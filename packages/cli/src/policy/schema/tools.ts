@@ -111,6 +111,9 @@ export const toolsSchema = z
             })
             .optional(),
         yamllint: z.strictObject({ rules: yamlRules.optional() }).optional(),
+        lychee: z
+            .strictObject({ exclude: z.array(z.unknown()).optional(), exclude_urls: z.array(z.unknown()).optional() })
+            .optional(),
         markdownlint: z
             .strictObject({
                 rules: z

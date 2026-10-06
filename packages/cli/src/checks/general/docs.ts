@@ -13,9 +13,10 @@ import { runnerSchema } from '#cli/parsers/schema/settings.ts';
 import { globPaths, expandPaths } from '#cli/platform/paths.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
-import type { PathIndex } from '#cli/types/checks/general/docs.ts';
+import { scopeOf, scopeAncestors } from '#cli/repository/scopes.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { MISE_FILES, LICENSE_FILE } from '#cli/config/repository/inventory.ts';
+import type { PathIndex, TaskSources } from '#cli/types/checks/general/docs.ts';
 import { pathTokens, proseLines, cleanPathToken } from '#cli/parsers/markdown.ts';
 
 import {
@@ -47,13 +48,13 @@ function miseTasks(input: EngineInput, file: string): string[] {
     }
 }
 
-function packageScripts(input: EngineInput): string[] {
+function packageScripts(input: EngineInput, file: string): string[] | undefined {
     try {
-        const manifest = parsePackageManifest(readSource(input.root, 'package.json', input.reads).toString('utf8'));
+        const manifest = parsePackageManifest(readSource(input.root, file, input.reads).toString('utf8'));
         return Object.keys(manifest.scripts ?? {});
     } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
-        throw new Error('Cannot read task definitions from package.json.', { cause: error });
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });
     }
 }
 
@@ -73,10 +74,14 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
         .map((token) =>
             findingAt(input, { file, line: number }, 'missing-path', `${token} names no tracked file or folder.`),
         );
-    const runToken = new RegExp(String.raw`\b(?<runner>${runnerSchema.options.join('|')}) run (?<task>[\w:.-]+)`, 'gu');
+    const runToken = new RegExp(String.raw`\b(?:${runnerSchema.options.join('|')}) run [\w:.-]+`, 'gu');
     const runs = line
         .matchAll(runToken)
-        .filter((match) => !index.tasks.has(match.groups?.['task'] ?? ''))
+        .filter((match) => {
+            const command = match[0];
+            const names = command.startsWith('mise run ') ? index.tasks.mise : index.tasks.packages;
+            return !names.has(command.slice(command.lastIndexOf(' ') + 1));
+        })
         .map((match) =>
             findingAt(input, { file, line: number }, 'missing-task', `${match[0]} names no task or script.`),
         )
@@ -118,14 +123,27 @@ function sectionFindings(input: EngineInput, file: string, nodes: RootContent[],
     ];
 }
 
-function taskNames(input: EngineInput): string[] {
+function taskSources(input: EngineInput, scope: string): TaskSources {
+    const ancestors = scopeAncestors(input.scopeEntries, scope).toReversed();
     const files = [
-        ...new Set([
-            ...MISE_FILES.filter((file) => file !== '.tool-versions'),
-            ...globPaths(input.root, '.mise/conf.d/*.toml', { dot: true }),
-        ]),
+        ...new Set(
+            ancestors.flatMap(({ path }) => [
+                ...MISE_FILES.filter((file) => file !== '.tool-versions').map((file) => posix.join(path, file)),
+                ...globPaths(input.root, posix.join(path, '.mise/conf.d/*.toml'), { dot: true }),
+            ]),
+        ),
     ];
-    return [...files.flatMap((file) => miseTasks(input, file)), ...packageScripts(input)];
+    let scripts: string[] = [];
+    for (const { path } of ancestors) {
+        const found = packageScripts(input, posix.join(path, 'package.json'));
+        if (found === undefined) continue;
+        scripts = found;
+        break;
+    }
+    return {
+        mise: new Set(files.flatMap((file) => miseTasks(input, file))),
+        packages: new Set(scripts),
+    };
 }
 
 /**
@@ -136,18 +154,19 @@ function taskNames(input: EngineInput): string[] {
 export function stalePaths(input: EngineInput): Finding[] {
     const exceptions = (input.view.options('docs')['exclude'] as PathAllowance[] | undefined) ?? [];
     const isException = pathMatcher(exceptions.flatMap((entry) => entry.paths));
-    const index: PathIndex = {
-        known: knownPaths(input),
-        tasks: new Set(taskNames(input)),
-        isException,
-    };
-    return input.files
-        .filter((file) => file.kind === 'source' && file.path.endsWith('.md') && !isException(file.path))
-        .flatMap((file) =>
+    const files = input.files.filter(
+        (file) => file.kind === 'source' && file.path.endsWith('.md') && !isException(file.path),
+    );
+    const known = knownPaths(input);
+    const projects = Map.groupBy(files, (file) => scopeOf(file.path, input.scopeEntries).path);
+    return [...projects].flatMap(([scope, sources]) => {
+        const index: PathIndex = { known, tasks: taskSources(input, scope), isException };
+        return sources.flatMap((file) =>
             proseLines(readSource(input.root, file.path, input.reads).toString('utf8')).flatMap((prose) =>
                 lineFindings(input, file.path, prose, index),
             ),
         );
+    });
 }
 
 /**

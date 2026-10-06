@@ -211,3 +211,30 @@ test('at-rule exceptions use native Stylelint options without a duplicate settin
     });
     expect(policyProblems(native)).toStrictEqual([]);
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s refuses native documentation link flags as extra coverage controls in every scope',
+    (level) => {
+        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
+            const table = scope === '' ? 'tools' : 'scope.tools';
+            const owner = scope === '' ? 'tools.lychee' : 'scope.0.tools.lychee';
+            for (const field of ['offline', 'include_fragments', 'scheme', 'accept'])
+                expect(() =>
+                    parseStrictPolicy(
+                        buildPolicy([], {
+                            level,
+                            tables: `${scope}[${table}.lychee]\n${field} = false\n`,
+                        }),
+                    ),
+                ).toThrow(`\`${field}\` is not a setting gspot knows under [${owner}]`);
+            expect(() =>
+                parseStrictPolicy(
+                    buildPolicy([], {
+                        level,
+                        tables: `${scope}[${table}.lychee.verbatim]\noffline = true\nreason = "Project preference"\n`,
+                    }),
+                ),
+            ).toThrow(`\`verbatim\` is not a setting gspot knows under [${owner}]`);
+        }
+    },
+);

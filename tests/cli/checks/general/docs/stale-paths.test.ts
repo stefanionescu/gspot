@@ -7,6 +7,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { stalePaths } from '#cli/checks/general/docs.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
+import { DOC_TASK_FILES, DOC_TASK_SCOPES, DOC_TASK_FINDINGS } from '#tests/config/cli/checks/general/docs.ts';
 
 test('wildcard examples stay intact while emphasized literal paths remain checked', async () => {
     await using sandbox = await testdir();
@@ -139,4 +141,48 @@ test('a directory at a task configuration path is an error, not absent configura
     mkdirSync(join(sandbox.path, 'package.json'));
     const selected = buildEngineInput(session, 'docs/stale-paths', { paths: ['a.md'] });
     expect(() => stalePaths(selected)).toThrow('Cannot read task definitions from package.json.');
+});
+
+test.each(['recommended', 'all'] as const)(
+    '%s validates documented tasks against their runner and nearest scoped definitions',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy([], { level, tables: DOC_TASK_SCOPES }),
+            ...DOC_TASK_FILES,
+        });
+        const found = stalePaths(buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths'));
+        expect(found).toHaveLength(DOC_TASK_FINDINGS.length);
+        for (const { command, ...place } of DOC_TASK_FINDINGS)
+            expect(found).toContainEqual(
+                containing({ ...place, rule: 'missing-task', message: textContaining(command) }),
+            );
+    },
+);
+
+test('a selected child document does not read unrelated or shadowed package scripts', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy([], { tables: DOC_TASK_SCOPES }),
+        ...DOC_TASK_FILES,
+    });
+    const session = await openSession(sandbox.path);
+    await createFileTree(sandbox.path, { 'package.json': '{broken', 'sibling/package.json': '{broken' });
+    const input = buildEngineInput(session, 'docs/stale-paths', { paths: ['app/nested/guide.md'] });
+    expect(stalePaths(input)).toStrictEqual([]);
+});
+
+test.each([
+    ['app/package.json', '{broken'],
+    ['app/mise.toml', '[tasks'],
+])('a selected child document reports malformed %s at its actual owner', async (path, text) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy([], { tables: DOC_TASK_SCOPES }),
+        ...DOC_TASK_FILES,
+    });
+    const session = await openSession(sandbox.path);
+    await Bun.write(join(sandbox.path, path), text);
+    const input = buildEngineInput(session, 'docs/stale-paths', { paths: ['app/nested/guide.md'] });
+    expect(() => stalePaths(input)).toThrow(`Cannot read task definitions from ${path}.`);
 });

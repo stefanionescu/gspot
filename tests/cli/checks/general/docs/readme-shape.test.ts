@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -7,6 +8,8 @@ import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { README, LICENSE } from '#tests/config/samples/docs.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
+import { NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { headings, readmeShape, readmePresent } from '#cli/checks/general/docs.ts';
 
 describe('readme shape', () => {
@@ -107,4 +110,38 @@ test('a NOTICE file does not supply the repository license', async () => {
     expect(readmePresent(buildEngineInput(await openSession(sandbox.path), 'docs/readme-present'))).toMatchObject([
         { file: 'LICENSE', rule: 'missing-license' },
     ]);
+});
+
+test('README shape diagnostics give a valid reasoned exception command without changing policy on preview', async () => {
+    const policy = buildPolicy([], { level: 'all', tables: NO_AGENT_RULES });
+    await using sandbox = await testdir({ 'gspot.toml': policy, 'README.md': '# Tool\n\n## Install\n' });
+    const checked = await runGspot(sandbox.path, ['check', '--only', 'docs/readme-shape', '--json']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+        {
+            check: 'docs/readme-shape',
+            status: 'failed',
+            findings: [
+                containing({
+                    file: 'README.md',
+                    rule: 'opening-paragraph',
+                    line: 1,
+                    help: textContaining('gspot ignore docs/readme-shape --paths <glob> --reason "<why>"'),
+                }),
+            ],
+        },
+    ]);
+    const preview = await runGspot(sandbox.path, [
+        'ignore',
+        'docs/readme-shape',
+        '--paths',
+        'README.md',
+        '--reason',
+        'The product site supplies the generated README introduction.',
+        '--dry-run',
+    ]);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    expect(preview.stdout).toContain('check = "docs/readme-shape"');
+    expect(preview.stdout).toMatch(/paths = \[\s*"README\.md"\s*\]/u);
+    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
 });

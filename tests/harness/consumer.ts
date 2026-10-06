@@ -21,6 +21,7 @@ export async function createConsumer(
     const workspace = await testdir();
     try {
         const root = join(workspace.path, 'consumer');
+        const env = { ...consumerEnvironment, BUN_INSTALL_CACHE_DIR: join(workspace.path, 'bun-cache') };
         mkdirSync(root);
         writeFileSync(join(root, 'package.json'), '{"name":"consumer","private":true}\n');
         const installed = await runTestCommand(
@@ -46,7 +47,7 @@ export async function createConsumer(
         const offlineOptions = {
             cwd: root,
             env: {
-                ...consumerEnvironment,
+                ...env,
                 NO_COLOR: '1',
                 CI: '1',
                 ...OFFLINE_ENVIRONMENT,
@@ -55,7 +56,7 @@ export async function createConsumer(
         };
         const onlineOptions = {
             ...offlineOptions,
-            env: { ...consumerEnvironment, NPM_CONFIG_USERCONFIG: registry.npmrc, NO_COLOR: '1', CI: '1' },
+            env: { ...env, NPM_CONFIG_USERCONFIG: registry.npmrc, NO_COLOR: '1', CI: '1' },
         };
         return {
             root: root,

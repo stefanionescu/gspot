@@ -1,6 +1,3 @@
 <%~ toml({
-    offline: true,
-    include_fragments: 'full',
-    no_progress: true,
     exclude: (settings['tools.lychee.exclude_urls'] ?? []).flatMap((entry) => typeof entry === 'string' ? [entry] : (entry.patterns ?? [])),
 }).trimEnd() %>

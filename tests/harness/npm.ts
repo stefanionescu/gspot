@@ -119,13 +119,17 @@ export async function createPackageProject(
             ),
         );
         const previous = Object.fromEntries(
-            ['YARN_CACHE_FOLDER', 'YARN_GLOBAL_FOLDER'].map((name) => [name, environmentVariables()[name]]),
+            ['BUN_INSTALL_CACHE_DIR', 'YARN_CACHE_FOLDER', 'YARN_GLOBAL_FOLDER'].map((name) => [
+                name,
+                environmentVariables()[name],
+            ]),
         );
         resources.defer(() => {
             for (const [name, value] of Object.entries(previous)) setEnvironmentVariable(name, value);
         });
         setEnvironmentVariable('YARN_GLOBAL_FOLDER', join(artifacts, 'resolution-global'));
         setEnvironmentVariable('YARN_CACHE_FOLDER', join(artifacts, 'resolution-cache'));
+        setEnvironmentVariable('BUN_INSTALL_CACHE_DIR', join(artifacts, 'bun-cache'));
         const authored = await writePackageProject({ root, artifacts, registry, installer, projectPath, runner });
         await prepareToolProject(root);
         return {

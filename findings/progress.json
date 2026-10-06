@@ -42,7 +42,7 @@
             "scope": "Test, script, and package organization",
             "decision": "The current user plan requires four test directories: cli, plugin, tools, and packages. Config and types mirror their behavioral owners, and the shared harness stays flat. Scripts own suite and registry orchestration. This supersedes the inherited five-family decision.",
             "evidence": [
-                "The user\u2019s implementation plan in this conversation",
+                "The user’s implementation plan in this conversation",
                 "tests/package.json",
                 "tests/bunfig.toml",
                 "mise.toml",
@@ -13132,7 +13132,7 @@
         {
             "from": "packages/cli/src/tools/npm/project.ts",
             "to": "packages/cli/src/parsers/schema/packages.ts",
-            "name": "packageSchema \u2192 toolProjectSchema",
+            "name": "packageSchema → toolProjectSchema",
             "type": false
         },
         {
@@ -13150,7 +13150,7 @@
         {
             "from": "packages/cli/src/types/tools/npm.ts",
             "to": "packages/cli/src/types/parsers/packages.ts",
-            "name": "PackageManagerIdentity \u2192 PackageClientIdentity",
+            "name": "PackageManagerIdentity → PackageClientIdentity",
             "type": true
         },
         {
@@ -18660,7 +18660,7 @@
             "evidence": [
                 "Source: packages/cli/configurations/framework/nextjs/manifest.toml; framework/nestjs/manifest.toml and eslint.fragment.js.tmpl; language/css/stylelint.json.tmpl; src/repository/manifests.ts; src/generation/templates.ts and types/generation/templates.ts. Real template callers share the nearest-project dependency calculation. Static fixture facts and module-level types retain their behavioral config/types owners.",
                 "Initial focused run exposed incorrect test expectations for removed-setting diagnostics and inactive planning, then the child-app case exposed repository-relative prerequisite globs. The final globs match scoped router trees and the assertions retain full project inputs plus empty parent inputs. Final affected regressions: /tmp/gspot-framework-applicability-consumers-final.log (95 passes, zero failures; 367 assertions across six files).",
-                "Initial native suite: /tmp/gspot-framework-applicability-native-initial.log (14 passes, one test assertion failure, 81 assertions across three files; 318.66 seconds). All existing Next.js type/delegation, required-rule and i18n cases passed. NestJS route mismatch and both Swagger dependency transitions passed. Stylelint levels/options/editor discovery and both Tailwind scope transitions passed. The new build assertion expected a component name, while the current parser reports native webpack\u2019s final summary. The corrected test asserts the native failure summary and completes its coverage transitions and successful correction.",
+                "Initial native suite: /tmp/gspot-framework-applicability-native-initial.log (14 passes, one test assertion failure, 81 assertions across three files; 318.66 seconds). All existing Next.js type/delegation, required-rule and i18n cases passed. NestJS route mismatch and both Swagger dependency transitions passed. Stylelint levels/options/editor discovery and both Tailwind scope transitions passed. The new build assertion expected a component name, while the current parser reports native webpack’s final summary. The corrected test asserts the native failure summary and completes its coverage transitions and successful correction.",
                 "Native build after scoped-glob correction: /tmp/gspot-framework-applicability-native-build-scoped-globs.log (one pass, five other cases filtered, zero failures; 11 assertions; 83.77 seconds). Native Tailwind with Next.js actually selected/declared: /tmp/gspot-framework-applicability-native-tailwind-next.log (five passes, zero failures; 33 assertions; 44.80 seconds). One CSS private installation is shared; no SDK imported only for syntax evidence is installed.",
                 "Initial broad CLI/plugin suite: /tmp/gspot-framework-applicability-full-cli-plugin.log (2850 passes, three existing platform skips, two obsolete expectation failures; 10171 assertions across 342 files; 222.56 seconds). Updated the unconditional Next.js Tailwind expectation and the package-manifest inspection diagnostic prefix. Authored native options, alias correction and all original unique assertions remain. Added declared-Tailwind generation coverage without deriving expected values from the implementation.",
                 "Delivered-package suite after the final manifest change: /tmp/gspot-framework-applicability-packages-final.log (five passes, zero failures; 382 assertions across launcher, standalone binaries and native-tool installation; 65.00 seconds). Isolated registry closes.",
@@ -18686,7 +18686,7 @@
                 "Four TypeScript targets: /tmp/gspot-css-framework-ownership-types-delivery-final.log (8.61 seconds). The preceding concurrent Astro sync/build collided on a shared temporary file; the metadata/type run was rerun after the successful build completed. Documentation: /tmp/gspot-css-framework-ownership-docs-delivery.log (316 pages; every local link and fragment valid).",
                 "Delivered-package tests: /tmp/gspot-css-framework-ownership-packages-final.log (five passes, zero failures; 382 assertions across launcher, standalone binaries and native installation; 65.59 seconds). The isolated registry closes.",
                 "Canonical apply first writes only the CSS config, Knip tool list and private package manifest; second apply changes no outputs. Root tooling refresh passes and the installed workspace plugin matches its build. Unrelated refresh version changes were discarded; owning offline Bun regeneration prunes only unused parser dependencies and frozen npm/Python synchronization retains the existing transitive pins. Logs: root-tools-refresh.log, npm-lock-prune.log, npm-frozen-sync.log and python-frozen-sync.log under /tmp/gspot-css-framework-ownership-.",
-                "Actual initial gspot check --staged: /tmp/gspot-css-framework-ownership-staged-initial.json (130 passes, two failed checks, six legitimate skips; 79.969 seconds). Only documentation paragraph/punctuation and the native customSyntax key naming are reported. Split the paragraph and use the existing file-specific naming.fixed_keys declaration for Stylelint\u2019s exact API key; no product check, severity or coverage rule is disabled.",
+                "Actual initial gspot check --staged: /tmp/gspot-css-framework-ownership-staged-initial.json (130 passes, two failed checks, six legitimate skips; 79.969 seconds). Only documentation paragraph/punctuation and the native customSyntax key naming are reported. Split the paragraph and use the existing file-specific naming.fixed_keys declaration for Stylelint’s exact API key; no product check, severity or coverage rule is disabled.",
                 "The assertion matcher requires the complete native customSyntax field in its TypeScript shape. Removing that field fails type verification, so it is restored and remains asserted exactly. Final four targets pass /tmp/gspot-css-framework-ownership-types-final-policy.log (8.30 seconds). Selected consumer regressions pass /tmp/gspot-css-framework-ownership-staged-correction-regression.log (11 passes, 46 assertions). Final documentation passes /tmp/gspot-css-framework-ownership-docs-staged-correction.log (316 pages; all local links/fragments valid).",
                 "Canonical generation after tooling installation and the file-specific API-key declaration: /tmp/gspot-css-framework-ownership-apply-policy-first.json and apply-policy-second.json each have 136 unchanged outputs, zero writes/removals/updates and zero notes. Existing Python transitive pins and preserved Python implementation remain unchanged.",
                 "Actual final gspot check --staged: /tmp/gspot-css-framework-ownership-staged-final.json (132 passes, six legitimate prerequisite skips, zero findings/errors; 70.491 seconds). Normal Semgrep, OSV and Taplo pass; no gate is skipped or weakened.",
@@ -18768,10 +18768,42 @@
                 "Final generation/policy replay: /tmp/gspot-yaml-generation-policy-delivery.log retains all 393 passes and 1,872 assertions (39.48 seconds). Changed ESLint passes in /tmp/gspot-yaml-eslint-delivery-final.log. Canonical delivery apply-first and apply-second each report 137 unchanged outputs, zero writes/updates/removals and no notes.",
                 "Initial delivered-package proof: /tmp/gspot-yaml-packages.log has five passes, zero failures and 381 assertions (90.09 seconds). A delivery replay follows the final native rule-key boundary correction.",
                 "Final delivered-package replay: /tmp/gspot-yaml-packages-delivery.log has five passes, zero failures and 381 assertions (88.31 seconds), covering real launcher initialization/diagnostics, cancellation, standalone archives without Node.js/Bun on PATH, immutable private installation and installed native TOML/whitespace correction.",
-                "Actual staged gate: /tmp/gspot-yaml-staged.json reports 133 passes, six existing prerequisite/ownership/runner skips, zero findings and zero execution errors (72.990 seconds). Normal Semgrep and OSV remain enabled. Original IDs, owners, source paths and quotations are unchanged; only the two reconciled review records change status."
+                "Actual staged gate: /tmp/gspot-yaml-staged.json reports 133 passes, six existing prerequisite/ownership/runner skips, zero findings and zero execution errors (72.990 seconds). Normal Semgrep and OSV remain enabled. Original IDs, owners, source paths and quotations are unchanged; only the two reconciled review records change status.",
+                "Delivery: hook-enabled commit 864a4d72e9667967b82e5aa15360d01ef1a495aa succeeds in /tmp/gspot-yaml-commit.log (88 pre-commit passes, two justified skips; commit-message pass). Normal origin/main push succeeds in /tmp/gspot-yaml-push.log (133 passes, six justified skips, zero findings). HEAD equals origin/main and the tree is clean before the next implementation batch."
             ],
             "remaining": [
                 "Continue 937 original implementation records; publication and deployment retain separate authorization boundaries."
+            ]
+        },
+        {
+            "subsystem": "Native documentation links and scoped task sources",
+            "rows": [
+                "main/102",
+                "slices/kits-general/001",
+                "slices/kits-general/002",
+                "slices/kits-general/003",
+                "slices/kits-general/004",
+                "areas/checks/067"
+            ],
+            "outcome": "Six original records close with IDs and source quotations preserved. Local/native network checks use their own flags and scope exclusions; full fragment coverage and runner-specific scoped task definitions have real regression evidence. 931 original records remain open.",
+            "evidence": [
+                "Source: packages/cli/configurations/general/docs/manifest.toml and lychee.toml.tmpl. Offline mode belongs only to the local command; both commands explicitly select full anchor/text-fragment validation, with no duplicated progress setting. Scoped native configurations preserve additive root/child URL exceptions. Local-check and task summaries describe actual coverage; the existing README-shape help is verified through its public diagnostic and reasoned ignore preview.",
+                "Task ownership: checks/general/docs.ts uses the existing scopeOf/scopeAncestors calculation, groups selected Markdown by project, reads nearest package scripts, inherits ancestor mise definitions and keeps the runner sources distinct. Malformed consumed definitions name their actual file; unrelated and shadowed package definitions are not read. TaskSources and PathIndex remain in the existing types/checks/general/docs.ts owner. No new configuration or task-selection mechanism is introduced.",
+                "Decision recommended-and-all: native lychee flags, accepted status ranges, fragment modes and verbatim presets are not project coverage controls. policy/schema/tools.ts owns only the declared file/URL exception lists. Both levels refuse unsupported native flags in root and scope tables with exact table-specific diagnostics. The external check retains its declared manual stage and network prerequisite.",
+                "Affected CLI: /tmp/gspot-doc-links-cli-final.log has 421 passes, zero failures and 1,945 assertions across 55 files (49.56 seconds). New cases cover all five runners, root/child/sibling ownership, absent and explicitly empty package scripts, inherited mise definitions, malformed scoped definitions, unrelated invalid manifests, native-control refusals and an actionable README exception preview that leaves authored policy unchanged.",
+                "Native: /tmp/gspot-doc-links-native-delivery.log has one pass, zero failures and 43 assertions (11.50 seconds) through pinned Lychee 0.24.2. Offline runs make zero HTTP requests. External runs report exact root 404 positions; child URL exceptions do not leak into root; independent corrections pass. Missing text fragments fail locally and over HTTP, while valid fragments pass through recommended/all/recommended transitions. The test owns and disposes its isolated HTTP listener.",
+                "Existing native consumers: /tmp/gspot-doc-links-native.log passes all six Markdown/docs/Vale cases, including a positioned local missing target and correction, native Markdown findings and missing Vale-dictionary acquisition/recovery. Its new scoped link case initially assumed exclusion lists replaced rather than appended; native-final and native-delivery exercise the correct inherited list contract. No product gate or prerequisite is disabled.",
+                "Four TypeScript targets pass in /tmp/gspot-doc-links-types-delivery.log (9.16 seconds). Changed source/test ESLint passes in /tmp/gspot-doc-links-eslint-delivery.log; native manifest Taplo formatting passes. New assertions use contractual rule/file/line values and variable command fragments, preserving existing unique cases.",
+                "Documentation: /tmp/gspot-doc-links-docs-delivery.log builds 316 pages and validates every local link and fragment. Canonical apply-first writes four native configurations with 136 outputs unchanged; apply-second reports 140 unchanged outputs, zero writes/updates/removals, no preserved output and no notes. Generated .gspot content changes only through apply.",
+                "Delivery exposed a real fixture cache collision: /tmp/gspot-doc-links-packages.log has four passes and one lock-portability failure. The host Bun metadata cache contains the same loopback prettier.tgz URL from a previous authenticated synthetic registry. The private lock owner intentionally preserves nonstandard tarball URLs. Test-owned caches now isolate createConsumer, the formatter consumer and each createPackageProject; fixture-level environment changes restore the prior Bun/Yarn cache values during disposal. Product lock semantics and portability assertions stay intact.",
+                "Delivered packages after isolation: /tmp/gspot-doc-links-packages-final.log has five passes, zero failures and 381 assertions across launcher, standalone archives and installed native tools (100.13 seconds). The lock retains no registry/work path, failed runner installation preserves completed metadata, and formatter/native corrections pass. All publication stays inside the owned throwaway registry.",
+                "Final policy placement: native link-setting refusals now live in the existing cli/policy/read-policy/settings.test.ts owner; /tmp/gspot-doc-links-policy-final.log has 43 passes, zero failures and 613 assertions across that owner and level-contract.test.ts. Final four TypeScript targets pass in /tmp/gspot-doc-links-types-final.log. These changes preserve every existing generation assertion.",
+                "Final cache ownership regressions: /tmp/gspot-doc-links-npm-isolation.log has 40 passes, zero failures and 300 assertions across six files (289.79 seconds). Actual npm, Bun, pnpm and Yarn preserve authored/locked inputs, repair stale locks, refuse lifecycle scripts and partial/racing installation, refresh changed package bytes explicitly and restore edited native tools. Each fixture owns and disposes its cache/registry.",
+                "Final delivered-tool replay after consolidating the shared consumer environment: /tmp/gspot-doc-links-packages-isolation-final.log has two passes, zero failures and 39 assertions (41.87 seconds). Four TypeScript targets pass in /tmp/gspot-doc-links-types-isolation-final.log (10.98 seconds); final changed source/test ESLint passes.",
+                "Actual gspot check --staged: /tmp/gspot-doc-links-staged.json reports 136 passed checks, six existing skips, zero findings and zero execution errors (93.248 seconds). Normal Semgrep, OSV and Taplo pass. All 2,939 original records remain; six records close and 931 remain open. IDs, source paths, owners and original findings are unchanged; the complete original 990-ID batch mapping retains its order."
+            ],
+            "remaining": [
+                "Continue 931 original implementation records; publication and deployment retain separate authorization boundaries."
             ]
         }
     ],
@@ -22033,6 +22065,27 @@
                     "tests/cli/generation/config-consumers.test.ts",
                     "packages/cli/configurations/general/commits/commitlint.config.cjs.tmpl",
                     "tests/tools/configurations/general/commits.test.ts"
+                ]
+            },
+            {
+                "id": "native-documentation-links-and-scoped-task-sources",
+                "records": [
+                    "main/102",
+                    "slices/kits-general/001",
+                    "slices/kits-general/002",
+                    "slices/kits-general/003",
+                    "slices/kits-general/004",
+                    "areas/checks/067"
+                ],
+                "owners": [
+                    "packages/cli/configurations/general/docs/manifest.toml",
+                    "packages/cli/configurations/general/docs/lychee.toml.tmpl",
+                    "packages/cli/src/checks/general/docs.ts",
+                    "packages/cli/src/types/checks/general/docs.ts",
+                    "packages/cli/src/policy/schema/tools.ts",
+                    "tests/tools/configurations/general/lychee.test.ts",
+                    "tests/cli/checks/general/docs/stale-paths.test.ts",
+                    "tests/cli/checks/general/docs/readme-shape.test.ts"
                 ]
             }
         ]

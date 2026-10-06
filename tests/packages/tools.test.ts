@@ -51,6 +51,7 @@ async function prepareFormatterConsumer(installation: Consumer, release: Publish
             NO_COLOR: '1',
             PATH: `${hostTools}${delimiter}${consumerEnvironment['PATH'] ?? ''}`,
             NPM_CONFIG_USERCONFIG: release.registry.npmrc,
+            BUN_INSTALL_CACHE_DIR: join(installation.workspace, 'formatter-cache'),
             HTTP_PROXY: undefined,
             HTTPS_PROXY: undefined,
             ALL_PROXY: undefined,
