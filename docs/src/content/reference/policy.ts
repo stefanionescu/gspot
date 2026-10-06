@@ -16,12 +16,12 @@ function acceptedValue(node: JSONSchema.JSONSchema | boolean): string {
     return SCHEMA_TYPE_LABELS[type] ?? type;
 }
 
-function schemaProperties(node: JSONSchema.JSONSchema | boolean): Record<string, JSONSchema.JSONSchema | boolean> {
+function schemaProperties(node: JSONSchema.JSONSchema | boolean): Array<[string, JSONSchema.JSONSchema | boolean]> {
     let shape = node;
     if (typeof node !== 'boolean' && node.type === 'array' && !Array.isArray(node.items) && node.items !== undefined)
         shape = node.items;
-    if (typeof shape === 'boolean') return {};
-    return shape.properties ?? {};
+    if (typeof shape === 'boolean' || shape.properties === undefined) return [];
+    return Object.entries(shape.properties);
 }
 
 /**
@@ -30,9 +30,9 @@ function schemaProperties(node: JSONSchema.JSONSchema | boolean): Record<string,
  */
 export function policyReference(): string {
     const schema: JSONSchema.JSONSchema = buildJsonSchema();
-    const sections = Object.entries(schema.properties ?? {}).map(([name, node]) => {
+    const sections = schemaProperties(schema).map(([name, node]) => {
         const properties = schemaProperties(node);
-        const entries = Object.keys(properties).length === 0 ? [[name, node] as const] : Object.entries(properties);
+        const entries = properties.length === 0 ? [[name, node] as const] : properties;
         const topic = name === 'tools' ? 'tool options' : 'settings and defaults';
         const rows = entries.map(([key, value]) => [
             `\`${key}\``,

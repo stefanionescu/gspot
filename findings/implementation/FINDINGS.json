@@ -409,7 +409,8 @@
         "status": "open",
         "outcome": null,
         "verification": [
-            "Explicit user decision recommended-and-all (current implementation plan): recommended and all are the only developer-facing check coverage choices. The recommendation to introduce or retain an opt-in kit, configuration, profile or enabling strategy is superseded. Delete nonportable policy when required or generate applicable native checks directly from these levels; keep legitimate project prerequisites and the subsequently clarified manual language/framework overrides. This decision does not close unrelated constituent work in an aggregate record."
+            "Explicit user decision recommended-and-all (current implementation plan): recommended and all are the only developer-facing check coverage choices. The recommendation to introduce or retain an opt-in kit, configuration, profile or enabling strategy is superseded. Delete nonportable policy when required or generate applicable native checks directly from these levels; keep legitimate project prerequisites and the subsequently clarified manual language/framework overrides. This decision does not close unrelated constituent work in an aggregate record.",
+            "Decision recommended-and-all follow-up: packages/cli/src/config/rules.ts removes \"or when the project turns them on\" from ALL_LEVEL_SUMMARY. The managed instruction generator now names all as the sole level for stricter engineering rules and keeps routine checks and declared contracts at both levels. Regenerate every managed instruction index through gspot apply; preserve manual language/framework overrides and legitimate project prerequisites. This evidence follows the explicit user decision against the conflicting opt-in recommendation; broader constituent work and original source quotations remain intact."
         ],
         "kind": "answer aggregate",
         "decisionEvidence": [
@@ -1851,7 +1852,8 @@
         "status": "open",
         "outcome": null,
         "verification": [
-            "Explicit user decision recommended-and-all (current implementation plan): recommended and all are the only developer-facing check coverage choices. The recommendation to introduce or retain an opt-in kit, configuration, profile or enabling strategy is superseded. Delete nonportable policy when required or generate applicable native checks directly from these levels; keep legitimate project prerequisites and the subsequently clarified manual language/framework overrides. This decision does not close unrelated constituent work in an aggregate record."
+            "Explicit user decision recommended-and-all (current implementation plan): recommended and all are the only developer-facing check coverage choices. The recommendation to introduce or retain an opt-in kit, configuration, profile or enabling strategy is superseded. Delete nonportable policy when required or generate applicable native checks directly from these levels; keep legitimate project prerequisites and the subsequently clarified manual language/framework overrides. This decision does not close unrelated constituent work in an aggregate record.",
+            "Decision recommended-and-all follow-up: packages/cli/src/config/rules.ts removes \"or when the project turns them on\" from ALL_LEVEL_SUMMARY. The managed instruction generator now names all as the sole level for stricter engineering rules and keeps routine checks and declared contracts at both levels. Regenerate every managed instruction index through gspot apply; preserve manual language/framework overrides and legitimate project prerequisites. This evidence follows the explicit user decision against the conflicting opt-in recommendation; broader constituent work and original source quotations remain intact."
         ],
         "kind": "phase aggregate",
         "decisionEvidence": [

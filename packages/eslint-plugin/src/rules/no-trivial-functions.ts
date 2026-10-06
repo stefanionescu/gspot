@@ -149,7 +149,8 @@ function hasInheritedContract(node: ImplementedFunction, source: TSESLint.Source
     const method = node.parent;
     if (method.type !== AST_NODE_TYPES.MethodDefinition || method.static) return false;
     const owner = method.parent.parent;
-    const { program, esTreeNodeToTSNodeMap: mapping } = source.parserServices ?? {};
+    if (source.parserServices === undefined) return false;
+    const { program, esTreeNodeToTSNodeMap: mapping } = source.parserServices;
     if (!program || !mapping) return false;
     const checker = program.getTypeChecker();
     const symbol = checker.getSymbolAtLocation(mapping.get(method.key));
