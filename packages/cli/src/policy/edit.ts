@@ -4,12 +4,11 @@ import { patchToml } from '#cli/parsers/toml/patch.ts';
 import { stringify as stringifyToml } from 'smol-toml';
 import { isReasoned } from '#cli/policy/schema/fields.ts';
 import { policyIndent } from '#cli/policy/settings/known.ts';
-import { valueAt, isRecord } from '#cli/platform/objects.ts';
 import { wrapLongArrays } from '#cli/parsers/toml/layout.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { POLICY_LINE_WIDTH } from '#cli/config/parsers/toml.ts';
-import { normalizeTomlTables } from '#cli/parsers/toml/document.ts';
 import { parseTomlText, parseStrictPolicy } from '#cli/policy/read.ts';
+import { valueAt, isRecord, normalizeTables } from '#cli/platform/objects.ts';
 import type { Mutation, Proposal, Reasoned, PolicyKey, TomlTable } from '#cli/types/policy/settings.ts';
 
 function splitKey(key: string): PolicyKey {
@@ -113,7 +112,7 @@ export function addToList(raw: TomlTable, key: string, entries: Reasoned<unknown
     const existing = current.value;
     const list = [...((existing as unknown[] | undefined) ?? [])];
     for (const entry of entries.value) {
-        const value = normalizeTomlTables(entry);
+        const value = normalizeTables(entry);
         if (!list.some((item) => isDeepStrictEqual(item, value))) list.push(value);
     }
     const reason = entries.reason ?? current.reason;

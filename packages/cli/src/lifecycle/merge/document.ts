@@ -1,7 +1,8 @@
 import { isDeepStrictEqual } from 'node:util';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { normalizeTables } from '#cli/platform/objects.ts';
+import { openTomlDocument } from '#cli/parsers/toml/document.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
-import { openTomlDocument, normalizeTomlTables } from '#cli/parsers/toml/document.ts';
 
 /**
  * Inspect shared fields through the same parser used by lifecycle plans.
@@ -16,7 +17,5 @@ export function hasFields(root: string, output: ConfigurationOutput): boolean {
     const current = files.read(output.path);
     if (current === undefined) return false;
     const document = openTomlDocument({ path: output.path, source: current.bytes.toString('utf8') });
-    return output.changes.every((field) =>
-        isDeepStrictEqual(document.value(field.path), normalizeTomlTables(field.value)),
-    );
+    return output.changes.every((field) => isDeepStrictEqual(document.value(field.path), normalizeTables(field.value)));
 }

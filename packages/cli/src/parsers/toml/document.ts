@@ -1,8 +1,9 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { patchToml } from '#cli/parsers/toml/patch.ts';
-import { isRecord, valueAt as getValue } from '#cli/platform/objects.ts';
-import type { TomlInput, TomlDocument, TomlTableOptions } from '#cli/types/parsers/toml.ts';
+import type { ConfigurationDocument } from '#cli/types/platform/document.ts';
+import type { TomlInput, TomlTableOptions } from '#cli/types/parsers/toml.ts';
+import { isRecord, normalizeTables, valueAt as getValue } from '#cli/platform/objects.ts';
 
 // The TOML table a key path's parent names, created on the way when a value is being set.
 function getTomlTable(
@@ -14,7 +15,7 @@ function getTomlTable(
         if (!Object.hasOwn(table, key)) {
             if (!options.create) return undefined;
             Object.defineProperty(table, key, {
-                value: normalizeTomlTables({}),
+                value: normalizeTables({}),
                 enumerable: true,
                 writable: true,
                 configurable: true,
@@ -35,7 +36,7 @@ function getTomlTable(
  * @param input the file path and TOML text
  * @returns the document used by managed config-file edits
  */
-export function openTomlDocument(input: TomlInput): TomlDocument {
+export function openTomlDocument(input: TomlInput): ConfigurationDocument {
     const document: Record<string, unknown> = parseTomlFile(input);
     return {
         value: (path) => getValue(document, path),
@@ -52,7 +53,7 @@ export function openTomlDocument(input: TomlInput): TomlDocument {
             if (value === undefined) Reflect.deleteProperty(table, key);
             else
                 Object.defineProperty(table, key, {
-                    value: normalizeTomlTables(value),
+                    value: normalizeTables(value),
                     enumerable: true,
                     writable: true,
                     configurable: true,
@@ -79,19 +80,4 @@ export function parseTomlFile(input: TomlInput): Record<string, unknown> {
     } catch (error) {
         throw new Error(`${input.path} is not valid TOML. Fix the file, then run gspot apply.`, { cause: error });
     }
-}
-
-/**
- * Give edited TOML tables the parser's null prototype while preserving dates and array order.
- * @param value a TOML field created by an edit
- * @returns the same TOML values with consistent table prototypes
- */
-export function normalizeTomlTables(value: unknown): unknown {
-    if (Array.isArray(value)) return value.map((entry) => normalizeTomlTables(entry));
-    if (!isRecord(value)) return value;
-    const table = Object.fromEntries<unknown>(
-        Object.entries(value).map(([key, entry]) => [key, normalizeTomlTables(entry)]),
-    );
-    Object.setPrototypeOf(table, null);
-    return table;
 }

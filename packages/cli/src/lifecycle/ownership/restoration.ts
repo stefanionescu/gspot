@@ -2,14 +2,15 @@
 // gspot adopted it outside `.gspot`.
 import { isDeepStrictEqual } from 'node:util';
 import { decodeUtf8 } from '#cli/platform/text.ts';
+import { normalizeTables } from '#cli/platform/objects.ts';
 import type { Snapshot } from '#cli/types/platform/root.ts';
 import { blockSpan } from '#cli/platform/managed-blocks.ts';
 import { pruneParents } from '#cli/lifecycle/merge/plan.ts';
 import { isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import { openTomlDocument } from '#cli/parsers/toml/document.ts';
 import type { Planned, MergeRecord } from '#cli/types/lifecycle/output.ts';
 import { getOnDisk, recordedBlockStart } from '#cli/lifecycle/ownership/plans.ts';
-import { openTomlDocument, normalizeTomlTables } from '#cli/parsers/toml/document.ts';
 import type { Log, Restoration, OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
 
 // The configuration record whose fields go back, when the file was edited or merged into an authored file.
@@ -26,7 +27,7 @@ function restoreFields(path: string, current: Snapshot, configuration: MergeReco
     if (text === undefined) return undefined;
     const document = openTomlDocument({ path, source: text });
     for (const field of configuration.fields) {
-        if (!isDeepStrictEqual(document.value(field.path), normalizeTomlTables(field.installed))) return undefined;
+        if (!isDeepStrictEqual(document.value(field.path), normalizeTables(field.installed))) return undefined;
     }
     for (const field of configuration.fields) document.set(field.path, field.original);
     pruneParents(document, configuration.parents ?? []);

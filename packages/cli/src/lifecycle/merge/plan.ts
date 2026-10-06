@@ -2,13 +2,13 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { decodeUtf8 } from '#cli/platform/text.ts';
-import type { KeyPath } from '#cli/types/platform/document.ts';
-import type { TomlDocument } from '#cli/types/parsers/toml.ts';
+import { normalizeTables } from '#cli/platform/objects.ts';
+import { openTomlDocument } from '#cli/parsers/toml/document.ts';
 import type { MergeRecord } from '#cli/types/lifecycle/output.ts';
 import { fieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { MERGED_CONFIGURATION_FORMAT } from '#cli/config/lifecycle/ownership.ts';
-import { openTomlDocument, normalizeTomlTables } from '#cli/parsers/toml/document.ts';
+import type { KeyPath, ConfigurationDocument } from '#cli/types/platform/document.ts';
 import type { Field, MergePlan, MergeRequest, MergePlanContents } from '#cli/types/lifecycle/merge.ts';
 
 // Whether a value is an empty plain object or array, which an owner may remove when it created it.
@@ -27,13 +27,12 @@ function hasUnrecordedEdits(request: MergeRequest): boolean {
 }
 
 // Puts back the original value of each unrequested key, as long as the developer left it as installed.
-function retireFields(document: TomlDocument, recorded: Field[], requested: Field[]): Field[] | undefined {
+function retireFields(document: ConfigurationDocument, recorded: Field[], requested: Field[]): Field[] | undefined {
     const retired = recorded.filter(
         (previous) => !requested.some((field) => isDeepStrictEqual(field.path, previous.path)),
     );
     for (const previous of retired) {
-        if (!isDeepStrictEqual(document.value(previous.path), normalizeTomlTables(previous.installed)))
-            return undefined;
+        if (!isDeepStrictEqual(document.value(previous.path), normalizeTables(previous.installed))) return undefined;
         document.set(previous.path, previous.original);
     }
     return recorded.filter((previous) => !retired.includes(previous));
@@ -41,27 +40,27 @@ function retireFields(document: TomlDocument, recorded: Field[], requested: Fiel
 
 // The field as it will be recorded, or undefined when the developer's value stands in the way of installing it.
 function planField(
-    document: TomlDocument,
+    document: ConfigurationDocument,
     request: MergeRequest,
     field: Field,
     previous: Field | undefined,
 ): Field | undefined {
     const value = document.value(field.path);
     if (previous !== undefined) {
-        if (!isDeepStrictEqual(value, normalizeTomlTables(previous.installed))) return undefined;
+        if (!isDeepStrictEqual(value, normalizeTables(previous.installed))) return undefined;
         return { ...field, ...(previous.original === undefined ? {} : { original: previous.original }) };
     }
     if (
         request.current !== undefined &&
         !request.canReplace &&
-        !isDeepStrictEqual(value, normalizeTomlTables(field.installed))
+        !isDeepStrictEqual(value, normalizeTables(field.installed))
     )
         return undefined;
     return { ...field, ...(value === undefined ? {} : { original: z.json().parse(value) }) };
 }
 
 // Records the containers above a key that do not exist yet, which this owner is about to create.
-function recordParents(document: TomlDocument, path: KeyPath, parents: KeyPath[]): void {
+function recordParents(document: ConfigurationDocument, path: KeyPath, parents: KeyPath[]): void {
     for (let length = 1; length < path.length; length++) {
         const parent = path.slice(0, length);
         if (document.value(parent) === undefined && !parents.some((known) => isDeepStrictEqual(known, parent)))
@@ -71,7 +70,7 @@ function recordParents(document: TomlDocument, path: KeyPath, parents: KeyPath[]
 
 // Installs every requested field, returning the recorded fields, or undefined when one cannot be installed.
 function installFields(
-    document: TomlDocument,
+    document: ConfigurationDocument,
     request: MergeRequest,
     recorded: Field[],
     requested: Field[],
@@ -127,7 +126,11 @@ function buildMergePlan(request: MergeRequest, contents: MergePlanContents): Mer
  * @param keptPaths the key paths whose containers stay whatever they hold
  * @returns the created containers that still exist
  */
-export function pruneParents(document: TomlDocument, parents: KeyPath[], keptPaths: KeyPath[] = []): KeyPath[] {
+export function pruneParents(
+    document: ConfigurationDocument,
+    parents: KeyPath[],
+    keptPaths: KeyPath[] = [],
+): KeyPath[] {
     for (const parent of parents.toSorted((left, right) => right.length - left.length)) {
         if (
             keptPaths.some(

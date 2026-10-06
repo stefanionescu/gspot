@@ -34,3 +34,18 @@ export function valueAt(value: unknown, keys: Readonly<KeyPath>): unknown {
     }
     return current;
 }
+
+/**
+ * Give parsed objects a consistent null prototype while preserving dates and array order.
+ * @param value a parsed or edited field
+ * @returns the same values with consistent object prototypes
+ */
+export function normalizeTables(value: unknown): unknown {
+    if (Array.isArray(value)) return value.map((entry) => normalizeTables(entry));
+    if (!isRecord(value)) return value;
+    const table = Object.fromEntries<unknown>(
+        Object.entries(value).map(([key, entry]) => [key, normalizeTables(entry)]),
+    );
+    Object.setPrototypeOf(table, null);
+    return table;
+}

@@ -30,13 +30,6 @@ export type TomlAssignment = { key: string; value: Value };
 /** Formatting supplied by the policy writer, before TOML layout is rewritten. */
 export type TomlLayout = { indent: string; width: number };
 
-/** A TOML document that preserves comments and layout when reading and editing keys. */
-export type TomlDocument = {
-    value(path: KeyPath): unknown;
-    set(path: KeyPath, value: unknown): void;
-    text(): string;
-};
-
 /** The authored file and its TOML text. */
 export type TomlInput = { path: string; source: string };
 
