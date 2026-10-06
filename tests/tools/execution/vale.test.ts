@@ -4,7 +4,9 @@ import { test, expect } from 'bun:test';
 import { parseAlerts } from '#cli/parsers/vale.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readAsset } from '#cli/platform/assets.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { vale } from '#cli/checks/general/prose/vale.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
@@ -12,6 +14,8 @@ import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { CURRENCY_CASES } from '#tests/config/tools/vale.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { TOKEN_IGNORES } from '#cli/config/generation/templates.ts';
 
@@ -165,4 +169,55 @@ test('heading capitalization distinguishes ordinary edge from the browser name a
     expect(parseAlerts(result.stdout).map((alert) => ({ line: alert.line, check: alert.check }))).toStrictEqual([
         { line: 7, check: 'gspot.heading-case' },
     ]);
+});
+
+test.each([...CURRENCY_CASES])(
+    'Vale currency checks distinguish amounts from parameter text in $path',
+    async (entry) => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, {
+            '.vale.ini':
+                'StylesPath = styles\nMinAlertLevel = suggestion\n[formats]\nsh = py\nts = md\n[*]\nBasedOnStyles = gspot\n',
+            'styles/gspot/currency.yml': readAsset('configurations/general/prose/styles/gspot/currency.yml'),
+            [entry.path]: entry.source,
+        });
+        const native = await runTestCommand(
+            ['vale', '--config', '.vale.ini', '--output', 'JSON', '--no-exit', entry.path],
+            { cwd: directory.path },
+        );
+        expect(native.code, native.stdout + native.stderr).toBe(0);
+        expect(parseAlerts(native.stdout).map((alert) => ({ line: alert.line, check: alert.check }))).toStrictEqual(
+            entry.lines.map((line) => ({ line, check: 'gspot.currency' })),
+        );
+    },
+);
+
+test('generated recommended Vale configuration reports unhelpful link text and accepts the destination name', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': buildPolicy(['prose'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'guide.md': '# Guide\n\nRead [here](guide.md).\n\n```markdown\n[here](guide.md)\n```\n',
+        'source.ts': 'const example = "[here](guide.md)";\n// Read [here](guide.md).\n',
+    });
+    const session = await openSession(directory.path);
+    using ownership = openOwnership(directory.path);
+    writeOutputs(session, ownership, undefined, emitAll(session));
+    const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
+    const defect = await runEngineCheck(session, vale, planned!);
+    expect(defect.status, defect.note).toBe('failed');
+    expect(defect.findings).toStrictEqual([
+        containing({ file: 'guide.md', line: 3, rule: 'gspot.link-text' }),
+        containing({ file: 'source.ts', line: 2, rule: 'gspot.link-text' }),
+    ]);
+    await Bun.write(
+        join(directory.path, 'guide.md'),
+        '# Guide\n\nRead [request guide](guide.md).\n\n```markdown\n[here](guide.md)\n```\n',
+    );
+    await Bun.write(
+        join(directory.path, 'source.ts'),
+        'const example = "[here](guide.md)";\n// Read [request guide](guide.md).\n',
+    );
+    const corrected = await runEngineCheck(session, vale, planned!);
+    expect(corrected.status, corrected.note).toBe('passed');
+    expect(corrected.findings).toStrictEqual([]);
 });

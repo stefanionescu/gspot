@@ -832,7 +832,9 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            "Explicit user decision recommended-and-all (current implementation plan): recommended and all are the only developer-facing check coverage choices. The recommendation to introduce or retain an opt-in kit, configuration, profile or enabling strategy is superseded. Delete nonportable policy when required or generate applicable native checks directly from these levels; keep legitimate project prerequisites and the subsequently clarified manual language/framework overrides. This decision does not close unrelated constituent work in an aggregate record."
+        ],
         "decisionEvidence": [
             "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
             "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
@@ -963,7 +965,9 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            "Explicit user decision recommended-and-all (current implementation plan): recommended and all are the only developer-facing check coverage choices. The recommendation to introduce or retain an opt-in kit, configuration, profile or enabling strategy is superseded. Delete nonportable policy when required or generate applicable native checks directly from these levels; keep legitimate project prerequisites and the subsequently clarified manual language/framework overrides. This decision does not close unrelated constituent work in an aggregate record."
+        ],
         "decisionEvidence": [
             "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
             "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."

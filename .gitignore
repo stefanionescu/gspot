@@ -35,7 +35,6 @@ node_modules/
 .gspot/config/vale/styles/proselint/
 .gspot/config/vale/styles/alex/
 .gspot/config/vale/styles/RedHat/
-.gspot/config/vale/styles/Readability/
 .gspot/config/vale/styles/Harper/
 .gspot/config/vale/styles/.vale-config/
 .gspot/config/vale/styles/config/dictionaries/

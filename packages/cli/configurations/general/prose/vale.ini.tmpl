@@ -100,7 +100,7 @@ const rules = isAll
       }
     : Object.fromEntries(
           prose.rules
-              .filter((style) => !['dates', 'links', 'alt-text'].includes(style))
+              .filter((style) => !['dates', 'link-text', 'alt-text'].includes(style))
               .map((style) => ['gspot.' + style, 'NO']),
       );
 rules['gspot.alt-text'] = 'NO';
