@@ -242,7 +242,7 @@ fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 exit_codes = [1]
 files = {extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.json"], tags = ["shebang:node"], eslint_plugins = true}
 output = {format = "eslint"}
-summary = "Runs ESLint with the shipped rule set over every JavaScript file and every package.json."
+summary = "Runs the shipped ESLint rules on JavaScript, TypeScript, component files, and package.json."
 why = "ESLint catches mistakes and dead code the runtime accepts: unused code, unsafe patterns, functions that only forward."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> links the rule documentation."
 
@@ -259,12 +259,12 @@ files = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks plain JavaScript through its JSDoc comments."
 why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
-help = "Add or fix the JSDoc type the checker names; gspot explain tsc/TS2345 links the error page."
+help = "Add or fix the JSDoc type that the error names."
 
 [[check]]
 name = "knip"
 title = "Find unused JavaScript code"
-example = "An exported declaration that no selected entry point uses reports an unused export. Remove the export or declaration and update consumers. If the file is dynamically loaded, declare its real entry point in policy."
+example = "An exported declaration that no selected entry point uses reports an unused export. Remove the export or declaration and update consumers. If the file is dynamically loaded, add its entry point with gspot set tools.knip.entry."
 level = "recommended"
 stage = "push"
 runs = "scope"

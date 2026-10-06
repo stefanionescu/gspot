@@ -218,7 +218,7 @@ export function explainToolRule(session: Session | undefined, tool: string, rule
     const optionLines = configuration.settings
         .filter((setting) => setting.name === `tools.${engine}.rules`)
         .map(() => `Change its options: gspot set ${key} <options> --reason "..."`);
-    let description = `The tool's documentation has the page for ${identifier}.`;
+    let description = `Read the ${engine} documentation for ${identifier}.`;
     if (page !== undefined) description = `The tool's page: ${page}`;
     if (summary !== undefined) description = `The tool says: ${summary}`;
     const lines = [

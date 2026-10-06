@@ -2828,10 +2828,34 @@
                 "Meaningful baseline: /tmp/gspot-takeover-baseline-proof.json records replay of the final eight native cases and thirteen new CLI regressions against all 21 production owners from commit add53c7e2dfcc925882b3989f330be26fc858ad0. Every native and CLI regression fails; each current source is restored byte for byte. /tmp/gspot-takeover-baseline-native.log and baseline-cli.log retain the failures. The first implementation exposed a missing local-path prefix and incorrect expectations about Knip\u2019s JSON envelope and project patterns. Correct the production pointer and native assertions without reducing diagnostic counts, locations, severity, ownership protection or scope isolation.",
                 "Final verification: /tmp/gspot-takeover-native-final.log passes 18 native cases with 172 assertions across takeover, JavaScript and Node-engine owners (25.98 seconds). /tmp/gspot-takeover-cli-final.log passes 471 affected CLI cases with 2626 assertions across 79 files (86.33 seconds). /tmp/gspot-takeover-restoration-final.log passes 83 cases with 387 assertions, including both non-UTF-8 preservation cases (1.04 seconds). /tmp/gspot-takeover-types-final.log passes all four TypeScript targets (10.00 seconds). Affected ESLint, Prettier, Taplo and git diff --check pass. /tmp/gspot-takeover-docs.log builds 314 pages and validates all local links and fragments. Canonical apply succeeds twice with all 139 outputs unchanged and zero writes, updates or removals: apply.json and apply-second.json under /tmp/gspot-takeover-. CLI/plugin defaults remain 60 seconds, native tools/packages 900 seconds, with child operations bounded by the remaining budget. No gates, prerequisites, ignores or publication/deployment boundaries change.",
                 "The first actual staged gate (/tmp/gspot-takeover-staged.json) passes 65 checks with 9 explicit skips and rejects six JSDoc writing findings plus the temporary name oldConfiguration. Add sentence punctuation, use the required Oxford comma, clarify the return description, and name the authored native configuration directly. No scenario, assertion, product check, ignore or policy exception changes. Verify the installed Knip package metadata as 6.35.1 and correct that verification-only version label.",
-                "Final actual staged verification: /tmp/gspot-takeover-staged-final.json exits 0 with 67 passed, 9 explicit skips, zero failures/errors and duration 40864 ms. /tmp/gspot-takeover-native-renamed.log passes all eight takeover cases with 93 assertions (7.32 seconds). /tmp/gspot-takeover-rename-proof.json verifies the complete native test AST is unchanged apart from the authoredConfiguration identifier rename. Normal product checks and native startup gates run without bypasses."
+                "Final actual staged verification: /tmp/gspot-takeover-staged-final.json exits 0 with 67 passed, 9 explicit skips, zero failures/errors and duration 40864 ms. /tmp/gspot-takeover-native-renamed.log passes all eight takeover cases with 93 assertions (7.32 seconds). /tmp/gspot-takeover-rename-proof.json verifies the complete native test AST is unchanged apart from the authoredConfiguration identifier rename. Normal product checks and native startup gates run without bypasses.",
+                "Delivery batch 44: commit c3f09b4014f1977d86394d9c3b10e825e3c29fc2 (fix(cli): own shared native configuration fields) passes hook-enabled commit checks (44 passed, 2 explicit skips, zero findings; 9.3 seconds) and commitlint. Normal push to origin/main passes 67 checks with 9 explicit skips and zero findings (42.8 seconds), /tmp/gspot-takeover-push.log. The clean tree and matching local/remote SHA were verified before starting another batch."
             ],
             "remaining": [
                 "Complete remaining compiler, policy/language/framework/platform/test/repository/installation findings, final full verification and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Truthful language references and library inspection",
+            "rows": [
+                "slices/kits-web-languages/005",
+                "slices/kits-web-languages/007",
+                "slices/kits-web-languages/017",
+                "slices/kits-web-languages/019",
+                "slices/kits-web-languages/040",
+                "slices/kits-web-languages/046"
+            ],
+            "outcome": "Six records close; 826 original implementation records remain open.",
+            "evidence": [
+                "Truthful language help: JavaScript tsc help names the JSDoc contract to fix and claims no diagnostic-page link. The explain fallback directs readers to the native tool documentation without promising an undeclared per-rule page. Existing native-rule option ownership remains conditional on declared settings; TypeScript errors expose no invented tools.tsc.rules options. The Knip example now names the actual gspot set tools.knip.entry command. ESLint\u2019s summary includes TypeScript and supported components alongside JavaScript and package.json; retain the already-correct no-unused-vars example and dead-code explanation.",
+                "TypeScript and HTML source evidence: config/generation/typescript.ts owns five required recommended diagnostics: strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes, noImplicitOverride and noFallthroughCasesInSwitch. All additionally requires noImplicitReturns and noPropertyAccessFromIndexSignature. State those exact options and end the repair example at fixing the reported errors. Replace HTML example jargon with literal text in html.templates and a content placeholder. Correct the original review recommendation\u2019s tools.html.templates spelling to the actual authored html.templates field; retain the original quote and ID. These are legitimate project contract fields, with recommended/all as the only check coverage levels.",
+                "Library ownership evidence: eslint-config-prettier already declares kind = library in commit 4ce293ae8aed8e40dfae9b6459b6b90d04497937. Reconcile that existing implementation with native proof instead of duplicating the change. The native regression copies the complete actual installed 10.1.8 package inside the managed installation boundary. Executing its real CLI with --version loads the authored ESLint configuration and fails with the exact fixture error; inspectTool with the actual shipped library pin reads package metadata and returns state ok with the exact version and managed metadata path. The authored configuration remains unchanged. No internal mock, package installation, metadata fabrication or relaxed source-link boundary is introduced.",
+                "Meaningful regressions and corrections: /tmp/gspot-language-reference-baseline-proof.json replays the new public explanation case against the prior four production owners at commit c3f09b4014f1977d86394d9c3b10e825e3c29fc2; the new case fails, existing eight cases pass, and every current source is restored byte for byte. The initial native fixture exposed the correctly enforced external-link boundary; copy the actual package into the fixture instead. An existing XML prerequisite test also failed in isolation because a relocated npm shell shim could not find its interpreter, commands and package layout. Declare a valid exact packageManager in that fixture and remove the unnecessary npm link. The unchanged doctor and XML check assertions still prove the missing host XML reader and its platform acquisition guidance. Keep its isolated PATH and all product prerequisites intact.",
+                "Final verification: /tmp/gspot-language-reference-native-final.log passes the actual installed-package regression with five assertions (0.274 seconds). /tmp/gspot-language-reference-cli-final.log passes 98 affected cases with 748 assertions across ten files (9.35 seconds), including public explanations, listing, real library/executable version boundaries, strict compiler checks, level generation and HTML consumers. /tmp/gspot-language-reference-types-final.log passes all four TypeScript targets (9.78 seconds). Affected ESLint, Prettier, Taplo and git diff --check pass. /tmp/gspot-language-reference-docs.log builds 314 pages and validates all local links and fragments. Canonical apply succeeds twice with all 139 outputs unchanged and zero writes, updates or removals: /tmp/gspot-language-reference-apply.json and apply-second.json. CLI/plugin defaults remain 60 seconds and tools/packages 900 seconds, with child operations bounded by remaining test budget. Manual language/framework overrides, genuine project prerequisites and publication/deployment authorization remain unchanged.",
+                "Actual staged verification: /tmp/gspot-language-reference-staged.json passes 67 checks with nine input or prerequisite skips, zero failures or errors, exitCode 0 and duration 41326 milliseconds. No gate is bypassed or weakened."
+            ],
+            "remaining": [
+                "Complete compiler ownership and the remaining policy/language/framework/platform/test/repository/installation findings, final full verification and separately authorized publication/deployment."
             ]
         }
     ],
@@ -6535,6 +6559,26 @@
                     "tests/cli/lifecycle/ownership/json.test.ts",
                     "tests/cli/generation/stylelint.test.ts",
                     "tests/cli/commands/init/takeover.test.ts"
+                ]
+            },
+            {
+                "id": "language-reference-truth",
+                "records": [
+                    "slices/kits-web-languages/005",
+                    "slices/kits-web-languages/007",
+                    "slices/kits-web-languages/017",
+                    "slices/kits-web-languages/019",
+                    "slices/kits-web-languages/040",
+                    "slices/kits-web-languages/046"
+                ],
+                "owners": [
+                    "packages/cli/configurations/language/javascript/manifest.toml",
+                    "packages/cli/configurations/language/typescript/manifest.toml",
+                    "packages/cli/configurations/language/html/manifest.toml",
+                    "packages/cli/src/commands/explain/check.ts",
+                    "tests/cli/commands/explain/command.test.ts",
+                    "tests/tools/execution/libraries.test.ts",
+                    "tests/cli/tools/inspect/hints.test.ts"
                 ]
             }
         ]

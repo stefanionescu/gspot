@@ -64,10 +64,10 @@ help = "Read the first error tsc prints and fix that file; later errors are ofte
 [[check]]
 name = "tsconfig"
 title = "Keep strict TypeScript options"
-example = "An authored TypeScript configuration setting `strict` to `false` reports the required compiler option. Enable `strict` and fix the resulting type errors rather than disabling the integrity check."
+example = "An authored TypeScript configuration setting `strict` to `false` reports the required compiler option. Enable `strict` and fix the type errors it reports."
 level = "recommended"
 stage = "commit"
-summary = "Checks that every tsconfig still turns on the strict options the configuration requires."
+summary = "Requires strict, noUncheckedIndexedAccess, exactOptionalPropertyTypes, noImplicitOverride, and noFallthroughCasesInSwitch in every authored tsconfig. Level all also requires noImplicitReturns and noPropertyAccessFromIndexSignature."
 why = "One tsconfig that drops strict lets untyped code back in for that whole scope."
 help = "Enable the reported compiler option in the authored TypeScript configuration."
 

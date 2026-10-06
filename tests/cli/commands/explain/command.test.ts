@@ -67,3 +67,15 @@ test('an unknown raw rule namespace is refused with the requested subject', () =
         data: { tool: 'eslint', rule: 'unknown/no-such-rule', page: null },
     });
 });
+
+test('TypeScript errors have no invented rule options or error-page link', () => {
+    const rule = explain(undefined, 'tsc/TS2345');
+    expect(rule).toMatchObject({ kind: 'tool-rule', data: { tool: 'tsc', rule: 'TS2345', page: null } });
+    expect(rule.text).toContain('Read the tsc documentation for TS2345.');
+    expect(rule.text).not.toContain('Change its options:');
+    expect(rule.text).not.toContain('tools.tsc.rules');
+    expect(rule.text).not.toContain("The tool's page:");
+    expect(explain(undefined, 'javascript/tsc')).toMatchObject({
+        data: { help: 'Add or fix the JSDoc type that the error names.' },
+    });
+});

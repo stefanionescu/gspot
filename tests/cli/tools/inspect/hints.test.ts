@@ -53,16 +53,17 @@ test('doctor and a missing XML check report the host installation prerequisite',
     const root = join(sandbox.path, 'project');
     const binaries = join(sandbox.path, 'binaries');
     mkdirSync(binaries);
-    for (const name of ['git', 'node', 'npm']) {
+    for (const name of ['git', 'node']) {
         const executable = Bun.which(name);
         expect(executable, `${name} is required for CLI metadata inspection.`).not.toBeNull();
-        const windowsName = name === 'npm' ? 'npm.cmd' : `${name}.exe`;
+        const windowsName = `${name}.exe`;
         const filename = process.platform === 'win32' ? windowsName : name;
         symlinkSync(executable!, join(binaries, filename));
     }
     await createFileTree(root, {
         'gspot.toml': buildPolicy([]),
         'document.xml': '<root />\n',
+        'package.json': '{"private":true,"packageManager":"npm@10.9.0"}\n',
     });
     const hint = XML_INSTALL_HINTS.find(({ platform }) => platform === process.platform)!.hint;
     const environment = { PATH: binaries, MISE_DATA_DIR: join(sandbox.path, 'mise') };
