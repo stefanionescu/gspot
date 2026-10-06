@@ -85,7 +85,7 @@ example = "An `eslint-disable-next-line` comment without a reason reports an une
 level = "recommended"
 stage = "commit"
 runs = "once"
-summary = "Checks suppression reasons when require_reasons is enabled; nosemgrep is refused outright."
+summary = "Checks suppression reasons when require_reasons is enabled; Semgrep and Vale directives are refused outright."
 why = "A suppression with no reason hides a finding nobody reviewed."
 help = "Write the reason in the comment (after two dashes for eslint-disable, after a colon for ts-expect-error), or fix the finding and drop the suppression."
 

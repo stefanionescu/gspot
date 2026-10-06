@@ -73,16 +73,6 @@ why = "A migration that does not parse fails at deploy, halfway through a releas
 help = "Correct the statement at the line and column the message names."
 
 [[check]]
-name = "block-comments"
-title = "Use line comments in SQL"
-example = "The SQL comment `/* Explains the table. */` reports a block-comment finding. Replace it with `-- Explains the table.` on its own line."
-level = "all"
-stage = "commit"
-summary = "Refuses block comments in SQL, so every comment is a line comment."
-why = "Vale reads SQL line comments. Use line comments so Vale can check their prose."
-help = "Rewrite the block as line comments that start with two dashes."
-
-[[check]]
 name = "file-lines"
 title = "Limit SQL file lines"
 example = "A SQL file with 401 code lines exceeds a 400-line ceiling. Split independent database changes into appropriately ordered files and rerun with each file below the configured limit."

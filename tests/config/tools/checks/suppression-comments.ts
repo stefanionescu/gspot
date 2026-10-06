@@ -17,3 +17,14 @@ export const RUFF_DIRECTIVES = [
     { source: '# noqa: F401\nimport os\n', suppressed: false, directive: true },
     { source: 'import os # noqa: F821\n', suppressed: false, directive: true },
 ];
+
+/** Vale directives are forbidden; code examples and ordinary comments remain documentation. */
+export const VALE_DIRECTIVES = [
+    { source: '<!-- vale off -->', suppressed: true, directive: true },
+    { source: '<!-- vale Example.Concrete = NO -->', suppressed: true, directive: true },
+    { source: '<!-- vale Example.Concrete = YES -->', suppressed: false, directive: true },
+    { source: '<!-- vale on -->', suppressed: false, directive: true },
+    { source: '<!-- Example vale off -->', suppressed: false, directive: false },
+    { source: '`<!-- vale off -->`', suppressed: false, directive: false },
+    { source: '```markdown\n<!-- vale off -->\n```', suppressed: false, directive: false },
+] as const;

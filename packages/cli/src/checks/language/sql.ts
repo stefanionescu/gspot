@@ -8,14 +8,8 @@ import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { positionAt, parseSqlFile } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import { LINE_COMMENT, PARSED_DIALECTS, OUTPUT_PARAMETERS } from '#cli/config/checks/language/sql.ts';
 
-import {
-    SQL_TOKENS,
-    LINE_COMMENT,
-    BLOCK_COMMENT,
-    PARSED_DIALECTS,
-    OUTPUT_PARAMETERS,
-} from '#cli/config/checks/language/sql.ts';
 import type {
     SqlSource,
     SqlFileInput,
@@ -158,26 +152,6 @@ export async function syntax(input: EngineInput): Promise<Finding[]> {
         findings.push(findingAt(input, { file: source.path, line, column }, 'syntax', text));
     }
     return findings;
-}
-
-/**
- * One finding for each file that holds a block comment.
- * @param input the engine input
- * @returns the findings
- */
-export function blockComments(input: EngineInput): Finding[] {
-    return sources(input).flatMap((source): Finding[] => {
-        const found = source.text.matchAll(SQL_TOKENS).find((match) => match[0] === BLOCK_COMMENT);
-        if (found === undefined) return [];
-        return [
-            findingAt(
-                input,
-                { file: source.path, ...positionAt(source.text, found.index) },
-                'block-comment',
-                'Replace this block comment with -- line comments.',
-            ),
-        ];
-    });
 }
 
 /**

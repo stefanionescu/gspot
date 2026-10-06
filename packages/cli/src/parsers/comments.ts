@@ -172,6 +172,7 @@ const COMMENT_READERS = new Map<string, CommentReader>([
     ['.html', (text) => treeComments('html', text, text)],
     ['.htm', (text) => treeComments('html', text, text)],
     ['.md', (text) => treeComments('html', text, markdownHtml(text))],
+    ['.mdx', (text) => treeComments('html', text, markdownHtml(text))],
     ['.css', (text) => treeComments('css', text, text)],
 ]);
 

@@ -66,6 +66,34 @@ test('SQLFluff honors root and nested dialect settings over the database default
     expect(wrongChild.stdout).toContain('PRS');
 });
 
+test.each(['recommended', 'all'] as const)(
+    'SQLFluff at %s accepts valid block comments and still rejects malformed queries',
+    async (level) => {
+        await using sandbox = await testdir();
+        const source = '/* Explains the query. */\nSELECT 1;\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['postgres'], { level }),
+            'query.sql': source,
+        });
+        const session = await openSession(sandbox.path);
+        const rendered = emitAll(session);
+        const configuration = rendered.files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
+        using ownership = openOwnership(sandbox.path);
+        writeOutputs(session, ownership, undefined, rendered);
+        const parseArguments = ['parse', '--config', configuration.path, '--ignore-local-config', 'query.sql'];
+        const accepted = await runTestCommand(['sqlfluff', ...parseArguments], { cwd: sandbox.path });
+        expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
+        expect(await Bun.file(join(sandbox.path, 'query.sql')).text()).toBe(source);
+        await Bun.write(join(sandbox.path, 'query.sql'), '/* Explains the query. */\nSELECT FROM;\n');
+        const failed = await runTestCommand(['sqlfluff', ...parseArguments], { cwd: sandbox.path });
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        expect(failed.stdout).toContain('PRS');
+        await Bun.write(join(sandbox.path, 'query.sql'), source);
+        const corrected = await runTestCommand(['sqlfluff', ...parseArguments], { cwd: sandbox.path });
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    },
+);
+
 test.each(FOREIGN_DIALECT_CASES)(
     'SQLFluff parses the $dialect fixture that PostgreSQL rejects',
     async ({ dialect, source }) => {

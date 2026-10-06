@@ -16,7 +16,7 @@ A suppression turns a rule off for one place, and it carries a reason.
 
 The forms differ by language, and the rule is the same in all of them. The forms are the ESLint
 disable comment, the Ruff `noqa`, the type-checker ignore, the SwiftLint disable, the ShellCheck
-disable. `nosemgrep` is refused. Record a Semgrep finding with `gspot ignore`.
+disable. Semgrep and Vale directives are refused. Record their findings with `gspot ignore`.
 
 To accept a finding without touching the code, record it with `gspot ignore <check>` and a reason.
 The ignore names the check, the rule, and the paths, and every report lists it.

@@ -27,6 +27,7 @@ brew = "vale"
 winget = "errata-ai.Vale"
 scoop = "vale"
 github = {name = "errata-ai/vale", version = "v3.21.0"}
+suppression = {marker = "^<!--\\s*vale\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true}
 
 [[tool.replace]]
 file = ".vale.ini"
@@ -52,16 +53,6 @@ stage = "commit"
 summary = "Checks ambiguous dates, link text, and alternative text with bundled Vale styles at level `recommended`. Level `all` adds the complete style and upstream packages."
 why = "Prose that hedges, markets or wanders is read by everyone who reads the code, and nothing else checks it."
 help = "Rewrite the sentence the alert names, add a real name to prose.vocabulary, or use gspot ignore prose/vale --rule <rule> --reason \"<why>\"."
-
-[[check]]
-name = "hidden"
-title = "Keep prose visible to checks"
-example = "A prose-linter disable directive in source reports a bypass finding. Remove the directive and correct the text, or record the narrowly scoped policy exception with its reason."
-level = "all"
-stage = "commit"
-summary = "Finds Vale directives inside Markdown and block comments in SQL, which take text away from the prose check."
-why = "A directive in the text turns a rule off for everyone silently; a block comment is invisible to Vale."
-help = "Delete the directive and change the text, or disable the rule with a reason; write SQL comments with two dashes."
 
 [[setting]]
 name = "prose.vocabulary"

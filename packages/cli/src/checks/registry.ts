@@ -8,7 +8,6 @@ import { fences } from '#cli/checks/language/markdown.ts';
 import { gspotDrift } from '#cli/checks/general/gspot.ts';
 import { expoDoctor } from '#cli/checks/framework/expo.ts';
 import { jscpd } from '#cli/checks/general/duplication.ts';
-import { hiddenProse } from '#cli/checks/general/hidden.ts';
 import { moduleClasses } from '#cli/checks/language/css.ts';
 import { embeds } from '#cli/checks/language/bash/embeds.ts';
 import { safety } from '#cli/checks/language/bash/safety.ts';
@@ -96,7 +95,6 @@ import {
 import {
     syntax as sqlSyntax,
     fileLines as sqlFileLines,
-    blockComments as sqlBlockComments,
     trivialFunctions as sqlTrivialFunctions,
 } from '#cli/checks/language/sql.ts';
 import {
@@ -234,7 +232,6 @@ export const CHECKS: CheckRegistry = {
     'postgres/migration-docs': { engine: migrationDocs },
     'sql/trivial-functions': { engine: sqlTrivialFunctions },
     'sql/syntax': { engine: sqlSyntax },
-    'sql/block-comments': { engine: sqlBlockComments },
     'sql/file-lines': { engine: sqlFileLines },
     'docker/dockerignore': { engine: dockerignore },
     'docker/trivy-image': { engine: trivyImage },
@@ -262,7 +259,6 @@ export const CHECKS: CheckRegistry = {
     'bash/source-comments': { engine: sourceComments },
     'bash/source-order': { engine: sourceOrder },
     'prose/vale': { engine: vale },
-    'prose/hidden': { engine: hiddenProse },
     'naming/identifiers': { engine: namingIdentifiers },
     'naming/paths': { engine: namingPaths },
     'naming/policy': { engine: namingPolicy },

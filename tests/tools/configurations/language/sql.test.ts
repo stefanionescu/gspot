@@ -1,4 +1,4 @@
-// Test repository for the sql configuration: a statement that does not parse, a block comment, a lowercase keyword, a camel-case column.
+// SQL syntax, keyword casing, and column naming retain independent native regressions.
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { containing } from '#tests/harness/expectations.ts';

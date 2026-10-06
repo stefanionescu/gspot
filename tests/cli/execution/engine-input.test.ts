@@ -109,7 +109,7 @@ test.skipIf(!isPosix)('engines read edited SQL source when a session is reused',
     });
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({
-        only: ['sql/syntax', 'sql/block-comments', 'sql/file-lines'],
+        only: ['sql/syntax', 'sql/trivial-functions', 'sql/file-lines'],
         isDryRun: true,
     });
     const clean = await executeRun(session, options);
@@ -119,7 +119,7 @@ test.skipIf(!isPosix)('engines read edited SQL source when a session is reused',
             .filter((check) => check.scope === 'app')
             .map((check) => check.check)
             .toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual(['sql/block-comments', 'sql/file-lines', 'sql/syntax']);
+    ).toStrictEqual(['sql/file-lines', 'sql/syntax', 'sql/trivial-functions']);
     await Bun.write(join(sandbox.path, path), 'select from;\n');
     const defect = await executeRun(session, options);
     expect(defect.report.exitCode).toBe(1);
