@@ -8,7 +8,7 @@ import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { readEslintPresets } from '#cli/generation/eslint/presets.ts';
 import type { TemplateInputs } from '#cli/types/generation/templates.ts';
-import { tablesFor, harnessFolders } from '#cli/policy/settings/entries.ts';
+import { tablesFor, harnessFolders, declaredArchitectures } from '#cli/policy/settings/entries.ts';
 import type { ScopeView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/settings.ts';
 import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation/eslint.ts';
 import ESLINT_ALL_RULES from '../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
@@ -84,10 +84,8 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
 // the scope that names them, so a nested scope never takes the elements of the root.
 function boundaryBlocks(context: EslintContext): EslintBlock[] {
     const { policy, scopes, nodeFiles } = context;
-    return scopes.flatMap(({ scope, view }): EslintBlock[] => {
+    return declaredArchitectures(policy, scopes).map(({ selection: { scope, view }, architecture: table }) => {
         const { path } = scope;
-        const table = path === '' ? policy.architecture : policy.scopeTables[path]?.architecture;
-        if (table === undefined || table.modules.length === 0) return [];
         const prefix = path === '' ? '' : `${path}/`;
         // Each element is a category of files, because boundaries matches its element patterns against folders only.
         const categories = table.modules.map((element) => ({
@@ -98,22 +96,20 @@ function boundaryBlocks(context: EslintContext): EslintBlock[] {
             from: { file: { categories: entry.from } },
             allow: { to: { file: { categories: { anyOf: entry.to } } } },
         }));
-        return [
-            {
-                files: [
-                    `${prefix}${eslintSourcePattern('javascript', 'typescript')}`,
-                    ...eslintNodePatterns(
-                        nodeFiles.filter((file) => isInScope(file, path)),
-                        '',
-                    ),
-                ],
-                settings: {
-                    'boundaries/files': categories,
-                    'boundaries/ignore': (view.settings['tests'] as string[]).map((pattern) => `${prefix}${pattern}`),
-                },
-                rules: { 'boundaries/dependencies': ['error', { default: 'disallow', policies }] },
+        return {
+            files: [
+                `${prefix}${eslintSourcePattern('javascript', 'typescript')}`,
+                ...eslintNodePatterns(
+                    nodeFiles.filter((file) => isInScope(file, path)),
+                    '',
+                ),
+            ],
+            settings: {
+                'boundaries/files': categories,
+                'boundaries/ignore': (view.settings['tests'] as string[]).map((pattern) => `${prefix}${pattern}`),
             },
-        ];
+            rules: { 'boundaries/dependencies': ['error', { default: 'disallow', policies }] },
+        };
     });
 }
 

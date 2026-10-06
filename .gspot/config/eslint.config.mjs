@@ -4,7 +4,9 @@ import { fileURLToPath } from 'node:url';
 import eslint from '@eslint/js';
 import gspot from '@gspothq/eslint-plugin';
 
+
 import boundaries from 'eslint-plugin-boundaries';
+
 import importX from 'eslint-plugin-import-x';
 import jsdoc from 'eslint-plugin-jsdoc';
 import nodePlugin from 'eslint-plugin-n';

@@ -7,6 +7,7 @@ import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { privateToolInstallation } from '#cli/tools/installation.ts';
 import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
+import { declaredArchitectures } from '#cli/policy/settings/entries.ts';
 
 /**
  * Companion tools consumed by a check's command and its selected native configuration.
@@ -58,6 +59,7 @@ export function requiredToolNames(check: PlannedCheck, runner: string | undefine
  */
 export function applicableManifests(session: Session): Manifest[] {
     const checks = configuredChecks(session, true);
+    const architectures = declaredArchitectures(session.policyFiles.policy, session.scopes);
     const needed = new Set(checks.flatMap((check) => requiredToolNames(check, session.policyFiles.policy.run_with)));
     const selected = everyManifest(session.scopes);
     const owners = new Set(selected);
@@ -77,8 +79,9 @@ export function applicableManifests(session: Session): Manifest[] {
             tools: manifest.tools
                 .filter(
                     (tool) =>
-                        tool.name !== '@eslint-community/eslint-plugin-eslint-comments' ||
-                        session.policyFiles.policy.require_reasons,
+                        (tool.name !== '@eslint-community/eslint-plugin-eslint-comments' ||
+                            session.policyFiles.policy.require_reasons) &&
+                        (tool.name !== 'eslint-plugin-boundaries' || architectures.length > 0),
                 )
                 .filter(
                     (tool) =>

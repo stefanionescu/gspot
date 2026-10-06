@@ -13,8 +13,10 @@ import type {
     SettingState,
     KnownSettings,
     PolicyLocation,
+    ScopeSelection,
     ResolvedSetting,
     NamingLanguageTable,
+    ArchitectureDeclaration,
 } from '#cli/types/policy/settings.ts';
 
 function plain(value: unknown): Reasoned<unknown> {
@@ -162,6 +164,20 @@ export function tablesFor(policy: Policy, scope: string | undefined): PolicyTabl
             path,
             name: path === '' ? POLICY_FILE : `[[scope]] ${path}`,
         }));
+}
+
+/**
+ * Explicit module contracts in the resolved scopes, without inheriting a parent's modules.
+ * @param policy the validated root and scoped architecture tables
+ * @param scopes the resolved configuration selections
+ * @returns declarations consumed by native architecture rules and their tool requirements
+ */
+export function declaredArchitectures(policy: Policy, scopes: ScopeSelection[]): ArchitectureDeclaration[] {
+    return scopes.flatMap((selection) => {
+        const path = selection.scope.path;
+        const architecture = path === '' ? policy.architecture : policy.scopeTables[path]?.architecture;
+        return architecture === undefined || architecture.modules.length === 0 ? [] : [{ selection, architecture }];
+    });
 }
 
 /**

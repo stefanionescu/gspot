@@ -162,6 +162,9 @@ export type ArchitectureSettings = Omit<Defined<Required<RawArchitecture>>, 'imp
     imports_allowed: ArchitectureAllow[];
 };
 
+/** An explicit module contract and the scope whose files and test patterns it owns. */
+export type ArchitectureDeclaration = { selection: ScopeSelection; architecture: ArchitectureSettings };
+
 /** Dotted mutation key split into its containing tables and leaf field. */
 export type PolicyKey = { path: string[]; name: string };
 /** Root or scoped values and their source-document location. */
