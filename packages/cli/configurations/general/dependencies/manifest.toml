@@ -4,7 +4,8 @@ always_selected = true
 description = "Dependency health: known advisories, one version for each dependency, exact pins, one package manager, and a lockfile that matches its manifest."
 
 [detect]
-filenames = ["package.json", "pyproject.toml", "Package.swift", "Cargo.toml", "go.mod", "Gemfile"]
+project_files = ["package.json"]
+filenames = ["pyproject.toml", "Package.swift", "Cargo.toml", "go.mod", "Gemfile"]
 
 [files]
 filenames = ["package.json", "bun.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bunfig.toml", ".npmrc", "pnpm-workspace.yaml", "pyproject.toml", "uv.lock", "requirements*.txt", "Package.swift", "Package.resolved", "Cargo.toml", "Cargo.lock", "go.mod", "go.sum", "Gemfile.lock"]

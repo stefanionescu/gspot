@@ -22,6 +22,7 @@ configurations = [
     "format",
     "gspot",
     "structure",
+    "javascript",
 ]
 run_with = "mise"
 dependencies.scanner = "@socketsecurity/bun-security-scanner"
