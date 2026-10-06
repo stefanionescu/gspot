@@ -823,7 +823,6 @@ reason = "The database and library namespaces match the behavioral check owners.
 
 [[structure.lone_files_allowed]]
 paths = [
-    "tests/cli/checks/general/files",
     "tests/cli/checks/general/security",
     "tests/cli/docs",
     "tests/cli/parsers/naming",

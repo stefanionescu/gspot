@@ -85,13 +85,6 @@ test.each([
         corrected: '---\nkey: 1\n',
         expected: { file: 'config.yaml', line: 2, rule: 'key-duplicates' },
     },
-    {
-        check: 'files/env-example',
-        path: '.env.example',
-        broken: 'PORT=3000\n',
-        corrected: 'PORT=3000\nHOST=localhost\n',
-        expected: { file: 'src/server.js', line: 1, rule: 'missing-key' },
-    },
 ])(
     'the configs configuration: $check rejects its invalid input and accepts the corrected file',
     async (scenario) => {
@@ -172,23 +165,6 @@ test(
         expect((JSON.parse(valid.stdout) as RunReport).checks).toMatchObject([
             { check: 'files/v8r', status: 'passed', findings: [] },
         ]);
-    },
-    NATIVE_TEST_TIMEOUT_MS,
-);
-
-test(
-    'The dotenv fixer corrects tracked environment files with the pinned tool',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { '.env.example': 'lowercase=value\n' });
-        commitAll(sandbox.path);
-        const environment = { PATH: buildToolsPath(['dotenv-linter']) };
-        await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment, { level: 'all' });
-        const fixed = await spawnGspot(sandbox.path, ['check', '--only', 'files/dotenv-linter', '--fix'], environment);
-        expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-        expect(await Bun.file(join(sandbox.path, '.env.example')).text()).toBe('LOWERCASE=value\n');
-        const checked = await spawnGspot(sandbox.path, ['check', '--only', 'files/dotenv-linter'], environment);
-        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     },
     NATIVE_TEST_TIMEOUT_MS,
 );

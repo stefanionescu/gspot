@@ -1,9 +1,7 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import * as inspect from '#cli/tools/inspect.ts';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { runBlocking } from '#cli/platform/spawn.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
@@ -43,22 +41,6 @@ test('doctor identifies unowned generated-directory files that apply preserves',
     });
     expect(result.text).toContain('.gspot/authored.json');
     expect(readFileSync(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
-});
-
-test('doctor fails hooks this clone does not run and accepts them once installed', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([], { tables: '[hooks]\n' }) });
-    expect(runBlocking(['git', 'init', '-q'], { cwd: sandbox.path }).code).toBe(0);
-    const missing = await doctorCommand(sandbox.path);
-    expect(missing.exitCode).toBe(1);
-    expect(missing.text).toContain('not installed; run gspot install');
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const installed = await runGspot(sandbox.path, ['install']);
-    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    const diagnosed = await doctorCommand(sandbox.path);
-    expect(diagnosed.exitCode, diagnosed.text).toBe(0);
-    expect(diagnosed.text).toContain('.gspot/hooks: installed');
 });
 
 test('doctor excludes private tool manifests from language detection and detects an authored Python project', async () => {

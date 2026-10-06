@@ -4,7 +4,6 @@ import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { actionlint } from '#cli/checks/tool/actions.ts';
 import { vale } from '#cli/checks/general/prose/vale.ts';
 import { ansibleLint } from '#cli/checks/tool/ansible.ts';
-import { envExample } from '#cli/checks/general/files.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
 import { gspotDrift } from '#cli/checks/general/gspot.ts';
 import { expoDoctor } from '#cli/checks/framework/expo.ts';
@@ -73,11 +72,11 @@ import { swiftBuild, swiftPeriphery, swiftlintAnalyze } from '#cli/checks/langua
 import { svgo, deadAssets, webManifest, securityHeaders } from '#cli/checks/general/site/source.ts';
 import { importComments as swiftImportComments } from '#cli/checks/language/swift/import-comments.ts';
 import { staleExclusions as pythonStaleExclusions } from '#cli/checks/language/python/basedpyright.ts';
-import { envFiles, trufflehog, gitleaksHistory, gitleaksBaseline } from '#cli/checks/general/secrets.ts';
 import { importComments as pythonImportComments } from '#cli/checks/language/python/imports/comments.ts';
 import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { sleeps, disabled, recording, xctestCoverage, xctestReferences } from '#cli/checks/tool/xctest.ts';
 import { sitemap, purgecss, siteSize, brokenLinks, htmlValidate } from '#cli/checks/general/site/output.ts';
+import { envFiles, envExample, trufflehog, gitleaksHistory, gitleaksBaseline } from '#cli/checks/general/secrets.ts';
 import { relations as drizzleRelations, migrations as drizzleMigrationsFresh } from '#cli/checks/library/drizzle.ts';
 import { privateBeforePublic as swiftPrivateBeforePublic } from '#cli/checks/language/swift/private-before-public.ts';
 import { nextBuild, nextTypes, versionPairs, routeSegments, nextConfiguration } from '#cli/checks/framework/nextjs.ts';
@@ -147,7 +146,7 @@ export const CHECKS: CheckRegistry = {
     'docs/readme-shape': { engine: readmeShape },
     'markdown/fences': { engine: fences },
     'duplication/jscpd': { engine: jscpd },
-    'files/env-example': { engine: envExample },
+    'secrets/env-example': { engine: envExample },
     'secrets/env-files': { engine: envFiles },
     'security/codeql': { engine: codeql },
     'secrets/gitleaks-baseline': { engine: gitleaksBaseline },

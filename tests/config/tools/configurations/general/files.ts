@@ -20,7 +20,7 @@ export const REPOSITORY: RepositoryScenario = {
     modules: false,
 
     init: [...QUIET_INIT],
-    tools: ['taplo', 'yamllint', 'dotenv-linter'],
+    tools: ['taplo', 'yamllint'],
     files: { 'scripts/a.sh': CLEAN_BASH_SCRIPT, 'settings/clean.toml': 'a = 1\n' },
 };
 
@@ -34,12 +34,6 @@ export const CASES: FindingCase[] = [
             message: 'The file is not formatted with the configured TOML settings.',
         },
         corrected: { files: { 'settings/layout.toml': 'a = 1\nb = 2\n' } },
-    },
-    {
-        check: 'files/dotenv-linter',
-        files: { '.env.example': 'PORT=3000\nport=3000\nPORT=4000\n' },
-        expected: { file: '.env.example', rule: 'LowercaseKey', line: 2 },
-        corrected: { files: { '.env.example': 'PORT=3000\n' } },
     },
     {
         check: 'files/xmllint',

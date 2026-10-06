@@ -12,7 +12,7 @@ import { NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { testKeyId, secretSettings } from '#tests/config/harness/secrets.ts';
-import { VERIFIER_TOKENS } from '#tests/config/tools/configurations/general/secrets-pushed.ts';
+import { VERIFIER_TOKENS } from '#tests/config/tools/configurations/general/secrets/pushed.ts';
 import type { SecretHistory, SecretVerifier } from '#tests/types/tools/configurations/general/secrets.ts';
 
 /** Creates independent clean and leaked histories whose final trees contain no test files. */

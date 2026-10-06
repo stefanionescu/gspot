@@ -5,8 +5,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { envExample } from '#cli/checks/general/files.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
+import { envExample } from '#cli/checks/general/secrets.ts';
 
 test('environment templates preserve first missing reads per file and escaped custom accessors', async () => {
     await using sandbox = await testdir();
@@ -26,7 +26,7 @@ test('environment templates preserve first missing reads per file and escaped cu
             dotenv: { templates: ['example.env'], accessor: 'config.$env' },
         }),
     );
-    const input = buildEngineInput(await openSession(sandbox.path), 'files/env-example', {
+    const input = buildEngineInput(await openSession(sandbox.path), 'secrets/env-example', {
         paths: Object.keys(source),
     });
     expect(envExample(input).map(({ file, line, message: diagnostic }) => ({ file, line, diagnostic }))).toStrictEqual([
@@ -38,7 +38,7 @@ test('environment templates preserve first missing reads per file and escaped cu
     await Bun.write(`${sandbox.path}/config/example.env`, 'KNOWN=value\nMISSING=value\nCUSTOM=value\nOTHER=value\n');
     expect(
         envExample(
-            buildEngineInput(await openSession(sandbox.path), 'files/env-example', { paths: Object.keys(source) }),
+            buildEngineInput(await openSession(sandbox.path), 'secrets/env-example', { paths: Object.keys(source) }),
         ),
     ).toStrictEqual([]);
 });
@@ -56,7 +56,7 @@ test('environment reads without a template in their scope remain unchecked', asy
             tables: '[[scope]]\npath = "app"\nconfigurations = ["files"]\n',
         }),
     );
-    const input = buildEngineInput(await openSession(sandbox.path), 'files/env-example', {
+    const input = buildEngineInput(await openSession(sandbox.path), 'secrets/env-example', {
         scope: 'app',
         paths: ['.env.example', 'app/source.ts'],
     });
@@ -78,7 +78,7 @@ test('modern environment accessors in component and module files require matchin
         'notes.txt': 'import.meta.env.UNREAD_API; Deno.env.get("UNREAD_API");\n',
     };
     await createFileTree(sandbox.path, { 'gspot.toml': policy, '.env.example': 'KNOWN=example\n', ...sources });
-    const rejected = envExample(buildEngineInput(await openSession(sandbox.path), 'files/env-example'));
+    const rejected = envExample(buildEngineInput(await openSession(sandbox.path), 'secrets/env-example'));
     expect(rejected.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'app.astro', line: 2, rule: 'missing-key' },
         { file: 'app.svelte', line: 1, rule: 'missing-key' },
@@ -92,7 +92,7 @@ test('modern environment accessors in component and module files require matchin
         join(sandbox.path, '.env.example'),
         'KNOWN=example\nVITE_API=example\nSVELTE_API=example\nVUE_API=example\nDENO_API=example\nMODULE_API=example\nCOMMON_API=example\nLEGACY_API=example\n',
     );
-    expect(envExample(buildEngineInput(await openSession(sandbox.path), 'files/env-example'))).toStrictEqual([]);
+    expect(envExample(buildEngineInput(await openSession(sandbox.path), 'secrets/env-example'))).toStrictEqual([]);
     expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
     for (const [path, text] of Object.entries(sources))
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(text);
