@@ -96,6 +96,7 @@ run.
 - `eslint`, `grouped`, `lines`, and `none` support other output contracts described in the reference.
 - `format = "typos"` reads the JSON of typos. It turns byte offsets into character columns.
 - `format = "markdownlint"` reads the results of markdownlint.
+- `format = "knip"` reads Knip JSON and preserves issue categories and source positions.
 
 Malformed output counts as a failed run, exit code `2`. The
 [policy reference](/reference/configuration/#check) lists every field.

@@ -12,12 +12,13 @@ export const OUTPUTS: NonNullable<CheckSpec['output']>[] = [
     { format: 'none' },
     { format: 'json', fields: { file: 'file', line: 'line', rule: 'rule', message: 'message' } },
     { format: 'eslint' },
+    { format: 'knip' },
     { format: 'semgrep' },
     { format: 'typos' },
     { format: 'trufflehog-json' },
     { format: 'markdownlint' },
 ];
 
-export const JSON_FORMATS = new Set(['json', 'eslint', 'semgrep', 'typos', 'trufflehog-json', 'markdownlint']);
+export const JSON_FORMATS = new Set(['json', 'eslint', 'knip', 'semgrep', 'typos', 'trufflehog-json', 'markdownlint']);
 
 export const FOREIGN = 'not the output of any tool {\n';

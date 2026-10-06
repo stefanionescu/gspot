@@ -268,9 +268,9 @@ example = "An exported declaration that no selected entry point uses reports an 
 level = "recommended"
 stage = "push"
 runs = "scope"
-command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "compact", "{workspace:--workspace}"]
+command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "json", "{workspace:--workspace}"]
 cwd = "root"
-output = {format = "regex", pattern = "^(?<file>[^:\\s]+)(?::\\s*(?<message>.*))?$"}
+output = {format = "knip"}
 summary = "Finds files, exports, and dependencies nothing uses."
 why = "Dead code is read, maintained, and shipped for nobody."
 help = "Delete what knip names, or add a knip entry point with gspot set tools.knip.entry if the file is loaded in a way knip cannot see."

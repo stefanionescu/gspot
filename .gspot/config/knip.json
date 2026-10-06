@@ -1,18 +1,5 @@
 {
     "$schema": "https://unpkg.com/knip@6/schema.json",
-    "entry": [
-        "packages/eslint-plugin/src/plugin.ts",
-        "packages/cli/src/tools/eslint/worker.ts",
-        "docs/src/content/reference/collection.ts",
-        "docs/src/route-metadata.ts",
-        "src/main.{ts,js}",
-        "src/index.{ts,js}",
-        "src/server.{ts,js}",
-        "scripts/**/*.{ts,js,mjs}",
-        "**/*.{test,spec}.{ts,tsx,js}",
-        "tests/**/*.{ts,js}",
-        ".markdownlint-cli2.mjs"
-    ],
     "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}"],
     "ignoreDependencies": [
         "@gspothq/cli",
@@ -98,9 +85,6 @@
         "wrangler",
         "yamllint",
         "zizmor",
-        "git",
-        "bunx",
-        "npx",
         "mise"
     ],
     "ignoreExportsUsedInFile": true,

@@ -2,6 +2,7 @@ import type { z } from 'zod';
 import type { outputSchema } from '#cli/parsers/schema/output.ts';
 
 import type {
+    knipReportSchema,
     typosEntrySchema,
     eslintReportSchema,
     eslintDiagnosticSchema,
@@ -15,6 +16,7 @@ export type OutputSpec = z.infer<typeof outputSchema>;
 export type EslintDiagnostic = z.infer<typeof eslintDiagnosticSchema>;
 export type EslintReport = z.infer<typeof eslintReportSchema>;
 export type MarkdownlintEntry = z.infer<typeof markdownlintReportSchema>[number];
+export type KnipReport = z.infer<typeof knipReportSchema>;
 export type TypoEntry = z.infer<typeof typosEntrySchema>;
 
 /** Output patterns and metadata owned by the parsing boundary. */

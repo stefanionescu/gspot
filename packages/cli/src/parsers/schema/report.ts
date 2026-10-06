@@ -73,3 +73,39 @@ export const typosEntrySchema = z.object({
     typo: z.string().min(1),
     corrections: z.array(z.string()).nullable(),
 });
+
+export const knipSymbolSchema = z.object({
+    name: z.string().min(1),
+    namespace: z.string().optional(),
+    kind: z.string().optional(),
+    specifier: z.string().optional(),
+    line: z.number().int().positive().optional(),
+    col: z.number().int().positive().optional(),
+    pos: z.number().int().nonnegative().optional(),
+});
+
+export const knipReportSchema = z.strictObject({
+    issues: z.array(
+        z.strictObject({
+            file: z.string().min(1),
+            owners: z.array(z.object({ name: z.string() })).optional(),
+            binaries: z.array(knipSymbolSchema).optional(),
+            catalog: z.array(knipSymbolSchema).optional(),
+            catalogReferences: z.array(knipSymbolSchema).optional(),
+            cycles: z.array(z.array(knipSymbolSchema).min(1)).optional(),
+            dependencies: z.array(knipSymbolSchema).optional(),
+            devDependencies: z.array(knipSymbolSchema).optional(),
+            duplicates: z.array(z.array(knipSymbolSchema).min(1)).optional(),
+            enumMembers: z.array(knipSymbolSchema).optional(),
+            exports: z.array(knipSymbolSchema).optional(),
+            files: z.array(knipSymbolSchema).optional(),
+            namespaceMembers: z.array(knipSymbolSchema).optional(),
+            nsExports: z.array(knipSymbolSchema).optional(),
+            nsTypes: z.array(knipSymbolSchema).optional(),
+            optionalPeerDependencies: z.array(knipSymbolSchema).optional(),
+            types: z.array(knipSymbolSchema).optional(),
+            unlisted: z.array(knipSymbolSchema).optional(),
+            unresolved: z.array(knipSymbolSchema).optional(),
+        }),
+    ),
+});

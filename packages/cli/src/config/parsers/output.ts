@@ -19,3 +19,24 @@ export const ESLINT_ERROR = 2;
 
 /** Semgrep's native source parsing diagnostic exit code. */
 export const SEMGREP_PARSE_EXIT = 3;
+
+/** Knip JSON categories and the meaning retained in every finding. */
+export const KNIP_ISSUE_MESSAGES = {
+    binaries: 'Unlisted binary',
+    catalog: 'Unused catalog entry',
+    catalogReferences: 'Unresolved catalog reference',
+    cycles: 'Circular dependency',
+    dependencies: 'Unused dependency',
+    devDependencies: 'Unused development dependency',
+    duplicates: 'Duplicate export',
+    enumMembers: 'Unused exported enum member',
+    exports: 'Unused export',
+    files: 'Unused file',
+    namespaceMembers: 'Unused exported namespace member',
+    nsExports: 'Export in used namespace',
+    nsTypes: 'Exported type in used namespace',
+    optionalPeerDependencies: 'Referenced optional peer dependency',
+    types: 'Unused exported type',
+    unlisted: 'Unlisted dependency',
+    unresolved: 'Unresolved import',
+} as const;

@@ -4,6 +4,7 @@ import { realpathSync } from 'node:fs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { parseJson } from '#cli/parsers/output/json.ts';
+import { knipFindings } from '#cli/parsers/output/knip.ts';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/execution/runtime.ts';
 import { semgrepFindings } from '#cli/parsers/output/semgrep.ts';
@@ -127,6 +128,7 @@ const FORMAT_READERS: Record<OutputSpec['format'], (parsing: Parsing, output: Ou
     'trufflehog-json': ({ spec, stdout }) => trufflehogFindings(spec.name, stdout, spec.help),
     typos: ({ spec, stdout, root, cwd }) => typosFindings(spec.name, stdout, spec.help, root, cwd),
     markdownlint: ({ spec, stdout, root, cwd }) => markdownlintFindings(spec.name, stdout, spec.help, root, cwd),
+    knip: ({ spec, stdout }) => knipFindings(spec.name, stdout, spec.help),
     eslint: ({ spec, stdout }) => eslintFindings(spec.name, stdout, spec.help),
     semgrep: ({ spec, stdout }) => semgrepFindings(spec.name, stdout, spec.help),
     lines: ({ spec, text }) =>

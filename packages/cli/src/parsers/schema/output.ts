@@ -6,6 +6,7 @@ export const outputSchema = z.strictObject({
         'regex',
         'grouped',
         'eslint',
+        'knip',
         'semgrep',
         'trufflehog-json',
         'typos',
