@@ -70,7 +70,7 @@
     ],
     "relocations": {
         "source": "findings/relocations.json",
-        "items": 2833
+        "items": 2834
     },
     "checklists": [
         {
@@ -3129,10 +3129,26 @@
                 "Regression proof: /tmp/gspot-site-html-scope-baseline-proof.json temporarily restores both production owners to d37e8a5582e844fb624acd148c028951dd188dd9 and restores every current byte afterward. The exact final four native cases fail (zero passes, four failures, 7.56 seconds). The site-only cases demonstrate the actual lost sibling diagnostic: both checks incorrectly pass with exit code zero. The root-HTML cases fail the native configuration isolation assertion. /tmp/gspot-site-html-scope-native-final.log passes all four corrected cases with 48 assertions and zero failures (11.01 seconds).",
                 "The affected CLI family initially passes 100 cases and exposes one existing report fixture carrying site/build-reproducible as the HTML engine identity. Give every report fixture its actual check identity through SiteReportCase and buildEngineInput; preserve all fatal, absent, malformed, defect and correction assertions. Change no product lookup fallback and weaken no gate. Keep the built template byte-identical and still in the HTML owner for this prerequisite commit. Move ownership separately after delivery; keep original findings 044 and 045 open.",
                 "Final affected verification: /tmp/gspot-site-html-scope-cli-final.log passes all 101 cases across eleven actual files with 255 assertions and zero failures (4.35 seconds). All four TypeScript targets pass (8.80 seconds), /tmp/gspot-site-html-scope-types-final.log. Affected ESLint, Prettier and git diff --check pass. Documentation builds 314 pages and validates every local link and fragment (3.47 seconds), /tmp/gspot-site-html-scope-docs.log. Both canonical apply runs report all 139 outputs unchanged. /tmp/gspot-site-html-scope-ledger-proof.json retains every original record and immutable source field and the initial 990-record mapping; no status changes, 809 open and 2130 closed. Preserve CLI/plugin 60-second and tools/packages 900-second limits with child operations bounded by the remaining test budget.",
-                "Actual staged verification: /tmp/gspot-site-html-scope-staged.json exits zero with 67 passed checks, nine explicit skips, zero failures or errors and duration 46373 milliseconds. Use the existing authenticated GitHub session only in the child environment for normal API-backed verification; print and persist no credential. All normal Semgrep, OSV, Taplo, Pinact and native startup gates remain enabled. Add no suppression, ignored check, offline-only strategy, altered coverage level or product workaround."
+                "Actual staged verification: /tmp/gspot-site-html-scope-staged.json exits zero with 67 passed checks, nine explicit skips, zero failures or errors and duration 46373 milliseconds. Use the existing authenticated GitHub session only in the child environment for normal API-backed verification; print and persist no credential. All normal Semgrep, OSV, Taplo, Pinact and native startup gates remain enabled. Add no suppression, ignored check, offline-only strategy, altered coverage level or product workaround.",
+                "Batch 61 delivery: hook-enabled commit a5e1c3afc6fbc74e2bc432750723fe83aebf8631 and normal push to origin/main succeed. Commit code hooks pass 44 checks with two explicit skips and zero findings (7.1 seconds), followed by passing commit-message validation (0.4 seconds). An initial overlong body line was wrapped and the complete commit hooks rerun without bypass. Push hooks pass 67 checks with nine explicit skips and zero findings (43.3 seconds). HEAD, origin/main and remote main match and the tree is clean before the ownership batch. Logs: /tmp/gspot-site-html-scope-commit.log and push.log."
             ],
             "remaining": [
-                "Finish hook-enabled commit and normal push. Then complete the separate built-HTML ownership move and native accessibility rules, all remaining original records and separately authorized publication/deployment."
+                "Finish the separate built-HTML ownership move and native accessibility rules, all remaining original records and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Built HTML site configuration ownership",
+            "rows": ["slices/kits-web-languages/044"],
+            "outcome": "One original finding implemented; 808 records remain open.",
+            "evidence": [
+                "Move exactly the built-HTML [[config]] declaration from language/html/manifest.toml into general/site/manifest.toml and rename the shipped template into the same site owner. The scoped declaration, native rule settings, check and tool identities, targets, configuration asset bytes, level filters, prerequisites and engine behavior remain unchanged. The HTML configuration retains its native validator pin and template declaration; site already requires HTML. The move introduces no extra setting, enabling strategy, compatibility path or forwarding wrapper.",
+                "Complete generation equivalence: /tmp/gspot-html-owner-scoped-equivalence-proof.json compares every generated file path, content, kind, read-only flag and rule record in ten retained repositories: both levels across HTML-only, root site, ignored root site, nested site and ignored nested site. All generated outputs are identical before and after. HTML-only projects correctly contain no built configuration at either level; this part of the original finding was already fixed by the declared check-binding gate. The two actual generated configuration reference pages now list the built target under site and remove it from HTML. The asset remains exactly 676 bytes with SHA-256 c6b8a7eadbb266dfdc603e0c12451db0b7f271d4bca09c13126e2ce7e6bc6df2. Preserve the historical source quotation and both explicit scope and native-rule follow-up records.",
+                "The preceding separate behavior batch is required evidence: native rule exceptions must be scoped before changing the owner. This mechanical batch preserves the corrected generation in every nested and ignored context. Retain all four native public-CLI sibling-scope regressions and all existing test bodies and unique assertions. Update the relocation ledger and generated reference ownership through the manifest consumers; no live code, task or documentation import names the old shipped asset path.",
+                "Affected verification: /tmp/gspot-html-owner-scoped-cli.log passes all 101 cases with 255 assertions across eleven files (4.45 seconds). /tmp/gspot-html-owner-scoped-native.log passes all four real public-CLI scope cases at both levels with 48 assertions and zero failures (12.90 seconds). All four TypeScript targets pass (10.18 seconds), /tmp/gspot-html-owner-scoped-types.log. Documentation builds 314 pages and validates every local link and fragment; both canonical apply runs leave all 139 outputs unchanged. git diff --check and affected formatting pass. The asset is an exact rename and requires no reformatting. The ledger audit retains all 2939 original IDs and immutable fields, every preceding relocation record and the original 990-record map; only finding 044 closes, leaving 808 open.",
+                "Actual staged verification: /tmp/gspot-html-owner-scoped-staged.json exits zero with 46 passed checks, three explicit skips, zero failures or errors and duration 39278 milliseconds. Preserve all normal repository gates and native startup without suppressions, ignores, offline-only flags or product weakening. Git recognizes the shipped asset as a 100 percent rename; only the declaration owner, reference ownership and relocation/evidence records change."
+            ],
+            "remaining": [
+                "Finish hook-enabled commit and normal push. Continue native accessibility finding 045 and every remaining original record, supported-platform/native and delivered-package checks and separately authorized publication/deployment."
             ]
         }
     ],
@@ -7055,6 +7071,15 @@
                     "packages/cli/src/checks/general/site/output.ts"
                 ],
                 "status": "Behavioral prerequisite before the separate built-HTML ownership move; retain the original finding open."
+            },
+            {
+                "id": "built-html-site-configuration-ownership",
+                "records": ["slices/kits-web-languages/044"],
+                "owners": [
+                    "packages/cli/configurations/general/site/manifest.toml",
+                    "packages/cli/configurations/general/site/html-validate-built.json.tmpl"
+                ],
+                "status": "Move the declaration and byte-identical asset to the site owner after delivering scoped native execution."
             }
         ]
     }

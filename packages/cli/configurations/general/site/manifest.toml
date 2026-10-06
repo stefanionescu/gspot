@@ -29,6 +29,14 @@ name = "purgecss"
 version = "7.0.2"
 npm = "purgecss"
 
+[[config]]
+target = ".gspot/config/html-validate-built.json"
+scoped = true
+tool = "html-validate"
+check = "site/html-validate"
+rule_keys = ["rules"]
+generated_header = false
+
 [[check]]
 name = "build"
 title = "Build the site"

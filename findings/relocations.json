@@ -16843,5 +16843,10 @@
         "from": "tests/cli/checks/general/prose/hidden.test.ts",
         "to": "tests/cli/checks/general/hidden.test.ts",
         "type": false
+    },
+    {
+        "from": "packages/cli/configurations/language/html/html-validate-built.json.tmpl",
+        "to": "packages/cli/configurations/general/site/html-validate-built.json.tmpl",
+        "type": false
     }
 ]

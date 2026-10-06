@@ -843,10 +843,11 @@
         "finding": "| `kits/language/html/manifest.toml:35-38`, `kits/language/html/html-validate-built.json.tmpl:1-12` | Only `site/html-validate` reads `html-validate-built.json` (`src/checks/general/site/output.ts:94`), and the file already uses the site check's ignores. Every HTML project without the site kit gets a file that nothing reads. | Move the `[[config]]` and the template to the site kit. |",
         "owner": "`kits/language/html/manifest.toml:35-38`, `kits/language/html/html-validate-built.json.tmpl:1-12`",
         "location": null,
-        "status": "open",
-        "outcome": null,
+        "status": "closed",
+        "outcome": "implemented",
         "verification": [
-            "Batch 61 prerequisite: built HTML declarations and native execution now preserve per-site scope configuration and whole-scope rule exceptions. Four public-CLI native regressions fail against the previous owners and pass with the fix. Keep this record open until the separate declaration/template ownership move is implemented and verified. Evidence: findings/progress.json, Built HTML native scope isolation."
+            "Batch 61 prerequisite: built HTML declarations and native execution now preserve per-site scope configuration and whole-scope rule exceptions. Four public-CLI native regressions fail against the previous owners and pass with the fix. Keep this record open until the separate declaration/template ownership move is implemented and verified. Evidence: findings/progress.json, Built HTML native scope isolation.",
+            "Batch 62: move the scoped built-HTML declaration and byte-identical template into the site owner. Complete generated outputs remain identical in ten repositories across both levels and root, ignored and nested contexts; the actual generated reference pages now list the asset under site. Native sibling-scope behavior was delivered separately in a5e1c3afc6fbc74e2bc432750723fe83aebf8631. Evidence: findings/progress.json, Built HTML site configuration ownership."
         ]
     },
     {
