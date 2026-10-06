@@ -29,16 +29,11 @@ async function linkedStyles(directory: string, kind: string): Promise<string> {
     return root;
 }
 
-test.each(['configuration', 'package'])(
-    'Vale package detection rejects a linked %s without reading outside styles',
-    async (kind) => {
-        await using directory = await testdir();
-        const root = await linkedStyles(directory.path, kind);
-        expect(() => hasValePackages(root)).toThrow(/lifecycle/iu);
-        expect(readFileSync(join(directory.path, 'outside/terms.yml'), 'utf8')).toBe('external bytes\n');
-        expect(readFileSync(join(directory.path, 'outside/vale.ini'), 'utf8')).toBe(CONFIG);
-    },
-);
+test.each(['configuration', 'package'])('Vale package detection rejects a linked %s', async (kind) => {
+    await using directory = await testdir();
+    const root = await linkedStyles(directory.path, kind);
+    expect(() => hasValePackages(root)).toThrow(/lifecycle/iu);
+});
 
 test.each(['package', 'nested directory'])(
     'Vale package removal refuses a linked %s without deleting outside styles',

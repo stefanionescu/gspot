@@ -5,69 +5,37 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { aliasesFor } from '#cli/repository/aliases.ts';
 import { openSession } from '#cli/execution/session.ts';
-import { rmSync, mkdirSync, unlinkSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { ALIAS_INPUTS, ALIAS_PROJECT } from '#tests/config/cli/repository/aliases.ts';
 
-test.each(['package.json', 'tsconfig.json'])(
-    'generation reports malformed %s instead of dropping aliases',
-    async (path) => {
+test.each(ALIAS_INPUTS)('alias reads report malformed $path', async ({ path, diagnostic }) => {
+    await using sandbox = await testdir({ [path]: '{ "compilerOptions": { "paths": {} },' });
+    expect(() => aliasesFor(sandbox.path, '')).toThrow(diagnostic.replace('{PATH}', join(sandbox.path, path)));
+});
+
+test.each(ALIAS_INPUTS)(
+    'alias reads refuse an authored $path linked outside the repository',
+    async ({ path, valid }) => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['typescript']),
-            'source.ts': 'export const value = 1;\n',
-            [path]: '{}',
-        });
-        const session = await openSession(sandbox.path);
-        writeFileSync(join(sandbox.path, path), '{ "compilerOptions": { "paths": {} },');
-        expect(() => emitAll(session)).toThrow(
-            path === 'tsconfig.json'
-                ? `Cannot read TypeScript configuration ${join(sandbox.path, path)}`
-                : 'Cannot inspect manifest package.json:',
-        );
-        rmSync(join(sandbox.path, path), { recursive: true });
-        writeFileSync(
-            join(sandbox.path, path),
-            path === 'package.json'
-                ? '{"imports":{"#app/*":"./src/*"}}'
-                : '{"compilerOptions":{"paths":{"#app/*":["./src/*"]}}}',
-        );
-        expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '#app/': 'src/' });
+        await using outside = await testdir({ [path]: valid });
+        symlinkSync(join(outside.path, path), join(sandbox.path, path));
+        expect(() => aliasesFor(sandbox.path, '')).toThrow('Source link leaves the repository');
     },
 );
 
-test('alias reads reject a package manifest linked outside the repository and accept corrected bytes', async () => {
-    await using sandbox = await testdir();
-    await using outside = await testdir();
-    await createFileTree(sandbox.path, {
-        'package.json': '{}',
+test('root and child aliases read their own declarations with compiler paths taking precedence', async () => {
+    await using sandbox = await testdir(ALIAS_PROJECT);
+    expect(aliasesFor(sandbox.path, '')).toStrictEqual({
+        '#app/': 'src/',
+        '#root/': 'root/',
+        '@root/': 'typed/',
+        '#shared/': 'compiler/',
     });
-    await createFileTree(outside.path, { 'package.json': '{"imports":{"#private/*":"./private/*"}}' });
-    const path = join(sandbox.path, 'package.json');
-    unlinkSync(path);
-    symlinkSync(join(outside.path, 'package.json'), path);
-    expect(() => aliasesFor(sandbox.path, '')).toThrow('Source link leaves the repository');
-    unlinkSync(path);
-    writeFileSync(path, '{"imports":{"#app/*":"./src/*"}}');
-    expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '#app/': 'src/' });
-    expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{"imports":{"#private/*":"./private/*"}}');
-});
-
-test('TypeScript alias reads refuse an authored configuration linked outside the repository', async () => {
-    await using sandbox = await testdir();
-    await using outside = await testdir();
-    await createFileTree(sandbox.path, {
-        'tsconfig.json': '{"extends":"./base.json"}',
-        'base.json': '{}',
+    expect(aliasesFor(sandbox.path, 'web')).toStrictEqual({
+        '#app/': 'web/src/',
+        '@web/': 'web/typed/',
+        '#shared/': 'web/compiler/',
     });
-    await createFileTree(outside.path, {
-        'config.json': '{"compilerOptions":{"paths":{"@private/*":["./private/*"]}}}',
-    });
-    const path = join(sandbox.path, 'tsconfig.json');
-    unlinkSync(path);
-    symlinkSync(join(outside.path, 'config.json'), path);
-    expect(() => aliasesFor(sandbox.path, '')).toThrow('Source link leaves the repository');
-    unlinkSync(path);
-    writeFileSync(path, '{"compilerOptions":{"paths":{"@app/*":["./src/*"]}}}');
-    expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '@app/': 'src/' });
 });
 
 test('alias reads follow an extends into a linked node_modules package', async () => {
@@ -80,7 +48,6 @@ test('alias reads follow an extends into a linked node_modules package', async (
     mkdirSync(join(sandbox.path, 'node_modules'));
     symlinkSync(dependency.path, join(sandbox.path, 'node_modules/shared-config'), 'dir');
     expect(aliasesFor(sandbox.path, '')).toStrictEqual({});
-    expect(await Bun.file(join(dependency.path, 'tsconfig.json')).text()).toBe('{"compilerOptions":{"strict":true}}');
 });
 
 test('alias discovery accepts absent configuration files', async () => {
@@ -102,20 +69,24 @@ test('inherited aliases resolve from the configuration that declares them', asyn
     expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '@app/': 'app/src/' });
 });
 
-test('generation preserves authored aliases and reports missing authored bases', async () => {
+test('generated compiler configurations extend their authored alias owners', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['typescript']),
+        'gspot.toml': buildPolicy(['typescript'], {
+            level: 'all',
+            tables: '[[scope]]\npath = "web"\nconfigurations = ["typescript"]\n',
+        }),
+        'web/tsconfig.json': ALIAS_PROJECT['web/tsconfig.json'],
+        'web/source.ts': 'export const count = 1;\n',
         'tsconfig.json': '{"compilerOptions":{"paths":{"@app/*":["./src/*"]}}}',
     });
     const session = await openSession(sandbox.path);
     expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '@app/': 'src/' });
-    expect(emitAll(session).files.some((file) => file.path === '.gspot/config/tsconfig.json')).toBe(true);
-    expect(await Bun.file(join(sandbox.path, '.gspot/config/tsconfig.json')).exists()).toBe(false);
-    writeFileSync(join(sandbox.path, 'tsconfig.json'), '{"extends":"./missing-base.json"}');
-    expect(() => aliasesFor(sandbox.path, '')).toThrow('missing-base.json');
-    writeFileSync(join(sandbox.path, 'missing-base.json'), '{"compilerOptions":{"paths":{"@app/*":["./src/*"]}}}');
-    expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '@app/': 'src/' });
+    const generated = emitAll(session).files;
+    const compiler = generated.find((file) => file.path === '.gspot/config/tsconfig.json')!;
+    const child = generated.find((file) => file.path === '.gspot/config/web/tsconfig.json')!;
+    expect(JSON.parse(compiler.content)).toMatchObject({ extends: '../../tsconfig.json' });
+    expect(JSON.parse(child.content)).toMatchObject({ extends: '../../../web/tsconfig.json' });
 });
 
 test('alias discovery accepts linked authored manifests and inherited compiler configurations inside the repository', async () => {
@@ -128,7 +99,9 @@ test('alias discovery accepts linked authored manifests and inherited compiler c
     symlinkSync('settings/manifest.json', join(sandbox.path, 'package.json'));
     symlinkSync('settings/compiler.json', join(sandbox.path, 'tsconfig.json'));
     expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '#package/': 'src/', '#compiler/': 'app/' });
-    expect(await Bun.file(join(sandbox.path, 'settings/manifest.json')).text()).toBe(
-        '{"imports":{"#package/*":"./src/*"}}',
-    );
+});
+
+test('alias discovery reports a missing authored base by its filename', async () => {
+    await using sandbox = await testdir({ 'tsconfig.json': '{"extends":"./missing-base.json"}' });
+    expect(() => aliasesFor(sandbox.path, '')).toThrow('missing-base.json');
 });

@@ -18976,10 +18976,37 @@
                 "Failure corrections: the first CLI/type runs exposed three list helper callers, spelling identity shorthand, permissive list inspection and inherited-list expectations; corrected without weakening product checks. The expanded planning cohort exposed two stale link-check expectations: it now asserts both project partitions and the original exclusion. Schema refusal cases name the actual paths field. ESLint had changed a deliberately insecure URL literal to HTTPS; the test now sets URL.protocol to http: explicitly. The first package run exposed prose.vocabulary rejecting saved reasons; its typed schema and resolved Vale consumer are fixed. Only final clean logs support closures.",
                 "Type/format/docs/canonical verification: /tmp/gspot-exception-reasons-types-complete.log passes all four TypeScript targets (9.21 seconds). Affected ESLint, Prettier and native Taplo passes are retained in all-eslint, vocabulary-eslint-final, schema-eslint, prettier-final and final-toml logs. /tmp/gspot-exception-reasons-docs-complete.log builds 316 pages with every local link and fragment valid. Both apply-complete-first.json and apply-complete-second.json report 140 unchanged outputs and zero writes, updates, removals, preserved files or notes. Managed outputs are generated through apply.",
                 "Delivered native verification: /tmp/gspot-exception-reasons-packages-complete.log passes the standalone archive and installed language consumer, including shipped assets/checksum/source diagnostics without Node.js or Bun on PATH, pinned prose/Python/Bash defect/correction paths, Swift naming and packaged SQL parsing. The isolated local registry closes. External publication and deployment are not performed.",
-                "Staged verification: /tmp/gspot-exception-reasons-staged-final.json records the actual gspot --json check --staged at exit 0: 92 passed checks, ten explicit skips, 82 selection skips and zero findings (55.796 seconds). The first gate correctly rejected executable fixture setup in config/, a smart quote, banned with/scoped names and the new set/ prefix collision. Fixtures are now literal data; the helper is settingReasonValue; the result is childValues; the test title uses plain punctuation. Only the new regression files move into the existing commands owner as exceptions.test.ts and vocabulary.test.ts; no existing file is mechanically relocated. All 135 affected cases pass with 830 assertions (7.30 seconds), affected lint and the root TypeScript target pass in gate-corrections logs, and no product policy is weakened. Corrected package verification passes both delivered cases with 55 assertions (230.78 seconds)."
+                "Staged verification: /tmp/gspot-exception-reasons-staged-final.json records the actual gspot --json check --staged at exit 0: 92 passed checks, ten explicit skips, 82 selection skips and zero findings (55.796 seconds). The first gate correctly rejected executable fixture setup in config/, a smart quote, banned with/scoped names and the new set/ prefix collision. Fixtures are now literal data; the helper is settingReasonValue; the result is childValues; the test title uses plain punctuation. Only the new regression files move into the existing commands owner as exceptions.test.ts and vocabulary.test.ts; no existing file is mechanically relocated. All 135 affected cases pass with 830 assertions (7.30 seconds), affected lint and the root TypeScript target pass in gate-corrections logs, and no product policy is weakened. Corrected package verification passes both delivered cases with 55 assertions (230.78 seconds).",
+                "Delivery: commit eb804ef0d1d271ece187c30fb3334abf0911b8fb completed with hooks enabled: 60 pre-commit passes, two existing skips, zero findings, and a commit-message pass. Normal push to origin/main passed 92 checks with ten explicit skips and zero findings (55.6 seconds). HEAD and origin/main matched with a clean tree before the next batch. Logs: /tmp/gspot-exception-reasons-commit.log and /tmp/gspot-exception-reasons-push.log."
             ],
             "remaining": [
                 "Continue 897 original records. General typed namespace validation, scoped manifest range consumption, wider suppression/ignore ownership and full final suite families remain open. External publication and deployment still require separate authorization."
+            ]
+        },
+        {
+            "subsystem": "Alias and reader regression quality",
+            "rows": [
+                "slices/tests-integration-generation/001",
+                "slices/tests-integration-generation/002",
+                "slices/tests-integration-generation/003",
+                "slices/tests-integration-generation/004",
+                "slices/tests-integration-generation/005",
+                "slices/tests-integration-generation/007",
+                "slices/tests-integration-generation/008"
+            ],
+            "outcome": "Seven original records close with IDs and source quotations intact. 890 original implementation records remain open.",
+            "evidence": [
+                "Reader ownership: tests/cli/repository/aliases.test.ts calls the real repository aliasesFor owner directly. Only the case that renders generated compiler files opens a session. Malformed-input cases no longer build inventory/template inputs or include redundant unlink/rewrite/correction steps. Diagnostics and valid linked-file bytes are literal rows in tests/config/cli/repository/aliases.ts; the package reader diagnostic is Cannot read package manifest, distinct from the inventory inspector. No internal production mocks are introduced.",
+                "Scope and precedence: a single repository has conflicting root and web package imports and compiler paths. Exact dictionaries prove #app/ resolves to src/ at root and web/src/ in the child, root-only aliases do not appear in the child, and compiler paths override package imports independently in both scopes. The real TypeScript compiler parser resolves inherited paths and baseUrl; linked authored configurations inside the repository and trusted linked dependency compiler configuration remain covered.",
+                "Duplicate cases: the two external-link scenarios are one table over package.json and tsconfig.json. Both preserve the Source link leaves the repository refusal; the unused base file and extends are removed. Positive root package/compiler aliases remain in the scope and generated-owner cases, avoiding duplicate correction runs. Missing-base refusal has a focused reader scenario; absence and inherited-base branches remain. The existing inherited-title already says configuration that declares them, and its two native path-resolution assertions verify that correction.",
+                "Generated ownership: the rendering case checks actual parsed extends values, ../../tsconfig.json for the root and ../../../web/tsconfig.json for the child. It no longer tests only destination membership or that a pure render did not write a file. The authored root alias assertion remains. The existing Node-backed generated-boundary regression exercises scoped aliases through their actual ESLint consumer and verifies neighboring cross-project imports and independent corrections.",
+                "Read assertions: aliases, Vale package detection and shared document inspection no longer compare authored or external bytes after functions that cannot write them. Detection titles promise refusal, not unobserved reads or byte preservation. The destructive removeValePackages cases retain their external bytes assertions, and every original reader refusal, malformed shape, linked-boundary case, literal serializer field and native module-pointer assertion remains. Broader reader placement records remain open; no existing test is mechanically moved in this behavior batch.",
+                "Verification: /tmp/gspot-alias-tests-cli-final.log passes all 52 affected cases with 173 assertions across seven files (7.73 seconds). Real native Node imports verify module pointers with punctuation in directory names; generated ESLint boundaries and TypeScript replacement/index-only regressions pass through their pinned readers. /tmp/gspot-alias-tests-types.log passes all four TypeScript targets (9.72 seconds), and types-final.log passes the root target after the added child generated-owner assertion. Affected ESLint and git diff --check pass. The first direct-reader package error assertion expected the inventory inspector wording; its row now names the actual reader diagnostic without changing production output. The unused readFileSync import was removed.",
+                "Canonical verification: both /tmp/gspot-alias-tests-apply-first.json and apply-second.json report 140 unchanged outputs and zero writes, updates, removals, preserved files or notes. Production source, coverage levels, manual configuration overrides and native tool selection do not change. No new installation is needed for these test-quality corrections; final whole-suite/platform/delivered-package checks remain required by the overall plan.",
+                "Staged verification: /tmp/gspot-alias-tests-staged-final.json records the actual gspot --json check --staged at exit 0: 51 passed checks, eight explicit skips, 125 selection skips and zero findings (30.795 seconds). The first gate found the import ordering left after the unused readFileSync import was removed. Corrected import ESLint and Prettier pass, and the complete gate passes without changing product policy. Every original record ID, source quotation, owner and location remains intact; the 990-record mapping is unchanged."
+            ],
+            "remaining": [
+                "Continue 890 original records. Reader-test placement, remaining serializer coverage, all unique collision assertions, full suite families and platform/delivered-package completion remain open. Publication and deployment retain their separate authorization boundary."
             ]
         }
     ],
@@ -22395,6 +22422,24 @@
                     "tests/cli/commands/vocabulary.test.ts",
                     "tests/config/cli/docs/exceptions.ts",
                     "tests/tools/configurations/general/format.test.ts"
+                ]
+            },
+            {
+                "id": "alias-reader-regression-quality",
+                "records": [
+                    "slices/tests-integration-generation/001",
+                    "slices/tests-integration-generation/002",
+                    "slices/tests-integration-generation/003",
+                    "slices/tests-integration-generation/004",
+                    "slices/tests-integration-generation/005",
+                    "slices/tests-integration-generation/007",
+                    "slices/tests-integration-generation/008"
+                ],
+                "owners": [
+                    "tests/cli/repository/aliases.test.ts",
+                    "tests/config/cli/repository/aliases.ts",
+                    "tests/cli/generation/vale-packages.test.ts",
+                    "tests/cli/generation/serialization/documents.test.ts"
                 ]
             }
         ]
