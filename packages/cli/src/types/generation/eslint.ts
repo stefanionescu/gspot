@@ -87,6 +87,9 @@ export type EslintModule = {
     block: (block: EslintSettingsBlock, runtime?: string) => string;
 };
 
+/** Selected component patterns and authored test or script patterns. */
+export type EslintFileInputs = { components: string[]; tests: string[]; scripts: string[] };
+
 /** Shared file patterns for code, type-aware parsing, and test or script intersections. */
 export type EslintFiles = {
     code: string[];

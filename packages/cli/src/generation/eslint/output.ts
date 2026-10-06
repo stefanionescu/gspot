@@ -3,6 +3,7 @@ import { extensionsTagged } from '#cli/repository/tags.ts';
 import type {
     EslintFiles,
     EslintModule,
+    EslintFileInputs,
     EslintModuleInput,
     EslintFileSelector,
     EslintSettingsBlock,
@@ -16,12 +17,11 @@ function selectorSource(selector: EslintFileSelector): string {
 
 /**
  * Calculate the exact file sets shared by base blocks and every framework fragment.
- * @param components component patterns supplied by selected fragments
- * @param tests authored test patterns
- * @param scripts authored script patterns
+ * @param input selected component patterns and authored test or script patterns
  * @returns code patterns and intersections that exclude non-code files
  */
-export function eslintFilePatterns(components: string[], tests: string[], scripts: string[]): EslintFiles {
+export function eslintFilePatterns(input: EslintFileInputs): EslintFiles {
+    const { components, tests, scripts } = input;
     const code = [eslintSourcePattern('javascript', 'typescript'), ...components];
     const typescript = eslintSourcePattern('typescript');
     const javascript = eslintSourcePattern('javascript');

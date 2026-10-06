@@ -91,7 +91,7 @@ export function fragmentInputs(
     const eslintFiles =
         config === undefined
             ? inputs.eslintFiles
-            : eslintFilePatterns(fragmentFiles, config.testFiles, config.scriptFiles);
+            : eslintFilePatterns({ components: fragmentFiles, tests: config.testFiles, scripts: config.scriptFiles });
     const eslintFragmentBlocks: TemplateInputs['eslintFragmentBlocks'] = [];
     const rendered = renderedFragments(
         fragments,

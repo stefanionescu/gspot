@@ -2880,10 +2880,24 @@
                 "Truthful native repair guidance: Syncpack 15.3.3 exposes fix, not the removed fix-mismatches command. Its shipped help now names syncpack fix --config .gspot/config/syncpack.json and retains manual alignment as the alternative. /tmp/gspot-general-takeover-syncpack-fix-probe.json proves that sameRange disagreements require manual alignment in this native scenario. The regression proves the exact SameRangeMismatch diagnostics and clears them after aligning the authored dependency. Native command syntax does not provide another Gspot coverage selector.",
                 "Existing test ownership evidence: commit 4ce293ae8aed8e40dfae9b6459b6b90d04497937 already moved the two INI section cases from preview/readers.test.ts to tests/cli/parsers/tool/configuration.test.ts with the parser owner. /tmp/gspot-general-takeover-ini-proof.json proves both complete case bodies and all five assertions remain byte-identical to their original source. Reconcile that implementation without another move or replacement of unique assertions.",
                 "Meaningful verification: /tmp/gspot-general-takeover-baseline-proof.json restores all 9 production owners at f4e957ab0a7fc1ec7ca7d61ad44a9c73d43a6be7, removes the newly introduced owner during the baseline, and restores every current byte afterward. All 13 native cases and all three new CLI cases fail against the prior implementation; the two existing CLI cases pass. /tmp/gspot-general-takeover-native-verified.log passes 13 native cases with 127 assertions (9.21 seconds) using the already installed pinned tools without plugin preparation or a local registry. /tmp/gspot-general-takeover-cli-complete.log passes 489 cases with 2691 assertions across 83 affected files (93.60 seconds). After the final typed doctor binding, /tmp/gspot-general-takeover-cli-verified.log passes all 15 affected cases with 66 assertions (4.61 seconds). All four TypeScript targets pass in types-verified.log (9.53 seconds); affected ESLint, Prettier, Taplo and git diff --check pass. Documentation builds 314 pages and validates all local links and fragments. Canonical apply succeeds twice with all 139 outputs unchanged and zero writes, updates, removals or preserved conflicts. Defaults remain 60 seconds for CLI/plugin and 900 seconds for tools/packages, with child operations bounded by the remaining test budget.",
-                "Actual staged verification: /tmp/gspot-general-takeover-staged.json passes 67 checks with 9 input or prerequisite skips, zero failures or errors, exitCode 0 and duration 42467 milliseconds. No gate is bypassed or weakened."
+                "Actual staged verification: /tmp/gspot-general-takeover-staged.json passes 67 checks with 9 input or prerequisite skips, zero failures or errors, exitCode 0 and duration 42467 milliseconds. No gate is bypassed or weakened.",
+                "Batch 47 delivery: hook-enabled commit 21ec05adf731f91080db186d1815867eae6a0f5d and normal push to origin/main succeed. Commit hooks pass 44 checks with two explicit skips and zero failures (9.5 seconds), plus commit-message validation (0.4 seconds). Push hooks pass 67 checks with nine explicit skips and zero findings (43.7 seconds). /tmp/gspot-general-takeover-commit.log and push.log retain evidence. The tree is clean and local HEAD matches origin/main before this preparatory batch."
             ],
             "remaining": [
                 "Complete compiler ownership and the remaining policy/language/framework/platform/test/repository/installation findings, final full verification and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Shared ESLint file inputs (preparation)",
+            "rows": ["slices/kits-web-languages/002"],
+            "outcome": "Mechanical preparation only. No original finding closes; 823 records remain open.",
+            "evidence": [
+                "Replace three same-type positional arguments with named components, tests and scripts fields in the existing types/generation/eslint.ts owner. Update both real generation callers without an alias or wrapper. /tmp/gspot-eslint-file-inputs-proof.json proves the complete calculation body remains byte-identical after input destructuring; generated native behavior is unchanged.",
+                "Verification: all four TypeScript targets pass (10.91 seconds); the 101 affected generated ESLint cases pass with 796 assertions across 25 files (24.93 seconds). The existing eight native JavaScript generation cases pass with 57 assertions (14.27 seconds). ESLint and Prettier pass. Canonical apply succeeds twice with all 139 outputs unchanged. Logs: /tmp/gspot-eslint-file-inputs-types.log, cli.log, native.log, lint-fixed.log, apply.json and apply-second.json. No coverage selector or generated behavior changes in this preparation.",
+                "Actual staged verification: /tmp/gspot-eslint-file-inputs-staged.json passes 51 checks with 3 explicit skips, zero failures or errors, exitCode 0 and duration 47215 milliseconds. No gate is bypassed or weakened."
+            ],
+            "remaining": [
+                "Add detected extensionless Node paths through all native ESLint selectors and prove both coverage levels with native before/after regressions."
             ]
         }
     ],
@@ -6632,6 +6646,17 @@
                     "tests/cli/generation/commitlint.test.ts",
                     "tests/cli/commands/init/takeover.test.ts",
                     "tests/cli/parsers/tool/configuration.test.ts"
+                ]
+            },
+            {
+                "id": "native-extensionless-javascript",
+                "records": ["slices/kits-web-languages/002"],
+                "status": "Named shared inputs prepared; the coverage finding remains open.",
+                "owners": [
+                    "packages/cli/src/types/generation/eslint.ts",
+                    "packages/cli/src/generation/eslint/output.ts",
+                    "packages/cli/src/generation/eslint/configuration.ts",
+                    "packages/cli/src/generation/fragments.ts"
                 ]
             }
         ]

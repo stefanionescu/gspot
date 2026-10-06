@@ -249,11 +249,11 @@ export function eslintInputs(
             codeFiles: [eslintSourcePattern('javascript', 'typescript')],
             ruleOptions: eslintRuleOptions(policy),
         }),
-        eslintFiles: eslintFilePatterns(
-            [],
-            (selection.view.settings['tests'] ?? []) as string[],
-            (selection.view.settings['tools.eslint.script_files'] ?? []) as string[],
-        ),
+        eslintFiles: eslintFilePatterns({
+            components: [],
+            tests: (selection.view.settings['tests'] ?? []) as string[],
+            scripts: (selection.view.settings['tools.eslint.script_files'] ?? []) as string[],
+        }),
         eslintFragmentBlocks: [],
         eslintRuleSettings: eslintRuleSettings,
         eslintErrorRules,
