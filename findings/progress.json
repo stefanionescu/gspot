@@ -2735,10 +2735,28 @@
                 "Source notation: the since pattern excludes an immediately preceding @. Pinned native Vale accepts the JSDoc @since tag and the source string but still reports the causal prose comment on line 4. Remove TODO from the future style, accepting the ordinary todo noun and tag while still reporting will be added on line 3. A real generated ESLint all-level regression independently proves that Sonar todo-tag and Unicorn expiring-todo-comments still report the JavaScript marker at severity 2 and accept its correction. The first run found only incidental diagnostic ordering; the test now sorts the exact two rule/line/severity values rather than weakening the assertion.",
                 "Placeholder guidance: the shipped message now requests <kebab-case>, matching the existing native-config comment and public CLI help. The native regression still reports YOUR_TOKEN and {{token}} on exact lines 3 and 5 with exact corrected messages and accepts the api-token form. No placeholder matcher, native ignore, public command or setting changes.",
                 "Verification: /tmp/gspot-prose-notation-native.log passes 19 pinned Vale cases with 44 assertions (1.498 seconds). /tmp/gspot-prose-notation-cli-final.log passes 28 cases with 565 assertions across generated ESLint, prose assets, level contracts and every-template parsing (3.56 seconds). /tmp/gspot-prose-notation-types-final.log passes all four TypeScript targets (8.25 seconds). Affected ESLint and Prettier pass. Canonical apply writes four style assets; the second reports 139 unchanged outputs and zero writes, updates or removals. All original Vale assertions remain. No dependency, installation, scope/manual override, timeout, schedule or external publication/deployment changes.",
-                "Actual staged gate: /tmp/gspot-prose-notation-staged.json exits 0 with {'passed': 130, 'skipped': 11}, zero failures/errors and duration 76708 ms. Native Semgrep, OSV, Taplo and startup gates run without bypasses."
+                "Actual staged gate: /tmp/gspot-prose-notation-staged.json exits 0 with {'passed': 130, 'skipped': 11}, zero failures/errors and duration 76708 ms. Native Semgrep, OSV, Taplo and startup gates run without bypasses.",
+                "Delivery: commit eed8b64e361e45e29fd030777d382109811fb23a completed with hooks enabled: 90 pre-commit passes, two existing skips, zero findings (25.8 seconds), and message validation passed. Normal push to origin/main passed 130 checks with 11 explicit skips and zero findings (78.5 seconds). HEAD and origin/main matched with a clean tree before this acronym vocabulary batch. Logs: /tmp/gspot-prose-notation-commit.log and /tmp/gspot-prose-notation-push.log."
             ],
             "remaining": [
                 "Finish portable acronym vocabulary, complete typed/shared policy and scope execution, remaining framework/platform/language/testing/repository/installation records, final full verification and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Portable acronym vocabulary ownership",
+            "rows": ["areas/kits/013", "slices/kits-general/047"],
+            "outcome": "Two records close; 839 original implementation records remain open.",
+            "evidence": [
+                "Portable native asset: retain only API, URL, HTTP, JSON, SQL and CLI as general acronym exceptions. CI and ID do not match the existing first pattern, so they need no exception. Remove all unreachable two-letter, long, plural and mixed-case entries and all duplicated exceptions. The first/second matchers, message, severity and ignorecase are unchanged. Applicable project-specific names belong in authored policy, not the shipped native asset.",
+                "Repository preservation: /tmp/gspot-acronym-migration.json records the prior exception list and moves 153 applicable names into this repository\u2019s prose.vocabulary, retaining its three previous names. The structural TOML comparison proves no other policy value changes. Every prior exception matching three to six uppercase letters remains accepted through the six general exceptions, existing shipped vocabulary or authored project vocabulary. No new selection setting, enabling step, scope override, timeout, dependency or install is introduced.",
+                "Native ownership: pinned Vale 3.21.0 already uses its Vocab for conditional rules. /tmp/gspot-acronym-vocabulary-probe.json proves GPU reports with an empty vocabulary and is accepted when the vocabulary contains GPU, while APIZ still reports. The existing styleFiles producer already combines shipped and authored words into the native acceptance file, so no forwarding function, redundant calculation, custom native parser, manual exception renderer or additional enabling syntax is needed.",
+                "Regression coverage: the new execution/acronyms.test.ts belongs to pinned native rule behavior; the existing Vale execution file is already near its line limit. It uses the actual emitted acronym asset and vocabulary, with an isolated native configuration for that rule. General acronyms and a spelled-out GPU definition produce no finding. Exact GPU, APIZ and NQX messages appear on guide.md line 5 without project names. Adding GPU through authored prose.vocabulary removes only that message, leaves the two unknown terms reported, and leaves the emitted native rule unchanged. Every existing Vale source/comment/grammar/currency/link/style regression remains.",
+                "Verification: /tmp/gspot-acronym-vocabulary-native.log passes 20 pinned cases with 49 assertions across both Vale execution owners (1.71 seconds). /tmp/gspot-acronym-vocabulary-cli.log passes 22 cases with 171 assertions across vocabulary generation, level contracts and every-template parsing (2.01 seconds). /tmp/gspot-acronym-vocabulary-types.log passes all four TypeScript targets (9.42 seconds). /tmp/gspot-acronym-vocabulary-docs.log builds 314 pages and validates every local link and fragment. Affected ESLint, Prettier and native Taplo formatting pass. Canonical apply writes only acronyms.yml and the native acceptance file; the second reports 139 unchanged outputs and zero writes, updates or removals. No external publication/deployment occurs.",
+                "The first actual staged gate rejected the new vale-acronyms.test.ts filename because it shares an unnecessary prefix with vale.test.ts. The uncommitted new module is named acronyms.test.ts for its behavior, with every byte of its body retained. No existing module moves, import aliases, exception, ignore or weakened check is introduced. /tmp/gspot-acronym-vocabulary-staged.json records that first refusal.",
+                "Final verification: /tmp/gspot-acronym-vocabulary-native-final.log passes 20 pinned cases with 49 assertions under the final behavioral filename (1.67 seconds). /tmp/gspot-acronym-vocabulary-staged-final.json records the actual gspot --json check --staged at exit 0: {'passed': 130, 'skipped': 11}, zero failures/errors and duration 75659 ms. Native Semgrep, OSV, Taplo and startup gates run without bypasses."
+            ],
+            "remaining": [
+                "Finish complete typed/shared policy and scope execution, remaining framework/platform/language/testing/repository/installation findings, final full verification and separately authorized publication/deployment."
             ]
         }
     ],
@@ -6386,6 +6404,16 @@
                     "tests/config/tools/vale.ts",
                     "tests/tools/execution/vale.test.ts",
                     "tests/cli/generation/eslint/levels.test.ts"
+                ]
+            },
+            {
+                "id": "portable-acronym-vocabulary",
+                "records": ["areas/kits/013", "slices/kits-general/047"],
+                "owners": [
+                    "packages/cli/configurations/general/prose/styles/gspot/acronyms.yml",
+                    "gspot.toml",
+                    "packages/cli/src/generation/vale-styles.ts",
+                    "tests/tools/execution/acronyms.test.ts"
                 ]
             }
         ]
