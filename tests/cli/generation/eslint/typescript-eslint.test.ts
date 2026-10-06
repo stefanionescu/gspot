@@ -21,7 +21,7 @@ async function messagesOf(root: string): Promise<FileRuleFinding[]> {
     );
 }
 
-test('generated TypeScript configuration reports an interface once through the pinned replacement rule', async () => {
+test('an interface is reported once by consistent-type-definitions and not by types-placement', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...PROJECT,
@@ -32,11 +32,7 @@ test('generated TypeScript configuration reports an interface once through the p
     expect(reported.filter(({ rule }) => rule === '@typescript-eslint/consistent-type-definitions')).toStrictEqual([
         { rule: '@typescript-eslint/consistent-type-definitions', file: 'src/order.ts', line: 1 },
     ]);
-    writeFileSync(
-        join(sandbox.path, 'src/order.ts'),
-        '// The shape of a priced order.\n\n/** A total owned by one order. */\nexport type Order = { total: number };\n',
-    );
-    expect(await messagesOf(sandbox.path)).toStrictEqual([]);
+    expect(reported.filter(({ rule }) => rule === 'gspot/types-placement')).toStrictEqual([]);
 });
 
 test.each([
@@ -56,25 +52,40 @@ test.each([
         'src/second.ts': 'export const shared = 2;\n',
         'src/index.ts': barrel,
         'src/bridge/index.ts': 'export * from "../first.js";\n',
-        'src/forward.ts': 'export { shared } from "./first.ts";\n',
+    });
+    const reported = await messagesOf(sandbox.path);
+    expect(reported.filter(({ rule }) => rule === 'import-x/export')).toStrictEqual([
+        { rule: 'import-x/export', file: 'src/index.ts', line: 1 },
+        { rule: 'import-x/export', file: 'src/index.ts', line: 2 },
+    ]);
+});
+
+test('index-only reexports keep a nonduplicate barrel and reject forwarding from an ordinary module', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        ...PROJECT,
+        'gspot.toml': buildPolicy(['typescript'], {
+            tables: '[agent_rules]\nenabled = false\n[structure]\nreexports = "index-only"\n',
+            level: 'all',
+        }),
+        'src/first.ts': 'export const shared = 1;\n',
+        'src/second.ts': 'export const shared = 2;\n',
+        'src/index.ts': 'export * from "./first.js";\nexport { shared as second } from "./second.js";\n',
+        'src/forward.ts': 'export { shared } from "./first.js";\n',
     });
     const reported = await messagesOf(sandbox.path);
     expect(reported.filter(({ rule }) => rule === 'gspot/no-reexports')).toStrictEqual([
         { rule: 'gspot/no-reexports', file: 'src/forward.ts', line: 1 },
     ]);
-    expect(reported.filter(({ rule }) => rule === 'import-x/export')).toStrictEqual([
-        { rule: 'import-x/export', file: 'src/index.ts', line: 1 },
-        { rule: 'import-x/export', file: 'src/index.ts', line: 2 },
-    ]);
-    writeFileSync(
-        join(sandbox.path, 'src/index.ts'),
-        'export * from "./first.js";\nexport { shared as second } from "./second.js";\n',
-    );
+    expect(
+        reported.filter(
+            ({ file, rule }) =>
+                file === 'src/index.ts' &&
+                ['gspot/no-trivial-files', 'gspot/no-reexports', 'import-x/export'].includes(rule ?? ''),
+        ),
+    ).toStrictEqual([]);
     writeFileSync(join(sandbox.path, 'src/forward.ts'), 'export const shared = 1;\n');
     const corrected = await messagesOf(sandbox.path);
-    expect(
-        corrected.filter(({ rule, file }) => rule === 'gspot/no-trivial-files' && file === 'src/index.ts'),
-    ).toStrictEqual([]);
     expect(corrected.filter(({ rule }) => rule === 'gspot/no-reexports' || rule === 'import-x/export')).toStrictEqual(
         [],
     );

@@ -37,8 +37,11 @@ test('without a harness role no folder is the harness, so support files are plac
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...VITEST_FILES,
-        'gspot.toml': buildPolicy(['javascript'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
+        'gspot.toml': buildPolicy(['vitest'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
     });
     const eslint = await createEslint(sandbox.path);
+    const config = (await eslint.calculateConfigForFile('tests/unit/example.test.js')) as Linter.Config;
+    expect((config.rules!['vitest/no-focused-tests'] as unknown[])[0]).toBe(2);
+    expect(config.rules!['gspot/no-helpers-beside-tests']).toBeUndefined();
     expect(await ruleReports(eslint, 'tests/unit/helpers.js', 'gspot/no-helpers-beside-tests')).toStrictEqual([]);
 });

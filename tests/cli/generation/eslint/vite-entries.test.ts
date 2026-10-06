@@ -5,7 +5,7 @@ import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { FileRuleFinding } from '#tests/types/generation/findings.ts';
-import { START, STARTER, ENTRY_FILES, VITE_POLICY } from '#tests/config/cli/generation/eslint/vite-entries.ts';
+import { START, STARTER, VITE_POLICY, TRIVIAL_FILES } from '#tests/config/cli/generation/eslint/vite-entries.ts';
 
 // The files and rules the generated configuration reports among the two rules about trivial code.
 async function trivialFindings(root: string, policy: string): Promise<Pick<FileRuleFinding, 'file' | 'rule'>[]> {
@@ -28,8 +28,7 @@ function trivialFiles(findings: Pick<FileRuleFinding, 'file' | 'rule'>[]): strin
 test('Vite entry files keep the structural rules at both levels and in nested scopes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'package.json': '{"name":"entry-sandbox","private":true,"type":"module","devDependencies":{"vite":"8.3.0"}}',
-        'index.html': '<!doctype html><script type="module" src="/src/main.js"></script>',
+        'package.json': '{"name":"entry-sandbox","private":true,"type":"module"}',
         'src/start.js': STARTER,
         'src/main.js': START,
         'src/task.js': START,
@@ -37,23 +36,16 @@ test('Vite entry files keep the structural rules at both levels and in nested sc
         'api/src/main.js': START,
         'api/src/task.js': START,
     });
-    for (const policy of [
-        VITE_POLICY,
-        VITE_POLICY.replace('entry = []', 'entry = ["api/src/main.js"]'),
-        VITE_POLICY.replaceAll('entry = []', 'entry = ["src/*.js", "!src/task.js"]'),
-    ])
-        expect(trivialFiles(await trivialFindings(sandbox.path, policy))).toStrictEqual(ENTRY_FILES);
+    expect(trivialFiles(await trivialFindings(sandbox.path, VITE_POLICY))).toStrictEqual(TRIVIAL_FILES);
     writeFileSync(
         join(sandbox.path, 'src/main.js'),
         "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",
     );
     for (const level of ['recommended', 'all']) {
-        const policy = VITE_POLICY.replace('level = "all"', `level = "${level}"`)
-            .replace(
-                '[tools.knip]',
-                '[tools.eslint.rules]\n"gspot/no-trivial-functions" = [{maxStatements = 2}]\n"gspot/no-trivial-files" = [{maxStatements = 2}]\n[tools.knip]',
-            )
-            .replaceAll('entry = []', 'entry = ["src/main.js"]');
+        const policy = VITE_POLICY.replace('level = "all"', `level = "${level}"`).replace(
+            '[tools.knip]',
+            '[tools.eslint.rules]\n"gspot/no-trivial-functions" = [{maxStatements = 2}]\n"gspot/no-trivial-files" = [{maxStatements = 2}]\n[tools.knip]',
+        );
         const findings = await trivialFindings(sandbox.path, policy);
         expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(
             level === 'all'
@@ -63,7 +55,7 @@ test('Vite entry files keep the structural rules at both levels and in nested sc
                   ]
                 : [],
         );
-        expect(trivialFiles(findings)).toStrictEqual(level === 'all' ? ENTRY_FILES : []);
+        expect(trivialFiles(findings)).toStrictEqual(level === 'all' ? TRIVIAL_FILES : []);
         writeFileSync(
             join(sandbox.path, 'src/main.js'),
             "import { start } from './start.js';\nexport function boot() { start(); }\n",

@@ -70,7 +70,7 @@
     ],
     "relocations": {
         "source": "findings/relocations.json",
-        "items": 2820
+        "items": 2821
     },
     "checklists": [
         {
@@ -2498,10 +2498,49 @@
                 "Verification: /tmp/gspot-eslint-moves-cli.log passes all 116 affected cases with 1023 assertions across 28 files (25.36 seconds). The existing real native ESLint and Node consumers run from their new owners without new installations. /tmp/gspot-eslint-moves-types.log passes all four TypeScript targets (10.22 seconds). Affected ESLint, Prettier and git diff --check pass. Production behavior, recommended/all coverage, manual language/framework overrides, prerequisites and shipped assets do not change.",
                 "Ledger ownership: relocation history is now linked from findings/progress.json to findings/relocations.json. Every existing entry remains in the same order. No record is dropped, and the file size check remains unchanged. The spelling exclusion follows its moved runtime fixture; its deliberate runtime misspelling remains intact.",
                 "Gate corrections: the first staged run found the moved spelling exclusion, two import-order issues and the oversized progress ledger. The next broad gate found the deliberate runtime misspelling accidentally quoted in new evidence and an existing uppercase variable in the native ESLint worker. The evidence now describes the misspelling; the one-use constructor binding is inlined with the same loadESLint call and options. /tmp/gspot-eslint-moves-worker.log passes all four worker/schema cases with 17 assertions (3.81 seconds), including real native rule overrides, config refusal, aggregation and cancellation. /tmp/gspot-eslint-moves-types-final.log passes all four TypeScript targets. No check, time budget or policy limit is weakened. Final apply writes only the five spelling configurations that follow the relocated exclusion; its second apply reports 140 unchanged outputs and zero changes.",
-                "Staged verification: /tmp/gspot-eslint-moves-staged-complete.json records the actual gspot --json check --staged at exit 0: 131 passed checks, 6 explicit skips, 36 selection skips and zero findings (70.593 seconds). The complete batch includes the moved spelling-exclusion consumer, regenerated spelling configurations, linked relocation ledger and unchanged native worker constructor call. Every original source field and ID remains intact across 2939 records; the 990-record mapping is unchanged."
+                "Staged verification: /tmp/gspot-eslint-moves-staged-complete.json records the actual gspot --json check --staged at exit 0: 131 passed checks, 6 explicit skips, 36 selection skips and zero findings (70.593 seconds). The complete batch includes the moved spelling-exclusion consumer, regenerated spelling configurations, linked relocation ledger and unchanged native worker constructor call. Every original source field and ID remains intact across 2939 records; the 990-record mapping is unchanged.",
+                "Delivery: commit 7bdc5394feda83b1722df5f201400d8a88b00689 completed with hooks enabled: 91 pre-commit passes, two existing skips and zero findings. The first message used an unsupported scope and a long body line; the corrected cli scope and wrapped body pass commit-message validation. Normal push to origin/main passed 131 checks with 11 explicit skips and zero findings (72.5 seconds). HEAD and origin/main matched with a clean tree before the next batch. Logs: /tmp/gspot-eslint-moves-commit-final.log and /tmp/gspot-eslint-moves-push.log."
             ],
             "remaining": [
                 "Continue 888 original records. The generated ESLint behavioral corrections, reader/serializer ownership, all unique collision assertions, final suite families and supported platform/package checks remain open. External publication and deployment retain their separate authorization boundary."
+            ]
+        },
+        {
+            "subsystem": "Generated ESLint regression quality",
+            "rows": [
+                "slices/tests-integration-generation/019",
+                "slices/tests-integration-generation/020",
+                "slices/tests-integration-generation/021",
+                "slices/tests-integration-generation/022",
+                "slices/tests-integration-generation/023",
+                "slices/tests-integration-generation/024",
+                "slices/tests-integration-generation/025",
+                "slices/tests-integration-generation/026",
+                "slices/tests-integration-generation/027",
+                "slices/tests-integration-generation/029",
+                "slices/tests-integration-generation/030",
+                "slices/tests-integration-generation/032",
+                "slices/tests-integration-generation/034",
+                "slices/tests-integration-generation/035",
+                "slices/tests-integration-generation/036",
+                "slices/tests-integration-generation/037",
+                "slices/tests-integration-generation/039",
+                "slices/tests-integration-generation/044"
+            ],
+            "outcome": "Eighteen original records close with IDs and source quotations intact. 870 original implementation records remain open.",
+            "evidence": [
+                "Nonvacuous coverage: the recommended/all comparison explicitly includes react/jsx-key before checking retention. Both root and tests/package.json contain unsorted dependencies and have exact sort-collections findings, while the no-code-rule assertion remains. Parameter and layout diagnostics now compare exact rule/line lists instead of partial arrays; the type-documentation case compares exact line lists at both levels. Vitest without architecture roles explicitly selects vitest, proves its focused-test rule is active and its support placement rule is absent, and retains the real lint result. The adjacent declared-role case still proves support placement and runtime exclusion.",
+                "Shared native ownership: layout now calls createEslint instead of repeating link/session/render/write/constructor setup. Framework configuration inspection removes its extra private-store link and inaccurate explanation; parameter cases already use the same shared owner. All three source records now use the portable installed-module linking, managed lifecycle emission and native instance in tests/harness/generated.ts. The security selection test emits once per distinct policy; its earlier duplicate call disappeared with automatic common-check applicability. Its two independently opened policies are necessary to prove selecting Bash includes security without a separate selection.",
+                "Framework fixtures: the unused clean component is removed from this generated-rule fixture; its shared sample remains for real consumers. Testing Library debugging moves into one table for React, Vue and Svelte, preserving each framework fragment, exact defect line and outside-test exclusion. Its redundant React data entries and separate outside-test assertion disappear. React self-closing coverage remains at both levels. The DOM scope title explicitly states that React Native turns off DOM accessibility only in its scope. Parameter titles name the TypeScript this exclusion, and a comment names seven as the shipped default. The wrapper comment names only inline callbacks and recursion, both actually present in CALLBACK_SOURCE.",
+                "Duplicate cases: all four duplicate-export paths remain, including project aliases, stars, local declarations and nested barrels. Each row asserts only exact import-x/export locations. A separate single case checks the index-only barrel, the ordinary forwarding rejection, and its project-contract correction; it also excludes trivial-file findings from that valid barrel. The interface title names consistent-type-definitions and the absence of types-placement, with assertions for both. Jest extension rows retain their js/jsx scope checks; support placement, accepted harness location and runtime import rejection run once with the same fixed paths. Its APP_JEST policy is literal data under the matching config owner.",
+                "Structural selection: the Vite case uses one actual knip-entry policy, removes unused HTML/dependency data and names all four checked files TRIVIAL_FILES, including tasks. It retains root/child outcomes, both levels, native options and exported-versus-local function distinctions. The general structure cases test levels without duplicating knip setup, and titles state only at level all. The parser-only malformed-source assertion and third-party correction-only runs are removed. The dead APP_KNIP data owner is deleted. JSON metadata import coverage is a separate case for both levels and both scopes.",
+                "Effective import contract: the old JSON metadata assertion had no declared extension setting, so it could pass with that rule inactive. The new case declares the existing JavaScript suffix project contract and package import alias, proves native rule severity 2, checks the exact violation without an attribute, and verifies JSON attributes exempt it in root and nested scopes at recommended and all. This uses an existing runtime/project prerequisite, not an added coverage switch. An intermediate assertion expected a one-element native severity tuple; ESLint also returns its options, so the final assertion checks the actual severity using the existing ResolvedEslint type. Failed intermediate logs are not evidence of success.",
+                "Correction ownership: focused-test, ordinary no-undef, duplicate type-tag and simple limit correction-only runs are removed, including the escaped scope case. Legitimate generated rule options, scoped package exceptions, allowed harness locations, native Jest argument limits, disposal-only TypeScript bindings, exported-function distinctions and index-only policy outcomes remain. Managed-ignore tests drop only duplicate authored-prefix/idempotence assertions already owned by managed-block unit cases; their native Git ignore selection and deduplication assertions remain. The constant is CONFIGURATION_TABLE because the current manifest schema owns a configuration table, superseding the legacy kit-table spelling in the source record.",
+                "Verification: /tmp/gspot-eslint-quality-cli-final.log passes 128 affected cases with 1018 assertions across 29 files (23.10 seconds), including the real pinned ESLint/Node consumers, level contracts, serialized literal scopes and native Git ignores. /tmp/gspot-eslint-quality-structure-final-clean.log passes all seven structural/import cases with 37 assertions (1.92 seconds). /tmp/gspot-eslint-quality-typescript-final.log passes all six interface/barrel cases with nine assertions (3.17 seconds). All four TypeScript targets pass in types-complete.log (8.98 seconds); the root target also passes after the final native configuration type annotation. Affected ESLint, Prettier and git diff --check pass. Both apply-first.json and apply-second.json report 140 unchanged outputs and zero other changes. No production source, tool pins, timeout defaults, prerequisites, levels, manual language/framework overrides or publication/deployment behavior changes. No new native installation is needed.",
+                "Staged verification: /tmp/gspot-eslint-quality-staged.json records the actual gspot --json check --staged at exit 0: 51 passed checks, 6 explicit skips, 119 selection skips and zero findings (32.168 seconds). The final gate includes every changed test, data owner and ledger consumer. All 2939 original record IDs and source fields remain intact, and the 990-record mapping is unchanged. No gate or policy is weakened."
+            ],
+            "remaining": [
+                "Continue 870 original records. Reader/serializer ownership, remaining assertion and fixture quality, all unique collision assertions, typed settings and shared execution, remaining language/framework/platform findings and final suite/package/platform checks remain open. Publication and deployment retain their separate authorization boundary."
             ]
         }
     ],
@@ -5982,6 +6021,52 @@
                     "tests/cli/generation/eslint/layout.test.ts",
                     "tests/cli/generation/eslint/levels.test.ts",
                     "tests/cli/generation/eslint/escaped-scopes.test.ts"
+                ]
+            },
+            {
+                "id": "generated-eslint-regression-quality",
+                "records": [
+                    "slices/tests-integration-generation/019",
+                    "slices/tests-integration-generation/020",
+                    "slices/tests-integration-generation/021",
+                    "slices/tests-integration-generation/022",
+                    "slices/tests-integration-generation/023",
+                    "slices/tests-integration-generation/024",
+                    "slices/tests-integration-generation/025",
+                    "slices/tests-integration-generation/026",
+                    "slices/tests-integration-generation/027",
+                    "slices/tests-integration-generation/029",
+                    "slices/tests-integration-generation/030",
+                    "slices/tests-integration-generation/032",
+                    "slices/tests-integration-generation/034",
+                    "slices/tests-integration-generation/035",
+                    "slices/tests-integration-generation/036",
+                    "slices/tests-integration-generation/037",
+                    "slices/tests-integration-generation/039",
+                    "slices/tests-integration-generation/044"
+                ],
+                "owners": [
+                    "findings/implementation/slices/tests/integration/generation.json",
+                    "tests/cli/generation/eslint/escaped-scopes.test.ts",
+                    "tests/cli/generation/eslint/framework-rules.test.ts",
+                    "tests/cli/generation/eslint/functions.test.ts",
+                    "tests/cli/generation/eslint/jest.test.ts",
+                    "tests/cli/generation/eslint/jsdoc-types.test.ts",
+                    "tests/cli/generation/eslint/layout.test.ts",
+                    "tests/cli/generation/eslint/levels.test.ts",
+                    "tests/cli/generation/eslint/package-manifests.test.ts",
+                    "tests/cli/generation/eslint/parameter-limits.test.ts",
+                    "tests/cli/generation/eslint/react-rules.test.ts",
+                    "tests/cli/generation/eslint/structure.test.ts",
+                    "tests/cli/generation/eslint/typescript-eslint.test.ts",
+                    "tests/cli/generation/eslint/vite-entries.test.ts",
+                    "tests/cli/generation/eslint/vitest.test.ts",
+                    "tests/cli/generation/managed-ignores.test.ts",
+                    "tests/config/cli/generation/eslint/react-rules.ts",
+                    "tests/config/cli/generation/eslint/structure.ts",
+                    "tests/config/cli/generation/eslint/vite-entries.ts",
+                    "tests/config/cli/generation/managed-ignores.ts",
+                    "tests/config/cli/generation/eslint/jest.ts"
                 ]
             }
         ]

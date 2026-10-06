@@ -16769,5 +16769,11 @@
         "to": "tests/cli/generation/eslint/escaped-scopes.test.ts",
         "name": "Complete generated ESLint test cases",
         "type": false
+    },
+    {
+        "from": "tests/cli/generation/eslint/jest.test.ts",
+        "to": "tests/config/cli/generation/eslint/jest.ts",
+        "name": "APP_JEST",
+        "type": false
     }
 ]

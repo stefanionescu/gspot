@@ -50,6 +50,7 @@ test('all retains the effective recommended rules for the same applicable React 
         rules[level] = config.rules!;
     }
     const active = Object.entries(rules['recommended']!).filter(([, value]) => Array.isArray(value) && value[0] !== 0);
+    expect(active.map(([name]) => name)).toContain('react/jsx-key');
     for (const [name] of active) expect((rules['all']![name] as unknown[])[0], name).not.toBe(0);
 });
 

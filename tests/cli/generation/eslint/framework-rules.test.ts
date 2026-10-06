@@ -5,7 +5,6 @@ import { writeFileSync } from 'node:fs';
 import type { ESLint, Linter } from 'eslint';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/harness/generated.ts';
-import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
 
 async function configuredRules(policy: string, files: string[]): Promise<Record<string, Record<string, unknown[]>>> {
@@ -16,8 +15,6 @@ async function configuredRules(policy: string, files: string[]): Promise<Record<
         'tsconfig.json': '{"compilerOptions":{"strict":true,"jsx":"react-jsx"},"include":["src"]}\n',
         ...Object.fromEntries(files.map((file) => [file, 'export const App = (): string => "app";\n'])),
     });
-    // Preserve the fixture's private plugin installation; shared setup owns emission and writes.
-    linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
     const eslint = await createEslint(sandbox.path);
     const results: Record<string, Record<string, unknown[]>> = {};
     for (const file of files) {
@@ -36,7 +33,7 @@ function testingLibraryMessages(results: ESLint.LintResult[]): Pick<Linter.LintM
     );
 }
 
-test('DOM accessibility rules belong only to their web scope', async () => {
+test('React Native turns off DOM accessibility rules only inside its scope', async () => {
     const rules = await configuredRules(
         'configurations = ["react-dom", "typescript"]\n[[scope]]\npath = "native"\nconfigurations = ["react-native"]',
         ['native/App.tsx', 'web/App.tsx'],
@@ -96,6 +93,7 @@ enabled = false
 });
 
 test.each([
+    ['react', '@testing-library/react', '19.1.1'],
     ['vue', '@testing-library/vue', '3.5.22'],
     ['svelte', '@testing-library/svelte', '5.57.0'],
 ])(
@@ -120,9 +118,5 @@ test.each([
         expect(testingLibraryMessages(await eslint.lintText(debugged, { filePath: 'src/debugging.js' }))).toStrictEqual(
             [],
         );
-        const corrected = `${opening}screen.getByText('hello');\n`;
-        expect(
-            testingLibraryMessages(await eslint.lintText(corrected, { filePath: 'src/greeting.test.js' })),
-        ).toStrictEqual([]);
     },
 );

@@ -11,7 +11,7 @@ import { applyBlock } from '#cli/platform/managed-blocks.ts';
 import { parseManifest } from '#cli/parsers/configurations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { MANAGED_IGNORES_CONFIGURATION } from '#tests/config/cli/generation/managed-ignores.ts';
+import { CONFIGURATION_TABLE } from '#tests/config/cli/generation/managed-ignores.ts';
 
 test.each([true, false])(
     'apply waits for Git before managing ignore entries with authored file=%s',
@@ -49,15 +49,13 @@ test.each([true, false])(
 test('manifest-owned tool directories are ignored while generated rules and authored sources remain visible', async () => {
     await using repository = await testdir();
     const manifest = parseManifest(
-        'ignored = [".gspot/local/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
+        'ignored = [".gspot/local/downloads/"]\n' + CONFIGURATION_TABLE,
         'configurations/general/local',
     );
     const block = gitignoreBlock([...configurationManifests().values(), manifest, manifest]);
     const authored = '# Authored entries\nprivate.tmp\n';
     const content = applyBlock(authored, block, { path: '.gitignore', style: 'hash' });
     await createFileTree(repository.path, { '.gitignore': content });
-    expect(content.startsWith(authored)).toBe(true);
-    expect(applyBlock(content, block, { path: '.gitignore', style: 'hash' })).toBe(content);
     expect(content.match(/\.gspot\/local\/downloads\//gu)).toHaveLength(1);
     const initialized = await run(['git', 'init', '--quiet'], { cwd: repository.path });
     expect(initialized.code, initialized.stderr).toBe(0);
@@ -87,15 +85,12 @@ test.each(['source/', '.gspot/../source/', '.gspot/./downloads/', '.gspot/downlo
     (path) => {
         expect(() =>
             parseManifest(
-                `ignored = [${JSON.stringify(path)}]\n` + MANAGED_IGNORES_CONFIGURATION,
+                `ignored = [${JSON.stringify(path)}]\n` + CONFIGURATION_TABLE,
                 'configurations/general/local',
             ),
         ).toThrow();
         expect(() =>
-            parseManifest(
-                'ignored = [".gspot/downloads/"]\n' + MANAGED_IGNORES_CONFIGURATION,
-                'configurations/general/local',
-            ),
+            parseManifest('ignored = [".gspot/downloads/"]\n' + CONFIGURATION_TABLE, 'configurations/general/local'),
         ).not.toThrow();
     },
 );

@@ -78,6 +78,7 @@ test('generated lint reports local wrappers and preserves exported functions and
     });
     const eslint = await createEslint(sandbox.path);
     const results = await eslint.lintFiles(['callbacks.ts']);
+    // Inline callbacks and recursive functions remain valid; invoked local wrappers are reported.
     expect(
         results
             .flatMap((file) => file.messages)

@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { FileRuleFinding } from '#tests/types/generation/findings.ts';
+import { WEB_TSCONFIG, NATIVE_TSCONFIG, WEB_DEPENDENCIES, EXPO_DEPENDENCIES } from '#tests/config/samples/react.ts';
 
 import {
     WEB_FILES,
@@ -12,13 +13,6 @@ import {
     WEB_EXPECTED,
     NATIVE_EXPECTED,
 } from '#tests/config/cli/generation/eslint/react-rules.ts';
-import {
-    WEB_TSCONFIG,
-    CLEAN_COMPONENT,
-    NATIVE_TSCONFIG,
-    WEB_DEPENDENCIES,
-    EXPO_DEPENDENCIES,
-} from '#tests/config/samples/react.ts';
 
 // Creates the repository at the level and returns every message ESLint reports for its files.
 async function reported(
@@ -40,7 +34,6 @@ async function reported(
             dependencies: web ? WEB_DEPENDENCIES : EXPO_DEPENDENCIES,
         }),
         'tsconfig.json': JSON.stringify(web ? WEB_TSCONFIG : NATIVE_TSCONFIG, null, 4) + '\n',
-        'src/Greeting.tsx': CLEAN_COMPONENT,
         ...files,
     });
     const eslint = await createEslint(root);
@@ -63,12 +56,11 @@ test.each([
     for (const finding of expected) expect(messages).toContainEqual(finding);
 });
 
-test('react/self-closing-comp waits for the all level, and the Testing Library rules stay in test files', async () => {
+test('react/self-closing-comp waits for the all level', async () => {
     await using sandbox = await testdir();
-    const files = { 'src/Gap.tsx': WEB_FILES['src/Gap.tsx'], 'src/debugging.jsx': WEB_FILES['src/debugging.jsx'] };
+    const files = { 'src/Gap.tsx': WEB_FILES['src/Gap.tsx'] };
     const atRecommended = await reported(sandbox.path, 'react', 'recommended', files);
     expect(atRecommended.map(({ rule }) => rule)).not.toContain('react/self-closing-comp');
     const atAll = await reported(sandbox.path, 'react', 'all', files);
     expect(atAll).toContainEqual({ rule: 'react/self-closing-comp', file: 'src/Gap.tsx', line: 9 });
-    expect(atAll.filter(({ rule }) => rule?.startsWith('testing-library/') === true)).toStrictEqual([]);
 });

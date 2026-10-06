@@ -16,10 +16,6 @@ export const WEB_FILES = {
     'src/Gap.tsx':
         COMPONENT_HEADER +
         '/**\n * Leaves a gap.\n * @returns the gap\n */\nexport function Gap(): ReactNode {\n    return <div></div>;\n}\n',
-    'src/greeting.test.jsx':
-        "// A Testing Library test.\nimport { render, screen } from '@testing-library/react';\n\nrender(<p>hello</p>);\nscreen.debug();\n",
-    'src/debugging.jsx':
-        "// A Testing Library test.\nimport { render, screen } from '@testing-library/react';\n\nrender(<p>hello</p>);\nscreen.debug();\n",
 };
 
 export const WEB_EXPECTED = [
@@ -27,7 +23,6 @@ export const WEB_EXPECTED = [
     { rule: 'react/no-danger', file: 'src/Raw.tsx', line: 11 },
     { rule: 'jsx-a11y/alt-text', file: 'src/Picture.tsx', line: 9 },
     { rule: 'react-refresh/only-export-components', file: 'src/Badge.tsx', line: 5 },
-    { rule: 'testing-library/no-debugging-utils', file: 'src/greeting.test.jsx', line: 5 },
 ];
 
 export const NATIVE_FILES = {

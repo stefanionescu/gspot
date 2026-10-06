@@ -8,7 +8,8 @@ test('every package.json gets the package-json rules and no code rule beside a t
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': `level = "all"\nconfigurations = ["typescript", "vitest"]\n[agent_rules]\nenabled = false\n`,
-        'package.json': '{"name":"example","version":"1.0.0","private":true,"type":"module"}\n',
+        'package.json':
+            '{"name":"example","version":"1.0.0","private":true,"type":"module","dependencies":{"b":"1.0.0","a":"1.0.0"}}\n',
         'tests/package.json':
             '{"name":"test-tests","version":"1.0.0","private":true,"dependencies":{"b":"1.0.0","a":"1.0.0"}}\n',
     });
@@ -20,6 +21,9 @@ test('every package.json gets the package-json rules and no code rule beside a t
             rule: entry.ruleId ?? entry.message,
         })),
     );
-    expect(found).toContainEqual({ file: 'tests', rule: 'package-json/sort-collections' });
+    expect(found.filter(({ rule }) => rule === 'package-json/sort-collections')).toStrictEqual([
+        { file: 'root', rule: 'package-json/sort-collections' },
+        { file: 'tests', rule: 'package-json/sort-collections' },
+    ]);
     expect(found.filter((entry) => !entry.rule.startsWith('package-json/'))).toStrictEqual([]);
 });

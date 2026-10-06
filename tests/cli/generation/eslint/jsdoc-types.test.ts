@@ -26,17 +26,11 @@ test.each(['recommended', 'all'])(
         ).toStrictEqual([]);
         const testRepository = await eslint.lintFiles(['client.ts']);
         expect(
-            testRepository.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'jsdoc/no-types'),
-        ).toMatchObject(level === 'all' ? [{ line: 3 }, { line: 4 }] : []);
-        const corrected = await eslint.lintText(
-            description.replace('{string} ', '').replace('{number} ', '') + typescript,
-            { filePath: 'client.ts' },
-        );
-        expect(
-            corrected
+            testRepository
                 .flatMap((file) => file.messages)
-                .filter(({ ruleId, fatal }) => ruleId === 'jsdoc/no-types' || fatal),
-        ).toStrictEqual([]);
+                .filter(({ ruleId }) => ruleId === 'jsdoc/no-types')
+                .map(({ line }) => ({ line })),
+        ).toStrictEqual(level === 'all' ? [{ line: 3 }, { line: 4 }] : []);
     },
 );
 

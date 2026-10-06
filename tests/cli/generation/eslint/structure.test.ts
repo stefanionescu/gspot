@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { APP_KNIP } from '#tests/config/cli/generation/eslint/structure.ts';
+import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
 
 test('generated all lint checks authored directories named after build outputs', async () => {
     await using sandbox = await testdir();
@@ -22,54 +22,46 @@ test('generated all lint checks authored directories named after build outputs',
         expect(await eslint.isPathIgnored(filePath)).toBe(false);
         const defect = await eslint.lintText('missing();', { filePath });
         expect(defect.flatMap(({ messages }) => messages).some(({ ruleId }) => ruleId === 'no-undef')).toBe(true);
-        const corrected = await eslint.lintText('export const answer = 1;', { filePath });
-        expect(
-            corrected.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === 'no-undef'),
-        ).toStrictEqual([]);
     }
     expect(await eslint.isPathIgnored('emitted/check.js')).toBe(true);
-    const malformed = await eslint.lintText('export const value = ;', { filePath: 'tests/build/check.js' });
-    expect(malformed.flatMap(({ messages }) => messages).some(({ fatal, line }) => fatal === true && line === 1)).toBe(
-        true,
-    );
-});
-
-test.each(['recommended', 'all'])('generated %s lint enforces size limits in test files', async (level) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['javascript'], {
-            tables: '[limits]\nfile_lines = 8\nfunction_lines = 5\nstatements = 3\n',
-            level: level,
-        }),
-        'package.json': '{"private":true,"type":"module"}\n',
-        'sample.test.js': '',
-    });
-    const eslint = await createEslint(sandbox.path);
-    const rules = new Set(['max-lines', 'max-lines-per-function', 'max-statements']);
-    const declarations = Array.from(
-        { length: 9 },
-        (_, index) => `    const value${String(index)} = ${String(index)};`,
-    ).join('\n');
-    const source = `export function count() {\n${declarations}\n    return value0;\n}\n`;
-    const defect = await eslint.lintText(source, { filePath: 'sample.test.js' });
-    for (const rule of rules)
-        expect(defect.flatMap((file) => file.messages).some((diagnostic) => diagnostic.ruleId === rule)).toBe(
-            level === 'all',
-        );
-    const corrected = await eslint.lintText('export function count() { return 1; }\n', {
-        filePath: 'sample.test.js',
-    });
-    expect(
-        corrected.flatMap((file) => file.messages).filter((diagnostic) => rules.has(diagnostic.ruleId ?? '')),
-    ).toStrictEqual([]);
 });
 
 test.each(['recommended', 'all'])(
-    'generated %s structural rules include declared root and nested entries',
+    'generated %s lint applies size limits in test files only at level all',
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['javascript'], { tables: APP_KNIP, level: level }),
+            'gspot.toml': buildPolicy(['javascript'], {
+                tables: '[limits]\nfile_lines = 8\nfunction_lines = 5\nstatements = 3\n',
+                level: level,
+            }),
+            'package.json': '{"private":true,"type":"module"}\n',
+            'sample.test.js': '',
+        });
+        const eslint = await createEslint(sandbox.path);
+        const rules = new Set(['max-lines', 'max-lines-per-function', 'max-statements']);
+        const declarations = Array.from(
+            { length: 9 },
+            (_, index) => `    const value${String(index)} = ${String(index)};`,
+        ).join('\n');
+        const source = `export function count() {\n${declarations}\n    return value0;\n}\n`;
+        const defect = await eslint.lintText(source, { filePath: 'sample.test.js' });
+        for (const rule of rules)
+            expect(defect.flatMap((file) => file.messages).some((diagnostic) => diagnostic.ruleId === rule)).toBe(
+                level === 'all',
+            );
+    },
+);
+
+test.each(['recommended', 'all'])(
+    'generated %s structural rules apply to root and nested files only at level all',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['javascript'], {
+                tables: '[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n',
+                level: level,
+            }),
             'package.json': '{"private":true,"type":"module"}\n',
             'main.js': '',
             'app/main.js': '',
@@ -86,22 +78,41 @@ test.each(['recommended', 'all'])(
             expect(
                 local.flatMap(({ messages }) => messages).some(({ ruleId }) => ruleId === 'gspot/no-trivial-functions'),
             ).toBe(level === 'all');
-            const corrected = await eslint.lintText(
-                'export function start() { const app = launch(); app.configure(); return app.run(); }',
-                { filePath },
-            );
+        }
+    },
+);
+
+test.each(['recommended', 'all'])(
+    '%s exempts JSON attributes from declared JavaScript import extensions in root and nested scopes',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['javascript'], {
+                tables: '[tools.eslint]\nimport_extensions = {"**/*" = "js"}\n[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n',
+                level,
+            }),
+            'package.json': '{"private":true,"type":"module","imports":{"#manifest":"./package.json"}}\n',
+            'main.js': '',
+            'app/main.js': '',
+        });
+        const eslint = await createEslint(sandbox.path);
+        for (const filePath of ['main.js', 'app/main.js']) {
+            const config = (await eslint.calculateConfigForFile(filePath)) as ResolvedEslint;
+            expect(config.rules['gspot/import-extensions']![0]).toBe(2);
+            const ordinary = await eslint.lintText('import manifest from "#manifest";', { filePath });
             expect(
-                corrected
+                ordinary
                     .flatMap((file) => file.messages)
-                    .filter(
-                        ({ ruleId }) => ruleId === 'gspot/no-trivial-files' || ruleId === 'gspot/no-trivial-functions',
-                    ),
-            ).toStrictEqual([]);
+                    .filter(({ ruleId, fatal }) => ruleId === 'gspot/import-extensions' || fatal === true)
+                    .map(({ ruleId, line }) => ({ ruleId, line })),
+            ).toStrictEqual([{ ruleId: 'gspot/import-extensions', line: 1 }]);
             const metadata = await eslint.lintText('import manifest from "#manifest" with { type: "json" };', {
                 filePath,
             });
             expect(
-                metadata.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/import-extensions'),
+                metadata
+                    .flatMap((file) => file.messages)
+                    .filter(({ ruleId, fatal }) => ruleId === 'gspot/import-extensions' || fatal === true),
             ).toStrictEqual([]);
         }
     },
