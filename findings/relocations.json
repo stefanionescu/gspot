@@ -16823,5 +16823,25 @@
         "to": "tests/config/cli/generation/every-template.ts",
         "name": "TEST_SECRET renamed PROJECT_FILES",
         "type": false
+    },
+    {
+        "from": "packages/cli/src/checks/general/prose/vale.ts",
+        "to": "packages/cli/src/checks/general/vale.ts",
+        "type": false
+    },
+    {
+        "from": "packages/cli/src/checks/general/prose/hidden.ts",
+        "to": "packages/cli/src/checks/general/hidden.ts",
+        "type": false
+    },
+    {
+        "from": "tests/cli/checks/general/prose/vale.test.ts",
+        "to": "tests/cli/checks/general/vale.test.ts",
+        "type": false
+    },
+    {
+        "from": "tests/cli/checks/general/prose/hidden.test.ts",
+        "to": "tests/cli/checks/general/hidden.test.ts",
+        "type": false
     }
 ]

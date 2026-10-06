@@ -70,7 +70,7 @@
     ],
     "relocations": {
         "source": "findings/relocations.json",
-        "items": 2829
+        "items": 2833
     },
     "checklists": [
         {
@@ -2678,10 +2678,26 @@
                 "Verification: /tmp/gspot-prose-policy-native-complete.log passes all 15 pinned Vale cases with 35 assertions (1.224 seconds), including generated recommended output, real prose/comment links, excluded code/strings and exact currency scenarios. /tmp/gspot-prose-policy-types-complete.log passes all four TypeScript targets (9.18 seconds). Affected ESLint, Prettier and native Taplo formatting pass. Initial generation writes currency.yml, removes defaults.yml and updates .gitignore; final canonical generation writes link-text.yml. Its second apply reports 139 unchanged outputs and zero writes/updates/removals. No new dependency or installation, coverage control, manual-override removal, timeout change or external publication/deployment occurs.",
                 "The first actual staged check rejected raw-scope link matching inside a TypeScript test string and a lone test-data directory. Changing the native rule to link scope fixes the prose false positive and the strengthened native regression proves code fences and runtime strings remain excluded. The data owner now lives directly under tests/config/tools/. No ignore or policy exception is added.",
                 "Completed CLI verification: /tmp/gspot-prose-policy-cli-complete.log passes 22 cases with 171 assertions across three affected files (1.69 seconds). /tmp/gspot-prose-policy-docs-complete.log builds 316 pages and validates all local links and fragments.",
-                "Actual staged gate: /tmp/gspot-prose-policy-staged-complete.json exits 0 with 131 passed checks, 11 explicit skips and zero failures/errors (75.740 seconds). Normal Semgrep, OSV, Taplo and pinned native startup run without bypasses."
+                "Actual staged gate: /tmp/gspot-prose-policy-staged-complete.json exits 0 with 131 passed checks, 11 explicit skips and zero failures/errors (75.740 seconds). Normal Semgrep, OSV, Taplo and pinned native startup run without bypasses.",
+                "Delivery: commit 162ebce9b5dfeb00870e1720a15903a4ef6872c2 completed with hooks enabled: 91 pre-commit checks passed, two explicit skips, zero findings (24.3 seconds), and message validation passed. Normal push to origin/main passed 131 checks with 11 explicit skips and zero findings (74.9 seconds). HEAD and origin/main matched with a clean tree before this shared prose work. Logs: /tmp/gspot-prose-policy-commit.log and /tmp/gspot-prose-policy-push.log."
             ],
             "remaining": [
                 "Finish shared Vale suppression ownership, SQL comment correctness, remaining portable prose rules, typed namespaces and the remaining 847 records, final suite/platform/package checks, and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "Vale engine ownership preparation",
+            "rows": [],
+            "outcome": "Mechanical preparation only; 847 original implementation records remain open.",
+            "evidence": [
+                "The pending shared-suppression batch passed 57 CLI cases, 25 pinned native cases, four TypeScript targets and documentation validation, but its first actual staged gate found two naming errors and the two source/test prose folders that become lone-file folders when the duplicate engine is deleted. No skip, ignore or policy exception was introduced. Its complete patch and ledger were saved under /tmp/gspot-shared-prose-pending.patch and matching pending JSON files before restoring only this batch\u2019s authored changes. Managed suppression instructions were restored by canonical gspot apply. The batch remains pending until those failures are resolved and it passes the actual staged gate.",
+                "Move both Vale and the still-active hidden-prose engine, plus their CLI test modules, directly under their general check owners. Update the registry and native Vale consumer imports. This keeps the eventual engine deletion separate from the mechanical moves. Types, static data, shipped configuration assets and the four suite owners retain their existing ownership. No engine, callback, calculation, rule, level or check ID changes in this preparation.",
+                "/tmp/gspot-vale-ownership-proof-final.json verifies all statement tokens and comments are unchanged across four moved modules and two consumers after literal import-owner replacements and import ordering. The original hidden-prose public refusal/correction test and every Vale routing/finding assertion remain unchanged. Runtime references to both former engine paths and both former test paths are absent; historical source quotes remain.",
+                "Verification: /tmp/gspot-vale-ownership-cli.log passes 32 cases with 116 assertions across four affected owners (1.310 seconds). /tmp/gspot-vale-ownership-native.log passes 15 pinned Vale cases with 35 assertions (1.401 seconds). /tmp/gspot-vale-ownership-types.log passes all four TypeScript targets (9.84 seconds). Affected ESLint and Prettier pass. Both canonical generation runs retain 139 unchanged outputs and zero writes, updates or removals. No dependency, install, budget, manual override or external publication/deployment changes.",
+                "Actual staged gate: /tmp/gspot-vale-ownership-staged.json exits 0 with {'passed': 66, 'skipped': 9}, zero failures/errors and duration 42540 ms. All four module moves and consumers are staged together; no product check or policy gate is weakened."
+            ],
+            "remaining": [
+                "Restore the saved shared-suppression and SQL-comment behavior after this preparation is committed and normally pushed. Fix the two new variable names, preserve MDX and every original assertion, and pass all required gates. Finish the remaining 847 records and final delivery requirements."
             ]
         }
     ],
@@ -6288,6 +6304,17 @@
                 ],
                 "decision": "recommended-and-all",
                 "status": "Decision evidence recorded for every listed conflicting suggestion; unrelated substantive requirements remain open."
+            },
+            {
+                "id": "vale-engine-ownership-preparation",
+                "records": ["areas/checks/036", "slices/kits-general/045"],
+                "status": "Mechanical preparation; substantive findings remain open.",
+                "owners": [
+                    "packages/cli/src/checks/general/vale.ts",
+                    "packages/cli/src/checks/general/hidden.ts",
+                    "tests/cli/checks/general/vale.test.ts",
+                    "tests/cli/checks/general/hidden.test.ts"
+                ]
             }
         ]
     }
