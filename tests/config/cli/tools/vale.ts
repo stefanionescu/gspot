@@ -33,3 +33,13 @@ writeFileSync('.gspot/config/vale/styles/LocalStyle/terms.yml', 'corrected bytes
 `;
 
 export const CONFIG = 'StylesPath = vale/styles\nPackages = LocalStyle\n';
+
+export const VALE_DETECTION_LINKS = [
+    ['configuration', 'Lifecycle destination is not a private regular file: .gspot/config/vale.ini'],
+    ['package', 'Unsafe lifecycle destination: .gspot/config/vale/styles/LocalStyle'],
+] as const;
+
+export const VALE_REMOVAL_LINKS = [
+    ['package', 'Unsafe lifecycle destination: .gspot/config/vale/styles/LocalStyle'],
+    ['nested directory', 'Unsafe lifecycle destination: .gspot/config/vale/styles/LocalStyle/nested'],
+] as const;

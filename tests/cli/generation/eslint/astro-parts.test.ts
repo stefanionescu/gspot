@@ -1,4 +1,4 @@
-// ESLint reads each part of an Astro component: the frontmatter with type information, the markup, and each script.
+// ESLint reads each part of an Astro component: the frontmatter with type information, the markup, and its script.
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/harness/generated.ts';
@@ -21,6 +21,7 @@ test('the frontmatter, the markup, and a script of an Astro component each reach
         containingAll([
             '4 @typescript-eslint/no-unnecessary-condition',
             '6 astro/jsx-a11y/alt-text',
+            '7 astro/no-set-html-directive',
             '9 @typescript-eslint/no-unused-vars',
         ]),
     );

@@ -47,7 +47,7 @@ test('typos output preserves quoted keys and paths without creating settings', a
     expect(parsed['files']).not.toMatchObject({ 'extend-exclude': containingAll(['**']) });
 });
 
-test('template spelling values use the same TOML emission path', async () => {
+test('a quoted word from a template reaches typos.toml through init', async () => {
     const word = 'café."upstream"';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -87,21 +87,19 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
-            configurations: ['secrets', 'dependencies', 'files', 'docs', 'python', 'postgres'],
+            configurations: ['secrets', 'dependencies', 'files', 'docs', 'python'],
             format: { indent_style: 'tab' },
             tools: {
                 gitleaks: { allowed: [{ description: text, paths: [path], patterns: [text], reason }] },
                 taplo: { formatting: { [option]: text, column_width: 88 } },
                 lychee: { exclude_urls: [{ patterns: [text], reason }] },
             },
-            postgres: { frozen_through: 'all' },
             ignore: [
                 { check: 'python/ruff', rule: 'F401', paths: [path], reason },
                 { check: 'dependencies/osv', rule: text, reason, until: '2099-09-20' },
                 { check: 'dependencies/osv', rule: 'GHSA-path-specific', paths: [path], reason },
             ],
         }),
-        'migrations/20260101_initial.sql': 'select 1;\n',
         'sample.py': 'value = 1',
         'sample.md': '# Sample',
         'package.json': '{"private":true}',
@@ -124,9 +122,6 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     });
     expect(parsed.get('.gspot/config/lychee.toml')).toMatchObject({ exclude: [text] });
     expect(parsed.get('.gspot/config/ruff.toml')).toMatchObject({ lint: { 'per-file-ignores': { [path]: ['F401'] } } });
-    expect(parsed.get('.gspot/config/squawk.toml')).toMatchObject({
-        excluded_paths: ['migrations/20260101_initial.sql'],
-    });
 });
 
 test('an OSV expiry cannot inject another TOML table', async () => {

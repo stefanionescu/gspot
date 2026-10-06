@@ -2560,10 +2560,37 @@
                 "Verification: /tmp/gspot-reader-moves-cli.log passes all 37 affected cases with 138 assertions across eight files (7.28 seconds), including native Node module-pointer imports and Git/filesystem/process boundaries. /tmp/gspot-reader-moves-types.log passes all four TypeScript targets (9.75 seconds). Affected ESLint, Prettier and git diff --check pass. Both apply-first.json and apply-second.json report 140 unchanged outputs with zero other changes. Production source, native pins and timeout defaults, both coverage levels, manual language/framework overrides and legitimate prerequisites stay unchanged; no new installation is needed.",
                 "Composite status: no original record closes in this mechanical batch. Vale refusal text/path specificity, duplicate shared-reader assertions, the remaining Trivy/Squawk conversion assertions and the template-init title remain for the separate behavior batch. All 870 open records, original IDs/source fields and the 990-record mapping remain represented. External publication and deployment are not performed.",
                 "Package ownership: the complete reasoned package-ignore case moves from framework-rules.test.ts into the existing package-manifests.test.ts owner with its entire body intact. Its remaining correction-only run stays for the behavior batch. The first staged gate rejected a one-file lifecycle/merge folder; the shared document test now sits beside the other lifecycle tests. No folder exception is added. /tmp/gspot-reader-moves-extended-cli.log passes all ten package/framework/shared-reader cases with 23 assertions (3.96 seconds); the root TypeScript target passes after the extended moves. The final token/comment proof covers five complete-case moves and 24 original source statements.",
-                "Staged verification: /tmp/gspot-reader-moves-staged-final.json records the actual gspot --json check --staged at exit 0: 51 passed checks, 6 explicit skips, 119 selection skips and zero findings (30.995 seconds). The one-file folder finding is resolved by owner placement, with no policy exception. All original implementation checklist data is byte-for-value unchanged and the 990-record mapping is intact. No original record closes in this batch."
+                "Staged verification: /tmp/gspot-reader-moves-staged-final.json records the actual gspot --json check --staged at exit 0: 51 passed checks, 6 explicit skips, 119 selection skips and zero findings (30.995 seconds). The one-file folder finding is resolved by owner placement, with no policy exception. All original implementation checklist data is byte-for-value unchanged and the 990-record mapping is intact. No original record closes in this batch.",
+                "Delivery: commit 9e6dc4ddd7e2ca05724dd9c4e86e5e47c8722c1a completed with hooks enabled: 34 pre-commit passes, two existing skips and zero findings, followed by successful commit-message validation. Normal push to origin/main passed 51 checks with eight explicit skips and zero findings (31.4 seconds). HEAD and origin/main matched with a clean tree before the next batch. Logs: /tmp/gspot-reader-moves-commit.log and /tmp/gspot-reader-moves-push.log."
             ],
             "remaining": [
                 "Finish reader refusals and duplicate/conversion assertions in a separate behavior batch before closing the composite findings. Continue the remaining 870 original records and final verification families; external publication/deployment retain their separate authorization boundary."
+            ]
+        },
+        {
+            "subsystem": "Reader and tool generation regression quality",
+            "rows": [
+                "slices/tests-integration-generation/010",
+                "slices/tests-integration-generation/015",
+                "slices/tests-integration-generation/028",
+                "slices/tests-integration-generation/031",
+                "slices/tests-integration-generation/040",
+                "slices/tests-integration-generation/041",
+                "slices/tests-integration-generation/042",
+                "slices/tests-integration-generation/043"
+            ],
+            "outcome": "Eight original records close with IDs and source quotations intact. 862 original implementation records remain open.",
+            "evidence": [
+                "Exact Vale refusals: the configuration and package detection rows assert the exact Node throws message, including .gspot/config/vale.ini or the LocalStyle package path. Removal asserts the exact package or nested-directory refusal and retains the outside styles byte assertion because removal is destructive. Static scenarios belong to config/cli/tools/vale.ts, and the reader/remover cases already moved into the tools owner in the preceding mechanical commit. No internal mock or generic lifecycle regular expression remains in these cases.",
+                "Shared readers: lifecycle/shared-document.test.ts keeps one hasFields link refusal with actual requested changes and an exact linked.toml private-file message. The duplicate empty-change invocation is removed. Its malformed mise.toml case also uses exact Node throws matching for the owned file and recovery guidance. The compiler generation cases use literal rows under config/cli/generation/typescript.ts and exact full diagnostics, including the absolute config path and the pinned TypeScript parser message for malformed syntax, null and arrays. The legacy YAML/package-reader assertion cited by record 042 has been superseded by the current TOML-only shared reader contract; its current shared/compiler refusals are now exact. Original source quotations remain intact.",
+                "Value conversion ownership: Trivy duration and severity conversion has a focused generation/trivy.test.ts fixture declaring Docker and its existing timeout/severity settings. It parses the generated YAML and verifies 10m becomes 600s and HIGH,CRITICAL becomes the native list. The unrelated Trivy setting and assertion leave the literal-escaping fixture. Squawk all-migrations selection moves out of the mixed TOML literal case into the existing Squawk generation owner, alongside both exact numeric cutoffs and the large integer rounding boundary. The mixed serializer no longer selects Postgres or plants a migration solely for that assertion. No production rule, optional coverage switch, bundle or profile is added.",
+                "Focused outcomes: the authored template/init title now says that a quoted word reaches typos.toml through init. It retains the dry-run policy write and actual quoted-word output assertion; manual authored language/framework selections remain available. The reasoned package-ignore case is already beside package manifest tests; its neighboring require-exports rejection stays, while the correction-only run and write import are removed. Formatting retains both generated editor and native YAML formatting outcomes and removes only the two Prettier check self-tests. Astro now explicitly requires the line-seven no-set-html-directive finding and describes the one script its fixture contains; frontmatter, markup, accessibility and script diagnostics remain.",
+                "Failure corrections: the first run exposed missing imports for the new Vale rows and the compiler expectation incorrectly using a relative path. The rows are imported from their actual data owner, and compiler cases now assert the real absolute path plus exact pinned parser detail. No product diagnostic, native check, prerequisite, timeout or policy is weakened. The source records remain unchanged; the legacy generic-format assumption in record 042 closes as superseded by a correction, while the other seven outcomes are implemented.",
+                "Verification: /tmp/gspot-reader-quality-cli-final.log passes all 59 affected cases with 191 assertions across 11 files (11.16 seconds), including actual filesystem refusal/removal boundaries, pinned native ESLint/Node consumers, serialization, emitted tool configuration, template init and formatting. /tmp/gspot-reader-quality-refusals-final.log passes all 15 final refusal cases with 33 assertions (3.42 seconds) after exact TOML matching. /tmp/gspot-reader-quality-types-final.log passes all four TypeScript targets (8.96 seconds). Affected ESLint, Prettier and git diff --check pass. Both apply-first.json and apply-second.json report 140 unchanged outputs with zero other changes. No new installation or production change is needed; whole-suite/platform/delivered-package completion remains required by the overall plan. Publication and deployment are not performed.",
+                "Staged verification: /tmp/gspot-reader-quality-staged.json records the actual gspot --json check --staged at exit 0: 51 passed checks, 6 explicit skips, 119 selection skips and zero findings (31.501 seconds). Every changed regression and required data owner is staged. All 2939 original IDs/source fields remain intact, and the 990-record mapping is unchanged. No gate or product policy is weakened."
+            ],
+            "remaining": [
+                "Continue 862 original records, including Bun generation, complete template parser coverage, guide/hook test quality, typed settings/shared execution, remaining language/framework/platform work and final suite/package/platform verification. Publication and deployment retain their separate authorization boundary."
             ]
         }
     ],
@@ -6110,6 +6137,35 @@
                     "tests/cli/generation/serialization/toml.test.ts",
                     "tests/cli/generation/eslint/framework-rules.test.ts",
                     "tests/cli/generation/eslint/package-manifests.test.ts"
+                ]
+            },
+            {
+                "id": "reader-and-tool-generation-regression-quality",
+                "records": [
+                    "slices/tests-integration-generation/010",
+                    "slices/tests-integration-generation/015",
+                    "slices/tests-integration-generation/028",
+                    "slices/tests-integration-generation/031",
+                    "slices/tests-integration-generation/040",
+                    "slices/tests-integration-generation/041",
+                    "slices/tests-integration-generation/042",
+                    "slices/tests-integration-generation/043"
+                ],
+                "owners": [
+                    "findings/implementation/slices/tests/integration/generation.json",
+                    "tests/cli/generation/eslint/astro-parts.test.ts",
+                    "tests/cli/generation/eslint/package-manifests.test.ts",
+                    "tests/cli/generation/formatting.test.ts",
+                    "tests/cli/generation/serialization/documents.test.ts",
+                    "tests/cli/generation/serialization/toml.test.ts",
+                    "tests/cli/generation/squawk.test.ts",
+                    "tests/cli/generation/typescript.test.ts",
+                    "tests/cli/lifecycle/shared-document.test.ts",
+                    "tests/cli/tools/vale.test.ts",
+                    "tests/config/cli/generation/serialization.ts",
+                    "tests/config/cli/tools/vale.ts",
+                    "tests/cli/generation/trivy.test.ts",
+                    "tests/config/cli/generation/typescript.ts"
                 ]
             }
         ]

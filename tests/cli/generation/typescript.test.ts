@@ -1,12 +1,15 @@
-import { test, expect } from 'bun:test';
+import { test } from 'bun:test';
+import { join } from 'node:path';
+import { throws } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { MALFORMED_COMPILER_CONFIGURATIONS } from '#tests/config/cli/generation/typescript.ts';
 
-test.each(['{"extends":"./.gspot/tsconfig.json", invalid}', 'null', '[]'])(
+test.each(MALFORMED_COMPILER_CONFIGURATIONS)(
     'malformed TypeScript configuration fails generation: %s',
-    async (content) => {
+    async (content, detail) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'tsconfig.json': content,
@@ -14,6 +17,8 @@ test.each(['{"extends":"./.gspot/tsconfig.json", invalid}', 'null', '[]'])(
             'source.ts': 'export const value = 1;\n',
         });
         const session = await openSession(sandbox.path);
-        expect(() => emitAll(session)).toThrow('Cannot read TypeScript configuration');
+        throws(() => emitAll(session), {
+            message: `Cannot read TypeScript configuration ${join(sandbox.path, 'tsconfig.json')}: ${detail}`,
+        });
     },
 );

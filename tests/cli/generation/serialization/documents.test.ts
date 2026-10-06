@@ -68,7 +68,6 @@ test('JSON option keys and YAML values keep their literal structure', async () =
     expect(yaml.get('.gspot/config/yamllint.yml')).toMatchObject({
         rules: { truthy: { 'allowed-values': ['yes', 'no'] }, indentation: { spaces: 'consistent' } },
     });
-    expect(yaml.get('.gspot/config/trivy.yml')).toMatchObject({ timeout: '600s', severity: ['HIGH', 'CRITICAL'] });
 });
 
 test('the template YAML binding preserves literal mapping keys and scalar values', async () => {

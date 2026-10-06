@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { throws } from 'node:assert/strict';
 import { toolPin } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -8,7 +9,14 @@ import { rootView } from '#cli/policy/settings/view.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { hasValePackages, removeValePackages, installValePackages } from '#cli/tools/vale.ts';
 import { chmodSync, mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { CONFIG, VALE_ACQUISITION_FAILURES, CORRECTED_VALE_ACQUISITION } from '#tests/config/cli/tools/vale.ts';
+
+import {
+    CONFIG,
+    VALE_REMOVAL_LINKS,
+    VALE_DETECTION_LINKS,
+    VALE_ACQUISITION_FAILURES,
+    CORRECTED_VALE_ACQUISITION,
+} from '#tests/config/cli/tools/vale.ts';
 
 test.each(VALE_ACQUISITION_FAILURES)(
     'Vale acquisition preserves installed styles after %s and succeeds after correction',
@@ -67,20 +75,23 @@ async function linkedStyles(directory: string, kind: string): Promise<string> {
     return root;
 }
 
-test.each(['configuration', 'package'])('Vale package detection rejects a linked %s', async (kind) => {
+test.each(VALE_DETECTION_LINKS)('Vale package detection rejects a linked %s', async (kind, message) => {
     await using directory = await testdir();
     const root = await linkedStyles(directory.path, kind);
-    expect(() => hasValePackages(root)).toThrow(/lifecycle/iu);
+    throws(() => hasValePackages(root), { message });
 });
 
-test.each(['package', 'nested directory'])(
+test.each(VALE_REMOVAL_LINKS)(
     'Vale package removal refuses a linked %s without deleting outside styles',
-    async (kind) => {
+    async (kind, message) => {
         await using directory = await testdir();
         const root = await linkedStyles(directory.path, kind);
-        expect(() => {
-            removeValePackages(root);
-        }).toThrow(/lifecycle/iu);
+        throws(
+            () => {
+                removeValePackages(root);
+            },
+            { message },
+        );
         expect(readFileSync(join(directory.path, 'outside/terms.yml'), 'utf8')).toBe('external bytes\n');
     },
 );

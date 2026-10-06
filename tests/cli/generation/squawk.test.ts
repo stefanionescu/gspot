@@ -22,3 +22,12 @@ test.each([
     );
     expect(parse(text)['excluded_paths']).toStrictEqual(expected);
 });
+
+test('freezing all migrations excludes every discovered migration from Squawk', async () => {
+    const text = await emitFile(
+        buildPolicy(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' }),
+        '.gspot/config/squawk.toml',
+        { 'migrations/20260101_initial.sql': 'select 1;\n' },
+    );
+    expect(parse(text)['excluded_paths']).toStrictEqual(['migrations/20260101_initial.sql']);
+});

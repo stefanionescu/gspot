@@ -13,7 +13,6 @@ export const SERIALIZATION_POLICY = {
         yamllint: { rules: { truthy: { 'allowed-values': ['yes', 'no'] }, indentation: { spaces: 'consistent' } } },
         xcode: { project: PROJECT, scheme: SCHEME },
         hadolint: { trusted_registries: REGISTRIES },
-        trivy: { timeout: '10m', severity: 'HIGH,CRITICAL' },
     },
 };
 

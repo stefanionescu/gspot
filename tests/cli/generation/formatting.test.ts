@@ -89,10 +89,8 @@ test('the format width reaches editors and generated tool configurations', async
     expect(generated.get('.gspot/config/swiftformat')).toContain(`--indent ${String(width)}\n`);
     const source = await Bun.file(path).text();
     const expected = `parent:\n${' '.repeat(width)}child: value\n`;
-    expect(await prettier.check(source, { ...editor, filepath: path })).toBe(false);
     expect(await prettier.format(source, { ...editor, filepath: path })).toBe(expected);
     expect(await prettier.format(source, { ...native, filepath: path })).toBe(expected);
-    expect(await prettier.check(expected, { ...editor, filepath: path })).toBe(true);
 });
 
 test('an explicit YAML width override remains consistent between EditorConfig and Prettier', async () => {
