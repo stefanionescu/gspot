@@ -845,7 +845,9 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [
+            "Batch 61 prerequisite: built HTML declarations and native execution now preserve per-site scope configuration and whole-scope rule exceptions. Four public-CLI native regressions fail against the previous owners and pass with the fix. Keep this record open until the separate declaration/template ownership move is implemented and verified. Evidence: findings/progress.json, Built HTML native scope isolation."
+        ]
     },
     {
         "id": "slices/kits-web-languages/045",

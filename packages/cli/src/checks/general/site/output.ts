@@ -4,12 +4,13 @@ import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { NameAllowance } from '#cli/types/policy/settings.ts';
+import { targetInScope } from '#cli/configurations/declarations.ts';
 import { SITEMAP_LOCATION } from '#cli/config/checks/general/site.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import type { SizeLimit, LinkExclusion } from '#cli/types/checks/general/site.ts';
-import { POLICY_FILE, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { filesUnder, requireBuild, repositoryPath } from '#cli/checks/general/site/build.ts';
 import { purgecssReportSchema, linkinatorReportSchema, htmlValidationReportSchema } from '#cli/parsers/schema/site.ts';
 
@@ -76,7 +77,12 @@ export async function htmlValidate(input: EngineInput): Promise<Finding[]> {
         .filter((path) => path.endsWith('.html'))
         .map((path) => join(build.output, path));
     if (pages.length === 0) return [];
-    const config = join(input.root, CONFIGURATION_DIRECTORY, 'html-validate-built.json');
+    const configuration = input.manifests
+        .values()
+        .flatMap((manifest) => manifest.configs)
+        .find((target) => target.check.includes(input.spec.name));
+    if (configuration === undefined) throw new Error(`Check ${input.spec.name} has no declared HTML configuration.`);
+    const config = join(input.root, targetInScope(input.scope, configuration));
     const result = await runEngineTool(input, ['html-validate', '--config', config, '--formatter', 'json', ...pages], {
         cwd: build.cwd,
     });

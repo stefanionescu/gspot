@@ -30,3 +30,6 @@ export type TestedRuffConfiguration = RuffConfiguration & { lint: Required<RuffC
 export type RuntimeConfiguration = ResolvedEslint & {
     languageOptions: { globals: Record<string, string | boolean>; sourceType: string };
 };
+
+/** Built HTML rule severities generated for each selected site scope. */
+export type HtmlValidationConfiguration = { rules: Record<string, unknown> };

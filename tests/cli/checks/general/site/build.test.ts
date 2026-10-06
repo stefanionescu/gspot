@@ -28,6 +28,7 @@ import {
 const SITE_REPORTS: SiteReportCase[] = [
     {
         name: 'links',
+        check: 'site/linkinator',
         analyze: (input) => brokenLinks(input, false),
         defect: () => ({
             links: [{ url: 'https://example.com/missing', parent: 'index.html', state: 'BROKEN', status: 404 }],
@@ -39,6 +40,7 @@ const SITE_REPORTS: SiteReportCase[] = [
     },
     {
         name: 'markup',
+        check: 'site/html-validate',
         analyze: htmlValidate,
         defect: (output: string) => [
             {
@@ -53,6 +55,7 @@ const SITE_REPORTS: SiteReportCase[] = [
     },
     {
         name: 'selectors',
+        check: 'site/purgecss',
         analyze: purgecss,
         defect: () => [{ file: 'style.css', rejected: ['.unused'] }],
         corrected: [{ file: 'style.css', rejected: [] }],
@@ -206,11 +209,11 @@ test('site output inventory refuses external links and accepts corrected assets'
 
 test.each(SITE_REPORTS)(
     '$name rejects fatal, absent, and malformed reports and accepts defects and corrections',
-    async ({ analyze, defect, status, file, rule, corrected }) => {
+    async ({ analyze, check, defect, status, file, rule, corrected }) => {
         await using sandbox = await testdir();
         using resources = new DisposableStack();
         await createFileTree(sandbox.path, { 'gspot.toml': SITE_POLICY, 'build.js': SITE_BUILD_SCRIPT });
-        const request = buildEngineInput(await openSession(sandbox.path), 'site/build-reproducible', {
+        const request = buildEngineInput(await openSession(sandbox.path), check, {
             paths: ['build.js'],
             resources: resources,
         });

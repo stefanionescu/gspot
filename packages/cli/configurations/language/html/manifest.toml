@@ -35,6 +35,7 @@ generated_header = false
 
 [[config]]
 target = ".gspot/config/html-validate-built.json"
+scoped = true
 tool = "html-validate"
 check = "site/html-validate"
 rule_keys = ["rules"]
