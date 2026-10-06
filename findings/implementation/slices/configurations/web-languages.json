@@ -833,9 +833,14 @@
         "finding": "| `kits/language/css/manifest.toml:82-92` `module-classes`, `src/checks/language/css.ts:94-131` | The check reports false findings. Classes inside `:global(...)` count as module classes, so they are reported as unused (verified: `walkClasses` returns `dark` for `.root :global(.dark)`). Dynamic access (`styles[variant]`) and destructuring record no reads, so every class of that sheet is reported as unused. Every finding points at line 1. | These bugs support the replacement by eslint-plugin-css-modules that FINDINGS proposes in the built-in checks section. Until then, skip `:global` classes, skip unused-class findings for sheets read dynamically, and report the line of each class. |",
         "owner": "`kits/language/css/manifest.toml:82-92` `module-classes`, `src/checks/language/css.ts:94-131`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "All specified CSS module bugs are already fixed in the existing parser/check owners. isGlobalClass excludes functional and bare global selectors and respects explicitly local selectors. bindingReads resolves import symbols, literal properties and destructured aliases; computed access and object rest mark only their stylesheet dynamic. sheetFindings preserves undefined literal diagnostics and reports actual definition and importer lines. Preserve the substantive checker pending pinned native replacement equivalence; the broader replacement finding stays open.",
+            "Link this overlapping record to slices/checks-languages/063 and the earlier SQL, HTML, CSS and Bash verification. The existing parser and twenty substantive CSS regressions are present in commit 4ce293ae8aed8e40dfae9b6459b6b90d04497937; this reconciliation adds no duplicate implementation or test and removes no unique assertion.",
+            "Current public CLI proof: /tmp/gspot-css-usage-public-proof.json audits all eight real gspot check --json --only css/module-classes runs in two retained repositories, one per coverage level. Exact unused local definitions occur at lines 7 and 8; missing global-class reads occur at importer line 3. Dynamic access suppresses only the owning sheet's unused diagnostics and preserves the sibling sheet's line-4 defect and the literal missing read. Destructured aliases satisfy all local definitions. Explicit corrections clear every finding. Policy and stylesheet bytes remain unchanged and neither repository installs private tools. No extra enabling control is used.",
+            "Existing regression verification: /tmp/gspot-css-usage-cli.log passes twenty cases with 59 assertions, zero failures, in 909 milliseconds. Includes globals/local selectors, dynamic and rest access, destructured aliases, exact locations, lexical shadowing, binding forms, sibling identities, ignored importers, Sass boundaries and mts/cts corrections. All four TypeScript targets pass in 9.45 seconds, /tmp/gspot-css-usage-types.log."
+        ]
     },
     {
         "id": "slices/kits-web-languages/044",

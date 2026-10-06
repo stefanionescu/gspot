@@ -3181,10 +3181,27 @@
                 "One new manifest boundary regression rejects both formerly accepted per-selector level values at their exact config.0.selectors.0 field and accepts the existing selector/message/files/allowed contract without that field. Keep fixture literals in the existing parser config owner. /tmp/gspot-selector-level-baseline-proof.json restores all eight production owners to 3b3b72685b934d8b75a5c7ba55be28607c8c947a and restores every current byte afterward. The exact final regression fails because the old parser accepts the dead recommended declaration (one failure, 45 milliseconds); no unrelated failure or nonexistent test path is counted. All existing selector grouping and allowance assertions remain intact.",
                 "Affected verification: /tmp/gspot-selector-level-cli.log passes all 154 cases with 1048 assertions across thirty actual files (23.61 seconds), including native-backed framework, selector, rule, scope, schema, template and level-contract regressions. /tmp/gspot-selector-level-native.log passes all eighteen existing pinned native lint-policy, JavaScript and Node regressions with 127 assertions across three files (29.50 seconds). All four TypeScript targets pass (10.21 seconds), /tmp/gspot-selector-level-types.log. Affected ESLint, formatting and git diff --check pass. Documentation builds 314 pages and validates every local link and fragment (3.80 seconds), /tmp/gspot-selector-level-docs.log. The first canonical apply changes none of 139 outputs. Preserve all existing test bodies and unique assertions and CLI/plugin 60-second and tools/packages 900-second limits with remaining-budget-bounded child operations.",
                 "Final canonical and audit verification: the second apply leaves all 139 outputs unchanged, /tmp/gspot-selector-level-apply-second.log. /tmp/gspot-selector-level-ledger-proof.json preserves all 2939 original IDs and immutable source fields and the original 990-record map. Only finding 031 changes status, leaving 806 open and 2133 closed. Retain every unique prior assertion and all overlapping records for their unrelated constituent work.",
-                "Actual staged verification: /tmp/gspot-selector-level-staged.json exits zero with 67 passed checks, nine explicit skips, zero failures or errors and duration 44967 milliseconds. Preserve every normal repository gate and native startup, with no suppression, ignored check, offline-only flag, altered coverage level, relaxed timeout or product weakening. Existing GitHub credentials remain only in child environments and are neither printed nor persisted."
+                "Actual staged verification: /tmp/gspot-selector-level-staged.json exits zero with 67 passed checks, nine explicit skips, zero failures or errors and duration 44967 milliseconds. Preserve every normal repository gate and native startup, with no suppression, ignored check, offline-only flag, altered coverage level, relaxed timeout or product weakening. Existing GitHub credentials remain only in child environments and are neither printed nor persisted.",
+                "Batch 64 delivery: hook-enabled commit d2e3fdcd483f05dfeffa7e20ad18959332399492 and normal push to origin/main succeed. Commit code hooks pass 44 checks with two explicit skips and zero findings (7.8 seconds), followed by commit-message validation (0.4 seconds). Push hooks pass 67 checks with nine explicit skips and zero findings (43.1 seconds). HEAD, origin/main and remote main match and the tree is clean before batch 65. Logs: /tmp/gspot-selector-level-commit.log and push.log."
             ],
             "remaining": [
-                "Finish hook-enabled commit and normal push. Continue every remaining original finding, supported-platform/native and delivered-package checks, final full-family verification and separately authorized publication/deployment."
+                "Continue every remaining original finding, supported-platform/native and delivered-package checks, final full-family verification and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "CSS module usage finding reconciliation",
+            "rows": ["slices/kits-web-languages/043"],
+            "outcome": "One overlapping original finding implemented; 805 records remain open.",
+            "evidence": [
+                "All specified CSS module bugs are already fixed in the existing parser/check owners. isGlobalClass excludes functional and bare global selectors and respects explicitly local selectors. bindingReads resolves import symbols, literal properties and destructured aliases; computed access and object rest mark only their stylesheet dynamic. sheetFindings preserves undefined literal diagnostics and reports actual definition and importer lines. Preserve the substantive checker pending pinned native replacement equivalence; the broader replacement finding stays open.",
+                "Link this overlapping record to slices/checks-languages/063 and the earlier SQL, HTML, CSS and Bash verification. The existing parser and twenty substantive CSS regressions are present in commit 4ce293ae8aed8e40dfae9b6459b6b90d04497937; this reconciliation adds no duplicate implementation or test and removes no unique assertion.",
+                "Current public CLI proof: /tmp/gspot-css-usage-public-proof.json audits all eight real gspot check --json --only css/module-classes runs in two retained repositories, one per coverage level. Exact unused local definitions occur at lines 7 and 8; missing global-class reads occur at importer line 3. Dynamic access suppresses only the owning sheet's unused diagnostics and preserves the sibling sheet's line-4 defect and the literal missing read. Destructured aliases satisfy all local definitions. Explicit corrections clear every finding. Policy and stylesheet bytes remain unchanged and neither repository installs private tools. No extra enabling control is used.",
+                "Existing regression verification: /tmp/gspot-css-usage-cli.log passes twenty cases with 59 assertions, zero failures, in 909 milliseconds. Includes globals/local selectors, dynamic and rest access, destructured aliases, exact locations, lexical shadowing, binding forms, sibling identities, ignored importers, Sass boundaries and mts/cts corrections. All four TypeScript targets pass in 9.45 seconds, /tmp/gspot-css-usage-types.log.",
+                "Documentation builds 314 pages and validates every local link and fragment, /tmp/gspot-css-usage-docs.log. Both canonical apply runs leave all 139 outputs unchanged. Affected JSON formatting and git diff --check pass. /tmp/gspot-css-usage-ledger-proof.json preserves all 2939 original IDs and immutable fields and the original 990-record map; only the overlapping CSS record closes, leaving 805 open and 2134 closed. No production behavior changes.",
+                "Actual final staged check exits zero: 35 passed checks, 2 explicit skips, zero failures or errors, 29456 milliseconds; /tmp/gspot-css-usage-staged-final.json. The initial staged run detected only unformatted JSON evidence; format that file, restage it and rerun the full affected gate successfully. No product gate, suppression, timeout, selection control or installation changes."
+            ],
+            "remaining": [
+                "Finish staged verification, hook-enabled commit and normal push. Continue all remaining original records, including pinned CSS replacement equivalence and separately authorized publication/deployment."
             ]
         }
     ],
@@ -7134,6 +7151,16 @@
                     "packages/cli/src/generation/eslint/blocks.ts"
                 ],
                 "status": "Remove the dead per-selector level field and keep existing strict selector coverage in the shared all-level generator."
+            },
+            {
+                "id": "css-module-usage-diagnostics",
+                "records": ["slices/checks-languages/063", "slices/kits-web-languages/043"],
+                "owners": [
+                    "packages/cli/src/parsers/css.ts",
+                    "packages/cli/src/checks/language/css.ts",
+                    "packages/cli/src/types/parsers/css.ts",
+                    "tests/cli/checks/language/css.test.ts"
+                ]
             }
         ]
     }
