@@ -3058,6 +3058,20 @@
             "remaining": [
                 "Complete remaining policy/shared-execution, language/framework/platform, test, repository and installation findings, final verification and separately authorized publication/deployment."
             ]
+        },
+        {
+            "subsystem": "Patched Sharp dependency prerequisite for native lint delivery",
+            "rows": [],
+            "outcome": "No original record changes status in this dependency prerequisite; 813 records remain open in the delivered baseline. Preserve all pending native lint source and evidence changes.",
+            "evidence": [
+                "Actual staged OSV reported GHSA-wq5f-xc86-pv6w for sharp 0.35.4. Primary advisory https://github.com/advisories/GHSA-wq5f-xc86-pv6w identifies 0.35.5 as patched; https://github.com/lovell/sharp/releases/tag/v0.35.5 records the release. Use the existing exact workspace override mechanism so Miniflare cannot retain its exact vulnerable 0.35.4 dependency. Keep Astro, Wrangler and Miniflare pins, all unrelated dependencies and the seven-day minimum release age unchanged. Add no OSV ignore, suppression, disabled gate or check enabling control.",
+                "Bun updates and installs the lock normally, with integrity and the configured security scanner enabled. /tmp/gspot-sharp-prerequisite-lock-proof.json verifies that only sharp and its 26 native companion packages change and that no sharp 0.35.4 package remains. The first narrow update exposed the exact Miniflare requirement; the complete override removes that vulnerable subtree without upgrading unrelated packages. Dependency ownership remains transitive; no new direct dependency is added.",
+                "Native compatibility: /tmp/gspot-sharp-prerequisite-native.log loads Sharp through the actual Miniflare dependency resolver, reports sharp 0.35.5 and librsvg 2.63.2 and renders a two-pixel SVG to a 95-byte PNG. /tmp/gspot-sharp-prerequisite-worker-verified.log starts the existing pinned Miniflare worker with its current version-five configuration API, receives HTTP 200 with body ready and disposes it. Use supported compatibility date 2026-10-01; the pinned server explicitly reports that 2026-10-06 exceeds its 2026-10-02 ceiling. Documentation builds 314 pages and validates every local link and fragment (3.89 seconds). Preserve the pending lint edits in /tmp/gspot-eslint-policy-production-pending.json and progress-pending.json. Temporarily restore only those owned source edits to the delivered baseline, then regenerate via gspot apply so this dependency-only stage matches its generator. The second canonical apply changes none of 139 outputs. No generated file is edited by hand.",
+                "Final actual staged gate: /tmp/gspot-sharp-prerequisite-staged-final.json exits 0 with 36 passed checks, 2 explicit skips, zero failures or errors and duration 30908 milliseconds. OSV now passes normally. All four TypeScript targets pass after dependency installation (10.22 seconds). /tmp/gspot-sharp-prerequisite-ledger-proof.json proves all 2939 original records and every source/status field are unchanged in the staged dependency prerequisite and that the 990-record starting map is intact. The earlier dependency-only gate correctly rejected generated outputs from the separately pending generator edits; restore only those owned source changes temporarily and regenerate through the owning command, rather than weakening drift checks."
+            ],
+            "remaining": [
+                "Complete native lint batch delivery and all remaining original findings; publication and deployment retain separate authorization."
+            ]
         }
     ],
     "implementationBatches": {
