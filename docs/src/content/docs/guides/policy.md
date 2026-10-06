@@ -166,6 +166,20 @@ This reports repeated headings throughout a document, rather than only under the
 The selected level decides which rules run. Options cannot enable a rule outside that level.
 Both levels check image alt text. Accept a specific finding with `gspot ignore markdown/markdownlint --rule <rule> --reason "<why>"`.
 
+## Stylesheet rule options
+
+Stylelint options apply only to rules active at the selected level:
+
+```toml
+[tools.stylelint.rules]
+color-hex-length = "long"
+number-max-precision = 0
+```
+
+This requires long hexadecimal colors at both levels. The precision option applies at `all`, where the rule runs.
+Severity stays `error`. Accept a finding with `gspot ignore css/stylelint --rule <rule> --reason "<why>"`.
+Project-specific WebKit properties can use the native `ignoreProperties` option of `property-no-vendor-prefix`.
+
 ## Settings for one integration
 
 - [Tests and coverage](/guides/testing/): Jest, Vitest, pytest, and Swift tests.

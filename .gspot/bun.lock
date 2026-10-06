@@ -40,6 +40,7 @@
         "prettier-plugin-astro": "1.0.1",
         "prettier-plugin-svelte": "4.1.1",
         "stylelint": "16.23.1",
+        "stylelint-config-recommended": "17.0.0",
         "stylelint-config-standard": "39.0.0",
         "svelte-eslint-parser": "1.8.1",
         "typescript": "5.9.3",
@@ -180,7 +181,7 @@
 
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.4.1", "", { "dependencies": { "@eslint/core": "^0.17.0", "levn": "^0.4.1" } }, "sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA=="],
 
-    "@gspothq/eslint-plugin": ["@gspothq/eslint-plugin@0.1.0", "", { "dependencies": { "@typescript-eslint/utils": "8.70.0", "picomatch": "4.0.7" }, "peerDependencies": { "eslint": ">=9.38.0", "typescript": ">=4.8.4 <6.1.0" } }, "sha512-PyLREtAmKa5ZTB896gasxEnLXcy2aH7yXu5Gj7c7bfNFYthIHrPNR4EQ35HKhdAObm+N1efDUushVaHuDE64hA=="],
+    "@gspothq/eslint-plugin": ["@gspothq/eslint-plugin@0.1.0", "", { "dependencies": { "@typescript-eslint/utils": "8.70.0", "picomatch": "4.0.7" }, "peerDependencies": { "eslint": ">=9.38.0", "typescript": ">=4.8.4 <6.1.0" } }, "sha512-tZIbQUiN2vyXA4vApKo/8pL6TI5FKGfLTBWAP0RfKSxgo94l2CByyUSQEI1hRLzp0+p/j20GX1QI8vmxIagZYA=="],
 
     "@humanfs/core": ["@humanfs/core@0.19.2", "", { "dependencies": { "@humanfs/types": "^0.15.0" } }, "sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA=="],
 

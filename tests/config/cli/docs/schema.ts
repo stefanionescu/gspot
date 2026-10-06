@@ -6,6 +6,23 @@ export const SCHEMA_CHECK = { name: 'project/lint', command: ['lint'], paths: ['
 /** Each published-schema input exercises one supported value or refusal. */
 export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
     {
+        name: 'native Stylelint zero-valued options at error severity',
+        input: {
+            configurations: ['css'],
+            tools: { stylelint: { rules: { 'number-max-precision': [0, { severity: 'error' }] } } },
+        },
+        valid: true,
+    },
+    {
+        name: 'authored Stylelint warning severity',
+        input: {
+            configurations: ['css'],
+            tools: { stylelint: { rules: { 'color-hex-length': ['short', { severity: 'warning' }] } } },
+        },
+        valid: false,
+        key: 'tools.stylelint.rules.color-hex-length',
+    },
+    {
         name: 'native Markdown options without coverage selection',
         input: {
             configurations: ['markdown'],

@@ -556,10 +556,20 @@
         "section": "Kits: JavaScript, TypeScript, CSS, HTML, and Markdown",
         "finding": "| `kits/language/css/stylelint.json.tmpl:7` `ignoreFiles` | stylelint resolves `ignoreFiles` against `configBasedir` (`{root}/.gspot`), or against the config file's own folder for the editor pointer (`stylelint/lib/augmentConfig.mjs:21-25,146-148`). `**/dist/**`, `**/build/**`, and the other two globs therefore match only inside `.gspot/`, so the line does nothing. | Delete the line. If build output must be skipped, write root-relative globs from the policy's `generated` and `exclude` settings, as the ESLint config does. |",
         "owner": "`kits/language/css/stylelint.json.tmpl:7` `ignoreFiles`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/css/manifest.toml",
+            "packages/cli/configurations/language/css/stylelint.json.tmpl",
+            "tests/tools/configurations/language/css.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed the blanket ignoreFiles globs. A folder named build is no evidence of generated ownership; the native CLI and editor discovery now lint authored build/site.css and report its defects. Actual generated/excluded input ownership remains with the repository planner.",
+            "Source: packages/cli/configurations/language/css/manifest.toml; packages/cli/configurations/language/css/stylelint.json.tmpl; packages/cli/src/policy/schema/tools.ts; tests/tools/configurations/language/css.test.ts; tests/config/tools/configurations/language/css.ts.",
+            "Pinned native Stylelint: /tmp/gspot-stylelint-coverage-native-final.log (three passes, 21 assertions). Both levels report color and vendor-prefix defects in root/scoped CSS, then accept corrections; the zero precision option applies only at all; selector-max-id options cannot activate that nonselected rule. Native editor discovery reports authored build/site.css and accepts corrected root and scoped sources. One private installation is shared, and each case resets its authored inputs.",
+            "Runtime/published schema and policy generation: /tmp/gspot-stylelint-coverage-cli-initial.log (115 passes, 751 assertions across five files). Root and scope settings refuse warning severity while native zero-valued options remain valid. The initial TypeScript run exposed stray schema option properties from an edit; those are removed before the final four-target run.",
+            "All four TypeScript targets: /tmp/gspot-stylelint-coverage-types-final.log. Documentation: /tmp/gspot-stylelint-coverage-docs.log (316 pages; all local links and fragments valid). Full CLI/plugin: /tmp/gspot-stylelint-coverage-full-cli-plugin.log (2838 passes, three existing platform skips, zero failures/errors, 10098 assertions across 341 files; 218.49 seconds)."
+        ]
     },
     {
         "id": "slices/kits-web-languages/042",
@@ -568,10 +578,20 @@
         "section": "Kits: JavaScript, TypeScript, CSS, HTML, and Markdown",
         "finding": "| `kits/language/css/manifest.toml:7-11` `[detect]` and `[files]` | Only `.css` selects the kit. The format kit formats `.scss`, but a SCSS project gets no stylesheet linting, and `module-classes` reads only `.module.css`. | Detect `.scss` and lint it with `postcss-scss` and `stylelint-config-standard-scss`. Or say in the description that SCSS is not covered. |",
         "owner": "`kits/language/css/manifest.toml:7-11` `[detect]` and `[files]`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/css/manifest.toml",
+            "packages/cli/configurations/language/css/stylelint.json.tmpl",
+            "tests/tools/configurations/language/css.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The description explicitly limits stylesheet linting to CSS and Vue/Svelte style blocks, and states that SCSS receives formatting only. The detect/files/check extension declarations and Prettier source extensions confirm this scope. No SCSS parser or lint coverage is claimed.",
+            "Source: packages/cli/configurations/language/css/manifest.toml; packages/cli/configurations/language/css/stylelint.json.tmpl; packages/cli/src/policy/schema/tools.ts; tests/tools/configurations/language/css.test.ts; tests/config/tools/configurations/language/css.ts.",
+            "Pinned native Stylelint: /tmp/gspot-stylelint-coverage-native-final.log (three passes, 21 assertions). Both levels report color and vendor-prefix defects in root/scoped CSS, then accept corrections; the zero precision option applies only at all; selector-max-id options cannot activate that nonselected rule. Native editor discovery reports authored build/site.css and accepts corrected root and scoped sources. One private installation is shared, and each case resets its authored inputs.",
+            "Runtime/published schema and policy generation: /tmp/gspot-stylelint-coverage-cli-initial.log (115 passes, 751 assertions across five files). Root and scope settings refuse warning severity while native zero-valued options remain valid. The initial TypeScript run exposed stray schema option properties from an edit; those are removed before the final four-target run.",
+            "All four TypeScript targets: /tmp/gspot-stylelint-coverage-types-final.log. Documentation: /tmp/gspot-stylelint-coverage-docs.log (316 pages; all local links and fragments valid). Full CLI/plugin: /tmp/gspot-stylelint-coverage-full-cli-plugin.log (2838 passes, three existing platform skips, zero failures/errors, 10098 assertions across 341 files; 218.49 seconds)."
+        ]
     },
     {
         "id": "slices/kits-web-languages/043",

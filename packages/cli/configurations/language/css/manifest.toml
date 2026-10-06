@@ -1,7 +1,7 @@
 [configuration]
 title = "CSS"
 requires = ["format"]
-description = "Stylesheets and the style blocks of Vue and Svelte components: stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used."
+description = "CSS files and the style blocks of Vue and Svelte components: Stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used. SCSS receives formatting only."
 
 [detect]
 extensions = [".css", ".vue", ".svelte"]
@@ -51,6 +51,12 @@ version = "39.0.0"
 npm = "stylelint-config-standard"
 
 [[tool]]
+name = "stylelint-config-recommended"
+kind = "library"
+version = "17.0.0"
+npm = "stylelint-config-recommended"
+
+[[tool]]
 name = "postcss-html"
 kind = "library"
 version = "2.0.0"
@@ -66,7 +72,7 @@ stub_file = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\
 
 [[check]]
 name = "stylelint"
-tool = ["stylelint", "stylelint-config-standard", "postcss-html"]
+tool = ["stylelint", "stylelint-config-standard", "stylelint-config-recommended", "postcss-html"]
 title = "Lint stylesheets"
 example = "The declaration `color: #ggg` uses an invalid hexadecimal color and reports a Stylelint finding. Replace it with a valid intended color such as `#abc`."
 level = "recommended"
@@ -104,7 +110,7 @@ name = "tools.stylelint.rules"
 type = "table"
 direction = "rule-options"
 default = {}
-summary = "Enabled Stylelint rules and their native options. Disable a rule with gspot ignore css/stylelint --rule."
+summary = "Native options for Stylelint rules active at recommended or all. Severity remains error; accept a finding with gspot ignore css/stylelint --rule <rule> --reason <why>."
 
 [agent_rules]
 "TAILWIND.md" = {dependencies = ["tailwindcss"]}

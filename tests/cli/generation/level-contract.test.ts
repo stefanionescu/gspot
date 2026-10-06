@@ -274,3 +274,16 @@ test.each(['recommended', 'all'] as const)(
         }
     },
 );
+
+test.each(['recommended', 'all'] as const)(
+    '%s refuses authored Stylelint warning severity in root and scoped native options',
+    (level) => {
+        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
+            const table = scope === '' ? 'tools' : 'scope.tools';
+            const tables = `${scope}[${table}.stylelint.rules]\ncolor-hex-length = ["short", { severity = "warning" }]\n`;
+            expect(() => parseStrictPolicy(buildPolicy(['css'], { level, tables }))).toThrow(
+                'Stylelint rule selection',
+            );
+        }
+    },
+);

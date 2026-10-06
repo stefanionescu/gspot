@@ -2,7 +2,13 @@ import { z } from 'zod';
 import { reasoned } from '#cli/policy/schema/fields.ts';
 import { licenseExceptionSchema } from '#cli/parsers/schema/licenses.ts';
 import ESLINT_RUNTIMES from '../../../configurations/language/javascript/runtime-names.json' with { type: 'json' };
-import { ESLINT_OPTIONS_HELP, ESLINT_OPTION_STRING, MARKDOWNLINT_OPTIONS_HELP } from '#cli/config/policy/settings.ts';
+
+import {
+    ESLINT_OPTIONS_HELP,
+    ESLINT_OPTION_STRING,
+    STYLELINT_OPTIONS_HELP,
+    MARKDOWNLINT_OPTIONS_HELP,
+} from '#cli/config/policy/settings.ts';
 
 const extraTable = z.object({ reason: z.string().optional() }).catchall(z.unknown());
 
@@ -23,11 +29,17 @@ const eslintOptions = z.union([z.array(z.never()).max(0), z.tuple([firstEslintOp
 
 const eslintRules = z.record(z.string(), eslintOptions);
 
-const stylelintValue = z.union([z.literal(true), z.string().min(1), z.number(), z.record(z.string(), z.json())]);
+const stylelintOptions = z
+    .object({ severity: z.literal('error', { error: STYLELINT_OPTIONS_HELP }).optional() })
+    .catchall(z.json());
+
+const stylelintValue = z.union([z.literal(true), z.string().min(1), z.number(), stylelintOptions]);
 
 const stylelintRules = z.record(
     z.string().min(1),
-    z.union([stylelintValue, z.tuple([z.union([stylelintValue, z.array(z.json())])]).rest(z.json())]),
+    z.union([stylelintValue, z.tuple([z.union([stylelintValue, z.array(z.json())]), stylelintOptions.optional()])], {
+        error: STYLELINT_OPTIONS_HELP,
+    }),
 );
 
 const eslintTable = toolTable.extend({

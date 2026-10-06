@@ -622,10 +622,20 @@
         "section": "Findings",
         "finding": "| `packages/cli/kits/language/css/stylelint.json.tmpl:13` | `property-no-vendor-prefix` exempts `-webkit-text-size-adjust` and `-webkit-backdrop-filter`. These are one project's exceptions. | Delete the exemptions. A project adds them with `tools.stylelint.rules`. |",
         "owner": "`packages/cli/kits/language/css/stylelint.json.tmpl:13`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/css/manifest.toml",
+            "packages/cli/configurations/language/css/stylelint.json.tmpl",
+            "tests/tools/configurations/language/css.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Removed the two project-specific WebKit exemptions. Both levels report prefixed text-size-adjust and backdrop-filter in root and scoped CSS and accept their standard-property corrections. The documentation identifies the existing native ignoreProperties option for actual project exceptions; it does not add a coverage selector.",
+            "Source: packages/cli/configurations/language/css/manifest.toml; packages/cli/configurations/language/css/stylelint.json.tmpl; packages/cli/src/policy/schema/tools.ts; tests/tools/configurations/language/css.test.ts; tests/config/tools/configurations/language/css.ts.",
+            "Pinned native Stylelint: /tmp/gspot-stylelint-coverage-native-final.log (three passes, 21 assertions). Both levels report color and vendor-prefix defects in root/scoped CSS, then accept corrections; the zero precision option applies only at all; selector-max-id options cannot activate that nonselected rule. Native editor discovery reports authored build/site.css and accepts corrected root and scoped sources. One private installation is shared, and each case resets its authored inputs.",
+            "Runtime/published schema and policy generation: /tmp/gspot-stylelint-coverage-cli-initial.log (115 passes, 751 assertions across five files). Root and scope settings refuse warning severity while native zero-valued options remain valid. The initial TypeScript run exposed stray schema option properties from an edit; those are removed before the final four-target run.",
+            "All four TypeScript targets: /tmp/gspot-stylelint-coverage-types-final.log. Documentation: /tmp/gspot-stylelint-coverage-docs.log (316 pages; all local links and fragments valid). Full CLI/plugin: /tmp/gspot-stylelint-coverage-full-cli-plugin.log (2838 passes, three existing platform skips, zero failures/errors, 10098 assertions across 341 files; 218.49 seconds)."
+        ]
     },
     {
         "id": "areas/kits/048",

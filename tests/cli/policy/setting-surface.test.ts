@@ -205,7 +205,7 @@ describe('merged settings', () => {
         const settings = knownSettings(selectConfigurations(['css'], configurationManifests()));
         const policy = parseStrictPolicy(
             buildPolicy(['css'], {
-                tables: '[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "warning" }]\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-named = ["always-where-possible"]\n',
+                tables: '[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "error" }]\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-named = ["always-where-possible"]\n',
             }),
         );
         expect(settingValue(settings, policy, 'tools.stylelint.rules', 'app')?.value).toStrictEqual({
@@ -214,7 +214,7 @@ describe('merged settings', () => {
         });
         expect(settingValue(settings, policy, 'tools.stylelint.rules')?.value).toStrictEqual({
             'selector-max-id': 0,
-            'color-named': ['never', { severity: 'warning' }],
+            'color-named': ['never', { severity: 'error' }],
         });
     });
 });

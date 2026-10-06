@@ -56,6 +56,7 @@
         "prettier-plugin-astro",
         "prettier-plugin-svelte",
         "stylelint",
+        "stylelint-config-recommended",
         "stylelint-config-standard",
         "svelte-eslint-parser",
         "syncpack",
