@@ -1,576 +1,119 @@
 [
     {
-        "id": "slices/tests-unit/001",
-        "source": "findings/slices/tests-unit.md",
-        "line": 13,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/checks/general/naming/validate-name.test.ts:97`, \"path exclusions, digit allowances and structural prefixes apply\" | The name `i` has no problem even without the excluding rule. It is valid camel case, one word, and one character long. A scratch copy with `excludes: false` on rule 1 still passes all 8 tests. The exclusion branch (`problems.ts:96`) is untested. | Use `_`. It fails camel case unless rule 1 excludes it. |",
-        "owner": "`tests/unit/cli/checks/general/naming/validate-name.test.ts:97`, \"path exclusions, digit allowances and structural prefixes apply\"",
-        "location": ["tests/cli/checks/general/naming/validate-name.test.ts"],
-        "status": "closed",
-        "outcome": "The exclusion test uses _, which fails ordinary camel-case rules, and explicitly allows that name only through the excluding rule. It no longer uses a name that passes without exclusion.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/002",
-        "source": "findings/slices/tests-unit.md",
-        "line": 14,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/checks/general/naming/manifest-rules.test.ts:52`, \"an unselected framework contributes nothing\" | The test passes `[]` as the manifests to `effectivePolicy`. The caller, `namingEngine` (`identifiers.ts:158`), does the selection when it passes `input.selection.selected`. The test only shows that an empty list adds no rule, so it cannot fail. | Delete it. Or build an engine input where express is not selected, and assert that the express rule is absent. |",
-        "owner": "`tests/unit/cli/checks/general/naming/manifest-rules.test.ts:52`, \"an unselected framework contributes nothing\"",
-        "location": ["tests/cli/checks/general/naming/manifest-rules.test.ts"],
-        "status": "closed",
-        "outcome": "The empty-manifest tautology is absent. Selected framework coverage checks rule ordering, authored rules, structural prefixes, and language boundaries through effectivePolicy and rulesFor.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/003",
-        "source": "findings/slices/tests-unit.md",
-        "line": 15,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/checks/language/python/exports.test.ts:40`, \"`__all__` belongs at the bottom, lists names in declaration order, and stays under the package ceiling\" | `exportOrder` puts the shortest name first, then sorts alphabetically (`exports.ts:112-121`). `planted/listed.py` lists `[\"shown\", \"ab\"]`, which is declaration order, and the test expects a finding for it. The name says the opposite of the rule. | Rename the test to \"lists names shortest first\". Add a sorted `__all__` that passes. |",
-        "owner": "`tests/unit/cli/checks/language/python/exports.test.ts:40`, \"`__all__` belongs at the bottom, lists names in declaration order, and stays under the package ceiling\"",
-        "location": ["tests/cli/checks/language/python/exports.test.ts"],
-        "status": "closed",
-        "outcome": "The title states shortest-first ordering. A separate sorted __all__ passes, while the declaration-order fixture produces the specific export-order finding.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/004",
-        "source": "findings/slices/tests-unit.md",
-        "line": 16,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/checks/language/python/docstrings.test.ts:4-15` | When the pyproject sets no convention, `docstringStyle(text, convention)` uses the `tools.ruff.docstring_convention` setting (`pydoclint.ts:36`). No test passes that second argument. `git grep docstring_convention tests` finds nothing. | Add three rows: the setting alone gives the style, a pyproject convention wins over the setting, and a pydoclint `style` wins over both. |",
-        "owner": "`tests/unit/cli/checks/language/python/docstrings.test.ts:4-15`",
-        "location": [
-            "tests/cli/checks/language/python/pydoclint.test.ts",
-            "tests/config/cli/checks/language/python/pydoclint.ts"
-        ],
-        "status": "closed",
-        "outcome": "The style table passes the second setting argument. It covers Google and NumPy settings, project convention precedence, explicit pydoclint style precedence, and unrelated pydoclint options.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/005",
-        "source": "findings/slices/tests-unit.md",
-        "line": 17,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/checks/language/python/docstrings.test.ts:4`, \"Ruff %s docstrings keep into an unconfigured pydoclint style,\" and `:14` | The name does not parse as a sentence. Line 14 uses `toThrow()` without a message, and the first audit's `toThrow()` list leaves it out. The test name does not mention malformed TOML. | Rename the test to \"a Ruff %s convention becomes the pydoclint style unless pydoclint names one.\" Move the malformed TOML case to its own test and assert the parse error text. |",
-        "owner": "`tests/unit/cli/checks/language/python/docstrings.test.ts:4`, \"Ruff %s docstrings keep into an unconfigured pydoclint style,\" and `:14`",
-        "location": ["tests/cli/checks/language/python/pydoclint.test.ts"],
-        "status": "closed",
-        "outcome": "The style scenario names parse as sentences. Malformed TOML has its own named test and asserts the incomplete-key diagnostic.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/006",
-        "source": "findings/slices/tests-unit.md",
-        "line": 18,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/policy/settings.test.ts:246`, \"configured commands preserve quoted paths, empty arguments, and escaped spaces\" | No input has a backslash-escaped space. Line 253 checks that `&&` is refused, which the name does not say. It uses a bare `toThrow()`, and the first audit's list leaves it out. | Add a `two\\ words` input. Assert the refusal text for `&&` and name the refusal in the test. Keep the first audit's move to a quoting test. |",
-        "owner": "`tests/unit/cli/policy/settings.test.ts:246`, \"configured commands preserve quoted paths, empty arguments, and escaped spaces\"",
-        "location": ["tests/cli/parsers/command.test.ts"],
-        "status": "closed",
-        "outcome": "Escaped spaces have a dedicated parseCommand case asserting one literal argument, alongside quoted paths, empty arguments, and shell-operator refusal.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
         "id": "slices/tests-unit/007",
         "source": "findings/slices/tests-unit.md",
-        "line": 19,
+        "line": 9,
         "section": "Tests: Unit",
         "finding": "| `tests/unit/cli/commands/propose.test.ts:63`, \"initialization keeps the profile runner while honoring disabled integrations\" | The profile and the plan both set `runner = \"mise\"`. `applyIntegrations` always writes the plan's runner (`propose.ts:59-60`), so the profile runner never wins. The test cannot show which one wins, and the name says the profile wins. | Give the profile `mise` and the plan another runner. Assert the plan's value, and rename the test to say that the plan wins. |",
         "owner": "`tests/unit/cli/commands/propose.test.ts:63`, \"initialization keeps the profile runner while honoring disabled integrations\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-unit/008",
-        "source": "findings/slices/tests-unit.md",
-        "line": 20,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/commands/prompts.test.ts:49`, \"reports cancellation instead of accepting the default\" | `rejects(..., GspotError)` accepts any `GspotError`. That includes the \"Pass --continue\" refusal from the no-terminal branch. | Assert the message `/Cancelled; nothing written/`. |",
-        "owner": "`tests/unit/cli/commands/prompts.test.ts:49`, \"reports cancellation instead of accepting the default\"",
-        "location": ["tests/cli/commands/init/questions.test.ts"],
-        "status": "closed",
-        "outcome": "Cancellation asserts Cancelled; nothing written. It cannot be satisfied by the no-terminal refusal.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/009",
-        "source": "findings/slices/tests-unit.md",
-        "line": 21,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/commands/prompts.test.ts` (whole file) | `askChoice` has no test. `init/questions.ts:41,47,57` asks three questions through it. Without a terminal, `askChoice` refuses, while `askChoices` keeps the initial values. Nothing covers its `--yes`, no-terminal, and cancel branches. | Add a table for `askChoice` with its three branches. |",
-        "owner": "`tests/unit/cli/commands/prompts.test.ts` (whole file)",
-        "location": ["tests/cli/commands/init/questions.test.ts", "tests/config/cli/commands/init/questions.ts"],
-        "status": "closed",
-        "outcome": "Public initialization questions exercise the runner choice through explicit terminal response, --yes defaults, absent-terminal refusal, and cancellation. They assert returned integrations or the specific refusal, rather than calling a private question helper.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/010",
-        "source": "findings/slices/tests-unit.md",
-        "line": 22,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/commands/prompts.test.ts:11-103` | Every test creates two or three spies and restores them in its own `try` and `finally`. The file uses `rejects` from `node:assert` beside the harness `rejection`. | Create the spies with `using`, as `policy/profiles/sources.test.ts:14` does, or restore them in `afterEach`. Use `rejection` from the harness. |",
-        "owner": "`tests/unit/cli/commands/prompts.test.ts:11-103`",
-        "location": ["tests/cli/commands/init/questions.test.ts"],
-        "status": "closed",
-        "outcome": "Prompt, terminal, executable, and output spies use disposable resources. Async errors use the shared rejection helper; manual per-test restore blocks and node:assert rejects are absent.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/011",
-        "source": "findings/slices/tests-unit.md",
-        "line": 23,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/kits/owners.test.ts:13`, \"match by extension, filename at any depth, tag and glob\" | No case covers a glob. The bash manifest has only extensions and tags, and the inline table has `paths: []`. The `paths` branch of `isOwned` (`owners.ts:39`) is untested. | Add a case with `paths: ['infra/**']`, with one file under that folder and one outside it. |",
-        "owner": "`tests/unit/cli/kits/owners.test.ts:13`, \"match by extension, filename at any depth, tag and glob\"",
-        "location": ["tests/cli/configurations/owners.test.ts"],
-        "status": "closed",
-        "outcome": "The glob case asserts infra/config.txt is owned and docs/config.txt is not. It exercises a positive glob match rather than only an unrelated path.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/012",
-        "source": "findings/slices/tests-unit.md",
-        "line": 24,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/kits/owners.test.ts:35` and `:76` | Line 35 says \"a repository configuration with languages owners what the language kits claim.\" It means \"owns.\" Line 76 sits outside `describe('owners')` and fakes it with an `owners >` prefix. It also loops over three cases in one test. | Fix the verb. Move line 76 into the describe and make its loop a `test.each`. |",
-        "owner": "`tests/unit/cli/kits/owners.test.ts:35` and `:76`",
-        "location": ["tests/cli/configurations/owners.test.ts"],
-        "status": "closed",
-        "outcome": "All ownership cases belong to the owners describe group, with readable ownership titles. The former loop is a named test.each table for each selected configuration set.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/013",
-        "source": "findings/slices/tests-unit.md",
-        "line": 25,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/kits/owners.test.ts:60-66`, describe \"detection\" | This tests `detectKits` from `kits/detect.ts` in the owners file. The first audit moved only the selector and shebang tests. | Move it to `tests/unit/cli/kits/detect.test.ts`. |",
-        "owner": "`tests/unit/cli/kits/owners.test.ts:60-66`, describe \"detection\"",
-        "location": ["tests/cli/configurations/detect.test.ts"],
-        "status": "closed",
-        "outcome": "Configuration detection has its own test owner. It asserts supported root and nested project evidence and rejects unrelated evidence; no detection group remains in owners tests.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/014",
-        "source": "findings/slices/tests-unit.md",
-        "line": 26,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/execution/broken-tool.test.ts:15,43`, \"a finding on no real file is a crash, and one on a real file is a finding\" | The real file is the test file itself: `file: 'broken-tool.test.ts'` under `import.meta.dir`. Renaming or moving this file breaks the test with no product change, and the placement row below moves it. | Create a file in a `testdir` and pass that folder as the root. |",
-        "owner": "`tests/unit/cli/execution/broken-tool.test.ts:15,43`, \"a finding on no real file is a crash, and one on a real file is a finding\"",
-        "location": ["tests/cli/execution/output-failures.test.ts"],
-        "status": "closed",
-        "outcome": "Located output uses a real source.txt fixture in a disposable directory. Its root and finding path do not depend on the test filename, and authored bytes remain asserted.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/015",
-        "source": "findings/slices/tests-unit.md",
-        "line": 27,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/checks/tool/xctest-coverage.test.ts:6-7`, \"the coverage check compares each named target with its floor\" | The floors 60 and 80 are far from the report's 61.7 %. The code rounds down and compares with `>=` (`coverage.ts:69-70`). Code that rounds up or compares with `>` still passes the test. | Use floor 61, which passes, and floor 62, which fails. |",
-        "owner": "`tests/unit/cli/checks/tool/xctest-coverage.test.ts:6-7`, \"the coverage check compares each named target with its floor\"",
-        "location": ["tests/cli/checks/tool/xctest/coverage.test.ts"],
-        "status": "closed",
-        "outcome": "The 61.7-percent report passes floor 61 and fails floor 62, proving floor rounding and inclusive comparison. A missing target has separate coverage.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/016",
-        "source": "findings/slices/tests-unit.md",
-        "line": 28,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/kits/manifests/suppressions.test.ts:29`, \"the %s kit reads %s suppressions and their reasons\" | `toBeDefined()` passes when the reason pattern captures the wrong text, for example the marker or the closing `-->`. | Add an expected-reason column and assert the captured text. |",
-        "owner": "`tests/unit/cli/kits/manifests/suppressions.test.ts:29`, \"the %s kit reads %s suppressions and their reasons\"",
-        "location": [
-            "tests/cli/configurations/suppressions.test.ts",
-            "tests/config/cli/configurations/suppressions.ts"
-        ],
-        "status": "closed",
-        "outcome": "Every suppression row includes its expected reason. The test checks the exact captured reason and that a bare marker has no reason.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/017",
-        "source": "findings/slices/tests-unit.md",
-        "line": 29,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/repository/locked-packages.test.ts:22`, \"%s resolves the package to its locked version\" | `.has('example@1.2.3')` passes if the parser also returns extra identities, such as a pnpm peer suffix or Yarn's `__metadata`. Today each row returns exactly one identity, which a scratch run printed. | Assert `toStrictEqual(new Set(['example@1.2.3']))`. |",
-        "owner": "`tests/unit/cli/repository/locked-packages.test.ts:22`, \"%s resolves the package to its locked version\"",
-        "location": ["tests/cli/parsers/lockfiles.test.ts"],
-        "status": "closed",
-        "outcome": "Each supported lockfile row compares the full Set to example@1.2.3. Extra peer suffixes or metadata identities fail the assertion.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/018",
-        "source": "findings/slices/tests-unit.md",
-        "line": 30,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/policy/read-policy/boundaries.test.ts:20`, \"refuses escaping directory %j before filesystem discovery\" | `toThrow(GspotError)` passes for any policy error. A scratch run shows that a valid path parses, so the test can fail. But it does not show that the path caused the refusal. Each row loops over two tables, so a failure does not say which one broke. | Assert the key (`scope.0.path` or `rules.path`) and \"without parent traversal\" in the message. Make the two tables a column of the table. |",
-        "owner": "`tests/unit/cli/policy/read-policy/boundaries.test.ts:20`, \"refuses escaping directory %j before filesystem discovery\"",
-        "location": ["tests/cli/policy/read-policy/boundaries.test.ts"],
-        "status": "closed",
-        "outcome": "Directory-boundary rows include both the table and path in the test name. Assertions identify scope.0.path or agent_rules.folder and the relative-path refusal.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/019",
-        "source": "findings/slices/tests-unit.md",
-        "line": 31,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/policy/read-policy/recovery.test.ts:56`, \"an unknown kit and a default two configurations disagree on still stop reading,\" and `:70`, \"a syntax error still stops reading, because no rest exists\" | Line 56 tests only the unknown kit. The conflicting-default case in its name is missing. Line 72 (`hue = \"red\"`) is an unknown top-level key, not a syntax error. | Add the conflicting-default case, or drop it from the name. Move line 72 into its own test named for unknown top-level keys. |",
-        "owner": "`tests/unit/cli/policy/read-policy/recovery.test.ts:56`, \"an unknown kit and a default two configurations disagree on still stop reading,\" and `:70`, \"a syntax error still stops reading, because no rest exists\"",
-        "location": ["tests/cli/policy/read-policy/recovery.test.ts"],
-        "status": "closed",
-        "outcome": "Unknown configuration, malformed TOML, and unknown top-level key have distinct scenario names and specific diagnostics. The old title no longer claims an untested default conflict.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/020",
-        "source": "findings/slices/tests-unit.md",
-        "line": 32,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/kits/manifests/checks.test.ts:33`, \"manifest loading rejects an empty command or a field the check registry replaced: %s\" | `toThrow('not valid')` matches every schema error. A scratch run accepts the fixture with `command = [\"x\"]`, so the test can fail. But it does not show which field was refused. | Assert `check.0.command` for the first row and `Unrecognized key: \"engine\"` for the second. |",
-        "owner": "`tests/unit/cli/kits/manifests/checks.test.ts:33`, \"manifest loading rejects an empty command or a field the check registry replaced: %s\"",
-        "location": ["tests/cli/parsers/configurations/checks.test.ts"],
-        "status": "closed",
-        "outcome": "Empty command and removed engine field are separate named rows asserting check.0.command and Unrecognized key: engine respectively. Generic schema refusal text is absent.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/021",
-        "source": "findings/slices/tests-unit.md",
-        "line": 33,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/kits/manifests/ownership.test.ts` (file name) and `:135` (`waitingManifest`) | The file tests `validateManifests` from `kits/problems.ts`. It covers setting meanings, replacements, check references, pins, and waits, and nothing about ownership. `waitingManifest` returns nothing. It parses and validates. | Rename the file to `tests/unit/cli/kits/problems.test.ts` and the helper to `validateWaiting`. |",
-        "owner": "`tests/unit/cli/kits/manifests/ownership.test.ts` (file name) and `:135` (`waitingManifest`)",
-        "location": ["tests/cli/configurations/problems.test.ts"],
-        "status": "closed",
-        "outcome": "The file and describe groups identify assertManifests behavior. The one-use waitingManifest helper is gone; wait scenarios construct and validate their own manifest in the required test callback.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/022",
-        "source": "findings/slices/tests-unit.md",
-        "line": 34,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/kits/manifests/ownership.test.ts:29-31,68-70,85-92`; `checks.test.ts:8,39`; `declarations.test.ts:5,12,20,35,47,73` | The ownership lines copy `testManifest` from `tests/harness/cli/tooling.ts:25-29` word for word, including `requires = ${JSON.stringify([])}`. The other two files write the same `[kit]` header out eight more times. | Call `testManifest(name)`. Give the harness one builder that takes the extra tables, and use it in all three files. |",
-        "owner": "`tests/unit/cli/kits/manifests/ownership.test.ts:29-31,68-70,85-92`; `checks.test.ts:8,39`; `declarations.test.ts:5,12,20,35,47,73`",
-        "location": [
-            "tests/cli/configurations/problems.test.ts",
-            "tests/cli/parsers/configurations/checks.test.ts",
-            "tests/cli/parsers/configurations/declarations.test.ts",
-            "tests/harness/tooling.ts"
-        ],
-        "status": "closed",
-        "outcome": "Manifest fixture consumers use the flat harness parseConfigurationManifest builder with authored extra tables. Repeated complete configuration headers are absent from these suites.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/023",
-        "source": "findings/slices/tests-unit.md",
-        "line": 35,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/kits/manifests/ownership.test.ts:15-16,72-74,93-96` | Three tests take their fixtures from shipped kits: the `fastapi` settings, the `openapi` generate setting, the first bash check with a command, and `structure/stale-allowlists`. Line 96 throws if the shipped check stops being built-in. A kit edit can break these tests with no change to `validateManifests`. | Build the setting and the checks inline with `testManifest`. |",
-        "owner": "`tests/unit/cli/kits/manifests/ownership.test.ts:15-16,72-74,93-96`",
-        "location": ["tests/cli/configurations/problems.test.ts", "tests/config/cli/configurations/problems.ts"],
-        "status": "closed",
-        "outcome": "Setting meanings, replacements, borrowed checks, pins, and waits use manifests authored for their scenarios. They no longer copy shipped FastAPI, OpenAPI, Bash, or structure checks to validate unrelated manifest behavior.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
+        "verification": [],
+        "originalLine": 19
     },
     {
         "id": "slices/tests-unit/024",
         "source": "findings/slices/tests-unit.md",
-        "line": 36,
+        "line": 10,
         "section": "Tests: Unit",
         "finding": "| `tests/unit/cli/lifecycle/preview/readers.test.ts:73` and `:82` | Both pin a trailing `\\n` that `parseIni` keeps from the file's last newline. `parseSqlfluff` trims every value (`sqlfluff.ts:88,97,107`), so the newline never reaches a comparison. | Assert the values through `parseSqlfluff`. Or drop the trailing newline from the expected values and from `parseIni`. |",
         "owner": "`tests/unit/cli/lifecycle/preview/readers.test.ts:73` and `:82`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 36
     },
     {
         "id": "slices/tests-unit/025",
         "source": "findings/slices/tests-unit.md",
-        "line": 37,
+        "line": 11,
         "section": "Tests: Unit",
         "finding": "| `tests/unit/plugin/rules/types-placement.test.ts:33` | The `.map` adds `directory: 'types'` to every valid row. Lines 16 to 25 look as if they run without options, but they do not. The rule has a branch that does nothing when no directory is named (`types-placement.ts:160`), and no test reaches it. `env-owner.test.ts:18`, `import-direction.test.ts:58`, and `test-folders.test.ts:29` each test their own no-option branch. | Remove the map, write the options on each row, and add one row without options. |",
         "owner": "`tests/unit/plugin/rules/types-placement.test.ts:33`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-unit/026",
-        "source": "findings/slices/tests-unit.md",
-        "line": 38,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/plugin/rules/max-barrel-reexports.test.ts:4-11` | 20 is the default limit, `MAX_REEXPORTS` (`packages/eslint-plugin/src/config/rules.ts:70`), but the comment does not say so. No row has 21 re-exports under the default, so nothing shows the default limit report. | Import `MAX_REEXPORTS` and build the list from it. Add an invalid row with one more export and no options. |",
-        "owner": "`tests/unit/plugin/rules/max-barrel-reexports.test.ts:4-11`",
-        "location": ["tests/plugin/rules/max-barrel-reexports.test.ts"],
-        "status": "closed",
-        "outcome": "The test imports MAX_REEXPORTS from its authoritative owner, accepts the default boundary, and rejects one additional export without custom options. Custom limits retain independent coverage.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/027",
-        "source": "findings/slices/tests-unit.md",
-        "line": 39,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/plugin/rules/no-trivial-files.test.ts:64-78`, \"no-trivial-files at root and nested entry paths\" | The rule never reads the file name. Both rows use the input of line 41 and take the same path through the rule. | Delete the block. Or keep one row with a comment that entry file names give no exemption. |",
-        "owner": "`tests/unit/plugin/rules/no-trivial-files.test.ts:64-78`, \"no-trivial-files at root and nested entry paths\"",
-        "location": ["tests/plugin/rules/no-trivial-files.test.ts"],
-        "status": "closed",
-        "outcome": "The duplicate root and nested entry-path block is absent. Distinct allowIndex cases retain real filename-dependent behavior; ordinary trivial exports still fail without that option.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/028",
-        "source": "findings/slices/tests-unit.md",
-        "line": 40,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/acquisition.test.ts:12`, \"output without a known cause adds no note\" | `GITHUB_REFUSAL` (`packages/cli/src/config/tools/packages.ts:7`) matches `HTTP 403` and `rate limit` from any host. As a result, a 403 from a private npm registry gets the `GITHUB_TOKEN` note. The negative case uses unrelated output, so it cannot catch this. | Add a negative row for a 403 from a host that is not GitHub. If it fails, tie each alternative of the pattern to GitHub. |",
-        "owner": "`tests/unit/cli/acquisition.test.ts:12`, \"output without a known cause adds no note\"",
-        "location": [
-            "packages/cli/src/config/tools/npm.ts",
-            "packages/cli/src/tools/npm/install.ts",
-            "tests/cli/tools/npm.test.ts",
-            "tests/cli/tools/package-failures.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "GitHub token guidance now requires a GitHub API or release URL and a refusal on the same output line. Private registry 403s, bare rate limits, unrelated successful GitHub downloads, and lookalike hosts receive no GitHub note. Frozen installation and lock resolution preserve their original diagnostics, redaction, and file bytes.",
-        "verification": [
-            "Affected tool and lifecycle failure cohort: 129 cases pass with 402 assertions across 14 files (/tmp/gspot-acquisition-tests.log). The final native-hint fixture uses real PATH isolation and passes its 11 cases separately (/tmp/gspot-acquisition-hints-final.log).",
-            "All four TypeScript targets and affected ESLint pass (/tmp/gspot-acquisition-types.log, /tmp/gspot-acquisition-lint.log). The complete staged gate passes (/tmp/gspot-acquisition-staged.json)."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/029",
-        "source": "findings/slices/tests-unit.md",
-        "line": 41,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/sql-parser.test.ts:85-86`, \"psql tokens inside quoted SQL and nested comments retain their literal contents\" | `SELECT ':unterminated;` repeats the `'` row of the table at line 103. Both take the unterminated-string branch. | Delete lines 85 and 86. |",
-        "owner": "`tests/unit/cli/sql-parser.test.ts:85-86`, \"psql tokens inside quoted SQL and nested comments retain their literal contents\"",
-        "location": ["tests/cli/parsers/sql/statements.test.ts"],
-        "status": "closed",
-        "outcome": "The duplicate unterminated literal is absent from the quoted-token case. A named table retains each distinct quote opener and asserts native refusal without corrupting the source.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/030",
-        "source": "findings/slices/tests-unit.md",
-        "line": 42,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/checks/general/codeql.test.ts:223`, \"CodeQL uses artifact encoding and gives explicit lines precedence over character offsets\" | Two of its four results test other behavior. A negative offset falls back to line 1. A result with no location becomes a finding at file `''` (`sarif.ts:139`). The name mentions neither. | Move those two results into their own named tests. |",
-        "owner": "`tests/unit/cli/checks/general/codeql.test.ts:223`, \"CodeQL uses artifact encoding and gives explicit lines precedence over character offsets\"",
-        "location": ["tests/cli/checks/general/security/codeql.test.ts"],
-        "status": "closed",
-        "outcome": "Explicit-line and artifact-encoding precedence remains in its own case. Negative character offsets and results without source locations have separate scenario names and exact positions or repository-level paths.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
+        "verification": [],
+        "originalLine": 37
     },
     {
         "id": "slices/tests-unit/031",
         "source": "findings/slices/tests-unit.md",
-        "line": 43,
+        "line": 12,
         "section": "Tests: Unit",
         "finding": "| `tests/unit/cli/checks/general/naming/extract.test.ts:67,118,133` | The same category filter is written three times (`byCategory`, `names`, `names`). The describe holds two of the five tests. | Write one module-level helper and put all five tests in the describe. |",
         "owner": "`tests/unit/cli/checks/general/naming/extract.test.ts:67,118,133`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 43
     },
     {
         "id": "slices/tests-unit/032",
         "source": "findings/slices/tests-unit.md",
-        "line": 44,
+        "line": 13,
         "section": "Tests: Unit",
         "finding": "| `tests/unit/cli/lifecycle/preview/diff.test.ts:6-223` | Nine `GeneratedFile` literals repeat `kind: 'config'` and `readOnly: true`. | Add a local `generated(path, content, rulePaths)` builder. |",
         "owner": "`tests/unit/cli/lifecycle/preview/diff.test.ts:6-223`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-unit/033",
-        "source": "findings/slices/tests-unit.md",
-        "line": 45,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/execution/file-batches.test.ts:11,35` | `100_000` is `UNIX_COMMAND_LIMIT` (`config/execution/tool.ts:7`), written as a bare number. Line 11 counts characters without the fixed argument, while line 35 counts bytes with it. The two tests check different bounds. | Import the constant. Measure the full command in bytes in both tests. |",
-        "owner": "`tests/unit/cli/execution/file-batches.test.ts:11,35`",
-        "location": ["tests/cli/execution/command/batches.test.ts"],
-        "status": "closed",
-        "outcome": "Unix cases import UNIX_COMMAND_LIMIT and measure full commands in bytes, including fixed arguments. Unicode and Windows quoting retain separate platform-boundary coverage.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/034",
-        "source": "findings/slices/tests-unit.md",
-        "line": 46,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/policy/json-schema.test.ts:24,93,97,128` | The test builds and compiles the published schema again for each of the 17 table rows and in three other tests. | Compile the schema once at module level. |",
-        "owner": "`tests/unit/cli/policy/json-schema.test.ts:24,93,97,128`",
-        "location": ["tests/cli/docs/schema.test.ts"],
-        "status": "closed",
-        "outcome": "The published JSON schema is compiled once at module level and reused for the scenario table and other schema cases.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
-    },
-    {
-        "id": "slices/tests-unit/035",
-        "source": "findings/slices/tests-unit.md",
-        "line": 47,
-        "section": "Tests: Unit",
-        "finding": "| `tests/unit/cli/policy/json-schema.test.ts:116`, \"manifest settings preserve typed values and reject unknown siblings\" | No assertion reads a value back, so \"preserve typed values\" is untested. | Assert the parsed `safety_owners` value, or remove those words from the name. |",
-        "owner": "`tests/unit/cli/policy/json-schema.test.ts:116`, \"manifest settings preserve typed values and reject unknown siblings\"",
-        "location": ["tests/cli/docs/schema.test.ts"],
-        "status": "closed",
-        "outcome": "The typed-value scenario reads parsed bash.safety_owners and compares its exact array before refusing an unknown sibling in both schemas.",
-        "verification": [
-            "Current source review confirms the recorded behavior and placement. The complete CLI and plugin suites pass with 60-second test defaults: /tmp/gspot-test-review-cli-plugin.log. The repaired detection table has separate final evidence: /tmp/gspot-test-review-detection-final.log.",
-            "All four TypeScript targets pass: /tmp/gspot-test-review-types-final.log. Every repository ESLint scope and the staged gate pass: /tmp/gspot-test-review-lint.json and /tmp/gspot-test-review-staged.json."
-        ]
+        "verification": [],
+        "originalLine": 44
     },
     {
         "id": "slices/tests-unit/036",
         "source": "findings/slices/tests-unit.md",
-        "line": 48,
+        "line": 14,
         "section": "Tests: Unit",
         "finding": "| Loops inside one test: `tests/unit/cli/policy/json-schema.test.ts:98`, `policy/read-policy/boundaries.test.ts:19`, `execution/broken-tool.test.ts:61`, `checks/statements.test.ts:95`, `checks/general/copied-blocks.test.ts:10`, `rules/assemble.test.ts:17`, `checks/language/python/docstrings.test.ts:12`, `kits/manifests/declarations.test.ts:23` | A `for` loop runs several cases in one test. A failure does not say which case broke, and the first failure hides the others. In `copied-blocks.test.ts`, the `Set` merges `toNamespacedPath(root)` into `root` outside Windows, so that case does not run there and nothing reports it. | Make each loop a `test.each` table. |",
         "owner": "Loops inside one test: `tests/unit/cli/policy/json-schema.test.ts:98`, `policy/read-policy/boundaries.test.ts:19`, `execution/broken-tool.test.ts:61`, `checks/statements.test.ts:95`, `checks/general/copied-blocks.test.ts:10`, `rules/assemble.test.ts:17`, `checks/language/python/docstrings.test.ts:12`, `kits/manifests/declarations.test.ts:23`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 48
     },
     {
         "id": "slices/tests-unit/037",
         "source": "findings/slices/tests-unit.md",
-        "line": 49,
+        "line": 15,
         "section": "Tests: Unit",
         "finding": "| `tests/unit/cli/checks/statements.test.ts` (6 tests), `checks/language/python/exports.test.ts` (3), and `checks/language/python/imports.test.ts` (2) | Each test parses, then frees the tree or the modules in its own `try` and `finally`. Both Python files define the same `HEAD`, and `imports.test.ts:25-26` writes it out again. | Give the harness a disposable parse helper and use `using`. Share one `HEAD`. |",
         "owner": "`tests/unit/cli/checks/statements.test.ts` (6 tests), `checks/language/python/exports.test.ts` (3), and `checks/language/python/imports.test.ts` (2)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 49
     },
     {
         "id": "slices/tests-unit/038",
         "source": "findings/slices/tests-unit.md",
-        "line": 50,
+        "line": 16,
         "section": "Tests: Unit",
         "finding": "| Fake describe prefixes: `tests/unit/cli/execution/json.test.ts` (5 tests, `parseJson >`), `policy/read-policy/settings.test.ts` (8, `parsePolicyText >`), `policy/settings.test.ts` (10, `the settings surface >`), and `kits/manifests/checks.test.ts:5` (`parseManifest >`) | The names imitate a `describe` block by hand. `TESTING.md` asks for grouping with `describe` by unit. | Wrap each group in a `describe` and drop the prefix. |",
         "owner": "Fake describe prefixes: `tests/unit/cli/execution/json.test.ts` (5 tests, `parseJson >`), `policy/read-policy/settings.test.ts` (8, `parsePolicyText >`), `policy/settings.test.ts` (10, `the settings surface >`), and `kits/manifests/checks.test.ts:5` (`parseManifest >`)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 50
     },
     {
         "id": "slices/tests-unit/039",
         "source": "findings/slices/tests-unit.md",
-        "line": 51,
+        "line": 17,
         "section": "Tests: Unit",
         "finding": "| Under `tests/unit/cli`: `acquisition.test.ts`, `package-tool.test.ts`, `sql-parser.test.ts`, `checks/general/codeql.test.ts`, `checks/general/naming/sql.test.ts`, `checks/language/bash-parser.test.ts`, `checks/statements.test.ts`, `checks/tool/xctest-coverage.test.ts`, `commands/explain-rules.test.ts`, `commands/propose.test.ts`, `execution/broken-tool.test.ts`, `execution/command-parts.test.ts`, `execution/file-batches.test.ts`, `execution/json.test.ts`, `generation/eslint.test.ts`, `generation/format.test.ts`, `lifecycle/configuration-document.test.ts`, and `policy/toml-width.test.ts` | `CONTRIBUTING.md:107` says the folders below each tier follow the source. These 18 files sit away from their source, listed in the same order: `tools/packages/commands.ts`, `tools/packages/identity.ts`, `parsers/sql/statements.ts`, `checks/general/security/codeql.ts` and `sarif.ts`, `checks/general/naming/extractors/sql.ts`, `checks/language/bash/scripts.ts` and `code-lines.ts`, `checks/general/structure/statements.ts` with the Swift and Python trivial-function code, `checks/tool/xctest/coverage.ts`, `commands/explain/subjects.ts`, `commands/init/propose.ts`, `execution/tool/findings.ts`, `execution/tool/placeholders.ts`, `execution/tool/batches.ts`, `execution/tool/json.ts`, `generation/eslint/blocks.ts`, `generation/formatting/settings.ts`, `lifecycle/merge/document.ts`, and `policy/toml/width.ts`. `format.test.ts` also names its describe `prettierConfig`, but the function is `prettierConfiguration`. | Move each file to the folder of its source and name it after the source file. Split `statements.test.ts` into structure, Swift, and Python files. Fix the describe name. |",
         "owner": "Under `tests/unit/cli`: `acquisition.test.ts`, `package-tool.test.ts`, `sql-parser.test.ts`, `checks/general/codeql.test.ts`, `checks/general/naming/sql.test.ts`, `checks/language/bash-parser.test.ts`, `checks/statements.test.ts`, `checks/tool/xctest-coverage.test.ts`, `commands/explain-rules.test.ts`, `commands/propose.test.ts`, `execution/broken-tool.test.ts`, `execution/command-parts.test.ts`, `execution/file-batches.test.ts`, `execution/json.test.ts`, `generation/eslint.test.ts`, `generation/format.test.ts`, `lifecycle/configuration-document.test.ts`, and `policy/toml-width.test.ts`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 51
     }
 ]

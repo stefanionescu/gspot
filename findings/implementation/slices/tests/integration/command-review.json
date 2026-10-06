@@ -1,721 +1,262 @@
 [
     {
-        "id": "slices/tests-integration-commands/001",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 12,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/roots.test.ts:56-63`, \"a configuration below the Git root owns only its own project writes and changed paths\" | Cannot fail. The test breaks `outside.sh` at the Git root to prove that changes outside `app/` stay out of the run. The run selects only `sql/syntax`, which never reads a `.sh` file. `fileCount: 1` holds even if outside paths leak into the changed set. | Plant the outside change as a broken `outside.sql` at the Git root, or add a `[[check]]` with `paths = [\"**\"]`. Assert that the check receives only `src/query.sql`. |",
-        "owner": "`cli/commands/roots.test.ts:56-63`, \"a configuration below the Git root owns only its own project writes and changed paths\"",
-        "location": ["tests/cli/commands/roots.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The changed-path boundary fixture stages a healthy outside.sql and then breaks it with SELECT FROM;. The SQL run still reports exit 0 and exactly one selected SQL file beneath app/.",
-            "The focused command regression run passes all 12 cases and 102 assertions: /tmp/gspot-command-assertions-tests.log. Workspace TypeScript passes: /tmp/gspot-command-assertions-types.log."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/002",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 13,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/local-override.test.ts:18`, \"a leftover local file cannot hide a check while an explicit skip applies only to that run\" | \"Applies only to that run\" is never tested. No run after the `--skip` run still has `entry.txt` broken. The last run (lines 44-46) passes only because the test fixed the file. | After the skipped run, run `check` again without `--skip` while `entry.txt` says `bad`, and assert exit 1. Delete the correction run. |",
-        "owner": "`cli/commands/local-override.test.ts:18`, \"a leftover local file cannot hide a check while an explicit skip applies only to that run\"",
-        "location": ["tests/cli/commands/local-override.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The run after --skip omits the flag while entry.txt remains bad. It reports exit 1 and project/entry failed. The correction run and its unused write import are removed.",
-            "The focused command regression run passes all 12 cases and 102 assertions: /tmp/gspot-command-assertions-tests.log. Workspace TypeScript passes: /tmp/gspot-command-assertions-types.log."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/003",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 14,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/local-override.test.ts:36`, same test | `expect(doctor.code).not.toBe(2)` accepts both 0 and 1. | Assert the exact exit code doctor gives for this repository. |",
-        "owner": "`cli/commands/local-override.test.ts:36`, same test",
-        "location": ["tests/cli/commands/local-override.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Doctor reports exit 0 for the fixture with no selected tools or hooks. The assertion requires exactly 0 instead of accepting either success or findings.",
-            "The focused command regression run passes all 12 cases and 102 assertions: /tmp/gspot-command-assertions-tests.log. Workspace TypeScript passes: /tmp/gspot-command-assertions-types.log."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/004",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 15,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/cancellation.test.ts:88`, \"staged cancellation during %s preserves source content and permits retry\", row `diff` | For `diff`, the fake git writes no `checkout`. The expression is then `false`, so the assertion passes whatever happens. | Assert the snapshot removal only in the `clone` and `cat-file` rows. For `diff`, assert that the run made no snapshot folder at all. |",
-        "owner": "`cli/commands/cancellation.test.ts:88`, \"staged cancellation during %s preserves source content and permits retry\", row `diff`",
-        "location": ["tests/cli/commands/cancellation.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "TMPDIR belongs to the fixture. The diff case asserts that no snapshot folder exists while diff is stalled; all cases assert that the temporary directory is empty after cancellation. Clone and cat-file also require a recorded checkout and verify its removal.",
-            "The focused command regression run passes all 12 cases and 102 assertions: /tmp/gspot-command-assertions-tests.log. Workspace TypeScript passes: /tmp/gspot-command-assertions-types.log."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/005",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 16,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/cancellation.test.ts:155`, \"push cancellation while stdin remains open handles %s and permits retry\" | The retry on line 187 runs `check --staged`, not `check --push`. Nothing shows that a push run works after a canceled push. | Retry with `check --push` and a complete ref line on stdin, and assert exit 0. |",
-        "owner": "`cli/commands/cancellation.test.ts:155`, \"push cancellation while stdin remains open handles %s and permits retry\"",
-        "location": ["tests/cli/commands/cancellation.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The SIGINT and SIGTERM open-stdin cases now commit their fixture and retry check --hook pre-push with a complete ref/object line. They assert exit zero and a PushReport revision containing the actual committed object, ref and passing bash/syntax result. The canceled run still preserves the index and reports the exact cancellation record.",
-            "Zero-object fields use each actual object hash length, including the completed/pending push-report case. Existing live-child deadlines and disposal remain intact.",
-            "AST comparison preserves every assertion site and strengthens only the retry report assertion; runtime names preserve all nine cancellation cases. Root TypeScript, affected lint and formatting passed. The push/cancellation suite passed 18 tests with 158 assertions across three files; GIT_DEFAULT_HASH=sha256 passed all nine cancellation tests with 78 assertions. Signal cases retain their POSIX guard; verification ran on macOS."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/006",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 17,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/cancellation.test.ts:62-77`, `:118-133` | Two tests write a fake `git` as a one-line JavaScript string and build the same `PATH` override inline. The shims are hard to read and differ only in when they pause. | Add one local `fakeGit(directory, { operation, marker, pauseOnCall })` that writes the shim and returns the environment. Use it in both tests. |",
-        "owner": "`cli/commands/cancellation.test.ts:62-77`, `:118-133`",
-        "location": ["tests/cli/commands/cancellation.test.ts", "tests/types/cli/commands/cancellation.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "One local fakeGit builder now owns the executable fixture and PATH override. Staged cases pause the first diff, clone, or cat-file call; the multi-reference push pauses the second clone while delegating the first and unrelated commands to the real Git executable. The generated script uses readable statements and named checkout data.",
-            "Both callers retain their real-executable prerequisite assertions and pass the verified executable explicitly. Required options live in the cancellation type owner; no assertions or executable fixture producers moved into config or shared harness. Existing readiness markers, scratch isolation, cancellation reports, index/source preservation, child disposal, and retries remain intact.",
-            "AST comparison retains all 43 assertion sites and all nine runtime cancellation cases. Root TypeScript, affected ESLint, and formatting passed. Cancellation and push regression coverage passed 18 tests with 158 assertions across three files on macOS. All nine direct native test spawns still use the remaining test budget; POSIX guards remain intact."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/007",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 18,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/changed.test.ts:106`, \"a commit that changes only gspot.toml rechecks every file a kit check owns\" | The test runs `check --staged` and never commits. It sits in the file for `--changed`, and its name says \"a commit\". | Move it to `check/selection.test.ts` and rename it \"a staged change to only gspot.toml rechecks every file a kit check owns\". |",
-        "owner": "`cli/commands/changed.test.ts:106`, \"a commit that changes only gspot.toml rechecks every file a kit check owns\"",
-        "location": ["tests/cli/commands/changed.test.ts", "tests/cli/commands/check/selection.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The policy-only staged case now lives in the check-selection owner. Its name states that only gspot.toml is staged; the changed-selection owner keeps only working-tree/history comparisons. Required imports moved with the case and unused imports were removed.",
-            "AST comparison across both owners proves identical non-import syntax after normalizing the single corrected test name. All 42 assertion sites remain unchanged; no production behavior, fixture body, or timeout changed.",
-            "Root TypeScript, affected ESLint, and formatting passed. Both owners passed all 12 runtime cases with 45 assertions across two files."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/008",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 19,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/check/refusals.test.ts:56-58,73,88` `snapshotFolders` | The helper lists the shared system temporary folder by gspot's internal prefix `gspot-revision-` (`execution/checkout/revision.ts:250`). If the prefix changes, both tests pass with any leftover folder. Another process that makes a snapshot at the same time makes them fail. | Point `os.tmpdir` at a sandbox folder, as `cli/execution/fixers/isolation.test.ts:137` does. Assert that the folder is empty after the refusal. |",
-        "owner": "`cli/commands/check/refusals.test.ts:56-58,73,88` `snapshotFolders`",
-        "location": ["tests/cli/commands/check/refusals.test.ts", "tests/config/cli/commands/check-refusals.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Both staged refusals point os.tmpdir at a disposable test-owned folder and assert the entire folder is empty. Each spy restores in finally. The snapshotFolders helper and dependence on the system temporary directory or gspot-revision prefix are deleted.",
-            "AST comparison preserves all 18 assertion sites and strengthens only the diagnostic and two cleanup assertions. Runtime test-name comparison preserves all nine existing refusal cases and adds one incomplete UTF-8 case.",
-            "Root TypeScript, affected lint and formatting passed. Check, push and cancellation regressions passed: 40 tests, 244 assertions across six files. The native-spawn audit confirms all nine direct Bun subprocess call sites still use the remaining test budget."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/009",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 20,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/check/refusals.test.ts:49`, \"a push hook given %s exits 2 and leaves the working tree as it was\" | `not.toBe('')` passes for any stderr, including a crash trace. | Assert the text gspot gives for a ref update it cannot read. |",
-        "owner": "`cli/commands/check/refusals.test.ts:49`, \"a push hook given %s exits 2 and leaves the working tree as it was\"",
-        "location": ["tests/cli/commands/check/refusals.test.ts", "tests/config/cli/commands/check-refusals.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Push refusals assert the specific protocol or UTF-8 diagnostic, exit 2, unchanged source bytes and clean Git status. Invalid raw bytes retain their original FF FE 0A sequence; an added C3 case verifies that an incomplete UTF-8 sequence is refused on decoder flush. Static cases live under the matching check-refusals configuration owner; no production behavior changed.",
-            "AST comparison preserves all 18 assertion sites and strengthens only the diagnostic and two cleanup assertions. Runtime test-name comparison preserves all nine existing refusal cases and adds one incomplete UTF-8 case.",
-            "Root TypeScript, affected lint and formatting passed. Check, push and cancellation regressions passed: 40 tests, 244 assertions across six files. The native-spawn audit confirms all nine direct Bun subprocess call sites still use the remaining test budget."
-        ]
-    },
-    {
         "id": "slices/tests-integration-commands/010",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 21,
+        "line": 9,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Refusals that assert only exit 2: `cli/commands/agents.test.ts:51`, `declarations.test.ts:57`, `explain.test.ts:152`, `levels.test.ts:107`, `roots.test.ts:20`, `ci.test.ts:211`, `list.test.ts:39`, `init/refusals.test.ts:35,46,104`, `init/selection.test.ts:120` | gspot exits 2 for every error. A refusal for the wrong reason, such as an unknown key or a setup crash, passes these tests. | Assert the part of the message that names the cause: the path, key, kit, or flag. |",
         "owner": "Refusals that assert only exit 2: `cli/commands/agents.test.ts:51`, `declarations.test.ts:57`, `explain.test.ts:152`, `levels.test.ts:107`, `roots.test.ts:20`, `ci.test.ts:211`, `list.test.ts:39`, `init/refusals.test.ts:35,46,104`, `init/selection.test.ts:120`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-integration-commands/011",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 22,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| Expected text that echoes the input: `cli/commands/remove.test.ts:35-36` (`bash`, `typescript`), `set.test.ts:14` (`web`), `reasons.test.ts:146` (`extra`) | The expected text is the name the test passed in, or one short word. Any error that repeats the argument passes. | Assert the clause that states the cause next to the name, or the full key path `tools.shellcheck.extra`. |",
-        "owner": "Expected text that echoes the input: `cli/commands/remove.test.ts:35-36` (`bash`, `typescript`), `set.test.ts:14` (`web`), `reasons.test.ts:146` (`extra`)",
-        "location": [
-            "tests/cli/commands/remove.test.ts",
-            "tests/cli/commands/set.test.ts",
-            "tests/cli/commands/reasons.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "Removal tests assert complete dependency and absent-selection clauses. The undeclared-scope test names the available policy scopes even when the requested directory exists. The native-extension reason test asserts the full tools.shellcheck.verbatim owner and missing-reason clause, rather than a repeated input token.",
-        "verification": [
-            "The real command, template, writer, initialization, cancellation, and installation regression owners passed 167 cases and 1196 assertions. The real reason owner passed all 15 cases and 93 assertions.",
-            "Exact removal diagnostics and unchanged repository trees were verified in human and JSON output. The earlier removal-wording mutation made all three refusal cases fail; the unknown-scope fallback mutation also failed its cause assertion.",
-            "A mutation retained the native-extension key but removed its missing-reason clause. The required-reason control failed while the optional-reason control passed; the source was restored byte for byte.",
-            "Root TypeScript, affected ESLint, and formatting passed."
-        ]
+        "verification": [],
+        "originalLine": 21
     },
     {
         "id": "slices/tests-integration-commands/012",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 23,
+        "line": 10,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/apply.test.ts:30`, \"init deletes a replaced file, and apply preserves later edits and unowned content\" | The assertion checks the closing clause \"version pin was not changed\" of the preserved-edits error (`lifecycle/write.ts:89`). It does not check which file apply preserved. The name does not say that apply exits 2. | Assert that stderr names `.gspot/config/shellcheckrc`. Add \"exits 2\" to the name. |",
         "owner": "`cli/commands/apply.test.ts:30`, \"init deletes a replaced file, and apply preserves later edits and unowned content\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-integration-commands/013",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 24,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| Runs with no exit code check: `cli/commands/check/selection.test.ts:97-106` (second run of \"-C resolves file arguments from the folder it names\"), `:143,145` (\"a manual check runs only when --only names it\"), `explain.test.ts:84,116`, `push.test.ts:185` (\"pre-push text supplies an executable reproduction…\") | These runs parse the JSON report without asserting the exit code. A run that fails for another reason but still prints a report passes. | Assert the exit code of each run, as the other runs in these files do. |",
-        "owner": "Runs with no exit code check: `cli/commands/check/selection.test.ts:97-106` (second run of \"-C resolves file arguments from the folder it names\"), `:143,145` (\"a manual check runs only when --only names it\"), `explain.test.ts:84,116`, `push.test.ts:185` (\"pre-push text supplies an executable reproduction…\")",
-        "location": [
-            "tests/cli/commands/check/selection.test.ts",
-            "tests/cli/commands/explain/selection.test.ts",
-            "tests/cli/commands/push/revisions.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Added exact exit assertions to the second -C selection run, both manual-check selections, corrected and tracked-path explanations, and the failed pre-push run used to produce a reproduction command. The adjacent updated-setting explanation also lacked a status assertion and now requires success. Report parsing and all existing outcome checks remain intact.",
-            "AST comparison preserves all 104 existing assertion sites and every scenario name across the three owners, adding only seven status assertions. Each status matches the fixture: selected failing commands and the broken push exit one, while empty/manual-success selections and valid explanations exit zero.",
-            "Root TypeScript, affected ESLint, and formatting passed. All 31 affected cases passed with 151 assertions across three files."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/014",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 25,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/selectors.test.ts:16-29` `expectIndexReport` | The helper has one caller. Its name hides a second CLI run in text mode (line 19). It asserts the caller's file name `script with spaces.sh`. Lines 23-24 pin the text fragments `checked index;` and `checked working tree;`. | Inline it into the test at line 76. Assert the comparison through `--json` only. |",
-        "owner": "`cli/commands/selectors.test.ts:16-29` `expectIndexReport`",
-        "location": ["tests/cli/commands/check/snapshot.test.ts", "tests/cli/output/reporter.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The single-caller expectIndexReport helper is removed. Its comparison, staged reproduction, and finding-path assertions now appear directly in the owning snapshot case. That case reads comparison content through the public JSON report only; its hidden second text-mode CLI run and two duplicate text-fragment assertions are removed.",
-            "Comparison headers remain covered by the reporter owner, including index and quiet-mode cases. AST comparison preserves all 38 existing outcome assertion sites after normalizing the inlined report parameter and optional failure context. The two removed sites are the duplicate text checks.",
-            "Root TypeScript, affected ESLint, and formatting passed. Snapshot and reporter owners passed 17 tests with 78 assertions across two files. No production output behavior or test timeout changed."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/015",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 26,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/selectors.test.ts:104-106`, \"staged checks use index bytes and policy on an unborn branch while preserving unstaged edits\" | The last step deletes the working file and asserts only exit 0. The name does not mention it, and nothing shows that the check read the staged bytes. | Assert `status: 'passed'` and `fileCount: 1`, and name the step. Or delete it. |",
-        "owner": "`cli/commands/selectors.test.ts:104-106`, \"staged checks use index bytes and policy on an unborn branch while preserving unstaged edits\"",
-        "location": ["tests/cli/commands/check/snapshot.test.ts", "tests/cli/output/reporter.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The missing working-file step now has its own named, independently owned fixture. It stages a valid file, deletes its working copy, runs the public staged check, and asserts exit zero with an actual passed check and fileCount one. It also asserts that the working file remains absent, so an empty no-op report or source restoration fails the case.",
-            "The unborn-index case retains its policy, index-byte, reference, and authored-content assertions. The shared report helper is inlined, and all 38 existing outcome assertion sites are preserved; the missing-file status/count and absence assertions replace duplicate text coverage in this batch.",
-            "Root TypeScript, affected ESLint, and formatting passed. Snapshot and reporter owners passed 17 tests with 78 assertions across two files. The new case uses the existing bounded Git and CLI runners with the normal 60-second suite default."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/016",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 27,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/push.test.ts:229-231`, \"pre-push reports multiple objects once per object and handles forced rewinds\" | `[2, 0]` counts the two lines that `bash -n` prints for `if then`. This is the incidental tool output that the FINDINGS row about `['legacy.sh', 'legacy.sh']` names, at a line that row does not list. | Assert that the broken object has findings and the reviewed object has none. |",
-        "owner": "`cli/commands/push.test.ts:229-231`, \"pre-push reports multiple objects once per object and handles forced rewinds\"",
-        "location": ["tests/cli/commands/push/revisions.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "All eleven repeated Bash finding-file assertions in the reviewed declaration, scope, push, snapshot, and ignore cases now compare exact file sets. Expected data names each file once; missing or unexpected files still fail without depending on repeated native diagnostics.",
-            "The multi-object push case retains exact exit-code and comparison-reference assertions. Its failing revision must identify changed.sh, and its passing revision must have no findings, replacing the incidental [2, 0] count. AST comparison retains every scenario name and all 185 unrelated assertion sites; twelve prior count-based sites become thirteen outcome assertions.",
-            "A disposable real-CLI/Bash probe confirmed two invalid sources emitting respectively two and one diagnostics for the same entry.sh, followed by corrected source with exit zero and no findings. The probe preserved an unrelated file and removed its owned fixture. Root TypeScript, affected ESLint, and formatting passed; all six affected owners passed 28 tests with 229 assertions."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/017",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 28,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/push.test.ts:85`, \"new references without fetched comparison objects check the full tree\" | `command.slice(0, -2).concat('unseen', 'unused')` depends on the harness putting the remote name and address last. A change to that list makes the test use the wrong remote. | Return a `pushCommand(remote)` function from the harness, or build the argv in the test. |",
-        "owner": "`cli/commands/push.test.ts:85`, \"new references without fetched comparison objects check the full tree\"",
-        "location": ["tests/cli/commands/push/revisions.test.ts", "tests/config/cli/commands/push.ts"],
-        "status": "closed",
-        "outcome": "The shared pre-push arguments end before the remote pair. Default repository setup appends origin explicitly; the no-fetched-object case appends unseen explicitly. Neither caller infers the remote position from a command slice, and no forwarding function was added.",
-        "verification": [
-            "The actual pre-push regressions passed 9 cases and 82 assertions across two files, including exact full-tree findings and conflicting working-tree preservation. Root TypeScript, affected ESLint and formatting passed.",
-            "Source reconstruction verifies that the only changes in the test owner are explicit argv construction and removal of the unused command binding. All eight original declarations and 56 assertion sites remain. Parsing the old/new static arrays proves that both default and unfetched argv are identical to their prior runtime values."
-        ]
+        "verification": [],
+        "originalLine": 23
     },
     {
         "id": "slices/tests-integration-commands/018",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 29,
+        "line": 11,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Git calls that skip the harness: `cli/commands/cancellation.test.ts:112,115`, `push.test.ts:106,121,261`, `init/replace.test.ts:76-78`, `cli/doctor.test.ts:43`; and `expect(git(...).code).toBe(0)` throughout `selectors.test.ts`, `push.test.ts`, `cancellation.test.ts`, `agents.test.ts` | `git(...).stdout.trim()` ignores a failed Git call and returns an empty string. `init/replace.test.ts:76-78` does not check its three Git calls at all. `doctor.test.ts:43` runs `git init` through gspot's own `runBlocking`. The harness has `gitOutput` and `commitAll`, which throw with Git's error text. | Use `gitOutput` for calls the test needs the output of, `commitAll` for init, add, and commit, and `gitOutput` in place of `expect(git(...).code).toBe(0)`. |",
         "owner": "Git calls that skip the harness: `cli/commands/cancellation.test.ts:112,115`, `push.test.ts:106,121,261`, `init/replace.test.ts:76-78`, `cli/doctor.test.ts:43`; and `expect(git(...).code).toBe(0)` throughout `selectors.test.ts`, `push.test.ts`, `cancellation.test.ts`, `agents.test.ts`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 29
     },
     {
         "id": "slices/tests-integration-commands/019",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 30,
+        "line": 12,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/apply.test.ts:164,169`, `cli/commands/typed-tables.test.ts:42` | These cast `expect.stringContaining` by hand. The harness has `textContaining` for this. | Use `textContaining`. |",
         "owner": "`cli/commands/apply.test.ts:164,169`, `cli/commands/typed-tables.test.ts:42`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 30
     },
     {
         "id": "slices/tests-integration-commands/020",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 31,
+        "line": 13,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Local copies of harness values: `cli/commands/cancellation.test.ts:17` (`isWindows`), `cli/platform/spawn/termination.test.ts:104` (path of `spawn.ts`), `cli/commands/ignores.test.ts:41-54` (`node`) | `isWindows` repeats `onPosix`. The `spawn.ts` path repeats `cliSource('platform/spawn.ts')`. `ignores.test.ts` runs `node` from `PATH`, while every other declared check in this slice runs `process.execPath`. | Use `onPosix`, `cliSource`, and `process.execPath`. |",
         "owner": "Local copies of harness values: `cli/commands/cancellation.test.ts:17` (`isWindows`), `cli/platform/spawn/termination.test.ts:104` (path of `spawn.ts`), `cli/commands/ignores.test.ts:41-54` (`node`)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-integration-commands/021",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 32,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `if (onPosix) test(...)`: `cli/commands/agents.test.ts:102`, `cli/platform/globs.test.ts:18`, `cli/platform/filesystem.test.ts:31-167` (five tests), `cli/platform/spawn/backends.test.ts:60,85,145`, `cli/tools/inspect/installations.test.ts:17` | On Windows these tests are not registered, so the run reports nothing as skipped. FINDINGS names this pattern only for the Swift and XCTest files. | Use `test.skipIf(!onPosix)`. |",
-        "owner": "`if (onPosix) test(...)`: `cli/commands/agents.test.ts:102`, `cli/platform/globs.test.ts:18`, `cli/platform/filesystem.test.ts:31-167` (five tests), `cli/platform/spawn/backends.test.ts:60,85,145`, `cli/tools/inspect/installations.test.ts:17`",
-        "location": [
-            "tests/cli/commands/agents.test.ts",
-            "tests/cli/platform/globs.test.ts",
-            "tests/cli/platform/root.test.ts",
-            "tests/cli/platform/spawn/backends.test.ts",
-            "tests/cli/tools/inspect/installations.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Replaced all nine platform registration guards across the five current owners with test.skipIf. All thirteen guarded scenario declarations remain registered; the formerly grouped root declarations and backend loops retain their actual platform requirements.",
-            "AST comparison preserves 39 existing callback bodies after the intentional backend-loop expansion and cancellation budget binding. Every prior scenario remains present; the loop outcome and elapsed assertions are reviewed separately. Windows skip reporting is verified without pretending to run Windows subprocesses.",
-            "Root TypeScript, affected ESLint, and formatting passed. All 72 affected platform, agent, inspection, backend, and termination cases passed with 371 assertions on macOS. A separate selected run with a simulated Windows platform registered and reported all 22 relevant rows as skipped, with no assertions or native Windows execution."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/022",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 33,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/platform/filesystem.test.ts:78-80`, \"files lifecycle mutations: %s paths cannot use symlinks or hardlinks to change an external file\" | The `process.platform === 'win32' ? 0o777 : 0o700` branch never runs: the test sits inside the `if (onPosix)` block. | Delete the Windows branch, or move the `mkdir` assertion to a test that runs on every platform. |",
-        "owner": "`cli/platform/filesystem.test.ts:78-80`, \"files lifecycle mutations: %s paths cannot use symlinks or hardlinks to change an external file\"",
-        "location": ["tests/cli/platform/root.test.ts", "tests/config/cli/platform/root.ts"],
-        "status": "closed",
-        "outcome": "The POSIX-only private-directory assertion requires mode 0700 directly. The unreachable Windows expected-mode branch is gone; Windows file identities retain their separate existing test.",
-        "verification": [
-            "The two portable/native linked-destination rows and the POSIX permission assertion pass through real filesystem operations. Inspected the visible skipIf(!isPosix) registration; no native Windows filesystem run is claimed.",
-            "Root, lock and lifecycle-ownership regressions passed 76 cases and 474 assertions across 12 files. Root TypeScript, affected ESLint and formatting passed. All existing test declarations remain, with no production behavior changes."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/023",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 34,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/platform/filesystem.test.ts:154-160`, \"files lifecycle mutations: a second writer is refused until the first releases its lock\" | The test locks `.gspot/mutation.lock`. gspot's writer lock is `.gspot/state/writer.lock` (`lifecycle/ownership/owner.ts:89`). The test names a path the product no longer uses. | Lock `${STATE_DIRECTORY}/writer.lock` from the configuration constant. |",
-        "owner": "`cli/platform/filesystem.test.ts:154-160`, \"files lifecycle mutations: a second writer is refused until the first releases its lock\"",
-        "location": ["tests/cli/platform/root.test.ts", "tests/config/cli/platform/root.ts"],
-        "status": "closed",
-        "outcome": "The contention case locks the product path built from STATE_DIRECTORY and writer.lock. It observes the live token, verifies refusal preserves it, requires release and reacquisition, and checks final removal and unrelated bytes.",
-        "verification": [
-            "Traced the exact writer path in lifecycle/ownership/log.ts. Both root instances use that same path. Six additional assertions verify real lock state and preservation without elapsed-time claims or process mocks.",
-            "Root, lock and lifecycle-ownership regressions passed 76 cases and 474 assertions across 12 files. Root TypeScript, affected ESLint and formatting passed. All existing test declarations remain, with no production behavior changes."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/024",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 35,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/platform/filesystem.test.ts:71,74,133,227` | `.toThrow()` with no message passes for any error, including a `TypeError` from a bug. FINDINGS lists this pattern only for unit files. | Assert the refusal text, such as `Unsafe lifecycle` or `changed`. |",
-        "owner": "`cli/platform/filesystem.test.ts:71,74,133,227`",
-        "location": ["tests/cli/platform/root.test.ts", "tests/config/cli/platform/root.ts"],
-        "status": "closed",
-        "outcome": "Root refusal cases require their specific lifecycle diagnostics or ENOTEMPTY. All original unsafe destinations and link targets remain in static data under the root test owner; generic refusal matchers are gone.",
-        "verification": [
-            "A direct source/filesystem probe confirmed all nine link-target reasons and three unsafe-destination reasons before editing the cases. Specific write/removal refusals preserve external bytes; link refusals retain absent-output and safe-publication controls.",
-            "In temporary source copies, replacing the private-file refusal with an unrelated TypeError passes both original linked-destination cases (20 assertions) and fails both strengthened cases on the expected diagnostic. Repository production source was not modified.",
-            "Root, lock and lifecycle-ownership regressions passed 76 cases and 474 assertions across 12 files. Root TypeScript, affected ESLint and formatting passed. All existing test declarations remain, with no production behavior changes."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/025",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 36,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/platform/globs.test.ts:25`, \"a walk that follows links ends at a link back to its own folder\" | `toBeLessThan(10)` accepts up to nine paths. A walk that follows the loop several times before it stops still passes. | Assert the exact list the walk returns. |",
-        "owner": "`cli/platform/globs.test.ts:25`, \"a walk that follows links ends at a link back to its own folder\"",
-        "location": ["tests/cli/platform/globs.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The link-loop case now requires exactly src/a.ts, so repeated traversal cannot pass through a loose upper bound. Its platform restriction is registered as a skip instead of omitting the case.",
-            "Added three fixed-base link cases covering a linked first segment, linked nested segment, and literal descendant. Each verifies no traversal when following is disabled, the exact selected path when enabled, a successful regular-directory correction, and preservation of the outside configuration and unrelated source bytes.",
-            "Root TypeScript, affected ESLint, and formatting passed. All 72 affected platform, agent, inspection, backend, and termination cases passed with 371 assertions on macOS. A separate selected run with a simulated Windows platform registered and reported all 22 relevant rows as skipped, with no assertions or native Windows execution."
-        ]
+        "verification": [],
+        "originalLine": 31
     },
     {
         "id": "slices/tests-integration-commands/026",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 37,
+        "line": 14,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/platform/assets.test.ts:22`, \"development assets › resolve a checkout containing spaces, percent signs, and Unicode\" | The test also checks the missing Swift grammar error, the refusal of an undeclared grammar, and the WebAssembly validity of every grammar. The name covers one of four behaviors. The child script throws on lines 13-16, so those failures show only as exit 1. | Rename the test to cover the grammar checks, or split the missing-grammar run into its own test. Let the child print one JSON field per check, and assert each field. |",
         "owner": "`cli/platform/assets.test.ts:22`, \"development assets › resolve a checkout containing spaces, percent signs, and Unicode\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-integration-commands/027",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 38,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/platform/assets.test.ts:35,44` | Both `Bun.spawnSync` calls have no `timeout`. A hang blocks the whole run, because the test limit cannot interrupt a synchronous call. | Pass `timeout`, as `cli/sql-parser.test.ts:11` does. |",
-        "owner": "`cli/platform/assets.test.ts:35,44`",
-        "location": "tests/cli/platform/assets.test.ts",
-        "status": "closed",
-        "outcome": "Both fresh-process asset probes use runTestCommandBlocking, which clamps their timeout to the remaining scenario budget and reports the command, working directory, step, and captured streams if they time out.",
-        "verification": [
-            "Source audit confirms both probes use the bounded runner; no unbounded synchronous Bun call remains in this owner.",
-            "The missing-grammar refusal and valid packaged-grammar observations retain all four assertions. The complete CLI/plugin replay passes 2,424 tests with two platform skips, zero failures, and 7,575 assertions.",
-            "Changed-file ESLint and Prettier checks and the root TypeScript target pass. The existing synchronous timeout regression verifies timeout diagnostics and captured output."
-        ]
+        "verification": [],
+        "originalLine": 37
     },
     {
         "id": "slices/tests-integration-commands/028",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 39,
+        "line": 15,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Hand-written `describe` prefixes: `cli/commands/explain.test.ts` (\"explain > \", 6 tests), `cli/policy/key-paths.test.ts` (\"parsePolicyText > \"), `cli/policy/write.test.ts` (\"writePolicy > \", 9 of 12 tests), `cli/platform/filesystem.test.ts:32-149` (\"files lifecycle mutations: \"), `cli/tools/inspect/installations.test.ts` (\"the tool inspection > \") | The test names copy the form Bun prints for a `describe` block. The output then shows nesting that does not exist, and each file mixes prefixed and plain names. Several \"writePolicy >\" tests call only `preparePolicy`. | Wrap each group in `describe('<unit>', ...)` and drop the prefix from the names. |",
         "owner": "Hand-written `describe` prefixes: `cli/commands/explain.test.ts` (\"explain > \", 6 tests), `cli/policy/key-paths.test.ts` (\"parsePolicyText > \"), `cli/policy/write.test.ts` (\"writePolicy > \", 9 of 12 tests), `cli/platform/filesystem.test.ts:32-149` (\"files lifecycle mutations: \"), `cli/tools/inspect/installations.test.ts` (\"the tool inspection > \")",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 39
     },
     {
         "id": "slices/tests-integration-commands/029",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 40,
+        "line": 16,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Assertions that branch on the row: `cli/policy/key-paths.test.ts:84`, `cli/tools/inspect/versions.test.ts:25`, `cli/commands/reasons.test.ts:21,46,177` | `name !== 'a quoted key' \\|\\| ...` passes by construction in five of six rows. `note === undefined ? ... : ...` picks the assertion per row. `(text === policy).toBe(required)` prints only \"expected true, received false\". In key-paths, the `where` column holds a message fragment in the `kitz` row and a key path in the others. | Add the expected values as table columns (`message`, `found`, `note`) and assert them directly. Compare the policy text with `toBe(policy)` or `not.toBe(policy)` per row. |",
         "owner": "Assertions that branch on the row: `cli/policy/key-paths.test.ts:84`, `cli/tools/inspect/versions.test.ts:25`, `cli/commands/reasons.test.ts:21,46,177`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 40
     },
     {
         "id": "slices/tests-integration-commands/030",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 41,
+        "line": 17,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/policy/key-paths.test.ts:110`, \"parsePolicyText > scope %s cannot follow an external directory symlink\" | Cannot fail. `policyProblems` only parses text and never writes, so the sentinel is always unchanged. | Delete the line. |",
         "owner": "`cli/policy/key-paths.test.ts:110`, \"parsePolicyText > scope %s cannot follow an external directory symlink\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-integration-commands/031",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 42,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/policy/write.test.ts:44-68`, \"writePolicy > policy edits reject an external symlink before evaluating a mutation (dry run: %s)\" | Both rows end in the same throw. In the `false` row, `preparePolicy` runs first as the argument of `writePolicy` and refuses the link (`commands/edit.ts:25-31`). `writePolicy` is never reached. `preparePolicy` has no dry-run flag, so \"dry run\" names nothing. | Make it one plain test of `preparePolicy`. Drop the table and the dry-run wording. |",
-        "owner": "`cli/policy/write.test.ts:44-68`, \"writePolicy > policy edits reject an external symlink before evaluating a mutation (dry run: %s)\"",
-        "location": [
-            "tests/cli/policy/write.test.ts",
-            "packages/cli/src/commands/policy-edit.ts",
-            "packages/cli/src/policy/edit.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The duplicated dry-run table is now one explicitly named preparePolicy boundary test. It calls the actual preflight directly and retains refusal of the external symlink, proof that the mutation is not evaluated, preservation of the outside policy, and absence of ownership output. The unreachable write/log branch is removed.",
-            "Source tracing confirms preparePolicy reads and validates the original file before proposing the mutation. Its refusal precedes opening the ownership log or calling writePolicy, so the old dry-run parameter exercised no separate contract.",
-            "AST comparison preserves all 25 other assertion sites, revises only the boundary throw callback, and adds the separate empty-parent assertion. Root TypeScript, affected ESLint, and formatting passed; write, edit, and key-path coverage passed 24 tests with 84 assertions across three files on macOS. One duplicated runtime row is removed; no unique boundary outcome is lost."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/032",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 43,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/policy/write.test.ts:92`, \"writePolicy > sets a nested key, then deletes it and the empty table\" | Line 98 checks only that `file_lines` is gone. A leftover empty `[limits.bash]` table still passes. | Also assert that the text no longer holds `[limits`. |",
-        "owner": "`cli/policy/write.test.ts:92`, \"writePolicy > sets a nested key, then deletes it and the empty table\"",
-        "location": [
-            "tests/cli/policy/write.test.ts",
-            "packages/cli/src/commands/policy-edit.ts",
-            "packages/cli/src/policy/edit.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The nested-key deletion case now also rejects any remaining [limits table header after deleting its last key. The existing added-table and removed-file_lines assertions remain intact, so an empty parent left in the written document now fails.",
-            "A disposable direct proposal probe confirms the current implementation adds limits.bash, then removes both the key and its empty parent tables through deleteKey and TOML patching. No production change was needed.",
-            "Root TypeScript, affected ESLint, and formatting passed. Write, edit, and key-path coverage passed 24 tests with 84 assertions across three files. AST comparison retains the existing deletion assertions and all 25 unrelated outcome sites."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/033",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 44,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/policy/profile.test.ts:63`, \"profile publication is idempotent, preserves edits, and survives apply\" | The test counts entries of kind `export` in `.gspot/state/ownership.json`, a private field. FINDINGS names lines 127 and 132 of this file for the same reason, but not this line. | Delete the line. Lines 61-62 already prove that a second export changes nothing. |",
-        "owner": "`cli/policy/profile.test.ts:63`, \"profile publication is idempotent, preserves edits, and survives apply\"",
-        "location": ["tests/cli/policy/template.test.ts", "packages/cli/src/commands/export.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Removed the idempotence assertion that counted private ownership entries of kind export. The same case still exports twice, requires both public exit statuses to succeed, compares exact template bytes, applies, compares bytes again, and verifies preservation of an authored edit.",
-            "AST comparison preserves all 29 other assertion sites and every template case name, apart from the separately strengthened managed-policy refusal. Recovery tests retain their real filesystem fault, restoration, retry, and output checks.",
-            "Root TypeScript, affected ESLint, and formatting passed. Template publication, source loading, export parsing, and policy writing passed 32 cases with 94 assertions across four files on macOS."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/034",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 45,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/policy/profile.test.ts:109`, \"profile export preserves an unowned destination and refuses the managed repository policy\" | `toBeInstanceOf(Error)` passes for any failure. FINDINGS names this only at line 91. | Assert the message that refuses `gspot.toml` as the destination. |",
-        "owner": "`cli/policy/profile.test.ts:109`, \"profile export preserves an unowned destination and refuses the managed repository policy\"",
-        "location": ["tests/cli/policy/template.test.ts", "packages/cli/src/commands/export.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The export refusal now requires the diagnostic Template export cannot replace managed gspot.toml. Choose another destination. Its fixture first prepares and commits a real policy edit through the production ownership lifecycle, then disposes that log before attempting export. This exercises the managed-kind guard rather than the generic unowned-file refusal.",
-            "A direct before-state probe showed that a merely authored gspot.toml was rejected as unowned while retaining its bytes. The corrected fixture reaches the managed policy guard in exportCommand and still verifies exact policy bytes plus preservation of the separate occupied destination and its permissions.",
-            "AST comparison retains all 29 unrelated outcome assertion sites and every scenario name. Root TypeScript, affected ESLint, and formatting passed; the four affected template and policy owners passed 32 cases with 94 assertions on macOS."
-        ]
+        "verification": [],
+        "originalLine": 41
     },
     {
         "id": "slices/tests-integration-commands/035",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 46,
+        "line": 18,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/doctor.test.ts:96-100`, \"doctor exits by the installed library version %s: an outdated tool exits 1\" | The test replaces gspot's own `inspectTool` for every tool except one. That mocks the code under test. FINDINGS names only the call assertion on line 102. | Mock at the process boundary (`which.sync` and `processes.run`) so that every other tool reads as installed, or plant fake executables on a `PATH` the test controls. |",
         "owner": "`cli/doctor.test.ts:96-100`, \"doctor exits by the installed library version %s: an outdated tool exits 1\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 46
     },
     {
         "id": "slices/tests-integration-commands/036",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 47,
+        "line": 19,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Pinned human text: `cli/commands/agents.test.ts:66`, `init/refusals.test.ts:84-87`, `explain.test.ts:80`, `init/replace.test.ts:46-51`, `cli/doctor.test.ts:36,46,51`, `cli/tools/inspect/installations.test.ts:208-210` | These pin whole sentences, or the text layout (`/^hooks\\s+none$/` and the count of `(hand-written)`), where a JSON field or a path exists. FINDINGS lists other places with this pattern, but not these. | Assert the JSON field (`path`, `kind`, `state`), or one key token such as the path or command. |",
         "owner": "Pinned human text: `cli/commands/agents.test.ts:66`, `init/refusals.test.ts:84-87`, `explain.test.ts:80`, `init/replace.test.ts:46-51`, `cli/doctor.test.ts:36,46,51`, `cli/tools/inspect/installations.test.ts:208-210`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 47
     },
     {
         "id": "slices/tests-integration-commands/037",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 48,
+        "line": 20,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/sql-parser.test.ts:15`, \"concurrent SQL parsing returns independent results in a fresh process\" | The test pins the error text of libpg_query (`syntax error at or near \"...\"`, offset 0). A parser upgrade that changes the wording fails the test with no gspot change. The test is about independent results. | Assert that rows 1 and 3 are `null` and that row 2 is an error naming the typo. |",
         "owner": "`cli/sql-parser.test.ts:15`, \"concurrent SQL parsing returns independent results in a fresh process\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 48
     },
     {
         "id": "slices/tests-integration-commands/038",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 49,
+        "line": 21,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/instructions.test.ts` (whole file) | It tests `managedBlock` from `packages/cli/src/rules/instructions.ts` but sits at the top of `tests/integration/cli`. The unit tier already has `tests/unit/cli/rules/`. Both tests repeat the same `openSession` and `managedBlock` call. | Move it to the rules folder of the merged suite. Build the block in one local `blockFor(root)`. |",
         "owner": "`cli/instructions.test.ts` (whole file)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 49
     },
     {
         "id": "slices/tests-integration-commands/039",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 50,
+        "line": 22,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/tools/inspect/installations.test.ts`, `placement.test.ts`, `versions.test.ts` | `{ root: sandbox.path, inspections: new Map() }` is typed about 20 times across the three files. | Add one `inspectionContext(root)` to the harness for the three files. |",
         "owner": "`cli/tools/inspect/installations.test.ts`, `placement.test.ts`, `versions.test.ts`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 50
     },
     {
         "id": "slices/tests-integration-commands/040",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 51,
+        "line": 23,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/python-ownership.test.ts:7,10,20,48` | Dead setup. Both fixtures write `.gspot/version` with the running version. `check` refuses only a pin that differs (`lifecycle/version-pin.ts:47`), so a matching pin acts like no pin. The package manifest import serves only this. | Delete both `.gspot/version` entries and the import. |",
         "owner": "`cli/commands/python-ownership.test.ts:7,10,20,48`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-integration-commands/041",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 52,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/reasons.test.ts:39-70`, \"named allowances follow require_reasons=%s and removal restores enforcement\" | The body sits in an extra `{ ... }` block that does nothing. | Remove the block. |",
-        "owner": "`cli/commands/reasons.test.ts:39-70`, \"named allowances follow require_reasons=%s and removal restores enforcement\"",
-        "location": ["tests/cli/commands/reasons.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The named-allowance callback no longer wraps its complete body in a redundant block. Its async directory disposal remains at the same callback boundary.",
-            "AST comparison after flattening that sole block preserves the entire remaining syntax, including all 36 assertion sites, fixtures, CLI arguments, and scenario names. Root TypeScript, affected ESLint, and formatting passed; the reasons owner passed 15 cases with 93 assertions on macOS."
-        ]
+        "verification": [],
+        "originalLine": 51
     },
     {
         "id": "slices/tests-integration-commands/042",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 53,
+        "line": 24,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/levels.test.ts:10-27` `expectRecommendedLevel` | The helper ends by writing `entry.sh` back to the naming defect, and the caller's next step depends on that. A reader of the test cannot see the change. | Inline the helper, or move the restore into the test body. |",
         "owner": "`cli/commands/levels.test.ts:10-27` `expectRecommendedLevel`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-integration-commands/043",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 54,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/commands/explain.test.ts:115` comment | \"which once made the path read as one of its rules\" describes a past bug. `WRITING.md` asks for the present state. | Write what the line checks: \"The folder shares its name with bash/shellcheck, and the path still reads as a file.\" |",
-        "owner": "`cli/commands/explain.test.ts:115` comment",
-        "location": ["tests/cli/commands/explain/selection.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The tracked-path collision comment now describes the current rule: the shellcheck folder shares a check tool name, but the tracked path still selects the file. The historical bug narrative is removed; the existing JSON assertion verifies kind path and the exact tracked subject.",
-            "The same case now explicitly requires CLI exit zero. No prior assertion or scenario name changed, as verified by the AST comparison across all three touched owners.",
-            "Root TypeScript, affected ESLint, and formatting passed. Selection, explanation, and push coverage passed 31 cases with 151 assertions across three files."
-        ]
+        "verification": [],
+        "originalLine": 53
     },
     {
         "id": "slices/tests-integration-commands/044",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 55,
+        "line": 25,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| `cli/commands/init/replace.test.ts:150-151`, \"an ignore file inside a scope is replaced at init, and the scoped check runs\" | `check --only sql/syntax` without `--json` asserts only exit 0. That does not show that the check ran in scope `db` on `db/accounts.sql`. | Run with `--json` and assert `{ check: 'sql/syntax', scope: 'db', status: 'passed', fileCount: 1 }`. |",
         "owner": "`cli/commands/init/replace.test.ts:150-151`, \"an ignore file inside a scope is replaced at init, and the scoped check runs\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 55
     },
     {
         "id": "slices/tests-integration-commands/045",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 56,
+        "line": 26,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Correction runs that FINDINGS does not list: `cli/commands/apply.test.ts:74-77`, `check/policy-errors.test.ts:28-30,47-49,75-80,96-98`, `levels.test.ts:87-93`, `roots.test.ts:25-28`, `init/selection.test.ts:122-129` | After a refusal, the test fixes the input and runs again only to see a pass. Each run opens a fresh session. | Delete these runs, as the FINDINGS correction-run row proposes. Drop \"accept the suggested configuration\" and \"accepts its correction\" from the names in `policy-errors.test.ts`. |",
         "owner": "Correction runs that FINDINGS does not list: `cli/commands/apply.test.ts:74-77`, `check/policy-errors.test.ts:28-30,47-49,75-80,96-98`, `levels.test.ts:87-93`, `roots.test.ts:25-28`, `init/selection.test.ts:122-129`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/tests-integration-commands/046",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 57,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/platform/spawn/backends.test.ts:112-158` | Two tests loop over both backends inside one test, with no backend name in any assertion message. A failure does not say which backend broke. The tests above register one test per backend. | Move both into the `for (const backend of backends)` loop, or use `test.each(backends)`. |",
-        "owner": "`cli/platform/spawn/backends.test.ts:112-158`",
-        "location": ["tests/cli/platform/spawn/backends.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Stdin and inherited-environment coverage use test.each(backends), with each runner name in the scenario title and an independent directory for each row. The asynchronous and synchronous children retain the same command arguments, input bytes, environment, and outcomes.",
-            "The required backend execution callbacks and the separate cancellation case pass prepareTestCommand options to their real process boundaries. All three direct execution boundaries use the remaining test budget. Two elapsed-speed assertion sites are removed while timeout, cancellation, termination status, and stream outcomes remain exact.",
-            "Root TypeScript, affected ESLint, and formatting passed. All 72 affected platform, agent, inspection, backend, and termination cases passed with 371 assertions on macOS. A separate selected run with a simulated Windows platform registered and reported all 22 relevant rows as skipped, with no assertions or native Windows execution."
-        ]
-    },
-    {
-        "id": "slices/tests-integration-commands/047",
-        "source": "findings/slices/tests-integration-commands.md",
-        "line": 58,
-        "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
-        "finding": "| `cli/platform/spawn/termination.test.ts:33,183` | `duration < 1500` and `duration < 2000` are wall-clock bounds with the flaw that FINDINGS names for line 94. A slow runner fails them with no bug. | Keep the `isTimedOut` and `isCanceled` assertions and the descendant exit. Drop the duration bounds. |",
-        "owner": "`cli/platform/spawn/termination.test.ts:33,183`",
-        "location": ["tests/cli/platform/spawn/termination.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Termination tests now assert timeout and cancellation classifications, failure status, captured bytes, and actual child or descendant exit. Removed only the three incidental duration assertion sites (six runtime assertions); all 34 other assertion sites and all ten runtime cases remain unchanged.",
-            "The CLI exit probe keeps native Bun.spawn with its remaining-budget timeout and SIGKILL, plus explicit finally disposal and output draining. Removed the manual timer that duplicated the native deadline. The direct-spawn audit confirms all nine native test invocations still use prepared.options.timeoutMs.",
-            "Root TypeScript, affected ESLint, and formatting passed. Spawn backends, termination, and command cancellation passed 36 tests with 193 assertions across three files on macOS. AST comparison confirms identical outcome assertions and scenario names; platform guards remain intact."
-        ]
+        "verification": [],
+        "originalLine": 56
     },
     {
         "id": "slices/tests-integration-commands/048",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 60,
+        "line": 27,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Identifiers: `cli/policy/write.test.ts:18` (`text`), `cli/commands/init/selection.test.ts:19` (`selected`), `cli/commands/list.test.ts:26,32,33` (`configuration`), `cli/platform/assets.test.ts:7` (`ASSETS_CONFIGURATION`), `cli/policy/key-paths.test.ts:91` (`configurations = ?`) | `text` is the base policy for 12 tests. `selected` returns kit names. The last three use \"configuration\", the old word for a kit. | Rename to `COMMENTED_POLICY`, `proposedKits`, `kit`, and `BASH_MANIFEST`. Use any current key on line 91, such as `level = ?`. |",
         "owner": "Identifiers: `cli/policy/write.test.ts:18` (`text`), `cli/commands/init/selection.test.ts:19` (`selected`), `cli/commands/list.test.ts:26,32,33` (`configuration`), `cli/platform/assets.test.ts:7` (`ASSETS_CONFIGURATION`), `cli/policy/key-paths.test.ts:91` (`configurations = ?`)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 60
     },
     {
         "id": "slices/tests-integration-commands/049",
         "source": "findings/slices/tests-integration-commands.md",
-        "line": 61,
+        "line": 28,
         "section": "Tests: Command, Policy, Platform, and Tools Integration Tests",
         "finding": "| Magic values: `cli/commands/cancellation.test.ts:127` and `ci.test.ts:167` (`'0'.repeat(40)`), `cli/policy/write.test.ts:246` (bare `false`), `cli/commands/push.test.ts:256` and `cli/doctor.test.ts:42` (`[hooks]\\n`), `cli/tools/python.test.ts:12,18,50` (`pyjwt>=2.14.0`) | `'0'.repeat(40)` assumes SHA-1 object names, while the push harness uses `'0'.repeat(base.length)`. The bare `false` is `isDryRun` (`commands/edit.ts:68`). An empty `[hooks]` table turns hooks on with their defaults, and no comment says so. The pyjwt constraint is written three times in two forms. | Build the zero ID from a real object ID's length. Pass a named `isDryRun`. Add a one-line comment to each `[hooks]` fixture. Build the constraint string from `CONSTRAINT`. |",
         "owner": "Magic values: `cli/commands/cancellation.test.ts:127` and `ci.test.ts:167` (`'0'.repeat(40)`), `cli/policy/write.test.ts:246` (bare `false`), `cli/commands/push.test.ts:256` and `cli/doctor.test.ts:42` (`[hooks]\\n`), `cli/tools/python.test.ts:12,18,50` (`pyjwt>=2.14.0`)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 61
     }
 ]

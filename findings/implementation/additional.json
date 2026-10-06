@@ -2,7 +2,7 @@
     {
         "id": "additional/next-app-router-links",
         "source": "findings/additional.md",
-        "line": 5,
+        "line": 7,
         "section": "Next.js link validation",
         "finding": "The native no-html-link-for-pages rule returns no finding for an App Router anchor pointing to an existing local app/about/page.jsx route, even with the correct scope root and all level. Its App Router path normalization differs from href normalization. Preserve the Pages Router coverage and establish App Router positive and defect cases before choosing a repair or replacement.",
         "owner": "Next.js link validation",
@@ -16,64 +16,7 @@
         "verification": [
             "Original failing positive case: /tmp/gspot-next-xcode-regressions.log.",
             "Primary installed implementation inspected in tests/node_modules/@next/eslint-plugin-next/dist/utils/url.js and rules/no-html-link-for-pages.js. Pages Router regression is separately passing; it does not prove App Router coverage."
-        ]
-    },
-    {
-        "id": "additional/source-command-marker-readiness",
-        "source": "findings/additional.md",
-        "line": 20,
-        "section": "Source-command startup marker readiness",
-        "finding": "A fixture announced registry startup by creating its JSON marker before completing the write; the observer could read an empty document. Assertions before try/finally also bypassed graceful cancellation on failure. Publish the marker atomically and include readiness in the owned cleanup scope.",
-        "owner": "Source-command cancellation fixture",
-        "location": ["tests/config/cli/automation/source-command.ts", "tests/cli/automation/source-command.test.ts"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The broad run captured JSON Parse error: Unexpected EOF at the marker read (/tmp/gspot-generated-header-unit-integration.log).",
-            "Fixture publication uses prepared-file write followed by rename; readiness and marker reading are inside try/finally, which sends SIGTERM and waits before the capture disposable can use SIGKILL.",
-            "The cancellation scenario and repaired parser/check follow-up passed all 54 cases (/tmp/gspot-generated-header-repaired-tests.log); changed-owner ESLint and all TypeScript targets passed."
-        ]
-    },
-    {
-        "id": "additional/header-first-default-parser",
-        "source": "findings/additional.md",
-        "line": 28,
-        "section": "Header comments before JavaScript classes",
-        "finding": "The header rule indexes a missing decorators field on classes parsed by ESLint\u2019s default JavaScript parser. An ordinary class, named export, or default export after imports crashes linting. Handle the parser boundary while preserving declaration comments and header fixes.",
-        "owner": "Plugin header comments",
-        "location": [
-            "packages/eslint-plugin/src/rules/header-first.ts",
-            "tests/plugin/rules/header-first.test.ts",
-            "tests/config/packages/plugin.ts"
         ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "All three default-parser regression cases fail against the previous implementation (/tmp/gspot-header-default-parser-before.log).",
-            "The repaired plugin passes all 407 cases, including declaration comments and exact header fixes for all three class forms (/tmp/gspot-header-default-parser-tests.log).",
-            "The installed package consumer passes with ordinary JavaScript classes through ESM and CommonJS exports and both presets (/tmp/gspot-header-package-tests.log).",
-            "Root and plugin TypeScript targets pass (/tmp/gspot-header-root-types.log and /tmp/gspot-header-plugin-types.log)."
-        ]
-    },
-    {
-        "id": "additional/javascript-parameter-names",
-        "source": "tests/cli/checks/general/naming/extract.test.ts",
-        "line": 76,
-        "section": "JavaScript naming extraction",
-        "finding": "The document-order regression exposed missing JavaScript function parameters. The extractor selected only TypeScript required/optional parameter nodes, omitting ordinary JavaScript identifiers and destructuring under formal parameters.",
-        "owner": "JavaScript naming extraction",
-        "location": [
-            "packages/cli/src/parsers/naming/typescript.ts",
-            "tests/cli/checks/general/naming/extract.test.ts",
-            "tests/config/cli/checks/general/naming/extract.ts"
-        ],
-        "status": "closed",
-        "outcome": "Read direct formal parameter children and distinguish TypeScript wrappers from JavaScript binding patterns. Ordinary, object/array destructured, rest and single-arrow parameters become declarations while property keys remain excluded. Existing TypeScript parameter-property coverage remains passing.",
-        "verification": [
-            "Baseline 71926799 inspected: addParameters reads only TYPESCRIPT_PARAMETER_NODES. The new JavaScript order regression demonstrated the omitted inputValue before the fix.",
-            "468 affected CLI regressions pass with 1969 assertions across 68 files: /tmp/gspot-naming-fixes-tests.log. Includes naming, structure, Supabase, SQL parsing, generation, list, policy and scope execution.",
-            "Root TypeScript check passes: /tmp/gspot-naming-fixes-types.log.",
-            "Canonical generation and second unchanged apply: /tmp/gspot-naming-fixes-apply.json and /tmp/gspot-naming-fixes-second-apply.json."
-        ]
+        "originalLine": 5
     }
 ]

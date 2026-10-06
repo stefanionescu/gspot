@@ -127,7 +127,6 @@ paths = [
     "scripts/check-notes.mjs",
     "notes/deploy.txt",
     "bash",
-    "supabase/config.toml",
     "src/app.ts",
     "apps/web/package.json",
     "services/api/pyproject.toml",

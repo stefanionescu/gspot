@@ -1,501 +1,60 @@
 [
     {
-        "id": "slices/kits-other-languages/001",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 9,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:1-18` (no `target-version`) | Ruff runs with `--config .gspot/config/ruff.toml`, and that file sets no `target-version`. So Ruff ignores the project's `requires-python`. In a sample with `requires-python = \">=3.8\"`, Ruff offered UP045 (`X \\| None`) and UP006 (`list[int]`) as automatic fixes. `gspot check --fix` applies them, and the code then fails on Python 3.8 and 3.9. When `ruff.toml` sits next to `pyproject.toml`, Ruff reports FA100 instead. | Write `target-version` from the scope's `requires-python`. `packages/cli/src/repository/packages.ts:123` already reads it. |",
-        "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:1-18` (no `target-version`)",
-        "location": null,
-        "status": "closed",
-        "outcome": "Ruff check, fix, and formatting use native configuration discovery through each scope's generated ruff.toml pointer. Ruff now infers requires-python from the scoped pyproject.toml instead of losing it through an explicit --config argument. Native tests cover Python 3.8, 3.9, and 3.10 constraints at both levels and verify safe automatic fixes preserve older runtime syntax. No duplicate Python version parser was added.",
-        "verification": [
-            "Source: packages/cli/configurations/language/python/manifest.toml and basedpyrightconfig.json.tmpl; tests/tools/generation/ruff.test.ts (version, diagnostic ownership, and scoped configuration cases).",
-            "Native proof: /tmp/gspot-python-versions-native.log (15 passing cases; the two version expectations are superseded by /tmp/gspot-python-versions-version-safe.log, 2 passing cases and 36 assertions).",
-            "CLI regression proof: /tmp/gspot-python-versions-cli.log, 501 passing cases, 1,913 assertions, and 66 files.",
-            "Ruff inference contract: https://docs.astral.sh/ruff/configuration/#inferring-the-python-version.",
-            "All four TypeScript targets: /tmp/gspot-python-versions-types-final.log. Documentation: /tmp/gspot-python-versions-docs.log, 317 pages with valid links and fragments.",
-            "Canonical generation: /tmp/gspot-python-versions-apply-first.json and /tmp/gspot-python-versions-apply-second.json, both 137 unchanged outputs and no writes.",
-            "Repository ESLint: /tmp/gspot-python-versions-lint-verified.json, all five scopes passed. Staged check: /tmp/gspot-python-versions-staged-verified.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/002",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 10,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/manifest.toml:85-88` (`[[config]]` ruff, no `pointer`) | Init removes `ruff.toml`, `.ruff.toml`, and `[tool.ruff]` (lines 27-36), and the kit writes no root pointer for Ruff. So the Ruff in a developer's editor uses its defaults: line length 88 instead of gspot's 120, and a different rule set. Format on save and `python/ruff-format` then keep rewriting the same lines. | Write a root `ruff.toml` pointer that holds `extend = \".gspot/config/ruff.toml\"`. The basedpyright pointer already uses `extends` this way. |",
-        "owner": "`packages/cli/kits/language/python/manifest.toml:85-88` (`[[config]]` ruff, no `pointer`)",
-        "location": [
-            "packages/cli/configurations/language/python/manifest.toml",
-            "docs/src/content/docs/guides/existing-repository.md",
-            "tests/tools/generation/ruff.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The Python configuration declares a scoped ruff.toml extend pointer through the existing pointer generator. Root and nested editor discovery consume the same settings as explicit managed configuration commands; contributor-facing takeover guidance explains this behavior.",
-            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
-            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
-            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
-        ]
-    },
-    {
         "id": "slices/kits-other-languages/003",
         "source": "findings/slices/kits-other-languages.md",
-        "line": 11,
+        "line": 9,
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/basedpyrightconfig.json.tmpl:2-108` (no `venvPath`, `venv`) | The configuration names no interpreter. gspot runs basedpyright from `.gspot/.venv` (`packages/cli/src/tools/locate.ts:26`) and sets no `VIRTUAL_ENV`. In a sample, a package installed in the project's `.venv` gave `reportMissingImports`, which is an error at both levels. Adding `venvPath` and `venv` cleared it. In a hook or CI shell with no active environment, every third-party import fails `python/basedpyright`. | When the scope has a `.venv`, write `\"venvPath\"` and `\"venv\"`. Add a setting for projects that keep the interpreter somewhere else. |",
         "owner": "`packages/cli/kits/language/python/basedpyrightconfig.json.tmpl:2-108` (no `venvPath`, `venv`)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 11
     },
     {
         "id": "slices/kits-other-languages/004",
         "source": "findings/slices/kits-other-languages.md",
-        "line": 12,
+        "line": 10,
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/manifest.toml:142-154` (import-linter), `:171-184` (deptry) | Both run from gspot's environment, so they cannot see the project's installed packages. In a sample, declaring `beautifulsoup4` and importing `bs4` gave DEP001 and DEP002, because deptry cannot map the package name to the module name. lint-imports needs the project's packages to be importable, so a project with a `src` folder fails. | Run both with the project's interpreter, for example through `uv run --project <scope>`. |",
         "owner": "`packages/cli/kits/language/python/manifest.toml:142-154` (import-linter), `:171-184` (deptry)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/kits-other-languages/005",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 13,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/manifest.toml:186-200`, `:433-445` (`vulture`, `tools.vulture.*`) | vulture rates unused functions, classes, and variables at 60% confidence. The defaults are 100 (`recommended`) and 80 (`all`). At 100, vulture reported only unused arguments and unreachable code. At 80, it added unused imports. So the summary, the example (an unused import at `recommended`), the help text, and `ignore_names` all describe findings that never appear. Everything vulture does report also comes from Ruff (ARG001-ARG005, F401) or from basedpyright `reportUnreachable`. | Delete the check and both settings. Or set the default to 60, keep the check at `all` only, and turn off the Ruff and basedpyright rules it repeats. |",
-        "owner": "`packages/cli/kits/language/python/manifest.toml:186-200`, `:433-445` (`vulture`, `tools.vulture.*`)",
-        "location": [
-            "packages/cli/configurations/language/python/manifest.toml",
-            "tests/config/harness/python-installation.ts",
-            "tests/config/tools/configurations/language/python.ts",
-            "tests/tools/generation/ruff.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The explicit user decision removes Vulture, its settings, pin, installation list, and native fixture rather than adding an opt-in scanner. Ruff owns F401 while basedpyright retains independent type errors at both levels: /tmp/gspot-levels-native-authenticated.log. The complete Python configuration cohort passes without Vulture: /tmp/gspot-levels-native.log."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/006",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 14,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/manifest.toml:194` (vulture `--exclude`) | vulture wraps a pattern that has no wildcard in `*...*`. So `build` and `dist` skip any path that contains those letters. In a sample, vulture skipped `app/builders.py` and `app/distance.py`. | Use path patterns such as `*/build/*`. Build them from the root path settings, as in the next row. |",
-        "owner": "`packages/cli/kits/language/python/manifest.toml:194` (vulture `--exclude`)",
-        "location": ["packages/cli/configurations/language/python/manifest.toml"],
-        "status": "closed",
-        "outcome": "superseded by a correction",
-        "verification": [
-            "The user-selected removal in slices/kits-other-languages/005 eliminates the Vulture invocation and its incorrect exclusion semantics. No replacement Vulture flag or scan remains."
-        ]
+        "verification": [],
+        "originalLine": 12
     },
     {
         "id": "slices/kits-other-languages/007",
         "source": "findings/slices/kits-other-languages.md",
-        "line": 15,
+        "line": 11,
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:4`, `basedpyrightconfig.json.tmpl:108`, `manifest.toml:194` | Three hard-coded folder lists differ from each other, and none of them reads the root `exclude`, `generated`, or `vendored` settings. basedpyright and vulture scan the whole scope. I found no later step that drops findings in generated files, so a generated `_pb2.py` is type checked. Ruff's `exclude` line replaces Ruff's default list and drops `venv`, `.tox`, `.nox`, and `.eggs`. Because gspot passes file names to Ruff, the line has no effect when gspot runs Ruff. | Build one skip list from the root settings and each language kit's build folders, and use it in all three. Delete Ruff's `exclude` line, or change it to `extend-exclude`. |",
         "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:4`, `basedpyrightconfig.json.tmpl:108`, `manifest.toml:194`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/kits-other-languages/008",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 16,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:40,42,43,46` | `max-bool-expr`, `max-locals`, `max-public-methods`, and `max-nested-blocks` configure PLR0916, PLR0914, PLR0904, and PLR1702. All four are preview rules, and none is selected. So these lines do nothing. The settings `limits.boolean_operators`, `limits.locals`, and `limits.public_methods`, and `limits.nesting` for Python, have no effect. | Delete the four lines and the three Python-only settings. Remove `python` from the `languages` list of `limits.nesting`. |",
-        "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:40,42,43,46`",
-        "location": [
-            "packages/cli/configurations/language/python/ruff.toml.tmpl",
-            "packages/cli/configurations/general/structure/manifest.toml"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Removed the four options for inactive Ruff preview rules, the unused locals, boolean_operators and public_methods settings, and Python from the nesting languages. No replacements or compatibility settings were added.",
-            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
-            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
-            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/009",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 17,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:14,15-18,35` | Several lines do nothing. At `all`, `ignore` adds COM812, D203, and D213, but no list selects them. `fixable = [\"ALL\"]`, `unfixable = []`, and `preview = false` repeat Ruff's defaults. `explicit-preview-rules` matters only when preview is on. The four names in `extend-ignore-names` are already in Ruff's default `ignore-names`. | Delete these lines. |",
-        "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:14,15-18,35`",
-        "location": [
-            "packages/cli/configurations/language/python/ruff.toml.tmpl",
-            "tests/cli/generation/level-contract.test.ts",
-            "tests/types/generation/configuration-files.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Removed unselected ignore codes, repeated native fixability and preview defaults, the inactive explicit-preview option, and native naming exemptions already present in Ruff defaults. Generated configurations select only stable rule codes at both levels.",
-            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
-            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
-            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/010",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 18,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:1` (`baseline`), `basedpyrightconfig.json.tmpl:18` | The level text that gspot ships says complexity and conventions apply only at `all` (`packages/cli/src/rules/instructions.ts:51`). Even so, the `recommended` list holds C901 (complexity), PLR2004 (magic values), ERA001 (commented-out code), and T201 and T203 (`print`). T201 reports every `print` in a script or command-line tool. `reportImportCycles`, an architecture rule, is an error at `recommended`. | Move C901, PLR2004, ERA001, T201, and T203 to `conventions`. Turn on `reportImportCycles` only at `all`. |",
-        "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:1` (`baseline`), `basedpyrightconfig.json.tmpl:18`",
-        "location": [
-            "packages/cli/configurations/language/python/ruff.toml.tmpl",
-            "packages/cli/configurations/language/python/basedpyrightconfig.json.tmpl",
-            "tests/cli/generation/level-contract.test.ts",
-            "tests/tools/generation/ruff.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "C901, PLR2004, ERA001, T201 and T203 are selected only at all. Basedpyright reportImportCycles is none at recommended and error at all. Correctness diagnostics remain active at both levels, as demonstrated by actual F821 findings and accepted corrections.",
-            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
-            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
-            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/011",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 19,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/basedpyrightconfig.json.tmpl:19,22,42,80,94` (and `:49,76` at `all`) | basedpyright reports these as errors at both levels: `reportUnusedImport`, `reportUnusedVariable`, `reportRedeclaration`, `reportUndefinedVariable`, and `reportIgnoreCommentWithoutRule`. Ruff's `recommended` list reports the same problems as F401, F841, F811, F821, and PGH003. At `all`, `reportPrivateUsage` repeats SLF001, and `reportSelfClsParameterName` repeats N804 and N805. So each problem appears twice under two IDs, and accepting one needs two `gspot ignore` entries. | Set these basedpyright rules to `\"none\"`, and let Ruff report them. |",
-        "owner": "`packages/cli/kits/language/python/basedpyrightconfig.json.tmpl:19,22,42,80,94` (and `:49,76` at `all`)",
-        "location": null,
-        "status": "closed",
-        "outcome": "The seven basedpyright severities duplicated by Ruff are disabled in the shipped template. Both generated levels assert that ownership. Native checks produce one Ruff F401 for an unused import while retaining the independent basedpyright reportAssignmentType; correcting the source clears both checks.",
-        "verification": [
-            "Source: packages/cli/configurations/language/python/manifest.toml and basedpyrightconfig.json.tmpl; tests/tools/generation/ruff.test.ts (version, diagnostic ownership, and scoped configuration cases).",
-            "Native proof: /tmp/gspot-python-versions-native.log (15 passing cases; the two version expectations are superseded by /tmp/gspot-python-versions-version-safe.log, 2 passing cases and 36 assertions).",
-            "CLI regression proof: /tmp/gspot-python-versions-cli.log, 501 passing cases, 1,913 assertions, and 66 files.",
-            "Ruff inference contract: https://docs.astral.sh/ruff/configuration/#inferring-the-python-version.",
-            "All four TypeScript targets: /tmp/gspot-python-versions-types-final.log. Documentation: /tmp/gspot-python-versions-docs.log, 317 pages with valid links and fragments.",
-            "Canonical generation: /tmp/gspot-python-versions-apply-first.json and /tmp/gspot-python-versions-apply-second.json, both 137 unchanged outputs and no writes.",
-            "Repository ESLint: /tmp/gspot-python-versions-lint-verified.json, all five scopes passed. Staged check: /tmp/gspot-python-versions-staged-verified.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/012",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 20,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/manifest.toml:156-169` (pydoclint), `packages/cli/src/config/checks/language/python.ts:21` | I ran pydoclint with gspot's arguments. With no docstring convention set, pydoclint reads docstrings as NumPy style. A Google-style docstring that names the wrong argument then passed with exit code 0. With `tools.ruff.docstring_convention = \"google\"`, a correct Google docstring on a typed function got DOC105, DOC109, DOC110, and DOC203. pydoclint expects the types to be repeated in the docstring by default. | Pass `--arg-type-hints-in-docstring false --check-return-types false --check-yield-types false` unless `[tool.pydoclint]` sets them. When no convention is set, detect the style from the docstrings: an `Args:` section means Google style, and an underlined `Parameters` heading means NumPy style. |",
-        "owner": "`packages/cli/kits/language/python/manifest.toml:156-169` (pydoclint), `packages/cli/src/config/checks/language/python.ts:21`",
-        "location": [
-            "packages/cli/src/checks/language/python/pydoclint.ts",
-            "packages/cli/src/checks/language/python/imports/linter.ts",
-            "tests/tools/configurations/language/python.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Implementation: source docstrings select Google or NumPy style per file; authored native type requirements are preserved; signature types are not repeated by default. Import contracts use setup.cfg, .importlinter, then pyproject.toml and retain their native dependency chains after terminal formatting is removed.",
-            "Affected CLI and generation cohort: /tmp/gspot-python-contracts-cli-final.log, 304 passing cases and 1440 assertions. Final Python cohort includes later-batch failure preservation and styled native diagnostics: /tmp/gspot-python-contracts-cli-ready.log, 33 passing cases and 89 assertions.",
-            "Documentation: /tmp/gspot-python-contracts-docs.log, 317 pages and valid built-site links and fragments. Canonical apply: /tmp/gspot-python-contracts-apply-first.json and /tmp/gspot-python-contracts-apply-second.json, both 137 unchanged outputs and no writes.",
-            "The initial native cohort passed 20 cases but failed the three new dependency-chain assertions. The terminal-format parser was then corrected; direct installed import-linter 2.15 output retains the chain: /tmp/gspot-python-contracts-installed-output.json. This inspection uses a cached tool and does not replace the public installation regression suite.",
-            "Verification remains incomplete. Updated sandbox permissions prevent the local native-suite registry from listening on 127.0.0.1: /tmp/gspot-python-contracts-native-final.log (EPERM). Git staging is also denied because .git is read-only. The staged report has no checks because these files cannot be staged: /tmp/gspot-python-contracts-staged.json. These records remain open until the final native suite, meaningful staged gate, normal commit, and push succeed.",
-            "Final four-target TypeScript verification: /tmp/gspot-python-contracts-types-ready.log. Repository ESLint passes in all five scopes: /tmp/gspot-python-contracts-repository-lint.json. Final source formatting, ESLint, and naming checks all pass after the naming correction: /tmp/gspot-python-contracts-final-source.json.",
-            "Final documentation replay: /tmp/gspot-python-contracts-docs-ready.log, 317 pages and valid links and fragments.",
-            "The full working-tree gate ran 78 checks: 64 passed, 7 skipped, 6 errored, and one naming finding. The naming finding is corrected and independently verified. The remaining errors are Taplo native crashes, unavailable OSV network access, unavailable uv cache writes, and Semgrep trust-anchor failure: /tmp/gspot-python-contracts-working-check.json. No check was disabled and no hook was bypassed.",
-            "Affected CLI, initialization, preservation, policy, generation, and schema cohort: /tmp/gspot-python-batch-cli-takeovers.log, 580 passing cases, 2511 assertions, and 76 files. The final fixture changes pass 22 cases and 140 assertions: /tmp/gspot-python-batch-fixtures-complete.log.",
-            "All four TypeScript targets pass: /tmp/gspot-python-batch-types-complete.log. Formatting, ESLint, and naming pass for every changed TypeScript file: /tmp/gspot-python-batch-source-complete.json. Documentation builds 317 pages and validates all links and fragments: /tmp/gspot-python-batch-docs-complete.log.",
-            "Canonical apply and unchanged second apply: /tmp/gspot-python-batch-apply-complete-first.json and /tmp/gspot-python-batch-apply-complete-second.json.",
-            "Resumed native Python/Ruff verification succeeds with local registry access: /tmp/gspot-resumed-python-native.log (23 passed, 0 failed). Public check regressions verify both source docstring styles at both levels, authored type requirements, and import dependency chains from setup.cfg, .importlinter, and pyproject.toml in root and nested scopes.",
-            "Affected CLI: /tmp/gspot-resumed-python-cli.log (53 passed, 223 assertions). All four TypeScript targets pass: /tmp/gspot-resumed-python-types.log.",
-            "Actual gspot check --staged succeeds: /tmp/gspot-resumed-python-staged.json (71 passed, 7 skipped, 0 findings/errors). Normal Semgrep, Taplo, and OSV complete without bypasses. Documentation builds 317 pages with valid links: /tmp/gspot-resumed-python-docs.log. Both canonical applies write nothing: /tmp/gspot-resumed-python-apply-first.json and /tmp/gspot-resumed-python-apply-second.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/013",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 21,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/manifest.toml:142-154`, `packages/cli/src/checks/language/python/import-linter.ts:22-41` | The engine reads contracts only from `[tool.importlinter]` in `pyproject.toml`. Contracts in `.importlinter` or `setup.cfg`, which import-linter also reads, are skipped as \"no contracts\". A broken contract is reported at `pyproject.toml:1` with its name only. The message says \"lint-imports prints the chain\", but gspot drops that chain. The help text says \"change the contract with a reason in its name\", which is unclear. | Look for contracts in all three files. Put the chain lines in the finding. Change the help text to \"Move the import to the side the contract allows, or change the contract.\" |",
-        "owner": "`packages/cli/kits/language/python/manifest.toml:142-154`, `packages/cli/src/checks/language/python/import-linter.ts:22-41`",
-        "location": [
-            "packages/cli/src/checks/language/python/pydoclint.ts",
-            "packages/cli/src/checks/language/python/imports/linter.ts",
-            "tests/tools/configurations/language/python.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Implementation: source docstrings select Google or NumPy style per file; authored native type requirements are preserved; signature types are not repeated by default. Import contracts use setup.cfg, .importlinter, then pyproject.toml and retain their native dependency chains after terminal formatting is removed.",
-            "Affected CLI and generation cohort: /tmp/gspot-python-contracts-cli-final.log, 304 passing cases and 1440 assertions. Final Python cohort includes later-batch failure preservation and styled native diagnostics: /tmp/gspot-python-contracts-cli-ready.log, 33 passing cases and 89 assertions.",
-            "Documentation: /tmp/gspot-python-contracts-docs.log, 317 pages and valid built-site links and fragments. Canonical apply: /tmp/gspot-python-contracts-apply-first.json and /tmp/gspot-python-contracts-apply-second.json, both 137 unchanged outputs and no writes.",
-            "The initial native cohort passed 20 cases but failed the three new dependency-chain assertions. The terminal-format parser was then corrected; direct installed import-linter 2.15 output retains the chain: /tmp/gspot-python-contracts-installed-output.json. This inspection uses a cached tool and does not replace the public installation regression suite.",
-            "Verification remains incomplete. Updated sandbox permissions prevent the local native-suite registry from listening on 127.0.0.1: /tmp/gspot-python-contracts-native-final.log (EPERM). Git staging is also denied because .git is read-only. The staged report has no checks because these files cannot be staged: /tmp/gspot-python-contracts-staged.json. These records remain open until the final native suite, meaningful staged gate, normal commit, and push succeed.",
-            "Final four-target TypeScript verification: /tmp/gspot-python-contracts-types-ready.log. Repository ESLint passes in all five scopes: /tmp/gspot-python-contracts-repository-lint.json. Final source formatting, ESLint, and naming checks all pass after the naming correction: /tmp/gspot-python-contracts-final-source.json.",
-            "Final documentation replay: /tmp/gspot-python-contracts-docs-ready.log, 317 pages and valid links and fragments.",
-            "The full working-tree gate ran 78 checks: 64 passed, 7 skipped, 6 errored, and one naming finding. The naming finding is corrected and independently verified. The remaining errors are Taplo native crashes, unavailable OSV network access, unavailable uv cache writes, and Semgrep trust-anchor failure: /tmp/gspot-python-contracts-working-check.json. No check was disabled and no hook was bypassed.",
-            "Affected CLI, initialization, preservation, policy, generation, and schema cohort: /tmp/gspot-python-batch-cli-takeovers.log, 580 passing cases, 2511 assertions, and 76 files. The final fixture changes pass 22 cases and 140 assertions: /tmp/gspot-python-batch-fixtures-complete.log.",
-            "All four TypeScript targets pass: /tmp/gspot-python-batch-types-complete.log. Formatting, ESLint, and naming pass for every changed TypeScript file: /tmp/gspot-python-batch-source-complete.json. Documentation builds 317 pages and validates all links and fragments: /tmp/gspot-python-batch-docs-complete.log.",
-            "Canonical apply and unchanged second apply: /tmp/gspot-python-batch-apply-complete-first.json and /tmp/gspot-python-batch-apply-complete-second.json.",
-            "Resumed native Python/Ruff verification succeeds with local registry access: /tmp/gspot-resumed-python-native.log (23 passed, 0 failed). Public check regressions verify both source docstring styles at both levels, authored type requirements, and import dependency chains from setup.cfg, .importlinter, and pyproject.toml in root and nested scopes.",
-            "Affected CLI: /tmp/gspot-resumed-python-cli.log (53 passed, 223 assertions). All four TypeScript targets pass: /tmp/gspot-resumed-python-types.log.",
-            "Actual gspot check --staged succeeds: /tmp/gspot-resumed-python-staged.json (71 passed, 7 skipped, 0 findings/errors). Normal Semgrep, Taplo, and OSV complete without bypasses. Documentation builds 317 pages with valid links: /tmp/gspot-resumed-python-docs.log. Both canonical applies write nothing: /tmp/gspot-resumed-python-apply-first.json and /tmp/gspot-resumed-python-apply-second.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/014",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 22,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/manifest.toml:384-389` (`structure.python.singletons_allowed`) | The summary says each entry holds paths, names, and a reason. The engine reads only `names` (`packages/cli/src/checks/language/python/structure.ts:115-117`). So a name allowed for one file is allowed in every file. | Match `paths` as well. |",
-        "owner": "`packages/cli/kits/language/python/manifest.toml:384-389` (`structure.python.singletons_allowed`)",
-        "location": [
-            "packages/cli/src/checks/language/python/singletons.ts",
-            "packages/cli/src/policy/schema/policy.ts",
-            "packages/cli/src/types/checks/language/python.ts",
-            "packages/cli/configurations/language/python/manifest.toml",
-            "tests/cli/checks/language/python/singletons.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "The singleton check now matches both names and optional repository-relative path selectors. Negative selectors exclude files from an allowance, and scope-specific entries stay scoped. Omitting paths preserves existing scope-wide and FastAPI allowances. Policy reading validates names and paths instead of casting an untyped Python table.",
-        "verification": [
-            "The public source CLI reports exactly the four non-allowed objects across root and nested scopes; the same regression verifies names, positive paths, and excluded paths. Invalid names and paths fail at policy reading and preserve source bytes. Existing no-path and FastAPI cases remain unchanged.",
-            "Affected CLI, initialization, preservation, policy, generation, and schema cohort: /tmp/gspot-python-batch-cli-takeovers.log, 580 passing cases, 2511 assertions, and 76 files. The final fixture changes pass 22 cases and 140 assertions: /tmp/gspot-python-batch-fixtures-complete.log.",
-            "All four TypeScript targets pass: /tmp/gspot-python-batch-types-complete.log. Formatting, ESLint, and naming pass for every changed TypeScript file: /tmp/gspot-python-batch-source-complete.json. Documentation builds 317 pages and validates all links and fragments: /tmp/gspot-python-batch-docs-complete.log.",
-            "Canonical apply and unchanged second apply: /tmp/gspot-python-batch-apply-complete-first.json and /tmp/gspot-python-batch-apply-complete-second.json.",
-            "These source fixes and their regressions are verified locally. The batch remains uncommitted: the session explicitly denies writes to the repository .git directory. No hook was bypassed and no publication was attempted."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/015",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 23,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/manifest.toml:252-262`, `packages/cli/kits/general/structure/manifest.toml:130` | At `all`, two checks limit the size of one Python function: `python/function-lines` (60 code lines) and Ruff PLR0915 (30 statements). Separately, the `limits.file_lines` summary says only Bash counts code lines. The Python and SQL checks also skip blank and comment lines. | Keep one function-size limit for Python. Correct the `limits.file_lines` summary. |",
-        "owner": "`packages/cli/kits/language/python/manifest.toml:252-262`, `packages/cli/kits/general/structure/manifest.toml:130`",
-        "location": [
-            "packages/cli/configurations/language/python/ruff.toml.tmpl",
-            "packages/cli/configurations/general/structure/manifest.toml",
-            "tests/tools/generation/ruff.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Python function-lines remains the single size check. Removed PLR0915, its max-statements option and Python from the statements languages. A forty-statement function below sixty lines passes both actual Ruff and the public function-lines check. The file-line summary names Python, Bash and SQL as counting code lines, Swift as skipping comment-only lines, and JavaScript/TypeScript as counting every line.",
-            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
-            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
-            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/016",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 24,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/manifest.toml:9-10`, `packages/cli/kits/language/swift/manifest.toml:9-10` (`[detect] filenames`) | Detection looks at `project_files` first, and that list holds the same patterns (`packages/cli/src/kits/detect.ts:93`). So `filenames` never adds evidence. | Delete `filenames` from both `[detect]` tables. |",
-        "owner": "`packages/cli/kits/language/python/manifest.toml:9-10`, `packages/cli/kits/language/swift/manifest.toml:9-10` (`[detect] filenames`)",
-        "location": [
-            "packages/cli/configurations/language/python/manifest.toml",
-            "packages/cli/configurations/language/swift/manifest.toml",
-            "tests/cli/configurations/detect.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Removed duplicate detect.filenames declarations from Python and Swift. Both retain their existing project_files evidence, and root and nested Python manifest detection and Swift source evidence retain the selected language without unrelated configuration-file evidence. Dedicated final detection and initialization cases pass: /tmp/gspot-python-defaults-detection-final.log.",
-            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
-            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
-            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/017",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 25,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/python/manifest.toml:107,138,332` | The wording is wrong or unclear in three places. \"the shipped Ruff families\": the template selects single rule codes, not families. \"with stable diagnostics and adds annotation conventions at all\" reads badly. \"Refuses a module-level attribute hook\" is jargon. | Change them to \"Lints every Python file with the Ruff rules for the level, security rules included\", \"Type checks the project. At level all, it also requires annotations\", and \"Finds a module-level `__getattr__`\". |",
-        "owner": "`packages/cli/kits/language/python/manifest.toml:107,138,332`",
-        "location": ["packages/cli/configurations/language/python/manifest.toml"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The Python manifest summaries now describe selected Ruff rules, annotations at all, and module-level __getattr__ directly. Authoritative reference generation and its built-site link checks pass.",
-            "563 affected CLI cases pass across generation, configuration ownership and detection, policy, initialization, Python checks, manifest parsing, and the published schema. The final level-contract cases pass after the last assertion changes: /tmp/gspot-python-defaults-cli.log and /tmp/gspot-python-defaults-cli-final.log.",
-            "Real native Ruff confirms scoped pytest ownership, correctness at both levels, print conventions only at all, one function-size limit, and identical editor and explicit formatting in root and nested scopes. Initial CRLF serialization failure was corrected to native cr-lf and all five final Ruff cases pass. The other twelve native Python, initialization, and Python/Swift parameter-limit cases pass: /tmp/gspot-python-defaults-native.log and /tmp/gspot-python-defaults-native-final.log.",
-            "Pinned Ruff config documents confirm preview defaults to false, all rules are fixable by default, and native naming exemptions already include the four removed names. All four TypeScript targets and every repository ESLint scope pass. Documentation builds 317 pages and verifies every built link and fragment. Canonical apply is unchanged on the second run and staged checks pass. Evidence: /tmp/gspot-python-defaults-types.log, /tmp/gspot-python-defaults-lint.json, /tmp/gspot-python-defaults-docs-final.log, /tmp/gspot-python-defaults-apply-second.json, and /tmp/gspot-python-defaults-staged-final.json."
-        ]
+        "verification": [],
+        "originalLine": 15
     },
     {
         "id": "slices/kits-other-languages/018",
         "source": "findings/slices/kits-other-languages.md",
-        "line": 26,
+        "line": 12,
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/python/ruff.toml.tmpl:27,38-46`, `swift/swiftlint.yml.tmpl:8-25,30,34,50`, `packages/cli/src/config/checks/language/python.ts:8-10`, `swift.ts:14`, `bash.ts:10`, `sql.ts:4` | FINDINGS row 75 lists other copies of setting defaults. These are more: template fallbacks such as `at('cyclomatic_complexity', 8)` and `?? 300`, and code constants such as `FILE_LINES`, `FUNCTION_LINES`, `PACKAGE_EXPORTS`, `DUPLICATE_LINES`, and `FUNCTION_PARAMETERS`. `limit(key, language)` already falls back to `limits.<key>` (`packages/cli/src/policy/merge.ts:30-39`), so the middle `limit(key)` call in `at()` repeats that lookup. | Read defaults from the manifest only. |",
         "owner": "`packages/cli/kits/language/python/ruff.toml.tmpl:27,38-46`, `swift/swiftlint.yml.tmpl:8-25,30,34,50`, `packages/cli/src/config/checks/language/python.ts:8-10`, `swift.ts:14`, `bash.ts:10`, `sql.ts:4`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/kits-other-languages/019",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 27,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/swiftformat.tmpl:24-84,102-128` | In SwiftFormat 0.61.1, an explicit `--enable` wins over `--disable`, whatever their order. In my tests, `--disable redundantGet` placed before or after `--enable redundantGet` left the rule on. So at `recommended`, all 19 rules that the first block enables and the `!isAll` block disables still run. Examples are `redundantReturn`, `redundantSelf`, and `redundantGet`. 59 of the 60 `--enable` lines name rules that are on by default anyway. Lines 87-93 and 123-126 disable `acronyms`, `markTypes`, `organizeDeclarations`, and `sortSwitchCases`, which are off by default, so their comments explain lines that do nothing. | Write `--enable` only for opt-in rules, and only at the level that wants them. Put the rules turned off at `recommended` in one `--disable` list. |",
-        "owner": "`packages/cli/kits/language/swift/swiftformat.tmpl:24-84,102-128`",
-        "location": [
-            "packages/cli/configurations/language/swift/swiftformat.tmpl",
-            "packages/cli/configurations/language/swift/swiftlint.yml.tmpl"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Only applicable opt-in wrapEnumCases is explicitly enabled; recommended disables cannot be defeated by redundant enables. User-disabled opt-ins are excluded from enable.",
-            "/tmp/gspot-swift-configuration-compatibility.json: six native positive/idempotence/force_cast cases across both levels and three trailing settings.",
-            "Both levels and none/es5/all each pass actual native formatting, lint and second-format idempotence; force_cast remains detected. Generated SwiftFormat disables are deduplicated before capture/serialization. All three real language tutorials and hook failure/recovery passed (/tmp/gspot-quickstart-replay/results-all-languages-final.json). Native SwiftLint warnings for configuration of disabled recommended rules remain a separate open concern."
-        ],
-        "decisionEvidence": [
-            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
-            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/020",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 28,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/swiftformat.tmpl:76` (`trailingCommas`), `swiftlint.yml.tmpl:54-61` | SwiftFormat adds trailing commas to multi-line collections. SwiftLint's default rule `trailing_comma` forbids them. At both levels, a file that passes `swiftformat --lint` then fails SwiftLint. Neither tool reads `format.trailing_commas`. | Set `trailing_comma: mandatory_comma: true` in the SwiftLint file. Map `format.trailing_commas` to SwiftFormat's `--commas` and to `mandatory_comma`. |",
-        "owner": "`packages/cli/kits/language/swift/swiftformat.tmpl:76` (`trailingCommas`), `swiftlint.yml.tmpl:54-61`",
-        "location": [
-            "packages/cli/configurations/language/swift/swiftformat.tmpl",
-            "packages/cli/configurations/language/swift/swiftlint.yml.tmpl"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Maps none/es5/all trailing commas to never/collections-only/always and matching SwiftLint mandatory_comma. Disabled trailing_comma receives no options.",
-            "/tmp/gspot-swift-configuration-compatibility.json: six native positive/idempotence/force_cast cases across both levels and three trailing settings.",
-            "Both levels and none/es5/all each pass actual native formatting, lint and second-format idempotence; force_cast remains detected. Generated SwiftFormat disables are deduplicated before capture/serialization. All three real language tutorials and hook failure/recovery passed (/tmp/gspot-quickstart-replay/results-all-languages-final.json). Native SwiftLint warnings for configuration of disabled recommended rules remain a separate open concern."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/021",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 29,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/swiftformat.tmpl:10` (`--closingparen same-line`), `swiftlint.yml.tmpl:1` | SwiftFormat keeps `)` on the line of the last argument or parameter. SwiftLint's opt-in rules `multiline_arguments_brackets` and `multiline_parameters_brackets` require `)` on a line of its own. Formatted output failed SwiftLint at both levels. | Use `--closingparen balanced`, or remove the two SwiftLint rules. |",
-        "owner": "`packages/cli/kits/language/swift/swiftformat.tmpl:10` (`--closingparen same-line`), `swiftlint.yml.tmpl:1`",
-        "location": [
-            "packages/cli/configurations/language/swift/swiftformat.tmpl",
-            "packages/cli/configurations/language/swift/swiftlint.yml.tmpl"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Uses balanced closing parentheses; SwiftFormat owns multiline bracket layout.",
-            "/tmp/gspot-swift-configuration-compatibility.json: six native positive/idempotence/force_cast cases across both levels and three trailing settings.",
-            "Both levels and none/es5/all each pass actual native formatting, lint and second-format idempotence; force_cast remains detected. Generated SwiftFormat disables are deduplicated before capture/serialization. All three real language tutorials and hook failure/recovery passed (/tmp/gspot-quickstart-replay/results-all-languages-final.json). Native SwiftLint warnings for configuration of disabled recommended rules remain a separate open concern."
-        ],
-        "decisionEvidence": [
-            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
-            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/022",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 30,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/swiftformat.tmpl:84` (`numberFormatting`), `swiftlint.yml.tmpl:1` (`number_separator`) | SwiftFormat groups digits only from 6 digits up, and it reports `10_000` until the underscore is removed. SwiftLint's `number_separator` asks for `10_000`. The two tools rewrite the number back and forth at both levels. | Remove `number_separator`, and let SwiftFormat own number layout. |",
-        "owner": "`packages/cli/kits/language/swift/swiftformat.tmpl:84` (`numberFormatting`), `swiftlint.yml.tmpl:1` (`number_separator`)",
-        "location": [
-            "packages/cli/configurations/language/swift/swiftformat.tmpl",
-            "packages/cli/configurations/language/swift/swiftlint.yml.tmpl"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Removes number_separator opt-in; SwiftFormat owns number layout.",
-            "/tmp/gspot-swift-configuration-compatibility.json: six native positive/idempotence/force_cast cases across both levels and three trailing settings.",
-            "Both levels and none/es5/all each pass actual native formatting, lint and second-format idempotence; force_cast remains detected. Generated SwiftFormat disables are deduplicated before capture/serialization. All three real language tutorials and hook failure/recovery passed (/tmp/gspot-quickstart-replay/results-all-languages-final.json). Native SwiftLint warnings for configuration of disabled recommended rules remain a separate open concern."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/023",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 31,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/swiftformat.tmpl:157` (`redundantInternal`), `swiftlint.yml.tmpl:1` (`explicit_acl`, `explicit_top_level_acl`) | At `all`, SwiftFormat removes `internal`, and SwiftLint requires it on every declaration. A formatted file got 8 SwiftLint findings. | Choose one. Either turn off `redundantInternal` and `redundantPublic` whenever `explicit_acl` is on, or remove `explicit_acl` and `explicit_top_level_acl`. |",
-        "owner": "`packages/cli/kits/language/swift/swiftformat.tmpl:157` (`redundantInternal`), `swiftlint.yml.tmpl:1` (`explicit_acl`, `explicit_top_level_acl`)",
-        "location": [
-            "packages/cli/configurations/language/swift/swiftformat.tmpl",
-            "packages/cli/configurations/language/swift/swiftlint.yml.tmpl"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Keeps explicit SwiftLint access checks and disables formatter redundantInternal/redundantPublic at both levels. Native formatted source retains actual public and internal annotations.",
-            "/tmp/gspot-swift-configuration-compatibility.json: six native positive/idempotence/force_cast cases across both levels and three trailing settings.",
-            "Both levels and none/es5/all each pass actual native formatting, lint and second-format idempotence; force_cast remains detected. Generated SwiftFormat disables are deduplicated before capture/serialization. All three real language tutorials and hook failure/recovery passed (/tmp/gspot-quickstart-replay/results-all-languages-final.json). Native SwiftLint warnings for configuration of disabled recommended rules remain a separate open concern."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/024",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 32,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/swiftlint.yml.tmpl:54-58` (comment) and `:1` (`OPT_IN`) | The comment says that SwiftFormat owns layout \"so one tool reports them\". But only 3 SwiftLint rules are turned off. On one file at `recommended`, both tools reported the same five problems. The pairs were `control_statement` and `redundantParens`, `implicit_getter` and `redundantGet`, `implicit_optional_initialization` and `redundantNilInit`, `implicit_return` and `redundantReturn`, and `unneeded_parentheses_in_closure_argument` and `redundantParens`. The opt-in layout rules, such as `closure_spacing`, `operator_usage_whitespace`, `vertical_whitespace_*`, `multiline_*`, and `collection_alignment`, also cover SwiftFormat's ground. | Turn off the SwiftLint style and whitespace rules that SwiftFormat covers. Keep SwiftLint for correctness rules. |",
-        "owner": "`packages/cli/kits/language/swift/swiftlint.yml.tmpl:54-58` (comment) and `:1` (`OPT_IN`)",
-        "location": [
-            "packages/cli/configurations/language/swift/swiftformat.tmpl",
-            "packages/cli/configurations/language/swift/swiftlint.yml.tmpl"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Disables five concrete overlapping default rules and removes the opt-in whitespace/style rules already covered by SwiftFormat; retains both checks and force_cast correctness.",
-            "/tmp/gspot-swift-configuration-compatibility.json: six native positive/idempotence/force_cast cases across both levels and three trailing settings.",
-            "Both levels and none/es5/all each pass actual native formatting, lint and second-format idempotence; force_cast remains detected. Generated SwiftFormat disables are deduplicated before capture/serialization. All three real language tutorials and hook failure/recovery passed (/tmp/gspot-quickstart-replay/results-all-languages-final.json). Native SwiftLint warnings for configuration of disabled recommended rules remain a separate open concern."
-        ],
-        "decisionEvidence": [
-            "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
-            "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/025",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 33,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/swiftlint.yml.tmpl:2,7-46` | The template configures 10 rules and then turns them off at `recommended`. On every run, SwiftLint prints \"Found a configuration for 'X' rule, but it is disabled\" 10 times. `excludes_inherited_types: true` repeats SwiftLint's default. | Write a rule's options only when the rule is on. |",
-        "owner": "`packages/cli/kits/language/swift/swiftlint.yml.tmpl:2,7-46`",
-        "location": ["packages/cli/configurations/language/swift/swiftlint.yml.tmpl"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "A single options table is filtered by final offSet before constructing the same captured/serialized document. Recommended omits all ten disabled option blocks; user-disabled rules omit their options at all too. All-level custom file/function limits remain effective. Removed repeated excludes_inherited_types true; actual pinned SwiftLint default true preserves inherited-doc behavior.",
-            "/tmp/gspot-swift-disabled-options-matrix.json (six positive/idempotence/force_cast cases, zero disabled-option warnings, effective disables unique, all three trailing settings honored)",
-            "/tmp/gspot-swift-disabled-options-limits.json (active authored all-level file/function limits produce native findings; explicit user ignores remove options and findings; zero disabled-option warnings)",
-            "Root reviewed the original finding and current behavioral owners. Broader affected suites and final integration remain separate required verification."
-        ]
+        "verification": [],
+        "originalLine": 26
     },
     {
         "id": "slices/kits-other-languages/026",
         "source": "findings/slices/kits-other-languages.md",
-        "line": 34,
+        "line": 13,
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/swift/swiftlint.yml.tmpl:74-83` (`doc_comment_style`) | A custom regex rule bans `/** */` comments. SwiftFormat's opt-in rule `blockComments` does the same and also fixes the comment. | At `all`, turn on `--enable blockComments`, and delete the custom rule. |",
         "owner": "`packages/cli/kits/language/swift/swiftlint.yml.tmpl:74-83` (`doc_comment_style`)",
@@ -506,484 +65,72 @@
         "decisionEvidence": [
             "User plan: Finish all findings with only recommended and all, Decisions. These are the only developer-facing coverage levels. Do not introduce opt-in configurations, profiles, bundles, or extra enabling flags. Generate native selections from the level; retain actual platform, network, build, and project-setting prerequisites.",
             "Implementation owner: packages/cli/src/execution/planning/skips.ts, packages/cli/src/commands/init/prepare.ts, and packages/cli/src/parsers/schema/configurations/manifest.ts. Native SwiftLint opt_in_rules is generated syntax, not another Gspot selection choice."
-        ]
+        ],
+        "originalLine": 34
     },
     {
         "id": "slices/kits-other-languages/027",
         "source": "findings/slices/kits-other-languages.md",
-        "line": 35,
+        "line": 14,
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/swift/swiftlint.yml.tmpl:1` (`ANALYZER`: `unused_declaration`) | The analyzer rule finds unused declarations from the build. `swift/periphery` finds the same declarations from the same build, at the same level. | Remove `unused_declaration`, and let Periphery own unused declarations. |",
         "owner": "`packages/cli/kits/language/swift/swiftlint.yml.tmpl:1` (`ANALYZER`: `unused_declaration`)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 35
     },
     {
         "id": "slices/kits-other-languages/028",
         "source": "findings/slices/kits-other-languages.md",
-        "line": 36,
+        "line": 15,
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/swift/manifest.toml:101` (`swiftlint` why) | The text names \"a force unwrap\" and \"a function nobody can hold in their head\". At `recommended`, `force_unwrapping`, `cyclomatic_complexity`, and `function_body_length` are off (`swiftlint.yml.tmpl:2`). | Name rules that run at `recommended`, such as `force_cast`, `force_try`, and `weak_delegate`. |",
         "owner": "`packages/cli/kits/language/swift/manifest.toml:101` (`swiftlint` why)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 36
     },
     {
         "id": "slices/kits-other-languages/029",
         "source": "findings/slices/kits-other-languages.md",
-        "line": 37,
+        "line": 16,
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/swift/manifest.toml:62-64,119-158`, `packages/cli/src/checks/language/swift/plan.ts:31-39` | When `tools.xcode.project` is not set, the build, the analyzer, and Periphery run `swift build`, and nothing checks that the scope has a `Package.swift`. A scope with Swift files but no package then gets a tool error at push instead of a skip. Examples are an app whose Xcode settings are not set, or a React Native `AppDelegate.swift`. `platforms = [\"macos\"]` skips `swift build` on Linux, where it works, so a server-side Swift package gets no type check in Linux CI. The kit declares `xcodebuild` as a host tool but not `swift`. | Skip with a message that names `tools.xcode.project` when the scope has no `Package.swift`. Allow `linux` for the package build. Declare `swift` as a host tool. |",
         "owner": "`packages/cli/kits/language/swift/manifest.toml:62-64,119-158`, `packages/cli/src/checks/language/swift/plan.ts:31-39`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 37
     },
     {
         "id": "slices/kits-other-languages/030",
         "source": "findings/slices/kits-other-languages.md",
-        "line": 38,
+        "line": 17,
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/swift/manifest.toml:34-60` (`swiftformat`, `periphery` tools) | Neither tool has a `suppression` marker. So `// swiftformat:disable` and `// periphery:ignore` escape the reason rule that applies to SwiftLint, Ruff, basedpyright, ShellCheck, and sqlfluff comments. The Periphery help text even tells users to add `periphery:ignore`. | Add `suppression` markers with reason patterns for both tools. |",
         "owner": "`packages/cli/kits/language/swift/manifest.toml:34-60` (`swiftformat`, `periphery` tools)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/kits-other-languages/031",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 39,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:2-14,115-125` | `ios-keychain-accessible-always` also matches `kSecAttrAccessibleAfterFirstUnlock`, the class Apple recommends for items read in the background. The scan reported it. Its message (\"while the device is locked\") is wrong for that class. `kSecAttrAccessibleAlways` and `UIWebView` are deprecated, so the compiler already warns about both. | Remove `kSecAttrAccessibleAfterFirstUnlock` from the rule, and delete `ios-no-uiwebview`. |",
-        "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:2-14,115-125`",
-        "location": [
-            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
-            "tests/config/tools/generation/semgrep.ts",
-            "tests/tools/generation/semgrep.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The accessibility rule now matches only kSecAttrAccessibleAlways, with a message that lets the project choose its required accessibility class. Removed the deprecated UIWebView rule. Native recommended/all scans keep AfterFirstUnlock and UIWebView source as accepted neighboring cases while detecting Always and the separate weak-hash defect; correcting those defects leaves the neighboring source intact and passes: /tmp/gspot-security-false-positives-native-final.log."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/032",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 40,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:141-160` (`ios-log-sensitive-data`) | The rule matches words anywhere in the argument, so `print(\"Token refreshed\")` was reported. `logger.info(\"Signed in with \\(token)\")` was not, because `Logger.$METHOD` matches only the type name, not a `logger` value. `os_log($X, ...)` checks the format string, not the logged values. | Match `$LOGGER.$LEVEL(...)` and `print(...)` when an interpolated identifier matches the regex. |",
-        "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:141-160` (`ios-log-sensitive-data`)",
-        "location": [
-            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
-            "tests/config/tools/generation/secrets.ts",
-            "tests/tools/generation/secrets.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The Swift rule captures sensitive identifiers in interpolation and raw logged arguments, supports logger variables with logging-level predicates, and checks os_log values rather than its format string. Native recommended/all cases assert exact lines for print, NSLog, variable loggers, nested credential properties, and both os_log argument forms. Literal Token refreshed messages, user.name interpolation, and explicit private redaction stay accepted; correction preserves neighboring positive cases. Verification: /tmp/gspot-sensitive-data-native-final.log, /tmp/gspot-sensitive-data-native.log, /tmp/gspot-sensitive-data-cli.log, /tmp/gspot-sensitive-data-types-final.log, and /tmp/gspot-sensitive-data-lint.json. Documentation builds all 317 pages with valid local links; canonical second apply writes/removes no files."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/033",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 41,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:15-30` (`ios-no-secrets-in-userdefaults`) | `session` in the key regex reported the key `\"sessionCount\"`. The pattern matches only `UserDefaults.<member>.set`, not a `UserDefaults` instance kept in a variable. | Remove `session`, and match any `UserDefaults` value. |",
-        "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:15-30` (`ios-no-secrets-in-userdefaults`)",
-        "location": [
-            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
-            "tests/config/tools/generation/secrets.ts",
-            "tests/tools/generation/secrets.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Removed session from the sensitive-key predicate. The native Swift parser does not support metavariable-type, so receiver ownership follows actual UserDefaults construction, standard-instance bindings, explicit type declarations, and typed function parameters. Native recommended/all cases report direct, local, suite, mutable, typed, and parameter receivers at exact lines while accepting sessionCount and an unrelated DictionaryStore.set. Corrections move sensitive values to Keychain calls and preserve harmless preferences. Verification: /tmp/gspot-sensitive-data-native-final.log, /tmp/gspot-sensitive-data-native.log, /tmp/gspot-sensitive-data-cli.log, /tmp/gspot-sensitive-data-types-final.log, and /tmp/gspot-sensitive-data-lint.json. Documentation builds all 317 pages with valid local links; canonical second apply writes/removes no files."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/034",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 42,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:60-82` (`ios-hardcoded-url-with-credentials`, `ios-insecure-http-url`) | `[^@]+` crosses `/`, so `https://api.example.com:8443/v1/users?email=a@b.com` was reported as embedded credentials. The HTTP rule runs on every line, comments included, so an Apache license header URL was reported. `xcode/ats` already blocks cleartext loads at run time. | Delete the credentials rule along with the other secret rules (FINDINGS row 38). Delete the HTTP rule, or limit it to string literals passed to `URL(string:)` and `URLRequest`. |",
-        "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:60-82` (`ios-hardcoded-url-with-credentials`, `ios-insecure-http-url`)",
-        "location": [
-            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
-            "tests/config/tools/generation/semgrep.ts",
-            "tests/tools/generation/semgrep.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Deleted both the credentials-URL regex and the generic HTTP regex. Fresh native scans accept the port/path URL with an email query, the HTTP license comment and URL literal at both levels without extra findings. The fixture keeps those values after correcting genuine Keychain and weak-hash defects. Existing Xcode ATS native defect/correction cases and CLI secrets baseline cases remain active and pass: /tmp/gspot-security-false-positives-native.log, /tmp/gspot-security-false-positives-native-final.log and /tmp/gspot-security-false-positives-cli.log."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/035",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 43,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:84-98,127-139` | `ios-unsafe-pointer-cast` reports creating pointers and every `withUnsafeMutableBytes` call, not casts. The Swift 6.2 compiler flag `-strict-memory-safety` checks unsafe code properly. JavaScript is on by default in `WKWebView`, and `preferences.javaScriptEnabled` has been deprecated since iOS 14. So `ios-wkwebview-javascript-enabled` catches only an explicit `= true` set through that deprecated property. | Delete both rules. |",
-        "owner": "`packages/cli/kits/language/swift/semgrep/ios.yml.tmpl:84-98,127-139`",
-        "location": [
-            "packages/cli/configurations/language/swift/semgrep/swift.yml.tmpl",
-            "tests/config/tools/generation/semgrep.ts",
-            "tests/tools/generation/semgrep.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Deleted the broad unsafe-pointer rule and the deprecated WKWebView JavaScript property rule, including their empty level wrappers. Native recommended/all cases accept pointer creation, withUnsafeMutableBytes and the old explicit preference assignment, retain the real Keychain/weak-hash findings and accept their corrections. Every shipped pack validates with the native Semgrep parser at both levels: /tmp/gspot-security-false-positives-native.log and /tmp/gspot-security-false-positives-native-final.log."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/036",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 44,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/bash/shellcheckrc.tmpl:1` (`shell=bash`) | `shell=bash` overrides the shebang. The tagger marks `#!/bin/sh` files as `bash` (`packages/cli/src/repository/tags.ts:28`). A `sh` script that uses `[[ ]]` passed ShellCheck with this file, and SC3010 appeared only without it. At `all`, SC2292 (`require-double-brackets`) told a `sh` script to use `[[ ]]`, which fails under dash. | Delete `shell=bash`. Pass `--shell=bash` only for files with no shebang. Tag `sh` and `dash` shebangs as `sh`. |",
-        "owner": "`packages/cli/kits/language/bash/shellcheckrc.tmpl:1` (`shell=bash`)",
-        "location": null,
-        "status": "closed",
-        "outcome": "ShellCheck no longer receives a scope-wide Bash dialect. POSIX sh and dash shebangs replace the Bash extension tag, and ShellCheck and shfmt select those scripts. The native runner retains shebang discovery and supplies Bash or Bats only to shebangless files. Both coverage levels reject native enable/disable as separate rule selection and retain scoped gspot ignores.",
-        "verification": [
-            "Pinned ShellCheck 0.11.0 independently reports SC2164 for unchecked cd and accepts guarded cd; it reports SC3010 for POSIX double brackets and accepts POSIX single brackets: /tmp/gspot-shell-native-ownership-proof.log.",
-            "Final native Bash, Zsh, Bats, ShellCheck, shfmt, size, dialect, scope, correction, and tab formatting cohort: /tmp/gspot-shell-dialects-final-native.log (13 passing cases, 101 assertions, three files).",
-            "CLI cohort: /tmp/gspot-shell-dialects-cli.log (588 passes and one fixture error across 79 files). The root path-ignore fixture correction passes its complete two-file cohort: /tmp/gspot-shell-dialects-preview-correction.log (22 passes, 511 assertions).",
-            "All four TypeScript targets pass: /tmp/gspot-shell-dialects-types.log. Changed source lint passes: /tmp/gspot-shell-dialects-final-lint.log. Documentation validates 316 pages: /tmp/gspot-shell-dialects-docs.log.",
-            "Canonical apply succeeds twice without writes or notes: /tmp/gspot-shell-dialects-apply-first.json and /tmp/gspot-shell-dialects-apply-second.json.",
-            "Native initialization, level switching, canonical reapply, and missing-tool recovery pass: /tmp/gspot-shell-dialects-lifecycle.log (two passing cases).",
-            "Final contract corrections pass: /tmp/gspot-shell-dialects-final-cli.log (36 passes, 543 assertions); /tmp/gspot-shell-dialects-final-fixture.log (two native passes, 34 assertions); /tmp/gspot-shell-dialects-final-types.log (all four targets). Static fixtures contain literal corrections, and the shared interpreter table uses the repository vocabulary."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/037",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 45,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/bash/manifest.toml:7-9` (`shebangs = [\"shell\"]`) | A Gradle wrapper (`gradlew`, `#!/bin/sh`) proposes this kit for every Gradle, Android, and React Native project. On a standard `gradlew`, shfmt reported 214 diff lines and ShellCheck 5 findings at `recommended`. gspot does not mark `gradlew` or `mvnw` as generated. | Mark `gradlew`, `gradlew.bat`, and `mvnw` as generated by default. Detection already counts only source files, so this also stops the proposal. |",
-        "owner": "`packages/cli/kits/language/bash/manifest.toml:7-9` (`shebangs = [\"shell\"]`)",
-        "location": null,
-        "status": "closed",
-        "outcome": "Gradle and Maven launchers are generated by default in root and nested projects. Explicit classification declarations keep precedence. Real configuration detection ignores these launchers, and selected Bash source checks receive no wrapper files.",
-        "verification": [
-            "CLI repository, detection, Bash, scope, and parser cohort: /tmp/gspot-bash-portable-cli.log (316 passes and two new fixture errors, 31 files). Both corrected fixtures and the entire Bash structure cohort pass: /tmp/gspot-bash-portable-corrections.log (30 passing cases, 144 assertions).",
-            "Pinned native Bash configuration, ShellCheck, shfmt, and count cohort: /tmp/gspot-bash-portable-native.log (10 passes and one new fixture acquisition error). With declared mise acquisition, root/scoped C-style counts and correction pass: /tmp/gspot-bash-portable-counts-correction.log (one case, nine assertions).",
-            "All four TypeScript targets pass: /tmp/gspot-bash-portable-final-types.log. Source lint passes: /tmp/gspot-bash-portable-ready-lint.log. Native TOML formatting passes: /tmp/gspot-bash-portable-toml.log.",
-            "Native rule field semantics verified against the official ast-grep reference: https://ast-grep.github.io/reference/rule.html.",
-            "Documentation and links validate 316 pages: /tmp/gspot-bash-portable-docs.log. Canonical generation succeeds twice without changes: /tmp/gspot-bash-portable-apply-first.json and /tmp/gspot-bash-portable-apply-second.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/038",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 46,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/bash/manifest.toml:39-45` (`bash` floor) | The 4.4 floor sits on the host `bash` tool, so `bash/syntax`, a `recommended` check, fails as an outdated tool on stock macOS, which has Bash 3.2.57. The comment says the floor exists for Bats. It also says the kit \"writes scripts\", which it does not. | Put the floor on the Bats check only, and let `bash -n` run with any Bash. Change the comment to \"checks scripts\". |",
-        "owner": "`packages/cli/kits/language/bash/manifest.toml:39-45` (`bash` floor)",
-        "location": null,
-        "status": "closed",
-        "outcome": "The Bash 4.4 requirement belongs to the Bats check. Ordinary syntax checks accept stock macOS Bash. Manifest validation owns numeric floors and declared consumers; execution preserves stricter tool-wide requirements. Applicable check requirements also reach doctor and explain. No new developer-facing selection mechanism is introduced.",
-        "verification": [
-            "Native stock macOS Bash 3.2.57 and supported Bash regressions pass at recommended and all; syntax succeeds on stock Bash, Bats reports its 4.4.0 prerequisite, doctor reports the same unmet prerequisite, and supported Bats attributes malformed syntax to script.bats: /tmp/gspot-bats-floor-ready-native.log (7 passing cases, 83 assertions, three files).",
-            "Manifest consumer, numeric floor validation, stricter tool-wide floor preservation, explanations, doctor, planning, execution, and inspection regressions: /tmp/gspot-bats-floor-ready-cli.log (181 passing cases, 614 assertions, 19 files).",
-            "All four TypeScript targets pass: /tmp/gspot-bats-floor-ready-types.log. Changed source lint passes: /tmp/gspot-bats-floor-ready-lint.log.",
-            "Documentation builds and validates 316 pages: /tmp/gspot-bats-floor-docs.log. Canonical apply succeeds twice without writes, removals, or notes: /tmp/gspot-bats-floor-apply-first.json and /tmp/gspot-bats-floor-apply-second.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/039",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 47,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/bash/manifest.toml:340-349` (`safety`, `recommended`), `packages/cli/src/config/checks/language/bash.ts:144-163,186` | `unchecked-cd` repeats ShellCheck SC2164, which is on by default. Both reported `cd \"$dir\"`, and gspot also reported `cd \"$dir\" && ls`, which is safe. `recursive-remove` reports every `rm -rf` outside `tools.bash.safety_owners`, which defaults to an empty list. That includes the `trap 'rm -rf \"$tmp\"' EXIT` line that `bash/contract` requires after `mktemp` (`packages/cli/src/checks/language/bash/contract.ts:159-162`). `\\|\\| true` is the usual way to allow a failure under `set -e`, which `contract` also requires. | Remove `unchecked-cd`, and let ShellCheck own it. Exempt `rm` inside a trap for a `mktemp` path. Move `blanket-success` to `all`, or delete it. |",
-        "owner": "`packages/cli/kits/language/bash/manifest.toml:340-349` (`safety`, `recommended`), `packages/cli/src/config/checks/language/bash.ts:144-163,186`",
-        "location": [
-            "packages/cli/src/parsers/bash.ts",
-            "packages/cli/src/checks/language/bash/contract.ts",
-            "packages/cli/src/checks/language/bash/safety.ts"
-        ],
-        "status": "closed",
-        "outcome": "ShellCheck owns unchecked cd. The shared native Bash parser ties cleanup traps to exact mktemp assignments without reassignment or unrelated removal targets. Contract and safety consume the same owned cleanup data. Blanket success is checked only at all, directly from the level.",
-        "verification": [
-            "Pinned ShellCheck SC2164 ownership proof and guarded-cd regressions: /tmp/gspot-shell-dialects-final-native.log.",
-            "Exact native AST and public CLI cleanup cases cover multiline traps, local bindings, shadowing, reassignment including the deferred body, extra targets, and multiple removals on one line. Recommended and all failure-discard cases use no extra enabling setting: /tmp/gspot-bash-safety-cli-complete.log (76 passes, 232 assertions, eight files).",
-            "Pinned root/scoped ShellCheck accepts temporary cleanup at both levels and preserves source bytes: /tmp/gspot-bash-safety-native-final.log (15 passes, 127 assertions, four files).",
-            "All four TypeScript targets: /tmp/gspot-bash-safety-types-final.log. Source lint: /tmp/gspot-bash-safety-ready-lint.log."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/040",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 48,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/src/config/checks/language/bash.ts:147,159-162` (used by `bash/safety`) | These patterns come from one project's cleanup scripts. One reports sourcing a file whose name holds `state`, `snapshot`, or `last_config`. Others report clearing `${HOME}/.cache`, `/root/.cache`, and `/dev/shm/*`. | Delete them. ShellCheck SC2115 already covers `rm -rf \"$var/\"` when `$var` is empty. |",
-        "owner": "`packages/cli/src/config/checks/language/bash.ts:147,159-162` (used by `bash/safety`)",
-        "location": [
-            "packages/cli/src/config/checks/language/bash.ts",
-            "tests/cli/checks/language/bash/safety.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "Removed application-specific source-file, cache, temporary-directory, and shared-memory patterns. Native ShellCheck retains empty-path removal protection; shared safety still reports broad process kills and recursive removal outside declared owners.",
-        "verification": [
-            "Public CLI fixtures accept project path names at both levels while retaining recursive removal findings: /tmp/gspot-bash-safety-cli-complete.log.",
-            "Pinned ShellCheck still reports SC2115 for rm -rf \"$root/\" when root can be empty: /tmp/gspot-bash-safety-native-empty-path.json.",
-            "Pinned native root/scoped safety and ShellCheck regressions: /tmp/gspot-bash-safety-native-final.log. All four TypeScript targets: /tmp/gspot-bash-safety-types-final.log."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/041",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 49,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/bash/manifest.toml:133-134` (shfmt `-i {indent}`) | `{indent}` is `format.indent_width` (`packages/cli/src/execution/tool/runner.ts:228`), so shfmt ignores `format.indent_style = \"tab\"`. Ruff, SwiftFormat, and sqlfluff all follow it. | Pass `-i 0` when the indent style is `tab`. |",
-        "owner": "`packages/cli/kits/language/bash/manifest.toml:133-134` (shfmt `-i {indent}`)",
-        "location": null,
-        "status": "closed",
-        "outcome": "The shared command environment already passes indent zero for tab style. New native tests verify shfmt corrects root, scoped, and dash scripts to tabs at recommended and all, then accepts the formatted files unchanged.",
-        "verification": [
-            "Pinned ShellCheck 0.11.0 independently reports SC2164 for unchecked cd and accepts guarded cd; it reports SC3010 for POSIX double brackets and accepts POSIX single brackets: /tmp/gspot-shell-native-ownership-proof.log.",
-            "Final native Bash, Zsh, Bats, ShellCheck, shfmt, size, dialect, scope, correction, and tab formatting cohort: /tmp/gspot-shell-dialects-final-native.log (13 passing cases, 101 assertions, three files).",
-            "CLI cohort: /tmp/gspot-shell-dialects-cli.log (588 passes and one fixture error across 79 files). The root path-ignore fixture correction passes its complete two-file cohort: /tmp/gspot-shell-dialects-preview-correction.log (22 passes, 511 assertions).",
-            "All four TypeScript targets pass: /tmp/gspot-shell-dialects-types.log. Changed source lint passes: /tmp/gspot-shell-dialects-final-lint.log. Documentation validates 316 pages: /tmp/gspot-shell-dialects-docs.log.",
-            "Canonical apply succeeds twice without writes or notes: /tmp/gspot-shell-dialects-apply-first.json and /tmp/gspot-shell-dialects-apply-second.json.",
-            "Native initialization, level switching, canonical reapply, and missing-tool recovery pass: /tmp/gspot-shell-dialects-lifecycle.log (two passing cases).",
-            "Final contract corrections pass: /tmp/gspot-shell-dialects-final-cli.log (36 passes, 543 assertions); /tmp/gspot-shell-dialects-final-fixture.log (two native passes, 34 assertions); /tmp/gspot-shell-dialects-final-types.log (all four targets). Static fixtures contain literal corrections, and the shared interpreter table uses the repository vocabulary."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/042",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 50,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/bash/manifest.toml:263-283` (`wrappers`, `embeds`) | Both checks report `node -e` and `node <<` (`INLINE_NODE` and `RUNTIME_EMBEDS`, `packages/cli/src/config/checks/language/bash.ts:116,129-138`). So one line gives two findings in two checks. | Remove inline Node from `wrappers`. `embeds` keeps it and adds `node -p`. |",
-        "owner": "`packages/cli/kits/language/bash/manifest.toml:263-283` (`wrappers`, `embeds`)",
-        "location": null,
-        "status": "closed",
-        "outcome": "The embeds check alone reports Node -e, Node -p, and Node heredocs. The wrappers check retains forwarding and alias detection. The original inline Node assertion survives in the embeds fixture, beside the unique Python embed assertion.",
-        "verification": [
-            "CLI repository, detection, Bash, scope, and parser cohort: /tmp/gspot-bash-portable-cli.log (316 passes and two new fixture errors, 31 files). Both corrected fixtures and the entire Bash structure cohort pass: /tmp/gspot-bash-portable-corrections.log (30 passing cases, 144 assertions).",
-            "Pinned native Bash configuration, ShellCheck, shfmt, and count cohort: /tmp/gspot-bash-portable-native.log (10 passes and one new fixture acquisition error). With declared mise acquisition, root/scoped C-style counts and correction pass: /tmp/gspot-bash-portable-counts-correction.log (one case, nine assertions).",
-            "All four TypeScript targets pass: /tmp/gspot-bash-portable-final-types.log. Source lint passes: /tmp/gspot-bash-portable-ready-lint.log. Native TOML formatting passes: /tmp/gspot-bash-portable-toml.log.",
-            "Native rule field semantics verified against the official ast-grep reference: https://ast-grep.github.io/reference/rule.html.",
-            "Documentation and links validate 316 pages: /tmp/gspot-bash-portable-docs.log. Canonical generation succeeds twice without changes: /tmp/gspot-bash-portable-apply-first.json and /tmp/gspot-bash-portable-apply-second.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/043",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 51,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/bash/manifest.toml:140-149` (`contract`) | FINDINGS row 81 covers the header. The check also requires 3 more things. Every executable must define exactly one `main` and end with `main \"$@\"`. Every top-level assignment must be `readonly`. Directory constants must use one `CDPATH= cd -- ... && pwd -P \\|\\|` form (`contract.ts:95,111-114`, `bash.ts:93,119`). A 5-line script with no functions fails 3 rules. | Require `main` only in scripts that define functions. Drop the `readonly` and directory-constant rules, or turn them on with a setting. |",
-        "owner": "`packages/cli/kits/language/bash/manifest.toml:140-149` (`contract`)",
-        "location": null,
-        "status": "closed",
-        "outcome": "The all-level contract requires main only in executables that define functions. The readonly and prescribed directory computation checks are deleted. Small executables with ordinary constants pass, while a function-bearing executable without main still fails. No additional enabling setting is added.",
-        "verification": [
-            "CLI repository, detection, Bash, scope, and parser cohort: /tmp/gspot-bash-portable-cli.log (316 passes and two new fixture errors, 31 files). Both corrected fixtures and the entire Bash structure cohort pass: /tmp/gspot-bash-portable-corrections.log (30 passing cases, 144 assertions).",
-            "Pinned native Bash configuration, ShellCheck, shfmt, and count cohort: /tmp/gspot-bash-portable-native.log (10 passes and one new fixture acquisition error). With declared mise acquisition, root/scoped C-style counts and correction pass: /tmp/gspot-bash-portable-counts-correction.log (one case, nine assertions).",
-            "All four TypeScript targets pass: /tmp/gspot-bash-portable-final-types.log. Source lint passes: /tmp/gspot-bash-portable-ready-lint.log. Native TOML formatting passes: /tmp/gspot-bash-portable-toml.log.",
-            "Native rule field semantics verified against the official ast-grep reference: https://ast-grep.github.io/reference/rule.html.",
-            "Documentation and links validate 316 pages: /tmp/gspot-bash-portable-docs.log. Canonical generation succeeds twice without changes: /tmp/gspot-bash-portable-apply-first.json and /tmp/gspot-bash-portable-apply-second.json."
-        ],
-        "decisionEvidence": [
-            "The user implementation plan permits only recommended and all, and rejects another opt-in setting. The finding offers removal or a setting; this implementation removes the prescribed constant forms."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/044",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 52,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/bash/ast-grep/branches.yml:5-10`, `nesting.yml:5-15`, `assignments.yml:4-9`, `manifest.toml:259-260` | `for ((i = 0; ...))` parses as `c_style_for_statement`, which neither rule lists. A function nested for, if, for, if was reported with 1 nested level and 2 branches. The loop's `i = 0` counts as an assignment. The summary says \"reassignments\", but the rule counts every plain assignment that is not `local`, `declare`, `readonly`, or `export`. | Add `c_style_for_statement` to both rules. Skip assignments inside its header. Change the summary to \"assignments\". |",
-        "owner": "`packages/cli/kits/language/bash/ast-grep/branches.yml:5-10`, `nesting.yml:5-15`, `assignments.yml:4-9`, `manifest.toml:259-260`",
-        "location": null,
-        "status": "closed",
-        "outcome": "Pinned ast-grep rules count C-style loops in branches and nesting. Assignment rules omit the initializer, condition, and update fields while retaining body assignments. Public summaries now say assignments. Root and child-scope native regressions retain exact counts and correction behavior.",
-        "verification": [
-            "CLI repository, detection, Bash, scope, and parser cohort: /tmp/gspot-bash-portable-cli.log (316 passes and two new fixture errors, 31 files). Both corrected fixtures and the entire Bash structure cohort pass: /tmp/gspot-bash-portable-corrections.log (30 passing cases, 144 assertions).",
-            "Pinned native Bash configuration, ShellCheck, shfmt, and count cohort: /tmp/gspot-bash-portable-native.log (10 passes and one new fixture acquisition error). With declared mise acquisition, root/scoped C-style counts and correction pass: /tmp/gspot-bash-portable-counts-correction.log (one case, nine assertions).",
-            "All four TypeScript targets pass: /tmp/gspot-bash-portable-final-types.log. Source lint passes: /tmp/gspot-bash-portable-ready-lint.log. Native TOML formatting passes: /tmp/gspot-bash-portable-toml.log.",
-            "Native rule field semantics verified against the official ast-grep reference: https://ast-grep.github.io/reference/rule.html.",
-            "Documentation and links validate 316 pages: /tmp/gspot-bash-portable-docs.log. Canonical generation succeeds twice without changes: /tmp/gspot-bash-portable-apply-first.json and /tmp/gspot-bash-portable-apply-second.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/045",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 53,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/bash/semgrep/bash.yml.tmpl:6-10` (`gspot.bash.curl-pipe-shell`) | Only the plain `curl ... \\| sh` form matched. `\\| sudo bash`, `bash <(curl ...)`, `sh -c \"$(curl ...)\"`, and `wget -qO- ... \\| bash -s` were missed. | Add patterns for these forms. |",
-        "owner": "`packages/cli/kits/language/bash/semgrep/bash.yml.tmpl:6-10` (`gspot.bash.curl-pipe-shell`)",
-        "location": [
-            "packages/cli/configurations/language/bash/semgrep/bash.yml.tmpl",
-            "tests/config/tools/generation/semgrep.ts",
-            "tests/tools/generation/semgrep.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Added command arguments, sudo pipelines, process substitution and command substitution patterns for curl/wget and sh/bash. Native scans find the plain pipeline, sudo bash, bash process substitution, sh -c command substitution and wget -qO- piped to bash -s at their exact source lines. Quoted command text, comments and a download to a file produce no extra findings; the explicit shell correction passes. Evidence: /tmp/gspot-security-false-positives-native-final.log."
-        ]
+        "verification": [],
+        "originalLine": 38
     },
     {
         "id": "slices/kits-other-languages/046",
         "source": "findings/slices/kits-other-languages.md",
-        "line": 54,
+        "line": 18,
         "section": "Kits: Python, Swift, Bash, and SQL",
         "finding": "| `packages/cli/kits/language/bash/manifest.toml:162-172`, `packages/cli/kits/language/swift/manifest.toml:172-182` (`duplicate-functions`) | Two engines find identical function bodies. They use three limits (`limits.duplicate_lines`, `limits.bash.duplicate_lines`, and `limits.swift.duplicate_lines`) and two code constants. The duplication kit's jscpd also reads Swift and shell files. Python has no such check. | Keep one engine that works for every language in the structure kit, or rely on jscpd. |",
         "owner": "`packages/cli/kits/language/bash/manifest.toml:162-172`, `packages/cli/kits/language/swift/manifest.toml:172-182` (`duplicate-functions`)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "slices/kits-other-languages/047",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 55,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/sql/manifest.toml:59-67`, `packages/cli/src/config/checks/language/sql.ts:5` | `POSTGRES_DIALECTS` includes `ansi`, and `tools.sqlfluff.dialect` defaults to `ansi`. Only the postgres kit sets a dialect. So a MySQL, SQLite, or SQL Server project gets its files parsed by the Postgres parser at `recommended`. | Parse only when the dialect is `postgres`. Treat `ansi` as \"not known\". |",
-        "owner": "`packages/cli/kits/language/sql/manifest.toml:59-67`, `packages/cli/src/config/checks/language/sql.ts:5`",
-        "location": [
-            "packages/cli/src/config/checks/language/sql.ts",
-            "packages/cli/src/checks/language/sql.ts",
-            "tests/cli/checks/language/sql.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "Only the explicit postgres dialect selects PostgreSQL syntax and function parsing. The default ANSI dialect leaves dialect-specific validation to SQLFluff. Tests preserve source bytes, pass both internal engines for ANSI, and report malformed SQL after selecting postgres.",
-        "verification": [
-            "113 affected CLI regressions pass with 361 assertions across 20 files: /tmp/gspot-config-tests.log.",
-            "All four TypeScript targets pass: /tmp/gspot-config-root-types.log, /tmp/gspot-config-cli-types.log, /tmp/gspot-config-plugin-types.log, /tmp/gspot-config-docs-types.log.",
-            "Seven real tool cases pass with 41 assertions across SQL, dependencies, Markdown, docs, and prose: /tmp/gspot-config-native.log.",
-            "Canonical generation and a second unchanged apply: /tmp/gspot-config-apply.json and /tmp/gspot-config-second-apply.json."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/048",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 56,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/sql/manifest.toml:111-119`, `packages/cli/src/checks/language/sql.ts:200-210` (`sql/functions`) | The engine does not check the dialect. A parse failure throws, so at `all` any non-Postgres SQL file makes the check error. The title says \"function size\", but the check reports functions that are too small and lists of too many parameters. | Skip unless the dialect is `postgres`. Rename the check to `trivial-functions`, as in python, swift, and bash, and report parameters under their own rule name. |",
-        "owner": "`packages/cli/kits/language/sql/manifest.toml:111-119`, `packages/cli/src/checks/language/sql.ts:200-210` (`sql/functions`)",
-        "location": null,
-        "status": "closed",
-        "outcome": "The PostgreSQL-only guard and reasoned SQLFluff exclusions apply to syntax and trivial-functions. The manifest and registry now name sql/trivial-functions; excessive input parameters retain the separate function-parameters rule. ANSI and three foreign dialects bypass PostgreSQL parsing. Native SQLFluff proves that the foreign fixtures are valid in their own dialect and rejected by postgres. Coverage changes directly with recommended/all.",
-        "verification": [
-            "Source: packages/cli/configurations/language/sql/manifest.toml; packages/cli/configurations/general/structure/manifest.toml; packages/cli/src/checks/language/sql.ts; packages/cli/src/checks/registry.ts; packages/cli/src/config/generation/prose.ts.",
-            "CLI evidence: /tmp/gspot-sql-contract-cli-final.log (106 passes, 266 assertions, nine files); final replay after removing redundant readback assertions is recorded in progress.json.",
-            "Native evidence: /tmp/gspot-sql-contract-native-verified.log (SQLFluff dialect, root/scoped configuration, capitalization, and exclusions); final replay recorded in progress.json.",
-            "All four TypeScript targets: /tmp/gspot-sql-contract-types-final.log. Documentation: /tmp/gspot-sql-contract-docs.log (316 pages; links and fragments valid).",
-            "Canonical generation: /tmp/gspot-sql-contract-apply-first.json and /tmp/gspot-sql-contract-apply-second.json (136 unchanged outputs, no writes or notes each)."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/049",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 57,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/general/structure/manifest.toml:133-137,157-161,316-319` | Nothing reads `limits.sql.function_lines`. The SQL engine reads `file_lines`, `trivial_statements`, and `function_parameters`. `limits.function_lines` lists `sql`, and `limits.cyclomatic_complexity` lists `bash`, but no code reads either for those languages. | Delete `limits.sql.function_lines`. Remove `sql` and `bash` from those `languages` lists. |",
-        "owner": "`packages/cli/kits/general/structure/manifest.toml:133-137,157-161,316-319`",
-        "location": null,
-        "status": "closed",
-        "outcome": "Removed the unread limits.sql.function_lines declaration, sql from shared function_lines metadata, and bash from cyclomatic_complexity metadata. Public policy validation now refuses both unconsumed language overrides while preserving SQL function_parameters.",
-        "verification": [
-            "Source: packages/cli/configurations/language/sql/manifest.toml; packages/cli/configurations/general/structure/manifest.toml; packages/cli/src/checks/language/sql.ts; packages/cli/src/checks/registry.ts; packages/cli/src/config/generation/prose.ts.",
-            "CLI evidence: /tmp/gspot-sql-contract-cli-final.log (106 passes, 266 assertions, nine files); final replay after removing redundant readback assertions is recorded in progress.json.",
-            "Native evidence: /tmp/gspot-sql-contract-native-verified.log (SQLFluff dialect, root/scoped configuration, capitalization, and exclusions); final replay recorded in progress.json.",
-            "All four TypeScript targets: /tmp/gspot-sql-contract-types-final.log. Documentation: /tmp/gspot-sql-contract-docs.log (316 pages; links and fragments valid).",
-            "Canonical generation: /tmp/gspot-sql-contract-apply-first.json and /tmp/gspot-sql-contract-apply-second.json (136 unchanged outputs, no writes or notes each)."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/050",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 58,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/sql/sqlfluff.cfg.tmpl:7` | The list of rules turned off at `recommended` includes AL06, AL07, and CV09, which never report anything. AL07 needs `force_enable = True`, AL06 needs alias length options, and CV09 needs `blocked_words`. A run with `--rules AL06,AL07,CV09` reported nothing, so level `all` gains nothing from them. | Remove the three codes. |",
-        "owner": "`packages/cli/kits/language/sql/sqlfluff.cfg.tmpl:7`",
-        "location": ["packages/cli/configurations/language/sql/sqlfluff.cfg.tmpl"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Recommended excludes no longer list AL06, AL07 or CV09. Current pinned SQLFluff source and both-level native runs confirm those rules require authored settings absent from shipped defaults. Explicit rulesOff remains preserved.",
-            "/tmp/gspot-sqlfluff-template-before.json (actual pre-change behavior with pinned4.3.0)",
-            "/tmp/gspot-sqlfluff-template-after.json (14 actual native lint cases and two precise fix cases, both levels)",
-            "/tmp/gspot-sqlfluff-pinned-existing-before.log (six actual root/parent/child native dialect cases preserve pre-capture findings and exit codes)",
-            "/tmp/gspot-sqlfluff-existing-after.log (existing native scoped generation test:1pass,0fail,6assertions)",
-            "/tmp/gspot-sqlfluff-acceptance-after.log (existing public SQL defect/correction case:1pass,0fail,5assertions)",
-            "Root reviewed actual lower/upper CP03 native results, exact native fixes, retained CP01 defect and authored CP03 ignore. Permanent regression addition and final five-family integration remain pending; no whole SQL or configuration capture closure."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/051",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 59,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/sql/sqlfluff.cfg.tmpl:19-20` (`capitalisation.functions = upper`) | CP03 also applies to functions the project defines. `sqlfluff fix` changed `CREATE FUNCTION get_user_name` to `GET_USER_NAME`, while line 17 requires lowercase identifiers. | Use `consistent`, or `lower`. |",
-        "owner": "`packages/cli/kits/language/sql/sqlfluff.cfg.tmpl:19-20` (`capitalisation.functions = upper`)",
-        "location": ["packages/cli/configurations/language/sql/sqlfluff.cfg.tmpl"],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Functions use lower, matching existing lowercase identifier policy. Native CP03 accepts lowercase user-defined function definitions/calls, detects uppercase versions, and fixes precisely their case. Both levels preserve CP01 keyword defects and explicitly ignored CP03. Captured semantic rule data records the same lowercase option rendered to native configuration.",
-            "/tmp/gspot-sqlfluff-template-before.json (actual pre-change behavior with pinned4.3.0)",
-            "/tmp/gspot-sqlfluff-template-after.json (14 actual native lint cases and two precise fix cases, both levels)",
-            "/tmp/gspot-sqlfluff-pinned-existing-before.log (six actual root/parent/child native dialect cases preserve pre-capture findings and exit codes)",
-            "/tmp/gspot-sqlfluff-existing-after.log (existing native scoped generation test:1pass,0fail,6assertions)",
-            "/tmp/gspot-sqlfluff-acceptance-after.log (existing public SQL defect/correction case:1pass,0fail,5assertions)",
-            "Root reviewed actual lower/upper CP03 native results, exact native fixes, retained CP01 defect and authored CP03 ignore. Permanent regression addition and final five-family integration remain pending; no whole SQL or configuration capture closure."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/052",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 60,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/sql/manifest.toml:5,76` | The `why` of `block-comments` says the spelling checks read only line comments. typos reads the whole file, block comments included. Only Vale skips block comments, because gspot maps SQL to Vale's Lua format (`packages/cli/src/config/generation/generation.ts:103-105`). The kit description claims \"names checked by category\", but no SQL check does that. The naming kit does. | Name Vale as the reason, or map SQL to a format in which Vale reads both comment styles and delete the check. Remove the naming claim from the description. |",
-        "owner": "`packages/cli/kits/language/sql/manifest.toml:5,76`",
-        "location": null,
-        "status": "closed",
-        "outcome": "The SQL description describes only owned checks, names PostgreSQL-only parsing, and no longer claims category naming. The block-comments rationale names Vale specifically; typos is not described as skipping block comments. The generated prose mapping retains SQL to Vale Lua format.",
-        "verification": [
-            "Source: packages/cli/configurations/language/sql/manifest.toml; packages/cli/configurations/general/structure/manifest.toml; packages/cli/src/checks/language/sql.ts; packages/cli/src/checks/registry.ts; packages/cli/src/config/generation/prose.ts.",
-            "CLI evidence: /tmp/gspot-sql-contract-cli-final.log (106 passes, 266 assertions, nine files); final replay after removing redundant readback assertions is recorded in progress.json.",
-            "Native evidence: /tmp/gspot-sql-contract-native-verified.log (SQLFluff dialect, root/scoped configuration, capitalization, and exclusions); final replay recorded in progress.json.",
-            "All four TypeScript targets: /tmp/gspot-sql-contract-types-final.log. Documentation: /tmp/gspot-sql-contract-docs.log (316 pages; links and fragments valid).",
-            "Canonical generation: /tmp/gspot-sql-contract-apply-first.json and /tmp/gspot-sql-contract-apply-second.json (136 unchanged outputs, no writes or notes each)."
-        ]
-    },
-    {
-        "id": "slices/kits-other-languages/053",
-        "source": "findings/slices/kits-other-languages.md",
-        "line": 61,
-        "section": "Kits: Python, Swift, Bash, and SQL",
-        "finding": "| `packages/cli/kits/language/sql/manifest.toml:24-38`, `packages/cli/kits/language/python/manifest.toml:46-47` (`[[tool.replace]]`) | sqlfluff also reads `[tool.sqlfluff]` in `pyproject.toml`, and basedpyright reads `[tool.basedpyright]` and `[tool.pyright]`. These tables are not listed, so init neither shows nor takes over them. gspot then ignores them silently: sqlfluff runs with `--ignore-local-config`, and the root `pyrightconfig.json` pointer takes priority over `pyproject.toml`. | Add `pyproject.toml` entries for `tool.sqlfluff`, `tool.basedpyright`, and `tool.pyright`, with `shared = true`. |",
-        "owner": "`packages/cli/kits/language/sql/manifest.toml:24-38`, `packages/cli/kits/language/python/manifest.toml:46-47` (`[[tool.replace]]`)",
-        "location": [
-            "packages/cli/configurations/language/python/manifest.toml",
-            "packages/cli/configurations/language/sql/manifest.toml",
-            "tests/config/cli/commands/init/replace.ts",
-            "tests/cli/commands/init/replace.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "Python declares shared takeover entries for tool.basedpyright and tool.pyright, and SQL declares tool.sqlfluff. Initialization identifies each authored pyproject.toml table in root and nested scopes and explains that generated configuration takes over. Shared project metadata and other tool settings remain byte-for-byte unchanged with their original mode.",
-        "verification": [
-            "Real init dry runs and application runs cover all three native tables in both root and nested scopes. They verify the retained-table notice, exact project bytes, file mode, and the actual generated Pyright pointer or SQLFluff configuration.",
-            "Affected CLI, initialization, preservation, policy, generation, and schema cohort: /tmp/gspot-python-batch-cli-takeovers.log, 580 passing cases, 2511 assertions, and 76 files. The final fixture changes pass 22 cases and 140 assertions: /tmp/gspot-python-batch-fixtures-complete.log.",
-            "All four TypeScript targets pass: /tmp/gspot-python-batch-types-complete.log. Formatting, ESLint, and naming pass for every changed TypeScript file: /tmp/gspot-python-batch-source-complete.json. Documentation builds 317 pages and validates all links and fragments: /tmp/gspot-python-batch-docs-complete.log.",
-            "Canonical apply and unchanged second apply: /tmp/gspot-python-batch-apply-complete-first.json and /tmp/gspot-python-batch-apply-complete-second.json.",
-            "These source fixes and their regressions are verified locally. The batch remains uncommitted: the session explicitly denies writes to the repository .git directory. No hook was bypassed and no publication was attempted."
-        ]
+        "verification": [],
+        "originalLine": 54
     }
 ]

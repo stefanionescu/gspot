@@ -2,189 +2,176 @@
     {
         "id": "areas/developer-experience/001",
         "source": "findings/areas/developer-experience.md",
-        "line": 13,
+        "line": 9,
         "section": "1. Whether gspot installs cleanly in each kind of project",
         "finding": "| Sample | npm tools pinned | npm tools no active check uses | Python tools pinned | JavaScript files at the root | `init --yes --no-install --no-hooks` |",
         "owner": "Sample",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 13
     },
     {
         "id": "areas/developer-experience/002",
         "source": "findings/areas/developer-experience.md",
-        "line": 15,
+        "line": 10,
         "section": "1. Whether gspot installs cleanly in each kind of project",
         "finding": "| Python package | 8 | 4: `@ast-grep/cli`, `@commitlint/cli`, `license-checker-rseidelsohn`, `syncpack` | 9 | `.prettierrc.json`, `.prettierignore` | exit 0 |",
         "owner": "Python package",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 15
     },
     {
         "id": "areas/developer-experience/003",
         "source": "findings/areas/developer-experience.md",
-        "line": 16,
+        "line": 11,
         "section": "1. Whether gspot installs cleanly in each kind of project",
         "finding": "| Swift package | 7 | 3: `@ast-grep/cli`, `@commitlint/cli`, `syncpack` | 1 (`yamllint`) | `.prettierrc.json`, `.prettierignore` | exit 0 |",
         "owner": "Swift package",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 16
     },
     {
         "id": "areas/developer-experience/004",
         "source": "findings/areas/developer-experience.md",
-        "line": 17,
+        "line": 12,
         "section": "1. Whether gspot installs cleanly in each kind of project",
         "finding": "| React Native app | 37 | 4, plus 2 Expo tools in an app without Expo, plus `eslint-plugin-jsx-a11y` with all 39 rules turned off | 2 (`pip-licenses`, `yamllint`) | expected for this stack | exit 2, partial write |",
         "owner": "React Native app",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 17
     },
     {
         "id": "areas/developer-experience/005",
         "source": "findings/areas/developer-experience.md",
-        "line": 18,
+        "line": 13,
         "section": "1. Whether gspot installs cleanly in each kind of project",
         "finding": "| TypeScript app plus Python service | 27 | 4 | 9 | expected for `apps/web` | exit 2, partial write |",
         "owner": "TypeScript app plus Python service",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 18
     },
     {
         "id": "areas/developer-experience/006",
         "source": "findings/areas/developer-experience.md",
-        "line": 64,
+        "line": 19,
         "section": "2. How a Python or Swift developer installs and runs gspot today",
         "finding": "| Option | Python or Swift developer needs | Version pin per repository | Cost |",
         "owner": "Option",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 64
     },
     {
         "id": "areas/developer-experience/007",
         "source": "findings/areas/developer-experience.md",
-        "line": 66,
+        "line": 20,
         "section": "2. How a Python or Swift developer installs and runs gspot today",
         "finding": "| npm only (today) | Node.js 22, npm, and the exact Bun or npm version | One global version per machine | None added |",
         "owner": "npm only (today)",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 66
     },
     {
         "id": "areas/developer-experience/008",
         "source": "findings/areas/developer-experience.md",
-        "line": 67,
+        "line": 21,
         "section": "2. How a Python or Swift developer installs and runs gspot today",
         "finding": "| Compiled binary via mise | mise | Yes, mise reads the repository file | One release job; gspot already writes mise files |",
         "owner": "Compiled binary via mise",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 67
     },
     {
         "id": "areas/developer-experience/009",
         "source": "findings/areas/developer-experience.md",
-        "line": 68,
+        "line": 22,
         "section": "2. How a Python or Swift developer installs and runs gspot today",
         "finding": "| Compiled binary via PyPI wheel | uv or pipx | Yes, with `uvx gspot@<pin>` | One wheel per platform, built from the same binaries |",
         "owner": "Compiled binary via PyPI wheel",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 68
     },
     {
         "id": "areas/developer-experience/010",
         "source": "findings/areas/developer-experience.md",
-        "line": 69,
+        "line": 23,
         "section": "2. How a Python or Swift developer installs and runs gspot today",
         "finding": "| Compiled binary via Homebrew | Homebrew | No, one global version | One formula per release |",
         "owner": "Compiled binary via Homebrew",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 69
     },
     {
         "id": "areas/developer-experience/011",
         "source": "findings/areas/developer-experience.md",
-        "line": 184,
+        "line": 29,
         "section": "Findings",
         "finding": "| `packages/cli/src/commands/init/write.ts:79-88`, `packages/cli/src/commands/init/command.ts:62-63` | Init writes `gspot.toml` and the `.gitignore` block before it resolves the tool locks. When resolution fails, as in the React Native and monorepo samples, the policy stays, init exits 2, and every later `init` refuses with \"already has a gspot.toml\". | Resolve both locks in the prepare step, in a scratch folder, before anything is written to the repository. Alternatively, remove the policy and the blocks when a later step fails. |",
         "owner": "`packages/cli/src/commands/init/write.ts:79-88`, `packages/cli/src/commands/init/command.ts:62-63`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "areas/developer-experience/012",
-        "source": "findings/areas/developer-experience.md",
-        "line": 185,
-        "section": "Findings",
-        "finding": "| `packages/cli/src/tools/packages/commands.ts:92-97` | A failed lock resolution prints \"Registry credentials and package-manager output are not included\" and no cause. Neither failing sample showed which package failed. | Print the package manager's error output with the credential values replaced. The code already collects those values at `commands.ts:146`. At least name the package that failed to resolve. |",
-        "owner": "`packages/cli/src/tools/packages/commands.ts:92-97`",
-        "location": [
-            "packages/cli/src/tools/diagnostics.ts",
-            "packages/cli/src/tools/npm/install.ts",
-            "packages/cli/src/config/tools/npm.ts",
-            "packages/cli/src/types/tools/npm.ts",
-            "packages/cli/src/tools/python/project.ts",
-            "tests/cli/tools/diagnostics.test.ts",
-            "tests/cli/tools/package-failures.test.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "npm and uv failures retain bounded output after redaction. Diagnostics identify the missing package and the repair command. Known raw, URL-encoded, base64, and inherited credentials, URL userinfo, printed credentials, and authorization headers are redacted before truncation. Existing authored settings and locks are preserved on failure.",
-            "All four TypeScript targets passed (/tmp/gspot-schema-derived-final-types.log).",
-            "Full unit/integration: 1997 passed, 2 platform skips, 0 failures, 6648 assertions across 297 files (/tmp/gspot-schema-derived-full-tests.log).",
-            "Repository ESLint passed in all five scopes and Prettier passed for 1469 authored files (/tmp/gspot-current-repository-clean-lint.json).",
-            "Focused diagnostic/recovery contracts: 22 passed, 87 assertions (/tmp/gspot-installation-diagnostic-tests.log)."
-        ]
+        "verification": [],
+        "originalLine": 184
     },
     {
         "id": "areas/developer-experience/013",
         "source": "findings/areas/developer-experience.md",
-        "line": 186,
+        "line": 30,
         "section": "Findings",
         "finding": "| `packages/cli/src/lifecycle/write.ts:61-62`, `packages/cli/src/tools/python.ts:138`, `packages/cli/src/commands/init/command.ts:106` | `init --no-install` still runs `bun install --lockfile-only` and `uv lock`. So it needs registry access, the exact package manager version, uv, and Python 3.11 or newer, because of `--no-python-downloads`. The flag help says \"Skip installing the tools\". | With `--no-install`, write the manifests and leave lock resolution to `gspot install`. Or state in the flag help that init resolves locks and what that needs. |",
         "owner": "`packages/cli/src/lifecycle/write.ts:61-62`, `packages/cli/src/tools/python.ts:138`, `packages/cli/src/commands/init/command.ts:106`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 186
     },
     {
         "id": "areas/developer-experience/014",
         "source": "findings/areas/developer-experience.md",
-        "line": 187,
+        "line": 31,
         "section": "Findings",
         "finding": "| `packages/cli/src/tools/packages/identity.ts:77-87`, `packages/cli/src/tools/packages/commands.ts:77-85` | When the repository declares no package manager and has no lockfile, the tool project uses Bun if Bun is on the PATH of the person who ran init. Its version is that machine's version. Every teammate must then have that exact version. All four samples recorded `bun@1.4.2`, including the two whose detected runner is npm. | Use npm when the repository has no JavaScript package manager, because npm ships with Node.js. Follow the runner answer when there is one. Require the lockfile format, or the major version, instead of the exact patch version. |",
         "owner": "`packages/cli/src/tools/packages/identity.ts:77-87`, `packages/cli/src/tools/packages/commands.ts:77-85`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 187
     },
     {
         "id": "areas/developer-experience/015",
         "source": "findings/areas/developer-experience.md",
-        "line": 188,
+        "line": 32,
         "section": "Findings",
         "finding": "| `packages/cli/src/tools/pins.ts:38-61` | Tool pins come from every selected kit. The level, the check's `files` filter, and its `when` condition are not consulted. The Python sample pins `@commitlint/cli` and `syncpack` for checks that are off at `recommended`, and two license tools for a check that waits for `tools.licenses.allowed`. | Pin a tool only when a check that uses it is active at the level and its `files` filter matches tracked files. Its `when` condition must also hold. `gspot set level all` and `gspot set tools.licenses.allowed` already rerun apply, which would add the pins. |",
         "owner": "`packages/cli/src/tools/pins.ts:38-61`",
@@ -193,12 +180,13 @@
         "outcome": null,
         "verification": [
             "Shared fix native-general-takeover links this overlapping record to applicable initialization and doctor ownership, native package-field restoration and inactive strict-tool retention. These changes and their regressions do not close the other installation, pinning or generation portions of this record. Recommended/all remain the only coverage choices; legitimate project settings and prerequisites remain required."
-        ]
+        ],
+        "originalLine": 188
     },
     {
         "id": "areas/developer-experience/016",
         "source": "findings/areas/developer-experience.md",
-        "line": 189,
+        "line": 33,
         "section": "Findings",
         "finding": "| `packages/cli/src/generation/outputs.ts:131-132` | Configuration files are emitted per kit as well. `.gspot/config/syncpack.json` and `.gspot/config/commitlint.config.cjs` land in the Python and Swift samples, where neither tool runs. | Emit a tool's configuration only when the tool is pinned under the rule in the previous row. |",
         "owner": "`packages/cli/src/generation/outputs.ts:131-132`",
@@ -207,331 +195,254 @@
         "outcome": null,
         "verification": [
             "Shared fix native-general-takeover links this overlapping record to applicable initialization and doctor ownership, native package-field restoration and inactive strict-tool retention. These changes and their regressions do not close the other installation, pinning or generation portions of this record. Recommended/all remain the only coverage choices; legitimate project settings and prerequisites remain required."
-        ]
+        ],
+        "originalLine": 189
     },
     {
         "id": "areas/developer-experience/017",
         "source": "findings/areas/developer-experience.md",
-        "line": 190,
+        "line": 34,
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/structure/manifest.toml:9-16` | The `structure` kit, which every project gets, pins `ast-grep`. Only the Bash kit runs it (`packages/cli/src/checks/language/bash/ast-grep.ts:29`). | Move the `[[tool]]` entry to `packages/cli/kits/language/bash/manifest.toml`. |",
         "owner": "`packages/cli/kits/general/structure/manifest.toml:9-16`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 190
     },
     {
         "id": "areas/developer-experience/018",
         "source": "findings/areas/developer-experience.md",
-        "line": 191,
+        "line": 35,
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/licenses/manifest.toml:13-27` | The kit pins the npm and the Python license tools together. A Python package gets `license-checker-rseidelsohn`, and a React Native app gets `pip-licenses`, which needs uv and Python. | Pin `license-checker-rseidelsohn` only when a `package.json` is tracked, and `pip-licenses` only when a `pyproject.toml` is. Splitting `licenses/packages` into an npm check and a Python check, each with its own `files` filter, gives this through the rule in row 5. |",
         "owner": "`packages/cli/kits/general/licenses/manifest.toml:13-27`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 191
     },
     {
         "id": "areas/developer-experience/019",
         "source": "findings/areas/developer-experience.md",
-        "line": 192,
+        "line": 36,
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/format/manifest.toml:86`, `packages/cli/kits/general/files/manifest.toml:47-50`, `packages/cli/kits/language/markdown/manifest.toml:15-19` | Four checks that run in every stack depend on Node.js: Prettier for Markdown, YAML, and JSON, markdownlint-cli2, v8r, and the editorconfig-checker npm wrapper. The wrapper fetches a Go binary from GitHub at install time. A Python or Swift repository needs Node.js and Bun only for these. | When no JavaScript kit is selected, install `ec` as the native binary; the `aqua:` entry already exists at `format/manifest.toml:87`. Evaluate non-Node replacements for those stacks: `check-jsonschema` from PyPI for v8r, `rumdl` from PyPI and Homebrew for the markdownlint rules, and `dprint`, or no formatter, for Markdown. |",
         "owner": "`packages/cli/kits/general/format/manifest.toml:86`, `packages/cli/kits/general/files/manifest.toml:47-50`, `packages/cli/kits/language/markdown/manifest.toml:15-19`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 192
     },
     {
         "id": "areas/developer-experience/020",
         "source": "findings/areas/developer-experience.md",
-        "line": 193,
+        "line": 37,
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/commits/manifest.toml:11-15` | Commit messages are checked by `@commitlint/cli`, a Node.js tool with a CommonJS configuration. The generated rules are a type list, case, lengths, and blank lines. | Implement those rules as a built-in gspot check. gspot already receives the message file through `check --message-file`. |",
         "owner": "`packages/cli/kits/general/commits/manifest.toml:11-15`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 193
     },
     {
         "id": "areas/developer-experience/021",
         "source": "findings/areas/developer-experience.md",
-        "line": 194,
+        "line": 38,
         "section": "Findings",
         "finding": "| `packages/cli/kits/general/format/manifest.toml:98-108`, `packages/cli/kits/general/format/prettierignore.tmpl` | Python and Swift repositories get `.prettierrc.json` and `.prettierignore` at the root. The ignore file lists npm, pnpm, Yarn, and Bun lockfiles, and leaves out `.venv/` and `.build/`. | Write the root pointer only when a JavaScript kit is selected. The check already passes `--config` and `--ignore-path`. Build the ignore patterns from the selected kits. |",
         "owner": "`packages/cli/kits/general/format/manifest.toml:98-108`, `packages/cli/kits/general/format/prettierignore.tmpl`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "areas/developer-experience/022",
-        "source": "findings/areas/developer-experience.md",
-        "line": 195,
-        "section": "Findings",
-        "finding": "| `packages/cli/src/tools/inspect.ts:237-240`, `packages/cli/src/commands/install/steps.ts:25` | `installHint` returns \"Run: gspot install\" for any tool with a mise, npm, PyPI, GitHub, or cargo installer. `gspot install` installs native tools only when the runner is mise. With the default runner for Python and Swift (`none`), the hint for SwiftLint, gitleaks, and the others sends the user in a loop. | When the runner is not mise, return the platform command, such as `brew install swiftlint`, or `mise use swiftlint@0.63.2`. |",
-        "owner": "`packages/cli/src/tools/inspect.ts:237-240`, `packages/cli/src/commands/install/steps.ts:25`",
-        "location": [
-            "packages/cli/src/tools/inspect.ts",
-            "tests/cli/tools/installation.test.ts",
-            "tests/config/cli/tools/installation.ts"
-        ],
-        "status": "closed",
-        "outcome": "The inspection owner selects gspot install for mise-managed tools or private npm/Python installations. Other native tools receive a platform acquisition command or their pinned mise command. Regressions remove executables from PATH and verify missing SwiftLint and gitleaks guidance with and without mise, including the final availability diagnostic.",
-        "verification": [
-            "Affected tool and lifecycle failure cohort: 129 cases pass with 402 assertions across 14 files (/tmp/gspot-acquisition-tests.log). The final native-hint fixture uses real PATH isolation and passes its 11 cases separately (/tmp/gspot-acquisition-hints-final.log).",
-            "All four TypeScript targets and affected ESLint pass (/tmp/gspot-acquisition-types.log, /tmp/gspot-acquisition-lint.log). The complete staged gate passes (/tmp/gspot-acquisition-staged.json)."
-        ]
+        "verification": [],
+        "originalLine": 194
     },
     {
         "id": "areas/developer-experience/023",
         "source": "findings/areas/developer-experience.md",
-        "line": 196,
+        "line": 39,
         "section": "Findings",
         "finding": "| `packages/cli/src/tools/inspect.ts:33` | When a mise shim has no version, doctor puts the raw multi-line mise error into the tool table as the note. | Use a fixed note, such as \"not installed\", with the hint from the previous row. |",
         "owner": "`packages/cli/src/tools/inspect.ts:33`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 196
     },
     {
         "id": "areas/developer-experience/024",
         "source": "findings/areas/developer-experience.md",
-        "line": 197,
+        "line": 40,
         "section": "Findings",
         "finding": "| `packages/cli/src/generation/tools/mise.ts:36` | With the mise runner, the mise file pins `npm:@gspothq/cli` and five other `npm:` tools, but not `node`. Prettier stays in `.gspot/package.json` under `bun@1.4.2`. A Python developer on mise still needs Node.js and Bun from somewhere else. | Pin `node`, and `bun` when the tool project uses it, whenever the mise file has an `npm:` entry. After a binary exists, pin gspot through `github:` or `aqua:`. |",
         "owner": "`packages/cli/src/generation/tools/mise.ts:36`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "areas/developer-experience/025",
-        "source": "findings/areas/developer-experience.md",
-        "line": 198,
-        "section": "Findings",
-        "finding": "| `packages/cli/kits/language/javascript/eslint.config.mjs.tmpl:322`, `packages/cli/kits/language/javascript/manifest.toml:283-287` | React Native code gets `globals.node` and the `eslint-plugin-n` rules. React Native globals such as `__DEV__` are not declared, while `no-undef` is on for JavaScript files. `tools.eslint.runtimes` offers only `node`, `browser`, `worker`, and `commonjs`. | Add a `react-native` runtime with the React Native globals and without the Node.js globals or `n/*` rules. Have the React Native kit set it for its scope. |",
-        "owner": "`packages/cli/kits/language/javascript/eslint.config.mjs.tmpl:322`, `packages/cli/kits/language/javascript/manifest.toml:283-287`",
-        "location": [
-            "packages/cli/configurations/language/javascript/eslint.config.mjs.tmpl",
-            "packages/cli/configurations/language/javascript/runtime-names.json",
-            "packages/cli/configurations/language/javascript/manifest.toml",
-            "packages/cli/src/config/eslint.ts",
-            "packages/cli/src/generation/eslint/runtimes.ts",
-            "packages/cli/src/generation/eslint/configuration.ts",
-            "packages/cli/src/generation/fragments.ts",
-            "packages/cli/src/policy/schema/tools.ts",
-            "packages/cli/src/types/generation/eslint.ts",
-            "packages/cli/src/tools/eslint/client.ts",
-            "packages/cli/src/tools/eslint/worker.ts",
-            "tests/config/cli/generation/runtimes.ts",
-            "tests/types/generation/configuration-files.ts",
-            "tests/cli/generation/runtimes.test.ts",
-            "docs/src/content/docs/guides/policy.md"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Second-pass base-global correction applied: Node API globals and n/* rules exist only in the selected Node/CommonJS runtime. ESM uses nodeBuiltin; cjs/cts use commonjs. Runtime names validate against pinned globals metadata, worker and service-worker are separate, React Native and web frameworks receive scoped defaults, scripts keep Node and authored runtime selectors override defaults. Vue preset window leakage was reproduced before repair; preset languageOptions retain compiler/test globals but runtime API globals are supplied by one matching runtime block.",
-            "Native generated ESLint and preset integration, all generation integration/unit tests, policy and preview cases: 201 passed, zero failures, 1,181 assertions across 43 files (/tmp/gspot-runtime-presets-tests-final.log).",
-            "All four TypeScript targets and read-only ESLint across the changed owners passed; all sixteen changed source, data, and documentation files passed Prettier.",
-            "Repository ESLint passed across all five scopes and 1,288 selected files (/tmp/gspot-runtime-repository-eslint.json).",
-            "Canonical apply updated only the managed ESLint output; a second apply changed nothing. Docs built 308 pages and passed all built-site link and fragment checks."
-        ]
+        "verification": [],
+        "originalLine": 197
     },
     {
         "id": "areas/developer-experience/026",
         "source": "findings/areas/developer-experience.md",
-        "line": 199,
+        "line": 41,
         "section": "Findings",
         "finding": "| `packages/cli/kits/language/javascript/manifest.toml:335-336` | `NODE.md` installs with every JavaScript kit. In a React Native app, it tells agents that `process`, `Buffer`, and Node.js built-ins are available. Only `BUN.md` has a condition. | Give `NODE.md` a condition that leaves it out when `react-native` or `expo` is a dependency. |",
         "owner": "`packages/cli/kits/language/javascript/manifest.toml:335-336`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
-    },
-    {
-        "id": "areas/developer-experience/027",
-        "source": "findings/areas/developer-experience.md",
-        "line": 200,
-        "section": "Findings",
-        "finding": "| `packages/cli/kits/framework/react-native/manifest.toml:27-36` | `eslint-plugin-expo` and `expo-doctor` are pinned, and three Expo rules are on at `recommended`, in an app without `expo`. | Pin the Expo tools and turn on the Expo rules only when `expo` is a dependency of the scope. |",
-        "owner": "`packages/cli/kits/framework/react-native/manifest.toml:27-36`",
-        "location": [
-            "packages/cli/configurations/framework/expo/manifest.toml",
-            "packages/cli/src/checks/framework/expo.ts"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "Expo tools and lint/required rules belong to the detected Expo configuration; bare React Native does not require them. Doctor remains a scoped adapter with installed-project validation and multiline issue parsing.",
-            "Permanent bare-native regression reproduced unwanted Expo and DOM plugin requirements before the split (/tmp/gspot-mobile-applicability-defect.log).",
-            "Affected generation, policy, manifest, parser, and reconciliation tests: 306 passed, zero failures, 1,483 assertions across 60 files (/tmp/gspot-mobile-affected-tests.log).",
-            "After separating the bare-native and Expo dependency data, eight focused generation/reconciliation cases passed and all four TypeScript targets passed (/tmp/gspot-mobile-final-fixture-tests.log, /tmp/gspot-mobile-final-fixture-types.log).",
-            "Real installed acceptance: React DOM hooks, Expo native style rules, bare-native raw text, and absence of irrelevant tools all passed; four tests, 19 assertions (/tmp/gspot-mobile-native-acceptance.log).",
-            "Docs build: 310 pages and valid internal links/fragments. Canonical apply updated only managed ESLint output and added detected React DOM selection to the tests scope; second apply changed nothing."
-        ]
-    },
-    {
-        "id": "areas/developer-experience/028",
-        "source": "findings/areas/developer-experience.md",
-        "line": 201,
-        "section": "Findings",
-        "finding": "| `packages/cli/kits/framework/react/manifest.toml:23-26`, `packages/cli/kits/framework/react-native/manifest.toml:79` | The React kit pins `eslint-plugin-jsx-a11y`, and the React Native kit turns off all 39 of its rules. The plugin is still installed and loaded. | Leave the plugin out of a scope where the React Native kit is selected. |",
-        "owner": "`packages/cli/kits/framework/react/manifest.toml:23-26`, `packages/cli/kits/framework/react-native/manifest.toml:79`",
-        "location": [
-            "packages/cli/configurations/framework/react-dom/manifest.toml",
-            "packages/cli/configurations/framework/react-native/manifest.toml"
-        ],
-        "status": "closed",
-        "outcome": "implemented",
-        "verification": [
-            "The React DOM configuration owns the JSX accessibility plugin. Bare native projects retain React and native plugins without installing JSX accessibility. Browser rule activation and inherited native scope isolation are demonstrated. Shared monorepo installations may include a plugin required by a sibling web scope.",
-            "Permanent bare-native regression reproduced unwanted Expo and DOM plugin requirements before the split (/tmp/gspot-mobile-applicability-defect.log).",
-            "Affected generation, policy, manifest, parser, and reconciliation tests: 306 passed, zero failures, 1,483 assertions across 60 files (/tmp/gspot-mobile-affected-tests.log).",
-            "After separating the bare-native and Expo dependency data, eight focused generation/reconciliation cases passed and all four TypeScript targets passed (/tmp/gspot-mobile-final-fixture-tests.log, /tmp/gspot-mobile-final-fixture-types.log).",
-            "Real installed acceptance: React DOM hooks, Expo native style rules, bare-native raw text, and absence of irrelevant tools all passed; four tests, 19 assertions (/tmp/gspot-mobile-native-acceptance.log).",
-            "Docs build: 310 pages and valid internal links/fragments. Canonical apply updated only managed ESLint output and added detected React DOM selection to the tests scope; second apply changed nothing."
-        ]
+        "verification": [],
+        "originalLine": 199
     },
     {
         "id": "areas/developer-experience/029",
         "source": "findings/areas/developer-experience.md",
-        "line": 202,
+        "line": 42,
         "section": "Findings",
         "finding": "| `packages/cli/src/commands/init/plan/build.ts:140-147` | The plan's write list comes from the pointer names in the kit manifests, not from the generated paths. It leaves out `.editorconfig` and `.prettierignore`, lists `.swiftlint.yml` twice for three files, and shows `pyrightconfig.json` for `services/api/pyrightconfig.json`. | Build the write list from the `emitAll` output paths outside `.gspot/`. |",
         "owner": "`packages/cli/src/commands/init/plan/build.ts:140-147`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 202
     },
     {
         "id": "areas/developer-experience/030",
         "source": "findings/areas/developer-experience.md",
-        "line": 203,
+        "line": 43,
         "section": "Findings",
         "finding": "| `packages/cli/src/commands/init/plan/build.ts:138` | The plan counts every check of a kit. Python shows `commits 2 checks`, `structure 9 checks`, and `python 22 checks`, where 0, 4, and 9 run at `recommended`. | Count the checks that are active at the selected level, and name the rest as off by level. |",
         "owner": "`packages/cli/src/commands/init/plan/build.ts:138`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 203
     },
     {
         "id": "areas/developer-experience/031",
         "source": "findings/areas/developer-experience.md",
-        "line": 204,
+        "line": 44,
         "section": "Findings",
         "finding": "| `packages/cli/src/kits/manifests.ts:150-151`, callers `packages/cli/src/commands/init/write.ts:85` and `packages/cli/src/generation/outputs.ts:74` | `gitignoreBlock()` is called without the selection, so every project gets the ignored paths of all kits, including 10 Vale style folders. | Pass the selected manifests. |",
         "owner": "`packages/cli/src/kits/manifests.ts:150-151`, callers `packages/cli/src/commands/init/write.ts:85` and `packages/cli/src/generation/outputs.ts:74`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 204
     },
     {
         "id": "areas/developer-experience/032",
         "source": "findings/areas/developer-experience.md",
-        "line": 205,
+        "line": 45,
         "section": "Findings",
         "finding": "| `packages/cli/src/commands/init/questions.ts:39-41` | `init --dry-run` without a terminal exits 2 at the hooks question. A dry run writes nothing, so it does not need the answers. | In a dry run without a terminal, take the default answers. |",
         "owner": "`packages/cli/src/commands/init/questions.ts:39-41`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 205
     },
     {
         "id": "areas/developer-experience/033",
         "source": "findings/areas/developer-experience.md",
-        "line": 206,
+        "line": 46,
         "section": "Findings",
         "finding": "| `packages/cli/src/policy/messages.ts:175-181` | For a global install, which is the documented path for non-JavaScript repositories, the pin mismatch message offers `gspot apply`. That moves the team's pin to the developer's installed version. | Name the command that installs the pinned version first. Present moving the pin as a separate upgrade step. |",
         "owner": "`packages/cli/src/policy/messages.ts:175-181`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 206
     },
     {
         "id": "areas/developer-experience/034",
         "source": "findings/areas/developer-experience.md",
-        "line": 207,
+        "line": 47,
         "section": "Findings",
         "finding": "| `docs/src/content/docs/guides/without-mise.md:22-25` | The page says gspot adds its launcher to `devDependencies` for the npm, Bun, pnpm, and Yarn runners. No code does that. The runner changes only the hook line (`packages/cli/src/config/generation/generation.ts:75-81`) and the mise file. The hook line `npm exec --no -- gspot` needs a local install. | Write the `devDependencies` entry, or correct the page. |",
         "owner": "`docs/src/content/docs/guides/without-mise.md:22-25`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 207
     },
     {
         "id": "areas/developer-experience/035",
         "source": "findings/areas/developer-experience.md",
-        "line": 208,
+        "line": 48,
         "section": "Findings",
         "finding": "| `docs/src/content/docs/guides/without-mise.md:36-38`, `docs/src/content/docs/guides/troubleshooting.md:25-27` | The pages say doctor lists the missing native tools with their install commands. Doctor prints \"Run: gspot install\" or a raw mise error. | Correct the pages after the hint fix in row 12. |",
         "owner": "`docs/src/content/docs/guides/without-mise.md:36-38`, `docs/src/content/docs/guides/troubleshooting.md:25-27`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 208
     },
     {
         "id": "areas/developer-experience/036",
         "source": "findings/areas/developer-experience.md",
-        "line": 209,
+        "line": 49,
         "section": "Findings",
         "finding": "| `docs/src/content/docs/guides/install.md:8-25`, `README.md:9-18`, `packages/cli/README.md:6-16` | The prerequisites are Node.js 22 and Git. A Python or Swift repository also needs the exact Bun or npm version, uv, Python 3.11 or newer, registry access during init, and mise or Homebrew for the native tools. | List the prerequisites per stack, or remove them through rows 3, 4, 5, and 9. |",
         "owner": "`docs/src/content/docs/guides/install.md:8-25`, `README.md:9-18`, `packages/cli/README.md:6-16`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 209
     },
     {
         "id": "areas/developer-experience/037",
         "source": "findings/areas/developer-experience.md",
-        "line": 210,
+        "line": 50,
         "section": "Findings",
         "finding": "| `docs/src/content/docs/guides/generated-files.md:22-25` | The page calls the pointers \"files at the repository root\". gspot also writes `Tests/.swiftlint.yml`, `Tests/GreeterTests/.swiftlint.yml`, and `services/api/pyrightconfig.json`. | Say that pointers can land in subfolders and scopes. |",
         "owner": "`docs/src/content/docs/guides/generated-files.md:22-25`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 210
     },
     {
         "id": "areas/developer-experience/038",
         "source": "findings/areas/developer-experience.md",
-        "line": 211,
+        "line": 51,
         "section": "Findings",
         "finding": "| `packages/cli/kits/language/swift/swiftformat.tmpl:34`, `:87`, `:103`, `:121` | At `recommended`, the generated SwiftFormat file enables rules and later disables them, and disables some twice, such as `hoistPatternLet` and `sortSwitchCases`. | Compute the effective rule set in the template and write each rule once. |",
         "owner": "`packages/cli/kits/language/swift/swiftformat.tmpl:34`, `:87`, `:103`, `:121`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 211
     },
     {
         "id": "areas/developer-experience/039",
         "source": "findings/areas/developer-experience.md",
-        "line": 212,
+        "line": 52,
         "section": "Findings",
         "finding": "| `packages/cli/scripts/build.ts:20-33`, `packages/cli/src/platform/assets.ts:13-31`, `packages/cli/src/lifecycle/preview/eslint/client.ts:23-31` | gspot ships only as a Node.js package. Python and Swift developers must install Node.js to run it, and one global install cannot follow per-repository pins. | Add a `bun build --compile` target per platform. Embed the kits, rules, and grammars. Extract the `ast-grep` rule files to a cache folder. Replace the `process.execPath` worker. Publish the binaries through GitHub releases for mise, a PyPI wheel, and a Homebrew formula. |",
         "owner": "`packages/cli/scripts/build.ts:20-33`, `packages/cli/src/platform/assets.ts:13-31`, `packages/cli/src/lifecycle/preview/eslint/client.ts:23-31`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [],
+        "originalLine": 212
     }
 ]
