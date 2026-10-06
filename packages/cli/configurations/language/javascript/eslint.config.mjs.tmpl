@@ -21,7 +21,6 @@ const { code: CODE, javascript: JAVASCRIPT, tests: TEST_CODE, scripts: SCRIPT_CO
 const TESTS = config.testFiles;
 const SCRIPTS = config.scriptFiles;
 const IS_ALL = isAll;
-const NODE_VERSION = config.nodeVersion;
 const RESTRICTED = config.restrictedImports;
 const JAVASCRIPT_LIMITS = config.javascriptLimits;
 const limits = config.limits;
@@ -168,11 +167,13 @@ const securityRules = {
     'security/detect-non-literal-fs-filename': 'off',
 };
 
-const nodeRules = {
+const nodeRules = (version) => {
+    const options = version === undefined ? {} : { version };
+    return {
     'n/no-deprecated-api': 'error',
     'n/no-process-exit': 'error',
-    'n/no-unsupported-features/node-builtins': ['error', { version: NODE_VERSION, allowExperimental: true }],
-    'n/no-unsupported-features/es-builtins': ['error', { version: NODE_VERSION }],
+    'n/no-unsupported-features/node-builtins': ['error', { ...options, allowExperimental: true }],
+    'n/no-unsupported-features/es-builtins': ['error', options],
     // TypeScript owns syntax support.
     'n/no-unsupported-features/es-syntax': 'off',
     'n/prefer-global/buffer': ['error', 'always'],
@@ -194,6 +195,7 @@ const nodeRules = {
     'n/no-unpublished-require': 'error',
     'n/no-extraneous-import': 'error',
     'n/no-extraneous-require': 'error',
+    };
 };
 
 const jsdocRules = {
@@ -255,7 +257,6 @@ const commentRules = {
 %>
 // The root has no closing separator because TypeScript's project service resolves from its containing folder.
 const root = fileURLToPath(new URL('../..', import.meta.url)).replace(/[\\/]$/u, '');
-const NODE_VERSION = <%= json(NODE_VERSION) %>;
 const RUNTIME_GLOBAL_NAMES = new Set(Object.keys({ ...globals.node, ...globals.browser, ...globals.worker, ...globals.serviceworker, ...globals['react-native'] }));
 // Keep compiler and test globals from framework presets; runtime APIs have their own file selectors.
 function stripRuntimeGlobals(block) {
@@ -294,7 +295,7 @@ export default [
 <% for (const [name, source] of [['eslint', 'eslint.configs.recommended'], ['sonar', 'sonarjs.configs.recommended'], ['unicorn', 'unicorn.configs.recommended']]) { const { parser, ...preset } = presets[name].blocks[0]; %>
     <%~ eslintModule.block({ files: CODE, ...preset }, `...${source}`) %>,
 <% } %>
-    <%~ eslintModule.block({ files: CODE, rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules } }, `plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { node: { version: NODE_VERSION }, gspot: { root } }`) %>,
+    <%~ eslintModule.block({ files: CODE, rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules } }, `plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root } }`) %>,
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } }) %>,
 <% for (const block of [...config.importStyleBlocks, ...config.scopeBlocks, ...config.boundaryBlocks]) { const { settings, ...data } = block; %>
     <%~ eslintModule.block(data, settings === undefined ? '' : `settings: ${json(settings)}`) %>,
@@ -302,8 +303,8 @@ export default [
     <%~ eslintModule.block({ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }) %>,
 <% } eslintModule.blocks.push(...eslintFragmentBlocks); %>
 <%~ fragments %>
-<% for (const [index, declaration] of config.runtimes.entries()) { const { runtime } = declaration; const isNode = ['node', 'nodeBuiltin', 'commonjs'].includes(runtime); const names = runtime === 'node' ? 'nodeBuiltin' : runtime === 'commonjs' ? 'node' : runtime === 'service-worker' ? 'serviceworker' : runtime; %>
-    <%~ eslintModule.block({ files: CODE.map((pattern) => [pattern, { runtime: { declarations: config.runtimes, index } }]), rules: { ...(isNode ? nodeRules : {}), ...(runtime === 'commonjs' ? { 'unicorn/prefer-module': 'off' } : {}) } }, `languageOptions: { sourceType: ${json(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${json(names)}] }`) %>,
+<% for (const [index, declaration] of config.runtimes.entries()) { const { runtime, nodeVersion } = declaration; const isNode = ['node', 'nodeBuiltin', 'commonjs'].includes(runtime); const names = runtime === 'node' ? 'nodeBuiltin' : runtime === 'commonjs' ? 'node' : runtime === 'service-worker' ? 'serviceworker' : runtime; %>
+    <%~ eslintModule.block({ files: CODE.map((pattern) => [pattern, { runtime: { declarations: config.runtimes, index } }]), rules: { ...(isNode ? nodeRules(nodeVersion) : {}), ...(runtime === 'commonjs' ? { 'unicorn/prefer-module': 'off' } : {}) } }, `languageOptions: { sourceType: ${json(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${json(names)}] }`) %>,
 <% } for (const group of fragmentSelectors) { %>
     <%~ eslintModule.block({ files: (group.files ?? CODE).map((pattern) => [pattern, group.scope ? `${group.scope}/**/*` : '**/*']), ignores: (group.ignoredScopes ?? []).map((scope) => `${scope}/**`), rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...group.selectors] } }) %>,
 <% } %>

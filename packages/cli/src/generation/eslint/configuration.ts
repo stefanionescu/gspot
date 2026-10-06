@@ -143,13 +143,12 @@ function limitsOf(view: ScopeView, language: string, keys: Record<string, string
 }
 
 // The effective test patterns and ESLint settings, including the selected configuration defaults.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: Reading these four effective settings inside eslintConfiguration puts it over the complexity limit.
+// eslint-disable-next-line gspot/no-trivial-functions -- reason: Reading these effective settings inside eslintConfiguration puts it over the complexity limit.
 function eslintSettings(view: ScopeView) {
     const { settings } = view;
     return {
         testFiles: settings['tests'] as string[],
         scriptFiles: settings['tools.eslint.script_files'] as string[],
-        nodeVersion: settings['tools.eslint.node_version'] as string,
         restrictedImports: settings['tools.eslint.restricted_imports'] as unknown[],
     };
 }

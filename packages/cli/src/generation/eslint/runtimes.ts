@@ -1,3 +1,4 @@
+import { compact } from '#cli/platform/objects.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { ESLINT_BROWSER_CONFIGURATIONS } from '#cli/config/eslint.ts';
 import { isInScope, pathExpressions } from '#cli/repository/selectors.ts';
@@ -17,10 +18,7 @@ function frameworkRuntime(configurations: string[]): string | undefined {
  * @returns runtime declarations in increasing precedence order
  */
 export function runtimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock[] {
-    const blocks: EslintRuntimeBlock[] = [
-        { scope: '', runtime: 'node', ...pathExpressions(['**/*']) },
-        { scope: '', runtime: 'commonjs', ...pathExpressions(['**/*.{cjs,cts}']) },
-    ];
+    const blocks: EslintRuntimeBlock[] = [];
     for (const selection of scopes.toSorted((left, right) => left.scope.path.length - right.scope.path.length)) {
         const scope = selection.scope.path;
         const children = scopes
@@ -32,11 +30,19 @@ export function runtimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock[] {
                 return `!${literal}/**`;
             });
         const tool = selection.view.options('tools.eslint') as EslintSettings;
+        const version = compact({
+            nodeVersion: selection.view.settings['tools.eslint.node_version'] as string | undefined,
+        });
+        blocks.push(
+            { scope, ...version, runtime: 'node', ...pathExpressions(['**/*', ...children]) },
+            { scope, ...version, runtime: 'commonjs', ...pathExpressions(['**/*.{cjs,cts}', ...children]) },
+        );
         const runtime = frameworkRuntime(selection.view.configurations);
         if (runtime !== undefined) {
             const scripts = tool.script_files ?? [];
             blocks.push({
                 scope,
+                ...version,
                 runtime,
                 ...pathExpressions(['**/*', '!**/*.{cjs,cts}', ...scripts.map((path) => `!${path}`), ...children]),
             });
@@ -44,6 +50,7 @@ export function runtimeBlocks(scopes: ScopeSelection[]): EslintRuntimeBlock[] {
         blocks.push(
             ...Object.entries(tool.runtimes ?? {}).map(([glob, runtime]) => ({
                 scope,
+                ...version,
                 runtime,
                 ...pathExpressions([glob, ...children]),
             })),

@@ -1140,7 +1140,9 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            "The authored tools.eslint.node_version flow now preserves active native Node checks and resolves effective scoped versions. See native-node-engine-ownership and slices/kits-web-languages/014 for implementation and two-level pinned evidence. The architecture.roles.runtime requirement remains open."
+        ],
         "kind": "phase finding"
     },
     {
@@ -1605,7 +1607,8 @@
             "CommonJS ownership: remove the repeated Unicorn import-style and TypeScript no-require-imports off entries from the CommonJS override. Their general and typed owners already disable them. The existing comment correctly distinguishes path extensions from default/named imports. Existing generated runtime regressions continue to verify CommonJS parsing and globals, ES-module globals and scope isolation. The override still owns Unicorn prefer-module, which actually differs for CommonJS.",
             "Verification: /tmp/gspot-javascript-contract-native-final.log passes eight pinned cases with 57 assertions (14.03 seconds), including original interpreter/compiler/layout/exclusion/scope assertions. /tmp/gspot-javascript-contract-cli.log passes 28 cases with 489 assertions across levels, runtime isolation, typed ownership and every-template readers (6.88 seconds). /tmp/gspot-javascript-contract-types.log passes all four TypeScript targets (9.83 seconds). /tmp/gspot-javascript-contract-docs.log builds 314 pages and validates every local link and fragment. Affected ESLint and Prettier pass. Canonical apply updates only generated ESLint; the second leaves all 139 outputs unchanged. Existing dependencies, installation, 60/900-second budgets, prerequisites, manual language/framework overrides and publication/deployment boundaries remain.",
             "The first actual staged gate (/tmp/gspot-javascript-contract-staged.json) reports 129 passes, 11 explicit skips and one naming failure: SCRIPT_LINT_SCRIPT repeats script. Rename the uncommitted constant and its consumers to SCRIPT_LINT_SOURCE; no policy exception, ignore or weakened check is introduced.",
-            "Final verification: /tmp/gspot-javascript-contract-native-renamed.log passes all eight pinned cases with 57 assertions (14.41 seconds). The actual gspot --json check --staged in /tmp/gspot-javascript-contract-staged-final.json exits 0 with {'passed': 130, 'skipped': 11}, zero failures/errors and duration 75422 ms. Normal Semgrep, OSV, Taplo and native startup gates run without bypasses."
+            "Final verification: /tmp/gspot-javascript-contract-native-renamed.log passes all eight pinned cases with 57 assertions (14.41 seconds). The actual gspot --json check --staged in /tmp/gspot-javascript-contract-staged-final.json exits 0 with {'passed': 130, 'skipped': 11}, zero failures/errors and duration 75422 ms. Normal Semgrep, OSV, Taplo and native startup gates run without bypasses.",
+            "Delivery: commit 096c7b69c4927398b8794ad2fb0750b7e6d572a6 completed with hooks enabled: 90 pre-commit passes, two existing skips and zero findings (26.3 seconds), plus message validation. Normal push to origin/main passed 130 checks, 11 explicit skips and zero findings (76.8 seconds). HEAD matched origin/main with a clean tree before this native engine ownership batch. Logs: /tmp/gspot-javascript-contract-commit.log and /tmp/gspot-javascript-contract-push.log."
         ],
         "kind": "phase finding"
     },

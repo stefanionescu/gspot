@@ -43,7 +43,6 @@ export type EslintConfiguration = {
     aliases: Record<string, string>;
     testFiles: string[];
     scriptFiles: string[];
-    nodeVersion: string;
     limits: Record<string, number | undefined>;
     javascriptLimits: Record<string, number | undefined>;
     gspotRules: Record<string, unknown>;
@@ -62,7 +61,11 @@ export type EslintConfiguration = {
 export type ScopeEslintSettings = { scope: string; settings: EslintSettings };
 
 /** One scoped runtime declaration, using the repository selector contract. */
-export type EslintRuntimeBlock = PathExpressions & { scope: string; runtime: string };
+export type EslintRuntimeBlock = PathExpressions & {
+    scope: string;
+    runtime: string;
+    nodeVersion?: string;
+};
 
 /** A function selector retains the exact declarations that generate it. */
 export type EslintFileSelector =

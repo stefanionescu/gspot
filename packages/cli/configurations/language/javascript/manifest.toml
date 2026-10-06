@@ -308,8 +308,7 @@ summary = "The runtime per scoped file selector, using names from globals; servi
 name = "tools.eslint.node_version"
 type = "string"
 direction = "neutral"
-default = ">=22.0.0"
-summary = "The Node version the n plugin checks builtins against; detected from engines at init."
+summary = "Override the Node version checked by the n plugin. When unset, the plugin reads each source file's package engines."
 
 [[setting]]
 name = "tools.eslint.restricted_imports"
