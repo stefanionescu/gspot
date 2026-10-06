@@ -1,3 +1,5 @@
+import type { EslintSuppressionCase } from '#tests/types/generation/configuration-files.ts';
+
 export const COALESCING_SOURCE = `export function fallback(value) {
     const alternate = value || {};
     return alternate ?? {};
@@ -59,4 +61,39 @@ export const TYPE_EXPORT_CORRECTION = `import type { Shape } from "./value.js";
 import { value } from "./value.js";
 export type { Shape };
 export { value };
+`;
+
+export const SUPPRESSION_CASES: EslintSuppressionCase[] = [
+    { level: 'recommended', requireReasons: false },
+    { level: 'recommended', requireReasons: true },
+    { level: 'all', requireReasons: false },
+    { level: 'all', requireReasons: true },
+];
+
+export const SUPPRESSION_PROJECT = {
+    'package.json': '{"private":true,"type":"module"}\n',
+    'unused.js':
+        '// eslint-disable-next-line no-debugger -- reason: Demonstrate an unused directive.\nexport const value = 1;\n',
+    'missing.js': '// eslint-disable-next-line no-debugger\ndebugger;\n',
+};
+
+export const SUPPRESSION_CORRECTION = {
+    'unused.js': 'export const value = 1;\n',
+    'missing.js': '// eslint-disable-next-line no-debugger -- reason: Demonstrate a described directive.\ndebugger;\n',
+};
+
+export const SUPPRESSION_SCRIPT = `import { ESLint } from 'eslint';
+const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
+const config = await eslint.calculateConfigForFile('unused.js');
+const prefix = '@eslint-community/eslint-comments/';
+const results = await eslint.lintFiles(['unused.js', 'missing.js']);
+process.stdout.write(JSON.stringify({
+    unusedSeverity: config.linterOptions.reportUnusedDisableDirectives,
+    legacy: Object.hasOwn(config.rules, prefix + 'no-unused-disable'),
+    plugin: Object.hasOwn(config.plugins, '@eslint-community/eslint-comments'),
+    description: config.rules[prefix + 'require-description'] ?? null,
+    findings: results.map(({ messages }) => messages
+        .filter(({ ruleId, fatal }) => ruleId === null || ruleId.startsWith(prefix) || fatal)
+        .map(({ ruleId, line, column, severity }) => ({ ruleId, line, column, severity }))),
+}));
 `;

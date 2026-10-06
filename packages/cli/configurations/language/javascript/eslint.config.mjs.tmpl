@@ -1,8 +1,11 @@
+<% const config = eslint(); %>
 import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import eslint from '@eslint/js';
 import gspot from '@gspothq/eslint-plugin';
+<% if (config.commentLevel === 'error') { %>
 import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
+<% } %>
 import boundaries from 'eslint-plugin-boundaries';
 import importX from 'eslint-plugin-import-x';
 import jsdoc from 'eslint-plugin-jsdoc';
@@ -16,7 +19,6 @@ import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 <%~ fragmentImports %>
 <%
-const config = eslint();
 const { code: CODE, javascript: JAVASCRIPT, tests: TEST_CODE, scripts: SCRIPT_CODE } = eslintFiles;
 const TESTS = config.testFiles;
 const SCRIPTS = config.scriptFiles;
@@ -201,10 +203,9 @@ const importRules = {
     'import-x/no-duplicates': 'error',
 };
 
-const commentRules = {
-    '@eslint-community/eslint-comments/require-description': config.commentLevel,
-    '@eslint-community/eslint-comments/no-unused-disable': 'error',
-};
+const commentRules = config.commentLevel === 'error' ? {
+    '@eslint-community/eslint-comments/require-description': 'error',
+} : {};
 
 %>
 // The root has no closing separator because TypeScript's project service resolves from its containing folder.
@@ -247,7 +248,7 @@ export default [
 <% for (const [name, source] of [['eslint', 'eslint.configs.recommended'], ['sonar', 'sonarjs.configs.recommended'], ['unicorn', 'unicorn.configs.recommended']]) { const { parser, ...preset } = presets[name].blocks[0]; %>
     <%~ eslintModule.block({ files: CODE, ...preset }, `...${source}`) %>,
 <% } %>
-    <%~ eslintModule.block({ files: CODE, rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules } }, `plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root } }`) %>,
+    <%~ eslintModule.block({ files: CODE, rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules } }, `plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries${config.commentLevel === 'error' ? ", '@eslint-community/eslint-comments': eslintComments" : ''} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root } }`) %>,
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } }) %>,
 <% for (const block of [...config.importStyleBlocks, ...config.scopeBlocks, ...config.boundaryBlocks]) { const { settings, ...data } = block; %>
     <%~ eslintModule.block(data, settings === undefined ? '' : `settings: ${json(settings)}`) %>,

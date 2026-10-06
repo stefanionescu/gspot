@@ -77,6 +77,11 @@ export function applicableManifests(session: Session): Manifest[] {
             tools: manifest.tools
                 .filter(
                     (tool) =>
+                        tool.name !== '@eslint-community/eslint-plugin-eslint-comments' ||
+                        session.policyFiles.policy.require_reasons,
+                )
+                .filter(
+                    (tool) =>
                         needed.has(tool.name) ||
                         (ownsEslint && (tool.kind === 'library' || tool.name === 'eslint-config-prettier')) ||
                         (ownsPrettier && tool.prettier !== undefined),

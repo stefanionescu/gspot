@@ -6,7 +6,6 @@
         "@astrojs/check",
         "@commitlint/cli",
         "@darraghor/eslint-plugin-nestjs-typed",
-        "@eslint-community/eslint-plugin-eslint-comments",
         "@eslint/js",
         "@gspothq/eslint-plugin",
         "@next/eslint-plugin-next",

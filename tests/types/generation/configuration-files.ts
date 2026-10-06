@@ -23,6 +23,9 @@ export type YamllintConfiguration = { rules: { indentation: { spaces: 'consisten
 /** The normalized severity tuples returned by a resolved ESLint configuration. */
 export type ResolvedEslint = { rules: Record<string, [number, ...unknown[]]> };
 
+/** Suppression diagnostics retain one native owner at both coverage levels. */
+export type EslintSuppressionCase = { level: 'recommended' | 'all'; requireReasons: boolean };
+
 /** A tested Ruff document that is required to contain runner path exclusions. */
 export type TestedRuffConfiguration = RuffConfiguration & { lint: Required<RuffConfiguration['lint']> };
 
