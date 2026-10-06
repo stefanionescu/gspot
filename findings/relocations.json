@@ -16811,5 +16811,17 @@
         "to": "tests/cli/generation/eslint/package-manifests.test.ts",
         "name": "Complete package ignore case",
         "type": false
+    },
+    {
+        "from": "tests/cli/generation/bun.test.ts",
+        "to": "tests/cli/generation/bunfig.test.ts",
+        "name": "Complete Bun configuration regression file",
+        "type": false
+    },
+    {
+        "from": "tests/config/cli/generation/every-template.ts",
+        "to": "tests/config/cli/generation/every-template.ts",
+        "name": "TEST_SECRET renamed PROJECT_FILES",
+        "type": false
     }
 ]

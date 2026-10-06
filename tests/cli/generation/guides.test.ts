@@ -30,8 +30,8 @@ async function generatedGuides(level: Level, files: Record<string, string>): Pro
         ...files,
     });
     const session = await openSession(sandbox.path);
-    const plan = emitAll(session);
-    return new Map(plan.files.filter((file) => file.kind === 'rules').map((file) => [file.path, file.content]));
+    const output = emitAll(session);
+    return new Map(output.files.filter((file) => file.kind === 'rules').map((file) => [file.path, file.content]));
 }
 
 test('recommended guides omit marked sections and retain the next heading', async () => {

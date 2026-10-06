@@ -70,7 +70,7 @@
     ],
     "relocations": {
         "source": "findings/relocations.json",
-        "items": 2827
+        "items": 2829
     },
     "checklists": [
         {
@@ -2587,10 +2587,32 @@
                 "Focused outcomes: the authored template/init title now says that a quoted word reaches typos.toml through init. It retains the dry-run policy write and actual quoted-word output assertion; manual authored language/framework selections remain available. The reasoned package-ignore case is already beside package manifest tests; its neighboring require-exports rejection stays, while the correction-only run and write import are removed. Formatting retains both generated editor and native YAML formatting outcomes and removes only the two Prettier check self-tests. Astro now explicitly requires the line-seven no-set-html-directive finding and describes the one script its fixture contains; frontmatter, markup, accessibility and script diagnostics remain.",
                 "Failure corrections: the first run exposed missing imports for the new Vale rows and the compiler expectation incorrectly using a relative path. The rows are imported from their actual data owner, and compiler cases now assert the real absolute path plus exact pinned parser detail. No product diagnostic, native check, prerequisite, timeout or policy is weakened. The source records remain unchanged; the legacy generic-format assumption in record 042 closes as superseded by a correction, while the other seven outcomes are implemented.",
                 "Verification: /tmp/gspot-reader-quality-cli-final.log passes all 59 affected cases with 191 assertions across 11 files (11.16 seconds), including actual filesystem refusal/removal boundaries, pinned native ESLint/Node consumers, serialization, emitted tool configuration, template init and formatting. /tmp/gspot-reader-quality-refusals-final.log passes all 15 final refusal cases with 33 assertions (3.42 seconds) after exact TOML matching. /tmp/gspot-reader-quality-types-final.log passes all four TypeScript targets (8.96 seconds). Affected ESLint, Prettier and git diff --check pass. Both apply-first.json and apply-second.json report 140 unchanged outputs with zero other changes. No new installation or production change is needed; whole-suite/platform/delivered-package completion remains required by the overall plan. Publication and deployment are not performed.",
-                "Staged verification: /tmp/gspot-reader-quality-staged.json records the actual gspot --json check --staged at exit 0: 51 passed checks, 6 explicit skips, 119 selection skips and zero findings (31.501 seconds). Every changed regression and required data owner is staged. All 2939 original IDs/source fields remain intact, and the 990-record mapping is unchanged. No gate or product policy is weakened."
+                "Staged verification: /tmp/gspot-reader-quality-staged.json records the actual gspot --json check --staged at exit 0: 51 passed checks, 6 explicit skips, 119 selection skips and zero findings (31.501 seconds). Every changed regression and required data owner is staged. All 2939 original IDs/source fields remain intact, and the 990-record mapping is unchanged. No gate or product policy is weakened.",
+                "Delivery: commit 4c1844660e8ea5ce3c738a1e3a58db4de2409bd4 completed with hooks enabled: 34 pre-commit passes, two existing skips and zero findings, followed by successful commit-message validation. Normal push to origin/main passed 51 checks with eight explicit skips and zero findings (31.6 seconds). HEAD and origin/main matched with a clean tree before the next batch. Logs: /tmp/gspot-reader-quality-commit.log and /tmp/gspot-reader-quality-push.log."
             ],
             "remaining": [
                 "Continue 862 original records, including Bun generation, complete template parser coverage, guide/hook test quality, typed settings/shared execution, remaining language/framework/platform work and final suite/package/platform verification. Publication and deployment retain their separate authorization boundary."
+            ]
+        },
+        {
+            "subsystem": "Generation test naming preparation",
+            "rows": [
+                "slices/tests-integration-generation/009",
+                "slices/tests-integration-generation/012",
+                "slices/tests-integration-generation/013",
+                "slices/tests-integration-generation/014",
+                "slices/tests-integration-generation/016"
+            ],
+            "outcome": "Mechanical preparation only. Zero original records close; 862 original implementation records remain open.",
+            "evidence": [
+                "Ownership: tests/cli/generation/bun.test.ts becomes bunfig.test.ts, reflecting the native configuration it generates. Its complete bytes, bodies, comments and assertions remain identical. The sample files used by every-template become PROJECT_FILES instead of TEST_SECRET; both its data declaration and actual consumer change. The guide emitter result becomes output instead of plan. These are only filename and identifier replacements, not coverage or fixture changes.",
+                "Proof: /tmp/gspot-generation-names.json contains every original file and the exact replacement mapping. Direct byte comparison after only those replacements succeeds for all four original modules. No old Bun path or exact TEST_SECRET symbol remains in active sources, tasks or docs; unrelated real TEST_SECRETS fixtures are preserved. No forwarding alias is introduced.",
+                "Verification: /tmp/gspot-generation-names-cli.log passes all 33 affected cases with 60 assertions across three files (5.22 seconds). /tmp/gspot-generation-names-types.log passes all four TypeScript targets (9.56 seconds). Affected ESLint, Prettier check and git diff --check pass. Both apply-first.json and apply-second.json report 140 unchanged outputs and zero other changes. No production behavior, level, manual language/framework override, prerequisite, timeout, native pin or tool installation changes.",
+                "Composite status: authored Bun age branches, complete native parser/template output coverage and guide emission reuse remain open for the separate behavior batch. Every original implementation checklist is unchanged, and all 862 original open records and the 990-record mapping remain represented. External publication and deployment are not performed.",
+                "Staged verification: /tmp/gspot-generation-names-staged.json records the actual gspot --json check --staged at exit 0: 51 passed checks, 6 explicit skips, 119 selection skips and zero findings (32.555 seconds). Original implementation checklists and the 990-record mapping are unchanged. No coverage finding closes in this naming preparation."
+            ],
+            "remaining": [
+                "Finish Bun age, complete template reader coverage, guide/hook regressions and remaining 862 original records. Full final suite/platform/package checks and separately authorized publication/deployment remain required."
             ]
         }
     ],
@@ -6166,6 +6188,22 @@
                     "tests/config/cli/tools/vale.ts",
                     "tests/cli/generation/trivy.test.ts",
                     "tests/config/cli/generation/typescript.ts"
+                ]
+            },
+            {
+                "id": "generation-test-naming-preparation",
+                "records": [
+                    "slices/tests-integration-generation/009",
+                    "slices/tests-integration-generation/012",
+                    "slices/tests-integration-generation/013",
+                    "slices/tests-integration-generation/014",
+                    "slices/tests-integration-generation/016"
+                ],
+                "owners": [
+                    "tests/cli/generation/bunfig.test.ts",
+                    "tests/cli/generation/every-template.test.ts",
+                    "tests/config/cli/generation/every-template.ts",
+                    "tests/cli/generation/guides.test.ts"
                 ]
             }
         ]

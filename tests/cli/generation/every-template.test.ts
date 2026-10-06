@@ -10,7 +10,7 @@ import { openSession } from '#cli/execution/session.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { TEST_SECRET } from '#tests/config/cli/generation/every-template.ts';
+import { PROJECT_FILES } from '#tests/config/cli/generation/every-template.ts';
 
 const PARSERS: Record<string, (text: string, path: string) => void> = {
     '.json': parseJson,
@@ -50,7 +50,7 @@ test.each(['recommended', 'all'])(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            ...TEST_SECRET,
+            ...PROJECT_FILES,
             'gspot.toml': `level = "${level}"\nconfigurations = ${JSON.stringify(configurations)}\n`,
         });
         linkInstalledModules(join(sandbox.path, 'node_modules'));
