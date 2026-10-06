@@ -17,9 +17,9 @@ import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
 import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
 import { styleRules, proseFormats } from '#cli/generation/vale-styles.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { requiredTsconfigOptions } from '#cli/policy/settings/typescript.ts';
 import { readManifests, getProjectDependencies } from '#cli/repository/manifests.ts';
 import { tablesFor, policyValue, harnessFolders } from '#cli/policy/settings/entries.ts';
-import { COMPILER_OPTIONS, RECOMMENDED_OPTIONS } from '#cli/config/generation/typescript.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting.ts';
 import type { TemplateInputs, ScopeTemplateInputs } from '#cli/types/generation/templates.ts';
 
@@ -144,7 +144,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
         editorconfigOverrides: () => editorconfigOverrides(policy),
         isAll: policy.level === 'all',
         typescriptOptions: Object.fromEntries(
-            Object.entries(policy.level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS).filter(
+            Object.entries(requiredTsconfigOptions(policy.level, [])).filter(
                 ([option]) => !view.rulesOff('typescript/tsconfig').includes(option),
             ),
         ),

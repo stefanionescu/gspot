@@ -1,19 +1,3 @@
-/** Compiler flags that add diagnostics without changing module resolution or emitted JavaScript. */
-export const RECOMMENDED_OPTIONS = {
-    strict: true,
-    noUncheckedIndexedAccess: true,
-    exactOptionalPropertyTypes: true,
-    noImplicitOverride: true,
-    noFallthroughCasesInSwitch: true,
-};
-
-/** Additional compiler diagnostics required at all. */
-export const COMPILER_OPTIONS = {
-    ...RECOMMENDED_OPTIONS,
-    noImplicitReturns: true,
-    noPropertyAccessFromIndexSignature: true,
-};
-
 /** JavaScript source checks preserve the author's resolution when a jsconfig is present. */
 export const JAVASCRIPT_OPTIONS = { checkJs: true, allowJs: true, strict: true, noEmit: true };
 
