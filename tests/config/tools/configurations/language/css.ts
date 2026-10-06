@@ -24,3 +24,27 @@ export const CORRECTED = {
     'build/site.css': 'a {\n    color: #f00;\n    width: 1px;\n    text-size-adjust: 100%;\n}\n',
     'app/site.css': '#example {\n    color: #ff0000;\n    width: 1px;\n    backdrop-filter: blur(2px);\n}\n',
 };
+
+/** Tailwind syntax follows the declaring package boundary. */
+export const TAILWIND_FILES = {
+    'package.json': '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
+    'build/site.css': '@tailwind utilities;\n',
+    'app/package.json': '{"private":true,"devDependencies":{"tailwindcss":"4.1.13"}}\n',
+    'app/site.css': '@tailwind utilities;\n',
+    'other/package.json': '{"private":true}\n',
+    'other/site.css': '@tailwind utilities;\n',
+};
+
+export const TAILWIND_TABLES = `run_with = "mise"
+[agent_rules]
+enabled = false
+[[scope]]
+path = "app"
+configurations = ["css"]
+[[scope]]
+path = "other"
+configurations = ["css"]
+`;
+
+/** Selecting Next.js alone cannot grant Tailwind syntax. */
+export const TAILWIND_CONFIGURATIONS = ['css', 'nextjs'];

@@ -39,7 +39,10 @@ const allRules = [
 ];
 const activeRules = new Set([...stableRules, 'function-no-unknown'].filter((rule) => isAll || !allRules.includes(rule)));
 const chosen = Object.fromEntries(Object.entries(settings['tools.stylelint.rules']).filter(([rule]) => activeRules.has(rule)));
-const ignoreAtRules = settings['tools.stylelint.ignore_at_rules'];
+const tailwindAtRules = scopeDependencies.includes('tailwindcss')
+    ? ['tailwind', 'apply', 'layer', 'theme', 'utility', 'variant', 'custom-variant', 'source', 'plugin', 'config', 'reference']
+    : [];
+const ignoreAtRules = [...new Set([...settings['tools.stylelint.ignore_at_rules'], ...tailwindAtRules])];
 const componentRules = Object.fromEntries(
     Object.entries({
         'selector-pseudo-class-no-unknown': [true, { ignorePseudoClasses: ['deep', 'global', 'slotted'] }],

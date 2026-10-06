@@ -14,13 +14,14 @@ import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
 import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
 import { eslintInputs } from '#cli/generation/eslint/configuration.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
-import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
 import { styleRules, proseFormats } from '#cli/generation/vale-styles.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { readManifests, getProjectDependencies } from '#cli/repository/manifests.ts';
 import { tablesFor, policyValue, harnessFolders } from '#cli/policy/settings/entries.ts';
 import { COMPILER_OPTIONS, RECOMMENDED_OPTIONS } from '#cli/config/generation/typescript.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting.ts';
+import type { TemplateInputs, ScopeTemplateInputs } from '#cli/types/generation/templates.ts';
 
 import {
     ETA_OPTIONS,
@@ -49,7 +50,8 @@ function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): st
     return [...new Set([...authored, ...declared])];
 }
 
-function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeSelection, manifests: Manifest[]) {
+function scopeInputs(input: ScopeTemplateInputs) {
+    const { policy, scopes, selection, manifests, projects } = input;
     const { view } = selection;
     const tools = collectPins(manifests);
     const names = tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name);
@@ -70,6 +72,7 @@ function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeS
     return {
         prettierConfig: (targetPath: string) => prettierConfiguration({ ...formatting, targetPath }),
         scope: selection.scope.path,
+        scopeDependencies: Object.keys(getProjectDependencies(projects, selection.scope.path)),
         scopes: scopes
             .filter((entry) => entry.scope.path !== '')
             .map((entry) => ({
@@ -83,6 +86,7 @@ function scopeInputs(policy: Policy, scopes: ScopeSelection[], selection: ScopeS
                 .map((entry) => ({
                     path: entry.scope.path,
                     settings: entry.view.settings,
+                    dependencies: Object.keys(getProjectDependencies(projects, entry.scope.path)),
                     verbatim: entry.view.verbatim,
                     harness: harnessFolders(policy, entry.scope.path)[0],
                 })),
@@ -127,7 +131,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
     const files = (extension: string): string[] =>
         sourceFiles.filter((file) => file.path.endsWith(extension) && file.kind === 'source').map((file) => file.path);
     return {
-        ...scopeInputs(policy, scopes, selection, manifests),
+        ...scopeInputs({ policy, scopes, selection, manifests, projects: readManifests(root, sourceFiles) }),
         ...eslintInputs(session, selection),
         javascriptConfig: (target) =>
             buildJsconfig({

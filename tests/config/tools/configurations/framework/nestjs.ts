@@ -1,6 +1,9 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 
+/** Declared Swagger use selects its lint contracts without importing the SDK in this source. */
+export const SWAGGER_DEPENDENCY = '11.2.3';
+
 export const NESTJS_DEPENDENCIES = {
     '@nestjs/common': '11.2.3',
     '@nestjs/core': '11.2.3',

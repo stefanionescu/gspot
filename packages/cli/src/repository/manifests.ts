@@ -1,8 +1,26 @@
+import { posix } from 'node:path';
 import { readText } from '#cli/platform/source.ts';
-import { isToolingPath } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { isInScope, isToolingPath } from '#cli/repository/selectors.ts';
 import { manifestParser, parsePackageManifest } from '#cli/parsers/packages.ts';
-import type { PackageManifest, ProjectManifest } from '#cli/types/parsers/packages.ts';
+import type { DependencyMap, PackageManifest, ProjectManifest } from '#cli/types/parsers/packages.ts';
+
+/**
+ * Get dependencies from the nearest declared npm project that contains a scope.
+ * @param manifests validated source project manifests
+ * @param scope the repository-relative project scope
+ * @returns declared dependencies without borrowing from children or siblings
+ */
+export function getProjectDependencies(manifests: ProjectManifest[], scope: string): DependencyMap {
+    const owner = manifests
+        .filter(
+            (manifest) =>
+                manifest.kind === 'package.json' &&
+                isInScope(scope, manifest.path === 'package.json' ? '' : posix.dirname(manifest.path)),
+        )
+        .toSorted((first, second) => second.path.length - first.path.length)[0];
+    return owner?.dependencies ?? {};
+}
 
 /**
  * Read supported project manifests for dependency and runtime detection.

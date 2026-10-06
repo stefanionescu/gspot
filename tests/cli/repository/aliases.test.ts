@@ -21,7 +21,7 @@ test.each(['package.json', 'tsconfig.json'])(
         expect(() => emitAll(session)).toThrow(
             path === 'tsconfig.json'
                 ? `Cannot read TypeScript configuration ${join(sandbox.path, path)}`
-                : 'Cannot read package manifest package.json',
+                : 'Cannot inspect manifest package.json:',
         );
         rmSync(join(sandbox.path, path), { recursive: true });
         writeFileSync(

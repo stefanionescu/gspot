@@ -5,7 +5,6 @@ import { emitFile } from '#tests/harness/generated.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { KNIP, RUFF, STYLELINT } from '#tests/config/cli/generation/shared-settings.ts';
 
 import type {
     KnipConfiguration,
@@ -13,6 +12,13 @@ import type {
     StylelintConfiguration,
     TestedRuffConfiguration,
 } from '#tests/types/generation/configuration-files.ts';
+import {
+    KNIP,
+    RUFF,
+    STYLELINT,
+    TAILWIND_AT_RULES,
+    TAILWIND_PROJECT_FILES,
+} from '#tests/config/cli/generation/shared-settings.ts';
 
 async function generatedDocument<Shape>(
     policy: string,
@@ -31,7 +37,6 @@ const manifests = configurationManifests();
 const pytest = manifests.get('pytest')!;
 const testIgnores = pytest.set['tools.ruff.rules_off_in_tests'] as string[];
 const entry = manifests.get('javascript')!.entry[0]!;
-const tailwindAtRules = manifests.get('nextjs')!.set['tools.stylelint.ignore_at_rules'];
 const python = buildPolicy(['python']);
 
 test('knip takes its workspaces from the package workspaces, with the policy entries and the configuration entry files', async () => {
@@ -72,15 +77,22 @@ test('knip retains the Markdown configuration consumed by its native runner', as
 });
 
 test.each([
-    ['no framework', buildPolicy(['css']), true],
-    ['the Next.js at-rules', buildPolicy(['css', 'nextjs']), [true, { ignoreAtRules: tailwindAtRules }]],
+    ['no framework', buildPolicy(['css']), true, {}],
+    ['Next.js without Tailwind exceptions', buildPolicy(['css', 'nextjs']), true, {}],
+    [
+        'declared Tailwind syntax',
+        buildPolicy(['css']),
+        [true, { ignoreAtRules: TAILWIND_AT_RULES }],
+        TAILWIND_PROJECT_FILES,
+    ],
     [
         'the at-rules the policy adds',
         buildPolicy(['css'], { tables: '[tools.stylelint]\nignore_at_rules = ["container"]\n' }),
         [true, { ignoreAtRules: ['container'] }],
+        {},
     ],
-])('Stylelint accepts %s', async (_name, policy, expected) => {
-    const stylelint = await generatedDocument<StylelintConfiguration>(policy, STYLELINT);
+])('Stylelint accepts %s', async (_name, policy, expected, files) => {
+    const stylelint = await generatedDocument<StylelintConfiguration>(policy, STYLELINT, files);
     expect(stylelint.rules['at-rule-no-unknown']).toStrictEqual(expected);
 });
 

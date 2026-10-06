@@ -9,3 +9,13 @@ export const DISABLED_RULES = [
     },
     { tool: 'yamllint', configuration: 'files', rule: 'line-length', value: 'disable', check: 'files/yamllint' },
 ];
+
+/** Framework coverage follows the level and declared dependencies, with no extra switches. */
+export const REMOVED_FRAMEWORK_CONTROLS = [
+    {
+        table: 'tools.next',
+        key: 'build_on_push',
+        diagnostic: 'No selected configuration has the setting `tools.next.build_on_push`',
+    },
+    { table: 'nestjs', key: 'swagger', diagnostic: '`nestjs` is not a setting gspot knows' },
+];

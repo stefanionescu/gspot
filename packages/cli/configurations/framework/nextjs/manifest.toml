@@ -48,12 +48,12 @@ name = "build"
 tool = "next"
 title = "Build the Next.js app"
 example = "A Next.js page importing a nonexistent component fails the project build. Restore the component or correct the import path and rerun the configured build."
-level = "recommended"
-when = {setting = "tools.next.build_on_push"}
+level = "all"
+files = {paths = ["**/app/**", "**/pages/**"]}
 stage = "push"
 runs = "scope"
 needs = ["build"]
-summary = "Builds the app with next build, for a repository that set tools.next.build_on_push."
+summary = "Builds the app with next build at all when its scope contains an app or pages tree."
 why = "Some mistakes show only at build time: a server import in a client file, or a page that cannot be prerendered."
 help = "Run next build and read the first error it prints."
 
@@ -89,13 +89,6 @@ runs = "once"
 summary = "Checks that packages that ship together sit on one version: the framework with its lint package, and react with react-dom."
 why = "A lint package a version behind flags what the framework allows and allows what it removed."
 help = "Move both packages to the same version."
-
-[[setting]]
-name = "tools.next.build_on_push"
-type = "boolean"
-direction = "tightening"
-default = false
-summary = "Whether the push stage builds the app with next build."
 
 [[setting]]
 name = "tools.next.build_flags"
@@ -134,4 +127,3 @@ reason = "Next.js route files act as framework entry points when the project per
 
 [set]
 "tools.eslint.import_extensions" = {"**/*" = "extensionless"}
-"tools.stylelint.ignore_at_rules" = ["tailwind", "apply", "layer", "theme", "utility", "variant", "custom-variant", "source", "plugin", "config", "reference"]

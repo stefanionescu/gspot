@@ -165,7 +165,7 @@ export async function nextTypes(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * Builds the app, for a repository that set tools.next.build_on_push.
+ * Builds the selected Next.js app in an isolated project copy.
  * @param input the engine input
  * @returns one finding for a build that fails
  */

@@ -203,3 +203,22 @@ export const RUNTIME_EVIDENCE_CASES = [
         detected: false,
     },
 ];
+
+/** npm project boundaries separate framework-specific dependency contracts. */
+export const PROJECT_DEPENDENCY_FILES = {
+    'package.json': '{"dependencies":{"@nestjs/swagger":"11.2.3"}}',
+    'app/package.json': '{"devDependencies":{"tailwindcss":"4.1.13"}}',
+    'other/package.json': '{"dependencies":{"next":"16.3.5"}}',
+    'empty/package.json': '{"private":true}',
+    '.gspot/package.json': '{"dependencies":{"tailwindcss":"4.1.13"}}',
+};
+
+export const PROJECT_DEPENDENCY_SCOPES = [
+    { scope: '', dependencies: { '@nestjs/swagger': '11.2.3' } },
+    { scope: 'application', dependencies: { '@nestjs/swagger': '11.2.3' } },
+    { scope: 'app', dependencies: { tailwindcss: '4.1.13' } },
+    { scope: 'app/styles', dependencies: { tailwindcss: '4.1.13' } },
+    { scope: 'other', dependencies: { next: '16.3.5' } },
+    { scope: 'empty', dependencies: {} },
+    { scope: 'empty/src', dependencies: {} },
+];

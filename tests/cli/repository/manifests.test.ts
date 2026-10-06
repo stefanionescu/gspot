@@ -7,9 +7,15 @@ import { parseManifest } from '#cli/parsers/configurations.ts';
 import { npmToolNames } from '#cli/configurations/declarations.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { readManifests, readPackageManifest } from '#cli/repository/manifests.ts';
 import { rmSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
-import { RUNTIME_EVIDENCE_CASES, AUTHORED_PACKAGE_FIELDS } from '#tests/config/cli/repository/manifests.ts';
+import { readManifests, readPackageManifest, getProjectDependencies } from '#cli/repository/manifests.ts';
+
+import {
+    RUNTIME_EVIDENCE_CASES,
+    AUTHORED_PACKAGE_FIELDS,
+    PROJECT_DEPENDENCY_FILES,
+    PROJECT_DEPENDENCY_SCOPES,
+} from '#tests/config/cli/repository/manifests.ts';
 
 test('Python project detection uses captured dependencies and actual project files', async () => {
     await using sandbox = await testdir();
@@ -215,4 +221,14 @@ test.each(RUNTIME_EVIDENCE_CASES)('$name determines runtime applicability within
     );
     const detected = detectConfigurations(repository.files, new Map([['runtime', manifest]]), projectManifests, 'api');
     expect(detected.map(({ configuration }) => configuration)).toStrictEqual(entry.detected ? ['runtime'] : []);
+});
+
+test('declared framework dependencies follow the nearest npm project boundary', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, PROJECT_DEPENDENCY_FILES);
+    const repository = await readRepository(sandbox.path, [], [], []);
+    const manifests = readManifests(sandbox.path, repository.files);
+    for (const { scope, dependencies } of PROJECT_DEPENDENCY_SCOPES) {
+        expect(getProjectDependencies(manifests, scope), scope).toStrictEqual(dependencies);
+    }
 });

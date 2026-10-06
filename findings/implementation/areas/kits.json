@@ -575,9 +575,14 @@
         "finding": "| `packages/cli/kits/framework/nextjs/manifest.toml:134` | The Next.js kit turns on Tailwind at-rules for stylelint. Tailwind is not part of Next.js. | Make this depend on the `tailwindcss` dependency. |",
         "owner": "`packages/cli/kits/framework/nextjs/manifest.toml:134`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Source: packages/cli/configurations/framework/nextjs/manifest.toml no longer sets tools.stylelint.ignore_at_rules. packages/cli/configurations/language/css/stylelint.json.tmpl derives Tailwind directives from the nearest containing npm project dependency facts.",
+            "Native: /tmp/gspot-framework-applicability-native-tailwind-next.log has five passes, 33 assertions. With Next.js selected and declared at the root, both levels reject Tailwind directives in root and sibling CSS, accept them in the child that declares Tailwind, and pass after the root/sibling source corrections. Existing scoped native options and editor discovery assertions remain.",
+            "Generation and consumers: /tmp/gspot-framework-applicability-consumers-final.log has 95 passes, 367 assertions across six files. Next.js alone grants no Tailwind exceptions; declaring Tailwind grants its stable directive set; authored native at-rule options remain effective.",
+            "Nearest-project regression: tests/cli/repository/manifests.test.ts covers root, child, sibling, nested folder, prefix-neighbor, empty package boundaries, and private tooling exclusion."
+        ]
     },
     {
         "id": "areas/kits/044",
@@ -1751,9 +1756,15 @@
         "finding": "| `packages/cli/kits/framework/nextjs/manifest.toml:88-93`, `packages/cli/kits/framework/nestjs/manifest.toml:50-55` | `tools.next.build_on_push` only switches a check on. `tools.nestjs.swagger` can be read from the `@nestjs/swagger` dependency. | Delete both. Put `nextjs/build` at level `all`, and detect Swagger from the dependency. |",
         "owner": "`packages/cli/kits/framework/nextjs/manifest.toml:88-93`, `packages/cli/kits/framework/nestjs/manifest.toml:50-55`",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Decision: recommended-and-all (findings/progress.json) requires these two levels as the only coverage controls; manual-configuration-overrides preserves manual language/framework selection.",
+            "Source: packages/cli/configurations/framework/nextjs/manifest.toml selects nextjs/build at all with router-tree prerequisites and deletes tools.next.build_on_push. packages/cli/configurations/framework/nestjs/manifest.toml deletes nestjs.swagger; eslint.fragment.js.tmpl selects Swagger contracts from @nestjs/swagger dependency facts. No replacement enabling setting is added.",
+            "Native Next.js: /tmp/gspot-framework-applicability-native-build-scoped-globs.log passes the complete build transition (11 assertions). An imported missing component fails native webpack at all, recommended omits that check, and returning to all with the restored page builds successfully. Authored compiler and policy bytes remain unchanged by the isolated build.",
+            "Native NestJS: /tmp/gspot-framework-applicability-native-initial.log passes both recommended/all Swagger dependency transitions. The pinned native rule reports the controller missing API tags when Swagger is declared and accepts the clean module when that declaration is removed. No unused SDK runtime installation is needed; the source imports only its existing NestJS dependencies.",
+            "Planning, schema and lists: /tmp/gspot-framework-applicability-consumers-final.log passes all 95 cases. Root and scoped policies refuse the removed switches; recommended lists the build as off by level. App and Pages Router trees at root/src locations retain all child project inputs while the SDK-only parent has none. Existing direct/delegated/skipped type checks, required-rule restoration, route-parameter diagnostics, and i18n assertions remain."
+        ]
     },
     {
         "id": "areas/kits/134",

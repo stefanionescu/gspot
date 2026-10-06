@@ -48,13 +48,6 @@ selector = "Decorator[expression.callee.name=/^(InjectRepository|InjectModel|Inj
 message = "A controller reaches data through a service. Inject the service, and keep the repository behind it."
 files = ["**/*.controller.ts"]
 
-[[setting]]
-name = "nestjs.swagger"
-type = "boolean"
-direction = "tightening"
-default = false
-summary = "Whether the service documents its API with @nestjs/swagger, which turns the Swagger rules of the NestJS plugin on."
-
 [[naming.paths]]
 paths = ["**"]
 languages = ["typescript", "javascript"]

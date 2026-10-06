@@ -53,6 +53,15 @@ gspot set level all
 
 The level controls every applicable check. Security checks are selected automatically for supported source files. Duplication checks run at `all`. License checks are selected when a dependency manifest exists and wait for the project's allowed license list.
 
+Next.js builds run at `all` when the selected scope contains an `app/`, `src/app/`,
+`pages/`, or `src/pages/` tree. The project must provide a supported Next.js executable
+and the dependencies its build needs. `recommended` retains the Next.js type check.
+
+Framework syntax follows declared project dependencies. A NestJS project that declares
+`@nestjs/swagger` receives Swagger lint contracts. CSS accepts Tailwind at-rules when the
+nearest containing npm project declares `tailwindcss`. A dependency in a child or sibling
+project does not change its parent's rules.
+
 ## Record one exception
 
 This example lets scripts print to the terminal:

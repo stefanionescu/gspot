@@ -1,6 +1,8 @@
+import type { Manifest } from '#cli/types/configurations.ts';
+import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import type { EditorconfigOverride } from '#cli/types/generation/formatting.ts';
 import type { EslintPresets, EslintAllRules } from '#cli/types/parsers/eslint.ts';
-import type { Policy, ScopeView, PolicyScope } from '#cli/types/policy/settings.ts';
+import type { Policy, ScopeView, PolicyScope, ScopeSelection } from '#cli/types/policy/settings.ts';
 
 import type {
     EslintFiles,
@@ -10,6 +12,15 @@ import type {
     EslintConfiguration,
     EslintSettingsBlock,
 } from '#cli/types/generation/eslint.ts';
+
+/** Effective scope policy and declared project facts available to generated assets. */
+export type ScopeTemplateInputs = {
+    policy: Policy;
+    scopes: ScopeSelection[];
+    selection: ScopeSelection;
+    manifests: Manifest[];
+    projects: ProjectManifest[];
+};
 
 export type TemplateInputs = {
     /** Present for a configuration whose manifest declares rule paths. */
@@ -37,9 +48,12 @@ export type TemplateInputs = {
     version: string;
     scope: string;
     scopes: PolicyScope[];
+    /** Dependencies declared by the nearest npm project that contains this scope. */
+    scopeDependencies: string[];
     configurationScopes: (configuration: string) => {
         path: string;
         settings: Record<string, unknown>;
+        dependencies: string[];
         verbatim: ScopeView['verbatim'];
         /** The first harness folder of the scope, relative to it, when the policy names one. */
         harness: string | undefined;

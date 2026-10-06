@@ -19,6 +19,9 @@ import {
     COMPONENTS,
     LINK_POLICY,
     POLICY_PATHS,
+    NEXT_BUILD_FILES,
+    NEXT_BUILD_ROUTES,
+    NEXT_BUILD_TABLES,
     NODE_REQUIREMENTS,
 } from '#tests/config/cli/execution/planning/selection.ts';
 
@@ -247,3 +250,39 @@ test.each(['bun', 'mise'])('private schema tools include their runtime peer unde
     expect(names).toContain('v8r');
     expect(names.includes('ajv')).toBe(runner === 'bun');
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s selects Next.js builds only for scopes with an app and retains all project inputs',
+    async (level) => {
+        for (const route of NEXT_BUILD_ROUTES) {
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
+                'gspot.toml': buildPolicy(['nextjs'], { level, tables: NEXT_BUILD_TABLES }),
+                ...NEXT_BUILD_FILES,
+                [`web/${route}`]: 'export default function Page() { return null; }\n',
+            });
+            const planned = planRun(await openSession(sandbox.path), {
+                stage: 'push',
+                skips: [],
+                only: ['nextjs/build'],
+            });
+            if (level === 'recommended') {
+                expect(planned).toStrictEqual([]);
+                continue;
+            }
+            expect(planned.find((entry) => entry.scope.scope.path === '')).toMatchObject({
+                files: [],
+                triggerPaths: [],
+            });
+            const app = planned.find((entry) => entry.scope.scope.path === 'web');
+            expect(app?.skip).toBeUndefined();
+            expect(
+                app?.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
+            ).toStrictEqual(
+                ['web/package.json', 'web/src/data.ts', 'web/tsconfig.json', `web/${route}`].toSorted((left, right) =>
+                    left.localeCompare(right),
+                ),
+            );
+        }
+    },
+);

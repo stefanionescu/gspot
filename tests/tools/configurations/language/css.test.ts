@@ -9,7 +9,15 @@ import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { suiteTimeout, openTestBudget, runTestCommand } from '#tests/harness/command.ts';
-import { FILES, TABLES, CORRECTED } from '#tests/config/tools/configurations/language/css.ts';
+
+import {
+    FILES,
+    TABLES,
+    CORRECTED,
+    TAILWIND_FILES,
+    TAILWIND_TABLES,
+    TAILWIND_CONFIGURATIONS,
+} from '#tests/config/tools/configurations/language/css.ts';
 
 const resources = new AsyncDisposableStack();
 let root: string;
@@ -97,6 +105,42 @@ test(
             });
             expect(native.code, native.stdout + native.stderr).toBe(0);
         }
+    },
+    NATIVE_TEST_TIMEOUT_MS,
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s recognizes Tailwind only within its declared project',
+    async (level) => {
+        await createFileTree(root, {
+            'gspot.toml': buildPolicy(TAILWIND_CONFIGURATIONS, { level, tables: TAILWIND_TABLES }),
+            ...TAILWIND_FILES,
+        });
+        const applied = await spawnGspot(root, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const command = ['check', '--only', 'css/stylelint', '--json'];
+        const failed = await spawnGspot(root, command);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        const report = JSON.parse(failed.stdout) as RunReport;
+        expect(report.checks.find((check) => check.scope === 'app')).toMatchObject({
+            status: 'passed',
+            findings: [],
+        });
+        expect(report.checks.flatMap((check) => check.findings)).toStrictEqual(
+            containingAll([
+                containing({ file: 'build/site.css', rule: 'at-rule-no-unknown', line: 1 }),
+                containing({ file: 'other/site.css', rule: 'at-rule-no-unknown', line: 1 }),
+            ]),
+        );
+        await Bun.write(join(root, 'build/site.css'), 'a { color: red; }\n');
+        await Bun.write(join(root, 'other/site.css'), 'a { color: red; }\n');
+        const corrected = await spawnGspot(root, command);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+            { scope: '', status: 'passed', findings: [] },
+            { scope: 'app', status: 'passed', findings: [] },
+            { scope: 'other', status: 'passed', findings: [] },
+        ]);
     },
     NATIVE_TEST_TIMEOUT_MS,
 );

@@ -5,6 +5,10 @@ import { NEXT_PAGE, NEXT_LAYOUT, NEXT_CONFIG_FILE } from '#tests/config/samples/
 
 export const COUNT = '// A test file.\n\n/** A number that holds text. */\nexport const count: number = "three";\n';
 
+/** A missing imported page dependency fails native bundling. */
+export const BUILD_FAILURE =
+    "import Missing from './missing-component';\nexport default function Page() { return <Missing />; }\n";
+
 /** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['nextjs'],

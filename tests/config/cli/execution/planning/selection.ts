@@ -48,3 +48,20 @@ export const NODE_REQUIREMENTS = [
         node: true,
     },
 ];
+
+/** The SDK-only root has no app; the child app owns its complete build inputs. */
+export const NEXT_BUILD_FILES = {
+    'package.json': '{"dependencies":{"next":"16.3.5"}}',
+    'library.ts': 'export const count = 1;\n',
+    'web/package.json': '{"dependencies":{"next":"16.3.5"}}',
+    'web/tsconfig.json': '{}',
+    'web/src/data.ts': 'export const count = 1;\n',
+};
+
+export const NEXT_BUILD_TABLES = `[[scope]]
+path = "web"
+configurations = ["nextjs"]
+`;
+
+/** Next.js accepts either router at the project root or under src. */
+export const NEXT_BUILD_ROUTES = ['app/page.tsx', 'src/app/page.tsx', 'pages/index.tsx', 'src/pages/index.tsx'];

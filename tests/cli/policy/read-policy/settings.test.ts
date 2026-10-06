@@ -5,8 +5,8 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
-import { DISABLED_RULES } from '#tests/config/cli/policy/read/settings.ts';
 import { readPolicy, readPolicyText, parseStrictPolicy } from '#cli/policy/read.ts';
+import { DISABLED_RULES, REMOVED_FRAMEWORK_CONTROLS } from '#tests/config/cli/policy/read/settings.ts';
 
 describe('policy value normalization', () => {
     test('normalizes reasoned limits into value and reason', () => {
@@ -184,3 +184,17 @@ test('native zero-valued Stylelint options and false Taplo formatting remain act
         taplo: { formatting: { reorder_keys: false } },
     });
 });
+
+test.each(REMOVED_FRAMEWORK_CONTROLS)(
+    'root and scope refuse the removed $table.$key control',
+    ({ table, key, diagnostic }) => {
+        for (const prefix of ['', 'scope.']) {
+            const scope = prefix === '' ? '' : '[[scope]]\npath = "api"\n';
+            const source = buildPolicy(['nextjs', 'nestjs'], {
+                tables: `${scope}[${prefix}${table}]\n${key} = true\n`,
+            });
+            expect(() => parseStrictPolicy(source)).toThrow(diagnostic);
+            expect(policyProblems(source)).toHaveLength(1);
+        }
+    },
+);
