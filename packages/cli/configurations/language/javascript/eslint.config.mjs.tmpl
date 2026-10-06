@@ -58,6 +58,8 @@ const BASE_SELECTORS = IS_ALL ? [
         { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
 ] : [];
 const coreRules = {
+    // regexp also validates constructor patterns and Unicode set expressions.
+    'no-empty-character-class': 'off',
     'no-useless-constructor': 'error',
     'no-useless-return': 'error',
     'no-useless-call': 'error',
@@ -76,6 +78,9 @@ const gspotRules = { ...presets.gspot.blocks[0].rules, ...config.gspotRules };
 // sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
 // helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
 const sonarRules = {
+    // Native owners cover these defects without duplicate reports.
+    'sonarjs/no-empty-character-class': 'off',
+    'sonarjs/no-useless-catch': 'off',
     // A file of fixtures beside tests contains no test cases.
     'sonarjs/no-empty-test-file': 'off',
     'sonarjs/cognitive-complexity': ['error', limits.cognitive],
@@ -88,6 +93,8 @@ const sonarRules = {
 };
 
 const unicornRules = {
+    // sonarjs/no-collapsible-if owns nested conditions at both levels.
+    'unicorn/no-lonely-if': 'off',
     // The naming check owns abbreviations and filename case; two owners would give two answers.
     'unicorn/prevent-abbreviations': 'off',
     'unicorn/filename-case': 'off',

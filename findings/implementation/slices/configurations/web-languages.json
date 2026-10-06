@@ -463,7 +463,9 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": []
+        "verification": [
+            "Batch 69 partially resolves three duplicate families with pinned native source and regression evidence. Keep this record open for the other listed overlaps. Partial implementation of finding 022: retain regexp/no-empty-character-class as the sole owner of empty and impossible character classes, core no-useless-catch for redundant rethrows, and sonarjs/no-collapsible-if for nested conditions. Disable only core and Sonar empty-character-class rules, Sonar useless-catch, and Unicorn no-lonely-if. Preserve both coverage levels, every plugin pin and project prerequisite. No opt-in check control or additional selection mechanism is introduced. /tmp/gspot-native-overlap-equivalence-proof.json compares the complete actual configuration in 36 native JavaScript, TypeScript, framework, test, script and extensionless Node contexts. Only the four disabled duplicate owners change; every other rule, setting, registered plugin, parser metadata, global and linter option is identical. Native initial cases pass with 34 assertions (4.73 seconds). The exact final cases against the old production template both fail on duplicate-rule ownership, /tmp/gspot-native-overlap-baseline-proof.json (2.69 seconds); restore every production byte afterward."
+        ]
     },
     {
         "id": "slices/kits-web-languages/023",
