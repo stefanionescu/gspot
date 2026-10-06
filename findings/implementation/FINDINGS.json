@@ -979,7 +979,8 @@
         "status": "open",
         "outcome": null,
         "verification": [
-            "SQL dialect/exclusion subfinding is resolved by slices/kits-other-languages/048 and main/091. Other aggregate subfindings remain open."
+            "SQL dialect/exclusion subfinding is resolved by slices/kits-other-languages/048 and main/091. Other aggregate subfindings remain open.",
+            "The import-index subfinding is implemented by the shared fix native-javascript-import-and-script-contracts (main/107 and slices/kits-web-languages/009). Its other substantive requirements remain open."
         ],
         "kind": "phase aggregate",
         "decisionEvidence": [
@@ -1595,9 +1596,17 @@
         "finding": "- `noUselessIndex` rewrites `./lib/index.js` to `./lib`, which Node.js refuses in ES modules.",
         "owner": "source ownership and commands",
         "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Prior pinned behavior: /tmp/gspot-javascript-contract-before.log reproduces all four new recommended/all cases against the prior template. Valid ./lib/index.js imports receive a fixer replacing them with ./lib. Both TypeScript script classes report core and typed unused-variable diagnostics; all also rejects process.exit through Unicorn. The first corrected run caught only an incidental single-quote assertion and a recommended-level expectation for the all-only no-console rule. The final test preserves exact semantic findings and checks runtime resolution independently of formatting.",
+            "Native import contract: remove noUselessIndex while retaining import-x/no-useless-path-segments at both levels. The actual emitted configuration accepts the valid index path and reports exactly the redundant path on line 1, including the native replacement text. Pinned Node runs ESLint with fix enabled and writes both results; both imports retain lib/index.js and execute successfully, exporting the expected value. No custom replacement rule, configuration selector, scope gate or extra enabling step is introduced.",
+            "Script ownership: remove the late core no-unused-vars override so generated TypeScript scripts retain their typed owner, while JavaScript keeps its native core owner. The script block disables both native process-exit rules. Its summary now describes console output and process.exit. Pinned Node loads the actual generated configuration at both levels and reports exactly one unused-variable finding for JavaScript, TypeScript and config-file scripts. Non-script TypeScript still reports console and both exit rules at all. Correcting the unused variables leaves script console/exit calls in place and clears every selected finding; correcting the ordinary source clears its stricter findings.",
+            "CommonJS ownership: remove the repeated Unicorn import-style and TypeScript no-require-imports off entries from the CommonJS override. Their general and typed owners already disable them. The existing comment correctly distinguishes path extensions from default/named imports. Existing generated runtime regressions continue to verify CommonJS parsing and globals, ES-module globals and scope isolation. The override still owns Unicorn prefer-module, which actually differs for CommonJS.",
+            "Verification: /tmp/gspot-javascript-contract-native-final.log passes eight pinned cases with 57 assertions (14.03 seconds), including original interpreter/compiler/layout/exclusion/scope assertions. /tmp/gspot-javascript-contract-cli.log passes 28 cases with 489 assertions across levels, runtime isolation, typed ownership and every-template readers (6.88 seconds). /tmp/gspot-javascript-contract-types.log passes all four TypeScript targets (9.83 seconds). /tmp/gspot-javascript-contract-docs.log builds 314 pages and validates every local link and fragment. Affected ESLint and Prettier pass. Canonical apply updates only generated ESLint; the second leaves all 139 outputs unchanged. Existing dependencies, installation, 60/900-second budgets, prerequisites, manual language/framework overrides and publication/deployment boundaries remain.",
+            "The first actual staged gate (/tmp/gspot-javascript-contract-staged.json) reports 129 passes, 11 explicit skips and one naming failure: SCRIPT_LINT_SCRIPT repeats script. Rename the uncommitted constant and its consumers to SCRIPT_LINT_SOURCE; no policy exception, ignore or weakened check is introduced.",
+            "Final verification: /tmp/gspot-javascript-contract-native-renamed.log passes all eight pinned cases with 57 assertions (14.41 seconds). The actual gspot --json check --staged in /tmp/gspot-javascript-contract-staged-final.json exits 0 with {'passed': 130, 'skipped': 11}, zero failures/errors and duration 75422 ms. Normal Semgrep, OSV, Taplo and native startup gates run without bypasses."
+        ],
         "kind": "phase finding"
     },
     {

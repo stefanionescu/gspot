@@ -295,7 +295,7 @@ name = "tools.eslint.script_files"
 type = "list"
 direction = "neutral"
 default = ["scripts/**", "**/*.config.{js,mjs,cjs,ts}", ".mise/tasks/**"]
-summary = "The globs that count as scripts: no-process-exit off, every unused argument reported."
+summary = "Globs for script files: they may print to the console and call process.exit."
 
 [[setting]]
 name = "tools.eslint.runtimes"

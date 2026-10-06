@@ -9,10 +9,118 @@ import { openSession } from '#cli/execution/session.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { statSync, chmodSync, existsSync } from 'node:fs';
 import { buildToolsPath } from '#tests/harness/install.ts';
+import { createEslint } from '#tests/harness/generated.ts';
+import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
-import { JAVASCRIPT_AUTHORED_FILES } from '#tests/config/tools/generation/javascript.ts';
+
+import {
+    IMPORT_FIX_SCRIPT,
+    SCRIPT_LINT_SOURCE,
+    JAVASCRIPT_AUTHORED_FILES,
+} from '#tests/config/tools/generation/javascript.ts';
+
+test.each(['recommended', 'all'] as const)(
+    '%s native import fixes preserve executable Node ESM paths',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['javascript'], { level }),
+            'package.json': '{"private":true,"type":"module"}',
+            'lib/index.js': 'export const value = 42;\n',
+            'source.js': "import { value } from './lib/index.js';\nexport const result = value;\n",
+            'redundant.js': "import { value } from './lib/../lib/index.js';\nexport const result = value;\n",
+        });
+        const eslint = await createEslint(sandbox.path);
+        const before = await eslint.lintFiles(['source.js', 'redundant.js']);
+        expect(
+            before.flatMap(({ filePath, messages }) =>
+                messages.flatMap(({ ruleId, line, severity, fix }) =>
+                    ruleId === 'import-x/no-useless-path-segments'
+                        ? [{ file: filePath.slice(sandbox.path.length + 1), line, severity, fix: fix?.text }]
+                        : [],
+                ),
+            ),
+        ).toStrictEqual([{ file: 'redundant.js', line: 1, severity: 2, fix: '"./lib/index.js"' }]);
+        const native = await runTestCommand(['node', '--input-type=module', '-e', IMPORT_FIX_SCRIPT], {
+            cwd: sandbox.path,
+        });
+        expect(native.code, native.stdout + native.stderr).toBe(0);
+        expect(native.stdout).toBe('[]');
+        for (const path of ['source.js', 'redundant.js']) {
+            expect(await Bun.file(join(sandbox.path, path)).text()).toContain('./lib/index.js');
+            const runtime = await runTestCommand(
+                [
+                    'node',
+                    '--input-type=module',
+                    '-e',
+                    `import assert from 'node:assert/strict'; import { result } from './${path}'; assert.equal(result, 42);`,
+                ],
+                { cwd: sandbox.path },
+            );
+            expect(runtime.code, runtime.stdout + runtime.stderr).toBe(0);
+        }
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s native scripts have one unused-variable owner and permit process output and exit',
+    async (level) => {
+        await using sandbox = await testdir();
+        const source = 'const unused = 1;\nconsole.log("result");\nprocess.exit(0);\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['typescript'], { level }),
+            'package.json': '{"private":true,"type":"module"}',
+            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*.ts"]}',
+            'scripts/run.js': source,
+            'scripts/run.ts': source.replace('unused =', 'unused: number ='),
+            'build.config.ts': source.replace('unused =', 'unused: number ='),
+            'src/source.ts': source.replace('unused =', 'unused: number ='),
+        });
+        await createEslint(sandbox.path);
+        const native = await runTestCommand(['node', '--input-type=module', '-e', SCRIPT_LINT_SOURCE], {
+            cwd: sandbox.path,
+        });
+        expect(native.code, native.stdout + native.stderr).toBe(0);
+        expect(native.stdout).toBe(
+            JSON.stringify(
+                ['scripts/run.js', 'scripts/run.ts', 'build.config.ts', 'src/source.ts'].map((file) => ({
+                    file,
+                    findings: [
+                        {
+                            ruleId: file.endsWith('.js') ? 'no-unused-vars' : '@typescript-eslint/no-unused-vars',
+                            line: 1,
+                            severity: 2,
+                        },
+                        ...(file === 'src/source.ts' && level === 'all'
+                            ? [
+                                  { ruleId: 'n/no-process-exit', line: 3, severity: 2 },
+                                  { ruleId: 'no-console', line: 2, severity: 2 },
+                                  { ruleId: 'unicorn/no-process-exit', line: 3, severity: 2 },
+                              ]
+                            : []),
+                    ],
+                })),
+            ),
+        );
+        for (const path of ['scripts/run.js', 'scripts/run.ts', 'build.config.ts'])
+            await Bun.write(join(sandbox.path, path), source.slice(source.indexOf('\n') + 1));
+        await Bun.write(join(sandbox.path, 'src/source.ts'), 'export const result = 1;\n');
+        const corrected = await runTestCommand(['node', '--input-type=module', '-e', SCRIPT_LINT_SOURCE], {
+            cwd: sandbox.path,
+        });
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(corrected.stdout).toBe(
+            JSON.stringify(
+                ['scripts/run.js', 'scripts/run.ts', 'build.config.ts', 'src/source.ts'].map((file) => ({
+                    file,
+                    findings: [],
+                })),
+            ),
+        );
+    },
+);
 
 test('JavaScript checking includes authored build directories at all', async () => {
     await using sandbox = await testdir();

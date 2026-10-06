@@ -242,7 +242,7 @@ const importRules = {
     ...config.importLayoutRules,
     'import-x/no-cycle': ['error', { ignoreExternal: false }],
     'import-x/no-self-import': 'error',
-    'import-x/no-useless-path-segments': ['error', { noUselessIndex: true }],
+    'import-x/no-useless-path-segments': 'error',
     'import-x/no-empty-named-blocks': 'error',
     'import-x/no-duplicates': 'error',
 };
@@ -303,12 +303,12 @@ export default [
 <% } eslintModule.blocks.push(...eslintFragmentBlocks); %>
 <%~ fragments %>
 <% for (const [index, declaration] of config.runtimes.entries()) { const { runtime } = declaration; const isNode = ['node', 'nodeBuiltin', 'commonjs'].includes(runtime); const names = runtime === 'node' ? 'nodeBuiltin' : runtime === 'commonjs' ? 'node' : runtime === 'service-worker' ? 'serviceworker' : runtime; %>
-    <%~ eslintModule.block({ files: CODE.map((pattern) => [pattern, { runtime: { declarations: config.runtimes, index } }]), rules: { ...(isNode ? nodeRules : {}), ...(runtime === 'commonjs' ? { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' } : {}) } }, `languageOptions: { sourceType: ${json(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${json(names)}] }`) %>,
+    <%~ eslintModule.block({ files: CODE.map((pattern) => [pattern, { runtime: { declarations: config.runtimes, index } }]), rules: { ...(isNode ? nodeRules : {}), ...(runtime === 'commonjs' ? { 'unicorn/prefer-module': 'off' } : {}) } }, `languageOptions: { sourceType: ${json(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${json(names)}] }`) %>,
 <% } for (const group of fragmentSelectors) { %>
     <%~ eslintModule.block({ files: (group.files ?? CODE).map((pattern) => [pattern, group.scope ? `${group.scope}/**/*` : '**/*']), ignores: (group.ignoredScopes ?? []).map((scope) => `${scope}/**`), rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...group.selectors] } }) %>,
 <% } %>
     <%~ eslintModule.block({ files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } }) %>,
-    <%~ eslintModule.block({ files: SCRIPT_CODE, rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] } }) %>,
+    <%~ eslintModule.block({ files: SCRIPT_CODE, rules: { 'n/no-process-exit': 'off', 'unicorn/no-process-exit': 'off' } }) %>,
     <%~ eslintModule.block({ files: TEST_CODE, rules: { 'jsdoc/require-jsdoc': 'off', 'jsdoc/require-param': 'off', 'jsdoc/require-returns': 'off', 'jsdoc/require-description': 'off', 'jsdoc/require-param-description': 'off', 'jsdoc/require-returns-description': 'off', 'n/no-unpublished-import': 'off', 'n/no-unpublished-require': 'off' } }) %>,
 <% for (const [name, files, source] of [['packageJson', ['**/package.json'], 'packageJson.configs.recommended'], ['prettier', CODE, 'prettierConfig']]) { const { parser, ...preset } = presets[name].blocks[0]; %>
     <%~ eslintModule.block({ files, ...preset }, `...${source}`) %>,
