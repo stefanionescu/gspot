@@ -78,6 +78,9 @@ const gspotRules = { ...presets.gspot.blocks[0].rules, ...config.gspotRules };
 // sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
 // helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
 const sonarRules = {
+    // Core and TypeScript unused-variable rules cover bindings and imports, including intentional ignores.
+    'sonarjs/no-unused-vars': 'off',
+    'sonarjs/unused-import': 'off',
     // Native owners cover these defects without duplicate reports.
     'sonarjs/no-empty-character-class': 'off',
     'sonarjs/no-useless-catch': 'off',
@@ -115,8 +118,9 @@ const securityRules = {
     'security/detect-buffer-noassert': 'error',
     'security/detect-child-process': 'error',
     'security/detect-disable-mustache-escape': 'error',
-    'security/detect-eval-with-expression': 'error',
-    'security/detect-new-buffer': 'error',
+    // Sonar covers dynamic execution; Node covers deprecated constructors without matching local names.
+    'security/detect-eval-with-expression': 'off',
+    'security/detect-new-buffer': 'off',
     'security/detect-no-csrf-before-method-override': 'error',
     // detect-non-literal-regexp is off: it flags the constructor, not the input.
     'security/detect-non-literal-regexp': 'off',

@@ -25,7 +25,6 @@
             'sonarjs/no-duplicate-in-composite': 'error',
             'sonarjs/redundant-type-aliases': 'error',
             'no-unused-vars': 'off',
-            'sonarjs/no-unused-vars': 'off',
 }; const classicResolver = eslint().boundaryBlocks.length === 0 ? '' : ", 'import/resolver': { typescript: { project: " + json(projects) + ".map((project) => join(root, project)) } }"; %>
 <%~ eslintModule.block({ files: eslintFiles.typescript, rules }, `plugins: { '@typescript-eslint': tseslint.plugin }, languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } }, settings: { 'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] }, 'import-x/resolver-next': [createTypeScriptImportResolver({ project: ${json(projects)}.map((project) => join(root, project)) })]${classicResolver} }`) %>,
 <%~ eslintModule.block({ files: eslintFiles.tests, rules: { '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/no-non-null-assertion': 'off' } }) %>,

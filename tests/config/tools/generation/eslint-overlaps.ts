@@ -95,3 +95,155 @@ process.stdout.write(JSON.stringify({ configurations,
     })),
 }));
 `;
+
+export const BINDING_SOURCES = {
+    dependency: 'export class Widget {}\nexport const value = 1;\n',
+    local: 'export function run() { const unused = 1; return 2; }\n',
+    function: 'export function run() { function unused() { return 1; } return 2; }\n',
+    ignored: 'export function run() { const _unused = 1; return 2; }\n',
+    read: 'export function run() { const value = 1; return value; }\n',
+    import: "import { value } from './dependency.js';\nexport const result = 2;\n",
+    ignoredImport: "import { value as _unused } from './dependency.js';\nexport const result = 2;\n",
+    jsdoc: "import { Widget } from './dependency.js';\n/** @type {Widget | undefined} */\nexport const result = undefined;\n",
+    typed: "import { Widget } from './dependency.js';\nexport const result: Widget | undefined = undefined;\n",
+};
+
+export const BINDING_PROJECT = {
+    'package.json': '{"private":true,"type":"module"}\n',
+    'tsconfig.json':
+        '{"compilerOptions":{"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[]},"include":["*.ts","*.cts"]}\n',
+    'dependency.js': BINDING_SOURCES.dependency,
+    'dependency.ts': BINDING_SOURCES.dependency,
+    'local.js': BINDING_SOURCES.local,
+    'local.ts': BINDING_SOURCES.local,
+    'function.js': BINDING_SOURCES.function,
+    'function.ts': BINDING_SOURCES.function,
+    'ignored.js': BINDING_SOURCES.ignored,
+    'ignored.ts': BINDING_SOURCES.ignored,
+    'read.js': BINDING_SOURCES.read,
+    'read.ts': BINDING_SOURCES.read,
+    'import.js': BINDING_SOURCES.import,
+    'import.ts': BINDING_SOURCES.import,
+    'ignored-import.js': BINDING_SOURCES.ignoredImport,
+    'ignored-import.ts': BINDING_SOURCES.ignoredImport,
+    'types.js': BINDING_SOURCES.jsdoc,
+    'types.ts': BINDING_SOURCES.typed,
+};
+
+export const EXECUTION_SOURCES = {
+    eval: 'export const result = eval(process.env.SCRIPT);\n',
+    static: "export const result = eval('1 + 1');\n",
+    template: 'export const result = eval(`1 + 1`);\n',
+    function: 'export const result = new Function(process.env.SCRIPT);\n',
+    vm: "import { runInNewContext } from 'node:vm';\nexport const result = runInNewContext(process.env.SCRIPT);\n",
+    url: 'export const result = `javascript:${process.env.SCRIPT}`;\n',
+    buffer: 'export const result = new Buffer(process.env.DATA);\n',
+    literal: 'export const result = new Buffer(8);\n',
+    alias: "import { Buffer as Bytes } from 'node:buffer';\nexport const result = new Bytes(8);\n",
+    safe: 'export const result = Buffer.alloc(8);\n',
+    shadow: 'class Buffer { constructor(value) { this.value = value; } }\nexport const result = new Buffer(Date.now());\n',
+    shadowEval: 'function run(eval) { return eval(process.env.SCRIPT); }\nmodule.exports = run;\n',
+};
+
+export const EXECUTION_PROJECT = {
+    'eval.js': EXECUTION_SOURCES.eval,
+    'eval.ts': EXECUTION_SOURCES.eval,
+    'static.js': EXECUTION_SOURCES.static,
+    'static.ts': EXECUTION_SOURCES.static,
+    'static-template.js': EXECUTION_SOURCES.template,
+    'static-template.ts': EXECUTION_SOURCES.template,
+    'dynamic-function.js': EXECUTION_SOURCES.function,
+    'dynamic-function.ts': EXECUTION_SOURCES.function,
+    'vm.js': EXECUTION_SOURCES.vm,
+    'vm.ts': EXECUTION_SOURCES.vm,
+    'url.js': EXECUTION_SOURCES.url,
+    'url.ts': EXECUTION_SOURCES.url,
+    'buffer.js': EXECUTION_SOURCES.buffer,
+    'buffer.ts': EXECUTION_SOURCES.buffer,
+    'literal-buffer.js': EXECUTION_SOURCES.literal,
+    'literal-buffer.ts': EXECUTION_SOURCES.literal,
+    'alias-buffer.js': EXECUTION_SOURCES.alias,
+    'alias-buffer.ts': EXECUTION_SOURCES.alias,
+    'safe-buffer.js': EXECUTION_SOURCES.safe,
+    'safe-buffer.ts': EXECUTION_SOURCES.safe,
+    'shadow-buffer.js': EXECUTION_SOURCES.shadow,
+    'shadow-buffer.ts': EXECUTION_SOURCES.shadow,
+    'shadow-eval.cjs': EXECUTION_SOURCES.shadowEval,
+    'shadow-eval.cts': EXECUTION_SOURCES.shadowEval,
+};
+
+export const BINDING_SCRIPT = `import { basename } from 'node:path';
+import { ESLint } from 'eslint';
+const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
+const names = ['no-unused-vars', '@typescript-eslint/no-unused-vars', 'sonarjs/no-unused-vars', 'sonarjs/unused-import',
+    'security/detect-eval-with-expression', 'sonarjs/code-eval', 'security/detect-new-buffer', 'n/no-deprecated-api'];
+const configurations = {};
+for (const file of ['local.js', 'local.ts']) {
+    const config = await eslint.calculateConfigForFile(file);
+    configurations[file] = Object.fromEntries(names.map((name) => [name, config.rules[name]?.[0] ?? null]));
+}
+const results = await eslint.lintFiles(['*.js', '*.ts', '*.cjs', '*.cts']);
+process.stdout.write(JSON.stringify({ configurations,
+    files: results.map(({ filePath, messages }) => ({ file: basename(filePath),
+        findings: messages.filter(({ ruleId, fatal }) => names.includes(ruleId) || fatal)
+            .map(({ ruleId, line, column, severity }) => ({ ruleId, line, column, severity })),
+    })),
+}));
+`;
+
+export const BINDING_FINDINGS = {
+    'dependency.js': [],
+    'dependency.ts': [],
+    'function.js': [{ ruleId: 'no-unused-vars', line: 1, column: 34, severity: 2 }],
+    'function.ts': [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1, column: 34, severity: 2 }],
+    'ignored-import.js': [],
+    'ignored-import.ts': [],
+    'ignored.js': [],
+    'ignored.ts': [],
+    'import.js': [{ ruleId: 'no-unused-vars', line: 1, column: 10, severity: 2 }],
+    'import.ts': [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1, column: 10, severity: 2 }],
+    'local.js': [{ ruleId: 'no-unused-vars', line: 1, column: 31, severity: 2 }],
+    'local.ts': [{ ruleId: '@typescript-eslint/no-unused-vars', line: 1, column: 31, severity: 2 }],
+    'read.js': [],
+    'read.ts': [],
+    'types.js': [],
+    'types.ts': [],
+};
+
+export const EXECUTION_FINDINGS = {
+    'alias-buffer.js': [{ ruleId: 'n/no-deprecated-api', line: 2, column: 23, severity: 2 }],
+    'alias-buffer.ts': [{ ruleId: 'n/no-deprecated-api', line: 2, column: 23, severity: 2 }],
+    'buffer.js': [{ ruleId: 'n/no-deprecated-api', line: 1, column: 23, severity: 2 }],
+    'buffer.ts': [{ ruleId: 'n/no-deprecated-api', line: 1, column: 23, severity: 2 }],
+    'dynamic-function.js': [{ ruleId: 'sonarjs/code-eval', line: 1, column: 27, severity: 2 }],
+    'dynamic-function.ts': [{ ruleId: 'sonarjs/code-eval', line: 1, column: 27, severity: 2 }],
+    'eval.js': [{ ruleId: 'sonarjs/code-eval', line: 1, column: 23, severity: 2 }],
+    'eval.ts': [{ ruleId: 'sonarjs/code-eval', line: 1, column: 23, severity: 2 }],
+    'literal-buffer.js': [{ ruleId: 'n/no-deprecated-api', line: 1, column: 23, severity: 2 }],
+    'literal-buffer.ts': [{ ruleId: 'n/no-deprecated-api', line: 1, column: 23, severity: 2 }],
+    'safe-buffer.js': [],
+    'safe-buffer.ts': [],
+    'shadow-buffer.js': [],
+    'shadow-buffer.ts': [],
+    'shadow-eval.cjs': [],
+    'shadow-eval.cts': [],
+    'static-template.js': [],
+    'static-template.ts': [],
+    'static.js': [],
+    'static.ts': [],
+    'url.js': [{ ruleId: 'sonarjs/code-eval', line: 1, column: 23, severity: 2 }],
+    'url.ts': [{ ruleId: 'sonarjs/code-eval', line: 1, column: 23, severity: 2 }],
+    'vm.js': [{ ruleId: 'sonarjs/code-eval', line: 2, column: 23, severity: 2 }],
+    'vm.ts': [{ ruleId: 'sonarjs/code-eval', line: 2, column: 23, severity: 2 }],
+};
+
+export const BINDING_SEVERITIES = {
+    'no-unused-vars': 2,
+    '@typescript-eslint/no-unused-vars': null,
+    'sonarjs/no-unused-vars': 0,
+    'sonarjs/unused-import': 0,
+    'security/detect-eval-with-expression': 0,
+    'sonarjs/code-eval': 2,
+    'security/detect-new-buffer': 0,
+    'n/no-deprecated-api': 2,
+};
