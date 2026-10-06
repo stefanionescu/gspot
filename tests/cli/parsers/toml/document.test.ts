@@ -35,3 +35,21 @@ test('TOML edits name the file when an authored scalar blocks a required table',
     );
     expect(document.text()).toBe(source);
 });
+
+test('TOML table edits preserve authored dates, array order, and prototype-named fields', () => {
+    const source = '# Release timestamp\npublished = 2026-10-06T00:00:00Z\n';
+    const document = openTomlDocument({ path: 'tool.toml', source });
+    const entries = [
+        Object.fromEntries([
+            ['__proto__', 'authored data'],
+            ['constructor', 'first'],
+        ]),
+        { constructor: 'second' },
+    ];
+    document.set(['copied'], document.value(['published']));
+    document.set(['metadata', 'entries'], entries);
+    const text = document.text();
+    expect(text.startsWith(source)).toBe(true);
+    expect(Reflect.get(Bun.TOML.parse(text), 'metadata')).toStrictEqual({ entries });
+    expect(document.value(['copied'])).toBeInstanceOf(Date);
+});

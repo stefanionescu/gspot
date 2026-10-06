@@ -9,7 +9,7 @@ test('template export preserves ESLint rules and omits repository-specific overr
     const exported = exportTemplate(ESLINT_OVERRIDE_POLICY, 'project.template.toml');
     expect(exported.text).not.toContain('overrides');
     expect(parseTemplate(exported.text, 'project.template.toml').tables.tools?.eslint?.rules?.['eqeqeq']).toStrictEqual(
-        ['error', 'smart'],
+        ['smart'],
     );
     expect(exported.leftOut).toContain('tools.eslint.overrides[0]: names a repository path');
 });

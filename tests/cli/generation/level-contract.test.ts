@@ -10,8 +10,8 @@ import { openSession } from '#cli/execution/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { emitFile, createEslint } from '#tests/harness/generated.ts';
-import { RUFF_PREVIEW_RULES } from '#tests/config/cli/generation/level-contract.ts';
 import type { RuffConfiguration } from '#tests/types/generation/configuration-files.ts';
+import { RUFF_PREVIEW_RULES, ESLINT_REJECTED_SELECTIONS } from '#tests/config/cli/generation/level-contract.ts';
 
 test('a scope resolves its own tool settings over the root defaults', async () => {
     await using sandbox = await testdir();
@@ -184,3 +184,62 @@ test('switching levels restores generated defaults and agent instructions', asyn
     expect(outputs[0]).not.toBe(outputs[1]);
     expect(outputs[2]).toBe(outputs[0]);
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s refuses authored ESLint coverage choices in root and scoped native options',
+    (level) => {
+        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
+            const table = scope === '' ? 'tools' : 'scope.tools';
+            for (const selection of ESLINT_REJECTED_SELECTIONS) {
+                const tables = `${scope}[${table}.eslint.rules]\neqeqeq = ${selection}\n`;
+                expect(() => parseStrictPolicy(buildPolicy(['javascript'], { level, tables }))).toThrow(
+                    'ESLint rule selection',
+                );
+            }
+            for (const key of ['rules', 'overrides', 'extends']) {
+                const tables = `${scope}[${table}.eslint.verbatim]\n${key} = []\nreason = "Project preference"\n`;
+                expect(() => parseStrictPolicy(buildPolicy(['javascript'], { level, tables }))).toThrow(
+                    'ESLint rule selection',
+                );
+            }
+        }
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s preserves generated script and test exclusions while applying native options',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['javascript'], {
+                level,
+                tables: '[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n"gspot/no-trivial-functions" = [{maxStatements = 4}]\n"gspot/instances-in-registry" = [{files = ["source.js"]}]\n',
+            }),
+            'package.json': '{"private":true,"type":"module"}',
+            'source.js': 'export const source = new Client();',
+            'another.js': 'export const source = new Client();',
+            'scripts/run.js': '',
+            'tests/example.test.js': '',
+        });
+        const eslint = await createEslint(sandbox.path);
+        const source = (await eslint.calculateConfigForFile('source.js')) as Linter.Config;
+        const script = (await eslint.calculateConfigForFile('scripts/run.js')) as Linter.Config;
+        const test = (await eslint.calculateConfigForFile('tests/example.test.js')) as Linter.Config;
+        expect((source.rules!['n/no-process-exit'] as unknown[])[0]).toBe(level === 'all' ? 2 : 0);
+        expect(source.rules!['gspot/instances-in-registry']).toStrictEqual(
+            level === 'all' ? [2, { files: ['source.js'] }] : undefined,
+        );
+        expect((script.rules!['n/no-process-exit'] as unknown[])[0]).toBe(0);
+        expect((test.rules!['jsdoc/require-description'] as unknown[])[0]).toBe(0);
+        expect((source.rules!['gspot/no-trivial-functions'] as unknown[])[0]).toBe(level === 'all' ? 2 : 0);
+        if (level === 'all')
+            expect(source.rules!['gspot/no-trivial-functions']).toStrictEqual([2, { maxStatements: 4 }]);
+        const results = await eslint.lintFiles(['source.js', 'another.js']);
+        const findings = results
+            .flatMap(({ messages }) => messages)
+            .filter(({ ruleId }) => ruleId === 'gspot/instances-in-registry');
+        expect(findings.map(({ messageId: diagnosticId }) => diagnosticId)).toStrictEqual(
+            level === 'all' ? ['registry'] : [],
+        );
+    },
+);

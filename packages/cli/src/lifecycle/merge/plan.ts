@@ -4,11 +4,11 @@ import { isDeepStrictEqual } from 'node:util';
 import { decodeUtf8 } from '#cli/platform/text.ts';
 import type { KeyPath } from '#cli/types/platform/document.ts';
 import type { TomlDocument } from '#cli/types/parsers/toml.ts';
-import { openTomlDocument } from '#cli/parsers/toml/document.ts';
 import type { MergeRecord } from '#cli/types/lifecycle/output.ts';
 import { fieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { MERGED_CONFIGURATION_FORMAT } from '#cli/config/lifecycle/ownership.ts';
+import { openTomlDocument, normalizeTomlTables } from '#cli/parsers/toml/document.ts';
 import type { Field, MergePlan, MergeRequest, MergePlanContents } from '#cli/types/lifecycle/merge.ts';
 
 // Whether a value is an empty plain object or array, which an owner may remove when it created it.
@@ -32,7 +32,8 @@ function retireFields(document: TomlDocument, recorded: Field[], requested: Fiel
         (previous) => !requested.some((field) => isDeepStrictEqual(field.path, previous.path)),
     );
     for (const previous of retired) {
-        if (!isDeepStrictEqual(document.value(previous.path), previous.installed)) return undefined;
+        if (!isDeepStrictEqual(document.value(previous.path), normalizeTomlTables(previous.installed)))
+            return undefined;
         document.set(previous.path, previous.original);
     }
     return recorded.filter((previous) => !retired.includes(previous));
@@ -47,10 +48,14 @@ function planField(
 ): Field | undefined {
     const value = document.value(field.path);
     if (previous !== undefined) {
-        if (!isDeepStrictEqual(value, previous.installed)) return undefined;
+        if (!isDeepStrictEqual(value, normalizeTomlTables(previous.installed))) return undefined;
         return { ...field, ...(previous.original === undefined ? {} : { original: previous.original }) };
     }
-    if (request.current !== undefined && !request.canReplace && !isDeepStrictEqual(value, field.installed))
+    if (
+        request.current !== undefined &&
+        !request.canReplace &&
+        !isDeepStrictEqual(value, normalizeTomlTables(field.installed))
+    )
         return undefined;
     return { ...field, ...(value === undefined ? {} : { original: z.json().parse(value) }) };
 }

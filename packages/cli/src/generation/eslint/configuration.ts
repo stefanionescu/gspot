@@ -10,7 +10,6 @@ import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import { tablesFor, harnessFolders } from '#cli/policy/settings/entries.ts';
 import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation/eslint.ts';
 import type { Policy, ScopeView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/settings.ts';
-import { eslintRuleBlocks, manifestRuleBlocks, structuralRuleBlocks } from '#cli/generation/eslint/blocks.ts';
 import ESLINT_ALL_RULES from '../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
 
 import {
@@ -20,12 +19,17 @@ import {
     ESLINT_JAVASCRIPT_LIMITS,
 } from '#cli/config/eslint.ts';
 import {
+    eslintRuleOptions,
+    eslintIgnoreBlocks,
+    manifestRuleBlocks,
+    structuralRuleBlocks,
+} from '#cli/generation/eslint/blocks.ts';
+import {
     eslintModule,
     eslintErrorRules,
     eslintFilePatterns,
     eslintRuleSettings,
     eslintSourcePattern,
-    serializeEslintBlock,
 } from '#cli/generation/eslint/output.ts';
 
 // The globs of a role: an element name stands for the paths of that element, and the fallback holds when unset.
@@ -107,6 +111,7 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
             ? { 'gspot/no-reexports': 'error' }
             : { 'gspot/no-reexports': ['error', { allowIndex: true }] };
     return {
+        'gspot/instances-in-registry': 'error',
         'gspot/no-alias-exports': 'error',
         'gspot/no-index-imports': 'error',
         'gspot/header-first': 'error',
@@ -220,7 +225,6 @@ export function eslintInputs(
     | 'eslintFiles'
     | 'eslintFragmentBlocks'
     | 'eslintRuleSettings'
-    | 'serializeEslintBlock'
     | 'eslintErrorRules'
     | 'eslintPresets'
 > {
@@ -237,10 +241,15 @@ export function eslintInputs(
         eslintPolicy: () => [
             ...structuralRuleBlocks(scopes, policy),
             ...manifestRuleBlocks(scopes, policy),
-            ...eslintRuleBlocks(policy),
+            ...eslintIgnoreBlocks(policy),
         ],
         eslintAllRules: allRules,
-        eslintModule: eslintModule(allRules, policy.level === 'all', [eslintSourcePattern('javascript', 'typescript')]),
+        eslintModule: eslintModule({
+            allRules,
+            isAll: policy.level === 'all',
+            codeFiles: [eslintSourcePattern('javascript', 'typescript')],
+            ruleOptions: eslintRuleOptions(policy),
+        }),
         eslintFiles: eslintFilePatterns(
             [],
             (selection.view.settings['tests'] ?? []) as string[],
@@ -249,7 +258,6 @@ export function eslintInputs(
         eslintFragmentBlocks: [],
         eslintRuleSettings: eslintRuleSettings,
         eslintErrorRules,
-        serializeEslintBlock,
         eslintPresets: (name) => {
             let snapshot = presets.get(name);
             if (snapshot !== undefined) return snapshot;

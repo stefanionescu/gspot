@@ -141,3 +141,15 @@ export const RUFF_PREVIEW_RULES = new Set([
     'RUF106',
     'RUF201',
 ]);
+
+/** Native severities are not another way to select lint coverage. */
+export const ESLINT_REJECTED_SELECTIONS = [
+    '"error"',
+    '"warn"',
+    '0',
+    '"off"',
+    '["error"]',
+    '["off", "always"]',
+    '["warn", "always"]',
+    '["error", {}]',
+];

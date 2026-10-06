@@ -146,10 +146,11 @@ If a component wraps React Native's `Text`, include its name in the lint rule's 
 
 ```toml
 [tools.eslint.rules]
-"react-native/no-raw-text" = ["error", { skip = ["ThemedText"] }]
+"react-native/no-raw-text" = [{ skip = ["ThemedText"] }]
 ```
 
-This allows text inside `ThemedText`. The rule still reports bare text inside a `View`.
+Option arrays omit the native severity. The selected level decides which rules run, and options
+apply only where that level enables the rule. This allows text inside `ThemedText`. The rule still reports bare text inside a `View`.
 Set the option in the native project's scope when other projects use different components.
 
 ## Settings for one integration

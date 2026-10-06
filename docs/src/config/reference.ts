@@ -70,7 +70,7 @@ export const POLICY_EXAMPLES: Record<string, string> = {
     naming: '[[naming.paths]]\npaths = ["migrations/**"]\nallow_digits = true\nreason = "Migration filenames begin with their version."',
     architecture: '[architecture.roles]\nruntime = ["src/**"]\ntests = ["tests/**"]',
     structure: '[structure]\nreexports = "index-only"',
-    tools: '[tools.eslint.rules]\n"no-console" = "error"',
+    tools: '[tools.eslint.rules]\n"no-console" = [{ allow = ["warn"] }]',
     format: '[format]\nindent_width = 4\nprint_width = 100',
     dependencies: '[dependencies]\nmin_release_age_days = 7',
     prose: '[prose]\nvocabulary = ["Acme"]',
@@ -123,7 +123,12 @@ export const PLUGIN_OPTIONS: Record<string, Record<string, string>> = {
 };
 
 /** Rules that need project-owned selectors before they can report findings. */
-export const PLUGIN_REQUIRES_OPTIONS = ['env-owner', 'import-direction', 'no-helpers-beside-tests'];
+export const PLUGIN_REQUIRES_OPTIONS = [
+    'env-owner',
+    'import-direction',
+    'instances-in-registry',
+    'no-helpers-beside-tests',
+];
 
 /** Configuration details that explain interactions between tools. */
 export const CONFIGURATION_NOTES: Record<string, string> = {

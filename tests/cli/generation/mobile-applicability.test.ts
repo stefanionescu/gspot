@@ -67,7 +67,7 @@ test('native text component options preserve raw-text findings and ordinary Text
     const policy = {
         configurations: ['react-native'],
         agent_rules: { enabled: false },
-        tools: { eslint: { rules: { 'react-native/no-raw-text': ['error', { skip: ['ThemedText'] }] } } },
+        tools: { eslint: { rules: { 'react-native/no-raw-text': [{ skip: ['ThemedText'] }] } } },
     };
     await createFileTree(sandbox.path, { 'gspot.toml': stringify(policy), ...TEXT_COMPONENTS });
     const eslint = await createEslint(sandbox.path);

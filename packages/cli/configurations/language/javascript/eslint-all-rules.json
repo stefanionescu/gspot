@@ -34,6 +34,7 @@
     "gspot/header-first",
     "gspot/import-boundaries",
     "gspot/import-direction",
+    "gspot/instances-in-registry",
     "gspot/no-alias-exports",
     "gspot/no-helpers-beside-tests",
     "gspot/no-index-imports",

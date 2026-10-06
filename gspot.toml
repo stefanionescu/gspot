@@ -529,7 +529,6 @@ node_version = ">=24.2.0"
 
 [tools.eslint.rules]
 "gspot/instances-in-registry" = [
-    "error",
     {files = [
         "**/registry.ts",
         "**/registry.tsx",

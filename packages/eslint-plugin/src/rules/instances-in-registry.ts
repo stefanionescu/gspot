@@ -1,8 +1,8 @@
 import { unwrap } from '#plugin/syntax.ts';
 import { lintedPath, isAnyGlobMatch } from '#plugin/files.ts';
 import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { VALUE_CONSTRUCTORS } from '#plugin/config/instances-in-registry.ts';
 import type { InstancesInRegistryOptions } from '#plugin/types/instances-in-registry.ts';
-import { REGISTRY_FILES, VALUE_CONSTRUCTORS } from '#plugin/config/instances-in-registry.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isConstructed(
@@ -19,13 +19,13 @@ function isConstructed(
 export const instancesInRegistry = createRule<InstancesInRegistryOptions, 'registry'>({
     name: 'instances-in-registry',
     meta: {
-        defaultOptions: [{ files: REGISTRY_FILES }],
+        defaultOptions: [{ files: [] }],
         type: 'suggestion',
         docs: {
-            level: 'none',
+            level: 'all',
             title: 'Export one registry instance',
             example:
-                'Given a `Client` constructor, `export const client = new Client();` in `src/turn/client.ts` reports `registry`. Move that declaration and its required import to `src/turn/registry.ts`, then update consumers.',
+                'With `files: ["**/registry.ts"]` and a `Client` constructor, `export const client = new Client();` in `src/turn/client.ts` reports `registry`. Move that declaration and its required import to `src/turn/registry.ts`, then update consumers.',
             description: 'Finds an exported instance created with new outside a registry file.',
             why: 'An instance exported from anywhere is a hidden singleton; a registry file makes every shared instance visible in one place.',
             fix: "Create the instance in the module's registry file and import it from there.",
@@ -35,7 +35,7 @@ export const instancesInRegistry = createRule<InstancesInRegistryOptions, 'regis
     },
     create(context, [options]) {
         const file = lintedPath(context);
-        if (file === undefined || isAnyGlobMatch(file.relative, options.files)) return {};
+        if (options.files.length === 0 || file === undefined || isAnyGlobMatch(file.relative, options.files)) return {};
         return {
             ExportNamedDeclaration(node) {
                 if (node.declaration?.type !== AST_NODE_TYPES.VariableDeclaration) return;

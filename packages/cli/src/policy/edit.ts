@@ -7,6 +7,7 @@ import { valueAt, isRecord } from '#cli/platform/objects.ts';
 import { wrapLongArrays } from '#cli/parsers/toml/layout.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { POLICY_LINE_WIDTH } from '#cli/config/parsers/toml.ts';
+import { normalizeTomlTables } from '#cli/parsers/toml/document.ts';
 import { parseTomlText, parseStrictPolicy } from '#cli/policy/read.ts';
 import type { Mutation, Proposal, PolicyKey, TomlTable } from '#cli/types/policy/settings.ts';
 
@@ -107,7 +108,10 @@ export function addToList(raw: TomlTable, key: string, entries: unknown[]): void
     const table = createTable(raw, path);
     if (!table) throw new Error(`\`${key}\` runs through a value that is not a table.`);
     const list = [...((table[name] as unknown[] | undefined) ?? [])];
-    for (const value of entries) if (!list.some((item) => isDeepStrictEqual(item, value))) list.push(value);
+    for (const entry of entries) {
+        const value = normalizeTomlTables(entry);
+        if (!list.some((item) => isDeepStrictEqual(item, value))) list.push(value);
+    }
     table[name] = list;
 }
 

@@ -230,10 +230,18 @@
         "section": "Kits: JavaScript, TypeScript, CSS, HTML, and Markdown",
         "finding": "| `kits/language/javascript/manifest.toml:327,333` `rules-off` `example` and `help` | \"Run gspot apply to write the configuration again\" fixes nothing. A required rule is off because of `[tools.eslint.extra]` or a kit fragment, and apply writes the same blocks again. `gspot/drift` already reports a hand-edited generated file. The example uses jargon: \"authored ESLint override\", \"through policy\", \"regenerate configuration\". | Help: \"Remove the `[tools.eslint.extra]` entry that turns the rule off, or record the decision with `gspot ignore javascript/eslint --rule <rule> --reason`.\" Rewrite the example the same way. |",
         "owner": "`kits/language/javascript/manifest.toml:327,333` `rules-off` `example` and `help`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/cli/configurations/language/javascript/manifest.toml",
+            "packages/cli/src/policy/schema/tools.ts",
+            "tests/cli/generation/level-contract.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "The rules-off help and example name the entry to remove or the exact reasoned gspot ignore command. Schema and manifest refusal prevent authored ESLint severity, rules, overrides, and extends from selecting coverage. Apply is no longer presented as a repair for a declaration that would be regenerated unchanged.",
+            "Source: packages/cli/configurations/language/javascript/manifest.toml; packages/cli/src/policy/schema/tools.ts; tests/cli/generation/level-contract.test.ts.",
+            "Focused native ESLint API and plugin contracts pass 87 tests, 615 assertions across five files, /tmp/gspot-eslint-options-contracts-final.log. All four TypeScript targets pass, /tmp/gspot-eslint-options-types-ready-final.log; documentation builds 316 pages with all links and fragments valid, /tmp/gspot-eslint-options-docs.log. Canonical second apply changes nothing: /tmp/gspot-eslint-options-apply-second.json (136 unchanged outputs, no notes)."
+        ]
     },
     {
         "id": "slices/kits-web-languages/017",
@@ -422,10 +430,21 @@
         "section": "Kits: JavaScript, TypeScript, CSS, HTML, and Markdown",
         "finding": "| `src/config/generation/eslint.ts:37`, `src/generation/eslint/configuration.ts:102-105` `gspot/registry-instances` | At level `all`, every repository must create shared instances only in files named `registry.ts`, `registry.tsx`, or `registry.js`. That is gspot's own file convention, and this template ships it. | Turn the rule off by default. Turn it on only when the policy names the registry files. |",
         "owner": "`src/config/generation/eslint.ts:37`, `src/generation/eslint/configuration.ts:102-105` `gspot/registry-instances`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": [
+            "packages/eslint-plugin/src/rules/instances-in-registry.ts",
+            "packages/cli/src/generation/eslint/configuration.ts",
+            "tests/plugin/rules/instances-in-registry.test.ts",
+            "tests/plugin/configuration.test.ts",
+            "tests/cli/generation/level-contract.test.ts"
+        ],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "No consumer registry file convention is imposed: the singleton rule defaults to an empty project file list and reports nothing without project-owned paths. All supplies the rule; authored native option arrays declare its files without a severity or enabling flag. Recommended leaves it inactive even with those options.",
+            "Decision evidence: recommended-and-all and manual-configuration-overrides retain legitimate project prerequisites while prohibiting a second coverage selection step. The finding\u2019s suggestion to manually enable the rule is superseded; its project ownership requirement is implemented.",
+            "Source: packages/eslint-plugin/src/rules/instances-in-registry.ts; packages/cli/src/generation/eslint/configuration.ts; tests/plugin/rules/instances-in-registry.test.ts; tests/plugin/configuration.test.ts; tests/cli/generation/level-contract.test.ts.",
+            "Focused native ESLint API and plugin contracts pass 87 tests, 615 assertions across five files, /tmp/gspot-eslint-options-contracts-final.log. All four TypeScript targets pass, /tmp/gspot-eslint-options-types-ready-final.log; documentation builds 316 pages with all links and fragments valid, /tmp/gspot-eslint-options-docs.log. Canonical second apply changes nothing: /tmp/gspot-eslint-options-apply-second.json (136 unchanged outputs, no notes)."
+        ]
     },
     {
         "id": "slices/kits-web-languages/033",

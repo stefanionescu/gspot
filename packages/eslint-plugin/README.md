@@ -38,9 +38,11 @@ export default [gspot.configs.recommended];
 `recommended` turns on `gspot/no-client-env` as an error.
 
 `gspot.configs.all` adds the rules for imports, layout, trivial files, and
-trivial functions. It also forbids re-exports. Select `require-server-only`, `max-barrel-reexports`,
-`import-extensions`, and `instances-in-registry` yourself with the files and options they
-need.
+trivial functions. It also forbids re-exports. The instance rule requires registry file paths
+from the project.
+`require-server-only` needs server file paths; `max-barrel-reexports` needs a project limit;
+`import-extensions` needs the project's import conventions. The CLI supplies these project
+settings where they apply.
 
 Use `eslint-plugin-import-x` for duplicate exports (`import-x/export`) and declarations
 before exports (`import-x/exports-last`). TypeScript also reports ambiguous star exports
@@ -122,6 +124,7 @@ its own. Without options they report nothing:
 
 - `import-direction` takes `roles`: the globs of your types, tests, harness, config, env, and
   runtime files.
+- `instances-in-registry` takes `files`: the paths that may export constructed instances.
 - `env-owner` takes `owners`: the files that may read `process.env` or `import.meta.env`.
 - `no-helpers-beside-tests` takes `harness`: the folder the shared test helpers move to.
 - `import-boundaries` takes `folders`: boundary folders or folder globs, relative to the repository root. It defaults to `*/*`, which selects folders such as `src/turn` or `packages/cli`. The nearest matching ancestor owns each file. Set `aliases` to map import prefixes to repository folders for automatic fixes.

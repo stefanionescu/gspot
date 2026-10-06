@@ -314,10 +314,10 @@ export default [
     <%~ eslintModule.block({ files, ...preset }, `...${source}`) %>,
 <% } %>
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'max-params': ['error', JAVASCRIPT_LIMITS.parameters] } }) %>,
-<% const overrides = []; if (config.verbatim !== undefined) { overrides.push(config.verbatim.entries); %>
+<% if (config.verbatim !== undefined) { %>
     // [tools.eslint.verbatim]: <%= json(config.verbatim.reason, 0) %>
     <%= json(config.verbatim.entries) %>,
-<% } for (const { scope, includes, excludes, rules } of eslintPolicy()) { const matches = { scope: { scope, includes, excludes, flags: 's' } }; const entries = Object.entries(rules); for (const block of [{ files: CODE.map((pattern) => [pattern, matches]), rules: Object.fromEntries(entries.filter(([name]) => !name.startsWith('package-json/'))) }, { files: [['**/package.json', matches]], rules: Object.fromEntries(entries.filter(([name]) => name.startsWith('package-json/'))) }]) { overrides.push(block); %>
-    <%~ serializeEslintBlock(block) %>,
-<% } } recordRules(eslintRuleSettings([...eslintModule.blocks, ...overrides])); %>
+<% } for (const { scope, includes, excludes, rules } of eslintPolicy()) { const matches = { scope: { scope, includes, excludes, flags: 's' } }; const entries = Object.entries(rules); for (const block of [{ files: CODE.map((pattern) => [pattern, matches]), rules: Object.fromEntries(entries.filter(([name]) => !name.startsWith('package-json/'))) }, { files: [['**/package.json', matches]], rules: Object.fromEntries(entries.filter(([name]) => name.startsWith('package-json/'))) }]) { %>
+    <%~ eslintModule.block(block) %>,
+<% } } recordRules(eslintRuleSettings([...eslintModule.blocks, ...(config.verbatim === undefined ? [] : [config.verbatim.entries])])); %>
 ];

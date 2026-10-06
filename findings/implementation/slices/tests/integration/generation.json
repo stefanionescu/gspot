@@ -131,10 +131,14 @@
         "section": "Tests: Generation Integration Tests",
         "finding": "| `cli/generation/eslint-ignores.test.ts:48-49`, \"ESLint overrides preserve order, nested scope bounds, future files, and path-specific ignores\" | The test discards the result of line 48. Each loop pass calls `generatedEslint` again after `tests/future.js` exists, so every configuration is generated with that file already in the inventory. A generator that listed inventory files would still pass. The \"future files\" part cannot fail. | In each pass, write `tests/future.js` after `generatedEslint` returns and before `lintFiles`. Delete line 48. |",
         "owner": "`cli/generation/eslint-ignores.test.ts:48-49`, \"ESLint overrides preserve order, nested scope bounds, future files, and path-specific ignores\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
+        "location": ["tests/cli/generation/eslint-ignores.test.ts"],
+        "status": "closed",
+        "outcome": "implemented",
+        "verification": [
+            "Every loop pass generates the ESLint configuration before creating tests/future.js, then removes that file before the next pass. No discarded preliminary generation remains. The existing exact ordered findings retain nested scope, path override, explicit ignore, and future file assertions.",
+            "Source: tests/cli/generation/eslint-ignores.test.ts.",
+            "Focused native ESLint API and plugin contracts pass 87 tests, 615 assertions across five files, /tmp/gspot-eslint-options-contracts-final.log. All four TypeScript targets pass, /tmp/gspot-eslint-options-types-ready-final.log; documentation builds 316 pages with all links and fragments valid, /tmp/gspot-eslint-options-docs.log. Canonical second apply changes nothing: /tmp/gspot-eslint-options-apply-second.json (136 unchanged outputs, no notes)."
+        ]
     },
     {
         "id": "slices/tests-integration-generation/012",

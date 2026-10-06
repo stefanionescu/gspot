@@ -47,7 +47,7 @@ test('Expo appears and disappears with its dependency while native tool options 
         expect(pins.has('eslint-plugin-expo')).toBe(expo);
         expect(pins.has('expo-doctor')).toBe(expo);
         expect(parse(policy)).toMatchObject({
-            tools: { eslint: { rules: { 'react-native/no-raw-text': ['error', { skip: ['ProjectText'] }] } } },
+            tools: { eslint: { rules: { 'react-native/no-raw-text': [{ skip: ['ProjectText'] }] } } },
         });
         const stable = readTree(sandbox.path);
         await applyCommand({ cwd: sandbox.path, isDryRun: false });

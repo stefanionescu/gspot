@@ -24,7 +24,7 @@ test.each([
         text: '[[scope]]\npath = "api"\n[scope.tools.eslint.rules]\n"no-console" = "off"\n',
         where: 'scope.0.tools.eslint.rules.no-console',
         before: '"off"',
-        after: '"error"',
+        after: '[]',
     },
 ])(
     'parseStrictPolicy > semantic errors name the key path of $name and accept its correction',
@@ -69,7 +69,7 @@ test.each([
     },
     {
         name: 'a nested array of tables under a second scope',
-        text: '[[scope]]\npath = "api"\n[[scope.tools.eslint.overrides]]\npaths = ["src"]\nrules = {eqeqeq = "error"}\n[[scope]]\npath = "web"\n[[scope.tools.eslint.overrides]]\npaths = []\nrules = {eqeqeq = "error"}\n',
+        text: '[[scope]]\npath = "api"\n[[scope.tools.eslint.overrides]]\npaths = ["src"]\nrules = {eqeqeq = ["always"]}\n[[scope]]\npath = "web"\n[[scope.tools.eslint.overrides]]\npaths = []\nrules = {eqeqeq = ["always"]}\n',
         where: 'scope.1.tools.eslint.overrides.0.paths',
         correction: ['paths = []', 'paths = ["src"]'],
     },

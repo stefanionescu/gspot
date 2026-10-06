@@ -19,6 +19,7 @@ eslint_plugins = true
 
 [[tool]]
 name = "eslint"
+refused_options = [{paths = ["rules", "overrides", "extends"], message = "ESLint rule selection comes from level recommended or all. Use tools.eslint.rules and tools.eslint.overrides for native options, or gspot ignore javascript/eslint --rule <rule> --reason <why> to accept a finding."}]
 rule_url = "https://eslint.org/docs/latest/rules/{rule}"
 crash_pattern = "^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)"
 diagnostic_header_pattern = "^(?:Oops!|ESLint: )"
@@ -272,9 +273,8 @@ summary = "The languages a component script block declares; empty means plain Ja
 name = "tools.eslint.rules"
 type = "table"
 direction = "rule-options"
-off_values = [0, "off"]
 default = {}
-summary = "Rule options and rules turned on, by ESLint rule id; a rule turned off is a gspot ignore --rule."
+summary = "Native option arrays by ESLint rule ID, without a severity. Options apply only where the selected level enables the rule. Accept findings with gspot ignore --rule."
 
 [[setting]]
 name = "tools.eslint.overrides"
@@ -343,13 +343,13 @@ summary = "Dependencies knip does not report as unused, each with a reason: pack
 name = "rules-off"
 title = "Keep required ESLint rules on"
 tool = "node"
-example = "An authored ESLint override disabling a rule required by policy reports that missing rule. Remove the override or record the intended scoped exception with a reason through policy, then regenerate configuration."
+example = "A later configuration block turns off a required rule. Remove the entry that turns it off, or accept the finding with gspot ignore javascript/eslint --rule <rule> --reason <why>."
 level = "recommended"
 stage = "push"
 runs = "scope"
 summary = "Checks that the configuration ESLint resolves for a file still turns on every rule the configurations require."
 why = "The configuration is put together from the blocks of many configurations, and a later block can turn off a rule that an earlier one turned on."
-help = "Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason."
+help = "Remove the configuration entry that turns the rule off, or accept the finding with gspot ignore javascript/eslint --rule <rule> --reason <why>."
 
 [agent_rules]
 "NODE.md" = {runtimes = ["node"]}

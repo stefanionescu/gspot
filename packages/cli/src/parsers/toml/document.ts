@@ -13,7 +13,12 @@ function getTomlTable(
     for (const key of options.keys) {
         if (!Object.hasOwn(table, key)) {
             if (!options.create) return undefined;
-            Object.defineProperty(table, key, { value: {}, enumerable: true, writable: true, configurable: true });
+            Object.defineProperty(table, key, {
+                value: normalizeTomlTables({}),
+                enumerable: true,
+                writable: true,
+                configurable: true,
+            });
         }
         const child = table[key];
         if (!isRecord(child))
@@ -45,7 +50,13 @@ export function openTomlDocument(input: TomlInput): TomlDocument {
             });
             if (table === undefined) return;
             if (value === undefined) Reflect.deleteProperty(table, key);
-            else Object.defineProperty(table, key, { value, enumerable: true, writable: true, configurable: true });
+            else
+                Object.defineProperty(table, key, {
+                    value: normalizeTomlTables(value),
+                    enumerable: true,
+                    writable: true,
+                    configurable: true,
+                });
         },
         text() {
             const text = patchToml(input.source, document);
@@ -68,4 +79,19 @@ export function parseTomlFile(input: TomlInput): Record<string, unknown> {
     } catch (error) {
         throw new Error(`${input.path} is not valid TOML. Fix the file, then run gspot apply.`, { cause: error });
     }
+}
+
+/**
+ * Give edited TOML tables the parser's null prototype while preserving dates and array order.
+ * @param value a TOML field created by an edit
+ * @returns the same TOML values with consistent table prototypes
+ */
+export function normalizeTomlTables(value: unknown): unknown {
+    if (Array.isArray(value)) return value.map((entry) => normalizeTomlTables(entry));
+    if (!isRecord(value)) return value;
+    const table = Object.fromEntries<unknown>(
+        Object.entries(value).map(([key, entry]) => [key, normalizeTomlTables(entry)]),
+    );
+    Object.setPrototypeOf(table, null);
+    return table;
 }

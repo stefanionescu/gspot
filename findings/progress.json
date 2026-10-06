@@ -42,7 +42,7 @@
             "scope": "Test, script, and package organization",
             "decision": "The current user plan requires four test directories: cli, plugin, tools, and packages. Config and types mirror their behavioral owners, and the shared harness stays flat. Scripts own suite and registry orchestration. This supersedes the inherited five-family decision.",
             "evidence": [
-                "The user’s implementation plan in this conversation",
+                "The user\u2019s implementation plan in this conversation",
                 "tests/package.json",
                 "tests/bunfig.toml",
                 "mise.toml",
@@ -13131,7 +13131,7 @@
         {
             "from": "packages/cli/src/tools/npm/project.ts",
             "to": "packages/cli/src/parsers/schema/packages.ts",
-            "name": "packageSchema → toolProjectSchema",
+            "name": "packageSchema \u2192 toolProjectSchema",
             "type": false
         },
         {
@@ -13149,7 +13149,7 @@
         {
             "from": "packages/cli/src/types/tools/npm.ts",
             "to": "packages/cli/src/types/parsers/packages.ts",
-            "name": "PackageManagerIdentity → PackageClientIdentity",
+            "name": "PackageManagerIdentity \u2192 PackageClientIdentity",
             "type": true
         },
         {
@@ -18525,12 +18525,10 @@
                 "Canonical generation: /tmp/gspot-sql-contract-apply-first.json and /tmp/gspot-sql-contract-apply-second.json (136 unchanged outputs, no writes or notes each).",
                 "Final CLI replay: /tmp/gspot-sql-contract-cli-ready.log (106 passes, 262 assertions, nine files).",
                 "Final native replay: /tmp/gspot-sql-contract-native-ready.log (seven passes, 36 assertions, two files).",
-                "Actual gspot check --staged: /tmp/gspot-sql-contract-staged.json ({'passed': 71, 'skipped': 7}, no findings/errors)."
+                "Actual gspot check --staged: /tmp/gspot-sql-contract-staged.json ({'passed': 71, 'skipped': 7}, no findings/errors).",
+                "Hook-enabled commit 19f1c491; /tmp/gspot-sql-contract-commit.log. Initial normal push failed OSV; dependency gate repaired in 88359ef8 and both commits pushed normally, /tmp/gspot-sql-security-push.log (72 passes, seven skips, no findings/errors)."
             ],
-            "remaining": [
-                "Normal hook-enabled commit and push.",
-                "Continue remaining implementation batches and separately authorized publication/deployment."
-            ]
+            "remaining": ["Continue remaining implementation batches and separately authorized publication/deployment."]
         },
         {
             "subsystem": "SQL delivery security gate",
@@ -18544,10 +18542,48 @@
                 "Installed consumer dependency resolution and native positive/negative contracts: /tmp/gspot-sql-security-native-contracts-final.json (patch versions, spoof rejection, trusted/untrusted clients, valid flat/indexed maps, oversized offset refusal). Earlier ad hoc indexed-map probes used unsupported conversion paths; final mapping-iteration regression passes.",
                 "All four TypeScript targets: /tmp/gspot-sql-security-types.log. Documentation: /tmp/gspot-sql-security-docs.log (316 pages, all links/fragments valid).",
                 "Delivered-package suite: /tmp/gspot-sql-security-package.log (nine passes, 450 assertions across eight files; isolated registry closes normally).",
-                "Actual gspot check --staged: /tmp/gspot-sql-security-staged.json (37 passes, one skip, no findings/errors)."
+                "Actual gspot check --staged: /tmp/gspot-sql-security-staged.json (37 passes, one skip, no findings/errors).",
+                "Hook-enabled commit 88359ef8; /tmp/gspot-sql-security-commit-final.log (24 passes, one skip and valid commit message). Normal push to origin/main passed 72 checks, seven skips, zero findings/errors, /tmp/gspot-sql-security-push.log. HEAD and origin/main matched and tree was clean before the ESLint batch."
+            ],
+            "remaining": ["Continue remaining implementation batches and separately authorized publication/deployment."]
+        },
+        {
+            "subsystem": "ESLint options preserve level coverage and project file prerequisites",
+            "rows": [
+                "slices/kits-web-languages/016",
+                "slices/kits-web-languages/032",
+                "slices/tests-integration-generation/011"
+            ],
+            "outcome": "Native option arrays configure only rules already active in their generated blocks. Original scope selectors, script/test exclusions, later native disables and explicit ignores retain their order. Authored severity and verbatim coverage declarations are refused at the policy boundary. The all-level singleton rule preserves project-owned file prerequisites without a consumer folder convention. Three review records close with their IDs and original findings retained.",
+            "evidence": [
+                "Focused generation/policy replay: /tmp/gspot-eslint-options-cli-replay.log (374 passes, 1738 assertions, 52 files).",
+                "Final focused installed ESLint API, plugin and published/runtime schema contracts: /tmp/gspot-eslint-options-contracts-final.log (87 passes, 615 assertions, five files). The initial schema test exposed invalid prefixItems for an empty tuple; a zero-length array fixes the published schema. The severity error points exactly to its array entry.",
+                "Source lint: /tmp/gspot-eslint-options-changed-lint.log and /tmp/gspot-eslint-options-last-lint.log; schema lint: /tmp/gspot-eslint-options-schema-lint.log; TOML formatting: /tmp/gspot-eslint-options-toml-format.log.",
+                "All four TypeScript targets: /tmp/gspot-eslint-options-types-ready-final.log. Documentation: /tmp/gspot-eslint-options-docs.log (316 pages; links and fragments valid).",
+                "Generated plugin build: /tmp/gspot-eslint-options-plugin-build.log. Canonical apply: /tmp/gspot-eslint-options-apply-first.json (one generated ESLint write) and /tmp/gspot-eslint-options-apply-second.json (136 unchanged, no writes or notes).",
+                "Final source CLI native compatibility after rebuilding the plugin: /tmp/gspot-eslint-options-native-final.log (five passes, 24 assertions across two files; JavaScript, React, Expo and bare React Native defects/corrections and required-tool ownership).",
+                "Full CLI/plugin verification: /tmp/gspot-eslint-options-full-cli-plugin-ready.log (2828 passes, three existing platform skips, zero failures/errors, 10051 assertions across 341 files; 302.68 seconds).",
+                "Delivered-package verification before the security pin changes: /tmp/gspot-eslint-options-packages.log (nine passes, 450 assertions across seven files; source binaries, native tools, syntax and plugin module formats; isolated registry closes). Final delivery replay follows the dependency fixes.",
+                "Initial actual staged gate: /tmp/gspot-eslint-options-staged.json (129 passes, three failures, seven legitimate skips). Failures were a smart apostrophe, a reserved destructured parameter name, and newly reported smol-toml/sprintf-js advisories. Text issues corrected without rule changes.",
+                "Primary security sources: https://github.com/squirrelchat/smol-toml/releases/tag/v1.9.0; https://github.com/advisories/GHSA-r4xh-jqrq-34v2; https://github.com/advisories/GHSA-hp3w-g68c-fv3c; https://github.com/advisories/GHSA-2883-xcg3-v3hh; https://github.com/advisories/GHSA-5p4m-2wfm-xmqj.",
+                "The reviewed smol-toml 1.9.0 release replaces quadratic key scanning with a linear parser and returns null-prototype tables. Both direct consumers now pin 1.9.0. sprintf-js has no fixed release; it is removed with its argparse 1.x/esprima chain by resolving js-yaml 3.x requests to compatible js-yaml 4.3.2. The only old loader consumer, @istanbuljs/load-nyc-config, calls the retained load API; native inherited YAML configuration and real Babel Jest coverage pass. No advisory ignore is added.",
+                "An initial js-yaml 4.3.0 compatibility probe passed but OSV reported two older-branch advisories. Pin 4.3.2 fixes both. Final actual OSV: /tmp/gspot-eslint-options-osv-final.json (passed, no findings).",
+                "Final installed primary native contracts: /tmp/gspot-eslint-options-security-native-final.json (js-yaml 4.3.2; YAML inheritance; malformed YAML rejection; empty-merge budget enforcement; real Jest coverage with an uncovered branch retained; smol-toml 1.9.0; 128000 flat keys parsed correctly; quoted-key round trip). Measured parse time is evidence from one run, not a product promise.",
+                "Post-parser-upgrade four TypeScript targets: /tmp/gspot-eslint-options-security-types.log.",
+                "Final post-security delivered-package replay before TOML ownership repairs: /tmp/gspot-eslint-options-final-packages.log (nine passes, 450 assertions across seven files; 296.66 seconds).",
+                "Post-security full CLI/plugin replay exposed five genuine prototype-shape regressions: /tmp/gspot-eslint-options-final-cli-plugin.log (2823 passes, three platform skips, five failures). The parser now returns null-prototype tables; edits and stored JSON ownership fields must use the same table shape for strict comparison.",
+                "Source repair: packages/cli/src/parsers/toml/document.ts normalizes edited tables recursively, preserves Date values and array order, and keeps prototype-named keys as own data. Policy list deduplication, shared field adoption/inspection, update and restoration normalize expected tables before strict equality. Byte/mode ownership checks and value types remain strict.",
+                "Focused TOML ownership replay: /tmp/gspot-eslint-options-toml-ownership-tests-final.log (102 passes, 442 assertions across 15 files, including all ownership cases and authored timestamp/prototype-key preservation). Final full replay follows the repair.",
+                "Actual staged replay before TOML ownership repairs: /tmp/gspot-eslint-options-staged-final.json (132 passes, seven skips, zero findings/errors). The final actual staged gate includes the ownership repair.",
+                "Final documentation: /tmp/gspot-eslint-options-final-docs.log (316 pages, all links/fragments valid). Post-security canonical apply: /tmp/gspot-eslint-options-security-apply-first.json and /tmp/gspot-eslint-options-security-apply-second.json (136 unchanged outputs, zero writes/notes both).",
+                "Final full CLI/plugin replay after TOML ownership repairs: /tmp/gspot-eslint-options-complete-cli-plugin.log (2829 passes, three existing platform skips, zero failures/errors, 10054 assertions across 341 files; 244.49 seconds).",
+                "Final affected delivered-package replay after TOML ownership repairs: /tmp/gspot-eslint-options-ownership-packages.log (five passes, 382 assertions across three files; launchers, standalone binary, installation, formatting and native diagnostics; isolated registry closes). The earlier complete nine-case package replay remains valid for unchanged language/plugin consumers.",
+                "All four final TypeScript targets: /tmp/gspot-eslint-options-toml-types-ready.log. Final source/test lint: /tmp/gspot-eslint-options-toml-ownership-lint.log and /tmp/gspot-eslint-options-toml-test-lint-ready.log.",
+                "Actual final gspot check --staged: /tmp/gspot-eslint-options-staged-ready.json (132 passes, seven legitimate skips, no findings/errors; 98.069 seconds).",
+                "Final canonical applies after TOML ownership repairs: /tmp/gspot-eslint-options-ready-apply-first.json and /tmp/gspot-eslint-options-ready-apply-second.json (136 unchanged outputs, zero writes or notes each)."
             ],
             "remaining": [
-                "Hook-enabled dependency commit and normal push.",
+                "Hook-enabled commit and normal push.",
                 "Continue remaining implementation batches and separately authorized publication/deployment."
             ]
         }

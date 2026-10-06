@@ -1,25 +1,27 @@
 import { z } from 'zod';
 import { reasoned } from '#cli/policy/schema/fields.ts';
 import { licenseExceptionSchema } from '#cli/parsers/schema/licenses.ts';
-import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/parsers/output.ts';
+import { ESLINT_OPTIONS_HELP, ESLINT_OPTION_STRING } from '#cli/config/policy/settings.ts';
 import ESLINT_RUNTIMES from '../../../configurations/language/javascript/runtime-names.json' with { type: 'json' };
 
 const extraTable = z.object({ reason: z.string().optional() }).catchall(z.unknown());
 
 const toolTable = z.object({ verbatim: extraTable.optional() }).catchall(z.unknown());
 
-const ruleSeverity = z.union([
-    z.literal('off'),
-    z.literal(0),
-    z.literal('warn'),
-    z.literal('error'),
-    z.literal(ESLINT_WARN),
-    z.literal(ESLINT_ERROR),
+const firstEslintOption = z.union([
+    z.string().regex(ESLINT_OPTION_STRING, { error: ESLINT_OPTIONS_HELP }),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(z.json()),
+    z.record(z.string(), z.json()),
 ]);
 
-const ruleOption = z.union([ruleSeverity, z.tuple([ruleSeverity]).rest(z.unknown())]);
+const eslintOptions = z.union([z.array(z.never()).max(0), z.tuple([firstEslintOption]).rest(z.json())], {
+    error: ESLINT_OPTIONS_HELP,
+});
 
-const eslintRules = z.record(z.string(), ruleOption);
+const eslintRules = z.record(z.string(), eslintOptions);
 
 const stylelintValue = z.union([z.literal(true), z.string().min(1), z.number(), z.record(z.string(), z.json())]);
 

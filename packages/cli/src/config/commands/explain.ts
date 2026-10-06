@@ -6,7 +6,7 @@ export const DIRECTION_TEXTS: Record<SettingSpec['direction'], string> = {
     loosening: 'a loosening: setting it needs a reason',
     tightening: 'a tightening: no reason needed',
     neutral: 'neutral: no reason needed',
-    'rule-options': 'per rule: options and rules turned on; off is an ignore',
+    'rule-options': 'per rule: native options; accepting a finding requires an ignore',
 };
 
 export const RULE_LOOKUP_TIMEOUT_MS = 10_000;

@@ -2,6 +2,12 @@ import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
 
 export const ISO_DATE_LENGTH = 10;
 
+// ESLint option arrays omit the severity; coverage and severity come from generated rule declarations.
+export const ESLINT_OPTION_STRING = /^(?!(?:off|warn|error)$)[\s\S]*$/u;
+
+export const ESLINT_OPTIONS_HELP =
+    'ESLint rule selection comes from level recommended or all. Write only native options in an array, without a severity. Accept a finding with gspot ignore javascript/eslint --rule <rule> --reason "<why>".';
+
 // A category key has two parts after the language: naming.<language>.<category>.<setting>.
 export const CATEGORY_KEY_PARTS = 2;
 

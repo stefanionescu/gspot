@@ -1,9 +1,9 @@
 import { extensionsTagged } from '#cli/repository/tags.ts';
-import type { EslintAllRules } from '#cli/types/parsers/eslint.ts';
 
 import type {
     EslintFiles,
     EslintModule,
+    EslintModuleInput,
     EslintFileSelector,
     EslintSettingsBlock,
 } from '#cli/types/generation/eslint.ts';
@@ -58,36 +58,21 @@ export function serializeEslintBlock(block: EslintSettingsBlock, runtime = ''): 
 
 /**
  * Bind default block rendering to its level and optional project scope.
- * @param allRules the house style rule IDs generated from the actual metadata.
- * @param isAll whether house style rules apply.
- * @param codeFiles the complete code patterns including framework components.
- * @param scope the fragment's owning scope, absent for root blocks.
- *
- * @param scope.path the owning folder, relative to the repository root.
- * @param scope.excluded the nested project patterns excluded from this fragment.
- * @returns rendered defaults and their identical ordered rule data.
+ * @param input the level, generated file selectors, authored options, and optional fragment scope
+ * @returns rendered defaults and their identical ordered rule data
  */
-export function eslintModule(
-    allRules: EslintAllRules,
-    isAll: boolean,
-    codeFiles: string[],
-    scope?: { path: string; excluded: string[] },
-): EslintModule {
+export function eslintModule(input: EslintModuleInput): EslintModule {
+    const { allRules, isAll, codeFiles, ruleOptions, scope } = input;
     const blocks: EslintSettingsBlock[] = [];
     return {
         blocks,
         block: (payload, runtime) => {
-            const rules =
-                payload.rules === undefined
-                    ? {}
-                    : {
-                          rules: Object.fromEntries(
-                              Object.entries(payload.rules).map(([name, value]) => [
-                                  name,
-                                  !isAll && allRules.has(name) ? 'off' : value,
-                              ]),
-                          ),
-                      };
+            const rules: Record<string, unknown> = Object.fromEntries(
+                Object.entries(payload.rules ?? {}).map(([name, value]) => [
+                    name,
+                    !isAll && allRules.has(name) ? 'off' : value,
+                ]),
+            );
             const nested =
                 scope === undefined
                     ? {}
@@ -98,10 +83,39 @@ export function eslintModule(
                           ]),
                           ignores: [...(payload.ignores ?? []), ...scope.excluded],
                       };
-            const block = { ...payload, ...rules, ...nested };
-            blocks.push(block);
-            const rendered = serializeEslintBlock(block, runtime);
-            return scope === undefined ? rendered : `stripRuntimeGlobals(${rendered})`;
+            const block = { ...payload, ...nested, rules };
+            const configured = ruleOptions.flatMap((options): EslintSettingsBlock[] => {
+                const entries = Object.entries(block.rules).flatMap(([name, value]): [string, unknown][] => {
+                    const chosen = options.rules[name];
+                    const severity: unknown = Array.isArray(value) ? value[0] : value;
+                    return chosen === undefined || severity === 'off' || severity === 0
+                        ? []
+                        : [[name, [severity, ...chosen]]];
+                });
+                if (entries.length === 0) return [];
+                const matches = {
+                    scope: { scope: options.scope, includes: options.includes, excludes: options.excludes, flags: 's' },
+                };
+                const selectedRules: Record<string, unknown> = Object.fromEntries<unknown>(entries);
+                return [
+                    {
+                        ...block,
+                        files: (block.files ?? codeFiles).map((entry) => [
+                            ...(Array.isArray(entry) ? entry : [entry]),
+                            matches,
+                        ]),
+                        rules: selectedRules,
+                    },
+                ];
+            });
+            const rendered = [block, ...configured];
+            blocks.push(...rendered);
+            return rendered
+                .map((entry, index) => {
+                    const source = serializeEslintBlock(entry, index === 0 ? runtime : '');
+                    return scope === undefined ? source : `stripRuntimeGlobals(${source})`;
+                })
+                .join(',\n');
         },
     };
 }

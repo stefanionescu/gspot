@@ -5,7 +5,7 @@ export const MOBILE_RECONCILIATION_POLICY = `configurations = ["react-native"]
 [agent_rules]
 enabled = false
 [tools.eslint.rules]
-"react-native/no-raw-text" = ["error", { skip = ["ProjectText"] }]
+"react-native/no-raw-text" = [{ skip = ["ProjectText"] }]
 `;
 
 /** The declared package manager version supplied by the process boundary. */

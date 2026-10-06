@@ -1,7 +1,20 @@
+import type { EslintAllRules } from '#cli/types/parsers/eslint.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
 import type { Policy, RawPolicy, ScopeSelection } from '#cli/types/policy/settings.ts';
 
 export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
+
+/** Authored native options never declare rule severity or coverage. */
+export type EslintRuleOptions = PathExpressions & { scope: string; rules: NonNullable<EslintSettings['rules']> };
+
+/** Generated rule blocks retain their level, project bounds, and authored native options. */
+export type EslintModuleInput = {
+    allRules: EslintAllRules;
+    isAll: boolean;
+    codeFiles: string[];
+    ruleOptions: EslintRuleOptions[];
+    scope?: { path: string; excluded: string[] };
+};
 
 /** One no-restricted-syntax rule: its file set, or every code file when absent, and the selectors it holds. */
 export type SelectorGroup = {

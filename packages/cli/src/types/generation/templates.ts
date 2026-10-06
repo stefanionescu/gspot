@@ -22,7 +22,6 @@ export type TemplateInputs = {
     eslintPresets: (configuration: string) => EslintPresets;
     eslintRuleSettings: (blocks: EslintSettingsBlock[]) => { rules: Record<string, unknown[]> };
     eslintErrorRules: (rules: Record<string, unknown>) => Record<string, unknown>;
-    serializeEslintBlock: (block: EslintSettingsBlock, runtime?: string) => string;
     targetPath?: string;
     scopeIgnorePatterns: (patterns: string[], scope: string) => string[];
     javascriptConfig: (targetPath: string) => Record<string, unknown>;

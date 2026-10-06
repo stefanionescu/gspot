@@ -76,7 +76,7 @@ describe('policy setting refusals', () => {
         expect(found).toHaveLength(1);
         expect(found[0]).toContain('scope.0.tools.eslint.rules.unicorn/no-null');
         expect(found[0]).toContain('gspot ignore');
-        expect(found[0]).toContain('--rule unicorn/no-null');
+        expect(found[0]).toContain('without a severity');
     });
 
     test('a verbatim table needs a reason', () => {

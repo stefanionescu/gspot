@@ -4,23 +4,23 @@ export const ESLINT_OVERRIDE_POLICY = `configurations = ["javascript"]
 [agent_rules]
 enabled = false
 [tools.eslint.rules]
-eqeqeq = ["error", "smart"]
+eqeqeq = ["smart"]
 [[tools.eslint.overrides]]
 paths = ["tests"]
-rules = {eqeqeq = ["error", "always"]}
+rules = {eqeqeq = ["always"]}
 [[tools.eslint.overrides]]
 paths = ["tests/exempt.js"]
-rules = {eqeqeq = ["error", "smart"]}
+rules = {eqeqeq = ["smart"]}
 [[scope]]
 path = "apps/web"
 [scope.tools.eslint.rules]
-eqeqeq = ["warn", "always"]
+eqeqeq = ["always"]
 [[scope.tools.eslint.overrides]]
 paths = ["**/*", "!apps/web/exempt.js"]
-rules = {eqeqeq = ["error", "smart"]}
+rules = {eqeqeq = ["smart"]}
 [[scope]]
 path = "apps/web/admin"
 [[scope.tools.eslint.overrides]]
 paths = ["**/*"]
-rules = {eqeqeq = ["error", "always"]}
+rules = {eqeqeq = ["always"]}
 `;

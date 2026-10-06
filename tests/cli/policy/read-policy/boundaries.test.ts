@@ -36,14 +36,14 @@ describe('configuration directory boundaries', () => {
 });
 
 test.each([
-    { source: 'paths = []\nrules = {eqeqeq = "error"}', message: 'gspot.toml: tools.eslint.overrides.0.paths:' },
+    { source: 'paths = []\nrules = {eqeqeq = ["always"]}', message: 'gspot.toml: tools.eslint.overrides.0.paths:' },
     { source: 'paths = ["src"]\nrules = {eqeqeq = 0}', message: 'gspot.toml: tools.eslint.overrides.0.rules.eqeqeq:' },
     {
         source: 'paths = ["src"]\nrules = {eqeqeq = true}',
         message: 'gspot.toml: tools.eslint.overrides.0.rules.eqeqeq:',
     },
     {
-        source: 'paths = ["src"]\nrulez = {eqeqeq = "error"}',
+        source: 'paths = ["src"]\nrulez = {eqeqeq = ["always"]}',
         message: 'gspot.toml: `rulez` is not a setting gspot knows under [tools.eslint.overrides.0]',
     },
 ])('invalid ESLint override names its refusal: $message', ({ source, message: diagnostic }) => {
@@ -70,24 +70,19 @@ test.each(["author's name", '$(printf injected); *'])(
 );
 
 test.each([false, true])(
-    'disabled override rules are located and removed without dropping allowed sibling rules (scoped: %s)',
+    'override rule severities are refused without accepting sibling rule selections (scoped: %s)',
     (nested) => {
         const prefix = nested
             ? '[[scope]]\npath = "app"\n[[scope.tools.eslint.overrides]]'
             : '[[tools.eslint.overrides]]';
         const source = buildPolicy(['javascript'], {
-            tables: `${prefix}\npaths = ["src/**"]\nrules = {eqeqeq = 0, "no-var" = "error"}\n`,
+            tables: `${prefix}\npaths = ["src/**"]\nrules = {eqeqeq = 0, "no-var" = []}\n`,
         });
         expect(() => parseStrictPolicy(source)).toThrow('gspot ignore');
-        const { policy, problems } = readPolicyText(source);
-        expect(problems).toMatchObject([
-            {
-                path: [...(nested ? ['scope', 0] : []), 'tools', 'eslint', 'overrides', 0, 'rules', 'eqeqeq'],
-                message: textContaining('gspot ignore'),
-            },
-        ]);
-        expect(nested ? policy.scopeTables['app']?.tools?.['eslint'] : policy.tools['eslint']).toStrictEqual({
-            overrides: [{ paths: ['src/**'], rules: { 'no-var': 'error' } }],
+        expect(() => readPolicyText(source)).toThrow('gspot ignore');
+        const corrected = parseStrictPolicy(source.replace('eqeqeq = 0, ', ''));
+        expect(nested ? corrected.scopeTables['app']?.tools?.['eslint'] : corrected.tools['eslint']).toStrictEqual({
+            overrides: [{ paths: ['src/**'], rules: { 'no-var': [] } }],
         });
     },
 );

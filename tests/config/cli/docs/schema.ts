@@ -6,6 +6,28 @@ export const SCHEMA_CHECK = { name: 'project/lint', command: ['lint'], paths: ['
 /** Each published-schema input exercises one supported value or refusal. */
 export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
     {
+        name: 'native ESLint option arrays without severities',
+        input: { configurations: ['javascript'], tools: { eslint: { rules: { eqeqeq: ['smart'] } } } },
+        valid: true,
+    },
+    {
+        name: 'a zero-valued native ESLint option',
+        input: { configurations: ['javascript'], tools: { eslint: { rules: { 'max-params': [0] } } } },
+        valid: true,
+    },
+    {
+        name: 'an authored ESLint severity',
+        input: { configurations: ['javascript'], tools: { eslint: { rules: { eqeqeq: 'error' } } } },
+        valid: false,
+        key: 'tools.eslint.rules.eqeqeq',
+    },
+    {
+        name: 'a native ESLint severity inside an option array',
+        input: { configurations: ['javascript'], tools: { eslint: { rules: { eqeqeq: ['error', 'smart'] } } } },
+        valid: false,
+        key: 'tools.eslint.rules.eqeqeq.0',
+    },
+    {
         name: 'custom Semgrep rule files',
         input: { configurations: ['security'], semgrep: { rule_files: ['security/own.yml'] } },
         valid: true,

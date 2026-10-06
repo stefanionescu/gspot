@@ -51,23 +51,27 @@ test('Vite entry files keep the structural rules at both levels and in nested sc
         const policy = VITE_POLICY.replace('level = "all"', `level = "${level}"`)
             .replace(
                 '[tools.knip]',
-                '[tools.eslint.rules]\n"gspot/no-trivial-functions" = "error"\n"gspot/no-trivial-files" = "error"\n[tools.knip]',
+                '[tools.eslint.rules]\n"gspot/no-trivial-functions" = [{maxStatements = 2}]\n"gspot/no-trivial-files" = [{maxStatements = 2}]\n[tools.knip]',
             )
             .replaceAll('entry = []', 'entry = ["src/main.js"]');
         const findings = await trivialFindings(sandbox.path, policy);
-        expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual([
-            { file: 'src/main.js', rule: 'gspot/no-trivial-files' },
-            { file: 'src/main.js', rule: 'gspot/no-trivial-functions' },
-        ]);
-        expect(trivialFiles(findings)).toStrictEqual(ENTRY_FILES);
+        expect(findings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(
+            level === 'all'
+                ? [
+                      { file: 'src/main.js', rule: 'gspot/no-trivial-files' },
+                      { file: 'src/main.js', rule: 'gspot/no-trivial-functions' },
+                  ]
+                : [],
+        );
+        expect(trivialFiles(findings)).toStrictEqual(level === 'all' ? ENTRY_FILES : []);
         writeFileSync(
             join(sandbox.path, 'src/main.js'),
             "import { start } from './start.js';\nexport function boot() { start(); }\n",
         );
         const publicFindings = await trivialFindings(sandbox.path, policy);
-        expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual([
-            { file: 'src/main.js', rule: 'gspot/no-trivial-files' },
-        ]);
+        expect(publicFindings.filter(({ file }) => file === 'src/main.js')).toStrictEqual(
+            level === 'all' ? [{ file: 'src/main.js', rule: 'gspot/no-trivial-files' }] : [],
+        );
         writeFileSync(
             join(sandbox.path, 'src/main.js'),
             "import { start } from './start.js';\nfunction boot() { start(); }\nboot();\n",

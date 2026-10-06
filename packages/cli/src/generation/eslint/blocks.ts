@@ -8,7 +8,13 @@ import { everyTable, policyValue } from '#cli/policy/settings/entries.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Fragment, ResolvedSelector } from '#cli/types/generation/fragments.ts';
 import { byScopeDepth, nestedScopes, pathExpressions } from '#cli/repository/selectors.ts';
-import type { SelectorGroup, EslintRuleBlock, ScopeEslintSettings } from '#cli/types/generation/eslint.ts';
+
+import type {
+    SelectorGroup,
+    EslintRuleBlock,
+    EslintRuleOptions,
+    ScopeEslintSettings,
+} from '#cli/types/generation/eslint.ts';
 
 function distinctLists(lists: string[][]): string[][] {
     const seen = new Set<string>();
@@ -31,23 +37,32 @@ function allowedPaths(selection: ScopeSelection, setting: string): string[] {
 }
 
 /**
- * Build base rules, ordered path overrides, then lint ignore entries, each bounded by its owning scope.
+ * Build native option declarations and ordered path overrides, each bounded by its owning scope.
  * @param policy the repository policy
- * @returns one block per scope, path override, and lint ignore entry, in application order
+ * @returns one option block per scope and path override, in application order
  */
-export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
+export function eslintRuleOptions(policy: Policy): EslintRuleOptions[] {
     const tables = everyTable(policy).toSorted((first, second) => byScopeDepth(first.scope ?? '', second.scope ?? ''));
     const settings = tables.map<ScopeEslintSettings>(({ scope = '', table }) => ({
         scope,
         settings: table.tools?.['eslint'] ?? {},
     }));
-    const base = settings.flatMap(({ scope, settings }): EslintRuleBlock[] =>
+    const base = settings.flatMap(({ scope, settings }): EslintRuleOptions[] =>
         settings.rules === undefined ? [] : [{ scope, ...pathExpressions(['**/*']), rules: settings.rules }],
     );
     const overrides = settings.flatMap(({ scope, settings }) =>
         (settings.overrides ?? []).map(({ paths, rules }) => ({ scope, ...pathExpressions(paths), rules })),
     );
-    const ignores = activeIgnores(policy).flatMap((entry): EslintRuleBlock[] =>
+    return [...base, ...overrides];
+}
+
+/**
+ * Apply accepted findings after generated defaults and native option declarations.
+ * @param policy the repository policy
+ * @returns explicit rule ignores with their path selectors
+ */
+export function eslintIgnoreBlocks(policy: Policy): EslintRuleBlock[] {
+    return activeIgnores(policy).flatMap((entry): EslintRuleBlock[] =>
         entry.rule === undefined || entry.check !== LINT_CHECK
             ? []
             : [
@@ -60,7 +75,6 @@ export function eslintRuleBlocks(policy: Policy): EslintRuleBlock[] {
                   },
               ],
     );
-    return [...base, ...overrides, ...ignores];
 }
 
 /**
