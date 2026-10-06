@@ -23,6 +23,27 @@ import { FORMAT_CASES, FORMAT_OVERRIDES_POLICY } from '#tests/config/samples/for
 import { IGNORE_CASES, IGNORE_POLICY, SVELTE_PLUGIN } from '#tests/config/cli/generation/formatting.ts';
 import type { YamllintConfiguration, MarkdownlintConfiguration } from '#tests/types/generation/configuration-files.ts';
 
+test.each(['recommended', 'all'] as const)(
+    '%s keeps Taplo defaults and applies only declared formatting choices',
+    async (level) => {
+        await using sandbox = await testdir();
+        for (const tables of ['', '[tools.taplo.formatting]\ncompact_inline_tables = true\n']) {
+            await createFileTree(sandbox.path, {
+                'gspot.toml': buildPolicy([], { level, tables }),
+                'settings.toml': 'entry = { key = true }\n',
+            });
+            const output = emitAll(await openSession(sandbox.path)).files.find(
+                (file) => file.path === '.gspot/config/taplo.toml',
+            )!;
+            const document = parseToml(output.content);
+            expect(document).toHaveProperty('schema.enabled', false);
+            expect(document).toMatchObject({ formatting: { indent_string: ' '.repeat(4), column_width: 120 } });
+            if (tables === '') expect(document).not.toHaveProperty('formatting.compact_inline_tables');
+            else expect(document).toHaveProperty('formatting.compact_inline_tables', true);
+        }
+    },
+);
+
 test('the format width reaches editors and generated tool configurations', async () => {
     const width = 6;
     await using directory = await testdir();

@@ -5,8 +5,8 @@ requires = ["format"]
 description = "Checks JSON, YAML, TOML, XML, and related formats. Its templates configure the tools that inspect these files."
 
 [files]
-extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".ini", ".cfg", ".properties", ".plist", ".entitlements", ".xcconfig", ".xcstrings", ".xml", ".storyboard", ".xib", ".webmanifest"]
-filenames = [".nvmrc", ".node-version", ".python-version", "_headers", "_redirects"]
+extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".plist", ".entitlements", ".xcconfig", ".xcstrings", ".xml", ".storyboard", ".xib"]
+filenames = ["_headers", "_redirects"]
 kinds = ["source"]
 
 [[tool]]
@@ -63,6 +63,8 @@ platforms = ["macos"]
 [[tool]]
 name = "xmllint"
 system = true
+brew = "libxml2"
+apt = "libxml2-utils"
 
 [[config]]
 target = ".gspot/config/taplo.toml"

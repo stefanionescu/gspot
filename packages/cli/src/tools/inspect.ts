@@ -29,8 +29,8 @@ import type {
  * @returns the hint
  */
 function installHint(tool: ToolPin, runner?: string): string {
-    if (tool.system === true) return HOST_HINTS[tool.name] ?? `install ${tool.name}`;
-    if (runner === 'mise' || privateToolInstallation(tool, runner) !== undefined) return 'Run: gspot install';
+    if (tool.system !== true && (runner === 'mise' || privateToolInstallation(tool, runner) !== undefined))
+        return 'Run: gspot install';
     const [command] = OPERATING_SYSTEMS.filter(({ node }) => node === process.platform).flatMap((system) =>
         system.installers.flatMap(({ installer, command }) => {
             const pin = tool.installers[installer];
@@ -38,10 +38,11 @@ function installHint(tool: ToolPin, runner?: string): string {
         }),
     );
     if (command !== undefined) return command;
+    if (tool.system === true) return HOST_HINTS[tool.name] ?? `install ${tool.name}`;
     const pin = misePin(tool);
     if (pin === undefined) return `Install ${tool.name} using its supported installer.`;
-    const version = pin.version === undefined ? '' : `@${pin.version}`;
-    return `Install mise (https://mise.jdx.dev/getting-started.html), then run: mise install ${pin.name}${version}`;
+    const requirement = [pin.name, pin.version].filter((value) => value !== undefined).join('@');
+    return `Install mise (https://mise.jdx.dev/getting-started.html), then run: mise install ${requirement}`;
 }
 
 // An npm tool is the version its package says. For example, `license-checker-rseidelsohn@5.0.1` prints `4.4.2`.

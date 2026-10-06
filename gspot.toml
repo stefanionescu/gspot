@@ -67,6 +67,7 @@ naming.banned = [
     "fixtures",
     "shell",
 ]
+tools.taplo = {formatting = {value = {compact_inline_tables = true}, reason = "This repository keeps its authored compact inline TOML tables."}}
 
 [[scope]]
 path = "docs"

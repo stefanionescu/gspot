@@ -1,12 +1,14 @@
 // A test repository with its private tools installed: the files, the selected configurations, and the level each framework test starts from.
 import { join } from 'node:path';
-import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
+import { commitAll, gitOutput } from '#tests/harness/git.ts';
+import { applyChanges } from '#tests/harness/preservation.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { install, buildSandboxPath } from '#tests/harness/install.ts';
 import type { CheckCommand } from '#tests/types/harness/check-case.ts';
+import type { CaseChanges } from '#tests/types/harness/preservation.ts';
 import type { RepositorySetup, RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 
 // The manifest a fixture with dependencies starts from.
@@ -87,4 +89,25 @@ export async function createTestRepository(
         await sandbox[Symbol.asyncDispose]();
         throw error;
     }
+}
+
+/**
+ * Restore source, policy, index and generated outputs after commands mutate a shared test repository.
+ * @param repository the prepared repository and public command runner
+ * @param changes the authored files and policy changed by the test
+ * @returns cleanup of the test's source and generated state
+ */
+export function preserveRepositoryChanges(repository: OwnedTestRepository, changes: CaseChanges): AsyncDisposable {
+    const { root, environment, run } = repository;
+    const tree = gitOutput(root, ['write-tree']).trim();
+    const restore = applyChanges(root, changes);
+    return {
+        async [Symbol.asyncDispose]() {
+            restore();
+            gitOutput(root, ['read-tree', tree]);
+            const applied = await run(root, ['apply'], environment);
+            if (applied.code !== 0)
+                throw new Error(`Test repository restoration failed: ${applied.stdout}${applied.stderr}`);
+        },
+    };
 }

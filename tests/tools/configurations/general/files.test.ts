@@ -1,35 +1,32 @@
-// The configs configuration: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
+// Native file readers report positioned defects and accept independent corrections.
 import { join } from 'node:path';
-import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { git, commitAll } from '#tests/harness/git.ts';
+import { git, gitOutput } from '#tests/harness/git.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
-import { install, buildToolsPath } from '#tests/harness/install.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
-import { CASES, REPOSITORY, CONFIGS_INIT } from '#tests/config/tools/configurations/general/files.ts';
+import { CASES, REPOSITORY } from '#tests/config/tools/configurations/general/files.ts';
+import { createTestRepository, preserveRepositoryChanges } from '#tests/harness/repository.ts';
 
-describe('the configs configuration', () => {
-    const resources = new AsyncDisposableStack();
-    let testRepository: OwnedTestRepository;
-    beforeAll(async () => {
-        const budget = openTestBudget(suiteTimeout());
-        try {
-            testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
-        } finally {
-            budget[Symbol.dispose]();
-        }
-    }, suiteTimeout());
-    afterAll(async () => {
-        await resources.disposeAsync();
-    });
+const resources = new AsyncDisposableStack();
+let testRepository: OwnedTestRepository;
+beforeAll(async () => {
+    const budget = openTestBudget(suiteTimeout());
+    try {
+        testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+    } finally {
+        budget[Symbol.dispose]();
+    }
+}, suiteTimeout());
+afterAll(async () => {
+    await resources.disposeAsync();
+});
+describe('the files configuration', () => {
     for (const entry of CASES) {
         const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
         const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
@@ -39,8 +36,13 @@ describe('the configs configuration', () => {
                 const { failed: outcome, passed: correction } = await runFindingCase(testRepository, entry, REPOSITORY);
                 expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+                const { message: findingText, ...position } = entry.expected;
                 expect(outcome.report.checks[0]?.findings).toContainEqual(
-                    containing({ check: entry.check, ...entry.expected }),
+                    containing({
+                        check: entry.check,
+                        ...position,
+                        ...(findingText === undefined ? {} : { message: textContaining(findingText) }),
+                    }),
                 );
                 expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
                 expect(correction.report.checks).toMatchObject([
@@ -70,81 +72,76 @@ describe('the configs configuration', () => {
     );
 });
 
-test.each([
-    {
-        check: 'files/taplo',
-        path: 'settings.toml',
-        broken: 'a = 1\n[x\n',
-        corrected: 'a = 1\n',
-        expected: { file: 'settings.toml', line: 2 },
-    },
-    {
-        check: 'files/yamllint',
-        path: 'config.yaml',
-        broken: 'key: 1\nkey: 2\n',
-        corrected: '---\nkey: 1\n',
-        expected: { file: 'config.yaml', line: 2, rule: 'key-duplicates' },
-    },
-])(
-    'the configs configuration: $check rejects its invalid input and accepts the corrected file',
-    async (scenario) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'scripts/a.sh': CLEAN_BASH_SCRIPT,
-            'settings.toml': 'a = 1\n',
-            'config.yaml': '---\nkey: 1\n',
-            '.env.example': 'PORT=3000\n',
-        });
-        commitAll(sandbox.path);
-        const environment = { PATH: buildToolsPath(['taplo', 'yamllint']) };
-        await install(sandbox.path, CONFIGS_INIT, environment, { level: 'all' });
-        await createFileTree(sandbox.path, {
-            [scenario.path]: scenario.broken,
-            'src/server.js': 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',
-        });
-        const command = ['check', '--only', scenario.check, '--json'];
-        const failed = await spawnGspot(sandbox.path, command, environment);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const report = JSON.parse(failed.stdout) as RunReport;
-        expect(report.checks).toMatchObject([{ check: scenario.check, status: 'failed' }]);
-        expect(report.checks[0]!.findings).toContainEqual(containing(scenario.expected));
-        await Bun.write(join(sandbox.path, scenario.path), scenario.corrected);
-        const corrected = await spawnGspot(sandbox.path, command, environment);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: scenario.check, status: 'passed', findings: [] },
+test(
+    'Taplo preserves default spacing across levels and accepts authored inline formatting',
+    async () => {
+        const { root, environment } = testRepository;
+        await using state = new AsyncDisposableStack();
+        state.use(
+            preserveRepositoryChanges(testRepository, {
+                check: 'files/taplo-format',
+                files: { 'settings/inline.toml': '' },
+            }),
+        );
+        const path = join(root, 'settings/inline.toml');
+        const command = ['check', 'settings/inline.toml', '--only', 'files/taplo-format', '--json'];
+        for (const level of ['recommended', 'all', 'recommended']) {
+            const selected = await spawnGspot(root, ['set', 'level', level], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await Bun.write(path, 'entry={key=true}\n');
+            const fixed = await spawnGspot(root, [...command, '--fix'], environment);
+            expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+            expect(await Bun.file(path).text()).toBe('entry = { key = true }\n');
+            const checked = await spawnGspot(root, command, environment);
+            expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+            expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+                { check: 'files/taplo-format', status: 'passed', findings: [] },
+            ]);
+        }
+        const setting = await spawnGspot(
+            root,
+            ['set', 'tools.taplo.formatting', '{"compact_inline_tables":true}'],
+            environment,
+        );
+        expect(setting.code, setting.stdout + setting.stderr).toBe(0);
+        const rejected = await spawnGspot(root, command, environment);
+        expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
+        expect((JSON.parse(rejected.stdout) as RunReport).checks).toMatchObject([
+            { check: 'files/taplo-format', status: 'failed', findings: [{ file: 'settings/inline.toml' }] },
         ]);
+        const fixed = await spawnGspot(root, [...command, '--fix'], environment);
+        expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+        expect(await Bun.file(path).text()).toBe('entry = {key = true}\n');
+        const reset = await spawnGspot(root, ['set', 'tools.taplo.formatting', '--default'], environment);
+        expect(reset.code, reset.stdout + reset.stderr).toBe(0);
+        const selected = await spawnGspot(root, ['set', 'level', 'all'], environment);
+        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     },
-    NATIVE_TEST_TIMEOUT_MS,
+    suiteTimeout(),
 );
-
 test(
     'Schema validation finds nested Unicode paths through the real tool',
     async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'README.md': '# Schema validation\n',
-            'schema.json': JSON.stringify({
-                type: 'object',
-                properties: { count: { type: 'integer' } },
-                required: ['count'],
+        const { root, environment } = testRepository;
+        await using state = new AsyncDisposableStack();
+        state.use(
+            preserveRepositoryChanges(testRepository, {
+                check: 'files/v8r',
+                files: { 'settings/café.json': '', '.v8rrc.yml': '' },
             }),
-        });
-        commitAll(sandbox.path);
-        const environment = { PATH: buildToolsPath(['v8r']) };
-        await install(sandbox.path, [...CONFIGS_INIT, '--no-hooks'], environment, { level: 'all' });
+        );
         const mapping = JSON.stringify({ pattern: 'settings/café.json', schema: 'schema.json' });
-        const setting = await spawnGspot(sandbox.path, ['set', 'tools.v8r.schemas', mapping], environment);
+        const setting = await spawnGspot(root, ['set', 'tools.v8r.schemas', mapping], environment);
         expect(setting.code, setting.stdout + setting.stderr).toBe(0);
-        const applied = await spawnGspot(sandbox.path, ['apply'], environment);
+        const applied = await spawnGspot(root, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         // A conflicting authored config must not replace the generated configuration.
-        await Bun.write(join(sandbox.path, '.v8rrc.yml'), 'invalid: [\n');
-        const path = join(sandbox.path, 'settings/café.json');
+        await Bun.write(join(root, '.v8rrc.yml'), 'invalid: [\n');
+        const path = join(root, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
-        expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
+        expect(git(root, ['add', '-A']).code).toBe(0);
         const command = ['check', '--only', 'files/v8r', '--staged', '--json'];
-        const invalid = await spawnGspot(sandbox.path, command, environment);
+        const invalid = await spawnGspot(root, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect((JSON.parse(invalid.stdout) as RunReport).checks).toMatchObject([
             {
@@ -159,12 +156,94 @@ test(
             },
         ]);
         await Bun.write(path, JSON.stringify({ count: 1 }));
-        expect(git(sandbox.path, ['add', 'settings/café.json']).code).toBe(0);
-        const valid = await spawnGspot(sandbox.path, command, environment);
+        expect(git(root, ['add', 'settings/café.json']).code).toBe(0);
+        const valid = await spawnGspot(root, command, environment);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         expect((JSON.parse(valid.stdout) as RunReport).checks).toMatchObject([
             { check: 'files/v8r', status: 'passed', findings: [] },
         ]);
     },
     NATIVE_TEST_TIMEOUT_MS,
+);
+
+test(
+    'TOML parsing stays offline for explicit schema directives at both levels',
+    async () => {
+        const { root, environment } = testRepository;
+        await using resources = new AsyncDisposableStack();
+        let requests = 0;
+        const server = Bun.serve({
+            hostname: '127.0.0.1',
+            port: 0,
+            fetch() {
+                requests++;
+                return Response.json({ type: 'object', required: ['missing'] });
+            },
+        });
+        resources.defer(async () => {
+            await server.stop(true);
+        });
+        const directive = `#:schema ${server.url.toString()}schema.json\n`;
+        resources.use(
+            preserveRepositoryChanges(testRepository, {
+                check: 'files/taplo',
+                files: { 'settings/schema.toml': directive + 'value =\n' },
+            }),
+        );
+        const command = ['check', 'settings/schema.toml', '--only', 'files/taplo', '--json'];
+        for (const level of ['recommended', 'all']) {
+            const selected = await spawnGspot(root, ['set', 'level', level], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await Bun.write(join(root, 'settings/schema.toml'), directive + 'value =\n');
+            const failed = await spawnGspot(root, command, environment);
+            expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+            expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([
+                { check: 'files/taplo', status: 'failed', findings: [{ file: 'settings/schema.toml', line: 2 }] },
+            ]);
+            await Bun.write(join(root, 'settings/schema.toml'), directive + 'value = 1\n');
+            const corrected = await spawnGspot(root, command, environment);
+            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+            expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+                { check: 'files/taplo', status: 'passed', findings: [] },
+            ]);
+        }
+        expect(requests).toBe(0);
+    },
+    suiteTimeout(),
+);
+
+test(
+    'native test edits restore the shared policy, source, index and generated formatter',
+    async () => {
+        const { root, environment } = testRepository;
+        const policyPath = join(root, 'gspot.toml');
+        const configPath = join(root, '.gspot/config/taplo.toml');
+        const path = join(root, 'settings/restored.toml');
+        const policy = await Bun.file(policyPath).text();
+        const configuration = await Bun.file(configPath).text();
+        const index = gitOutput(root, ['write-tree']);
+        {
+            await using state = new AsyncDisposableStack();
+            state.use(
+                preserveRepositoryChanges(testRepository, {
+                    check: 'files/taplo-format',
+                    files: { 'settings/restored.toml': 'value = 1\n' },
+                }),
+            );
+            const setting = await spawnGspot(
+                root,
+                ['set', 'tools.taplo.formatting', '{"compact_inline_tables":true}'],
+                environment,
+            );
+            expect(setting.code, setting.stdout + setting.stderr).toBe(0);
+            expect(git(root, ['add', '-A']).code).toBe(0);
+            expect(await Bun.file(path).text()).toBe('value = 1\n');
+            expect(await Bun.file(configPath).text()).toContain('compact_inline_tables = true');
+        }
+        expect(await Bun.file(path).exists()).toBe(false);
+        expect(await Bun.file(policyPath).text()).toBe(policy);
+        expect(await Bun.file(configPath).text()).toBe(configuration);
+        expect(gitOutput(root, ['write-tree'])).toBe(index);
+    },
+    suiteTimeout(),
 );

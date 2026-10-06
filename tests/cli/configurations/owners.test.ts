@@ -3,8 +3,20 @@ import { buildTrackedFile } from '#tests/harness/tracked.ts';
 import { isOwned, ownedBy } from '#cli/configurations/owners.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { UNSUPPORTED_CONFIGURATION_FILES } from '#tests/config/cli/configurations/owners.ts';
 
 const manifests = configurationManifests();
+
+test('Configuration Files claims only formats its declared readers consume', () => {
+    const files = manifests.get('files')!;
+    for (const path of UNSUPPORTED_CONFIGURATION_FILES) {
+        expect(isOwned(files.files, buildTrackedFile(path))).toBe(false);
+        expect(isOwned(files.files, buildTrackedFile(`app/${path}`))).toBe(false);
+    }
+    for (const path of ['settings.json', 'settings.yaml', 'settings.toml', 'settings.xml'])
+        expect(isOwned(files.files, buildTrackedFile(path))).toBe(true);
+    expect(isOwned(manifests.get('site')!.files, buildTrackedFile('site.webmanifest'))).toBe(true);
+});
 
 describe('owners', () => {
     test('match by extension, filename at any depth, tag and glob', () => {

@@ -18845,10 +18845,39 @@
                 "Delivered packages: /tmp/gspot-env-readers-packages.log passes standalone archives, both installed-tool cases and launcher cancellation. The launcher consumer correctly adds a runtime environment-template skip beyond its planned Git/network/legal skips, exposing its obsolete expectation. The fixture now separates planned skips from runtime prerequisites and asserts the actionable env.templates diagnostic. /tmp/gspot-env-readers-launcher-final.log passes both launcher cases; all original takeover, native failure, scope, preservation, redaction and process-cancellation assertions remain. Final launcher lint passes and all four TypeScript targets pass in /tmp/gspot-env-readers-types-delivery.log (9.26 seconds).",
                 "Final gate corrections: the first staged run finds a calculation in config/packages/launcher.ts, the handwritten reader_functions type key and three banned fixture names. Runtime skip concatenation now lives in the test, its config holds only literals, and project reader fixture names describe their contents. EnvironmentSettings now derives keys and normalized values from the owned strict environment schema, with no naming exception. Schema declarations export at their definitions and remain last; a comment now directly describes runtime prerequisite reporting. No product gate or policy rule is disabled.",
                 "Final contracts: /tmp/gspot-env-readers-schema-final.log has 86 passes, zero failures and 269 assertions across five environment, policy and published-schema files (2.35 seconds). All four TypeScript targets pass in /tmp/gspot-env-readers-types-complete.log (9.98 seconds). Final schema lint passes in /tmp/gspot-env-readers-schema-export-eslint-final.log. /tmp/gspot-env-readers-launcher-gate-final.log passes both delivered launcher cases with 331 assertions (53.17 seconds); native and standalone/tool cases retain their earlier positive evidence.",
-                "Actual final gspot check --staged: /tmp/gspot-env-readers-staged-complete.json reports 68 passed checks, nine skips, zero findings and zero execution errors (42.508 seconds). The three newly explicit skips are absent environment templates in the repository root, CLI and tests scopes; their actionable prerequisites replace false passes. Normal Semgrep, OSV and Taplo pass. All 2,939 original records, quotations and owners remain; the original 990-record batch mapping is unchanged. Two linked reader records close and 927 remain open."
+                "Actual final gspot check --staged: /tmp/gspot-env-readers-staged-complete.json reports 68 passed checks, nine skips, zero findings and zero execution errors (42.508 seconds). The three newly explicit skips are absent environment templates in the repository root, CLI and tests scopes; their actionable prerequisites replace false passes. Normal Semgrep, OSV and Taplo pass. All 2,939 original records, quotations and owners remain; the original 990-record batch mapping is unchanged. Two linked reader records close and 927 remain open.",
+                "Delivery: hook-enabled commit 732568abdbf8b569841159945cd233d8b219bce9 succeeds in /tmp/gspot-env-readers-commit.log (45 pre-commit passes, two existing skips; commit-message pass). Normal origin/main push succeeds in /tmp/gspot-env-readers-push.log (68 passes, nine skips, zero findings; 40.6 seconds). The tree is clean and HEAD equals origin/main before the file-reader contract batch."
             ],
             "remaining": [
                 "Continue 927 original implementation records. Broader typed-setting and platform ownership records remain open; publication and deployment retain their authorization boundaries."
+            ]
+        },
+        {
+            "subsystem": "File reader coverage, host hints and native fixture ownership",
+            "rows": [
+                "slices/kits-general/020",
+                "slices/kits-general/021",
+                "slices/kits-general/024",
+                "areas/tool-tests/028"
+            ],
+            "outcome": "Four original records close with IDs and source quotations intact. A pinned regression corrects the schema-table recommendation while preserving offline parsing and push schema coverage. 923 original implementation records remain open.",
+            "evidence": [
+                "Ownership: configurations/general/files/manifest.toml removes .ini, .cfg, .properties, .webmanifest, .nvmrc, .node-version and .python-version from the Files owner. The declared native readers retain their formats, and the Site owner retains site.webmanifest. CLI ownership tests refuse every removed format at root and nested paths without erasing legitimate web coverage. Apple and platform ownership findings remain separate and open.",
+                "Host acquisition: the xmllint manifest declares brew libxml2 and apt libxml2-utils, confirmed by https://formulae.brew.sh/formula/libxml2 and https://packages.debian.org/stable/libxml2-utils. tools/inspect.ts now uses a host tool’s declared platform installer metadata, preserves host-specific guidance and refuses to recommend a managed gspot install for a host prerequisite. Windows keeps its explicit manual acquisition prerequisite; no unsupported binary or automatic installer is invented.",
+                "Inspection regressions: three OS classifications use a real empty PATH and an owned mise directory, with platform/environment state restored. The public doctor/check fixture exposes only Git and the Node/npm metadata prerequisites; it reports xmllint missing with the actual platform command and the check exits 2 with the same actionable note. No internal inspection function is mocked, no tools are installed and no call-count assertion replaces the public outcome.",
+                "Taplo formatting: the shipped template no longer forces compact_inline_tables. Both levels render ordinary Taplo inline spacing unless the project declares an existing tools.taplo.formatting choice. The repository’s authored compact style is preserved through gspot set with a reason in gspot.toml; apply owns every generated update. This is a formatting declaration, not a coverage level or enabling control.",
+                "Pinned correction to slices/kits-general/024: /tmp/gspot-file-contracts-native.log proves Taplo 0.10.0 still fetches an explicit schema directive with --no-schema after removing schema.enabled=false. Its parser and actual commit-stage check fail on the parked schema endpoint. The schema-table redundancy claim is disproved; the corrected implementation retains generated schema.enabled=false so parsing stays offline, while the declared push-stage v8r check owns schema validation. No gate or schema coverage is weakened.",
+                "Native regressions: /tmp/gspot-file-contracts-native-final.log has 12 passes, zero failures and 84 assertions across Files and environment owners (35.91 seconds). It retains positioned malformed TOML, duplicate YAML, formatter, XML and plist defects and independent corrections; commit-stage selection keeps v8r at push. It proves standard inline output through recommended/all/recommended transitions, an authored compact override, and native Unicode-path schema rejection/correction despite a conflicting authored v8r file.",
+                "Offline proof: a test-owned HTTP listener serves a schema that would reject the source. Both levels report malformed TOML at its exact line, accept the independent parse correction and make zero HTTP requests. /tmp/gspot-file-contracts-native-cleanup.log passes that case with 11 assertions (12.73 seconds); its asynchronous stack disposes the listener and temporary source. The initial template-removal and missing YAML-installation failures remain evidence, not skipped cases.",
+                "Test quality: all five native file defect/correction cases, commit selection, native formatting and v8r validation share one prepared repository and one installation. YAML and schema inputs exist before initialization so their applicable tools are installed; unrelated Bash/environment setup and CONFIGS_INIT are removed. Environment findings and the pinned dotenv fixer retain their separate Secrets-owned shared fixture. XML asserts its positioned tag mismatch with a stable fragment. The native header and grouping now say Files.",
+                "CLI and delivery: /tmp/gspot-file-contracts-cli-delivery.log has 195 passes, zero failures and 512 assertions across 14 tool-inspection, doctor, configuration, generation and published-schema files (10.89 seconds). /tmp/gspot-file-contracts-packages.log passes all five launcher, standalone archive and installed-tool cases with 382 assertions (93.08 seconds). The local registries close; external publication is not performed.",
+                "Documentation and canonical generation: /tmp/gspot-file-contracts-docs.log builds 316 pages and validates every local link and fragment. After restoring the required parser schema boundary, apply-final-first writes one generated config with 139 unchanged outputs; apply-final-second reports 140 unchanged outputs, zero writes/updates/removals, preserved outputs or notes. The generated config now equals HEAD; no generated asset is edited manually.",
+                "Final native restoration: /tmp/gspot-file-contracts-native-restoration.log passes 13 tests with 92 assertions in two files (35.57 seconds). The public restoration case proves exact source and policy bytes, generated configuration, Git index and temporary-file cleanup; all prior native defects and corrections still pass.",
+                "All four TypeScript targets pass in /tmp/gspot-file-contracts-types-restoration.log (8.73 seconds). Final changed-source and harness ESLint passes, including /tmp/gspot-file-contracts-stacks-eslint.log. The staged gate identified a reserved local name; its descriptive replacement keeps the same test assertion.",
+                "Actual gspot check --staged: /tmp/gspot-file-contracts-staged-final.json reports 131 passes, 11 explicit prerequisite/policy skips, zero failed/error checks and exit 0 (69.109 seconds). Taplo, normal Semgrep and OSV remain active. No check or gate is bypassed."
+            ],
+            "remaining": [
+                "Continue 923 original implementation records. Composite platform ownership, message assertions and broader test-quality records remain open; publication and deployment retain their authorization boundaries."
             ]
         }
     ],
@@ -22156,6 +22185,24 @@
                     "packages/cli/src/types/policy/settings.ts",
                     "tests/cli/checks/general/secrets/env/readers.test.ts",
                     "tests/cli/policy/read-policy/settings.test.ts"
+                ]
+            },
+            {
+                "id": "file-reader-contracts-and-native-fixture-ownership",
+                "records": [
+                    "slices/kits-general/020",
+                    "slices/kits-general/021",
+                    "slices/kits-general/024",
+                    "areas/tool-tests/028"
+                ],
+                "owners": [
+                    "packages/cli/configurations/general/files/manifest.toml",
+                    "packages/cli/configurations/general/files/taplo.toml.tmpl",
+                    "packages/cli/src/tools/inspect.ts",
+                    "tests/cli/tools/inspect/hints.test.ts",
+                    "tests/cli/configurations/owners.test.ts",
+                    "tests/tools/configurations/general/files.test.ts",
+                    "tests/harness/repository.ts"
                 ]
             }
         ]
