@@ -420,3 +420,34 @@ type = "list"
 direction = "loosening"
 default = []
 summary = "Paths basedpyright leaves out, such as files that need another dependency set, each with a reason."
+
+[[naming.paths]]
+paths = ["**/__init__.py", "**/__main__.py"]
+categories = ["files"]
+names = ["__init__", "__main__"]
+reason = "Python names these files."
+skip = true
+languages = ["python"]
+
+[[naming.paths]]
+paths = ["**"]
+languages = ["python"]
+categories = ["methods"]
+names = ["setUp", "setUpClass", "tearDown", "tearDownClass"]
+skip = true
+reason = "unittest discovers its lifecycle methods by these names."
+
+[[naming.paths]]
+paths = ["**"]
+languages = ["python"]
+categories = ["functions", "methods", "variables", "constants", "attributes"]
+names = ["__init__", "__main__", "__all__", "__name__", "__file__", "__dict__", "__slots__", "__repr__", "__str__", "__eq__", "__hash__", "__len__", "__iter__", "__next__", "__enter__", "__exit__", "__call__", "__getitem__", "__setitem__", "__delitem__", "__contains__", "__lt__", "__le__", "__gt__", "__ge__", "__ne__", "__bool__", "__post_init__", "__class_getitem__", "__aenter__", "__aexit__", "__await__", "__aiter__", "__anext__", "__new__", "__spec__", "__package__", "__loader__", "__cached__", "__doc__", "__annotations__", "__path__", "__class__", "__classcell__", "__qualname__", "__builtins__"]
+skip = true
+reason = "Python defines these special methods and attributes."
+
+[[naming.paths]]
+paths = ["**"]
+languages = ["python"]
+categories = ["functions", "variables", "constants", "methods", "attributes"]
+ignored_prefix = "^_+"
+reason = "A leading underscore marks a private Python declaration."

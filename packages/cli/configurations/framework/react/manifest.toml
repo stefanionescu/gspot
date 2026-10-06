@@ -65,3 +65,11 @@ reason = "React renders a component by its name, so a component of one statement
 [required_eslint_rules]
 jsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
 tsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
+
+[[naming.paths]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods", "variables"]
+names = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
+skip = true
+reason = "React defines these subscription and snapshot callback names."

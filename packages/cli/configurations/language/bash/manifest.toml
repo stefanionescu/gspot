@@ -411,3 +411,18 @@ type = "list"
 direction = "loosening"
 default = []
 summary = "The functions besides main that a script may define without calling or documenting them, such as a step runner other scripts call by name."
+
+[[naming.paths]]
+paths = ["**"]
+languages = ["bash"]
+categories = ["variables"]
+names = ["IFS", "OPTARG", "OPTIND", "EUID", "UID", "PPID", "RANDOM", "SECONDS", "LINENO", "BASH_SOURCE", "BASH_REMATCH", "BASH_VERSION", "BASH_VERSINFO", "FUNCNAME", "PIPESTATUS", "REPLY", "CDPATH", "OLDPWD", "SHLVL", "HOSTNAME", "OSTYPE", "MACHTYPE", "COLUMNS", "LINES"]
+skip = true
+reason = "The shell defines these variable names."
+
+[[naming.paths]]
+paths = ["**"]
+languages = ["bash"]
+categories = ["functions", "variables", "constants", "methods", "attributes"]
+ignored_prefix = "^_+"
+reason = "A leading underscore marks a private shell declaration."

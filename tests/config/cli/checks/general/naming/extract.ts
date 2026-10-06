@@ -77,7 +77,7 @@ export const PYTHON_NAMES = {
     exceptions: ['OrderError'],
     classes: ['Order_Book'],
     attributes: ['limit'],
-    methods: ['addItem'],
+    methods: ['__init__', 'addItem'],
     functions: ['make_order'],
     parameters: ['owner', 'verbatim', 'flags', 'item_name', 'count', 'name', 'size'],
 };

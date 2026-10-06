@@ -3,7 +3,6 @@ import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import type { Identifier, ExtractSink } from '#cli/types/parsers/naming.ts';
 
 import {
-    DUNDER,
     SPLAT_NODES,
     EXCEPTION_BASE,
     PYTHON_CONSTANT,
@@ -13,7 +12,7 @@ import {
 
 function add(sink: ExtractSink, node: Node, category: string): void {
     const name = node.text;
-    if (name === '' || name === '_' || DUNDER.test(name)) return;
+    if (name === '' || name === '_') return;
     sink.out.push(
         createIdentifier(sink, {
             line: node.startPosition.row + 1,

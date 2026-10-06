@@ -18936,10 +18936,29 @@
                 "CLI and schema: /tmp/gspot-naming-vocabulary-cli-final.log passes 395 tests with 2,533 assertions across 35 files (19.41 seconds). Public cases prove exact root/child/sibling category contracts, neighboring violations, reasoned word-group exceptions, hidden paths, authored prefixes, guide corrections and exact repeated-word matching. Runtime and published schemas accept category declarations and refuse free-text/inherited-object/empty uses and former naming fields. The first three unknown-key assertions expected the wrong diagnostic shape; literal diagnostics now preserve the actual parent-table error without changing production output. Original schema cases are preserved in the same runner; naming inputs have their own documentation data owner.",
                 "Native and package delivery: /tmp/gspot-naming-vocabulary-packages.log passes the standalone archive and installed language consumer with 55 assertions (237.12 seconds). Real pinned prose/Python/Bash defects accept independent corrections; installed Swift naming and packaged SQL rejection/correction succeed with the renamed shipped schema fields. The standalone archive preserves assets/checksum/source diagnostics without Node.js or Bun on PATH. The throwaway local registry closes; external publication is not performed.",
                 "Types and generation: /tmp/gspot-naming-vocabulary-types-final.log passes all four targets (10.26 seconds). Changed-source lint and /tmp/gspot-naming-vocabulary-diagnostics-eslint.log pass; the schema fixture exceeds its cap only before its new naming cases are placed under their behavioral owner. Native TOML formatting and Prettier pass. /tmp/gspot-naming-vocabulary-docs.log builds 316 pages with all local links/fragments valid. Both apply-first.json and apply-second.json report 140 unchanged outputs, zero writes/updates/removals/preserved outputs and zero notes; no generated asset is edited manually.",
-                "Staged gate: /tmp/gspot-naming-vocabulary-staged.json records the actual gspot --json check --staged at exit 0, 68 passed checks, nine explicit skips and zero findings (41.338 seconds). All complete owned changes are staged; native Taplo, normal Semgrep and OSV remain enabled where applicable. The initial invocation used the unsupported --format option and exited before running checks; it was corrected to the documented global --json flag."
+                "Staged gate: /tmp/gspot-naming-vocabulary-staged.json records the actual gspot --json check --staged at exit 0, 68 passed checks, nine explicit skips and zero findings (41.338 seconds). All complete owned changes are staged; native Taplo, normal Semgrep and OSV remain enabled where applicable. The initial invocation used the unsupported --format option and exited before running checks; it was corrected to the documented global --json flag.",
+                "Delivery: commit 4fbe75989ab640de5006b70066b1d1be017fd074 completed with hooks enabled (45 pre-commit passes, two existing skips, commit-message pass). Normal push to origin/main passed 68 checks with nine explicit skips and zero findings (42.4 seconds). HEAD and origin/main matched, with a clean tree before the next batch. Logs: /tmp/gspot-naming-vocabulary-commit.log and /tmp/gspot-naming-vocabulary-push.log."
             ],
             "remaining": [
                 "Continue 904 original implementation records. Framework/language exemption ownership, broader per-path reason semantics and policy validation remain open; publication and deployment retain their authorization boundaries."
+            ]
+        },
+        {
+            "subsystem": "Native naming contract ownership",
+            "rows": ["areas/kits/002", "areas/kits/003", "slices/kits-frameworks-tools/052"],
+            "outcome": "Three original records close with IDs and source quotations intact. 901 original implementation records remain open.",
+            "evidence": [
+                "Source ownership: general/naming/policy.json deletes the shared Next.js/React/unittest spellings, URLSession, 24 shell variable names and 34 Python special names. It also deletes spawnSync, ESLint and HTMLDialogElement without replacement allowances. framework/nextjs and framework/react own JavaScript/TypeScript function, method and binding exemptions; Python alone owns unittest lifecycle methods; Bash alone owns shell variables; Swift alone owns the Foundation type name. All use existing manifest naming.paths, with language/category selectors and reasons. Applicable selected configurations supply them automatically; recommended/all remain the only check coverage levels.",
+                "Python parsing: parsers/naming/python.ts collects special declarations instead of discarding every dunder spelling. The redundant DUNDER constant is removed. Python owns its named native special methods/attributes, module filenames and private-name prefix; Bash owns its private prefix. Named Python special attributes and __new__ preserve real native contracts when the blanket parser exemption is removed. The authoritative data model documents __new__ and module import/annotation attributes: https://docs.python.org/3/reference/datamodel.html. Invented __helper__ is reported, while neighboring native declarations remain intact. The original extractor category and parameter assertions remain, with __init__ now included in the method result.",
+                "Pytest ownership: tool/pytest/manifest.toml owns the existing test-name prefix and describes that behavior. The general asset no longer strips test_ for every Python repository. Public root/child/sibling fixtures prove only the pytest scope discounts the prefix from a five-word boundary name, while root and sibling scopes enforce their ordinary four-word ceiling. Independent corrections leave the pytest source unchanged.",
+                "Public regression evidence: /tmp/gspot-naming-ownership-cli-final.log passes 691 tests with 3,685 assertions across 81 files (67.46 seconds), including naming, policy, schema, configuration selection, level switching, explain/list/set/init and generation. /tmp/gspot-naming-ownership-modules.log additionally passes all eight ownership cases with 41 assertions (0.929 seconds). Exact native names remain intact while parameters, foreign-language spellings, sibling scopes, invented dunders and ordinary local defects fail and accept separate corrections. Python __init__.py/__main__.py exemptions preserve an adjacent TypeScript filename diagnostic and its correction. No internal production mocks or new native installations are used for these source grammar cases.",
+                "Initial fixture corrections: Swift parameter case belongs to SwiftLint, so the custom naming boundary asserts its actual banned-word diagnostic. The pytest boundary fixture replaces the independently banned word details with columns. No product check is weakened. Changed-source ESLint passes after removing one nested template literal; /tmp/gspot-naming-ownership-eslint-corrected.log and module-eslint.log exit 0. Native Taplo formatting and Prettier pass.",
+                "Type and documentation evidence: /tmp/gspot-naming-ownership-types.log passes all four TypeScript targets (9.02 seconds). The added module-filename case also passes the affected root target in test-types.log. /tmp/gspot-naming-ownership-docs.log builds 316 pages, with every local link and fragment valid. Both apply-first.json and apply-second.json report 140 unchanged outputs with zero writes, updates, removals, preserved files or notes; no managed file is edited manually.",
+                "Delivered native evidence: /tmp/gspot-naming-ownership-packages.log passes both standalone and installed-consumer cases with 55 assertions (224.84 seconds). The archive preserves its assets, checksum and source diagnostics without Node.js or Bun on PATH. The installed candidate reports pinned prose/Python/Bash defects and accepts their corrections; its shipped Swift grammar and SQL parser work without checkout dependencies. All child operations remain bounded by the 900-second test budget; the local registry closes and no external publication occurs.",
+                "Staged gate: /tmp/gspot-naming-ownership-staged-final.json records the actual gspot --json check --staged at exit 0, 68 passed checks, nine explicit skips and zero findings (41.642 seconds). Normal native checks remain enabled. The initial gate correctly reports a missing Oxford comma and the test constant SHELL_NAMES violating the repository-authored banned term shell. The comment now includes the comma and the constant is BASH_NAMES throughout its consumers. Corrected lint, the root TypeScript target and all eight ownership regressions pass (41 assertions, 0.923 seconds); no product policy is changed to pass the gate."
+            ],
+            "remaining": [
+                "Continue 901 original implementation records. Broader naming exception validation and framework route/callback behavior remain open; external publication and deployment still require authorization."
             ]
         }
     ],
@@ -22314,6 +22333,22 @@
                     "tests/cli/checks/general/naming/vocabulary.test.ts",
                     "tests/config/cli/docs/naming.ts",
                     "tests/cli/docs/schema.test.ts"
+                ]
+            },
+            {
+                "id": "native-naming-contract-ownership",
+                "records": ["areas/kits/002", "areas/kits/003", "slices/kits-frameworks-tools/052"],
+                "owners": [
+                    "packages/cli/configurations/general/naming/policy.json",
+                    "packages/cli/configurations/framework/nextjs/manifest.toml",
+                    "packages/cli/configurations/framework/react/manifest.toml",
+                    "packages/cli/configurations/language/python/manifest.toml",
+                    "packages/cli/configurations/language/bash/manifest.toml",
+                    "packages/cli/configurations/language/swift/manifest.toml",
+                    "packages/cli/configurations/tool/pytest/manifest.toml",
+                    "packages/cli/src/parsers/naming/python.ts",
+                    "tests/cli/checks/general/naming/ownership.test.ts",
+                    "tests/config/cli/checks/general/naming/ownership.ts"
                 ]
             }
         ]

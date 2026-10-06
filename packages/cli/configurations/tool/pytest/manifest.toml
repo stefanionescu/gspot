@@ -1,7 +1,7 @@
 [configuration]
 title = "pytest"
 requires = ["python"]
-description = "pytest suites: the pytest style rules of Ruff over the tests, a test prefix the naming check knows, and a coverage floor at push."
+description = "pytest suites: Ruff pytest style rules over the tests, pytest test-name prefixes, and a coverage floor at push."
 
 [detect]
 dependencies = ["pytest"]
@@ -45,3 +45,10 @@ summary = "The smallest share of lines the tests cover, out of 100."
 [ruff_rules]
 recommended = ["PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "PT015", "PT016", "PT017", "PT020", "PT021", "PT024", "PT025", "PT027", "PT028", "PT030", "PT031"]
 all = ["PT001", "PT002", "PT003", "PT006", "PT007", "PT018", "PT019", "PT022", "PT023", "PT026", "PTH100", "PTH101", "PTH102", "PTH103", "PTH104", "PTH105", "PTH106", "PTH107", "PTH108", "PTH109", "PTH110", "PTH111", "PTH112", "PTH113", "PTH114", "PTH115", "PTH116", "PTH117", "PTH118", "PTH119", "PTH120", "PTH121", "PTH122", "PTH123", "PTH124", "PTH201", "PTH202", "PTH203", "PTH204", "PTH205", "PTH206", "PTH207", "PTH208", "PTH210", "PTH211"]
+
+[[naming.paths]]
+paths = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/conftest.py"]
+languages = ["python"]
+categories = ["functions", "methods"]
+ignored_prefix = "^test_"
+reason = "The test runner finds a test by this prefix."

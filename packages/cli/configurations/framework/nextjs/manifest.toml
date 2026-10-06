@@ -127,3 +127,11 @@ reason = "Next.js route files act as framework entry points when the project per
 
 [set]
 "tools.eslint.import_extensions" = {"**/*" = "extensionless"}
+
+[[naming.paths]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods", "variables"]
+names = ["getStaticProps", "getServerSideProps", "generateMetadata", "generateStaticParams", "generateViewport"]
+skip = true
+reason = "Next.js discovers these data and metadata exports by name."

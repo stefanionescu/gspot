@@ -35,8 +35,6 @@ export const SPLAT_NODES = new Set(['list_splat_pattern', 'dictionary_splat_patt
 
 export const IMPLICIT_PARAMETERS = new Set(['self', 'cls']);
 
-export const DUNDER = /^__\w+__$/u;
-
 export const PYTHON_CONSTANT = /^_?[A-Z][A-Z\d_]*$/u;
 
 export const EXCEPTION_BASE = /(?:Error|Exception|Warning)\b/u;

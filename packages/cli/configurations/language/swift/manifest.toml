@@ -245,3 +245,11 @@ summary = "The Swift version SwiftFormat formats for."
 [agent_rules]
 "SWIFTUI.md" = {tags = ["swift-import:SwiftUI"]}
 "UIKIT.md" = {tags = ["swift-import:UIKit"]}
+
+[[naming.paths]]
+paths = ["**"]
+languages = ["swift"]
+categories = ["types"]
+names = ["URLSession"]
+skip = true
+reason = "Foundation defines this type name."

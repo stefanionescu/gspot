@@ -54,7 +54,7 @@ describe('identifiersOf', () => {
         ]);
     });
 
-    test('collects Python declarations by category and leaves out dunder names and self', async () => {
+    test('collects Python declarations by category and retains dunder names while leaving out self', async () => {
         const found = await identifiersOf('shop/orders.py', PYTHON_EXTRACTOR_SOURCE, 'python');
         expect(
             Object.fromEntries(
