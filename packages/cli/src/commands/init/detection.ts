@@ -33,7 +33,7 @@ function toolingRows(summary: DetectionSummary): (string | undefined)[] {
 }
 
 function ownershipRows(summary: DetectionSummary): string[] {
-    const lines = [row('gspot replaces', summary.owned), row('no configuration for', summary.unowned)].filter(
+    const lines = [row('gspot replaces', summary.owned), row('gspot leaves', summary.unowned)].filter(
         (line) => line !== undefined,
     );
     return lines.length === 0 ? [] : [...lines, ''];

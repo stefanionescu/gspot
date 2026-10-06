@@ -33,6 +33,18 @@ file = ".commitlintrc.js"
 file = ".commitlintrc.cjs"
 
 [[tool.replace]]
+file = ".commitlintrc.mjs"
+
+[[tool.replace]]
+file = ".commitlintrc.ts"
+
+[[tool.replace]]
+file = ".commitlintrc.cts"
+
+[[tool.replace]]
+file = ".commitlintrc.mts"
+
+[[tool.replace]]
 file = "commitlint.config.js"
 
 [[tool.replace]]
@@ -43,6 +55,17 @@ file = "commitlint.config.mjs"
 
 [[tool.replace]]
 file = "commitlint.config.ts"
+
+[[tool.replace]]
+file = "commitlint.config.cts"
+
+[[tool.replace]]
+file = "commitlint.config.mts"
+
+[[tool.replace]]
+file = "package.json"
+key = "commitlint"
+shared = true
 
 [[config]]
 target = ".gspot/config/commitlint.config.cjs"

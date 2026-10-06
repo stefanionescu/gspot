@@ -55,19 +55,6 @@ function getToolConfigs(root: string, paths: Iterable<string>): ToolFile[] {
 }
 
 /**
- * Whether a selected configuration declares that the generated configuration replaces the tool's own file.
- * @param tool the tool a configuration file belongs to
- * @param selected the ids of the selected configurations
- * @returns whether init replaces the tool's configuration
- */
-export function isReplaced(tool: string, selected: Set<string>): boolean {
-    const manifests = configurationManifests();
-    return [...selected].some(
-        (id) => manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.replace !== undefined) === true,
-    );
-}
-
-/**
  * Find the tool configuration the configurations replace, with the hooks, CI, agent files, lint folders, and runner found.
  * @param root the repository root
  * @param files the tracked files

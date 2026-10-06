@@ -1,12 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { existsSync, writeFileSync } from 'node:fs';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { writeSetup } from '#cli/commands/init/write.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { parseToolProject } from '#cli/parsers/packages.ts';
+import { templateSchema } from '#cli/policy/schema/templates.ts';
 import { INVALID_CSS, TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
+import { INACTIVE_CONFIGURATIONS } from '#tests/config/cli/generation/commitlint.ts';
 
 test('initialization previews only the managed package field and rejects a later authored edit before any write', async () => {
     await using sandbox = await testdir();
@@ -49,4 +53,29 @@ test('initialization does not overwrite a shared file created after its absent-f
     expect(await Bun.file(join(sandbox.path, 'bunfig.toml')).text()).toBe(authored);
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
     expect(existsSync(join(sandbox.path, '.gspot'))).toBe(false);
+});
+
+test('recommended initialization keeps authored configurations of inactive strict checks', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, INACTIVE_CONFIGURATIONS);
+    commitAll(sandbox.path);
+    const options = buildInitOptions(sandbox.path, {
+        configurations: ['none'],
+        template: {
+            source: 'level.toml',
+            digest: 'fixture',
+            tables: templateSchema.parse({ template: 'coverage', selection: 'detect', level: 'recommended' }),
+        },
+    });
+    const prepared = await prepare(sandbox.path, options);
+    expect(prepared.plan.remove).toStrictEqual([]);
+    expect(prepared.plan.change.some((row) => row.path === 'package.json')).toBe(false);
+    expect(prepared.plan.write.some((row) => /commitlint|syncpack/u.test(row.path))).toBe(false);
+    const initialized = await writeSetup(sandbox.path, options, prepared);
+    expect(initialized.exitCode).toBe(0);
+    for (const [path, source] of Object.entries(INACTIVE_CONFIGURATIONS))
+        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(source);
+    const project = parseToolProject(await Bun.file(join(sandbox.path, '.gspot/package.json')).text());
+    expect(project.dependencies).not.toHaveProperty('@commitlint/cli');
+    expect(project.dependencies).not.toHaveProperty('syncpack');
 });

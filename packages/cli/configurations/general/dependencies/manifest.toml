@@ -36,6 +36,18 @@ file = ".syncpackrc"
 file = ".syncpackrc.json"
 
 [[tool.replace]]
+file = ".syncpackrc.yaml"
+
+[[tool.replace]]
+file = ".syncpackrc.yml"
+
+[[tool.replace]]
+file = ".syncpackrc.ts"
+
+[[tool.replace]]
+file = ".syncpackrc.mjs"
+
+[[tool.replace]]
 file = ".syncpackrc.js"
 
 [[tool.replace]]
@@ -49,6 +61,9 @@ file = "syncpack.config.cjs"
 
 [[tool.replace]]
 file = "syncpack.config.mjs"
+
+[[tool.replace]]
+file = "syncpack.config.ts"
 
 [[config]]
 target = ".gspot/config/osv-scanner.toml"
@@ -88,7 +103,7 @@ files = {filenames = ["package.json"]}
 output = {format = "lines"}
 summary = "Checks that every workspace package resolves each dependency to one version."
 why = "Two versions of one dependency in a workspace mean two behaviors, and a bug that appears in one package only."
-help = "Run syncpack fix-mismatches with the gspot configuration, or align the versions by hand."
+help = "Run syncpack fix --config .gspot/config/syncpack.json, or align the versions by hand."
 
 [[check]]
 name = "manifests"

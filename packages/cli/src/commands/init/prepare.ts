@@ -10,6 +10,7 @@ import { buildInitPlan } from '#cli/commands/init/plan.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { selectForInit } from '#cli/lifecycle/selection.ts';
 import { getReplaced } from '#cli/commands/init/replaced.ts';
+import { getTooling } from '#cli/configurations/takeover.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
 import { askQuestions } from '#cli/commands/init/questions.ts';
@@ -17,7 +18,6 @@ import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
 import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { npmToolNames } from '#cli/configurations/declarations.ts';
-import { getTooling, isReplaced } from '#cli/configurations/takeover.ts';
 import type { Planning, InitPrepared } from '#cli/types/commands/init.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { draftPolicy, proposeText } from '#cli/commands/init/policy-text.ts';
@@ -38,12 +38,17 @@ function assertCleanTree(root: string, options: InitOptions): void {
 }
 
 // Prints what init found, unless the caller reads JSON.
-function printDetection(inputs: Omit<InitInputs, 'options'>, detected: InitSelection, tooling: Tooling): void {
+function printDetection(
+    inputs: Omit<InitInputs, 'options'>,
+    detected: InitSelection,
+    tooling: Tooling,
+    applicable: Set<string>,
+): void {
     const { repo, manifests } = inputs;
     const tools = [...new Set(tooling.configs.map((config) => config.tool))].toSorted((a, b) => a.localeCompare(b));
     const owned: string[] = [];
     const unowned: string[] = [];
-    for (const tool of tools) (isReplaced(tool, detected.selectedIds) ? owned : unowned).push(tool);
+    for (const tool of tools) (applicable.has(tool) ? owned : unowned).push(tool);
     print(
         detectionText({
             files: repo.files,
@@ -78,7 +83,6 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const inputs = { root, repo, projectManifests, workspace, manifests };
     const selection = selectForInit({ ...inputs, options });
     const tooling = getTooling(root, repo.files, projectManifests);
-    printDetection(inputs, selection, tooling);
     const answers = await askQuestions(root, options, tooling);
     const everySelected = [...selection.selectedIds]
         .map((id) => manifests.get(id))
@@ -88,7 +92,10 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const policyText = proposeText({ ...draft, ...(templateTables === undefined ? {} : { templateTables }) });
     const policy = parseStrictPolicy(policyText, root);
     const session = await openSession(root, { policy, text: policyText, path: POLICY_FILE, problems: [] });
-    const replaced = getReplaced(root, tooling, selection.selectedIds, emitAll(session).configurations);
+    const applicable = applicableManifests(session);
+    const tools = new Set(applicable.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
+    printDetection(inputs, selection, tooling, tools);
+    const replaced = getReplaced(root, tooling, tools, emitAll(session).configurations);
     const planning: Planning = {
         root,
         hasGit: repo.hasGit,
@@ -101,7 +108,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     };
     return {
         selections: prepareConfigurationOverrides({ ...inputs, options }, selection),
-        plan: buildInitPlan(planning, policy, policyText, applicableManifests(session)),
+        plan: buildInitPlan(planning, policy, policyText, applicable),
         policyText,
         removed: replaced.removed,
         read: replaced.read,

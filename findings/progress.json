@@ -2852,7 +2852,35 @@
                 "Library ownership evidence: eslint-config-prettier already declares kind = library in commit 4ce293ae8aed8e40dfae9b6459b6b90d04497937. Reconcile that existing implementation with native proof instead of duplicating the change. The native regression copies the complete actual installed 10.1.8 package inside the managed installation boundary. Executing its real CLI with --version loads the authored ESLint configuration and fails with the exact fixture error; inspectTool with the actual shipped library pin reads package metadata and returns state ok with the exact version and managed metadata path. The authored configuration remains unchanged. No internal mock, package installation, metadata fabrication or relaxed source-link boundary is introduced.",
                 "Meaningful regressions and corrections: /tmp/gspot-language-reference-baseline-proof.json replays the new public explanation case against the prior four production owners at commit c3f09b4014f1977d86394d9c3b10e825e3c29fc2; the new case fails, existing eight cases pass, and every current source is restored byte for byte. The initial native fixture exposed the correctly enforced external-link boundary; copy the actual package into the fixture instead. An existing XML prerequisite test also failed in isolation because a relocated npm shell shim could not find its interpreter, commands and package layout. Declare a valid exact packageManager in that fixture and remove the unnecessary npm link. The unchanged doctor and XML check assertions still prove the missing host XML reader and its platform acquisition guidance. Keep its isolated PATH and all product prerequisites intact.",
                 "Final verification: /tmp/gspot-language-reference-native-final.log passes the actual installed-package regression with five assertions (0.274 seconds). /tmp/gspot-language-reference-cli-final.log passes 98 affected cases with 748 assertions across ten files (9.35 seconds), including public explanations, listing, real library/executable version boundaries, strict compiler checks, level generation and HTML consumers. /tmp/gspot-language-reference-types-final.log passes all four TypeScript targets (9.78 seconds). Affected ESLint, Prettier, Taplo and git diff --check pass. /tmp/gspot-language-reference-docs.log builds 314 pages and validates all local links and fragments. Canonical apply succeeds twice with all 139 outputs unchanged and zero writes, updates or removals: /tmp/gspot-language-reference-apply.json and apply-second.json. CLI/plugin defaults remain 60 seconds and tools/packages 900 seconds, with child operations bounded by remaining test budget. Manual language/framework overrides, genuine project prerequisites and publication/deployment authorization remain unchanged.",
-                "Actual staged verification: /tmp/gspot-language-reference-staged.json passes 67 checks with nine input or prerequisite skips, zero failures or errors, exitCode 0 and duration 41326 milliseconds. No gate is bypassed or weakened."
+                "Actual staged verification: /tmp/gspot-language-reference-staged.json passes 67 checks with nine input or prerequisite skips, zero failures or errors, exitCode 0 and duration 41326 milliseconds. No gate is bypassed or weakened.",
+                "Batch 45 delivery: hook-enabled commit a3716822b27c971075017d144c3dba34399be241 and normal push to origin/main succeed. Commit hooks pass 44 checks with two skips and zero failures (9.6 seconds), plus commit-message validation (0.5 seconds). Push hooks pass 67 checks with nine skips, zero failures and zero findings (44.0 seconds). /tmp/gspot-language-reference-commit.log and push.log retain evidence. The working tree is clean and local HEAD equals origin/main before the next batch changes."
+            ],
+            "remaining": [
+                "Complete compiler ownership and the remaining policy/language/framework/platform/test/repository/installation findings, final full verification and separately authorized publication/deployment."
+            ]
+        },
+        {
+            "subsystem": "README banner restoration requested during implementation",
+            "rows": [],
+            "outcome": "Both README banner variants display the existing repository logo; no review record is silently closed.",
+            "evidence": [
+                "Both SVGs contained PNG data that the native decoder rejected with bad adaptive filter value. Replace only the embedded payload with the exact valid docs/public/brand/identity/mark/source.png bytes. /tmp/gspot-banner-proof.json proves every byte outside the payload is unchanged and both payloads match source SHA-256 ca53241234668bf14855652b8156c94dfd1079ee162597409a08453a6d29aada. Render and visually inspect /tmp/gspot-banner-light-fixed.png and dark-fixed.png; both show the logo inside the original 1200 by 360 layout. README.md already references both variants correctly.",
+                "Batch 46 delivery: /tmp/gspot-banner-staged.json passes 37 checks with two skips, zero failures or errors and duration 33746 milliseconds. Hook-enabled commit f4e957ab0a7fc1ec7ca7d61ad44a9c73d43a6be7 passes 23 checks with one skip (4.1 seconds) and commit-message validation (0.5 seconds). Normal push to origin/main passes 37 checks with two skips and zero findings (31.0 seconds). Local HEAD and origin/main match before resuming the preserved configuration batch; its pending files remain uncommitted. /tmp/gspot-banner-commit.log and push.log retain evidence."
+            ],
+            "remaining": []
+        },
+        {
+            "subsystem": "Native general-tool takeover and applicable configuration ownership",
+            "rows": ["areas/unit-tests/024", "slices/kits-general/026", "slices/kits-general/030"],
+            "outcome": "Three original records close; 823 original implementation records remain open.",
+            "evidence": [
+                "Pinned native discovery: Commitlint 21.2.2 load-config.js declares the six missing module filenames and package.json. Add all six filenames and declare package.json#commitlint as shared. Native cases load each authored module before initialization, confirm its retirement in the reviewed plan, lint the rejected type through the generated native configuration, and accept a corrected message. Syncpack 15.3.3 native probes and regressions prove discovery of .syncpackrc.yaml, .syncpackrc.yml, .syncpackrc.ts, .syncpackrc.mjs and syncpack.config.ts. Add those five filenames; leave unsupported syncpack.config.cts and syncpack.config.mts unchanged. /tmp/gspot-general-takeover-probe.json retains the native discovery evidence.",
+                "Complete package-field ownership: generation/commitlint.ts emits only authored commitlint fields when the repository-wide native configuration is actually generated. Use the existing native relative-path calculation and shared JSON lifecycle; redirect root and nested packages to the repository configuration without adding absent fields or changing unrelated package bytes. Native discovery without --config rejects the authored type after initialization, restores the authored settings at recommended, reapplies the generated settings at all, and accepts the corrected message. CLI cases verify nested scope ownership, unrelated edits, restoration records and an absent Git prerequisite. No additional coverage flag, profile, bundle or enabling step is introduced.",
+                "Applicable consumers: initialization deletion, package-field preview and installation use the same applicable tool plan. At recommended retain both previously recognized and newly recognized Commitlint and Syncpack files, leave package fields unchanged and omit both tools from the private package dependencies. Explain retained tooling as gspot leaves, rather than claiming no configuration exists. Doctor binds each row to its declared manifest owner, reports the real Git prerequisite, and suggests only gspot set level all for these inactive strict checks. Retain manual language/framework overrides and the existing shared parsing, merge, conflict, preview and restoration calculations; remove the unused isReplaced consumer and function.",
+                "Truthful native repair guidance: Syncpack 15.3.3 exposes fix, not the removed fix-mismatches command. Its shipped help now names syncpack fix --config .gspot/config/syncpack.json and retains manual alignment as the alternative. /tmp/gspot-general-takeover-syncpack-fix-probe.json proves that sameRange disagreements require manual alignment in this native scenario. The regression proves the exact SameRangeMismatch diagnostics and clears them after aligning the authored dependency. Native command syntax does not provide another Gspot coverage selector.",
+                "Existing test ownership evidence: commit 4ce293ae8aed8e40dfae9b6459b6b90d04497937 already moved the two INI section cases from preview/readers.test.ts to tests/cli/parsers/tool/configuration.test.ts with the parser owner. /tmp/gspot-general-takeover-ini-proof.json proves both complete case bodies and all five assertions remain byte-identical to their original source. Reconcile that implementation without another move or replacement of unique assertions.",
+                "Meaningful verification: /tmp/gspot-general-takeover-baseline-proof.json restores all 9 production owners at f4e957ab0a7fc1ec7ca7d61ad44a9c73d43a6be7, removes the newly introduced owner during the baseline, and restores every current byte afterward. All 13 native cases and all three new CLI cases fail against the prior implementation; the two existing CLI cases pass. /tmp/gspot-general-takeover-native-verified.log passes 13 native cases with 127 assertions (9.21 seconds) using the already installed pinned tools without plugin preparation or a local registry. /tmp/gspot-general-takeover-cli-complete.log passes 489 cases with 2691 assertions across 83 affected files (93.60 seconds). After the final typed doctor binding, /tmp/gspot-general-takeover-cli-verified.log passes all 15 affected cases with 66 assertions (4.61 seconds). All four TypeScript targets pass in types-verified.log (9.53 seconds); affected ESLint, Prettier, Taplo and git diff --check pass. Documentation builds 314 pages and validates all local links and fragments. Canonical apply succeeds twice with all 139 outputs unchanged and zero writes, updates, removals or preserved conflicts. Defaults remain 60 seconds for CLI/plugin and 900 seconds for tools/packages, with child operations bounded by the remaining test budget.",
+                "Actual staged verification: /tmp/gspot-general-takeover-staged.json passes 67 checks with 9 input or prerequisite skips, zero failures or errors, exitCode 0 and duration 42467 milliseconds. No gate is bypassed or weakened."
             ],
             "remaining": [
                 "Complete compiler ownership and the remaining policy/language/framework/platform/test/repository/installation findings, final full verification and separately authorized publication/deployment."
@@ -6579,6 +6607,31 @@
                     "tests/cli/commands/explain/command.test.ts",
                     "tests/tools/execution/libraries.test.ts",
                     "tests/cli/tools/inspect/hints.test.ts"
+                ]
+            },
+            {
+                "id": "native-general-takeover",
+                "records": [
+                    "areas/developer-experience/015",
+                    "areas/developer-experience/016",
+                    "areas/unit-tests/024",
+                    "diagram/install/002",
+                    "main/041",
+                    "slices/kits-general/026",
+                    "slices/kits-general/030"
+                ],
+                "owners": [
+                    "packages/cli/configurations/general/commits/manifest.toml",
+                    "packages/cli/configurations/general/dependencies/manifest.toml",
+                    "packages/cli/src/generation/commitlint.ts",
+                    "packages/cli/src/commands/init/prepare.ts",
+                    "packages/cli/src/commands/init/replaced.ts",
+                    "packages/cli/src/commands/doctor/suggestions.ts",
+                    "tests/tools/generation/commits.test.ts",
+                    "tests/tools/generation/dependencies.test.ts",
+                    "tests/cli/generation/commitlint.test.ts",
+                    "tests/cli/commands/init/takeover.test.ts",
+                    "tests/cli/parsers/tool/configuration.test.ts"
                 ]
             }
         ]

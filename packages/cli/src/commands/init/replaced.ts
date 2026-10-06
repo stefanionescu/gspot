@@ -1,7 +1,6 @@
 // What init replaces: the configuration files of the selected tools, read before anything is written.
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { Replaced } from '#cli/types/commands/init.ts';
-import { isReplaced } from '#cli/configurations/takeover.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
 
@@ -31,18 +30,18 @@ function recordOutcome(entry: ToolFile, replaced: Replaced): void {
  * The configuration files of the selected tools, read and sorted into what init deletes and what it leaves.
  * @param root the repository root.
  * @param tooling the configuration files init found.
- * @param selected the ids of the selected configurations.
+ * @param tools the tools consumed by applicable checks at the selected level.
  * @param configurations the applicable shared fields generated for the selection.
  * @returns the reads, the deletions, the unreadable files, and the shared files that stay.
  */
 export function getReplaced(
     root: string,
     tooling: Tooling,
-    selected: Set<string>,
+    tools: Set<string>,
     configurations: ConfigurationOutput[],
 ): Replaced {
     const replaced: Replaced = { read: new Map(), removed: [], unread: [], retained: [], changed: [] };
-    const owned = tooling.configs.filter(({ tool }) => isReplaced(tool, selected));
+    const owned = tooling.configs.filter(({ tool }) => tools.has(tool));
     captureOwned(
         root,
         owned.filter((entry) => !entry.shared),

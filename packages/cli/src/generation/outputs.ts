@@ -17,6 +17,7 @@ import type { Session } from '#cli/types/execution/session.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
 import { stylelintChanges } from '#cli/generation/stylelint.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
+import { commitlintChanges } from '#cli/generation/commitlint.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { configuredChecks } from '#cli/execution/planning/plan.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
@@ -175,6 +176,7 @@ export function emitAll(session: Session): Generated {
     generated.configurations.push(
         ...bunfigChanges(root, scopes),
         ...stylelintChanges(root, files, scopes, generated.files),
+        ...commitlintChanges(root, files, generated.files),
     );
     generated.files.push(
         ...hookFiles(root, policy, version),
