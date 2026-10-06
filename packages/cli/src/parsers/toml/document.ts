@@ -39,6 +39,7 @@ function getTomlTable(
 export function openTomlDocument(input: TomlInput): ConfigurationDocument {
     const document: Record<string, unknown> = parseTomlFile(input);
     return {
+        format: 'toml',
         value: (path) => getValue(document, path),
         set(path, value) {
             if (path.some((key) => typeof key !== 'string')) throw new Error(`${input.path} requires TOML table keys.`);

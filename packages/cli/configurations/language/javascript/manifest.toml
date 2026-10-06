@@ -44,6 +44,12 @@ file = "eslint.config.cjs"
 file = "eslint.config.ts"
 
 [[tool.replace]]
+file = "eslint.config.mts"
+
+[[tool.replace]]
+file = "eslint.config.cts"
+
+[[tool.replace]]
 file = ".eslintrc"
 
 [[tool.replace]]
@@ -177,13 +183,20 @@ file = "knip.jsonc"
 file = ".knip.json"
 
 [[tool.replace]]
+file = ".knip.jsonc"
+
+[[tool.replace]]
+file = "knip.ts"
+
+[[tool.replace]]
+file = "knip.js"
+
+[[tool.replace]]
 file = "knip.config.js"
 
 [[tool.replace]]
 file = "knip.config.ts"
 
-[[tool.replace]]
-file = "knip.config.mjs"
 
 [[tool]]
 name = "typescript"

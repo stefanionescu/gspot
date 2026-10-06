@@ -25,6 +25,7 @@ export type MergePlan = {
 
 /** Text and field ownership calculated for a managed configuration merge. */
 export type MergePlanContents = {
+    format: MergeRecord['format'];
     text: string;
     nextText: string;
     fields: Field[];

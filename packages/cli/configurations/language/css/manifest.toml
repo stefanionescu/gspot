@@ -30,6 +30,9 @@ file = ".stylelintrc.js"
 file = ".stylelintrc.cjs"
 
 [[tool.replace]]
+file = ".stylelintrc.mjs"
+
+[[tool.replace]]
 file = ".stylelintrc.yml"
 
 [[tool.replace]]
@@ -43,6 +46,11 @@ file = "stylelint.config.cjs"
 
 [[tool.replace]]
 file = "stylelint.config.mjs"
+
+[[tool.replace]]
+file = "package.json"
+key = "stylelint"
+shared = true
 
 [[tool]]
 name = "stylelint-config-standard"

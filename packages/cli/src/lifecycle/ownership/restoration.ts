@@ -8,7 +8,7 @@ import { blockSpan } from '#cli/platform/managed-blocks.ts';
 import { pruneParents } from '#cli/lifecycle/merge/plan.ts';
 import { isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import { openTomlDocument } from '#cli/parsers/toml/document.ts';
+import { openMergedDocument } from '#cli/lifecycle/merge/document.ts';
 import type { Planned, MergeRecord } from '#cli/types/lifecycle/output.ts';
 import { getOnDisk, recordedBlockStart } from '#cli/lifecycle/ownership/plans.ts';
 import type { Log, Restoration, OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
@@ -23,9 +23,8 @@ function restorableRecord(existing: OwnershipEntry, current: Snapshot | undefine
 
 // Puts the original values back into the merged fields, when the installed values are still in place.
 function restoreFields(path: string, current: Snapshot, configuration: MergeRecord): Snapshot | undefined {
-    const text = decodeUtf8(current.bytes);
-    if (text === undefined) return undefined;
-    const document = openTomlDocument({ path, source: text });
+    if (decodeUtf8(current.bytes) === undefined) return undefined;
+    const document = openMergedDocument(path, current, configuration.format);
     for (const field of configuration.fields) {
         if (!isDeepStrictEqual(document.value(field.path), normalizeTables(field.installed))) return undefined;
     }

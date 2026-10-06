@@ -6,6 +6,7 @@ export type KeyChange = { path: KeyPath; value: unknown };
 
 /** A structured document that preserves comments and layout when reading and editing keys. */
 export type ConfigurationDocument = {
+    format: 'toml' | 'json';
     value(path: KeyPath): unknown;
     set(path: KeyPath, value: unknown): void;
     text(): string;

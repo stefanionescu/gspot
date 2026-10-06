@@ -2,6 +2,7 @@
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { Replaced } from '#cli/types/commands/init.ts';
 import { isReplaced } from '#cli/configurations/takeover.ts';
+import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
 
 // Captures files selected for removal. Retained authored content has no mutation snapshot.
@@ -28,20 +29,41 @@ function recordOutcome(entry: ToolFile, replaced: Replaced): void {
 
 /**
  * The configuration files of the selected tools, read and sorted into what init deletes and what it leaves.
- * @param root the repository root
- * @param tooling the configuration files init found
- * @param selected the ids of the selected configurations
- * @returns the reads, the deletions, the unreadable files, and the shared files that stay
+ * @param root the repository root.
+ * @param tooling the configuration files init found.
+ * @param selected the ids of the selected configurations.
+ * @param configurations the applicable shared fields generated for the selection.
+ * @returns the reads, the deletions, the unreadable files, and the shared files that stay.
  */
-export function getReplaced(root: string, tooling: Tooling, selected: Set<string>): Replaced {
-    const replaced: Replaced = { read: new Map(), removed: [], unread: [], retained: [] };
+export function getReplaced(
+    root: string,
+    tooling: Tooling,
+    selected: Set<string>,
+    configurations: ConfigurationOutput[],
+): Replaced {
+    const replaced: Replaced = { read: new Map(), removed: [], unread: [], retained: [], changed: [] };
     const owned = tooling.configs.filter(({ tool }) => isReplaced(tool, selected));
     captureOwned(
         root,
         owned.filter((entry) => !entry.shared),
         replaced,
     );
+    using files = openRoot(root);
+    for (const output of configurations) {
+        replaced.read.set(output.path, files.read(output.path));
+        replaced.changed.push({
+            path: output.path,
+            note: `managed ${output.changes.map((field) => field.path.join('.')).join(', ')} fields; other content stays`,
+        });
+    }
     for (const entry of owned) {
+        if (
+            entry.shared &&
+            configurations.some(
+                (output) => output.path === entry.path && output.changes.some((field) => field.path[0] === entry.key),
+            )
+        )
+            continue;
         if (entry.shared || replaced.read.has(entry.path)) recordOutcome(entry, replaced);
     }
     return replaced;

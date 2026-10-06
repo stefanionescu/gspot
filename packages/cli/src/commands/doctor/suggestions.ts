@@ -9,8 +9,8 @@ import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
+import type { Generated } from '#cli/types/generation/output.ts';
 import { detectUnselected } from '#cli/configurations/detect.ts';
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { getTooling, isReplaced } from '#cli/configurations/takeover.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
@@ -34,7 +34,9 @@ function buildFileRow(session: Session, config: ToolFile, selected: Set<string>)
         return {
             path: config.path,
             note: `beside the generated ${config.tool} configuration`,
-            command: 'move any setting you still need into gspot.toml, then delete the file',
+            command: config.shared
+                ? `move any ${config.table ?? config.key ?? config.tool} setting you still need into gspot.toml, then delete the section`
+                : 'move any setting you still need into gspot.toml, then delete the file',
         };
     const configuration = session.manifests
         .values()
@@ -54,12 +56,19 @@ function unownedConfigs(
     session: Session,
     tooling: Tooling,
     selected: Set<string>,
-    files: GeneratedFile[],
+    outputs: Generated,
 ): SuggestionRow[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
-    const generated = new Set(files.map((file) => file.path));
+    const generated = new Set(outputs.files.map((file) => file.path));
     return tooling.configs
         .filter((config) => tracked.has(config.path) && !generated.has(config.path))
+        .filter(
+            (config) =>
+                !outputs.configurations.some(
+                    (output) =>
+                        output.path === config.path && output.changes.some((field) => field.path[0] === config.key),
+                ),
+        )
         .filter((config) => !hasHeader(readPrefix(session.root, config.path, HEADER_BYTES).toString('utf8')))
         .map((config) => buildFileRow(session, config, selected));
 }
@@ -94,7 +103,7 @@ export function getSuggestions(session: Session): Suggestions {
             everyManifest(session.scopes),
         ),
         recommended: recommendedConfigurations(session, selected),
-        unowned: [...unownedConfigs(session, tooling, selected, generated.files), ...getUnownedOutputs(session)],
+        unowned: [...unownedConfigs(session, tooling, selected, generated), ...getUnownedOutputs(session)],
         authored: [
             ...getLintJobs(
                 session.root,

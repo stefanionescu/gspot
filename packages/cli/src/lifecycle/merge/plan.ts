@@ -1,13 +1,11 @@
 // Planning the keys gspot owns in a shared configuration file the developer keeps, and the containers it created.
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
-import { decodeUtf8 } from '#cli/platform/text.ts';
 import { normalizeTables } from '#cli/platform/objects.ts';
-import { openTomlDocument } from '#cli/parsers/toml/document.ts';
 import type { MergeRecord } from '#cli/types/lifecycle/output.ts';
 import { fieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
-import { MERGED_CONFIGURATION_FORMAT } from '#cli/config/lifecycle/ownership.ts';
+import { openMergedDocument } from '#cli/lifecycle/merge/document.ts';
 import type { KeyPath, ConfigurationDocument } from '#cli/types/platform/document.ts';
 import type { Field, MergePlan, MergeRequest, MergePlanContents } from '#cli/types/lifecycle/merge.ts';
 
@@ -94,13 +92,13 @@ function installFields(
 function buildRecord(
     request: MergeRequest,
     recorded: MergeRecord | undefined,
-    fields: Field[],
-    parents: KeyPath[],
+    contents: MergePlanContents,
 ): MergeRecord {
+    const { fields, parents } = contents;
     const { existing, current, matchesInstalled } = request;
     const edited = recorded?.edited === true || (existing !== undefined && current !== undefined && !matchesInstalled);
     return {
-        format: MERGED_CONFIGURATION_FORMAT,
+        format: contents.format,
         fields,
         ...(parents.length === 0 ? {} : { parents }),
         edited,
@@ -110,13 +108,13 @@ function buildRecord(
 
 // The ownership to record after the plan: unchanged when the fields and the text are what was recorded.
 function buildMergePlan(request: MergeRequest, contents: MergePlanContents): MergePlan {
-    const { text, nextText, fields, parents } = contents;
+    const { text, nextText, fields } = contents;
     const next = { bytes: Buffer.from(nextText), mode: request.current?.mode ?? OWNER_WRITABLE_FILE };
     const recorded = request.existing?.configuration;
     const status = nextText === text ? 'unchanged' : 'changed';
     const isRecorded = recorded !== undefined && isDeepStrictEqual(fields, recorded.fields) && status === 'unchanged';
     if (isRecorded) return { next, configuration: recorded, status };
-    return { next, status, configuration: buildRecord(request, recorded, fields, parents) };
+    return { next, status, configuration: buildRecord(request, recorded, contents) };
 }
 
 /**
@@ -150,14 +148,13 @@ export function pruneParents(
  */
 export function planMerge(request: MergeRequest): MergePlan | undefined {
     const { changes, current, existing } = request;
-    const text = current === undefined ? '' : decodeUtf8(current.bytes);
-    if (text === undefined) throw new Error(`${request.path} is not UTF-8 text`);
-    const document = openTomlDocument({ path: request.path, source: text });
+    const recorded = existing?.configuration ?? { format: undefined, parents: [], fields: [] };
+    const document = openMergedDocument(request.path, current, recorded.format);
+    const text = current === undefined ? '' : document.text();
     if (hasUnrecordedEdits(request)) return undefined;
     const requested = fieldsSchema.parse(
         changes.map((change) => ({ path: change.path, installed: z.json().parse(change.value) })),
     );
-    const recorded = existing?.configuration ?? { parents: [], fields: [] };
     const parents = [...(recorded.parents ?? [])];
     const fields = installFields(document, request, recorded.fields, requested, parents);
     if (fields === undefined) return undefined;
@@ -166,5 +163,11 @@ export function planMerge(request: MergeRequest): MergePlan | undefined {
         parents,
         requested.map((field) => field.path),
     );
-    return buildMergePlan(request, { text, nextText: document.text(), fields, parents: remaining });
+    return buildMergePlan(request, {
+        text,
+        nextText: document.text(),
+        fields,
+        parents: remaining,
+        format: document.format,
+    });
 }

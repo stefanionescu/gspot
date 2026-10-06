@@ -23,7 +23,7 @@ import type { Written, InitPrepared, RetirementResult } from '#cli/types/command
 function retireReplaced(
     log: Log,
     removed: InitPrepared['removed'],
-    read: ReadonlyMap<string, Snapshot>,
+    read: ReadonlyMap<string, Snapshot | undefined>,
 ): RetirementResult {
     const result: RetirementResult = { removed: [], preserved: [] };
     const plans = [];
@@ -49,7 +49,7 @@ function retireReplaced(
 }
 
 // Refuses writes when an input changed after init read it.
-function assertReadUnchanged(log: Log, read: ReadonlyMap<string, Snapshot>): void {
+function assertReadUnchanged(log: Log, read: ReadonlyMap<string, Snapshot | undefined>): void {
     for (const [path, original] of read)
         if (!isDeepStrictEqual(log.files.read(path), original))
             throw new GspotError('policy', [
@@ -72,7 +72,11 @@ export async function writeSetup(
     using log = openOwnership(root);
     assertReadUnchanged(log, prepared.read);
     const removedPaths = new Set(prepared.removed.map((entry) => entry.path));
-    const reviewedOriginals = new Map([...prepared.read].filter(([path]) => removedPaths.has(path)));
+    const reviewedOriginals = new Map(
+        [...prepared.read].flatMap(([path, original]) =>
+            removedPaths.has(path) && original !== undefined ? [[path, original] as const] : [],
+        ),
+    );
     const session = await openSession(root, {
         policy: parseStrictPolicy(prepared.policyText, root),
         text: prepared.policyText,

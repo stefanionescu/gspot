@@ -39,7 +39,8 @@ export type InitPlan = {
 
 /** The authored configuration init replaces: what it read, what it deletes, and what stays for the developer. */
 export type Replaced = {
-    read: Map<string, Snapshot>;
+    changed: InitFileRow[];
+    read: Map<string, Snapshot | undefined>;
     removed: InitFileRow[];
     unread: InitFileRow[];
     retained: InitFileRow[];
@@ -70,7 +71,7 @@ export type InitPrepared = {
     plan: InitPlan;
     policyText: string;
     removed: { path: string }[];
-    read: Map<string, Snapshot>;
+    read: Map<string, Snapshot | undefined>;
 };
 
 export type Written = { lines: string[]; installNote: string; exitCode: number };

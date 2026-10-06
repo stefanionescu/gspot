@@ -6,7 +6,7 @@ import { INSTALLATION_KINDS } from '#cli/config/tools/install.ts';
 import { ruleSettingsSchema } from '#cli/parsers/schema/rules.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { BLOCK_STYLES } from '#cli/config/platform/managed-blocks.ts';
-import { OWNED_KINDS, MERGED_CONFIGURATION_FORMAT } from '#cli/config/lifecycle/ownership.ts';
+import { OWNED_KINDS, MERGED_CONFIGURATION_FORMATS } from '#cli/config/lifecycle/ownership.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
 const modeSchema = z.number().int().min(0).max(MODE_BITS);
@@ -49,7 +49,7 @@ const fileSchema = z.strictObject({
     adopted: z.literal(true).optional(),
     configuration: z
         .strictObject({
-            format: z.literal(MERGED_CONFIGURATION_FORMAT),
+            format: z.enum(MERGED_CONFIGURATION_FORMATS),
             fields: configurationFieldsSchema,
             parents: z.array(keyPathSchema).optional(),
             edited: z.boolean(),

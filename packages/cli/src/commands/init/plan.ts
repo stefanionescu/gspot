@@ -177,7 +177,7 @@ export function buildInitPlan(
             ...submodules.map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...retainedCiRows(answers.ci, tooling.ci, getLintJobs(root, tooling.ci)),
         ],
-        change,
+        change: [...change, ...replaced.changed],
         noLongerRuns: noLongerRuns(tooling, duplicateMisePins(root, requirements, answers.runner)),
     };
 }

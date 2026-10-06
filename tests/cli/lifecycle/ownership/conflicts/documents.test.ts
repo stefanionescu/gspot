@@ -69,3 +69,17 @@ test('shared TOML preserves changed managed keys and rejects malformed input', a
         expect(log.files.read('invalid.toml')!.bytes.toString('utf8')).toBe('[ unfinished');
     }
 });
+
+test.each(['json', 'toml'])('restoration preserves an authored non-UTF-8 edit to owned %s fields', async (format) => {
+    await using sandbox = await testdir();
+    const path = `config.${format}`;
+    await createFileTree(sandbox.path, { [path]: format === 'json' ? '{}\n' : 'authored = true\n' });
+    using log = openOwnership(sandbox.path);
+    applyPlan(log, proposeMerge(log, path, [{ path: ['owned'], value: true }], true));
+    const authored = Buffer.from([0xff]);
+    writeFileSync(join(sandbox.path, path), authored);
+    const recorded = structuredClone(log.state);
+    expect(applyPlan(log, proposeRestoration(log, path))).toBe('preserved');
+    expect(readFileSync(join(sandbox.path, path))).toStrictEqual(authored);
+    expect(log.state).toStrictEqual(recorded);
+});

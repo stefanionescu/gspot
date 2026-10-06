@@ -15,6 +15,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
+import { stylelintChanges } from '#cli/generation/stylelint.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { configuredChecks } from '#cli/execution/planning/plan.ts';
@@ -171,7 +172,10 @@ export function emitAll(session: Session): Generated {
             scope: scopeConsumers,
         });
     }
-    generated.configurations.push(...bunfigChanges(root, scopes));
+    generated.configurations.push(
+        ...bunfigChanges(root, scopes),
+        ...stylelintChanges(root, files, scopes, generated.files),
+    );
     generated.files.push(
         ...hookFiles(root, policy, version),
         ...npmProject(manifests, packageInstaller, policy.run_with),

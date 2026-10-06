@@ -1,6 +1,7 @@
 // What init proposes before anything is written: the detection, the selection, the policy text, and the plan.
 import { print } from '#cli/output/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { runGitBlocking } from '#cli/platform/git.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
@@ -78,11 +79,16 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const selection = selectForInit({ ...inputs, options });
     const tooling = getTooling(root, repo.files, projectManifests);
     printDetection(inputs, selection, tooling);
-    const replaced = getReplaced(root, tooling, selection.selectedIds);
     const answers = await askQuestions(root, options, tooling);
     const everySelected = [...selection.selectedIds]
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
+    const draft = draftPolicy(selection, answers);
+    const templateTables = options.template?.tables as TomlTable | undefined;
+    const policyText = proposeText({ ...draft, ...(templateTables === undefined ? {} : { templateTables }) });
+    const policy = parseStrictPolicy(policyText, root);
+    const session = await openSession(root, { policy, text: policyText, path: POLICY_FILE, problems: [] });
+    const replaced = getReplaced(root, tooling, selection.selectedIds, emitAll(session).configurations);
     const planning: Planning = {
         root,
         hasGit: repo.hasGit,
@@ -93,11 +99,6 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         answers,
         replaced,
     };
-    const draft = draftPolicy(selection, answers);
-    const templateTables = options.template?.tables as TomlTable | undefined;
-    const policyText = proposeText({ ...draft, ...(templateTables === undefined ? {} : { templateTables }) });
-    const policy = parseStrictPolicy(policyText, root);
-    const session = await openSession(root, { policy, text: policyText, path: POLICY_FILE, problems: [] });
     return {
         selections: prepareConfigurationOverrides({ ...inputs, options }, selection),
         plan: buildInitPlan(planning, policy, policyText, applicableManifests(session)),

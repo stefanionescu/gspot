@@ -7,8 +7,7 @@ import { TARGET_PLACEHOLDER } from '#cli/config/generation/pointers.ts';
 
 function fillTarget(value: unknown, pointerPath: string, targetPath: string): unknown {
     if (typeof value !== 'string') return value;
-    const relativePath = toPosix(relative(dirname(pointerPath), targetPath));
-    const target = relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
+    const target = relativeTarget(pointerPath, targetPath);
     return value.replaceAll(TARGET_PLACEHOLDER, (placeholder) => {
         if (placeholder === '{target_module}') {
             return JSON.stringify(
@@ -20,6 +19,17 @@ function fillTarget(value: unknown, pointerPath: string, targetPath: string): un
         }
         return placeholder === '{target_json}' ? JSON.stringify(target) : target;
     });
+}
+
+/**
+ * Names a generated target relative to its native pointer, including the local-module prefix.
+ * @param pointerPath the authored pointer file
+ * @param targetPath the generated target file
+ * @returns a portable relative path understood by native configuration loaders
+ */
+export function relativeTarget(pointerPath: string, targetPath: string): string {
+    const relativePath = toPosix(relative(dirname(pointerPath), targetPath));
+    return relativePath.startsWith('./') || relativePath.startsWith('../') ? relativePath : `./${relativePath}`;
 }
 
 /**

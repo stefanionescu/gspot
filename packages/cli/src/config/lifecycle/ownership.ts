@@ -18,5 +18,5 @@ export const OUTPUT_JSON_INDENT = 2;
 export const RETAINED_PATHS = new Set([POLICY_FILE, '.gitignore', VERSION_FILE]);
 export const RETAINED_KINDS = new Set<OwnedKind>(['hook', 'export']);
 
-/** Format of authored config-file fields managed by the Bun integration. */
-export const MERGED_CONFIGURATION_FORMAT = 'toml' as const;
+/** Native formats of authored configuration fields managed by lifecycle merges. */
+export const MERGED_CONFIGURATION_FORMATS = ['toml', 'json'] as const;

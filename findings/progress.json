@@ -2809,10 +2809,29 @@
             "evidence": [
                 "Move the existing structured document contract from types/parsers/toml.ts to types/platform/document.ts as ConfigurationDocument. Move the existing recursive table normalizer to platform/objects.ts as normalizeTables. Update every real parser, merge, restoration and policy-edit consumer without aliases, forwarding functions or re-exports. The native TOML parser and all existing merge behavior remain unchanged. JSON ownership and complete native takeover remain open for the separate behavior batch.",
                 "Mechanical proof: /tmp/gspot-document-owners-proof.json verifies all 49 non-import declarations and executable statements against commit 02dc66d0c14c599be1a382e59d4a5a51a0748bc2 after only moving the existing contract/normalizer and renaming their identifiers. /tmp/gspot-document-owners-cli.log passes 84 existing TOML, merge, restoration and policy cases with 387 assertions across thirteen files (1.28 seconds). /tmp/gspot-document-owners-types.log passes all four TypeScript targets (9.47 seconds). Affected ESLint, Prettier and git diff --check pass. No native tool behavior changes, new abstractions, dependencies, coverage choices or policy exceptions are introduced.",
-                "Canonical generation succeeds twice with all 139 outputs unchanged and zero writes, updates or removals: /tmp/gspot-document-owners-apply.json and /tmp/gspot-document-owners-apply-second.json. The actual gspot --json check --staged exits 0 with 51 passed, 3 explicit skips, zero failures/errors and duration 41789 ms, /tmp/gspot-document-owners-staged.json. No check or hook is bypassed."
+                "Canonical generation succeeds twice with all 139 outputs unchanged and zero writes, updates or removals: /tmp/gspot-document-owners-apply.json and /tmp/gspot-document-owners-apply-second.json. The actual gspot --json check --staged exits 0 with 51 passed, 3 explicit skips, zero failures/errors and duration 41789 ms, /tmp/gspot-document-owners-staged.json. No check or hook is bypassed.",
+                "Delivery batch 43: commit add53c7e2dfcc925882b3989f330be26fc858ad0 (refactor(cli): share document contracts and normalization) passes hook-enabled commit checks (33 passed, 1 explicit skip, zero findings; 7.3 seconds) and commitlint. Normal push to origin/main passes 51 checks with 3 explicit skips and zero findings (39.5 seconds), /tmp/gspot-document-owners-push.log. Clean tree and matching local/remote SHA were verified before starting the separate behavior batch."
             ],
             "remaining": [
                 "Implement shared JSON field ownership and complete native configuration takeover; complete the remaining implementation batches and final verification."
+            ]
+        },
+        {
+            "subsystem": "Native configuration takeover and shared JSON ownership",
+            "rows": ["slices/kits-web-languages/018"],
+            "outcome": "One record closes; 832 original implementation records remain open.",
+            "evidence": [
+                "Pinned native source evidence: ESLint 9.39.5 config-loader.js recognizes eslint.config.mts and eslint.config.cts; Knip 6.35.1 constants.js and create-options.js recognize .knip.jsonc, knip.ts and knip.js, but not knip.config.mjs. Stylelint 16.23.1 getConfigForFile.mjs delegates native discovery to cosmiconfig, including .stylelintrc.mjs and package.json#stylelint ahead of .stylelintrc.json. Add every missing declaration, remove the unsupported Knip filename and declare the shared Stylelint package field.",
+                "Complete shared-field ownership: native JSON/JSONC documents join TOML in the existing merge, inspection and restoration owners. The existing declared jsonc-parser edits only managed fields; strict JSON still rejects comments, partial input, empty text and non-object roots. Preserve unrelated authored bytes, comments, CRLF, modes, later edits, original values and created-parent tracking. Store the actual native format and reject mismatched persisted ownership before mutation. Existing TOML ownership and non-UTF-8 restoration preservation remain intact. No whole-package replacement, new dependency, compatibility alias, custom coverage selector or native rule-enabling syntax is introduced.",
+                "Applicable scope ownership: generation/stylelint.ts selects the nearest emitted native pointer within the package\u2019s scope boundary. Only existing authored Stylelint fields with an applicable Stylelint output change; packages without that field and child scopes without a CSS consumer remain untouched. The actual existing relative target calculation now serves both body pointers and shared package pointers. Init previews the owned fields and captures existing or absent shared-file snapshots, rejecting edits or creation after the preview before any write. Retained unmodified shared sections keep their existing behavior. Doctor omits managed sections and directs review of other shared sections without suggesting deletion of a package.",
+                "Native regression: tests/tools/generation/takeover.test.ts uses pinned Node and installed native tools, without tool installation, mocks or explicit Stylelint configuration arguments. Root and scoped authored package fields initially hide the native unknown-property check; initialized ownership reports exactly property-no-unknown at line 2, column 5, severity error at recommended and all. Correcting the stylesheet clears the native diagnostic. A separate standalone .stylelintrc.mjs case proves native discovery before retirement and generated pointer discovery afterward without adding a package field. ESLint discovers each missing TypeScript filename before init and the generated native pointer afterward. Knip loads each missing configuration, reports the exact unused file, retires it and preserves unsupported knip.config.mjs. The generated native owner reports its exact unused-file set, and a legitimate authored entry-point setting clears all those diagnostics.",
+                "Meaningful baseline: /tmp/gspot-takeover-baseline-proof.json records replay of the final eight native cases and thirteen new CLI regressions against all 21 production owners from commit add53c7e2dfcc925882b3989f330be26fc858ad0. Every native and CLI regression fails; each current source is restored byte for byte. /tmp/gspot-takeover-baseline-native.log and baseline-cli.log retain the failures. The first implementation exposed a missing local-path prefix and incorrect expectations about Knip\u2019s JSON envelope and project patterns. Correct the production pointer and native assertions without reducing diagnostic counts, locations, severity, ownership protection or scope isolation.",
+                "Final verification: /tmp/gspot-takeover-native-final.log passes 18 native cases with 172 assertions across takeover, JavaScript and Node-engine owners (25.98 seconds). /tmp/gspot-takeover-cli-final.log passes 471 affected CLI cases with 2626 assertions across 79 files (86.33 seconds). /tmp/gspot-takeover-restoration-final.log passes 83 cases with 387 assertions, including both non-UTF-8 preservation cases (1.04 seconds). /tmp/gspot-takeover-types-final.log passes all four TypeScript targets (10.00 seconds). Affected ESLint, Prettier, Taplo and git diff --check pass. /tmp/gspot-takeover-docs.log builds 314 pages and validates all local links and fragments. Canonical apply succeeds twice with all 139 outputs unchanged and zero writes, updates or removals: apply.json and apply-second.json under /tmp/gspot-takeover-. CLI/plugin defaults remain 60 seconds, native tools/packages 900 seconds, with child operations bounded by the remaining budget. No gates, prerequisites, ignores or publication/deployment boundaries change.",
+                "The first actual staged gate (/tmp/gspot-takeover-staged.json) passes 65 checks with 9 explicit skips and rejects six JSDoc writing findings plus the temporary name oldConfiguration. Add sentence punctuation, use the required Oxford comma, clarify the return description, and name the authored native configuration directly. No scenario, assertion, product check, ignore or policy exception changes. Verify the installed Knip package metadata as 6.35.1 and correct that verification-only version label.",
+                "Final actual staged verification: /tmp/gspot-takeover-staged-final.json exits 0 with 67 passed, 9 explicit skips, zero failures/errors and duration 40864 ms. /tmp/gspot-takeover-native-renamed.log passes all eight takeover cases with 93 assertions (7.32 seconds). /tmp/gspot-takeover-rename-proof.json verifies the complete native test AST is unchanged apart from the authoredConfiguration identifier rename. Normal product checks and native startup gates run without bypasses."
+            ],
+            "remaining": [
+                "Complete remaining compiler, policy/language/framework/platform/test/repository/installation findings, final full verification and separately authorized publication/deployment."
             ]
         }
     ],
@@ -6499,6 +6518,23 @@
                     "tests/tools/generation/engines.test.ts",
                     "tests/config/tools/generation/engines.ts",
                     "tests/types/tools/generation/engines.ts"
+                ]
+            },
+            {
+                "id": "native-configuration-takeover",
+                "records": ["slices/kits-web-languages/018"],
+                "owners": [
+                    "packages/cli/configurations/language/javascript/manifest.toml",
+                    "packages/cli/configurations/language/css/manifest.toml",
+                    "packages/cli/src/parsers/document.ts",
+                    "packages/cli/src/parsers/json.ts",
+                    "packages/cli/src/lifecycle/merge/document.ts",
+                    "packages/cli/src/generation/stylelint.ts",
+                    "packages/cli/src/commands/init/replaced.ts",
+                    "tests/tools/generation/takeover.test.ts",
+                    "tests/cli/lifecycle/ownership/json.test.ts",
+                    "tests/cli/generation/stylelint.test.ts",
+                    "tests/cli/commands/init/takeover.test.ts"
                 ]
             }
         ]
