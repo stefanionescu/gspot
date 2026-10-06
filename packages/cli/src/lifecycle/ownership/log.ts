@@ -54,8 +54,11 @@ function openLog(files: Root): Log {
     const entries = new Map(state.files.map((entry) => [pathKey(entry.path), entry]));
     const save = (): void => {
         state.files = [...entries.values()];
-        ownershipSchema.parse(state);
-        const next = { bytes: Buffer.from(`${JSON.stringify(state, null, OUTPUT_JSON_INDENT)}\n`), mode: PRIVATE_FILE };
+        const parsed = ownershipSchema.parse(state);
+        const next = {
+            bytes: Buffer.from(`${JSON.stringify(parsed, null, OUTPUT_JSON_INDENT)}\n`),
+            mode: PRIVATE_FILE,
+        };
         files.write(logPath, next, recorded);
         recorded = next;
     };

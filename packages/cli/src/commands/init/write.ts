@@ -94,6 +94,8 @@ export async function writeSetup(
             canReplace: true,
         }),
     );
+    log.state.selections = prepared.selections;
+    log.save();
     const generatedPaths = outputPaths(generated);
     const applied = writeOutputs(session, log, reviewedOriginals, generated);
     const retired = retireReplaced(

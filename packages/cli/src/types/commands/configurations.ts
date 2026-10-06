@@ -7,4 +7,12 @@ export type AddOptions = { cwd: string; isDryRun: boolean; configurations: strin
 export type RemoveOptions = { cwd: string; isDryRun: boolean; configuration: string; scope?: string };
 
 /** One validated policy mutation and its public preview or publication request. */
-export type ConfigurationChange = { mutation: Mutation; summary: string; isDryRun: boolean };
+export type ConfigurationChange = {
+    mutation: Mutation;
+    summary: string;
+    isDryRun: boolean;
+    overrides: { path: string; added: string[]; removed: string[] };
+};
+
+/** The repository and explicit command intent recorded under the lifecycle lock. */
+export type ConfigurationOverrideUpdate = { root: string; overrides: ConfigurationChange['overrides'] };

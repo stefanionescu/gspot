@@ -94,6 +94,7 @@ export function registerApply(program: Program): void {
  */
 export async function applyCommand(options: ApplyOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
+    using log = options.isDryRun ? undefined : openOwnership(root);
     const current = await openSession(root);
     const reconciliation = reconcileConfigurations(current);
     const proposal = preparePolicy(root, reconciliation.mutate);
@@ -103,16 +104,17 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
         path: join(root, POLICY_FILE),
         problems: [],
     });
-    if (options.isDryRun) {
+    if (log === undefined) {
         const result = previewApply(session, proposal.text, reconciliation.notes);
         return {
             ...result,
             text: `${reconciliation.notes.map((note) => 'note     ' + note + '\n').join('')}${result.text}`,
         };
     }
-    using log = openOwnership(root);
     const generated = emitAll(session);
     writePolicy(log, proposal);
+    log.state.selections = reconciliation.selections;
+    log.save();
     const report = writeOutputs(session, log, undefined, generated);
     report.notes.unshift(...reconciliation.notes);
     return { text: reportText(report), json: report, exitCode: 0 };

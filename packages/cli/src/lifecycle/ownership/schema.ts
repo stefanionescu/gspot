@@ -74,6 +74,17 @@ export const ownershipSchema = z
         files: z.array(fileSchema),
         // Rule values from the last apply that completed every managed write.
         rules: z.record(pathSchema, ruleSettingsSchema).optional(),
+        // Language and framework overrides against the last applied selection, by scope.
+        selections: z
+            .record(
+                z.union([z.literal(''), pathSchema]),
+                z.strictObject({
+                    configurations: z.array(z.string()),
+                    added: z.array(z.string()),
+                    removed: z.array(z.string()),
+                }),
+            )
+            .optional(),
         installing: z.array(z.enum(INSTALLATION_KINDS)).optional(),
         // The private tool folders gspot installed whole, by kind.
         installed: z.array(z.enum(INSTALLATION_KINDS)).optional(),

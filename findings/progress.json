@@ -42,7 +42,7 @@
             "scope": "Test, script, and package organization",
             "decision": "The current user plan requires four test directories: cli, plugin, tools, and packages. Config and types mirror their behavioral owners, and the shared harness stays flat. Scripts own suite and registry orchestration. This supersedes the inherited five-family decision.",
             "evidence": [
-                "The user’s implementation plan in this conversation",
+                "The user\u2019s implementation plan in this conversation",
                 "tests/package.json",
                 "tests/bunfig.toml",
                 "mise.toml",
@@ -63,7 +63,8 @@
             "scope": "Automatic applicable configuration selection and manual language/framework overrides",
             "decision": "Retain gspot add/remove, init --configurations, and authored configuration lists for manual language and framework overrides. Remove opt-in check controls such as security, duplication, and licenses flags. This clarifies recommended-and-all: these remain the only check-coverage levels; language/framework overrides remain project configuration.",
             "evidence": [
-                "User reply to the pending scope clarification: Keep manual language/framework overrides; remove opt-in check controls only."
+                "User reply to the pending scope clarification: Keep manual language/framework overrides; remove opt-in check controls only.",
+                "Implementation: private ownership selections distinguish language/framework additions and removals from automatic detection. Init flags, authored lists, and add/remove remain available; no public selection setting is added. Source: lifecycle/configuration-overrides.ts, lifecycle/reconcile.ts, commands/configurations.ts, and init prepare/write owners."
             ]
         }
     ],
@@ -13131,7 +13132,7 @@
         {
             "from": "packages/cli/src/tools/npm/project.ts",
             "to": "packages/cli/src/parsers/schema/packages.ts",
-            "name": "packageSchema → toolProjectSchema",
+            "name": "packageSchema \u2192 toolProjectSchema",
             "type": false
         },
         {
@@ -13149,7 +13150,7 @@
         {
             "from": "packages/cli/src/types/tools/npm.ts",
             "to": "packages/cli/src/types/parsers/packages.ts",
-            "name": "PackageManagerIdentity → PackageClientIdentity",
+            "name": "PackageManagerIdentity \u2192 PackageClientIdentity",
             "type": true
         },
         {
@@ -18626,7 +18627,28 @@
                 "A broad lock refresh also refreshed unrelated wcwidth 0.9.1 to 0.9.2. The Python lock is restored to the previous generated artifact and its environment resynced frozen: /tmp/gspot-stylelint-coverage-python-frozen.log. No Python inputs, pins or product checks change.",
                 "Affected delivered-package suite: /tmp/gspot-stylelint-coverage-packages.log (five passes, 382 assertions across launcher, standalone binaries and native-tool installation; isolated registry closes).",
                 "Canonical generation after installation: /tmp/gspot-stylelint-coverage-apply-first.json and /tmp/gspot-stylelint-coverage-apply-second.json (136 unchanged outputs, zero writes or notes on each).",
-                "Actual gspot check --staged: /tmp/gspot-stylelint-coverage-staged-initial.json (132 passes, seven legitimate skips, zero findings/errors)."
+                "Actual gspot check --staged: /tmp/gspot-stylelint-coverage-staged-initial.json (132 passes, seven legitimate skips, zero findings/errors).",
+                "Delivery: hook-enabled commit 20bdf58d897894f0fd2794ccf6c1887c2011f789 (/tmp/gspot-stylelint-coverage-commit.log: 87 passes, two legitimate skips, zero findings/errors; valid commit message). Normal push to origin/main succeeds (/tmp/gspot-stylelint-coverage-push.log: 132 passes, seven legitimate skips, zero findings/errors; 78.3 seconds). Tree is clean and HEAD equals origin/main before the next batch."
+            ],
+            "remaining": ["Continue remaining implementation batches and separately authorized publication/deployment."]
+        },
+        {
+            "subsystem": "Manual language/framework overrides persist across automatic reconciliation",
+            "rows": [],
+            "outcome": "Implements manual-configuration-overrides without adding a public coverage control. Root/scope authored additions and removals, explicit initialization, and add/remove survive apply. Automatic selections still follow source and dependency changes. No unrelated review record is closed; all 951 open records and every original finding ID/quote remain.",
+            "evidence": [
+                "Source: packages/cli/src/lifecycle/configuration-overrides.ts, lifecycle/reconcile.ts, lifecycle/ownership/schema.ts and log.ts, commands/apply.ts, commands/configurations.ts, and commands/init/prepare.ts and write.ts. Private history records only language/framework intent. A real apply locks ownership before reading that history; dry runs acquire no writer lock and change no files.",
+                "Ownership serialization now uses its validated schema output so first and repeated applies have identical field order. Interrupted generated writes retain already-written policy intent. Explicit add records an override even if the language was already detected; remove records intent before the first apply. The policy mutation still evaluates once.",
+                "Focused completed regressions: /tmp/gspot-manual-overrides-cli-complete.log (163 passes, zero failures; 876 assertions across 22 files). Covers authored root/scope language/framework choices, exact/detect initialization, add/remove, permanent removals across source disappearance/return, automatic source disappearance/return, absent/returned scopes, dry-run parity, repeated apply idempotence, ownership recovery/preservation, and native tool-option retention while Expo and React DOM dependencies change.",
+                "The first full CLI/plugin run exposed one pre-existing fixture that explicitly authored Bash but expected it to be dropped. It now starts without an authored language choice so it tests automatic disappearance/restoration. All original settings, ignores, custom checks, native output removal/restoration, preview parity, and repeated-apply assertions remain. Initial result: /tmp/gspot-manual-overrides-full-cli-plugin.log (2844 passes, three platform skips, one failure; 10125 assertions across 342 files). The corrected fixture passes in the focused completed regression above.",
+                "Four TypeScript targets: /tmp/gspot-manual-overrides-types-complete.log. Source lint: /tmp/gspot-manual-overrides-source-lint-final.log and /tmp/gspot-manual-overrides-source-lint-ready2.log, each completed successfully. Documentation: /tmp/gspot-manual-overrides-docs.log (316 pages; every local link and fragment valid).",
+                "Initial native installation regressions: /tmp/gspot-manual-overrides-native.log (three passes, 31 assertions across init and add/remove; 89.71 seconds). Initial delivered-package regressions: /tmp/gspot-manual-overrides-packages.log (five passes, 382 assertions across launcher, standalone binaries and native-tool installation; 63.82 seconds).",
+                "Final full CLI/plugin suite: /tmp/gspot-manual-overrides-full-cli-plugin-final.log (2847 passes, three existing platform skips, zero failures/errors; 10141 assertions across 342 files; 234.96 seconds).",
+                "Final native suite: /tmp/gspot-manual-overrides-native-final.log (three passes, 31 assertions across init and add/remove; 99.10 seconds). Final delivered-package suite: /tmp/gspot-manual-overrides-packages-final.log (five passes, 382 assertions across three files; 68.60 seconds). Each isolated registry closes.",
+                "Canonical generation: /tmp/gspot-manual-overrides-apply-first.json and /tmp/gspot-manual-overrides-apply-second.json (136 unchanged outputs, zero writes or notes on both applies).",
+                "Initial actual staged gate: /tmp/gspot-manual-overrides-staged-initial.json reports only prose history wording and identifier vocabulary findings. Corrected comments and renamed private identifiers/fixture constants; coverage and checks remain intact. Final affected tests, types and staged gate follow.",
+                "After the staged wording/name corrections: /tmp/gspot-manual-overrides-naming-lint.log passes; /tmp/gspot-manual-overrides-naming-regressions.log has 26 passes, 151 assertions across four affected command/policy files; /tmp/gspot-manual-overrides-types-ready.log passes all four TypeScript targets. These final edits only change comments and private identifiers.",
+                "Actual final gspot check --staged: /tmp/gspot-manual-overrides-staged-final.json (94 passes, seven legitimate skips, zero findings/errors; 54.770 seconds)."
             ],
             "remaining": [
                 "Hook-enabled commit and normal push.",

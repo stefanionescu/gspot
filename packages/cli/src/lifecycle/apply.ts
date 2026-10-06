@@ -17,6 +17,7 @@ import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
 import { RETAINED_KINDS, RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
 import type { Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/output.ts';
+import { recordConfigurationOverrides } from '#cli/lifecycle/configuration-overrides.ts';
 import { proposeBlock, proposeMerge, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { POLICY_FILE, VALE_CONFIG, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
@@ -134,17 +135,17 @@ export function writeOutputs(
     assertNoProblems(session.policyFiles);
 
     assertPolicyUnchanged(log, session);
+    const generated = prepared ?? emitAll(session);
     const report: ApplyReport = {
         preserved: [],
         written: [],
         unchanged: [],
         removed: [],
         updated: [],
-        notes: [],
+        notes: [...generated.notes],
     };
-    const generated = prepared ?? emitAll(session);
     assertPolicyUnchanged(log, session);
-    report.notes.push(...generated.notes);
+    recordConfigurationOverrides(session, log);
     const paths = outputPaths(generated);
     writeGenerated(log, {
         agentRulesEnabled: session.policyFiles.policy.agentRules.enabled,

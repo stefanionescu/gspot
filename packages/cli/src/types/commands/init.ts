@@ -9,6 +9,7 @@ import type {
     RunnerChoice,
     InitSelection,
     ConfigurationReason,
+    ConfigurationSelections,
 } from '#cli/types/lifecycle/selection.ts';
 
 export type Choice<T extends string> = { value: T; label: string; hint?: string | undefined };
@@ -65,6 +66,7 @@ export type InitAnswers = {
 
 /** Everything init computes before it asks to continue. */
 export type InitPrepared = {
+    selections: ConfigurationSelections;
     plan: InitPlan;
     policyText: string;
     removed: { path: string }[];

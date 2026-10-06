@@ -10,11 +10,11 @@ import { readTree } from '#tests/harness/preservation.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { rmSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
-test('apply removes and restores a stack while retaining its authored policy and custom checks', async () => {
+test('apply removes and restores an automatically detected stack while retaining settings and custom checks', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['bash'], {
+        'gspot.toml': buildPolicy([], {
             tables: '[agent_rules]\nenabled = false\n[bash]\ndoc_style = "colon"\n[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The launcher intentionally expands its argument list."\n[[check]]\nname = "project/source"\npaths = ["*.sh"]\nstage = "commit"\ncommand = ["bash", "-n", "{files}"]\n',
         }),
         'source.sh': 'echo source\n',

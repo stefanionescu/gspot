@@ -1,4 +1,5 @@
 import type { Template } from '#cli/types/policy/templates.ts';
+import type { Ownership } from '#cli/types/lifecycle/ownership.ts';
 import type { Policy, Mutation } from '#cli/types/policy/settings.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
@@ -59,7 +60,24 @@ export type InitInputs = {
 };
 
 /** Policy mutation and selection changes calculated from repository evidence. */
-export type ConfigurationReconciliation = { mutate: Mutation; notes: string[] };
+export type ConfigurationReconciliation = { mutate: Mutation; notes: string[]; selections: ConfigurationSelections };
+
+/** Private language and framework override history, by scope. */
+export type ConfigurationSelections = NonNullable<Ownership['selections']>;
+
+/** Authored choices and the last applied baseline for identifying edits. */
+export type SelectionUpdate = {
+    choices: ReadonlyMap<string, string[]>;
+    manifests: Map<string, Manifest>;
+    previous: ConfigurationSelections;
+};
+
+/** Existing and detected choices with a scope's recorded overrides. */
+export type ConfigurationMerge = {
+    saved: string[];
+    found: string[];
+    overrides: ConfigurationSelections[string] | undefined;
+};
 
 /** Explicit, detected, and recommended choices for explaining initial selection. */
 export type ConfigurationChoices = { named: Set<string>; chosen: Set<string>; listed: Set<string> };

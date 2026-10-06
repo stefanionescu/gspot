@@ -21,6 +21,7 @@ import type { Planning, InitPrepared } from '#cli/types/commands/init.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { draftPolicy, proposeText } from '#cli/commands/init/policy-text.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
+import { prepareConfigurationOverrides } from '#cli/lifecycle/configuration-overrides.ts';
 import type { InitInputs, InitOptions, InitSelection } from '#cli/types/lifecycle/selection.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {
@@ -98,6 +99,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const policy = parseStrictPolicy(policyText, root);
     const session = await openSession(root, { policy, text: policyText, path: POLICY_FILE, problems: [] });
     return {
+        selections: prepareConfigurationOverrides({ ...inputs, options }, selection),
         plan: buildInitPlan(planning, policy, policyText, applicableManifests(session)),
         policyText,
         removed: replaced.removed,

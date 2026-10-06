@@ -32,6 +32,13 @@ require_reasons = true
 A configuration is a bundle of checks, tool configuration, and agent rules for one language, framework,
 or concern. To add or remove one, run `gspot add <configuration>` or `gspot remove <configuration>`.
 
+`apply` updates automatically detected language and framework selections when repository files or
+dependencies change. It keeps manual language and framework additions and removals at the root
+and in scopes, including choices from `init --configurations`, `--scope-configurations`, and
+edits to authored configuration lists. A manual removal stays removed when its detection
+source disappears and returns. These overrides select project configurations; `recommended`
+and `all` control check coverage.
+
 Initialization detects `react-native` from React Native dependencies and `expo` from Expo
 dependencies. The Expo configuration requires React Native and adds Expo lint rules and
 `expo/doctor`. A bare React Native project does not require either Expo tool. React web
