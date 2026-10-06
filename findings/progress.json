@@ -3341,6 +3341,15 @@
             "remaining": [
                 "Parameter mutation and loop-direction overlap require equivalent native coverage before either existing rule can be removed."
             ]
+        },
+        {
+            "subsystem": "Restore the latest original README banner exactly",
+            "rows": [],
+            "outcome": "Restore the September 29 banner from Git history; reject the earlier artwork substitutions.",
+            "evidence": [
+                "The user specifies the recent original artwork: gspot text on the left and the shaded logo on the right at its original size. Retrieve both SVG files directly from commit 8ecaa9db13a4935f894f9ae4077f535b1e1e4980, dated September 29. Restore every byte of both files. The original embedded logo decodes successfully and differs from the flat source image incorrectly substituted in the earlier repair.",
+                "Restore the original README SVG references and both theme selectors. Remove both PNG banners introduced in the recent delivery changes. No new image is created in the repository. Preview the retrieved original SVG files only outside the repository and visually verify the text and shaded logo positions and size. Keep the original typography, backgrounds, dimensions and embedded image bytes unchanged. No review status, policy, limit, dependency or check control changes."
+            ]
         }
     ],
     "implementationBatches": {

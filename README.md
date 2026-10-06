@@ -1,4 +1,4 @@
-# ![gspot](docs/public/brand/readme/banner/light.png#gh-light-mode-only)![gspot](docs/public/brand/readme/banner/dark.png#gh-dark-mode-only)
+# ![gspot](docs/public/brand/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/public/brand/readme/banner/dark.svg#gh-dark-mode-only)
 
 [![npm: unreleased](docs/public/brand/badges/npm.svg)](#install)
 [![Documentation source](docs/public/brand/badges/docs.svg)](docs/src/content/docs/guides/overview.md)
