@@ -23,6 +23,8 @@ mise installs the native tool pins gspot writes to `.mise/conf.d/gspot-tools.tom
 
 JavaScript and TypeScript checks use the project's TypeScript compiler when it is installed. If the project has none, gspot prefers its pinned private compiler over a global compiler. Run `gspot install` to install that compiler. An interrupted private installation reports an error; it does not block an available project compiler.
 
+TypeScript source files or an authored `tsconfig.json` select TypeScript checks. A TypeScript tool dependency or declaration files alone do not. When a scope has no authored configuration, gspot generates a standalone compiler project for its source files and declarations. The project excludes generated files, vendored files, and child scopes. An authored configuration keeps its project settings and receives the strict options required by the selected level.
+
 ## Platform limits
 
 SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage require macOS with Xcode selected by `xcode-select`. Container checks can require a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) states its platforms and external requirements.

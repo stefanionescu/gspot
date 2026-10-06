@@ -3,7 +3,7 @@ export type RuffConfiguration = {
     lint: { select: string[]; 'per-file-ignores'?: Record<string, string[]> };
 };
 /** Knip entries associated with the root and detected package workspaces. */
-export type KnipConfiguration = { entry: string[]; workspaces: Record<string, { entry: string[] }> };
+export type KnipConfiguration = { workspaces: Record<string, { entry: string[] }> };
 /** Stylelint rule settings read by shared framework defaults. */
 export type StylelintConfiguration = {
     rules: Record<string, unknown>;

@@ -70,3 +70,29 @@ test.each([
         detectConfigurations([buildTrackedFile('config.toml')], manifests, []).map((row) => row.configuration),
     ).not.toContain(configuration);
 });
+
+test.each(['.d.ts', '.d.mts', '.d.cts'])(
+    'a JavaScript package with TypeScript tooling and %s declarations needs real TypeScript project evidence',
+    async (extension) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['javascript']),
+            'package.json': '{"private":true,"devDependencies":{"typescript":"5.9.3"}}\n',
+            'source.js': 'export const value = 1;\n',
+            [`types/library${extension}`]: 'export declare const value: number;\n',
+        });
+        const before = await openSession(sandbox.path);
+        expect(
+            detectUnselected(sandbox.path, before.repository.files, before.manifests, []).map(
+                ({ configuration }) => configuration,
+            ),
+        ).not.toContain('typescript');
+        await Bun.write(join(sandbox.path, 'tsconfig.json'), '{"compilerOptions":{"strict":true}}\n');
+        const configured = await openSession(sandbox.path);
+        expect(
+            detectUnselected(sandbox.path, configured.repository.files, configured.manifests, []).find(
+                ({ configuration }) => configuration === 'typescript',
+            )?.evidence,
+        ).toBe('tsconfig.json');
+    },
+);

@@ -8,7 +8,6 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { tsconfig } from '#cli/checks/language/typescript.ts';
-import { textContaining } from '#tests/harness/expectations.ts';
 import { VALID } from '#tests/config/cli/checks/language/tsconfig-options.ts';
 
 const TSCONFIG_OPTIONS_POLICY = buildPolicy(['typescript']);
@@ -37,15 +36,19 @@ test('a missing inherited configuration cannot be replaced by empty compiler opt
     expect(tsconfig(buildEngineInput(await openSession(sandbox.path), 'typescript/tsconfig'))).toStrictEqual([]);
 });
 
-test('a scope without tsconfig.json reports the missing configuration', async () => {
+test('a standalone scope needs no authored tsconfig but still audits an added project configuration', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': TSCONFIG_OPTIONS_POLICY });
-    const findings = tsconfig(buildEngineInput(await openSession(sandbox.path), 'typescript/tsconfig'));
-    expect(findings).toMatchObject([
+    expect(tsconfig(buildEngineInput(await openSession(sandbox.path), 'typescript/tsconfig'))).toStrictEqual([]);
+    fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID.replace('"strict":true', '"strict":false'));
+    expect(tsconfig(buildEngineInput(await openSession(sandbox.path), 'typescript/tsconfig'))).toStrictEqual([
         {
             check: 'typescript/tsconfig',
             file: 'tsconfig.json',
-            message: textContaining('no tsconfig.json'),
+            rule: 'strict',
+            fixable: false,
+            message: 'strict is not on in this tsconfig.',
+            help: 'Enable this compiler option in the authored TypeScript configuration.',
         },
     ]);
     fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID);

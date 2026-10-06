@@ -51,20 +51,16 @@ test('knip takes its workspaces from the package workspaces, with the policy ent
         tables: '[tools.knip]\nentry = ["cli.js"]\n[[scope]]\npath = "api"\nconfigurations = ["javascript"]\n[scope.tools.knip]\nentry = ["serve.js"]\n[[scope]]\npath = "lib"\nconfigurations = ["javascript"]\n',
     });
     const knip = await generatedDocument<KnipConfiguration>(policy, KNIP, files);
-    expect(knip.entry).toStrictEqual(containingAll(['cli.js', entry]));
-    expect(knip.entry).not.toContain('api/serve.js');
+    expect(knip.workspaces['.']!.entry).toStrictEqual(containingAll(['cli.js', entry]));
+    expect(knip.workspaces['.']!.entry).not.toContain('api/serve.js');
     expect(knip.workspaces['api']?.entry).toStrictEqual(containingAll(['serve.js', entry]));
     expect(knip.workspaces['api']?.entry).not.toContain('cli.js');
     // A package workspace outside every scope takes the root configurations; a scope that is no package stays out.
     expect(knip.workspaces['web']?.entry).toStrictEqual(containingAll([entry]));
     expect(Object.keys(knip.workspaces)).not.toContain('lib');
-    const withoutEntries = await generatedDocument<Pick<KnipConfiguration, 'entry'>>(
-        buildPolicy(['javascript']),
-        KNIP,
-        files,
-    );
-    expect(withoutEntries.entry).toStrictEqual(containingAll([entry]));
-    expect(withoutEntries.entry).not.toContain('cli.js');
+    const withoutEntries = await generatedDocument<KnipConfiguration>(buildPolicy(['javascript']), KNIP, files);
+    expect(withoutEntries.workspaces['.']!.entry).toStrictEqual(containingAll([entry]));
+    expect(withoutEntries.workspaces['.']!.entry).not.toContain('cli.js');
 });
 
 test('knip retains the Markdown configuration consumed by its native runner', async () => {
@@ -72,8 +68,8 @@ test('knip retains the Markdown configuration consumed by its native runner', as
         'src/main.js': 'export const enabled = true;\n',
         'README.md': '# Example\n',
     });
-    expect(knip.entry).toContain('.markdownlint-cli2.mjs');
-    expect(knip.workspaces['.']?.entry).toContain('.markdownlint-cli2.mjs');
+    expect(knip.workspaces['.']!.entry).toContain('.markdownlint-cli2.mjs');
+    expect(knip).not.toHaveProperty('entry');
 });
 
 test.each([

@@ -30,14 +30,6 @@ export function tsconfig(input: EngineInput): Finding[] {
                     ...findingAt(input, { file: path }, option, `${option} is not on in this tsconfig.`),
                     help: 'Enable this compiler option in the authored TypeScript configuration.',
                 }));
-        if (path !== scopeTsconfig) return [];
-        return [
-            findingAt(
-                input,
-                { file: path },
-                'missing-tsconfig',
-                'This scope has no tsconfig.json. Add an authored TypeScript configuration for its source files.',
-            ),
-        ];
+        return [];
     });
 }

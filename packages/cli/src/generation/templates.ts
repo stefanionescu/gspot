@@ -6,6 +6,7 @@ import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
 import { buildJsconfig } from '#cli/generation/jsconfig.ts';
+import { buildTsconfig } from '#cli/generation/tsconfig.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { packageWorkspaces } from '#cli/repository/scopes.ts';
 import type { Session } from '#cli/types/execution/session.ts';
@@ -143,11 +144,19 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
         scopeIgnorePatterns,
         editorconfigOverrides: () => editorconfigOverrides(policy),
         isAll: policy.level === 'all',
-        typescriptOptions: Object.fromEntries(
-            Object.entries(requiredTsconfigOptions(policy.level, [])).filter(
-                ([option]) => !view.rulesOff('typescript/tsconfig').includes(option),
-            ),
-        ),
+        typescriptConfig: (target) =>
+            buildTsconfig({
+                root,
+                target,
+                scope: selection.scope.path,
+                files: sourceFiles,
+                scopeEntries: scopes.map((entry) => entry.scope),
+                options: Object.fromEntries(
+                    Object.entries(requiredTsconfigOptions(policy.level, view.configurations)).filter(
+                        ([option]) => !view.rulesOff('typescript/tsconfig').includes(option),
+                    ),
+                ),
+            }),
         prose: {
             rules: styleRules(),
             blockIgnores: BLOCK_IGNORES,
