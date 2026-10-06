@@ -1,5 +1,7 @@
 // ESLint reads every package.json through the package-json rules. A manifest under a test folder gets no code rule.
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/harness/generated.ts';
@@ -26,4 +28,39 @@ test('every package.json gets the package-json rules and no code rule beside a t
         { file: 'tests', rule: 'package-json/sort-collections' },
     ]);
     expect(found.filter((entry) => !entry.rule.startsWith('package-json/'))).toStrictEqual([]);
+});
+
+test('package rule exceptions retain neighboring violations and corrected success', async () => {
+    await using sandbox = await testdir();
+    const manifest = { name: 'example', version: '0.0.0', type: 'module' };
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `level = "all"
+configurations = ["typescript"]
+[[ignore]]
+check = "javascript/eslint"
+rule = "package-json/require-exports"
+paths = ["cli/package.json"]
+reason = "The command package exposes no module API."
+[agent_rules]
+enabled = false
+`,
+        'package.json': JSON.stringify({ ...manifest, private: true }),
+        'cli/package.json': JSON.stringify(manifest),
+        'library/package.json': JSON.stringify(manifest),
+    });
+    const eslint = await createEslint(sandbox.path);
+    const before = await eslint.lintFiles(['cli/package.json', 'library/package.json']);
+    const violations = before.flatMap((result) =>
+        result.messages
+            .filter((diagnostic) => diagnostic.ruleId === 'package-json/require-exports')
+            .map(() => result.filePath),
+    );
+    expect(violations).toStrictEqual([join(sandbox.path, 'library/package.json')]);
+    writeFileSync(join(sandbox.path, 'library/package.json'), JSON.stringify({ ...manifest, exports: './index.js' }));
+    const after = await eslint.lintFiles(['library/package.json']);
+    expect(
+        after.flatMap((result) =>
+            result.messages.filter((diagnostic) => diagnostic.ruleId === 'package-json/require-exports'),
+        ),
+    ).toStrictEqual([]);
 });

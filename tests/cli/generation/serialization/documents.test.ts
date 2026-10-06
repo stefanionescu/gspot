@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
-import { symlinkSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
@@ -11,7 +10,6 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { bodyPointer } from '#cli/generation/pointers.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { hasFields } from '#cli/lifecycle/merge/document.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { eta, templateInputs } from '#cli/generation/templates.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -81,45 +79,6 @@ test('the template YAML binding preserves literal mapping keys and scalar values
     expect(parseYaml(eta.renderString('<%~ yaml(value) %>', { ...inputs, value: { [KEY]: VALUE } }))).toStrictEqual({
         [KEY]: VALUE,
     });
-});
-
-test('shared output readers reject external links', async () => {
-    await using sandbox = await testdir();
-    const original = 'extends = "./.gspot/tsconfig.json"\n[scripts]\ncheck = "gspot check"\n';
-    await createFileTree(sandbox.path, { 'project/.keep': '', outside: original });
-    const project = join(sandbox.path, 'project');
-    symlinkSync(join(sandbox.path, 'outside'), join(project, 'linked.toml'));
-    const path = 'linked.toml';
-    expect(() => hasFields(project, { path, changes: [] })).toThrow('private regular file');
-    expect(() =>
-        hasFields(project, {
-            path,
-            changes: [{ path: ['scripts', 'check'], value: 'gspot check' }],
-        }),
-    ).toThrow('private regular file');
-});
-
-test.each(['{"extends":"./.gspot/tsconfig.json", invalid}', 'null', '[]'])(
-    'malformed TypeScript configuration fails generation: %s',
-    async (content) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'tsconfig.json': content,
-            'gspot.toml': buildPolicy(['typescript']),
-            'source.ts': 'export const value = 1;\n',
-        });
-        const session = await openSession(sandbox.path);
-        expect(() => emitAll(session)).toThrow('Cannot read TypeScript configuration');
-    },
-);
-
-test('malformed shared TOML fails inspection', async () => {
-    await using sandbox = await testdir();
-    const source = '[tasks\n';
-    await createFileTree(sandbox.path, { 'mise.toml': source });
-    expect(() => hasFields(sandbox.path, { path: 'mise.toml', changes: [] })).toThrow(
-        'mise.toml is not valid TOML. Fix the file, then run gspot apply.',
-    );
 });
 
 for (const configuration of ['javascript', 'markdown'])

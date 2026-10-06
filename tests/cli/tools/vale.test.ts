@@ -6,9 +6,9 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
-import { VALE_ACQUISITION_FAILURES, CORRECTED_VALE_ACQUISITION } from '#tests/config/cli/tools/vale.ts';
+import { hasValePackages, removeValePackages, installValePackages } from '#cli/tools/vale.ts';
+import { chmodSync, mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { CONFIG, VALE_ACQUISITION_FAILURES, CORRECTED_VALE_ACQUISITION } from '#tests/config/cli/tools/vale.ts';
 
 test.each(VALE_ACQUISITION_FAILURES)(
     'Vale acquisition preserves installed styles after %s and succeeds after correction',
@@ -45,3 +45,56 @@ test.each(VALE_ACQUISITION_FAILURES)(
         expect(readFileSync(join(directory.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
     },
 );
+
+// A repository whose Vale configuration, package, or nested package folder links to a folder beside it.
+async function linkedStyles(directory: string, kind: string): Promise<string> {
+    await createFileTree(directory, {
+        'project/.gspot/config/vale.ini': CONFIG,
+        'project/.gspot/config/vale/styles/.keep': '',
+        'outside/vale.ini': CONFIG,
+        'outside/terms.yml': 'external bytes\n',
+    });
+    const root = join(directory, 'project');
+    if (kind === 'configuration') {
+        unlinkSync(join(root, '.gspot/config/vale.ini'));
+        symlinkSync('../../outside/vale.ini', join(root, '.gspot/config/vale.ini'));
+    } else if (kind === 'package') {
+        symlinkSync('../../../../outside', join(root, '.gspot/config/vale/styles/LocalStyle'));
+    } else {
+        await createFileTree(root, { '.gspot/config/vale/styles/LocalStyle/.keep': '' });
+        symlinkSync('../../../../../outside', join(root, '.gspot/config/vale/styles/LocalStyle/nested'));
+    }
+    return root;
+}
+
+test.each(['configuration', 'package'])('Vale package detection rejects a linked %s', async (kind) => {
+    await using directory = await testdir();
+    const root = await linkedStyles(directory.path, kind);
+    expect(() => hasValePackages(root)).toThrow(/lifecycle/iu);
+});
+
+test.each(['package', 'nested directory'])(
+    'Vale package removal refuses a linked %s without deleting outside styles',
+    async (kind) => {
+        await using directory = await testdir();
+        const root = await linkedStyles(directory.path, kind);
+        expect(() => {
+            removeValePackages(root);
+        }).toThrow(/lifecycle/iu);
+        expect(readFileSync(join(directory.path, 'outside/terms.yml'), 'utf8')).toBe('external bytes\n');
+    },
+);
+
+test('package readiness follows the generated Vale configuration', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { '.gspot/config/vale.ini': 'Packages = Google\n' });
+    expect(hasValePackages(sandbox.path)).toBe(false);
+    mkdirSync(join(sandbox.path, '.gspot/config/vale/styles/Google'), { recursive: true });
+    expect(hasValePackages(sandbox.path)).toBe(true);
+});
+
+test('a Vale configuration without external packages needs no downloaded styles', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { '.gspot/config/vale.ini': 'Packages = \n' });
+    expect(hasValePackages(sandbox.path)).toBe(true);
+});

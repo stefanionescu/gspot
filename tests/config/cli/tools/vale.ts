@@ -31,3 +31,5 @@ const { mkdirSync, writeFileSync } = await import('node:fs');
 mkdirSync('.gspot/config/vale/styles/LocalStyle', { recursive: true });
 writeFileSync('.gspot/config/vale/styles/LocalStyle/terms.yml', 'corrected bytes\n');
 `;
+
+export const CONFIG = 'StylesPath = vale/styles\nPackages = LocalStyle\n';

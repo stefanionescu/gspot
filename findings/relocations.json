@@ -16775,5 +16775,41 @@
         "to": "tests/config/cli/generation/eslint/jest.ts",
         "name": "APP_JEST",
         "type": false
+    },
+    {
+        "from": "tests/cli/generation/vale-packages.test.ts",
+        "to": "tests/cli/tools/vale.test.ts",
+        "name": "Complete reader, tool or generation cases",
+        "type": false
+    },
+    {
+        "from": "tests/cli/generation/serialization/documents.test.ts",
+        "to": "tests/cli/lifecycle/shared-document.test.ts",
+        "name": "Complete reader, tool or generation cases",
+        "type": false
+    },
+    {
+        "from": "tests/cli/generation/serialization/documents.test.ts",
+        "to": "tests/cli/generation/typescript.test.ts",
+        "name": "Complete reader, tool or generation cases",
+        "type": false
+    },
+    {
+        "from": "tests/cli/generation/serialization/toml.test.ts",
+        "to": "tests/cli/generation/squawk.test.ts",
+        "name": "Complete reader, tool or generation cases",
+        "type": false
+    },
+    {
+        "from": "tests/config/cli/generation/vale-packages.ts",
+        "to": "tests/config/cli/tools/vale.ts",
+        "name": "CONFIG",
+        "type": false
+    },
+    {
+        "from": "tests/cli/generation/eslint/framework-rules.test.ts",
+        "to": "tests/cli/generation/eslint/package-manifests.test.ts",
+        "name": "Complete package ignore case",
+        "type": false
     }
 ]

@@ -70,7 +70,7 @@
     ],
     "relocations": {
         "source": "findings/relocations.json",
-        "items": 2821
+        "items": 2827
     },
     "checklists": [
         {
@@ -2537,10 +2537,33 @@
                 "Effective import contract: the old JSON metadata assertion had no declared extension setting, so it could pass with that rule inactive. The new case declares the existing JavaScript suffix project contract and package import alias, proves native rule severity 2, checks the exact violation without an attribute, and verifies JSON attributes exempt it in root and nested scopes at recommended and all. This uses an existing runtime/project prerequisite, not an added coverage switch. An intermediate assertion expected a one-element native severity tuple; ESLint also returns its options, so the final assertion checks the actual severity using the existing ResolvedEslint type. Failed intermediate logs are not evidence of success.",
                 "Correction ownership: focused-test, ordinary no-undef, duplicate type-tag and simple limit correction-only runs are removed, including the escaped scope case. Legitimate generated rule options, scoped package exceptions, allowed harness locations, native Jest argument limits, disposal-only TypeScript bindings, exported-function distinctions and index-only policy outcomes remain. Managed-ignore tests drop only duplicate authored-prefix/idempotence assertions already owned by managed-block unit cases; their native Git ignore selection and deduplication assertions remain. The constant is CONFIGURATION_TABLE because the current manifest schema owns a configuration table, superseding the legacy kit-table spelling in the source record.",
                 "Verification: /tmp/gspot-eslint-quality-cli-final.log passes 128 affected cases with 1018 assertions across 29 files (23.10 seconds), including the real pinned ESLint/Node consumers, level contracts, serialized literal scopes and native Git ignores. /tmp/gspot-eslint-quality-structure-final-clean.log passes all seven structural/import cases with 37 assertions (1.92 seconds). /tmp/gspot-eslint-quality-typescript-final.log passes all six interface/barrel cases with nine assertions (3.17 seconds). All four TypeScript targets pass in types-complete.log (8.98 seconds); the root target also passes after the final native configuration type annotation. Affected ESLint, Prettier and git diff --check pass. Both apply-first.json and apply-second.json report 140 unchanged outputs and zero other changes. No production source, tool pins, timeout defaults, prerequisites, levels, manual language/framework overrides or publication/deployment behavior changes. No new native installation is needed.",
-                "Staged verification: /tmp/gspot-eslint-quality-staged.json records the actual gspot --json check --staged at exit 0: 51 passed checks, 6 explicit skips, 119 selection skips and zero findings (32.168 seconds). The final gate includes every changed test, data owner and ledger consumer. All 2939 original record IDs and source fields remain intact, and the 990-record mapping is unchanged. No gate or policy is weakened."
+                "Staged verification: /tmp/gspot-eslint-quality-staged.json records the actual gspot --json check --staged at exit 0: 51 passed checks, 6 explicit skips, 119 selection skips and zero findings (32.168 seconds). The final gate includes every changed test, data owner and ledger consumer. All 2939 original record IDs and source fields remain intact, and the 990-record mapping is unchanged. No gate or policy is weakened.",
+                "Delivery: commit ad296735f14f35e70fc8962d255b32494078e3de completed with hooks enabled: 34 pre-commit passes, two existing skips and zero findings, followed by successful commit-message validation. Normal push to origin/main passed 51 checks with eight explicit skips and zero findings (31.2 seconds). HEAD and origin/main matched with a clean tree before the next batch. Logs: /tmp/gspot-eslint-quality-commit.log and /tmp/gspot-eslint-quality-push.log."
             ],
             "remaining": [
                 "Continue 870 original records. Reader/serializer ownership, remaining assertion and fixture quality, all unique collision assertions, typed settings and shared execution, remaining language/framework/platform findings and final suite/package/platform checks remain open. Publication and deployment retain their separate authorization boundary."
+            ]
+        },
+        {
+            "subsystem": "Reader and tool test ownership",
+            "rows": [
+                "slices/tests-integration-generation/028",
+                "slices/tests-integration-generation/031",
+                "slices/tests-integration-generation/040",
+                "slices/tests-integration-generation/041"
+            ],
+            "outcome": "Mechanical preparation only. Zero original records close; 870 original implementation records remain open.",
+            "evidence": [
+                "Mechanical ownership: Vale linked-package detection/removal and package readiness cases, together with linkedStyles, move from generation/vale-packages.test.ts into the existing tools/vale.test.ts owner. Its configuration constant merges into config/cli/tools/vale.ts; the obsolete generation data file is deleted. The generated vocabulary case stays under generation. Every preexisting acquisition case in the destination remains.",
+                "Shared readers: the linked shared-document and malformed-TOML inspection cases move intact into lifecycle/shared-document.test.ts. The malformed compiler configuration generation case moves intact into generation/typescript.test.ts. Numeric Squawk cutoff cases move intact into generation/squawk.test.ts. Literal serialization, native module pointers and the remaining mixed value-conversion assertions remain in their original files for the next behavior batch. No entire file is moved or renamed with changed assertions.",
+                "Proof: /tmp/gspot-reader-moves-proof.json verifies every non-import TypeScript token and comment across the five complete-case extractions and the merged configuration owner. All 24 original source statements are preserved across the new owners, and every existing destination statement remains. Only imports, owner placement and whitespace change. No forwarding aliases are added; the removed data import has no remaining consumer. The four test directories stay intact.",
+                "Verification: /tmp/gspot-reader-moves-cli.log passes all 37 affected cases with 138 assertions across eight files (7.28 seconds), including native Node module-pointer imports and Git/filesystem/process boundaries. /tmp/gspot-reader-moves-types.log passes all four TypeScript targets (9.75 seconds). Affected ESLint, Prettier and git diff --check pass. Both apply-first.json and apply-second.json report 140 unchanged outputs with zero other changes. Production source, native pins and timeout defaults, both coverage levels, manual language/framework overrides and legitimate prerequisites stay unchanged; no new installation is needed.",
+                "Composite status: no original record closes in this mechanical batch. Vale refusal text/path specificity, duplicate shared-reader assertions, the remaining Trivy/Squawk conversion assertions and the template-init title remain for the separate behavior batch. All 870 open records, original IDs/source fields and the 990-record mapping remain represented. External publication and deployment are not performed.",
+                "Package ownership: the complete reasoned package-ignore case moves from framework-rules.test.ts into the existing package-manifests.test.ts owner with its entire body intact. Its remaining correction-only run stays for the behavior batch. The first staged gate rejected a one-file lifecycle/merge folder; the shared document test now sits beside the other lifecycle tests. No folder exception is added. /tmp/gspot-reader-moves-extended-cli.log passes all ten package/framework/shared-reader cases with 23 assertions (3.96 seconds); the root TypeScript target passes after the extended moves. The final token/comment proof covers five complete-case moves and 24 original source statements.",
+                "Staged verification: /tmp/gspot-reader-moves-staged-final.json records the actual gspot --json check --staged at exit 0: 51 passed checks, 6 explicit skips, 119 selection skips and zero findings (30.995 seconds). The one-file folder finding is resolved by owner placement, with no policy exception. All original implementation checklist data is byte-for-value unchanged and the 990-record mapping is intact. No original record closes in this batch."
+            ],
+            "remaining": [
+                "Finish reader refusals and duplicate/conversion assertions in a separate behavior batch before closing the composite findings. Continue the remaining 870 original records and final verification families; external publication/deployment retain their separate authorization boundary."
             ]
         }
     ],
@@ -6067,6 +6090,26 @@
                     "tests/config/cli/generation/eslint/vite-entries.ts",
                     "tests/config/cli/generation/managed-ignores.ts",
                     "tests/config/cli/generation/eslint/jest.ts"
+                ]
+            },
+            {
+                "id": "reader-and-tool-test-ownership",
+                "records": [
+                    "slices/tests-integration-generation/028",
+                    "slices/tests-integration-generation/031",
+                    "slices/tests-integration-generation/040",
+                    "slices/tests-integration-generation/041"
+                ],
+                "owners": [
+                    "tests/cli/tools/vale.test.ts",
+                    "tests/config/cli/tools/vale.ts",
+                    "tests/cli/lifecycle/shared-document.test.ts",
+                    "tests/cli/generation/typescript.test.ts",
+                    "tests/cli/generation/squawk.test.ts",
+                    "tests/cli/generation/serialization/documents.test.ts",
+                    "tests/cli/generation/serialization/toml.test.ts",
+                    "tests/cli/generation/eslint/framework-rules.test.ts",
+                    "tests/cli/generation/eslint/package-manifests.test.ts"
                 ]
             }
         ]

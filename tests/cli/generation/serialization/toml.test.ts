@@ -147,26 +147,6 @@ test('an OSV expiry cannot inject another TOML table', async () => {
     expect(await rejection(openSession(sandbox.path))).toContain('ignore.0.until');
 });
 
-test.each([
-    ['2', ['migrations/2_initial.sql']],
-    [
-        '9007199254740992',
-        ['migrations/10_next.sql', 'migrations/2_initial.sql', 'migrations/9007199254740992_large.sql'],
-    ],
-])('Squawk excludes numeric migration versions through %s without rounding', async (through, expected) => {
-    const text = await emitFile(
-        buildPolicy(['postgres'], { tables: `[postgres]\nfrozen_through = "${through}"\n` }),
-        '.gspot/config/squawk.toml',
-        {
-            'migrations/2_initial.sql': 'SELECT 1;\n',
-            'migrations/10_next.sql': 'SELECT 1;\n',
-            'migrations/9007199254740992_large.sql': 'SELECT 1;\n',
-            'migrations/9007199254740993_later.sql': 'SELECT 1;\n',
-        },
-    );
-    expect(parse(text)['excluded_paths']).toStrictEqual(expected);
-});
-
 test('Mise pins the native archive with its complete asset directory on PATH', async () => {
     const text = await emitFile(buildPolicy([], { tables: 'run_with = "mise"\n' }), MISE_CONFIG_PATH);
     expect(parse(text)['tools']).toMatchObject({
