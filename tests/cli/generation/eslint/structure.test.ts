@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { APP_KNIP } from '#tests/config/cli/generation/plugin-levels/limits.ts';
+import { APP_KNIP } from '#tests/config/cli/generation/eslint/structure.ts';
 
 test('generated all lint checks authored directories named after build outputs', async () => {
     await using sandbox = await testdir();

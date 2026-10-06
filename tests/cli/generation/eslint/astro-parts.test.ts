@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/harness/generated.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
-import { COMPONENT } from '#tests/config/cli/generation/astro-parts.ts';
+import { COMPONENT } from '#tests/config/cli/generation/eslint/astro-parts.ts';
 
 test('the frontmatter, the markup, and a script of an Astro component each reach their rules', async () => {
     await using sandbox = await testdir();

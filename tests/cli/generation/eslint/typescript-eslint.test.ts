@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { FileRuleFinding } from '#tests/types/generation/findings.ts';
-import { PROJECT } from '#tests/config/cli/generation/typescript-eslint.ts';
+import { PROJECT } from '#tests/config/cli/generation/eslint/typescript-eslint.ts';
 
 // The rule, file, and place of each message ESLint reports for the source folder.
 async function messagesOf(root: string): Promise<FileRuleFinding[]> {

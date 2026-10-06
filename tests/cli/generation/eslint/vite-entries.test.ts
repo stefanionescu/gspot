@@ -5,7 +5,7 @@ import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { FileRuleFinding } from '#tests/types/generation/findings.ts';
-import { START, STARTER, ENTRY_FILES, VITE_POLICY } from '#tests/config/cli/generation/vite-entries.ts';
+import { START, STARTER, ENTRY_FILES, VITE_POLICY } from '#tests/config/cli/generation/eslint/vite-entries.ts';
 
 // The files and rules the generated configuration reports among the two rules about trivial code.
 async function trivialFindings(root: string, policy: string): Promise<Pick<FileRuleFinding, 'file' | 'rule'>[]> {

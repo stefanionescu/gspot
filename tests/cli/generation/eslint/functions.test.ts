@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { CALLBACK_SOURCE } from '#tests/config/cli/generation/plugin-levels/functions.ts';
+import { CALLBACK_SOURCE } from '#tests/config/cli/generation/eslint/functions.ts';
 
 test('generated lint accepts JavaScript method node shapes', async () => {
     await using sandbox = await testdir();

@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
-import { POLICY, PROJECT, STORE_EXTENSIONS } from '#tests/config/cli/generation/restricted-imports.ts';
+import { POLICY, PROJECT, STORE_EXTENSIONS } from '#tests/config/cli/generation/eslint/restricted-imports.ts';
 
 test.each(['recommended', 'all'] as const)(
     '%s retains authored imports in store files and configuration restrictions elsewhere',

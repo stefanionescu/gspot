@@ -28,8 +28,7 @@ async function readActiveRules(request: EslintCoverageRequest): Promise<EslintCo
         throw new Error('The generated ESLint configuration is missing. Run: gspot apply');
     const require = createRequire(join(request.root, TOOL_PACKAGE_PROJECT));
     const module = (await import(pathToFileURL(require.resolve('eslint')).href)) as typeof Eslint;
-    const ESLint = await module.loadESLint({ useFlatConfig: true });
-    const eslint = new ESLint({
+    const eslint = new (await module.loadESLint({ useFlatConfig: true }))({
         cwd: request.root,
         overrideConfigFile: join(request.root, ESLINT_FILE),
     });

@@ -8,7 +8,12 @@ import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
-import { RUNTIME_CASES, INVALID_RUNTIMES, FRAMEWORK_RUNTIME_CASES } from '#tests/config/cli/generation/runtimes.ts';
+
+import {
+    RUNTIME_CASES,
+    INVALID_RUNTIMES,
+    FRAMEWORK_RUNTIME_CASES,
+} from '#tests/config/cli/generation/eslint/runtimes.ts';
 
 test.each(RUNTIME_CASES)('runtime globals and Node.js rules are isolated: %j', async (entry) => {
     await using sandbox = await testdir();

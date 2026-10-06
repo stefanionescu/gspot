@@ -4,13 +4,13 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import type { BoundaryResult } from '#tests/types/cli/generation/import-boundaries.ts';
+import type { BoundaryResult } from '#tests/types/cli/generation/eslint/import-boundaries.ts';
 
 import {
     BOUNDARY_CASES,
     BOUNDARY_LINT_SCRIPT,
     TEST_BOUNDARY_POLICY,
-} from '#tests/config/cli/generation/import-boundaries.ts';
+} from '#tests/config/cli/generation/eslint/import-boundaries.ts';
 
 test('generated boundaries report a cross-project import once and fix scoped aliases from the repository root', async () => {
     await using sandbox = await testdir();

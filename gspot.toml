@@ -144,7 +144,7 @@ reason = "The site links are root-relative and resolve once Starlight builds it;
 paths = [
     "tests/config/harness/spelling.ts",
     "tests/config/cli/execution/parse-output/formats.ts",
-    "tests/config/cli/generation/runtimes.ts",
+    "tests/config/cli/generation/eslint/runtimes.ts",
 ]
 reason = "The spelling tests use deliberate misspellings; every other test file stays checked."
 

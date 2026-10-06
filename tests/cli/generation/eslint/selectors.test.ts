@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { selectorGroups } from '#cli/generation/eslint/blocks.ts';
-import { STORE, RAW_SQL, INJECTED, PROCEDURE } from '#tests/config/cli/generation/eslint.ts';
+import { STORE, RAW_SQL, INJECTED, PROCEDURE } from '#tests/config/cli/generation/eslint/selectors.ts';
 
 test('general selectors form one group for every code file, in first-mention order', () => {
     expect(selectorGroups([STORE, PROCEDURE])).toStrictEqual([{ selectors: [STORE, PROCEDURE] }]);

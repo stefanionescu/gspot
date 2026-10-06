@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import { VITEST_FILES } from '#tests/config/cli/generation/plugin-levels/vitest.ts';
+import { VITEST_FILES } from '#tests/config/cli/generation/eslint/vitest.ts';
 
 async function ruleReports(eslint: ESLint, file: string, rule: string): Promise<Pick<Linter.LintMessage, 'message'>[]> {
     const results = await eslint.lintFiles([file]);

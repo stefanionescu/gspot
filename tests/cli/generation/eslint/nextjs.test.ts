@@ -5,7 +5,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { NextEslintConfiguration } from '#tests/types/cli/generation/nextjs.ts';
+import type { NextEslintConfiguration } from '#tests/types/cli/generation/eslint/nextjs.ts';
 
 test('Next.js route rules resolve two project roots and disable route lookup in an empty scope', async () => {
     await using sandbox = await testdir();

@@ -11,7 +11,7 @@ import { configuredChecks } from '#cli/execution/planning/plan.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import { EXPO_DEPENDENCIES, NATIVE_DEPENDENCIES } from '#tests/config/samples/react.ts';
 import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
-import { MOBILE_POLICY, TEXT_COMPONENTS } from '#tests/config/cli/generation/mobile-applicability.ts';
+import { MOBILE_POLICY, TEXT_COMPONENTS } from '#tests/config/cli/generation/eslint/mobile-applicability.ts';
 
 test('a bare React Native project requires neither Expo nor DOM accessibility tooling', async () => {
     await using sandbox = await testdir();

@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { COMPONENTS } from '#tests/config/cli/generation/html-injection.ts';
+import { COMPONENTS } from '#tests/config/cli/generation/eslint/html-injection.ts';
 
 test.each(COMPONENTS)('$configuration rejects raw HTML and accepts text at both levels', async (component) => {
     for (const level of ['recommended', 'all'] as const) {

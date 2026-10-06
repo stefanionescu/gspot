@@ -5,8 +5,13 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { FileRuleFinding } from '#tests/types/generation/findings.ts';
-import { WEB_FILES, NATIVE_FILES, WEB_EXPECTED, NATIVE_EXPECTED } from '#tests/config/cli/generation/react-rules.ts';
 
+import {
+    WEB_FILES,
+    NATIVE_FILES,
+    WEB_EXPECTED,
+    NATIVE_EXPECTED,
+} from '#tests/config/cli/generation/eslint/react-rules.ts';
 import {
     WEB_TSCONFIG,
     CLEAN_COMPONENT,
