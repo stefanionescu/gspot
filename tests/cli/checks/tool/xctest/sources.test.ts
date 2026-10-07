@@ -7,7 +7,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { sleeps, disabled, recording } from '#cli/checks/tool/xctest.ts';
 
 test('Swift Testing outside test folders reports a sleep and accepts its correction', async () => {

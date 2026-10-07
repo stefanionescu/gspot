@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readTree } from '#tests/harness/preservation.ts';
-import type { CommandFailureJson } from '#cli/types/output.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { ARGUMENT_REFUSALS } from '#tests/config/cli/commands/program.ts';
 
 test.each(ARGUMENT_REFUSALS)(

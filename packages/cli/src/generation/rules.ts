@@ -1,5 +1,5 @@
-import { ruleSettingsSchema } from '#cli/parsers/schema/rules.ts';
-import type { RuleSettings } from '#cli/types/generation/rules.ts';
+import type { CapturedRules } from '#cli/types/generation/rules.ts';
+import { ruleSettingsSchema } from '#cli/parsers/schema/tool-rule.ts';
 
 // The string id of a rule record, or an error naming the path that holds something else.
 function ruleId(entry: unknown, path: string): string {
@@ -45,7 +45,7 @@ function getRules(parsed: unknown, path: string): Map<string, unknown> {
  * @param document the configuration data being generated
  * @returns comparable JSON rule values, grouped by their manifest paths
  */
-export function collectRuleSettings(paths: string[], document: unknown): RuleSettings {
+export function collectRules(paths: string[], document: unknown): CapturedRules {
     return ruleSettingsSchema.parse(
         Object.fromEntries(paths.map((path) => [path, Object.fromEntries(getRules(document, path))])),
     );

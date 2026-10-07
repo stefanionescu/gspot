@@ -4,9 +4,9 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { CommandFailureJson } from '#cli/types/output.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each([

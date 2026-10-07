@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { allowlistSchema } from '#cli/parsers/schema/licenses.ts';
 
 export type LicensedPackage = { name: string; license: string };

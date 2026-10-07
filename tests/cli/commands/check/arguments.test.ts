@@ -6,8 +6,8 @@ import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 
 // A sandbox with three commit checks that report every file they receive.

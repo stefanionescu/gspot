@@ -5,8 +5,8 @@ import { createFileTree } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { createConsumer } from '#tests/harness/consumer.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { SYNTAX_FILES } from '#tests/config/packages/syntax.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/harness/release.ts';
 

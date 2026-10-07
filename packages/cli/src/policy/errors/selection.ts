@@ -1,7 +1,7 @@
 import { valueAt } from '#cli/platform/objects.ts';
 import { similar, codeList } from '#cli/platform/text.ts';
 import { FIRST_READ } from '#cli/config/policy/settings.ts';
-import { everyTable } from '#cli/policy/settings/entries.ts';
+import { everyTable } from '#cli/policy/settings/lookup.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
 import { validateAgainstSurface } from '#cli/policy/errors/keys.ts';

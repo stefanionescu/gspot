@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 
 test.each([
     'import { router } from "./private/router.js";',

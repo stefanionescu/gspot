@@ -7,7 +7,7 @@ import { git, commitAll } from '#tests/harness/git.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { envFiles } from '#cli/checks/general/secrets.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { STAGED_CASES } from '#tests/config/cli/checks/general/secrets/env/files.ts';
 
 test('tracked-file checks distinguish environment files from templates in nested folders', async () => {

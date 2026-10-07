@@ -11,7 +11,7 @@ import { testModules } from '#tests/harness/environment.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import * as toolRunner from '#cli/execution/command/runner.ts';
 import { cachedBuild } from '#cli/checks/general/site/build.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { OUTPUT_CASES } from '#tests/config/cli/checks/general/site/output.ts';
 import { purgecss, brokenLinks, htmlValidate } from '#cli/checks/general/site/output.ts';

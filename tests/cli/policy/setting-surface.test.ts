@@ -5,7 +5,7 @@ import { textContaining } from '#tests/harness/expectations.ts';
 import { validateAgainstSurface } from '#cli/policy/errors/keys.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
-import { specFor, settingValue } from '#cli/policy/settings/entries.ts';
+import { specFor, settingValue } from '#cli/policy/settings/lookup.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 const selected = selectConfigurations(['bash', 'naming', 'format', 'spelling'], configurationManifests());

@@ -1,5 +1,5 @@
 import type { Level } from '#cli/types/configurations.ts';
-import type { Drift } from '#cli/types/lifecycle/output.ts';
+import type { Drift } from '#cli/types/lifecycle/apply.ts';
 
 /** One public policy transition and its expected native rule changes. */
 export type RulePreviewCase = {

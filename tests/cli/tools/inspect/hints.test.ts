@@ -8,7 +8,7 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { XML_INSTALL_HINTS } from '#tests/config/cli/tools/hints.ts';

@@ -6,7 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 
 test('a path-specific Vale ignore retains findings elsewhere and reports its actual matches', async () => {
     await using directory = await testdir();

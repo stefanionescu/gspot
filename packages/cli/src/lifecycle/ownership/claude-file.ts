@@ -3,7 +3,7 @@ import { identify } from '#cli/lifecycle/ownership/log.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import { blockSpan } from '#cli/platform/managed-blocks.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
-import type { Planned } from '#cli/types/lifecycle/output.ts';
+import type { Planned } from '#cli/types/lifecycle/apply.ts';
 import { MOVED_HEADING } from '#cli/config/lifecycle/ownership.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 

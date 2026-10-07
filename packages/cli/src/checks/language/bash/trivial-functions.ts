@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { trivialText } from '#cli/parsers/statements.ts';
-import type { Engine } from '#cli/types/execution/runtime.ts';
+import type { Engine } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 /**

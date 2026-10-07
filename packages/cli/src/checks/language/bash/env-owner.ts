@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { withoutDeclaration } from '#cli/parsers/bash.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { rolePaths } from '#cli/policy/settings/entries.ts';
-import type { Engine } from '#cli/types/execution/runtime.ts';
+import { rolePaths } from '#cli/policy/settings/lookup.ts';
+import type { Engine } from '#cli/types/execution/check.ts';
 import { TOP_LEVEL_ASSIGNMENT } from '#cli/config/checks/language/bash.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 

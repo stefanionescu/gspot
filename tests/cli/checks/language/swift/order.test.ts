@@ -3,7 +3,7 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 
 test('Swift declaration order identifies private types and extensions and accepts both before shared declarations', async () => {

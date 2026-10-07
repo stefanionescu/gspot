@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { LOOP_COUNTS, COUNTED_LOOPS, CORRECTED_LOOPS } from '#tests/config/tools/checks/loop-counts.ts';
 

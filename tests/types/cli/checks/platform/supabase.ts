@@ -1,4 +1,4 @@
-import type { CheckResult } from '#cli/types/execution/runtime.ts';
+import type { CheckResult } from '#cli/types/execution/check.ts';
 /** One invocation captured at the Supabase subprocess boundary. */
 export type SupabaseInvocation = { args: string[]; cwd: string };
 /** A scoped native type-generation check whose external mocks are disposed together. */

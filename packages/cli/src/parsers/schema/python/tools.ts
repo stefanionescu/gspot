@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { PYTHON_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';
 
 const requirementSchema = z.object({ name: z.string(), specifier: z.string() });
-export const pyprojectSchema = z.strictObject({
+export const pythonToolProjectSchema = z.strictObject({
     project: z.strictObject({
         name: z.literal(PYTHON_TOOL_PROJECT.name),
         version: z.literal(PYTHON_TOOL_PROJECT.version),

@@ -6,7 +6,7 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { BATS_MINIMUM_FILES } from '#tests/config/tools/checks/bats-minimum.ts';

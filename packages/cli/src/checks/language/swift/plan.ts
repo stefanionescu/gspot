@@ -1,6 +1,6 @@
 import { join } from 'node:path';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { buildFolder } from '#cli/checks/language/swift/cache.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { WORKSPACE_SUFFIX } from '#cli/config/checks/language/swift.ts';
 import type { SwiftBuildPlan, SwiftBuildPurpose } from '#cli/types/checks/language/swift.ts';

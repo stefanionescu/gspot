@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Engine } from '#cli/types/execution/runtime.ts';
+import type { Engine } from '#cli/types/execution/check.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { directoryOf, directoryTree } from '#cli/platform/paths.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';

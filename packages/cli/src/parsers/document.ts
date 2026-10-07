@@ -1,6 +1,6 @@
 import { openJsonDocument } from '#cli/parsers/json.ts';
 import { openTomlDocument } from '#cli/parsers/toml/document.ts';
-import type { ConfigurationDocument } from '#cli/types/platform/document.ts';
+import type { ConfigurationDocument } from '#cli/types/parsers/document.ts';
 
 /**
  * Opens the native format of a shared configuration file, creating empty text only for an absent file.

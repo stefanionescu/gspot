@@ -6,7 +6,7 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { SECONDS_PER_DAY } from '#cli/config/generation/bunfig.ts';
 import { parseBunInstallSettings } from '#cli/parsers/packages.ts';
 import { BUNFIG } from '#cli/config/checks/general/dependencies.ts';

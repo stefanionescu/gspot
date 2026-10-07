@@ -6,7 +6,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { CheckResult } from '#cli/types/execution/runtime.ts';
+import type { CheckResult } from '#cli/types/execution/check.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { isMap, isSeq, isAlias, isScalar, parseDocument } from 'yaml';
 import { ACTIONLINT_COMMAND } from '#cli/config/checks/tool/actions.ts';

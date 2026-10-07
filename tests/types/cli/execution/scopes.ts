@@ -1,5 +1,5 @@
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { CheckResult } from '#cli/types/execution/runtime.ts';
+import type { CheckResult } from '#cli/types/execution/check.ts';
 
 /** Expected findings owned by the root and child scope for one reader check. */
 export type ScopeReaderFindings = {

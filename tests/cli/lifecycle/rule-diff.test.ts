@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
+import { collectRules } from '#cli/generation/rules.ts';
 import { compareRules } from '#cli/lifecycle/rule-diff.ts';
-import { collectRuleSettings } from '#cli/generation/rules.ts';
 
 test('rule changes name additions, removals, and changed options across every declared path', () => {
     expect(
@@ -16,14 +16,14 @@ test('rule changes name additions, removals, and changed options across every de
 });
 
 test('rule collection ignores selection order while preserving record values and changed options', () => {
-    const before = collectRuleSettings(['selectors', 'rules'], {
+    const before = collectRules(['selectors', 'rules'], {
         selectors: ['first', 'second'],
         rules: [
             { id: 'first', pattern: 'eval(...)' },
             { id: 'second', pattern: 'exec(...)' },
         ],
     });
-    const reordered = collectRuleSettings(['selectors', 'rules'], {
+    const reordered = collectRules(['selectors', 'rules'], {
         selectors: ['second', 'first'],
         rules: [
             { id: 'second', pattern: 'exec(...)' },
@@ -31,7 +31,7 @@ test('rule collection ignores selection order while preserving record values and
         ],
     });
     expect(compareRules(before, reordered)).toStrictEqual([]);
-    const next = collectRuleSettings(['rules'], {
+    const next = collectRules(['rules'], {
         rules: [
             { id: 'first', pattern: 'other(...)' },
             { id: 'third', pattern: 'exec(...)' },
@@ -60,21 +60,18 @@ test.each([
     { document: { rules: [{ pattern: 'eval(...)' }] }, message: 'must contain records with string IDs' },
     { document: { rules: 1 }, message: 'must contain a rule list or table' },
 ])('rule collection rejects ambiguous generator data: $message', ({ document, message: diagnostic }) => {
-    expect(() => collectRuleSettings(['rules'], document)).toThrow(diagnostic);
+    expect(() => collectRules(['rules'], document)).toThrow(diagnostic);
 });
 
 test('rule collection separates native rule groups and supports absent paths without reading serialized files', () => {
     expect(
-        collectRuleSettings(
-            ['*.BasedOnStyles', '*.rules', 'checks', 'skips', 'sqlfluff.exclude_rules', 'sqlfluff:rules'],
-            {
-                '*': { BasedOnStyles: ['Vale', 'Example'], rules: { 'Example.Rule': true } },
-                checks: ['ssrf', 'aliastraversal'],
-                skips: ['ssrf'],
-                sqlfluff: { exclude_rules: ['CP01', 'LT01'] },
-                'sqlfluff:rules': { 'capitalisation.keywords': { capitalisation_policy: 'upper' } },
-            },
-        ),
+        collectRules(['*.BasedOnStyles', '*.rules', 'checks', 'skips', 'sqlfluff.exclude_rules', 'sqlfluff:rules'], {
+            '*': { BasedOnStyles: ['Vale', 'Example'], rules: { 'Example.Rule': true } },
+            checks: ['ssrf', 'aliastraversal'],
+            skips: ['ssrf'],
+            sqlfluff: { exclude_rules: ['CP01', 'LT01'] },
+            'sqlfluff:rules': { 'capitalisation.keywords': { capitalisation_policy: 'upper' } },
+        }),
     ).toStrictEqual({
         '*.BasedOnStyles': { Vale: true, Example: true },
         '*.rules': { 'Example.Rule': true },
@@ -83,5 +80,5 @@ test('rule collection separates native rule groups and supports absent paths wit
         'sqlfluff.exclude_rules': { CP01: true, LT01: true },
         'sqlfluff:rules': { 'capitalisation.keywords': { capitalisation_policy: 'upper' } },
     });
-    expect(collectRuleSettings(['missing', 'rules'], { rules: null })).toStrictEqual({ missing: {}, rules: {} });
+    expect(collectRules(['missing', 'rules'], { rules: null })).toStrictEqual({ missing: {}, rules: {} });
 });

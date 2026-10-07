@@ -14,7 +14,7 @@ import type {
     EngineInput,
     CheckRegistry,
     EngineOutcome,
-} from '#cli/types/execution/runtime.ts';
+} from '#cli/types/execution/check.ts';
 
 // Explicit coverage must stay within the source inventory the engine received.
 function assertCoverage(input: EngineInput, files: string[]): void {

@@ -5,8 +5,8 @@ import { pathToFileURL } from 'node:url';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
-import type { CommandFailureJson } from '#cli/types/output.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 
 const policy = `configurations = []
 [[check]]

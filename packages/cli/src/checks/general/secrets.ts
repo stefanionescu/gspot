@@ -22,7 +22,7 @@ import { getPushBase } from '#cli/repository/revisions/changes.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { GITLEAKS_BASELINE } from '#cli/config/platform/locations.ts';
 import type { EnvironmentSettings } from '#cli/types/policy/settings.ts';
-import type { CheckResult, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { CheckResult, EngineInput } from '#cli/types/execution/check.ts';
 import type { SecretScan, BaselineReason } from '#cli/types/checks/general/secrets.ts';
 
 import {

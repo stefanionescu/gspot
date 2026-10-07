@@ -8,16 +8,16 @@ import { Option } from '@commander-js/extra-typings';
 import { getTemplate } from '#cli/policy/templates.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { writeSetup } from '#cli/commands/init/write.ts';
-import type { CommandResult } from '#cli/types/output.ts';
 import { initPlanText } from '#cli/commands/init/plan.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import type { Template } from '#cli/types/policy/templates.ts';
 import { ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
 import { askConfirmation } from '#cli/commands/init/questions.ts';
-import { note, print, printResult } from '#cli/output/messages.ts';
 import type { InitOptions } from '#cli/types/lifecycle/selection.ts';
+import { note, print, printResult } from '#cli/terminal/messages.ts';
 import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
 import type { InitJson, InitPrepared } from '#cli/types/commands/init.ts';
 

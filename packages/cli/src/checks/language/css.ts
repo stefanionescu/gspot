@@ -4,7 +4,7 @@ import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { MODULE_SUFFIX } from '#cli/config/checks/language/css.ts';
 import type { CssClass, Importer } from '#cli/types/parsers/css.ts';
 import { definedClasses, moduleImporters } from '#cli/parsers/css.ts';

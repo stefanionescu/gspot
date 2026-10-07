@@ -1,4 +1,4 @@
-import type { CheckStatus } from '#cli/types/execution/runtime.ts';
+import type { CheckStatus } from '#cli/types/execution/check.ts';
 
 export const SCOPE_WIDTH_MIN = 4;
 

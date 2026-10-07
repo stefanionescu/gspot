@@ -7,7 +7,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 
 test('TSX and JSONC fences use their declared syntax while JSON rejects comments', async () => {
     await using sandbox = await testdir();

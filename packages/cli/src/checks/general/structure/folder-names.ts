@@ -1,9 +1,9 @@
 import { directoryOf } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Engine } from '#cli/types/execution/runtime.ts';
+import type { Engine } from '#cli/types/execution/check.ts';
 import { BANNED_FOLDERS } from '#cli/config/checks/general/structure.ts';
-import { repositoryHarnessFolders } from '#cli/policy/settings/entries.ts';
+import { repositoryHarnessFolders } from '#cli/policy/settings/lookup.ts';
 import { isAllowedFolder, structureSources } from '#cli/checks/general/structure/source-files.ts';
 
 /**

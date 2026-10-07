@@ -9,7 +9,7 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/config/tools/generation/swift-docs.ts';
 
 async function documentationFindings(root: string, code: 0 | 1) {

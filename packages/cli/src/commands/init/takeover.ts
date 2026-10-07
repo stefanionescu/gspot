@@ -34,7 +34,7 @@ function recordOutcome(entry: ToolFile, replaced: Replaced): void {
  * @param configurations the applicable shared fields generated for the selection.
  * @returns the reads, the deletions, the unreadable files, and the shared files that stay.
  */
-export function getReplaced(
+export function planTakeover(
     root: string,
     tooling: Tooling,
     tools: Set<string>,

@@ -1,7 +1,7 @@
 import { memo } from '#cli/platform/memo.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import { getBlobs, getHeadEntries } from '#cli/repository/revisions/objects.ts';
 import { FROZEN_ALL, FROZEN_NONE, MIGRATION_DOWN } from '#cli/config/checks/database/postgres.ts';

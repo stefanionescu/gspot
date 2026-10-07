@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const pyprojectSchema = z.object({
+export const docstringStyleSchema = z.object({
     tool: z
         .object({
             pydoclint: z

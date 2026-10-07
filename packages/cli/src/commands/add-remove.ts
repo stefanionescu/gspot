@@ -5,9 +5,9 @@ import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { getScopeTable } from '#cli/policy/edit.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { printResult } from '#cli/output/messages.ts';
+import { printResult } from '#cli/terminal/messages.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
-import type { CommandResult } from '#cli/types/output.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { requireChain } from '#cli/configurations/select.ts';
 import type { Mutation } from '#cli/types/policy/settings.ts';
@@ -24,7 +24,7 @@ import type {
     RemoveOptions,
     ConfigurationChange,
     ConfigurationOverrideUpdate,
-} from '#cli/types/commands/configurations.ts';
+} from '#cli/types/commands/add-remove.ts';
 
 function prepareOverrides(log: Log, input: ConfigurationOverrideUpdate): void {
     const { root, overrides } = input;

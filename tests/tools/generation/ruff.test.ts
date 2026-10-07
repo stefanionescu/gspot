@@ -7,10 +7,10 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import type { RuffFinding } from '#tests/types/tools/generation/ruff.ts';
 

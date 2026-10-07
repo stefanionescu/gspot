@@ -3,7 +3,7 @@ import { memo } from '#cli/platform/memo.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parseSqlFile } from '#cli/parsers/sql/statements.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { Migration } from '#cli/types/checks/database/postgres.ts';
 import { MIGRATION_DOWN, MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/config/checks/database/postgres.ts';
 

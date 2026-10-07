@@ -1,6 +1,6 @@
 // The builder checks use to report their identity and source location.
 
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { Finding, FindingPlace } from '#cli/types/parsers/output.ts';
 
 /**

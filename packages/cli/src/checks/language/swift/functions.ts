@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { visitSwiftSources } from '#cli/parsers/swift.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { SwiftFunction } from '#cli/types/parsers/swift.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { trivialText, isTrivialFile, executableStatements } from '#cli/parsers/statements.ts';
 
 /**

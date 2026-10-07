@@ -6,7 +6,7 @@ import { createEslint } from '#tests/harness/generated.ts';
 import { parseOutput } from '#cli/parsers/output/parse.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { installedModules } from '#tests/harness/environment.ts';
-import { eslintFilePatterns } from '#cli/generation/eslint/output.ts';
+import { eslintFilePatterns } from '#cli/generation/eslint/serialize.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 import {

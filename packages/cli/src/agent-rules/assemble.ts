@@ -1,14 +1,13 @@
 // Select agent instructions from configuration assets and render them into the configured rules folder.
 import { posix } from 'node:path';
-import type { RuleFile } from '#cli/types/rules.ts';
-import { FRONT_MATTER } from '#cli/config/rules.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { ruleSections } from '#cli/parsers/markdown.ts';
+import { FRONT_MATTER } from '#cli/config/agent-rules.ts';
 import { isExcluded } from '#cli/policy/errors/selection.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { detectConditions } from '#cli/configurations/detect.ts';
-import type { RuleSettings } from '#cli/types/policy/settings.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
+import type { RuleFile, AgentRules } from '#cli/types/agent-rules.ts';
 import { configurationFiles } from '#cli/configurations/declarations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
@@ -42,7 +41,7 @@ function configurationRules(manifests: Manifest[], repository: Repository): Rule
  * @returns each rule with its final content and destination
  */
 export function selectRuleFiles(
-    rules: RuleSettings,
+    rules: AgentRules,
     manifests: Manifest[],
     repository: Repository,
     level: Level,

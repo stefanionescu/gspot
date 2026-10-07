@@ -5,7 +5,7 @@ import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { CHECK, TABLE } from '#tests/config/cli/commands/typed-tables.ts';
 
 test('gspot set writes a list of tables typed the TOML way as tables, and the policy refuses quoted ones', async () => {

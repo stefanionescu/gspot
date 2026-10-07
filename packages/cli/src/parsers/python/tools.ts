@@ -14,9 +14,9 @@ import type {
 import {
     lockSchema,
     uvIndexSchema,
-    pyprojectSchema,
     uvIndexesSchema,
     uvFindLinksSchema,
+    pythonToolProjectSchema,
     uvProjectSettingsSchema,
 } from '#cli/parsers/schema/python/tools.ts';
 
@@ -52,7 +52,7 @@ function indexLocation(root: string, value: string): string {
 export function pythonLockMatches(project: string, lock: string | undefined): lock is string {
     if (lock === undefined) return false;
     try {
-        const parsed = pyprojectSchema.parse(parse(project));
+        const parsed = pythonToolProjectSchema.parse(parse(project));
         const manifest = parsed.project;
         const recorded = lockSchema.parse(parse(lock));
         if (!constraintsMatch(parsed.tool.uv['constraint-dependencies'], recorded)) return false;

@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { reportSchema, thresholdsSchema } from '#cli/parsers/schema/jest.ts';
 
 export type JestRun = { input: EngineInput; source: string; work: string };

@@ -1,5 +1,5 @@
 {
-    "openRecords": 1060,
+    "openRecords": 1057,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1060,
+        "openRecords": 1057,
         "records": 1092,
         "batches": [
             {
@@ -457,8 +457,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 4,
-                "unresolvedAssignments": 287
+                "completedAssignments": 5,
+                "unresolvedAssignments": 286
             },
             {
                 "id": "python",
@@ -1457,8 +1457,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 9,
-                "unresolvedAssignments": 123
+                "completedAssignments": 11,
+                "unresolvedAssignments": 121
             },
             {
                 "id": "installation-docs",
@@ -3403,10 +3403,13 @@
             "verification": []
         },
         "review/code-commands/036": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "b0a6b494a4463d39a05d79e47f5460f5350e095d",
+            "verification": [
+                "The prescribed brace-expansion 5.0.12 probe splits a[{,}]b into a[]b twice. Retained expandAlternatives and added the exact input to existing scope cases; 11 tests/13 assertions pass. No new dependency remains.",
+                "Checkpoint staged:95 passed/11 skipped/zero findings. Commit hook:69 passed/3 skipped/zero findings. Pre-push:95 passed/11 skipped/zero findings."
+            ]
         },
         "review/code-commands/037": {
             "status": "pending",
@@ -5248,11 +5251,13 @@
             "verification": []
         },
         "review/repository-root/034": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
-            "verification": ["Duplicate plugin JSON_INDENT removed; builds no longer refresh tracked presets."],
-            "remaining": ["Merge remaining maintenance formatting blocks into writeFormattedJson."]
+            "commit": "b0a6b494a4463d39a05d79e47f5460f5350e095d",
+            "verification": [
+                "One writeFormattedJson formats every preset JSON file using the sole CLI JSON_INDENT. Isolated refresh runs twice and leaves all 12 tracked data files unchanged; root TypeScript and staged checks pass.",
+                "Checkpoint staged:95 passed/11 skipped/zero findings. Commit hook:69 passed/3 skipped/zero findings. Pre-push:95 passed/11 skipped/zero findings."
+            ]
         },
         "review/repository-root/035": {
             "status": "complete",
@@ -5288,13 +5293,13 @@
             "verification": []
         },
         "review/repository-root/042": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "commit": "b0a6b494a4463d39a05d79e47f5460f5350e095d",
             "verification": [
-                "Approved flat plugin build and compiler-generated declarations pass strict packed NodeNext plus Node/Bun imports."
-            ],
-            "remaining": ["Explicit all-rules data refresh or prescribed code-commands/029 removal remains."]
+                "Plugin build lives at packages/eslint-plugin/build.ts under the approved flattening decision. Preset refresh is in scripts/eslint-presets.ts; build:plugin points at its owner. Plugin build and explicit 12-file refresh pass.",
+                "Checkpoint staged:95 passed/11 skipped/zero findings. Commit hook:69 passed/3 skipped/zero findings. Pre-push:95 passed/11 skipped/zero findings."
+            ]
         },
         "review/repository-root/045": {
             "status": "partial",
@@ -8908,6 +8913,40 @@
                     "Docs passed. Package/all12tools shards failed on Spectral rollup trust downgrade because temporary config omitted settings.npm.package_manager=npm.",
                     "Database37571565496 completed failure: directtestinvocationcannotfindsupabase.",
                     "Later focusedproductionpnpm acceptance14passed with trusteduserconfig fix; owner005 remains partial forCLIinstallationfixtures andplatformacceptance."
+                ]
+            }
+        },
+        {
+            "commit": "b0a6b494a4463d39a05d79e47f5460f5350e095d",
+            "completedRecords": [
+                "review/repository-root/034",
+                "review/repository-root/042",
+                "review/code-commands/036"
+            ],
+            "unresolvedRecords": 1057,
+            "validation": [
+                "Root TypeScript; native manager14tests/215assertions after trusted user config fix",
+                "Token-protected exact version probe: npm11.19.0,Bun1.4.2,pnpm10.34.6,Yarn1.22.22,Berry4.12.0; no tokens in config/locks",
+                "Preset refresh twice in isolated worktree:12files, unchanged data",
+                "Brace-expansion5.0.12 splits exactclass; retained11tests/13assertions pass",
+                "Staged95pass/11skip/zero findings57.96s; commit69pass/3skip/zero findings; messagecheckpassed",
+                "Pre-push95pass/11skip/zero findings84.1s; main pushed without force"
+            ],
+            "limitations": [
+                "Owner005 remains partial: CLI installation fixtures still start registries and tools; pending prescribed test moves",
+                "No publication, release tag, live account setup or deployment",
+                "Interim full tools run terminated intentionally with SIGTERM/143 before source moves: observed 422 pass, 15 fail, 5 skip; no final suite summary. Started 8d7 and later npm user configuration repair. Log /tmp/gspot-tools-shared-installation-ready.log is diagnostic only; full tools acceptance remains pending."
+            ],
+            "ci": {
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37573321908",
+                "status": "pending"
+            },
+            "database": {
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37573388124",
+                "status": "completed",
+                "conclusion": "success",
+                "verification": [
+                    "Both Supabase freshness/scoped tests ran: 2 pass, 0 fail, 20 assertions, no skips; 127.34s. Shared runner installed manifest tools once. Evidence: /tmp/gspot-ci-b0a6-database.log."
                 ]
             }
         }

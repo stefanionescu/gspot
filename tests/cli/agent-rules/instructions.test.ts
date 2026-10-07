@@ -3,10 +3,10 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { selectRuleFiles } from '#cli/rules/assemble.ts';
-import { managedBlock } from '#cli/rules/instructions.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
+import { selectRuleFiles } from '#cli/agent-rules/assemble.ts';
 import { allChecks } from '#cli/configurations/declarations.ts';
+import { managedBlock } from '#cli/agent-rules/instructions.ts';
 
 describe('the managed block', () => {
     test('an empty manual language list retains general check instructions', async () => {

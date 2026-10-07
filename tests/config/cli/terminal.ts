@@ -1,5 +1,5 @@
 // Report data covers findings, unavailable tools, successful checks, and ignored rules.
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 
 export const REPORT: RunReport = {
     version: '0.1.0',

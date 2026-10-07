@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
 
 import {

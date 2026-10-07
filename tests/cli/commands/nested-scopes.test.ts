@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import type { SettingsListJson } from '#cli/types/commands/list.ts';
 import { NESTED_SCOPES_POLICY } from '#tests/config/cli/commands/nested-scopes.ts';
 

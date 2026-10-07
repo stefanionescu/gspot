@@ -8,7 +8,7 @@ import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { readEslintPresets } from '#cli/generation/eslint/presets.ts';
 import type { TemplateInputs } from '#cli/types/generation/templates.ts';
-import { tablesFor, harnessFolders, declaredArchitectures } from '#cli/policy/settings/entries.ts';
+import { tablesFor, harnessFolders, declaredArchitectures } from '#cli/policy/settings/lookup.ts';
 import type { ScopeView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/settings.ts';
 import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation/eslint.ts';
 import ESLINT_ALL_RULES from '../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
@@ -32,7 +32,7 @@ import {
     eslintNodePatterns,
     eslintRuleSettings,
     eslintSourcePattern,
-} from '#cli/generation/eslint/output.ts';
+} from '#cli/generation/eslint/serialize.ts';
 
 // The globs of a role: an element name stands for the paths of that element, and the fallback holds when unset.
 function roleGlobs(architecture: ArchitectureSettings, name: string, defaults: string[]): string[] {

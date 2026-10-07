@@ -20,7 +20,7 @@ import { styleRules, proseFormats } from '#cli/generation/vale-styles.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { requiredTsconfigOptions } from '#cli/policy/settings/typescript.ts';
 import { readManifests, getProjectDependencies } from '#cli/repository/manifests.ts';
-import { tablesFor, policyValue, harnessFolders } from '#cli/policy/settings/entries.ts';
+import { tablesFor, policyValue, harnessFolders } from '#cli/policy/settings/lookup.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting.ts';
 import type { TemplateInputs, ScopeTemplateInputs } from '#cli/types/generation/templates.ts';
 

@@ -14,8 +14,8 @@ import type { PreparedCommand } from '#cli/types/execution/command.ts';
 import { isolatedFiles } from '#cli/execution/command/placeholders.ts';
 import { copyFiles, copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/execution/runtime.ts';
+import type { FixReport, FixResult, FixOptions } from '#cli/types/execution/check.ts';
 import { prepareCommand, commandEnvironment } from '#cli/execution/command/runner.ts';
-import type { FixReport, FixResult, FixOptions } from '#cli/types/execution/runtime.ts';
 import { hasToolError, toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {

@@ -10,7 +10,7 @@ import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 
 import {
     denoLint,

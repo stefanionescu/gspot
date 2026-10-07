@@ -1,5 +1,5 @@
 import type ts from 'typescript';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 
 export type Edge = ImportIndex['edges'][number];
 

@@ -9,7 +9,7 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
+import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 

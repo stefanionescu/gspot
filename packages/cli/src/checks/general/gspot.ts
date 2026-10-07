@@ -1,7 +1,7 @@
 import { emitAll } from '#cli/generation/outputs.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { emptyResult } from '#cli/execution/report.ts';
-import type { CheckResult } from '#cli/types/execution/runtime.ts';
+import type { CheckResult } from '#cli/types/execution/check.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { DRIFT_HELP, DRIFT_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 

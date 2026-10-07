@@ -2,7 +2,7 @@ import { readSource } from '#cli/platform/source.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { CheckResult } from '#cli/types/execution/runtime.ts';
+import type { CheckResult } from '#cli/types/execution/check.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 
 /**

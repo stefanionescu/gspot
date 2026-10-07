@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
 import type { CaseChanges } from '#tests/types/harness/preservation.ts';
 import type { Consumer, ConsumerOptions } from '#tests/types/harness/consumer.ts';

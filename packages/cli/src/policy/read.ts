@@ -6,7 +6,7 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { buildPolicy } from '#cli/policy/normalize.ts';
 import { TomlError, parse as parseToml } from 'smol-toml';
 import { policySchema } from '#cli/policy/schema/policy.ts';
-import type { KeyPath } from '#cli/types/platform/document.ts';
+import type { KeyPath } from '#cli/types/parsers/document.ts';
 import { FIELD_PROBLEMS } from '#cli/config/policy/settings.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { Policy, RawPolicy, PolicyFile, PolicyProblem } from '#cli/types/policy/settings.ts';

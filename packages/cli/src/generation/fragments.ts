@@ -6,7 +6,7 @@ import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
 import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import type { Manifest, ConfigurationFile } from '#cli/types/configurations.ts';
-import { eslintModule, eslintFilePatterns } from '#cli/generation/eslint/output.ts';
+import { eslintModule, eslintFilePatterns } from '#cli/generation/eslint/serialize.ts';
 import { eslintRuleOptions, fragmentSelectorGroups } from '#cli/generation/eslint/blocks.ts';
 
 // The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target

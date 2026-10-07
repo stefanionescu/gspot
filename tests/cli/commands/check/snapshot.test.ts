@@ -6,9 +6,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, gitOutput } from '#tests/harness/git.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import type { CommandFailureJson } from '#cli/types/output.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { statSync, chmodSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const { version: RUNNING_VERSION } = packageManifest;

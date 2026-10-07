@@ -15,8 +15,8 @@ import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { PYTHON_MIN_VERSION } from '#cli/config/parsers/packages.ts';
 import { assertCredentialFreeLock } from '#cli/tools/credentials.ts';
-import { pyprojectSchema } from '#cli/parsers/schema/python/tools.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/modes.ts';
+import { pythonToolProjectSchema } from '#cli/parsers/schema/python/tools.ts';
 import { pythonLockMatches, parsePythonSettings } from '#cli/parsers/python/tools.ts';
 import type { LockDrift, ToolOwner, LockPreparation } from '#cli/types/tools/install.ts';
 import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
@@ -158,7 +158,7 @@ export async function preparePythonProject(
     const { root } = preparation;
     const project = files.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return;
-    pyprojectSchema.parse(parse(project.content));
+    pythonToolProjectSchema.parse(parse(project.content));
     const original = owner.read(UV_LOCK);
     let content = refreshLocks ? undefined : original?.bytes.toString('utf8');
     if (!pythonLockMatches(project.content, content)) {
@@ -214,7 +214,7 @@ export function pythonInstallationPlan(
     using files = openRoot(root);
     const project = proposed ?? files.read(TOOL_PYTHON_PROJECT)?.bytes.toString('utf8');
     if (project === undefined) return { installer: [], lock: [], environment: [] };
-    pyprojectSchema.parse(parse(project));
+    pythonToolProjectSchema.parse(parse(project));
     const recorded = files.read(UV_LOCK);
     return {
         installer: runner === 'mise' ? [['mise', 'install', UV_MISE_PIN]] : [],
@@ -236,7 +236,7 @@ export function pythonInstallationPlan(
 export async function installPythonProject(root: string, owner: ToolOwner, executable: string): Promise<string> {
     const project = owner.read(TOOL_PYTHON_PROJECT);
     if (project === undefined) return '';
-    pyprojectSchema.parse(parse(project.bytes.toString('utf8')));
+    pythonToolProjectSchema.parse(parse(project.bytes.toString('utf8')));
     const lock = owner.read(UV_LOCK);
     if (lock === undefined || !pythonLockMatches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
         throw new GspotError('installation', SETUP);

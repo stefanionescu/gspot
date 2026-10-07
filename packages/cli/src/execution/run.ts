@@ -29,7 +29,7 @@ import type {
     CheckResult,
     IgnoredFindings,
     ReplannedFixResult,
-} from '#cli/types/execution/runtime.ts';
+} from '#cli/types/execution/check.ts';
 
 // The wrong lines of gspot.toml that reading dropped, reported as one failed check so the rest of the run stands.
 function policyProblemsResult(session: ToolSession): CheckResult | undefined {

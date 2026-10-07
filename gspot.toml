@@ -264,11 +264,11 @@ paths = [
 ]
 
 [[architecture.modules]]
-name = "output"
+name = "terminal"
 paths = [
-    "packages/cli/src/output/**",
-    "packages/cli/src/config/output.ts",
-    "packages/cli/src/types/output.ts",
+    "packages/cli/src/terminal/**",
+    "packages/cli/src/config/terminal.ts",
+    "packages/cli/src/types/terminal.ts",
 ]
 
 [[architecture.modules]]
@@ -320,11 +320,11 @@ paths = [
 ]
 
 [[architecture.modules]]
-name = "rules"
+name = "agent-rules"
 paths = [
-    "packages/cli/src/rules/**",
-    "packages/cli/src/config/rules.ts",
-    "packages/cli/src/types/rules.ts",
+    "packages/cli/src/agent-rules/**",
+    "packages/cli/src/config/agent-rules.ts",
+    "packages/cli/src/types/agent-rules.ts",
 ]
 
 [[architecture.modules]]
@@ -383,13 +383,13 @@ to = [
     "planning",
     "commands",
     "checks",
-    "output",
+    "terminal",
     "execution",
     "lifecycle",
     "generation",
     "tools",
     "policy",
-    "rules",
+    "agent-rules",
     "configurations",
     "repository",
     "parsers",
@@ -413,8 +413,8 @@ to = [
 ]
 
 [[architecture.imports_allowed]]
-from = "output"
-to = ["output", "execution", "parsers", "platform"]
+from = "terminal"
+to = ["terminal", "execution", "parsers", "platform"]
 
 [[architecture.imports_allowed]]
 from = "execution"
@@ -451,7 +451,7 @@ to = [
     "parsers",
     "generation",
     "policy",
-    "rules",
+    "agent-rules",
     "configurations",
     "repository",
     "platform",
@@ -481,8 +481,8 @@ from = "policy"
 to = ["parsers", "policy", "configurations", "repository", "platform"]
 
 [[architecture.imports_allowed]]
-from = "rules"
-to = ["rules", "policy", "parsers", "configurations", "repository", "platform"]
+from = "agent-rules"
+to = ["agent-rules", "policy", "parsers", "configurations", "repository", "platform"]
 
 [[architecture.imports_allowed]]
 from = "configurations"

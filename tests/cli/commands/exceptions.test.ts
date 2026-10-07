@@ -7,7 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { valueAt } from '#cli/platform/objects.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readTree } from '#tests/harness/preservation.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import type { SettingsListJson } from '#cli/types/commands/list.ts';
 import type { PolicyPreviewJson } from '#cli/types/commands/policy-edit.ts';
 

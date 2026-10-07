@@ -3,8 +3,8 @@ import { configuredChecks } from '#cli/planning/plan.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { declaredArchitectures } from '#cli/policy/settings/lookup.ts';
 import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
-import { declaredArchitectures } from '#cli/policy/settings/entries.ts';
 import { toolPin, checkToolPin, toolProjectPackage } from '#cli/configurations/pins.ts';
 
 /**

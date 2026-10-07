@@ -6,7 +6,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
 import { MANIFEST } from '#tests/config/cli/checks/general/dependencies/manifest-policy.ts';
 

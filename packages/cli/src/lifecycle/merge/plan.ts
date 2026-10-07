@@ -2,11 +2,11 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { normalizeTables } from '#cli/platform/objects.ts';
-import type { MergeRecord } from '#cli/types/lifecycle/output.ts';
+import type { MergeRecord } from '#cli/types/lifecycle/apply.ts';
 import { fieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { openMergedDocument } from '#cli/lifecycle/merge/document.ts';
-import type { KeyPath, ConfigurationDocument } from '#cli/types/platform/document.ts';
+import type { KeyPath, ConfigurationDocument } from '#cli/types/parsers/document.ts';
 import type { Field, MergePlan, MergeRequest, MergePlanContents } from '#cli/types/lifecycle/merge.ts';
 
 // Whether a value is an empty plain object or array, which an owner may remove when it created it.

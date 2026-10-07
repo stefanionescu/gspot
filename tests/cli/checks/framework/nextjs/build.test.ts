@@ -9,7 +9,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { nextBuild, nextTypes } from '#cli/checks/framework/nextjs.ts';
 import type { NextjsCommands } from '#tests/types/cli/checks/framework/nextjs.ts';
 import { statSync, chmodSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';

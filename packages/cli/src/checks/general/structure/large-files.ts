@@ -2,7 +2,7 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 
 /**
  * One finding per tracked file over `limits.file_kb` that is neither under LFS nor declared.

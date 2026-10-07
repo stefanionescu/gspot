@@ -1,9 +1,9 @@
 import { memo } from '#cli/platform/memo.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parseBashScript } from '#cli/parsers/bash.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
 import { isToolProjectPath } from '#cli/repository/selectors.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { ScriptFile, ScriptIndex } from '#cli/types/checks/language/bash.ts';
 import { SCRIPT_TAG, ENTRY_FUNCTIONS } from '#cli/config/checks/language/bash.ts';

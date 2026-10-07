@@ -1,7 +1,7 @@
 import { coversScope } from '#cli/repository/selectors.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { activeIgnores } from '#cli/policy/settings/ignores.ts';
-import { tablesFor, listSettings, settingValue } from '#cli/policy/settings/entries.ts';
+import { tablesFor, listSettings, settingValue } from '#cli/policy/settings/lookup.ts';
 
 import type {
     Policy,

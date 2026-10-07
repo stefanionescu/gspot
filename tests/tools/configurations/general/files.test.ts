@@ -4,7 +4,7 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { git, gitOutput } from '#tests/harness/git.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';

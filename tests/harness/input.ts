@@ -1,7 +1,7 @@
 // Build one check input from the session and inventory owned by its test.
 import { engineInput } from '#cli/execution/engines.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { EngineInputOptions } from '#tests/types/harness/input.ts';
 
 /**

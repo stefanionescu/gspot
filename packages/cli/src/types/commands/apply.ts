@@ -1,4 +1,4 @@
-import type { Drift } from '#cli/types/lifecycle/output.ts';
+import type { Drift } from '#cli/types/lifecycle/apply.ts';
 
 export type ApplyOptions = {
     cwd: string;

@@ -1,10 +1,10 @@
 // Checking one tree: the working tree, or a copy of the index or of a pushed commit.
 import { CHECKS } from '#cli/checks/registry.ts';
 import { codeList } from '#cli/platform/text.ts';
-import { runText } from '#cli/output/reporter.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { executeRun } from '#cli/execution/run.ts';
-import { note, warn } from '#cli/output/messages.ts';
+import { runText } from '#cli/terminal/reporter.ts';
+import { note, warn } from '#cli/terminal/messages.ts';
 import { openSession } from '#cli/commands/session.ts';
 import type { StageFilter } from '#cli/types/planning.ts';
 import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
@@ -15,8 +15,8 @@ import type { RevisionSource } from '#cli/types/execution/copy.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
 import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
-import { selectedPaths, refuseUnknownChecks } from '#cli/commands/check/selection.ts';
-import type { FixReport, RunReport, RunOptions } from '#cli/types/execution/runtime.ts';
+import type { FixReport, RunReport, RunOptions } from '#cli/types/execution/check.ts';
+import { selectedPaths, refuseUnknownChecks } from '#cli/commands/check/arguments.ts';
 import type { Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
 
 function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string {

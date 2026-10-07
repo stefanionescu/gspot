@@ -6,7 +6,7 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { install, buildToolsPath } from '#tests/harness/install.ts';

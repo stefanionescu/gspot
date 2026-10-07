@@ -12,7 +12,7 @@ import type { ProseLine } from '#cli/types/parsers/source.ts';
 import { runnerSchema } from '#cli/parsers/schema/settings.ts';
 import { globPaths, expandPaths } from '#cli/platform/paths.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { isGlob, pathMatcher } from '#cli/repository/selectors.ts';
 import { scopeOf, scopeAncestors } from '#cli/repository/scopes.ts';

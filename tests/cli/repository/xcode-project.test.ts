@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { readPbxproj } from '#cli/parsers/xcode.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { PBXPROJ_PROJECT } from '#tests/config/cli/repository/xcode-project.ts';
 
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {

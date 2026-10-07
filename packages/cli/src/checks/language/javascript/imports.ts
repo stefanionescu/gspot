@@ -5,7 +5,7 @@ import { readSource } from '#cli/platform/source.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { modulePath, getCompilerOptions } from '#cli/repository/modules.ts';
 import type { Edge, Importer, ImportIndex } from '#cli/types/checks/language/javascript.ts';
 

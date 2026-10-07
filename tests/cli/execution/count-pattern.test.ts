@@ -4,8 +4,8 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 
 const { version: RUNNING_VERSION } = packageManifest;

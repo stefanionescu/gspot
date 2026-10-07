@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { FileCopy } from '#cli/types/platform/root.ts';
-import type { KeyPath } from '#cli/types/platform/document.ts';
-import type { MergeRecord } from '#cli/types/lifecycle/output.ts';
+import type { KeyPath } from '#cli/types/parsers/document.ts';
+import type { MergeRecord } from '#cli/types/lifecycle/apply.ts';
 import type { fieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';

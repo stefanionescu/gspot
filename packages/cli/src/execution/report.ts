@@ -3,7 +3,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { FAILED_STATUSES } from '#cli/config/execution/runtime.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/platform/runtime.ts';
-import type { FixReport, RunReport, CheckResult, ReportInput } from '#cli/types/execution/runtime.ts';
+import type { FixReport, RunReport, CheckResult, ReportInput } from '#cli/types/execution/check.ts';
 
 // Name each failed or unavailable check and failed fixer once.
 function failedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {

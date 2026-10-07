@@ -5,7 +5,7 @@ import { main } from '#cli/commands/program.ts';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
 import { SOURCE_CLI_PATH } from '#tests/config/harness/cli.ts';
-import type { RunOptions } from '#cli/types/execution/runtime.ts';
+import type { RunOptions } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { CapturedProcess } from '#tests/types/harness/process.ts';

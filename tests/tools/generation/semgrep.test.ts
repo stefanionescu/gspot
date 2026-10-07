@@ -7,7 +7,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { installGeneratedPythonTools } from '#tests/harness/python-installation.ts';
 

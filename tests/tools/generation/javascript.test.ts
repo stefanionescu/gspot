@@ -12,8 +12,8 @@ import { buildToolsPath } from '#tests/harness/install.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 
 import {
     IMPORT_FIX_SCRIPT,

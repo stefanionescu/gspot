@@ -1,11 +1,11 @@
 import { isRecord } from '#cli/platform/objects.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import { similar, codeList } from '#cli/platform/text.ts';
-import type { KeyPath } from '#cli/types/platform/document.ts';
+import type { KeyPath } from '#cli/types/parsers/document.ts';
 import { TOOL_KEY_DEPTH } from '#cli/config/policy/settings.ts';
 import { namingCategorySchema } from '#cli/policy/schema/fields.ts';
 import { settingValueSchema } from '#cli/parsers/schema/settings.ts';
-import { specFor, tablesFor, everyTable, policyValue } from '#cli/policy/settings/entries.ts';
+import { specFor, tablesFor, everyTable, policyValue } from '#cli/policy/settings/lookup.ts';
 import { isLoosening, isReasonAccepted, reasonDiagnostic } from '#cli/policy/errors/reasons.ts';
 
 import type {

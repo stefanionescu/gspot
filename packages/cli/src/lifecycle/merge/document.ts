@@ -5,7 +5,7 @@ import { normalizeTables } from '#cli/platform/objects.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import { openConfigurationDocument } from '#cli/parsers/document.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
-import type { ConfigurationDocument } from '#cli/types/platform/document.ts';
+import type { ConfigurationDocument } from '#cli/types/parsers/document.ts';
 
 /**
  * Opens shared fields after validating file encoding and any persisted native-format contract.

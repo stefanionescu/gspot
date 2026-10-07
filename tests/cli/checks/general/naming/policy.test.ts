@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { SCOPE_POLICY, TEST_PATH_FILES, TEST_PATH_POLICY } from '#tests/config/cli/checks/naming.ts';
 

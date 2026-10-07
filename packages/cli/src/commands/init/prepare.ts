@@ -1,5 +1,5 @@
 // What init proposes before anything is written: the detection, the selection, the policy text, and the plan.
-import { print } from '#cli/output/messages.ts';
+import { print } from '#cli/terminal/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { runGitBlocking } from '#cli/platform/git.ts';
@@ -10,9 +10,9 @@ import { buildInitPlan } from '#cli/commands/init/plan.ts';
 import { npmToolNames } from '#cli/configurations/pins.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { selectForInit } from '#cli/lifecycle/selection.ts';
-import { getReplaced } from '#cli/commands/init/replaced.ts';
 import { getTooling } from '#cli/configurations/takeover.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
+import { planTakeover } from '#cli/commands/init/takeover.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
 import { askQuestions } from '#cli/commands/init/questions.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
@@ -95,7 +95,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const applicable = applicableManifests(session);
     const tools = new Set(applicable.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     printDetection(inputs, selection, tooling, tools);
-    const replaced = getReplaced(root, tooling, tools, emitAll(session).configurations);
+    const replaced = planTakeover(root, tooling, tools, emitAll(session).configurations);
     const planning: Planning = {
         root,
         hasGit: repo.hasGit,

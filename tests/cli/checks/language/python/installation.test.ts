@@ -10,9 +10,9 @@ import { openSession } from '#cli/commands/session.ts';
 import { environmentBin } from '#cli/platform/paths.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { importLinter } from '#cli/checks/language/python/imports/linter.ts';
 
 const { version: RUNNING_VERSION } = packageManifest;

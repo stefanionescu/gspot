@@ -7,8 +7,8 @@ import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { cpSync, mkdirSync, symlinkSync } from 'node:fs';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import { JAVASCRIPT_PROJECT_FILES, JAVASCRIPT_COMPILER_CASES } from '#tests/config/tools/generation/jsconfig.ts';
 

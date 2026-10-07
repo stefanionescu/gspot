@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import type { Engine } from '#cli/types/execution/runtime.ts';
+import type { Engine } from '#cli/types/execution/check.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { SSH_HEREDOC, SSH_BLOCK_LINES } from '#cli/config/checks/language/bash.ts';
 

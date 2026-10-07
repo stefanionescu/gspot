@@ -11,10 +11,10 @@ import type { Program } from '#cli/types/commands/program.ts';
 import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerDoctor } from '#cli/commands/doctor/command.ts';
 import { registerExplain } from '#cli/commands/explain/command.ts';
+import { registerAdd, registerRemove } from '#cli/commands/add-remove.ts';
 import { EXIT_ERROR, RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { Option, Command, CommanderError } from '@commander-js/extra-typings';
-import { registerAdd, registerRemove } from '#cli/commands/configurations.ts';
-import { printError, isColorAllowed, configureOutput, selectVerbosity } from '#cli/output/messages.ts';
+import { printError, isColorAllowed, configureOutput, selectVerbosity } from '#cli/terminal/messages.ts';
 
 // The program reads its options anywhere on the line. It hands the command every argument after the command name,
 // its own options included. An option such as --json then also ends a list option of the command where it stands.

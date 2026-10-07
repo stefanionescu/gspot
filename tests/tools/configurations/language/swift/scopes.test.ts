@@ -7,7 +7,7 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { install, buildToolsPath } from '#tests/harness/install.ts';
 import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/config/samples/swift.ts';

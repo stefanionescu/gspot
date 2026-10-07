@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { Node, Tree } from 'web-tree-sitter';
 import type { lockSchema } from '#cli/parsers/schema/python/tools.ts';
-import type { pyprojectSchema } from '#cli/parsers/schema/python/style.ts';
+import type { docstringStyleSchema } from '#cli/parsers/schema/python/docstrings.ts';
 
 /** One parsed Python source module and its caller-owned tree. */
 export type PythonModule = {
@@ -34,4 +34,4 @@ export type PythonSettingsSources = { uv: string | undefined; project: string | 
 export type PythonIndexSettings = { settings: Record<string, unknown>; credentials: string[] };
 
 /** The styles accepted by the native Python docstring checker. */
-export type PythonDocstringStyle = NonNullable<z.infer<typeof pyprojectSchema>['tool']['pydoclint']['style']>;
+export type PythonDocstringStyle = NonNullable<z.infer<typeof docstringStyleSchema>['tool']['pydoclint']['style']>;

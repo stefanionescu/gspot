@@ -6,8 +6,8 @@ import { findingAt } from '#cli/execution/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { typescriptNodes } from '#cli/parsers/typescript.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 
 function generatedContents(cwd: string): Map<string, Buffer> {

@@ -1,4 +1,4 @@
-import { vale } from '#cli/checks/general/vale.ts';
+import { vale } from '#cli/checks/general/prose.ts';
 import { locales } from '#cli/checks/library/i18n.ts';
 import { nginxTest } from '#cli/checks/tool/nginx.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
@@ -21,9 +21,9 @@ import { commitlintRange } from '#cli/checks/general/commits.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
 import { envOwner } from '#cli/checks/language/bash/env-owner.ts';
+import type { CheckRegistry } from '#cli/types/execution/check.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { swiftlint } from '#cli/checks/language/swift/swiftlint.ts';
-import type { CheckRegistry } from '#cli/types/execution/runtime.ts';
 import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
 import { shellcheck } from '#cli/checks/language/bash/shellcheck.ts';
 import { spectral, openapiFresh } from '#cli/checks/tool/openapi.ts';

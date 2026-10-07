@@ -1,8 +1,7 @@
 import { FIRST_READ } from '#cli/config/policy/settings.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import type { RuleSettings } from '#cli/types/policy/settings.ts';
 import { CONFIGURATION_LABELS } from '#cli/config/configurations.ts';
-import type { RuleFile, InstructionInputs } from '#cli/types/rules.ts';
+import type { RuleFile, AgentRules, InstructionInputs } from '#cli/types/agent-rules.ts';
 
 import {
     RULES_ALONE,
@@ -10,7 +9,7 @@ import {
     CHECKS_INSTALLED,
     ALL_LEVEL_SUMMARY,
     INSTRUCTION_HEADING,
-} from '#cli/config/rules.ts';
+} from '#cli/config/agent-rules.ts';
 
 function rulesByArea(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
@@ -25,7 +24,7 @@ function rulesByArea(files: RuleFile[]): [string, string[]][] {
     return [...rows];
 }
 
-function indexLines(rules: RuleSettings, files: RuleFile[]): string[] {
+function indexLines(rules: AgentRules, files: RuleFile[]): string[] {
     const { folder, project_folder: local } = rules;
     const projectRow: [string, string[]][] = local === undefined ? [] : [['Project rules', [`\`${local}/\``]]];
     return [

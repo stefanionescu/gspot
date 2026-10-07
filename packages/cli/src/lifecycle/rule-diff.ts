@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
-import type { Drift } from '#cli/types/lifecycle/output.ts';
-import type { RuleSettings } from '#cli/types/generation/rules.ts';
+import type { Drift } from '#cli/types/lifecycle/apply.ts';
+import type { CapturedRules } from '#cli/types/generation/rules.ts';
 
 /**
  * Compare generated rule data with the last successful apply, independent of edited file bytes.
@@ -8,7 +8,7 @@ import type { RuleSettings } from '#cli/types/generation/rules.ts';
  * @param proposed the current generated rule values
  * @returns added, removed, and changed rules under each declared path
  */
-export function compareRules(previous: RuleSettings, proposed: RuleSettings): NonNullable<Drift['rules']> {
+export function compareRules(previous: CapturedRules, proposed: CapturedRules): NonNullable<Drift['rules']> {
     const paths = new Set([...Object.keys(previous), ...Object.keys(proposed)]);
     return [...paths].flatMap((path) => {
         const before = previous[path];

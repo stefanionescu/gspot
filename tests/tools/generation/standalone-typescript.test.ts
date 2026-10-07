@@ -8,8 +8,8 @@ import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { cpSync, mkdirSync, symlinkSync } from 'node:fs';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 
 import {

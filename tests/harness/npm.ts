@@ -8,7 +8,7 @@ import { collectPins } from '#cli/configurations/pins.ts';
 import { packageLockFile } from '#cli/parsers/packages.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { LockName } from '#cli/types/parsers/lockfiles.ts';
-import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
+import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';

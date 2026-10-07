@@ -1,11 +1,11 @@
 // The selected configuration files in one scope, with the pointers that lead tools to them.
 import { posix } from 'node:path';
+import { collectRules } from '#cli/generation/rules.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import { bodyPointer } from '#cli/generation/pointers.ts';
 import { emitTarget } from '#cli/generation/templates.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
-import { collectRuleSettings } from '#cli/generation/rules.ts';
-import type { RuleSettings } from '#cli/types/generation/rules.ts';
+import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
@@ -117,7 +117,7 @@ function emitConfiguration(
     fragmentPaths: ReadonlySet<string>,
 ): void {
     const { scopes, selection, manifest } = context;
-    const payload: RuleSettings = {};
+    const payload: CapturedRules = {};
     const paths = configuration.rule_keys;
     const capture = { recorded: false };
     const inputs = {
@@ -126,7 +126,7 @@ function emitConfiguration(
             ? {}
             : {
                   recordRules: (document: unknown) => {
-                      Object.assign(payload, collectRuleSettings(paths, document));
+                      Object.assign(payload, collectRules(paths, document));
                       capture.recorded = true;
                   },
               }),

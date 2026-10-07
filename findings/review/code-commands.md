@@ -1,6 +1,6 @@
 # Commands, Lifecycle, Policy, Generation, Rules, Output, Configurations: Code Review
 
-43 unresolved review records remain.
+42 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -159,3 +159,11 @@ Records that are still open and cited with old paths: `areas/developer-experienc
 None. Every file in `commands/**`, `lifecycle/**`, `policy/**`, `generation/**` (including `eslint/`), `rules/**`, `output/**`, `configurations/**`, `main.ts`, `config/{commands,lifecycle,policy,generation}/**`, `config/{output,rules,configurations,eslint,formatting}.ts`, `types/{commands,lifecycle,policy,generation}/**`, and `types/{output,rules,configurations}.ts` was read in full.
 
 These files outside the area were read only in part, for context: `platform/root/writes.ts` (structure), `tools/vale.ts` (lines 1 to 80), `repository/survey.ts` (lines 144 to 200), `parsers/toml/patch.ts` (lines 1 to 40), and `execution/session.ts` (grep).
+
+## Installation and preset checkpoint of October 7, 2026
+
+Original records and quotations remain above.
+
+| ID                         | Status   | Evidence                                                                                                                                                                                                                                                              |
+| -------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/code-commands/036` | complete | The prescribed brace-expansion 5.0.12 probe splits a[{,}]b into a[]b twice. Retained expandAlternatives and added the exact input to existing scope cases; 11 tests/13 assertions pass. No new dependency remains. Commit `b0a6b494a4463d39a05d79e47f5460f5350e095d`. |

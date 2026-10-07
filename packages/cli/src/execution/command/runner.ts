@@ -22,7 +22,7 @@ import { checkedFindings, recordInvocation } from '#cli/execution/output.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform/runtime.ts';
 import { toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
 import type { ParsedFindings, CommandRunState } from '#cli/types/execution/output.ts';
-import type { CheckResult, EngineInput, CheckRunOptions } from '#cli/types/execution/runtime.ts';
+import type { CheckResult, EngineInput, CheckRunOptions } from '#cli/types/execution/check.ts';
 
 import {
     substitute,

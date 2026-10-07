@@ -1,6 +1,6 @@
 import { extensionsTagged } from '#cli/repository/tags.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { isToolProjectPath } from '#cli/repository/selectors.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 

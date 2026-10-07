@@ -1,6 +1,6 @@
 # Repository Root, Scripts, Workflows, and Package Wiring
 
-25 unresolved review records remain.
+23 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -263,3 +263,12 @@ Original records and quotations remain above.
 | ID                           | Status   | Evidence                                                                                                                                                                                                                                                                             |
 | ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `review/repository-root/015` | complete | One runner owns flags/paths, packing, scoped registry, CLI package build, and cancellation. Deleted package/deadline/registry-plugin forwarding modules, remainingTime, and test publication. Native and package acceptance pass. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |
+
+## Installation and preset checkpoint of October 7, 2026
+
+Original records and quotations remain above.
+
+| ID                           | Status   | Evidence                                                                                                                                                                                                                                                                           |
+| ---------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/repository-root/034` | complete | One writeFormattedJson formats every preset JSON file using the sole CLI JSON_INDENT. Isolated refresh runs twice and leaves all 12 tracked data files unchanged; root TypeScript and staged checks pass. Commit `b0a6b494a4463d39a05d79e47f5460f5350e095d`.                       |
+| `review/repository-root/042` | complete | Plugin build lives at packages/eslint-plugin/build.ts under the approved flattening decision. Preset refresh is in scripts/eslint-presets.ts; build:plugin points at its owner. Plugin build and explicit 12-file refresh pass. Commit `b0a6b494a4463d39a05d79e47f5460f5350e095d`. |

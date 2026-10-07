@@ -7,7 +7,7 @@ import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { rmSync, chmodSync, writeFileSync } from 'node:fs';
 import { containing } from '#tests/harness/expectations.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';

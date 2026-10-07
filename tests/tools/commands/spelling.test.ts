@@ -8,7 +8,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
 test(

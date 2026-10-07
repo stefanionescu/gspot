@@ -5,12 +5,12 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { readText, readSource } from '#cli/platform/source.ts';
 import { RAN_STATUSES } from '#cli/config/execution/runtime.ts';
-import type { CheckResult } from '#cli/types/execution/runtime.ts';
+import type { CheckResult } from '#cli/types/execution/check.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { pyprojectSchema } from '#cli/parsers/schema/python/style.ts';
 import type { PythonDocstringStyle } from '#cli/types/parsers/python.ts';
 import { docstringOf, parsePythonModule } from '#cli/parsers/python/source.ts';
+import { docstringStyleSchema } from '#cli/parsers/schema/python/docstrings.ts';
 import type { DocstringConfiguration } from '#cli/types/checks/language/python.ts';
 
 import {
@@ -59,7 +59,7 @@ async function docstringGroups(session: ToolSession, files: TrackedFile[], decla
  * @returns native arguments and the declared style, when one exists
  */
 export function docstringConfiguration(text: string, convention?: unknown): DocstringConfiguration {
-    const { tool } = pyprojectSchema.parse(parse(text));
+    const { tool } = docstringStyleSchema.parse(parse(text));
     const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
     const style = tool.pydoclint.style ?? (inherited === 'google' || inherited === 'numpy' ? inherited : undefined);
     const authored = new Set(Object.keys(tool.pydoclint).map((name) => name.replaceAll('_', '-')));

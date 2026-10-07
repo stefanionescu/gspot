@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readTree } from '#tests/harness/preservation.ts';
-import type { CommandFailureJson } from '#cli/types/output.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { POLICY, SET_CONFLICT_POLICIES, SET_ARGUMENT_CONFLICTS } from '#tests/config/cli/commands/set.ts';
 

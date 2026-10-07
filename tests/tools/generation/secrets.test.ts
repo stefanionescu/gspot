@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { installGeneratedPythonTools } from '#tests/harness/python-installation.ts';
 import { SENSITIVE_FILES, SENSITIVE_FINDINGS, SENSITIVE_CORRECTIONS } from '#tests/config/tools/generation/secrets.ts';
 

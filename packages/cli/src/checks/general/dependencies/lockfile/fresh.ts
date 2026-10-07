@@ -4,9 +4,9 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { copyFiles } from '#cli/execution/copy/files.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { STALE_LOCK_DIAGNOSTICS, LOCKFILE_DIAGNOSTIC_LINES } from '#cli/config/checks/general/dependencies.ts';
 
 // Yarn 2 and later use --immutable; other formats use the native command declared in the lockfile registry.

@@ -1,21 +1,21 @@
 // Every generated output of a repository: configuration files, pointers, blocks, hooks, tool pins, and rules.
 import { pathKey } from '#cli/platform/paths.ts';
 import { miseFile } from '#cli/generation/mise.ts';
-import type { RuleFile } from '#cli/types/rules.ts';
 import { npmProject } from '#cli/generation/npm.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
 import { configuredChecks } from '#cli/planning/plan.ts';
-import { selectRuleFiles } from '#cli/rules/assemble.ts';
+import type { RuleFile } from '#cli/types/agent-rules.ts';
 import { bunfigChanges } from '#cli/generation/bunfig.ts';
-import { managedBlock } from '#cli/rules/instructions.ts';
 import { pythonProject } from '#cli/generation/python.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
+import { selectRuleFiles } from '#cli/agent-rules/assemble.ts';
+import { managedBlock } from '#cli/agent-rules/instructions.ts';
 import { stylelintChanges } from '#cli/generation/stylelint.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import { commitlintChanges } from '#cli/generation/commitlint.ts';

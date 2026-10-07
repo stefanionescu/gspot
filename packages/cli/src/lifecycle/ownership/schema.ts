@@ -2,10 +2,10 @@ import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { pathKey } from '#cli/platform/paths.ts';
 import { MODE_BITS } from '#cli/config/platform/modes.ts';
-import { ruleSettingsSchema } from '#cli/parsers/schema/rules.ts';
 import { INSTALLATION_KINDS } from '#cli/config/configurations.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { BLOCK_STYLES } from '#cli/config/platform/managed-blocks.ts';
+import { ruleSettingsSchema } from '#cli/parsers/schema/tool-rule.ts';
 import { OWNED_KINDS, MERGED_CONFIGURATION_FORMATS } from '#cli/config/lifecycle/ownership.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);

@@ -1,4 +1,4 @@
-import type { Drift } from '#cli/types/lifecycle/output.ts';
+import type { Drift } from '#cli/types/lifecycle/apply.ts';
 
 export const CONFLICT_HELP = 'Run gspot apply to write the file again, then gspot install to install what it records.';
 

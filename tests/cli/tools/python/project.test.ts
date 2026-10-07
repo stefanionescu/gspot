@@ -9,8 +9,8 @@ import { UV_MISE_PIN } from '#cli/config/tools/python.ts';
 import { pythonProject } from '#cli/generation/python.ts';
 import { UV_LOCK } from '#cli/config/platform/locations.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { pyprojectSchema } from '#cli/parsers/schema/python/tools.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { pythonToolProjectSchema } from '#cli/parsers/schema/python/tools.ts';
 import { pythonLockDrift, pythonInstallationPlan } from '#cli/tools/python/project.ts';
 import { PRIVATE_PYTHON_LOCK, PRIVATE_PYTHON_PROJECT } from '#tests/config/samples/python/tools.ts';
 import { CONSTRAINT, PYTHON_LOCK_PLANS, PYTHON_ENVIRONMENT_STEPS } from '#tests/config/cli/tools/python/project.ts';
@@ -47,7 +47,7 @@ function lockFor(dependencies: string[], constraints: (typeof CONSTRAINT)[]): st
 test('a pypi constraint reaches the tool project, and only a lock resolved under it is current', async () => {
     await using sandbox = await testdir();
     const generated = pythonProject([constrainedManifest()]);
-    const project = pyprojectSchema.parse(parse(generated[0]!.content));
+    const project = pythonToolProjectSchema.parse(parse(generated[0]!.content));
     expect(project.tool.uv['constraint-dependencies']).toStrictEqual(['pyjwt>=2.14.0']);
     await createFileTree(sandbox.path, { [UV_LOCK]: lockFor(project.project.dependencies, []) });
     expect(pythonLockDrift(sandbox.path, generated)).toStrictEqual({ path: UV_LOCK, kind: 'changed' });

@@ -5,9 +5,9 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { captureChild } from '#tests/harness/process.ts';
-import type { CommandFailureJson } from '#cli/types/output.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import { runGspot, startGspot } from '#tests/harness/gspot.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 

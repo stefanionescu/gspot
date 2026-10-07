@@ -6,8 +6,8 @@ import { testdir, createFileTree } from 'testdirs';
 import example from '#docs/src/config/example.json';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 

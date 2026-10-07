@@ -6,8 +6,8 @@ import { gitOutput } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rmSync, existsSync, writeFileSync } from 'node:fs';
-import type { CommandFailureJson } from '#cli/types/output.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 
 test('staged paths preserve each spelling and its bytes, or refuse a case-folding file system', async () => {
     await using sandbox = await testdir();

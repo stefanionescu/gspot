@@ -7,7 +7,7 @@ import type { PushReport } from '#cli/types/commands/check.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { testKeyId, testApiToken } from '#tests/config/harness/secrets.ts';
-import type { RunReport, CheckResult } from '#cli/types/execution/runtime.ts';
+import type { RunReport, CheckResult } from '#cli/types/execution/check.ts';
 import { TEST_SECRETS, CORRECTED_SECRETS } from '#tests/config/tools/checks/gitleaks-output.ts';
 
 async function prepareSecrets(root: string, environment: Record<string, string>): Promise<void> {

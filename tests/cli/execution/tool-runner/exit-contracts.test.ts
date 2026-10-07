@@ -11,7 +11,7 @@ import { TYPO } from '#tests/config/harness/spelling.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { getCheckRunner } from '#cli/execution/engines.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { statSync, chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { TYPO_REPORT, MARKDOWN_REPORT } from '#tests/config/cli/execution/parse-output/formats.ts';

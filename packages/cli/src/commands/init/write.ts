@@ -1,6 +1,6 @@
 // Writing what init prepared: the policy, the generated files, the retirements, and the tool installation.
 import { isDeepStrictEqual } from 'node:util';
-import { colors } from '#cli/output/messages.ts';
+import { colors } from '#cli/terminal/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';

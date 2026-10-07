@@ -1,7 +1,7 @@
 import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Engine } from '#cli/types/execution/check.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { Engine } from '#cli/types/execution/runtime.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/language/bash.ts';
 

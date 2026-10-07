@@ -10,7 +10,7 @@ import { buildEngineInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';

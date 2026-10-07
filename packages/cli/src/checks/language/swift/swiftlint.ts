@@ -7,7 +7,7 @@ import { visitSwiftSources } from '#cli/parsers/swift.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { CheckResult } from '#cli/types/execution/runtime.ts';
+import type { CheckResult } from '#cli/types/execution/check.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import type { InlineDocumentation } from '#cli/types/checks/language/swift.ts';
 import { commandConfigurations } from '#cli/execution/command/placeholders.ts';

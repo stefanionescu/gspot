@@ -1,5 +1,5 @@
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
 import type { CaseChanges } from '#tests/types/harness/preservation.ts';
 

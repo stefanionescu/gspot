@@ -6,7 +6,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 const INIT = buildInitArguments(['bash']);

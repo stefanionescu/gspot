@@ -12,7 +12,7 @@ import { buildEngineInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { vale, routeFor, routeGroups } from '#cli/checks/general/vale.ts';
+import { vale, routeFor, routeGroups } from '#cli/checks/general/prose.ts';
 import { DIAGNOSTIC, EXECUTION_FAILURES } from '#tests/config/cli/checks/general/prose.ts';
 
 test('an outdated Vale executable reports its missing acquisition without scanning', async () => {

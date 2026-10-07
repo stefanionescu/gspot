@@ -2,7 +2,7 @@
 // configurations override an earlier scalar default; other scalar disagreements are reported as conflicts.
 import { isDeepStrictEqual } from 'node:util';
 import { isRecord } from '#cli/platform/objects.ts';
-import { mergeValue } from '#cli/policy/settings/entries.ts';
+import { mergeValue } from '#cli/policy/settings/lookup.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Level, Manifest, SettingSpec } from '#cli/types/configurations.ts';

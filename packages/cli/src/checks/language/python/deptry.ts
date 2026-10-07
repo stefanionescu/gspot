@@ -16,7 +16,7 @@ import { readText, readSource } from '#cli/platform/source.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { deptrySchema } from '#cli/parsers/schema/python/dependencies.ts';
-import type { CheckResult, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { CheckResult, EngineInput } from '#cli/types/execution/check.ts';
 
 import {
     PIP_INSTALL,

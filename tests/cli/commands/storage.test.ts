@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { CommandFailureJson } from '#cli/types/output.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { readdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('a linked .gspot folder is refused without changing outside bytes', async () => {

@@ -5,7 +5,7 @@ import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { CheckResult } from '#cli/types/execution/runtime.ts';
+import type { CheckResult } from '#cli/types/execution/check.ts';
 import { getPushBase } from '#cli/repository/revisions/changes.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import type { CommitSelection } from '#cli/types/repository/revisions.ts';

@@ -5,8 +5,8 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { FINDINGS_SHOWN } from '#cli/config/output.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import { FINDINGS_SHOWN } from '#cli/config/terminal.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { VERBOSITY_ARGS, VERBOSITY_CASES } from '#tests/config/cli/commands/verbosity.ts';
 
 test.each([...VERBOSITY_CASES])(

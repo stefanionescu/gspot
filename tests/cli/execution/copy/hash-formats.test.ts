@@ -6,8 +6,8 @@ import { writeFileSync } from 'node:fs';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 
 // The files a check reports and the status it ends with, for a staged run and for a push of the same change.
 async function verdicts(format: 'sha1' | 'sha256'): Promise<unknown> {

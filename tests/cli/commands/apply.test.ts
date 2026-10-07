@@ -8,8 +8,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { CommandFailureJson } from '#cli/types/output.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
+import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { chmodSync, existsSync, unlinkSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 

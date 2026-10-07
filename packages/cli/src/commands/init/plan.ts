@@ -1,5 +1,5 @@
 // The plan initialization shows before writing files, including dry runs.
-import { colors } from '#cli/output/messages.ts';
+import { colors } from '#cli/terminal/messages.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { duplicateMisePins } from '#cli/tools/mise.ts';
 import { getLintJobs } from '#cli/repository/survey.ts';

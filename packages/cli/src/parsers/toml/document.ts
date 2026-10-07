@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { patchToml } from '#cli/parsers/toml/patch.ts';
-import type { ConfigurationDocument } from '#cli/types/platform/document.ts';
+import type { ConfigurationDocument } from '#cli/types/parsers/document.ts';
 import type { TomlInput, TomlTableOptions } from '#cli/types/parsers/toml.ts';
 import { isRecord, normalizeTables, valueAt as getValue } from '#cli/platform/objects.ts';
 

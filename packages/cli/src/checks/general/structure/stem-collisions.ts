@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import type { Engine } from '#cli/types/execution/runtime.ts';
+import type { Engine } from '#cli/types/execution/check.ts';
 import { stemOf, directoryOf, directoryTree } from '#cli/platform/paths.ts';
 import { structureSources } from '#cli/checks/general/structure/source-files.ts';
 

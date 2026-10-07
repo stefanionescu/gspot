@@ -17,9 +17,9 @@ import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { nameProblems } from '#cli/checks/general/naming/problems.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/policy.ts';
+import type { Engine, EngineInput } from '#cli/types/execution/check.ts';
 import { typescriptIdentifiers } from '#cli/parsers/naming/typescript.ts';
-import type { Engine, EngineInput } from '#cli/types/execution/runtime.ts';
-import { everyTable, repositoryHarnessFolders } from '#cli/policy/settings/entries.ts';
+import { everyTable, repositoryHarnessFolders } from '#cli/policy/settings/lookup.ts';
 import { fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/paths.ts';
 import type { FileNames, NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 

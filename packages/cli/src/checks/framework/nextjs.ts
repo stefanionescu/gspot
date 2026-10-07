@@ -6,8 +6,8 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import { nextSettingsProblems } from '#cli/parsers/nextjs.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
 
 import {
     PAIRS,

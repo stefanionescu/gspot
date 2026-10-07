@@ -9,7 +9,7 @@ import { pruneParents } from '#cli/lifecycle/merge/plan.ts';
 import { isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { openMergedDocument } from '#cli/lifecycle/merge/document.ts';
-import type { Planned, MergeRecord } from '#cli/types/lifecycle/output.ts';
+import type { Planned, MergeRecord } from '#cli/types/lifecycle/apply.ts';
 import { getOnDisk, recordedBlockStart } from '#cli/lifecycle/ownership/plans.ts';
 import type { Log, Restoration, OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
 

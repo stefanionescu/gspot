@@ -6,7 +6,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { singletons } from '#cli/checks/language/python/singletons.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

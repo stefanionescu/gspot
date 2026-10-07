@@ -1,9 +1,9 @@
 // Records go to stdout; informational messages, warnings, and errors go to stderr.
 import pc from 'picocolors';
 import { isCI } from 'std-env';
-import { RESULT_JSON_INDENT } from '#cli/config/output.ts';
+import { RESULT_JSON_INDENT } from '#cli/config/terminal.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import type { CommandResult, OutputOptions, VerbosityFlags, CommandFailureJson } from '#cli/types/output.ts';
+import type { CommandResult, OutputOptions, VerbosityFlags, CommandFailureJson } from '#cli/types/terminal.ts';
 
 let options: OutputOptions = { verbosity: 'normal', json: false, color: false };
 

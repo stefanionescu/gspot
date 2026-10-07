@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import type { Engine } from '#cli/types/execution/runtime.ts';
+import type { Engine } from '#cli/types/execution/check.ts';
 import { RUNTIME_EMBEDS } from '#cli/config/checks/language/bash.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 

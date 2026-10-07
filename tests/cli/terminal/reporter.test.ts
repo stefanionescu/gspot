@@ -1,10 +1,10 @@
-import { runText } from '#cli/output/reporter.ts';
 import { test, expect, describe } from 'bun:test';
-import { REPORT } from '#tests/config/cli/output.ts';
+import { runText } from '#cli/terminal/reporter.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { configureOutput } from '#cli/output/messages.ts';
-import type { ComparisonCase } from '#tests/types/cli/output.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import { REPORT } from '#tests/config/cli/terminal.ts';
+import { configureOutput } from '#cli/terminal/messages.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
+import type { ComparisonCase } from '#tests/types/cli/terminal.ts';
 
 describe('the reporter', () => {
     test('skipped checks do not count as passes and an empty canceled run is incomplete', () => {

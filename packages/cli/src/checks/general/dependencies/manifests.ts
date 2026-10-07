@@ -3,7 +3,7 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';

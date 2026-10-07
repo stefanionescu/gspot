@@ -2,7 +2,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 

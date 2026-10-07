@@ -16,7 +16,7 @@ import { proposeClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
 import { RETAINED_KINDS, RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
-import type { Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/output.ts';
+import type { Planned, ApplyReport, WriteRequest } from '#cli/types/lifecycle/apply.ts';
 import { recordConfigurationOverrides } from '#cli/lifecycle/configuration-overrides.ts';
 import { proposeBlock, proposeMerge, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { READ_ONLY_FILE, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';

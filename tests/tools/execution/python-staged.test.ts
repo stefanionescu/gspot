@@ -9,8 +9,8 @@ import { installTools } from '#cli/lifecycle/install.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { preparePythonInstallation } from '#tests/harness/python-installation.ts';
 

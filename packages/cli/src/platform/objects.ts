@@ -1,6 +1,5 @@
 // Shared normalization and key-path reads for parsed objects.
 import type { Defined } from '#cli/types/platform/runtime.ts';
-import type { KeyPath } from '#cli/types/platform/document.ts';
 
 /**
  * Drops the undefined entries of an object, so exact optional types hold.
@@ -26,7 +25,7 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
  * @param keys the keys, outermost first
  * @returns the value, or undefined when any key along the path is absent
  */
-export function valueAt(value: unknown, keys: Readonly<KeyPath>): unknown {
+export function valueAt(value: unknown, keys: readonly (string | number)[]): unknown {
     let current = value;
     for (const key of keys) {
         if (current === null || typeof current !== 'object' || !Object.hasOwn(current, key)) return undefined;

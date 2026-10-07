@@ -1,7 +1,7 @@
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import type { KeyChange } from '#cli/types/platform/document.ts';
-import type { RuleSettings } from '#cli/types/generation/rules.ts';
+import type { KeyChange } from '#cli/types/parsers/document.ts';
+import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { BlockStyle } from '#cli/types/platform/managed-blocks.ts';
@@ -16,7 +16,7 @@ export type EmitConsumers = { repository: ConfigurationConsumers; scope: Configu
 export type BlockOutput = { path: string; block: string; style: BlockStyle };
 
 export type GeneratedFile = {
-    ruleData?: RuleSettings;
+    ruleData?: CapturedRules;
     path: string;
     content: string;
     readOnly: boolean;

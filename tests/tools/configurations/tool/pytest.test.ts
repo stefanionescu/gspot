@@ -6,7 +6,7 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { install, buildToolsPath } from '#tests/harness/install.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';

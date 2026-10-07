@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { READERS_HEADERS, EXPECTED_READERS } from '#tests/config/cli/execution/scopes.ts';
 
 test('scoped readers receive their own files and preserve binary asset inputs', async () => {

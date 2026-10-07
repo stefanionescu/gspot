@@ -8,8 +8,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { envTemplate } from '#cli/checks/general/secrets.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 
 test('environment templates preserve first missing reads per file and escaped custom accessors', async () => {
     await using sandbox = await testdir();

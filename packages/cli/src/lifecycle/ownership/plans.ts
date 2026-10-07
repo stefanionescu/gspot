@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { decodeUtf8 } from '#cli/platform/text.ts';
 import { planMerge } from '#cli/lifecycle/merge/plan.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
-import type { Planned } from '#cli/types/lifecycle/output.ts';
+import type { Planned } from '#cli/types/lifecycle/apply.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { blockSpan, applyBlock } from '#cli/platform/managed-blocks.ts';

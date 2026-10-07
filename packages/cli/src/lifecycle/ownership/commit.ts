@@ -3,7 +3,7 @@ import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { pathKey } from '#cli/platform/paths.ts';
 import type { Proposed } from '#cli/types/platform/root.ts';
-import type { Planned } from '#cli/types/lifecycle/output.ts';
+import type { Planned } from '#cli/types/lifecycle/apply.ts';
 import { getOnDisk } from '#cli/lifecycle/ownership/plans.ts';
 import { isMatch, identify } from '#cli/lifecycle/ownership/log.ts';
 import type { Log, Outcome } from '#cli/types/lifecycle/ownership.ts';

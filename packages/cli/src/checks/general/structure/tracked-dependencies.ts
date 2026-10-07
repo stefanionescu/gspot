@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 
 function dependencyFolder(path: string): string | undefined {

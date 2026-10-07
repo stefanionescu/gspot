@@ -4,8 +4,8 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { parseExpoDoctor } from '#cli/parsers/expo.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 
 function hasInstalledExpo(scopeRoot: string): boolean {

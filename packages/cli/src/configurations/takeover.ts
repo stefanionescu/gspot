@@ -17,7 +17,7 @@ function hasSection(root: string, path: string, replace: NonNullable<ToolPin['re
 }
 
 // The tool configurations one replace row finds among the tracked files.
-function getReplacedConfigs(
+function planTakeoverConfigs(
     root: string,
     inventory: Set<string>,
     tool: string,
@@ -49,7 +49,7 @@ function getToolConfigs(root: string, paths: Iterable<string>): ToolFile[] {
     const inventory = new Set([...paths].filter((path) => !isToolProjectPath(path)));
     return [...configurationManifests().values()].flatMap((manifest) =>
         manifest.tools.flatMap((tool) =>
-            (tool.replace ?? []).flatMap((replace) => getReplacedConfigs(root, inventory, tool.name, replace)),
+            (tool.replace ?? []).flatMap((replace) => planTakeoverConfigs(root, inventory, tool.name, replace)),
         ),
     );
 }

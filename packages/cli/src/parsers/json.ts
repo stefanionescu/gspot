@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
 import { parseJsonc } from '#cli/parsers/jsonc.ts';
 import type { JsonDocument } from '#cli/types/parsers/json.ts';
-import type { ConfigurationDocument } from '#cli/types/platform/document.ts';
+import type { ConfigurationDocument } from '#cli/types/parsers/document.ts';
 import { valueAt, isRecord, normalizeTables } from '#cli/platform/objects.ts';
 
 // Parse the complete native JSON document before editing or returning any of its fields.

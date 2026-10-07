@@ -8,8 +8,8 @@ import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import type { RunReport, RunOptions } from '#cli/types/execution/check.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
-import type { RunReport, RunOptions } from '#cli/types/execution/runtime.ts';
 
 const SECRETS_FILES_POLICY = buildPolicy(['secrets'], { tables: '[agent_rules]\nenabled = false\n' });
 

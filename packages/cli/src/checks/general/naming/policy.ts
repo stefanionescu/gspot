@@ -4,7 +4,7 @@ import { pathMatcher } from '#cli/repository/selectors.ts';
 import { namingTerms } from '#cli/parsers/schema/naming.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
-import { tablesFor, settingValue } from '#cli/policy/settings/entries.ts';
+import { tablesFor, settingValue } from '#cli/policy/settings/lookup.ts';
 import type { Policy, KnownSettings, NamingSettings } from '#cli/types/policy/settings.ts';
 import type { Term, PathRule, CategoryLimits, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 import type { Identifier, NamingTerms, NamingLanguage, NamingTermRule } from '#cli/types/parsers/naming.ts';

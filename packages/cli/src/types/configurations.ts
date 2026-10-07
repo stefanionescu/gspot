@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type { Defined } from '#cli/types/platform/runtime.ts';
-import type { KeyPath } from '#cli/types/platform/document.ts';
+import type { KeyPath } from '#cli/types/parsers/document.ts';
 import type { levelSchema } from '#cli/parsers/schema/settings.ts';
 import type { INSTALLATION_KINDS } from '#cli/config/configurations.ts';
 import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';

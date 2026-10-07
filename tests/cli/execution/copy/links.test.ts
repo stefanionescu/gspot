@@ -7,8 +7,8 @@ import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LINKS } from '#tests/config/cli/execution/copy.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
 
 // Adds each link to the index as Git stores it, so the test needs no link support from the file system.
 function stageLinks(root: string): void {

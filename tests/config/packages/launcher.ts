@@ -1,4 +1,4 @@
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 
 /** Authored input replaced or inspected by the delivered launcher scenario. */
 export const LAUNCHER_FILES = {

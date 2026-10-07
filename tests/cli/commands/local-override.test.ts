@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 
 // A declared check on host Bun that fails while entry.txt says bad.
 const POLICY = `configurations = []

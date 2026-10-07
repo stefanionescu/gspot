@@ -3,7 +3,7 @@ import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { LocaleSettings } from '#cli/types/checks/library/i18n.ts';
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.

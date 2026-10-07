@@ -6,7 +6,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { createConsumer } from '#tests/harness/consumer.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containingAll, textContaining } from '#tests/harness/expectations.ts';

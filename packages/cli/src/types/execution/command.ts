@@ -1,7 +1,7 @@
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { CheckResult } from '#cli/types/execution/runtime.ts';
+import type { CheckResult } from '#cli/types/execution/check.ts';
 
 export type CommandPart = string | { file: true };
 

@@ -6,7 +6,7 @@ import { parseTomlText } from '#cli/policy/read.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { contentDigest } from '#cli/platform/text.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
-import type { KeyPath } from '#cli/types/platform/document.ts';
+import type { KeyPath } from '#cli/types/parsers/document.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
 import { templateSchema } from '#cli/policy/schema/templates.ts';
 import { unknownConfigurations } from '#cli/configurations/problems.ts';

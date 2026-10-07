@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { textAtLevel } from '#cli/rules/assemble.ts';
+import { textAtLevel } from '#cli/agent-rules/assemble.ts';
 
 test('level filtering respects fenced examples, nested sections, and the next peer heading', () => {
     const before = '# Guide\n\n## Required\n\n```md\n## Example\n<!-- level: all -->\n```\n\n';

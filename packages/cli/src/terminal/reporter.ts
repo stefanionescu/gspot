@@ -1,11 +1,11 @@
 // Render completed checks without reading process settings or repeating hook diagnostics.
-import { colors } from '#cli/output/messages.ts';
+import { colors } from '#cli/terminal/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { FAILED_STATUSES } from '#cli/config/execution/runtime.ts';
+import type { RunReport, CheckResult } from '#cli/types/execution/check.ts';
 import { EXIT_ERROR, MS_PER_SECOND } from '#cli/config/platform/runtime.ts';
-import type { RunReport, CheckResult } from '#cli/types/execution/runtime.ts';
-import type { Columns, OutputOptions, ProgressStream } from '#cli/types/output.ts';
+import type { Columns, OutputOptions, ProgressStream } from '#cli/types/terminal.ts';
 
 import {
     FILES_WIDTH,
@@ -16,7 +16,7 @@ import {
     SCOPE_WIDTH_MIN,
     CHECK_STATUS_COLORS,
     COMMIT_PREFIX_LENGTH,
-} from '#cli/config/output.ts';
+} from '#cli/config/terminal.ts';
 
 function seconds(milliseconds: number): string {
     return `${(milliseconds / MS_PER_SECOND).toFixed(1)}s`;

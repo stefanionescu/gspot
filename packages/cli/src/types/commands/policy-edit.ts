@@ -1,8 +1,8 @@
-import type { CommandResult } from '#cli/types/output.ts';
+import type { CommandResult } from '#cli/types/terminal.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Proposal } from '#cli/types/policy/settings.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
+import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 
 export type PreparedPolicy = Proposal & { original: FileCopy };
 

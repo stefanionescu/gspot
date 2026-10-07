@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/execution/finding.ts';
-import type { Engine } from '#cli/types/execution/runtime.ts';
+import type { Engine } from '#cli/types/execution/check.ts';
 import type { ScriptFile } from '#cli/types/checks/language/bash.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { SOURCE_STATEMENT, SHELLCHECK_DIRECTIVE } from '#cli/config/checks/language/bash.ts';

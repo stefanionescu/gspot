@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
-import type { Engine } from '#cli/types/execution/runtime.ts';
+import type { Engine } from '#cli/types/execution/check.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';

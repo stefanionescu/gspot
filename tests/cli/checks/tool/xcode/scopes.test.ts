@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/runtime.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { INVALID_XCODE_DOCUMENTS } from '#tests/config/cli/checks/tool/xcode/scopes.ts';
 
 test.each([
