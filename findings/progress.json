@@ -1,5 +1,5 @@
 {
-    "openRecords": 1035,
+    "openRecords": 1030,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1035,
+        "openRecords": 1030,
         "records": 1092,
         "batches": [
             {
@@ -1798,8 +1798,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 36,
-                "unresolvedAssignments": 53
+                "completedAssignments": 41,
+                "unresolvedAssignments": 48
             },
             {
                 "id": "configurations",
@@ -5668,20 +5668,21 @@
             ]
         },
         "review/source-layout/036": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "843c4d79ed2780e3978163bc38b58c5d49899c19",
             "verification": [
-                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet."
+                "requiredTsconfigOptions is owned by generation/tsconfig.ts and its constants by config/generation/typescript.ts; former policy owners are deleted. Every caller uses the final owners. Prepared root/CLI types and generated-configuration focused cases pass.",
+                "Validated implementation843c4d79:478focused tests0fail397assertions25files4.42s; staged147pass13skip0findings64.849s, hook106pass3skip0findings22.8s, message hook1pass0findings. Push147pass13skip0findings100.2s; no hooks bypassed."
             ]
         },
         "review/source-layout/037": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "843c4d79ed2780e3978163bc38b58c5d49899c19",
             "verification": [
-                "Exact prescribed merge implemented in main: activeIgnores now lives in policy/settings/view.ts for scopeView and ESLint blocks; old ignores source and duplicate test file deleted. Existing UTC expiry/current/future/permanent/saved-policy assertions moved intact into scope-views owner.",
-                "Main root/CLI TypeScript and full-policy affected-owner ESLint pass. Focused policy settings/scope views/ESLint generation: 109 pass, zero fail, 808 assertions, 26 files, 20.79s. Existing unresolved source020/021 prefix gate prevents checkpoint commit/closure; no completed status claimed."
+                "activeIgnores is merged into policy/settings/view.ts; its previous source and singleton test owner are deleted. UTC expiry cases moved intact into scope-views and the existing consumer imports its view owner. Prepared scope-view acceptance, root/CLI types and staged gate pass; obsolete policy exception removed.",
+                "Validated implementation843c4d79:478focused tests0fail397assertions25files4.42s; staged147pass13skip0findings64.849s, hook106pass3skip0findings22.8s, message hook1pass0findings. Push147pass13skip0findings100.2s; no hooks bypassed."
             ]
         },
         "review/source-layout/038": {
@@ -5769,19 +5770,21 @@
             ]
         },
         "review/source-layout/049": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "843c4d79ed2780e3978163bc38b58c5d49899c19",
             "verification": [
-                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet."
+                "The quoting behavior is merged into platform/text.ts; platform/quoting.ts and its import aliases are removed. Callers retain the original behavior. Prepared focused command/claim cases, root/CLI types and staged gate pass.",
+                "Validated implementation843c4d79:478focused tests0fail397assertions25files4.42s; staged147pass13skip0findings64.849s, hook106pass3skip0findings22.8s, message hook1pass0findings. Push147pass13skip0findings100.2s; no hooks bypassed."
             ]
         },
         "review/source-layout/050": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "843c4d79ed2780e3978163bc38b58c5d49899c19",
             "verification": [
-                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet."
+                "The Bun runtime constant is beside MS_PER_SECOND in config/platform/runtime.ts; config/generation/bunfig.ts is deleted and its caller uses the final owner. Generated configuration acceptance, types and staged gate pass.",
+                "Validated implementation843c4d79:478focused tests0fail397assertions25files4.42s; staged147pass13skip0findings64.849s, hook106pass3skip0findings22.8s, message hook1pass0findings. Push147pass13skip0findings100.2s; no hooks bypassed."
             ]
         },
         "review/source-layout/051": {
@@ -5815,12 +5818,12 @@
             "verification": []
         },
         "review/source-layout/056": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "rules implementation; main integration",
-            "commit": null,
+            "commit": "843c4d79ed2780e3978163bc38b58c5d49899c19",
             "verification": [
-                "Exact fixes/owners/tests dispatched from bce72e26bbc55fc48e976aea29c466d0ce2e91b9 into isolated refactor/plugin-create-rule worktree through /tmp/gspot-plugin-wave2-packet.md. Mechanical constructor rename remains separate from transparent-callback behavior; main reserves exact CLI parser suppression removal. No integration/closure acceptance yet.",
-                "Frozen mechanical helper/type rename integrated into index; all17ruleimports and plugin type import follow create-rule owner, no aliases. Main plugin433passing and root/plugin types pass; actual packed Node and Bun-only consumers validate compiler declarations. Final combined staged gate remains pending."
+                "Plugin source and module type owners are create-rule.ts and types/create-rule.ts. Every import is updated; no compatibility exports or old filenames remain. Prepared plugin rule cases and root/CLI types pass.",
+                "Validated implementation843c4d79:478focused tests0fail397assertions25files4.42s; staged147pass13skip0findings64.849s, hook106pass3skip0findings22.8s, message hook1pass0findings. Push147pass13skip0findings100.2s; no hooks bypassed."
             ]
         },
         "review/tests-cli/001": {
@@ -9335,6 +9338,32 @@
                     "windows": "2928pass64skip45fail11101assertions3037tests363files1842.95s. Raw completed job log /tmp/gspot-ci-bce-windows-cli.log; not accepted and not a full platform timing measurement.",
                     "windowsTools": "All four Windows tool shards reached the60minute outer job bound. Each independent GitHub annotation confirms maximum execution time1h0m0s exceeded; /tmp/gspot-ci-bce-win1-annotations.json through win4-annotations.json. Shard4 raw log retained. Cancelled shards are incomplete and supply no complete platform suite or slowest-test measurement."
                 }
+            }
+        },
+        {
+            "commit": "843c4d79ed2780e3978163bc38b58c5d49899c19",
+            "completedRecords": [
+                "review/source-layout/036",
+                "review/source-layout/037",
+                "review/source-layout/049",
+                "review/source-layout/050",
+                "review/source-layout/056"
+            ],
+            "unresolvedRecords": 1030,
+            "validation": [
+                "Prepared snapshot deliberately defers four source moves conflicting with the shared-prefix policy; all later behavior is retained independently. Root/CLI types and478focused cases pass. Mandatory staged147checks pass with13skips, zero findings; both commit hooks and push hook pass. Main pushed without force at843c4d79.",
+                "Original IDs, quotations, decisions, ordered batch assignments and490original closed rows remain unchanged; unresolved counts derive from unique record statuses."
+            ],
+            "limitations": [
+                "Source-layout/035 awaits compiler cache behavior; source-layout/020 and021 await shared-prefix decision. Native APIs, plugin behavior, SQL changes, claim race, policy schema/writer, domain findings and cross-platform acceptance remain open. No publication, tag or deployment."
+            ],
+            "ci": {
+                "run": 37588813240,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37588813240",
+                "head": "843c4d79ed2780e3978163bc38b58c5d49899c19",
+                "status": "in_progress",
+                "conclusion": null,
+                "limitations": "No completed platform result observed yet. This run covers the pushed mechanical snapshot only."
             }
         }
     ]
