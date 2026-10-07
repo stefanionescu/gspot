@@ -5,11 +5,11 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { engineInput } from '#cli/execution/engines.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { planRun, ownedInputs } from '#cli/planning/plan.ts';
+import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
 import { SOURCE_CORRECTIONS } from '#tests/config/cli/execution/engine-input.ts';
 
 test.each(SOURCE_CORRECTIONS)(
@@ -75,7 +75,9 @@ test('engine inputs expose selected files and reserve the repository inventory f
             only: ['jest/coverage'],
             checks: {
                 ...CHECKS,
-                'jest/coverage': { engine: () => Promise.resolve({ findings: [], files: ['unrelated/private.txt'] }) },
+                'jest/coverage': {
+                    run: runEngineCheck(() => Promise.resolve({ findings: [], files: ['unrelated/private.txt'] })),
+                },
             },
         }),
     );
@@ -88,7 +90,9 @@ test('engine inputs expose selected files and reserve the repository inventory f
             only: ['jest/coverage'],
             checks: {
                 ...CHECKS,
-                'jest/coverage': { engine: () => Promise.resolve({ findings: [], files: ['apps/web/value.test.js'] }) },
+                'jest/coverage': {
+                    run: runEngineCheck(() => Promise.resolve({ findings: [], files: ['apps/web/value.test.js'] })),
+                },
             },
         }),
     );

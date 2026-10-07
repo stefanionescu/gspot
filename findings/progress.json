@@ -1,5 +1,5 @@
 {
-    "openRecords": 1036,
+    "openRecords": 1035,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1036,
+        "openRecords": 1035,
         "records": 1092,
         "batches": [
             {
@@ -1798,8 +1798,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 35,
-                "unresolvedAssignments": 54
+                "completedAssignments": 36,
+                "unresolvedAssignments": 53
             },
             {
                 "id": "configurations",
@@ -4555,10 +4555,12 @@
             "verification": []
         },
         "review/glossary/007": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Isolated worktree refactor/built-in-contract starts at 1285f9d5eead1c60f4f7b892c92d744bab52792f. Callback contract preparation is separate from mechanical vocabulary; no closure before full record acceptance."
+            ]
         },
         "review/glossary/008": {
             "status": "pending",
@@ -4642,10 +4644,12 @@
             "verification": []
         },
         "review/glossary/022": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Isolated worktree refactor/built-in-contract starts at 1285f9d5eead1c60f4f7b892c92d744bab52792f. Callback contract preparation is separate from mechanical vocabulary; no closure before full record acceptance."
+            ]
         },
         "review/glossary/023": {
             "status": "pending",
@@ -5380,11 +5384,12 @@
             ]
         },
         "review/source-layout/007": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "1285f9d5eead1c60f4f7b892c92d744bab52792f",
             "verification": [
-                "Separate scratch-directory callback patch integrated locally; root/CLI types and staged gate pending. Native isolated acceptance: 26 pass, 242 assertions, five files, 155s, including npm/Python scratch lifetime probes."
+                "Move readInstalledTree into lifecycle/ownership/installations.ts. Change the installation callback to take the scratch directory; lifecycle/install.ts reads the tree immediately while the scratch folder is alive.",
+                "Root and CLI types passed. Main focused installation ownership and Python callback tests: 30 pass, 157 assertions, four files. Isolated real shared tools runner: 26 pass, 242 assertions, five files, 155s; live npm and Python callbacks captured trees before scratch cleanup and installed bytes/interpreter survived disposal. Main audit: 564 files, 2,803 direct imports, zero ownership violations; tools imports no lifecycle. Full staged gate: 89 pass, 11 skip, zero findings, 45.428s; commit hook: 64 pass, three skip, zero findings, 10.1s; message hook passed. Authored TypeScript reduced by nine lines."
             ]
         },
         "review/source-layout/008": {
@@ -8994,7 +8999,8 @@
                 "Preset refresh twice in isolated worktree:12files, unchanged data",
                 "Brace-expansion5.0.12 splits exactclass; retained11tests/13assertions pass",
                 "Staged95pass/11skip/zero findings57.96s; commit69pass/3skip/zero findings; messagecheckpassed",
-                "Pre-push95pass/11skip/zero findings84.1s; main pushed without force"
+                "Pre-push95pass/11skip/zero findings84.1s; main pushed without force",
+                "CI 37573321908 partial evidence: package 8 pass, zero fail, 124 assertions; Linux tools1 105 pass/two skip, tools2 83 pass/eight skip; macOS tools1 106 pass/one skip, tools2 86 pass/three skip. Shared Spectral acquisition passed. Linux tools3/4 and macOS4 remain failed for fixtures including scoped registry routing to unpublished public plugin; Linux CLI 3038 pass/12 skip/four fail, macOS CLI 3047 pass/three skip/four fail. Windows and macOS3 still active; skips do not prove behavior."
             ],
             "limitations": [
                 "Owner005 remains partial: CLI installation fixtures still start registries and tools; pending prescribed test moves",
@@ -9042,12 +9048,14 @@
             ],
             "limitations": [
                 "Full CLI/plugin task before integration: 3042 pass, 3 skip, 9 fail; known baseline/fixture acceptance gaps remain. Mechanical focused tests and staged gates pass; no full-suite acceptance is claimed.",
-                "No publication, release tag, deployment or live account configuration."
+                "No publication, release tag, deployment or live account configuration.",
+                "Queued CI 37575581180 was superseded by newer main push and cancelled by workflow concurrency before jobs started; it supplies no platform acceptance."
             ],
             "ci": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37575581180",
-                "status": "pending",
-                "head": "a7f52291230775a7f356a8aac8d8150b7e3f4d2f"
+                "status": "completed",
+                "head": "a7f52291230775a7f356a8aac8d8150b7e3f4d2f",
+                "conclusion": "cancelled"
             }
         },
         {
@@ -9066,12 +9074,42 @@
             "unresolvedRecords": 1036,
             "validation": [
                 "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines.",
-                "Removed three stale Python architecture/folder declarations and regenerated with gspot apply. Original owners and compatibility aliases are absent."
+                "Removed three stale Python architecture/folder declarations and regenerated with gspot apply. Original owners and compatibility aliases are absent.",
+                "Pushed a7f522912..1285f9d5e to main without force. Required pre-push checks: 147 pass, 13 skip, zero findings, 83.6s; remote main verified at 1285f9d5eead1c60f4f7b892c92d744bab52792f."
             ],
             "limitations": [
                 "Platform skips do not prove platform behavior. Broader baseline CLI/tool fixture failures remain tracked; this checkpoint does not claim full-suite or cross-platform acceptance.",
                 "Release publication, tagging, live account setup and deployment remain unperformed."
-            ]
+            ],
+            "ci": {
+                "run": 37577232561,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37577232561",
+                "status": "pending",
+                "conclusion": null,
+                "head": "1285f9d5eead1c60f4f7b892c92d744bab52792f",
+                "limitations": "Queued behind prior CI; no platform results observed."
+            }
+        },
+        {
+            "commit": "1285f9d5eead1c60f4f7b892c92d744bab52792f",
+            "completedRecords": ["review/source-layout/007"],
+            "unresolvedRecords": 1035,
+            "validation": [
+                "Root and CLI types passed. Main focused installation ownership and Python callback tests: 30 pass, 157 assertions, four files. Isolated real shared tools runner: 26 pass, 242 assertions, five files, 155s; live npm and Python callbacks captured trees before scratch cleanup and installed bytes/interpreter survived disposal. Main audit: 564 files, 2,803 direct imports, zero ownership violations; tools imports no lifecycle. Full staged gate: 89 pass, 11 skip, zero findings, 45.428s; commit hook: 64 pass, three skip, zero findings, 10.1s; message hook passed. Authored TypeScript reduced by nine lines.",
+                "Pushed a7f522912..1285f9d5e to main without force. Required pre-push checks: 147 pass, 13 skip, zero findings, 83.6s; remote main verified at 1285f9d5eead1c60f4f7b892c92d744bab52792f."
+            ],
+            "limitations": [
+                "No cross-platform suite acceptance inferred from local tests or platform skips. Existing broader test and CI failures remain tracked.",
+                "No release publication, tag, deployment or live account setup."
+            ],
+            "ci": {
+                "run": 37577232561,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37577232561",
+                "status": "pending",
+                "conclusion": null,
+                "head": "1285f9d5eead1c60f4f7b892c92d744bab52792f",
+                "limitations": "Queued behind prior CI; no platform results observed."
+            }
         }
     ]
 }

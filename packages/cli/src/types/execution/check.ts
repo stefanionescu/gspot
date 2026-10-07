@@ -12,8 +12,8 @@ import type { ScopeView, PolicyFile, IgnoreEntry, ScopeSelection } from '#cli/ty
 
 export type SuppressionComment = { file: string; line: number; form: string; reason?: string; forbidden: boolean };
 
-/** Checks by ID: engines return findings from EngineInput; runners build CheckResult from a session and planned check. */
-export type CheckRegistry = Record<string, { engine: Engine } | { run: Executable['run'] }>;
+/** Checks by ID, each running through the same session and planned-check callback. */
+export type CheckRegistry = Record<string, { run: Executable['run'] }>;
 
 export type FixResult = { check: string; changed: string[] } & (
     | { status: 'changed' | 'unchanged' | 'skipped' }

@@ -32,11 +32,11 @@ for (const extension of ['md', 'sh']) {
         });
         const session = await openSession(directory.path);
         const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-        const defect = await runEngineCheck(session, vale, planned!);
+        const defect = await runEngineCheck(vale)(session, planned!);
         expect(defect.status, defect.note).toBe('failed');
         expect(defect.findings).toStrictEqual([containing({ file: path, line: 1, rule: 'Example.Concrete' })]);
         await Bun.write(join(directory.path, path), '# We inspect the records.\n');
-        const corrected = await runEngineCheck(session, vale, planned!);
+        const corrected = await runEngineCheck(vale)(session, planned!);
         expect(corrected.status, corrected.note).toBe('passed');
     });
 }
@@ -58,14 +58,14 @@ test('Vale preserves ESLint delimiters while checking punctuation inside reasons
     });
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const defect = await runEngineCheck(session, vale, planned!);
+    const defect = await runEngineCheck(vale)(session, planned!);
     expect(defect.status, defect.note).toBe('failed');
     expect(defect.findings).toStrictEqual([
         containing({ file: 'source.ts', line: 4, column: 56, rule: 'Example.Dashes' }),
         containing({ file: 'source.ts', line: 5, column: 15, rule: 'Example.Dashes' }),
     ]);
     await Bun.write(join(directory.path, 'source.ts'), '// Punctuation stays checked.\n');
-    const corrected = await runEngineCheck(session, vale, planned!);
+    const corrected = await runEngineCheck(vale)(session, planned!);
     expect(corrected.status, corrected.note).toBe('passed');
 });
 
@@ -106,7 +106,7 @@ test.each([
     });
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const result = await runEngineCheck(session, vale, planned!);
+    const result = await runEngineCheck(vale)(session, planned!);
     expect(result.status, result.note).toBe('failed');
     expect(result.findings).toStrictEqual([
         containing({ file: path, line: 2, rule: 'Example.Concrete' }),
@@ -138,7 +138,7 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
     });
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const result = await runEngineCheck(session, vale, planned!);
+    const result = await runEngineCheck(vale)(session, planned!);
     expect(result.status, result.note).toBe('failed');
     expect(result.findings).toStrictEqual([
         containing({ file: 'versions.md', line: 4, rule: 'Example.Versions' }),
@@ -203,7 +203,7 @@ test('generated recommended Vale configuration reports unhelpful link text and a
     using ownership = openOwnership(directory.path);
     writeOutputs(session, ownership, undefined, emitAll(session));
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const defect = await runEngineCheck(session, vale, planned!);
+    const defect = await runEngineCheck(vale)(session, planned!);
     expect(defect.status, defect.note).toBe('failed');
     expect(defect.findings).toStrictEqual([
         containing({ file: 'guide.md', line: 3, rule: 'gspot.link-text' }),
@@ -217,7 +217,7 @@ test('generated recommended Vale configuration reports unhelpful link text and a
         join(directory.path, 'source.ts'),
         'const example = "[here](guide.md)";\n// Read [request guide](guide.md).\n',
     );
-    const corrected = await runEngineCheck(session, vale, planned!);
+    const corrected = await runEngineCheck(vale)(session, planned!);
     expect(corrected.status, corrected.note).toBe('passed');
     expect(corrected.findings).toStrictEqual([]);
 });

@@ -79,30 +79,24 @@ export function engineInput(
 }
 
 /**
- * Runs one planned engine check.
- * @param session the session
- * @param engine the selected implementation
- * @param planned the check to run
- * @param staged the staged paths, in staged mode
- * @returns the check result with its findings
+ * Adapt one input-based check to the execution callback used by every built-in check.
+ * @param engine the selected implementation.
+ * @returns the callback that runs a planned check.
  */
-export async function runEngineCheck(
-    session: ToolSession,
-    engine: Engine,
-    planned: PlannedCheck,
-    staged?: Set<string>,
-): Promise<CheckResult> {
-    const base = emptyResult(planned);
-    const started = performance.now();
-    const input = engineInput(session, planned);
-    if (staged) input.staged = staged;
-    const outcome = await engine(input);
-    const result = engineResult(input, outcome);
-    return {
-        ...base,
-        ...result,
-        status: result.findings.length > 0 ? 'failed' : 'passed',
-        duration: performance.now() - started,
+export function runEngineCheck(engine: Engine): Executable['run'] {
+    return async (session, planned, options) => {
+        const base = emptyResult(planned);
+        const started = performance.now();
+        const input = engineInput(session, planned);
+        if (options?.staged) input.staged = options.staged;
+        const outcome = await engine(input);
+        const result = engineResult(input, outcome);
+        return {
+            ...base,
+            ...result,
+            status: result.findings.length > 0 ? 'failed' : 'passed',
+            duration: performance.now() - started,
+        };
     };
 }
 
@@ -114,10 +108,7 @@ export async function runEngineCheck(
  */
 export function getCheckRunner(spec: CheckSpec, checks: CheckRegistry): Executable['run'] {
     const implementation = checks[spec.name];
-    if (implementation !== undefined) {
-        if ('run' in implementation) return implementation.run;
-        return (session, planned, options) => runEngineCheck(session, implementation.engine, planned, options?.staged);
-    }
+    if (implementation !== undefined) return implementation.run;
     if (spec.command === undefined) {
         throw new Error(`The check ${spec.name} names no command, and gspot has no built-in check by that name.`);
     }
