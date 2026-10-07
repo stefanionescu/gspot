@@ -42,3 +42,19 @@ export const GSPOT_MISE_TOOL = 'npm:@gspothq/cli';
 
 /** Release pins shared by CLI generation, installation, and repository checks. */
 export const CLI_PINS = { mise: '2026.8.8' };
+
+export const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
+
+export const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
+
+export const POINTER_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
+
+export const WORKSPACE_PREFIX = '{workspace:';
+
+export const EXISTING_PLACEHOLDER = /^\{existing:(?<flag>[^:]+):(?<path>[^}]+)\}$/u;
+
+export const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)\}$/u;
+
+export const FILES_PLACEHOLDER = '{files}';
+
+export const FILE_PLACEHOLDER = '{file}';

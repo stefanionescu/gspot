@@ -1,8 +1,8 @@
 import { test, expect, describe } from 'bun:test';
 import { hasCase } from '#cli/parsers/naming/names.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import { namingTerms } from '#cli/parsers/schema/naming.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
+import { namingTerms } from '#cli/configurations/manifests.ts';
 import { compileTerms } from '#cli/checks/general/naming/policy.ts';
 import { nameProblems } from '#cli/checks/general/naming/problems.ts';
 import type { EffectivePolicy } from '#cli/types/checks/general/naming.ts';

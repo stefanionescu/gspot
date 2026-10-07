@@ -1,6 +1,6 @@
 import type ts from 'typescript';
 import type { Node } from 'web-tree-sitter';
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { rolePaths } from '#cli/policy/settings/lookup.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';

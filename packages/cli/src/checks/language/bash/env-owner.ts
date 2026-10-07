@@ -1,4 +1,4 @@
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import { withoutDeclaration } from '#cli/parsers/bash.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { rolePaths } from '#cli/policy/settings/lookup.ts';

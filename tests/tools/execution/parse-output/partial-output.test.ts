@@ -4,9 +4,9 @@ import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { checkedFindings } from '#cli/execution/output.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
+import { checkedFindings } from '#cli/execution/command/findings.ts';
 
 test('partial ShellCheck output beside an unreadable file is an execution error', async () => {
     await using sandbox = await testdir();

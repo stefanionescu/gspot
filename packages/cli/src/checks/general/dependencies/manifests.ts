@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';

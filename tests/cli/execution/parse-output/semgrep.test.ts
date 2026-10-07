@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { GspotError } from '#cli/platform/errors.ts';
-import { checkedFindings } from '#cli/execution/output.ts';
+import { checkedFindings } from '#cli/execution/command/findings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { EMPTY_FAILURE } from '#tests/config/cli/execution/output/shared.ts';
+import { EMPTY_FAILURE } from '#tests/config/cli/execution/command/findings.ts';
 import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR } from '#tests/config/cli/execution/parse-output/semgrep.ts';
 
 test('Semgrep retains both rule and source parse diagnostics with positions and Unicode paths', async () => {

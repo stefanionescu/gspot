@@ -3,8 +3,11 @@ import type { z } from 'zod';
 import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { compact, isRecord } from '#cli/platform/objects.ts';
+import type { NamingTerms } from '#cli/types/parsers/naming.ts';
 import { allChecks } from '#cli/configurations/declarations.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
+import { NAMING_TERMS_FILE } from '#cli/config/configurations.ts';
+import { shippedNamingSchema } from '#cli/parsers/schema/naming.ts';
 import { manifestSchema } from '#cli/parsers/schema/configurations/manifest.ts';
 import { manifestError, manifestProblems } from '#cli/configurations/problems.ts';
 import type { Manifest, CheckSpec, ManifestRegistryState } from '#cli/types/configurations.ts';
@@ -27,6 +30,7 @@ function locatedConfiguration(configuration: unknown, dir: string): Record<strin
 }
 
 const state: ManifestRegistryState = { cache: undefined };
+let shipped: NamingTerms | undefined;
 
 // Appends each referenced check, declared by another configuration, to the manifest that references it.
 function appendReferences(manifests: Map<string, Manifest>): void {
@@ -105,4 +109,13 @@ export function knownChecks(checks: readonly Pick<CheckSpec, 'name'>[]): string[
     const bundled = [...allChecks(configurationManifests().values()).keys()];
     const authored = checks.map((check) => check.name);
     return [...new Set([...bundled, ...authored])];
+}
+
+/**
+ * Reads the bundled naming policy once for policy validation and source checks.
+ * @returns the shipped naming choices
+ */
+export function namingTerms(): NamingTerms {
+    shipped ??= shippedNamingSchema.parse(JSON.parse(readAsset(NAMING_TERMS_FILE)));
+    return shipped;
 }

@@ -1,10 +1,10 @@
 // Compares generated outputs with the files on disk.
 import { createTwoFilesPatch } from 'diff';
+import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { outputPaths } from '#cli/generation/outputs.ts';
 import type { Drift } from '#cli/types/lifecycle/apply.ts';
-import { compareRules } from '#cli/lifecycle/rule-diff.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import { hasFields } from '#cli/lifecycle/merge/document.ts';
 import { packageLockDrift } from '#cli/tools/npm/project.ts';
@@ -14,6 +14,7 @@ import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { pythonLockDrift } from '#cli/tools/python/project.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import type { Ownership } from '#cli/types/lifecycle/ownership.ts';
+import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import { DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/drift.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { RETAINED_KINDS, RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
@@ -112,4 +113,33 @@ export function computeDrift(root: string, policy: Policy, generated: Generated)
         ...keyDrift(root, generated),
         ...strays,
     ].toSorted((a, b) => a.path.localeCompare(b.path));
+}
+
+/**
+ * Compare generated rule data with the last successful apply, independent of edited file bytes.
+ * @param previous the rule values recorded after the last successful apply
+ * @param proposed the current generated rule values
+ * @returns added, removed, and changed rules under each declared path
+ */
+export function compareRules(previous: CapturedRules, proposed: CapturedRules): NonNullable<Drift['rules']> {
+    const paths = new Set([...Object.keys(previous), ...Object.keys(proposed)]);
+    return [...paths].flatMap((path) => {
+        const before = previous[path];
+        const next = proposed[path];
+        const added = (next === undefined ? [] : Object.keys(next))
+            .filter((rule) => before === undefined || !Object.hasOwn(before, rule))
+            .toSorted((left, right) => left.localeCompare(right));
+        const removed = (before === undefined ? [] : Object.keys(before))
+            .filter((rule) => next === undefined || !Object.hasOwn(next, rule))
+            .toSorted((left, right) => left.localeCompare(right));
+        const changed = (next === undefined ? [] : Object.keys(next))
+            .filter(
+                (rule) =>
+                    before !== undefined &&
+                    Object.hasOwn(before, rule) &&
+                    !isDeepStrictEqual(before[rule], next?.[rule]),
+            )
+            .toSorted((left, right) => left.localeCompare(right));
+        return added.length + removed.length + changed.length === 0 ? [] : [{ path, added, removed, changed }];
+    });
 }

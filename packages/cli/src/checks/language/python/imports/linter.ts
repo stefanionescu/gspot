@@ -1,10 +1,10 @@
 // Run scoped Python import contracts and retain the dependency chains behind each broken contract.
 import { parse } from 'smol-toml';
 import { posix, basename } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { readText } from '#cli/platform/source.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { findingAt } from '#cli/execution/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { EngineInput } from '#cli/types/execution/check.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';

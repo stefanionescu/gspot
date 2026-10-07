@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { LINT_CHECK } from '#cli/config/generation/eslint.ts';

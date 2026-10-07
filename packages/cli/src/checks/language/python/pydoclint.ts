@@ -8,8 +8,8 @@ import { RAN_STATUSES } from '#cli/config/execution/runtime.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { docstringOf, parsePythonModule } from '#cli/parsers/python.ts';
 import type { PythonDocstringStyle } from '#cli/types/parsers/python.ts';
-import { docstringOf, parsePythonModule } from '#cli/parsers/python/source.ts';
 import { docstringStyleSchema } from '#cli/parsers/schema/python/docstrings.ts';
 import type { DocstringConfiguration } from '#cli/types/checks/language/python.ts';
 

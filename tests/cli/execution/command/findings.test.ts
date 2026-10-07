@@ -1,10 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { checkedFindings } from '#cli/execution/output.ts';
+import { checkedFindings } from '#cli/execution/command/findings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { EMPTY_FAILURE } from '#tests/config/cli/execution/output/shared.ts';
-import { REAL_PATH, FALSE_PATH, LOCATED_CHECK, FILELESS_CHECKS } from '#tests/config/cli/execution/output/failures.ts';
+
+import {
+    REAL_PATH,
+    FALSE_PATH,
+    EMPTY_FAILURE,
+    LOCATED_CHECK,
+    FILELESS_CHECKS,
+} from '#tests/config/cli/execution/command/findings.ts';
 
 test('located output rejects false paths and empty failures while retaining mixed real findings', async () => {
     await using sandbox = await testdir();

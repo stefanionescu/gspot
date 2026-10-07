@@ -1,7 +1,7 @@
+import { findingAt } from '#cli/checks/finding.ts';
 import { parseAlerts } from '#cli/parsers/vale.ts';
 import { hasValePackages } from '#cli/tools/vale.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import { join, relative, isAbsolute } from 'node:path';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ValeAlert } from '#cli/types/parsers/vale.ts';

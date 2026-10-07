@@ -1,8 +1,8 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';

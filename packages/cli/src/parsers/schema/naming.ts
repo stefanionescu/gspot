@@ -1,8 +1,5 @@
 import { z } from 'zod';
-import { readAsset } from '#cli/platform/assets.ts';
-import type { NamingTerms } from '#cli/types/parsers/naming.ts';
 import { CATEGORY_LABELS } from '#cli/config/parsers/naming.ts';
-import { NAMING_TERMS_FILE } from '#cli/config/configurations.ts';
 
 const namedReason = z.strictObject({ name: z.string(), reason: z.string().optional() });
 
@@ -17,8 +14,6 @@ const reservedTerm = z.strictObject({
 });
 
 const fixedKeyEntry = z.strictObject({ file: z.string(), names: z.array(z.string()), reason: z.string().optional() });
-
-let shipped: NamingTerms | undefined;
 
 /** A path-specific naming rule shared by policy, manifests, and shipped naming data. */
 export const namingRuleSchema = z.strictObject({
@@ -61,12 +56,3 @@ export const shippedNamingSchema = z.strictObject({
     ),
     paths: z.array(namingRuleSchema),
 });
-
-/**
- * Reads the bundled naming policy once for policy validation and source checks.
- * @returns the shipped naming choices
- */
-export function namingTerms(): NamingTerms {
-    shipped ??= shippedNamingSchema.parse(JSON.parse(readAsset(NAMING_TERMS_FILE)));
-    return shipped;
-}

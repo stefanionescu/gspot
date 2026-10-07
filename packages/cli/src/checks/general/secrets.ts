@@ -1,7 +1,7 @@
 import { join, posix } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';

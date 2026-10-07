@@ -1,5 +1,5 @@
 // Foreign key columns that no index leads with, read from the schema the migrations build.
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { EngineInput } from '#cli/types/execution/check.ts';

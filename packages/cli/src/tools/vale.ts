@@ -8,7 +8,7 @@ import { scratchFolder } from '#cli/platform/scratch.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
 import type { ValeInstallation } from '#cli/types/tools/install.ts';
-import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
+import { installationDiagnostics } from '#cli/tools/credentials.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/inspect.ts';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform/modes.ts';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';

@@ -28,3 +28,5 @@ export const CREDENTIAL_ASSIGNMENT =
     /((?:_authToken|_auth|_password|password|token|secret|credential)\s*[=:]\s*)(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/giu;
 
 export const AUTHORIZATION_HEADER = /(authorization\s*:\s*)(?:bearer|basic)\s+[^\s]+/giu;
+
+export const HTTP_URL = /^https?:\/\//u;

@@ -1,7 +1,5 @@
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 
-export const HTTP_URL = /^https?:\/\//u;
-
 export const INTEGRITY = /^sha(?:256|384|512)-[A-Za-z0-9+/]+={0,2}$/u;
 
 export const CREDENTIAL_KEY = /(?:_authToken|_auth|_password|key)$/iu;

@@ -8944,11 +8944,10 @@
             ],
             "ci": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37571363798",
-                "status": "in_progress",
-                "notes": [
-                    "Docs passed. Package/all12tools shards failed on Spectral rollup trust downgrade because temporary config omitted settings.npm.package_manager=npm.",
-                    "Database37571565496 completed failure: directtestinvocationcannotfindsupabase.",
-                    "Later focusedproductionpnpm acceptance14passed with trusteduserconfig fix; owner005 remains partial forCLIinstallationfixtures andplatformacceptance."
+                "status": "completed",
+                "conclusion": "failure",
+                "verification": [
+                    "Docs passed; 17 other jobs failed. Windows CLI:2926pass64skip47fail11083assertions,2279.15s;11fixture60s timeouts. Linux/macOS and native startup failures retained in /tmp/gspot-ci-8d7-completed-audit.md."
                 ]
             }
         },
@@ -8975,7 +8974,10 @@
             ],
             "ci": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37573321908",
-                "status": "pending"
+                "status": "in_progress",
+                "verification": [
+                    "Docs passed; native/tool/package suite steps active at inspection. Successful database/Spectral acquisition is recorded separately; platform suite success is unverified."
+                ]
             },
             "database": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37573388124",
@@ -9005,12 +9007,19 @@
             "unresolvedRecords": 1045,
             "validation": [
                 "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed.",
-                "gspot apply regenerated ESLint architecture paths/labels; old source owners and aliases removed; authored implementation seven lines smaller."
+                "gspot apply regenerated ESLint architecture paths/labels; old source owners and aliases removed; authored implementation seven lines smaller.",
+                "Ledger commit a7f52291230775a7f356a8aac8d8150b7e3f4d2f: staged47pass2skipzero findings30.26s; commit34pass1skipzero; message1pass.",
+                "Pushed b0a6b494a..a7f522912 without force; prepush147pass13skipzero findings109.3s; remote main exacta7f522912."
             ],
             "limitations": [
                 "Full CLI/plugin task before integration: 3042 pass, 3 skip, 9 fail; known baseline/fixture acceptance gaps remain. Mechanical focused tests and staged gates pass; no full-suite acceptance is claimed.",
                 "No publication, release tag, deployment or live account configuration."
-            ]
+            ],
+            "ci": {
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37575581180",
+                "status": "pending",
+                "head": "a7f52291230775a7f356a8aac8d8150b7e3f4d2f"
+            }
         }
     ]
 }

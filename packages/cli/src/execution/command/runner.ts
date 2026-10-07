@@ -12,16 +12,15 @@ import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { OutputPaths } from '#cli/types/parsers/output.ts';
 import { checkCompanions } from '#cli/planning/requirements.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
-import { FILES_PLACEHOLDER } from '#cli/config/parsers/command.ts';
+import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { ExecutionFailure } from '#cli/types/tools/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { toolPin, checkToolPin } from '#cli/configurations/pins.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
-import { checkedFindings, recordInvocation } from '#cli/execution/output.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform/runtime.ts';
 import { toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
-import type { ParsedFindings, CommandRunState } from '#cli/types/execution/output.ts';
+import { checkedFindings, recordInvocation } from '#cli/execution/command/findings.ts';
 import type { CheckResult, EngineInput, CheckRunOptions } from '#cli/types/execution/check.ts';
 
 import {
@@ -35,6 +34,8 @@ import type {
     CommandRun,
     EngineTool,
     Substitutions,
+    ParsedFindings,
+    CommandRunState,
     PreparedCommand,
     CommandInvocation,
     CommandEnvironment,

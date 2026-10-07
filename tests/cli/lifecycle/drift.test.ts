@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
+import { compareRules } from '#cli/lifecycle/drift.ts';
 import { collectRules } from '#cli/generation/rules.ts';
-import { compareRules } from '#cli/lifecycle/rule-diff.ts';
 
 test('rule changes name additions, removals, and changed options across every declared path', () => {
     expect(

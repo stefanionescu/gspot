@@ -1,11 +1,11 @@
 import type { Node } from 'web-tree-sitter';
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { EngineInput } from '#cli/types/execution/check.ts';
 import { CLASS_CALL } from '#cli/config/checks/language/python.ts';
+import { assignmentOf, visitPythonModules } from '#cli/parsers/python.ts';
 import type { SingletonAllowance } from '#cli/types/checks/language/python.ts';
-import { assignmentOf, visitPythonModules } from '#cli/parsers/python/source.ts';
 
 // A module variable that holds an object built from a class at import time, or undefined. A name in capitals is a constant.
 function builtAtImport(statement: Node): string | undefined {

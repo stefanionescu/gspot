@@ -9,10 +9,10 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
-import { checkedFindings } from '#cli/execution/output.ts';
 import { parseOutput } from '#cli/parsers/output/parse.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { checkedFindings } from '#cli/execution/command/findings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 

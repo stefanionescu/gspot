@@ -2,8 +2,8 @@
 import { codeLines } from '#cli/parsers/bash.ts';
 import { relative, isAbsolute } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import { assetPath } from '#cli/platform/assets.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';

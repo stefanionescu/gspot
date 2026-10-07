@@ -2,8 +2,8 @@ import { testdir } from 'testdirs';
 import { Tree } from 'web-tree-sitter';
 import { test, spyOn, expect } from 'bun:test';
 import { rejection } from '#tests/harness/expectations.ts';
+import { visitPythonModules } from '#cli/parsers/python.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { visitPythonModules } from '#cli/parsers/python/source.ts';
 import { PYTHON_SOURCES } from '#tests/config/cli/parsers/python.ts';
 
 test('Python observations are shared within one owner and remain isolated between scopes', async () => {

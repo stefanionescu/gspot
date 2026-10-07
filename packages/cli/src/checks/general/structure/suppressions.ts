@@ -1,7 +1,7 @@
 // Validate suppression comments against the repository reason policy.
+import { findingAt } from '#cli/checks/finding.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import { toolName } from '#cli/configurations/pins.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';

@@ -1,4 +1,4 @@
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import type { Engine } from '#cli/types/execution/check.ts';
 import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 

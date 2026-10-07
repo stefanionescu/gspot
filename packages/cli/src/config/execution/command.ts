@@ -7,3 +7,6 @@ export const WINDOWS_ESCAPE_EXPANSION = 5;
 export const WINDOWS_ARGUMENT_OVERHEAD = 9;
 
 export const TAIL_LINES = 20;
+
+// These formats deliberately produce findings without a file path.
+export const FILELESS_FORMATS = new Set(['lines', 'none']);

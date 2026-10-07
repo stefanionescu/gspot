@@ -1,5 +1,5 @@
 import { join, posix } from 'node:path';
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { EngineInput } from '#cli/types/execution/check.ts';

@@ -1,8 +1,8 @@
 import ts from 'typescript';
+import { findingAt } from '#cli/checks/finding.ts';
 import { globPaths } from '#cli/platform/paths.ts';
 import { join, dirname, basename } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { typescriptNodes } from '#cli/parsers/typescript.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';

@@ -3,11 +3,11 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
-import { checkedFindings } from '#cli/execution/output.ts';
 import { parseOutput } from '#cli/parsers/output/parse.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
+import { checkedFindings } from '#cli/execution/command/findings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { EMPTY_FAILURE } from '#tests/config/cli/execution/output/shared.ts';
+import { EMPTY_FAILURE } from '#tests/config/cli/execution/command/findings.ts';
 
 import {
     TYPO_REPORT,

@@ -1,5 +1,5 @@
+import { findingAt } from '#cli/checks/finding.ts';
 import { directoryOf } from '#cli/platform/paths.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Engine } from '#cli/types/execution/check.ts';
 import { BANNED_FOLDERS } from '#cli/config/checks/general/structure.ts';

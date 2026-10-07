@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { parse, stringify } from 'smol-toml';
 import { isDeepStrictEqual } from 'node:util';
+import { compact } from '#cli/platform/objects.ts';
 import { readText } from '#cli/platform/source.ts';
-import { buildLockFile } from '#cli/tools/locks.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { SETUP } from '#cli/config/tools/install.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
@@ -11,15 +11,15 @@ import { scratchFolder } from '#cli/platform/scratch.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { readInstalledTree } from '#cli/tools/installed-files.ts';
-import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
+import { pythonLockMatches } from '#cli/tools/python/lockfiles.ts';
+import { parsePythonSettings } from '#cli/tools/python/registry.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { PYTHON_MIN_VERSION } from '#cli/config/parsers/packages.ts';
-import { assertCredentialFreeLock } from '#cli/tools/credentials.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { pythonToolProjectSchema } from '#cli/parsers/schema/python/tools.ts';
-import { pythonLockMatches, parsePythonSettings } from '#cli/parsers/python/tools.ts';
 import type { LockDrift, ToolOwner, LockPreparation } from '#cli/types/tools/install.ts';
 import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
+import { installationDiagnostics, assertCredentialFreeLock } from '#cli/tools/credentials.ts';
 import type { PythonToolInputs, PythonPreparation, PythonInstallationPlan } from '#cli/types/tools/python.ts';
 import { chmodSync, lstatSync, unlinkSync, copyFileSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
@@ -176,7 +176,13 @@ export async function preparePythonProject(
             );
         content = readFileSync(join(work, 'uv.lock'), 'utf8');
     }
-    files.push(buildLockFile(UV_LOCK, content, original));
+    files.push({
+        path: UV_LOCK,
+        content,
+        readOnly: true,
+        kind: 'lock',
+        ...compact({ read: original }),
+    });
 }
 
 /**

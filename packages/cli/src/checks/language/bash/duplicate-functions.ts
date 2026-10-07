@@ -1,5 +1,5 @@
 import { codeLines } from '#cli/parsers/bash.ts';
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import type { Engine } from '#cli/types/execution/check.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';

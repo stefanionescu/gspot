@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';

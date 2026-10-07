@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
+import { findingAt } from '#cli/checks/finding.ts';
 import { escapeRegExp } from '#cli/platform/text.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import { walkRoot } from '#cli/platform/root/open.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';

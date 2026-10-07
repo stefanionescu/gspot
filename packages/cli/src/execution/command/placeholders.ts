@@ -18,7 +18,7 @@ import {
     POINTER_PLACEHOLDER,
     SETTING_PLACEHOLDER,
     EXISTING_PLACEHOLDER,
-} from '#cli/config/parsers/command.ts';
+} from '#cli/config/configurations.ts';
 
 /**
  * Expands an each part, or returns undefined when the part is something else.

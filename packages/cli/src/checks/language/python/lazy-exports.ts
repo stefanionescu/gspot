@@ -1,7 +1,7 @@
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { visitPythonModules } from '#cli/parsers/python.ts';
 import type { EngineInput } from '#cli/types/execution/check.ts';
-import { visitPythonModules } from '#cli/parsers/python/source.ts';
 import { DEFINITIONS } from '#cli/config/checks/language/python.ts';
 
 /**

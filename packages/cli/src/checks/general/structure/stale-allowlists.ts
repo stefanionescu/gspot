@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import { lockedPackages } from '#cli/parsers/lockfiles.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { everyTable } from '#cli/policy/settings/lookup.ts';

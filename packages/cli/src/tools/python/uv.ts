@@ -1,7 +1,7 @@
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { UV_MISE_PIN } from '#cli/config/tools/python.ts';
-import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
+import { installationDiagnostics } from '#cli/tools/credentials.ts';
 
 /**
  * Resolve uv through the selected runner before a temporary project uses it.

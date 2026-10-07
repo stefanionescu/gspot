@@ -1,5 +1,5 @@
 // The exclusions of the basedpyright type check, each of which must still match a tracked file.
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';

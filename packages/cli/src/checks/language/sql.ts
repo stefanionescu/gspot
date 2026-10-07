@@ -1,6 +1,6 @@
+import { findingAt } from '#cli/checks/finding.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import { trivialText } from '#cli/parsers/statements.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';

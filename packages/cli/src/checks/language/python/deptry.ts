@@ -3,10 +3,10 @@
 import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { escapeRegExp } from '#cli/platform/text.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';

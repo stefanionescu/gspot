@@ -1,4 +1,4 @@
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import { visitSwiftSources } from '#cli/parsers/swift.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { EngineInput } from '#cli/types/execution/check.ts';

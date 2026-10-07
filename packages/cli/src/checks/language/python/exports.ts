@@ -1,8 +1,8 @@
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { EngineInput } from '#cli/types/execution/check.ts';
+import { exportedNames, visitPythonModules } from '#cli/parsers/python.ts';
 import { DEFINITIONS, PACKAGE_FILE } from '#cli/config/checks/language/python.ts';
-import { exportedNames, visitPythonModules } from '#cli/parsers/python/source.ts';
 
 /**
  * In a module with __all__: every definition the list leaves out starts with an underscore, and the list holds no such name.

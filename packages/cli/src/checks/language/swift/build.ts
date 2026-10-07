@@ -1,7 +1,7 @@
 import { join, relative } from 'node:path';
 import { memo } from '#cli/platform/memo.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';

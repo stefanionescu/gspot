@@ -1,6 +1,6 @@
 // The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, mktemp cleanup.
 import semver from 'semver';
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import type { CodeLine } from '#cli/types/parsers/bash.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { codeLines, withoutDeclaration } from '#cli/parsers/bash.ts';

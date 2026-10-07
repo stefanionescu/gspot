@@ -307,7 +307,6 @@ export default [
                 "packages/cli/src/parsers/*.ts",
                 "packages/cli/src/parsers/naming/**",
                 "packages/cli/src/parsers/output/**",
-                "packages/cli/src/parsers/python/**",
                 "packages/cli/src/parsers/sql/**",
                 "packages/cli/src/parsers/toml/**",
                 "packages/cli/src/parsers/tool/**",

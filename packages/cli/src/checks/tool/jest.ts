@@ -1,7 +1,7 @@
 // Jest run over a disposable copy of the sources, with failed tests and coverage under its floors as findings.
 import { join, relative } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';

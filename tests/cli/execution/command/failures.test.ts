@@ -1,8 +1,8 @@
 import { test, expect, describe } from 'bun:test';
 import type { CheckSpec } from '#cli/types/configurations.ts';
-import { BASE_CHECK } from '#tests/config/cli/execution/output/shared.ts';
+import { BASE_CHECK } from '#tests/config/cli/execution/command/findings.ts';
 import { hasToolError, toolOutputDetail } from '#cli/execution/command/failures.ts';
-import { ESLINT_TOOL, ESLINT_CRASH } from '#tests/config/cli/execution/output/process.ts';
+import { ESLINT_TOOL, ESLINT_CRASH } from '#tests/config/cli/execution/command/failures.ts';
 
 test('bounded failure output retains the final diagnostic from both streams', () => {
     const progress = Array.from({ length: 30 }, (_, index) => `progress ${String(index)}`).join('\n');

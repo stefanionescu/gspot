@@ -1,13 +1,13 @@
 // The tool project under .gspot: its generated manifest, prepared lock, and installation.
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { buildLockFile } from '#cli/tools/locks.ts';
+import { compact } from '#cli/platform/objects.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { SETUP } from '#cli/config/tools/install.ts';
-import { lockMatches } from '#cli/tools/npm/locks.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import { lockMatches } from '#cli/tools/npm/lockfiles.ts';
 import type { InstallFiles } from '#cli/types/tools/npm.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
@@ -124,7 +124,13 @@ export async function preparePackageProject(
             generated.content,
             recorded,
         ));
-    files.push(buildLockFile(project.lockPath, content, original));
+    files.push({
+        path: project.lockPath,
+        content,
+        readOnly: true,
+        kind: 'lock',
+        ...compact({ read: original }),
+    });
 }
 
 /**

@@ -7,9 +7,9 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
-import { checkedFindings } from '#cli/execution/output.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { checkedFindings } from '#cli/execution/command/findings.ts';
 import { PENDING } from '#tests/config/cli/execution/parse-output/declared-checks.ts';
 
 const ENTRY = String.raw`configurations = []

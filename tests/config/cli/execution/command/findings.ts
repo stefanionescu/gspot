@@ -1,5 +1,16 @@
 import type { CheckSpec } from '#cli/types/configurations.ts';
-import { BASE_CHECK } from '#tests/config/cli/execution/output/shared.ts';
+
+export const BASE_CHECK = {
+    name: 'sandbox/diagnostic',
+    command: ['tool'],
+    level: 'recommended',
+    stage: 'commit',
+    runs: 'files',
+    summary: '',
+    why: '',
+    help: '',
+} satisfies CheckSpec;
+export const EMPTY_FAILURE = { code: 1, stdout: '', stderr: '', missing: false, duration: 1 };
 
 export const LOCATED_CHECK = {
     ...BASE_CHECK,

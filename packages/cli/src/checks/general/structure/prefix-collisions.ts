@@ -1,5 +1,5 @@
 import { posix } from 'node:path';
-import { findingAt } from '#cli/execution/finding.ts';
+import { findingAt } from '#cli/checks/finding.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { Engine } from '#cli/types/execution/check.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';

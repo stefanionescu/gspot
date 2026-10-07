@@ -6,10 +6,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { checkedFindings } from '#cli/execution/output.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
+import { checkedFindings } from '#cli/execution/command/findings.ts';
 
 describe.if(isMacos)('native property lists', () => {
     test('files/plutil classifies mixed native parse and input failures as execution errors', async () => {

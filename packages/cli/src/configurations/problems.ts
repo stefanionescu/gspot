@@ -6,9 +6,13 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { listAssets } from '#cli/platform/assets.ts';
 import { similar, codeList } from '#cli/platform/text.ts';
 import { allChecks, configurationName } from '#cli/configurations/declarations.ts';
-import { CONFIG_PLACEHOLDER, SETTING_PLACEHOLDER } from '#cli/config/parsers/command.ts';
-import { SETTING_DEFAULT_FIELDS, CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
 
+import {
+    CONFIG_PLACEHOLDER,
+    SETTING_PLACEHOLDER,
+    SETTING_DEFAULT_FIELDS,
+    CONFIGURATION_RULES_FOLDER,
+} from '#cli/config/configurations.ts';
 import type {
     ToolPin,
     Manifest,

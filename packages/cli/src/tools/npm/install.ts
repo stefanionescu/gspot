@@ -9,17 +9,20 @@ import { executableNames } from '#cli/platform/paths.ts';
 import { toolVersionState } from '#cli/tools/inspect.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
-import { registryPasswords } from '#cli/parsers/credentials.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseVersionOutput } from '#cli/parsers/tool/version.ts';
-import { installationDiagnostics } from '#cli/tools/diagnostics.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { isYarnBerry, packageLockFile } from '#cli/parsers/packages.ts';
 import type { PackageRun, PackageExecution } from '#cli/types/tools/npm.ts';
-import { stripBunRegistryUrls, stripYarnRegistryUrls } from '#cli/tools/npm/locks.ts';
-import { addEnvironmentReference, assertCredentialFreeLock } from '#cli/tools/credentials.ts';
+import { stripBunRegistryUrls, stripYarnRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
 
+import {
+    registryPasswords,
+    addEnvironmentReference,
+    installationDiagnostics,
+    assertCredentialFreeLock,
+} from '#cli/tools/credentials.ts';
 import {
     CREDENTIAL_KEY,
     GITHUB_REFUSAL,

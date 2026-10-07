@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
+import { findingAt } from '#cli/checks/finding.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { findingAt } from '#cli/execution/finding.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { EngineInput } from '#cli/types/execution/check.ts';

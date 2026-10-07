@@ -5,14 +5,19 @@ import { toolPath } from '#cli/platform/paths.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { parseOutput } from '#cli/parsers/output/parse.ts';
+import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
-import { FILE_PLACEHOLDER } from '#cli/config/parsers/command.ts';
-import { FILELESS_FORMATS } from '#cli/config/execution/output.ts';
+import { FILELESS_FORMATS } from '#cli/config/execution/command.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
-import type { CommandInvocation } from '#cli/types/execution/command.ts';
 import { hasToolError, toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Finding, OutputSpec, OutputPaths } from '#cli/types/parsers/output.ts';
-import type { OutputCheck, CommandRunState, InvocationOutput } from '#cli/types/execution/output.ts';
+
+import type {
+    OutputCheck,
+    CommandRunState,
+    InvocationOutput,
+    CommandInvocation,
+} from '#cli/types/execution/command.ts';
 
 function prefixScope(findings: Finding[], scopePath: string): void {
     for (const finding of findings)

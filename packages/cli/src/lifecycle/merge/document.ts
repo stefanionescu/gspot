@@ -1,11 +1,19 @@
 import { isDeepStrictEqual } from 'node:util';
 import { decodeUtf8 } from '#cli/platform/text.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { openJsonDocument } from '#cli/parsers/json.ts';
 import { normalizeTables } from '#cli/platform/objects.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
-import { openConfigurationDocument } from '#cli/parsers/document.ts';
+import { openTomlDocument } from '#cli/parsers/toml/document.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 import type { ConfigurationDocument } from '#cli/types/parsers/document.ts';
+
+// Select the native parser and the empty content used only for an absent shared file.
+function openConfigurationDocument(path: string, source: string | undefined): ConfigurationDocument {
+    if (path.endsWith('.toml')) return openTomlDocument({ path, source: source ?? '' });
+    if (path.endsWith('.json') || path.endsWith('.jsonc')) return openJsonDocument(path, source ?? '{}\n');
+    throw new Error(`${path} has no supported shared configuration format.`);
+}
 
 /**
  * Opens shared fields after validating file encoding and any persisted native-format contract.
