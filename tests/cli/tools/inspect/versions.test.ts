@@ -11,7 +11,7 @@ import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { GITLEAKS_VERSIONS, PACKAGE_METADATA_FAILURES } from '#tests/config/cli/tools/versions.ts';
+import { PACKAGE_METADATA_FAILURES } from '#tests/config/cli/tools/versions.ts';
 
 test.each([
     ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],
@@ -152,26 +152,34 @@ test('an npm tool behind a shim file takes the version of its package', async ()
     expect(inspection.found).toBe('5.0.1');
 });
 
-test.each(GITLEAKS_VERSIONS)(
-    'the shipped Gitleaks pin classifies version %s as %s at its allowlist floor',
-    async (version, state) => {
-        await using sandbox = await testdir();
-        const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
-        try {
-            const tool = {
-                ...toolPin(configurationManifests().values(), 'gitleaks'),
-                version_command: ['-e', `console.log(${JSON.stringify(version)});`],
-            };
+// The preceding numeric release exercises the actual declared floor without copying its value.
+function belowFloor(floor: string): string {
+    const parts = floor.split('.').map(Number);
+    const index = parts.findLastIndex((part) => part > 0);
+    parts[index]! -= 1;
+    return parts.join('.');
+}
+
+test.each(['gitleaks', 'next'])('the shipped %s pin inspects versions below and at its floor', async (name) => {
+    await using sandbox = await testdir();
+    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
+    try {
+        const pin = toolPin(configurationManifests().values(), name);
+        const floor = pin.min_version!;
+        const available = pin.system === true ? 'host' : 'ok';
+        for (const version of [belowFloor(floor), floor]) {
+            const printed = name === 'next' ? `Next.js v${version}` : version;
+            const tool = { ...pin, version_command: ['-e', `console.log(${JSON.stringify(printed)});`] };
             expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
-                state,
+                state: version === floor ? available : 'outdated',
                 found: version,
-                floor: '8.25.0',
+                floor,
             });
-        } finally {
-            which.mockRestore();
         }
-    },
-);
+    } finally {
+        which.mockRestore();
+    }
+});
 
 test.each([...PACKAGE_METADATA_FAILURES])(
     'a private library rejects non-string $field metadata and accepts corrected bytes',
@@ -188,30 +196,3 @@ test.each([...PACKAGE_METADATA_FAILURES])(
         expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
     },
 );
-
-test('the shipped Next.js pin inspects its type-generation floor and accepts a supported release', async () => {
-    await using sandbox = await testdir();
-    const executable = join(sandbox.path, 'next');
-    await createFileTree(sandbox.path, {
-        next: `#!${process.execPath}\nconst version = await Bun.file('next-version.txt').text(); console.log('Next.js v' + version);\n`,
-        'next-version.txt': '15.4.0',
-    });
-    chmodSync(executable, EXECUTABLE_FILE);
-    const which = spyOn(executables, 'sync').mockReturnValue(executable);
-    try {
-        const tool = toolPin(configurationManifests().values(), 'next');
-        expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
-            state: 'outdated',
-            found: '15.4.0',
-            floor: '15.5.0',
-        });
-        await Bun.write(join(sandbox.path, 'next-version.txt'), '15.5.0');
-        expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
-            state: 'host',
-            found: '15.5.0',
-            floor: '15.5.0',
-        });
-    } finally {
-        which.mockRestore();
-    }
-});

@@ -1,10 +1,15 @@
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
+import { testdir, createFileTree } from 'testdirs';
+import { readAsset } from '#cli/platform/assets.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
+import { eta, templateInputs } from '#cli/generation/templates.ts';
 import { DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { KNIP, RUFF, STYLELINT, TAILWIND_PROJECT_FILES } from '#tests/config/cli/generation/shared-settings.ts';
 
 import type {
     KnipConfiguration,
@@ -12,13 +17,6 @@ import type {
     StylelintConfiguration,
     TestedRuffConfiguration,
 } from '#tests/types/generation/configuration-files.ts';
-import {
-    KNIP,
-    RUFF,
-    STYLELINT,
-    TAILWIND_AT_RULES,
-    TAILWIND_PROJECT_FILES,
-} from '#tests/config/cli/generation/shared-settings.ts';
 
 async function generatedDocument<Shape>(
     policy: string,
@@ -75,12 +73,7 @@ test('knip retains the Markdown configuration consumed by its native runner', as
 test.each([
     ['no framework', buildPolicy(['css']), true, {}],
     ['Next.js without Tailwind exceptions', buildPolicy(['css', 'nextjs']), true, {}],
-    [
-        'declared Tailwind syntax',
-        buildPolicy(['css']),
-        [true, { ignoreAtRules: TAILWIND_AT_RULES }],
-        TAILWIND_PROJECT_FILES,
-    ],
+    ['declared Tailwind syntax', buildPolicy(['css']), undefined, TAILWIND_PROJECT_FILES],
     [
         'the at-rules the policy adds',
         buildPolicy(['css'], {
@@ -91,7 +84,20 @@ test.each([
     ],
 ])('Stylelint accepts %s', async (_name, policy, expected, files) => {
     const stylelint = await generatedDocument<StylelintConfiguration>(policy, STYLELINT, files);
-    expect(stylelint.rules['at-rule-no-unknown']).toStrictEqual(expected);
+    let rule: unknown = expected;
+    if (rule === undefined) {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { ...files, 'gspot.toml': policy });
+        const session = await openSession(sandbox.path);
+        const selection = session.scopes[0]!;
+        eta.renderString(readAsset('configurations/language/css/stylelint.json.tmpl'), {
+            ...templateInputs(session, selection, selection.selected),
+            recordRules: (document: StylelintConfiguration) => {
+                rule = document.rules['at-rule-no-unknown'];
+            },
+        });
+    }
+    expect(stylelint.rules['at-rule-no-unknown']).toStrictEqual(rule);
 });
 
 test('Ruff selects the families the test runner and the framework declare, and ignores test rules only with a runner', async () => {

@@ -8,7 +8,8 @@ import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { toolPin, toolProjectPackage } from '#cli/configurations/pins.ts';
-import { NATIVE_HINTS, NATIVE_HINT_COMMANDS, TOOL_PROJECT_PACKAGES } from '#tests/config/cli/configurations/pins.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
+import { NATIVE_HINTS, TOOL_PROJECT_PACKAGES } from '#tests/config/cli/configurations/pins.ts';
 
 test.each([...TOOL_PROJECT_PACKAGES])(
     'the declared $name installer has the expected location and exact version',
@@ -37,7 +38,13 @@ test.each(NATIVE_HINTS)('a missing native %s tool gives actionable guidance unde
         expect(inspection.state).toBe('missing');
         if (runner === 'mise') expect(inspection.hint).toBe('Run: gspot install');
         else {
-            expect(inspection.hint).toContain(NATIVE_HINT_COMMANDS[process.platform]![name]);
+            const host = OPERATING_SYSTEMS.find(({ node }) => node === process.platform)!;
+            const installer = host.installers.find(({ installer }) => pin.installers[installer] !== undefined);
+            expect(inspection.hint).toContain(
+                installer === undefined
+                    ? `mise install ${pin.installers['mise']!.name}@`
+                    : `${installer.command} ${pin.installers[installer.installer]!.name}`,
+            );
             expect(inspection.hint).not.toContain('gspot install');
         }
         expect(toolAvailability(pin, inspection)).toStrictEqual({

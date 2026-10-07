@@ -4,6 +4,7 @@ import { test, expect } from 'bun:test';
 import { unlinkSync, symlinkSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
@@ -51,14 +52,13 @@ test('a check version prerequisite cannot lower its tool-wide requirement', asyn
         'source.py': 'print("example")\n',
     });
     const session = await openSession(sandbox.path);
-    const python = session.manifests.get('python')!;
-    const ruff = python.checks.find((check) => check.name === 'python/ruff')!;
-    ruff.min_versions = { ruff: '0.8.0' };
-    const lower = planRun(session, { stage: 'all', skips: [], only: ['python/ruff'] });
-    expect(lower[0]?.tool?.min_version).toBe('0.9.0');
-    ruff.min_versions = { ruff: '0.10.0' };
-    const higher = planRun(session, { stage: 'all', skips: [], only: ['python/ruff'] });
-    expect(higher[0]?.tool?.min_version).toBe('0.10.0');
+    const ruff = session.manifests.get('python')!.checks.find((check) => check.name === 'python/ruff')!;
+    const tool = toolPin(session.manifests.values(), 'ruff');
+    for (const required of ['0.0.0', tool.version!]) {
+        ruff.min_versions = { ruff: required };
+        const [planned] = planRun(session, { stage: 'all', skips: [], only: ['python/ruff'] });
+        expect(planned?.tool?.min_version).toBe(required === '0.0.0' ? tool.min_version : required);
+    }
 });
 
 test.each(MANUAL_SELECTIONS)(

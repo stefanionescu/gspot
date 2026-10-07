@@ -7,17 +7,27 @@ import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { XML_INSTALL_HINTS } from '#tests/config/cli/tools/hints.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
-test.each([...XML_INSTALL_HINTS])(
-    'a missing host XML reader reports $platform acquisition guidance without requesting a managed install',
-    async ({ platform, hint }) => {
+// Acquisition commands use the package names declared by the host installers.
+function installerHint(tool: ToolPin, platform: string): string {
+    const system = OPERATING_SYSTEMS.find(({ node }) => node === platform)!;
+    const declared = system.installers.find(({ installer }) => tool.installers[installer] !== undefined);
+    return declared === undefined
+        ? `install ${tool.name}`
+        : `${declared.command} ${tool.installers[declared.installer]!.name}`;
+}
+
+test.each([...OPERATING_SYSTEMS])(
+    'a missing host XML reader reports $node acquisition guidance without requesting a managed install',
+    async ({ node: platform }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy([], { tables: 'run_with = "mise"\n' }),
@@ -30,6 +40,7 @@ test.each([...XML_INSTALL_HINTS])(
             setEnvironmentVariable('MISE_DATA_DIR', join(sandbox.path, 'mise'));
             Object.defineProperty(process, 'platform', { value: platform });
             const tool = toolPin(configurationManifests().values(), 'xmllint');
+            const hint = installerHint(tool, platform);
             expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
                 name: 'xmllint',
                 state: 'missing',
@@ -65,7 +76,7 @@ test('doctor and a missing XML check report the host installation prerequisite',
         'document.xml': '<root />\n',
         'package.json': '{"private":true,"packageManager":"npm@10.9.0"}\n',
     });
-    const hint = XML_INSTALL_HINTS.find(({ platform }) => platform === process.platform)!.hint;
+    const hint = installerHint(toolPin(configurationManifests().values(), 'xmllint'), process.platform);
     const environment = { PATH: binaries, MISE_DATA_DIR: join(sandbox.path, 'mise') };
     const doctor = await runGspot(root, ['doctor', '--json'], environment);
     expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);

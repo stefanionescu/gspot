@@ -4,6 +4,7 @@ import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import type { Level } from '#cli/types/configurations.ts';
+import { RULES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { DRIZZLE_DRIVERS } from '#tests/config/cli/generation/guides.ts';
 import { RUNTIME_EVIDENCE_CASES } from '#tests/config/cli/repository/manifests.ts';
 
@@ -29,7 +30,7 @@ beforeAll(async () => {
 });
 
 test('recommended guides omit sections marked for level all', () => {
-    const path = '.gspot/rules/general/engineering/code/COMMENTS.md';
+    const path = `${RULES_DIRECTORY}/general/engineering/code/COMMENTS.md`;
     expect(recommended.get(path)).not.toContain('## When to comment');
     expect(all.get(path)).toContain('## When to comment');
 });
@@ -40,10 +41,10 @@ test('a rule whose every section is for level all installs only at all', () => {
         'language/typescript/NAMING.md',
         'language/bash/NAMING.md',
     ]) {
-        expect(recommended.has(`.gspot/rules/${path}`)).toBe(false);
-        expect(all.has(`.gspot/rules/${path}`)).toBe(true);
+        expect(recommended.has(`${RULES_DIRECTORY}/${path}`)).toBe(false);
+        expect(all.has(`${RULES_DIRECTORY}/${path}`)).toBe(true);
     }
-    expect(recommended.has('.gspot/rules/general/engineering/agent/WORKING.md')).toBe(true);
+    expect(recommended.has(`${RULES_DIRECTORY}/general/engineering/agent/WORKING.md`)).toBe(true);
 });
 
 test('conditional guides follow file and dependency evidence', async () => {
@@ -52,8 +53,8 @@ test('conditional guides follow file and dependency evidence', async () => {
         'package.json': '{"name":"example","devDependencies":{"tailwindcss":"4.1.0","@playwright/test":"1.50.0"}}\n',
     });
     for (const path of ['language/javascript/BUN.md', 'language/css/TAILWIND.md', 'tool/vitest/PLAYWRIGHT.md']) {
-        expect(all.has(`.gspot/rules/${path}`)).toBe(false);
-        expect(present.has(`.gspot/rules/${path}`)).toBe(true);
+        expect(all.has(`${RULES_DIRECTORY}/${path}`)).toBe(false);
+        expect(present.has(`${RULES_DIRECTORY}/${path}`)).toBe(true);
     }
 });
 
@@ -61,8 +62,8 @@ test('Swift guides require parsed imports and ignore comments and strings', asyn
     const absent = await generatedGuides('all', { 'View.swift': '// import UIKit\nlet text = "import SwiftUI"\n' });
     const present = await generatedGuides('all', { 'View.swift': 'import SwiftUI\nimport class UIKit.UIView\n' });
     for (const path of ['language/swift/SWIFTUI.md', 'language/swift/UIKIT.md']) {
-        expect(absent.has(`.gspot/rules/${path}`)).toBe(false);
-        expect(present.has(`.gspot/rules/${path}`)).toBe(true);
+        expect(absent.has(`${RULES_DIRECTORY}/${path}`)).toBe(false);
+        expect(present.has(`${RULES_DIRECTORY}/${path}`)).toBe(true);
     }
 });
 
@@ -72,7 +73,9 @@ test.each(RUNTIME_EVIDENCE_CASES)('Node instructions follow $name evidence', asy
         'entry.js': entry.source,
         '.gspot/package.json': JSON.stringify('toolProjectManifest' in entry ? entry.toolProjectManifest : {}),
     });
-    expect(guides.has('.gspot/rules/language/javascript/NODE.md')).toBe(entry.runtime === 'node' && entry.detected);
+    expect(guides.has(`${RULES_DIRECTORY}/language/javascript/NODE.md`)).toBe(
+        entry.runtime === 'node' && entry.detected,
+    );
 });
 
 test.each([...DRIZZLE_DRIVERS])(
@@ -81,14 +84,14 @@ test.each([...DRIZZLE_DRIVERS])(
         const guides = await generatedGuides('all', {
             'package.json': JSON.stringify({ dependencies: { 'drizzle-orm': '0.45.1', [driver]: '1.0.0' } }),
         });
-        expect(guides.has('.gspot/rules/library/drizzle/DRIZZLE.md')).toBe(postgres);
+        expect(guides.has(`${RULES_DIRECTORY}/library/drizzle/DRIZZLE.md`)).toBe(postgres);
     },
 );
 
 test('shared HTTP and OpenAPI instructions use their engineering and tool owners', async () => {
     const guides = await generatedGuides('all', { 'openapi.yaml': 'openapi: 3.1.0\n' });
-    expect(guides.has('.gspot/rules/general/engineering/code/HTTP.md')).toBe(true);
-    expect(guides.has('.gspot/rules/tool/openapi/OPENAPI.md')).toBe(true);
-    expect(guides.has('.gspot/rules/framework/express/HTTP.md')).toBe(false);
-    expect(guides.has('.gspot/rules/framework/express/OPENAPI.md')).toBe(false);
+    expect(guides.has(`${RULES_DIRECTORY}/general/engineering/code/HTTP.md`)).toBe(true);
+    expect(guides.has(`${RULES_DIRECTORY}/tool/openapi/OPENAPI.md`)).toBe(true);
+    expect(guides.has(`${RULES_DIRECTORY}/framework/express/HTTP.md`)).toBe(false);
+    expect(guides.has(`${RULES_DIRECTORY}/framework/express/OPENAPI.md`)).toBe(false);
 });
