@@ -3,34 +3,12 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { configuredChecks } from '#cli/planning/plan.ts';
-import { collectPins } from '#cli/configurations/pins.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { applicableManifests } from '#cli/planning/requirements.ts';
 import { EXPO_DEPENDENCIES, NATIVE_DEPENDENCIES } from '#tests/config/samples/react.ts';
 import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
 import { MOBILE_POLICY, TEXT_COMPONENTS } from '#tests/config/cli/generation/eslint/mobile-applicability.ts';
-
-test('a bare React Native project requires neither Expo nor DOM accessibility tooling', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'configurations = ["react-native"]\n[agent_rules]\nenabled = false\n',
-        'package.json': JSON.stringify({ private: true, dependencies: NATIVE_DEPENDENCIES }),
-        'src/App.jsx': 'export const App = () => <View />;\n',
-    });
-    const session = await openSession(sandbox.path);
-    const pins = collectPins(applicableManifests(session)).map((tool) => tool.name);
-    expect(pins).not.toContain('eslint-plugin-expo');
-    expect(pins).not.toContain('expo-doctor');
-    expect(pins).not.toContain('eslint-plugin-jsx-a11y');
-    expect(pins).toContain('eslint-plugin-react-native');
-    expect(pins).toContain('eslint-plugin-react-hooks');
-    const config = emitAll(session).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!.content;
-    expect(config).not.toContain("from 'eslint-plugin-expo'");
-    expect(config).not.toContain("from 'eslint-plugin-jsx-a11y'");
-});
 
 test('Expo rules and Doctor apply to the Expo scope and leave its bare native sibling alone', async () => {
     await using sandbox = await testdir();

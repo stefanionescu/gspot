@@ -1,5 +1,5 @@
 {
-    "openRecords": 989,
+    "openRecords": 981,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -198,7 +198,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 989,
+        "openRecords": 981,
         "records": 1092,
         "batches": [
             {
@@ -504,8 +504,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 34,
-                "unresolvedAssignments": 257
+                "completedAssignments": 40,
+                "unresolvedAssignments": 251
             },
             {
                 "id": "python",
@@ -1364,8 +1364,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 10,
-                "unresolvedAssignments": 459
+                "completedAssignments": 12,
+                "unresolvedAssignments": 457
             },
             {
                 "id": "scripts-repository",
@@ -1999,8 +1999,8 @@
             "verification": []
         },
         "areas/checks/023": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules",
             "commit": null,
             "verification": []
         },
@@ -2425,8 +2425,8 @@
             "verification": []
         },
         "areas/integration-tests/051": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules",
             "commit": null,
             "verification": []
         },
@@ -3555,26 +3555,26 @@
             ]
         },
         "review/code-execution/004": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules",
             "commit": null,
             "verification": []
         },
         "review/code-execution/005": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules",
             "commit": null,
             "verification": []
         },
         "review/code-execution/006": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules",
             "commit": null,
             "verification": []
         },
         "review/code-execution/007": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules",
             "commit": null,
             "verification": []
         },
@@ -3603,14 +3603,13 @@
             ]
         },
         "review/code-execution/011": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
             "verification": [
-                "Draft stores one validated Git index on Repository and replaces duplicate index subprocesses and the separate Xcode index memo. Existing and migrated focused tests pass, including meaningful original regression: the former three index reads become one per run, and a later run sees corrected staged state. Native cancellation probes use a real Git index listing and confirm child termination/source preservation on Bun 1.4.2, Node 24.2.0 and Node 24.20.0. Isolated draft only; growth prevents integration."
-            ],
-            "remaining": [
-                "Complete the coherent shared-contract checkpoint with net code reduction, passing full-policy/staged checks, normal commit and push hooks, and CI inspection."
+                "Draft stores one validated Git index on Repository and replaces duplicate index subprocesses and the separate Xcode index memo. Existing and migrated focused tests pass, including meaningful original regression: the former three index reads become one per run, and a later run sees corrected staged state. Native cancellation probes use a real Git index listing and confirm child termination/source preservation on Bun 1.4.2, Node 24.2.0 and Node 24.20.0. Isolated draft only; growth prevents integration.",
+                "One canonical repository stage-index reader supplies Repository.index and CheckInput.index for native checks, revision entries and command callers; no redundant index reader/cache remains.",
+                "Combined integration:487pass0fail2739assertions57files107.19s. Final renamed/moved-data readers:31pass146assertions4files13.55s. Root/CLI types pass, Prettier79files pass. Mandatory staged138pass13skip0findings82.069s; commit106pass3skip0findings16.4s, message1pass; push138pass13skip0findings127.8s. main attached and origin/main verified at a6e22f689."
             ]
         },
         "review/code-execution/012": {
@@ -3641,15 +3640,14 @@
             ]
         },
         "review/code-execution/015": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration; installed license inventory owner",
-            "commit": null,
+            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
             "verification": [
-                "An initial installed-scan replacement passed 51 focused tests but failed the real combined staged gate for five scopes because inherited exceptions were audited independently at each recipient. The partial patch was preserved and excluded from the integrated checkpoint. Read-only origin diagnosis: /tmp/gspot-license-origin-contract.md."
-            ],
-            "remaining": [
-                "Audit each authored exception once over the actual selected installed-project inventory in its origin subtree; retain effective local license enforcement and error results for incomplete inventories.",
-                "Complete shared selection/inventory and exceptions-only activation prerequisites, then rerun origin-domain tests and the real repository staged gate."
+                "An initial installed-scan replacement passed 51 focused tests but failed the real combined staged gate for five scopes because inherited exceptions were audited independently at each recipient. The partial patch was preserved and excluded from the integrated checkpoint. Read-only origin diagnosis: /tmp/gspot-license-origin-contract.md.",
+                "Installed license inventories enforce local policy and audit authored exceptions once within their origin subtree. Exceptions-only activation, deepest selections, skipped inventory conservatism, descendant manifests and exact/native identities are covered. Lockfile identity readers/schema/tests are deleted.",
+                "Combined integration:487pass0fail2739assertions57files107.19s. Final renamed/moved-data readers:31pass146assertions4files13.55s. Root/CLI types pass, Prettier79files pass. Mandatory staged138pass13skip0findings82.069s; commit106pass3skip0findings16.4s, message1pass; push138pass13skip0findings127.8s. main attached and origin/main verified at a6e22f689.",
+                "Native installed licenses2pass8assertions9.64s using existing authenticated GitHub session after preserved HTTP403 tool-inspection failure. Repository installed license scan0findings16.495s. All required origins/scanner activation and conservative skipped-inventory cases included."
             ]
         },
         "review/code-execution/016": {
@@ -3699,21 +3697,24 @@
             ]
         },
         "review/code-execution/022": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
             "verification": [
-                "Draft binds source reads to a canonical session root and shares containment calculation with Root. Existing internal/external link, hardlink, bounded-prefix, alias-root, cache snapshot and original I/O error identity tests pass. Latest 11 source/index boundary tests pass 64 assertions; four migrated asynchronous-reader files pass 25 tests and retain 84 assertion outcomes. Root/CLI types and corrected affected-test lint pass. Isolated draft only; whole change still grows and is not integrated."
-            ],
-            "remaining": [
-                "Complete the coherent shared-contract checkpoint with net code reduction, passing full-policy/staged checks, normal commit and push hooks, and CI inspection."
+                "Draft binds source reads to a canonical session root and shares containment calculation with Root. Existing internal/external link, hardlink, bounded-prefix, alias-root, cache snapshot and original I/O error identity tests pass. Latest 11 source/index boundary tests pass 64 assertions; four migrated asynchronous-reader files pass 25 tests and retain 84 assertion outcomes. Root/CLI types and corrected affected-test lint pass. Isolated draft only; whole change still grows and is not integrated.",
+                "A real root is resolved once in createReadCache before repository/session opening, and sourcePath/readSource/readPrefix reuse native canonical containment without constructing per-read Root objects. Aliases and native source-error identity/correction pass.",
+                "Combined integration:487pass0fail2739assertions57files107.19s. Final renamed/moved-data readers:31pass146assertions4files13.55s. Root/CLI types pass, Prettier79files pass. Mandatory staged138pass13skip0findings82.069s; commit106pass3skip0findings16.4s, message1pass; push138pass13skip0findings127.8s. main attached and origin/main verified at a6e22f689."
             ]
         },
         "review/code-execution/023": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
+            "verification": [
+                "Native owned scratch IO replaces Root wrappers in Jest/site/Vale/installed/revision/npm paths. Private copies, links, modes, nonregular files, cleanup and cancellation remain guarded; source/custom index Git metadata is isolated for foreign Git and tools.",
+                "Combined integration:487pass0fail2739assertions57files107.19s. Final renamed/moved-data readers:31pass146assertions4files13.55s. Root/CLI types pass, Prettier79files pass. Mandatory staged138pass13skip0findings82.069s; commit106pass3skip0findings16.4s, message1pass; push138pass13skip0findings127.8s. main attached and origin/main verified at a6e22f689.",
+                "Native Git scratch/source controls on Bun1.4.2 and Node24.2/24.20 macOS retain actual index/HEAD/bytes; Gitleaks source/foreign15assertions perruntime. Initial35mocked-tool failures were caused by pager-only discovery; exactGIT_PAGER fastpath preserves native unknown-variable classification and combined487tests pass. No cross-platform outcome inferred."
+            ]
         },
         "review/code-execution/024": {
             "status": "complete",
@@ -3907,25 +3908,25 @@
             "verification": []
         },
         "review/code-execution/047": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
             "verification": [
-                "Pinned ShellCheck0.11.0 accepts the shebang-free Bats probe. Controlled sh/dash tests prove shell=bash suppresses SC3010; the owner approved retaining the minimal dialect wrapper. /tmp/gspot-shellcheck-feasibility.json."
-            ],
-            "remaining": [
-                "Complete the minimal-wrapper review and native applicability acceptance under the recorded owner override; integrate and pass normal staged/commit/push gates."
+                "Pinned ShellCheck0.11.0 accepts the shebang-free Bats probe. Controlled sh/dash tests prove shell=bash suppresses SC3010; the owner approved retaining the minimal dialect wrapper. /tmp/gspot-shellcheck-feasibility.json.",
+                "Recorded owner override preserves sh/dash shebang portability after pinned ShellCheck0.11 probe showed shell=bash masks SC3010. Minimal wrapper keeps Bats Bash selection, preserves native portability findings and removes duplicated command handling.",
+                "Combined integration:487pass0fail2739assertions57files107.19s. Final renamed/moved-data readers:31pass146assertions4files13.55s. Root/CLI types pass, Prettier79files pass. Mandatory staged138pass13skip0findings82.069s; commit106pass3skip0findings16.4s, message1pass; push138pass13skip0findings127.8s. main attached and origin/main verified at a6e22f689.",
+                "Actual native ShellCheck2pass28assertions preserves sh/dash portability, Bash/Bats applicability and corrected source; unchanged fixture-style owner hash9fe642884be8bf8ebc7ede4e9bd893752306ecc493aade45cc0c1919f27c5772."
             ]
         },
         "review/code-execution/048": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
             "verification": [
-                "Implemented isolated removal of rules-off and its ESLint worker/build/config/schema/types, plus in-process required-rule matrix for all nine declaring configurations at both levels. Actual test caught an App Router HTML-link applicability bug; applying review/verification/008 resolves it. Focused 29 tests and 558 assertions pass. Unintegrated draft; combined ownership, package contents, full policy/staged gates remain."
-            ],
-            "remaining": [
-                "Complete the coherent shared-contract checkpoint with net code reduction, passing full-policy/staged checks, normal commit and push hooks, and CI inspection."
+                "Implemented isolated removal of rules-off and its ESLint worker/build/config/schema/types, plus in-process required-rule matrix for all nine declaring configurations at both levels. Actual test caught an App Router HTML-link applicability bug; applying review/verification/008 resolves it. Focused 29 tests and 558 assertions pass. Unintegrated draft; combined ownership, package contents, full policy/staged gates remain.",
+                "ESLint worker and javascript/rules-off check/manifest/tests are deleted. In-process required-rule matrix verifies actual level, Pages/App and configuration applicability under the recorded owner decision. Fresh normal CLI build removes stale dist assets.",
+                "Combined integration:487pass0fail2739assertions57files107.19s. Final renamed/moved-data readers:31pass146assertions4files13.55s. Root/CLI types pass, Prettier79files pass. Mandatory staged138pass13skip0findings82.069s; commit106pass3skip0findings16.4s, message1pass; push138pass13skip0findings127.8s. main attached and origin/main verified at a6e22f689.",
+                "Fresh normal CLI build and npm dry-pack:294assets, dist/gspot.js launcher +dist/LICENSE.md present, no eslint-worker or node_modules asset."
             ]
         },
         "review/commands-templates/001": {
@@ -6097,10 +6098,12 @@
             "verification": []
         },
         "review/tests-cli/022": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Frozen ESLint checkpoint fdf61a90980cb557fd3c3e781c92d1a2cb61a84bf39a093f64dd463fb291d149: 24 CLI tests, 4 native Ruff/SwiftLint tests, root and CLI types, affected ESLint and structure checks pass. Native Bun 1.4.2 and Node 24.20.0 preserve all eight authored boundary cases before and after relocation. Integrated staged gate and commit pending."
+            ]
         },
         "review/tests-cli/023": {
             "status": "pending",
@@ -6280,34 +6283,44 @@
             "verification": []
         },
         "review/tests-cli/057": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Frozen ESLint checkpoint fdf61a90980cb557fd3c3e781c92d1a2cb61a84bf39a093f64dd463fb291d149: 24 CLI tests, 4 native Ruff/SwiftLint tests, root and CLI types, affected ESLint and structure checks pass. Native Bun 1.4.2 and Node 24.20.0 preserve all eight authored boundary cases before and after relocation. Integrated staged gate and commit pending."
+            ]
         },
         "review/tests-cli/058": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Frozen ESLint checkpoint fdf61a90980cb557fd3c3e781c92d1a2cb61a84bf39a093f64dd463fb291d149: 24 CLI tests, 4 native Ruff/SwiftLint tests, root and CLI types, affected ESLint and structure checks pass. Native Bun 1.4.2 and Node 24.20.0 preserve all eight authored boundary cases before and after relocation. Integrated staged gate and commit pending."
+            ]
         },
         "review/tests-cli/059": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Frozen ESLint checkpoint fdf61a90980cb557fd3c3e781c92d1a2cb61a84bf39a093f64dd463fb291d149: 24 CLI tests, 4 native Ruff/SwiftLint tests, root and CLI types, affected ESLint and structure checks pass. Native Bun 1.4.2 and Node 24.20.0 preserve all eight authored boundary cases before and after relocation. Integrated staged gate and commit pending."
+            ]
         },
         "review/tests-cli/060": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Frozen ESLint checkpoint fdf61a90980cb557fd3c3e781c92d1a2cb61a84bf39a093f64dd463fb291d149: 24 CLI tests, 4 native Ruff/SwiftLint tests, root and CLI types, affected ESLint and structure checks pass. Native Bun 1.4.2 and Node 24.20.0 preserve all eight authored boundary cases before and after relocation. Integrated staged gate and commit pending."
+            ]
         },
         "review/tests-cli/061": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Frozen ESLint checkpoint fdf61a90980cb557fd3c3e781c92d1a2cb61a84bf39a093f64dd463fb291d149: 24 CLI tests, 4 native Ruff/SwiftLint tests, root and CLI types, affected ESLint and structure checks pass. Native Bun 1.4.2 and Node 24.20.0 preserve all eight authored boundary cases before and after relocation. Integrated staged gate and commit pending."
+            ]
         },
         "review/tests-cli/062": {
             "status": "pending",
@@ -6697,10 +6710,12 @@
             "verification": []
         },
         "review/tests-cli/140": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Frozen ESLint checkpoint fdf61a90980cb557fd3c3e781c92d1a2cb61a84bf39a093f64dd463fb291d149: 24 CLI tests, 4 native Ruff/SwiftLint tests, root and CLI types, affected ESLint and structure checks pass. Native Bun 1.4.2 and Node 24.20.0 preserve all eight authored boundary cases before and after relocation. Integrated staged gate and commit pending."
+            ]
         },
         "review/tests-cli/141": {
             "status": "pending",
@@ -6847,10 +6862,12 @@
             "verification": []
         },
         "review/tests-layout/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "539dce4af0c78213331618daf2a6f48a127f6fb0",
+            "verification": [
+                "Bash move-table subset: four actual native test owners and three static mirrors moved directly to final configuration owners. Original body/data bytes remain identical except three imports. Native8pass0fail86assertions4files15.66s; staged51pass9skip0findings; normalcommit40pass3skip0findings8.6s and commit-message1pass; push51pass9skip0findings28.1s. Other configuration/ESLint moves remain open. Evidence /tmp/gspot-bash-tests-move-equality.json and /tmp/gspot-bash-tests-move-native.log."
+            ]
         },
         "review/tests-layout/027": {
             "status": "pending",
@@ -7029,14 +7046,14 @@
             "verification": []
         },
         "review/tests-tools/014": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
             "verification": [
-                "Frozen independent patch removes only duplicate shfmt steps: -10lines/-643bytes. Native2pass0fail28assertions and CLI23pass0fail176assertions; types, full-policy lint and formatting pass. /tmp/gspot-shellcheck-tools014-evidence.json."
-            ],
-            "remaining": [
-                "Integrate the frozen one-owner deletion with a coherent related checkpoint and complete mandatory gates."
+                "Frozen independent patch removes only duplicate shfmt steps: -10lines/-643bytes. Native2pass0fail28assertions and CLI23pass0fail176assertions; types, full-policy lint and formatting pass. /tmp/gspot-shellcheck-tools014-evidence.json.",
+                "Removed duplicate shfmt installation/format/assertion steps from the ShellCheck native test while retaining native dialect diagnostics, corrections, source bytes and the unchanged fixer style table.",
+                "Combined integration:487pass0fail2739assertions57files107.19s. Final renamed/moved-data readers:31pass146assertions4files13.55s. Root/CLI types pass, Prettier79files pass. Mandatory staged138pass13skip0findings82.069s; commit106pass3skip0findings16.4s, message1pass; push138pass13skip0findings127.8s. main attached and origin/main verified at a6e22f689.",
+                "Actual native ShellCheck2pass28assertions preserves sh/dash portability, Bash/Bats applicability and corrected source; unchanged fixture-style owner hash9fe642884be8bf8ebc7ede4e9bd893752306ecc493aade45cc0c1919f27c5772."
             ]
         },
         "review/tests-tools/015": {
@@ -7322,14 +7339,13 @@
             "verification": []
         },
         "review/verification/008": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
             "verification": [
-                "The isolated actual in-process ESLint matrix failed with all/App HTML-link rule enabled. The authored Next fragment now uses isAll and Pages-only presence; the corrected 29-test run passes 558 assertions, including Pages/App expectations at both levels. Unintegrated draft; current final verification remains."
-            ],
-            "remaining": [
-                "Complete the coherent shared-contract checkpoint with net code reduction, passing full-policy/staged checks, normal commit and push hooks, and CI inspection."
+                "The isolated actual in-process ESLint matrix failed with all/App HTML-link rule enabled. The authored Next fragment now uses isAll and Pages-only presence; the corrected 29-test run passes 558 assertions, including Pages/App expectations at both levels. Unintegrated draft; current final verification remains.",
+                "Next HTML-link rule applies at all for Pages or src/pages projects, stays off for App-only projects and recommended, and has actual emitted in-process matrix acceptance.",
+                "Combined integration:487pass0fail2739assertions57files107.19s. Final renamed/moved-data readers:31pass146assertions4files13.55s. Root/CLI types pass, Prettier79files pass. Mandatory staged138pass13skip0findings82.069s; commit106pass3skip0findings16.4s, message1pass; push138pass13skip0findings127.8s. main attached and origin/main verified at a6e22f689."
             ]
         },
         "review/verification/015": {
@@ -9734,6 +9750,168 @@
                 "status": "pending",
                 "conclusion": "",
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37610590353"
+            }
+        },
+        {
+            "commit": "a6e22f689739296608dbd311a05e7864aa2175dc",
+            "completedRecords": [
+                "review/code-execution/011",
+                "review/code-execution/015",
+                "review/code-execution/022",
+                "review/code-execution/023",
+                "review/code-execution/047",
+                "review/code-execution/048",
+                "review/verification/008",
+                "review/tests-tools/014"
+            ],
+            "unresolvedRecords": 981,
+            "validation": [
+                "Combined integration:487pass0fail2739assertions57files107.19s. Final renamed/moved-data readers:31pass146assertions4files13.55s. Root/CLI types pass, Prettier79files pass. Mandatory staged138pass13skip0findings82.069s; commit106pass3skip0findings16.4s, message1pass; push138pass13skip0findings127.8s. main attached and origin/main verified at a6e22f689.",
+                "Independent frozen source audit covers all8 IDs and retains broader overlap obligations; source final -144lines/-7278bytes/-1194AST and allauthored -43lines/-837bytes/-910AST. Original1092records1648assignments2259quotes490closed rows preserved.",
+                "Normal integration apply149unchanged and zero output changes on rerun. Main public apply initially exposed seven stale ownership identities despite HEAD/proposed/current matching bytes. The reviewed-ownership regression failed before the subsequent one-condition fix; all84 ownership tests then pass. Existing lifecycle writeOutputs refreshed exact7 reviewed identities with149unchanged and public apply149unchanged, zero generated bytes changed. No policy weakening."
+            ],
+            "limitations": [
+                "Linux/Windows behavior and final suite timing remain pending CI acceptance. Historical e587 CI failed; no platform skip/cancellation is treated as proof. Publication, account setup, tags and deployment remain outside authorization; main/001 remains partial.",
+                "The a6 CI run37618414364 was cancelled by GitHub before any job started. No Linux/macOS/Windows acceptance is inferred; the subsequent pushed main checkpoint is tracked separately."
+            ],
+            "ci": {
+                "runId": 37618414364,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37618414364",
+                "status": "completed",
+                "jobs": 0,
+                "historicalRun": 37608413434,
+                "historicalConclusion": "failure",
+                "historicalEvidence": "/tmp/gspot-ci-native-text-final-platform-evidence.md",
+                "conclusion": "cancelled"
+            }
+        },
+        {
+            "commit": "539dce4af0c78213331618daf2a6f48a127f6fb0",
+            "completedRecords": [],
+            "partialRecords": ["review/tests-layout/026"],
+            "unresolvedRecords": 981,
+            "validation": [
+                "Bash move-table subset: four actual native test owners and three static mirrors moved directly to final configuration owners. Original body/data bytes remain identical except three imports. Native8pass0fail86assertions4files15.66s; staged51pass9skip0findings; normalcommit40pass3skip0findings8.6s and commit-message1pass; push51pass9skip0findings28.1s. Other configuration/ESLint moves remain open. Evidence /tmp/gspot-bash-tests-move-equality.json and /tmp/gspot-bash-tests-move-native.log."
+            ],
+            "limitations": [
+                "Only the Bash move-table subset is implemented; broader026 and platform acceptance remain open.",
+                "Latest CI completed with failures in check, CLI, package and tools jobs; four Windows tools shards cancelled. Those results do not establish cross-platform acceptance. Saved actual run evidence /tmp/gspot-ci-bash-tests-move-current.json; diagnoses remain open."
+            ],
+            "ci": {
+                "run": 37622003191,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37622003191",
+                "status": "completed",
+                "conclusion": "failure",
+                "jobs": [
+                    {
+                        "name": "docs",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "id": 112798360765
+                    },
+                    {
+                        "name": "tools (macos 4/4)",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "id": 112798360937
+                    },
+                    {
+                        "name": "test (macos-15)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798360945
+                    },
+                    {
+                        "name": "tools (linux 2/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361024
+                    },
+                    {
+                        "name": "test (ubuntu-24.04)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361037
+                    },
+                    {
+                        "name": "tools (linux 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361042
+                    },
+                    {
+                        "name": "check",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361056
+                    },
+                    {
+                        "name": "tools (windows 2/4)",
+                        "status": "completed",
+                        "conclusion": "cancelled",
+                        "id": 112798361066
+                    },
+                    {
+                        "name": "tools (linux 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361084
+                    },
+                    {
+                        "name": "package",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361092
+                    },
+                    {
+                        "name": "tools (macos 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361116
+                    },
+                    {
+                        "name": "tools (linux 4/4)",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "id": 112798361142
+                    },
+                    {
+                        "name": "tools (macos 2/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361154
+                    },
+                    {
+                        "name": "tools (windows 4/4)",
+                        "status": "completed",
+                        "conclusion": "cancelled",
+                        "id": 112798361182
+                    },
+                    {
+                        "name": "tools (macos 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361189
+                    },
+                    {
+                        "name": "tools (windows 3/4)",
+                        "status": "completed",
+                        "conclusion": "cancelled",
+                        "id": 112798361212
+                    },
+                    {
+                        "name": "test (windows-2025)",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "id": 112798361239
+                    },
+                    {
+                        "name": "tools (windows 1/4)",
+                        "status": "completed",
+                        "conclusion": "cancelled",
+                        "id": 112798362132
+                    }
+                ]
             }
         }
     ]

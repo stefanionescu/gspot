@@ -16,4 +16,13 @@ store_files = ["**/store.js"]
 `;
 
 /** JavaScript and TypeScript module forms supported by the default store convention. */
-export const STORE_EXTENSIONS = ['ts', 'tsx', 'mts', 'cts', 'js', 'jsx', 'mjs', 'cjs'];
+export const STORE_FILES = [
+    'src/store.ts',
+    'src/stores/cart.tsx',
+    'src/store/cart.mts',
+    'src/cart.store.cts',
+    'src/store.js',
+    'src/stores/cart.jsx',
+    'src/store/cart.mjs',
+    'src/cart.store.cjs',
+];

@@ -10,7 +10,7 @@ import type { ParameterDiagnostic } from '#tests/types/tools/generation/paramete
 
 // SwiftLint ships no Windows build, which its tool pin records.
 for (const scenario of PARAMETER_CASES.filter((entry) => entry.language !== 'swift' || process.platform !== 'win32')) {
-    test.each([7, 8])(`${scenario.language} counts declared parameters with maximum %i`, async (maximum) => {
+    test.each([7, 8])(`${String(scenario.command[0])} counts declared parameters with maximum %i`, async (maximum) => {
         await using directory = await testdir();
         const { language } = scenario;
         const limits = maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n`;

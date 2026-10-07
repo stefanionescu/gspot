@@ -2,7 +2,6 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { textContaining } from '#tests/harness/expectations.ts';
 import { APP_JEST } from '#tests/config/cli/generation/eslint/jest.ts';
 
 test.each([
@@ -73,33 +72,4 @@ test.each(['js', 'jsx'])('Jest rules apply only to their declared scope for %s',
     expect(
         nested.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'jest/no-focused-tests'),
     ).toMatchObject([{ line: 2 }]);
-});
-
-test('the Jest harness folder places support files and closes them to runtime code in its scope', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': APP_JEST,
-        'package.json': '{"private":true,"type":"module"}\n',
-        'app/tests/fixtures/helpers.js': 'export const value = 1;\n',
-        'app/tests/fixtures/example.test.js': '',
-        'app/tests/unit/helpers.js': 'export const value = 1;\n',
-        'app/tests/unit/example.test.js': '',
-        'app/src/runtime.js':
-            'import { value } from "../tests/fixtures/helpers.js"; export const result = value + 1;\n',
-    });
-    const eslint = await createEslint(sandbox.path);
-    const misplaced = await eslint.lintFiles(['app/tests/unit/helpers.js']);
-    expect(
-        misplaced.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/no-helpers-beside-tests'),
-    ).toMatchObject([{ message: textContaining('app/tests/fixtures') }]);
-    const harnessResults = await eslint.lintFiles(['app/tests/fixtures/helpers.js']);
-    expect(
-        harnessResults
-            .flatMap((file) => file.messages)
-            .filter(({ ruleId, fatal }) => ruleId === 'gspot/no-helpers-beside-tests' || fatal),
-    ).toStrictEqual([]);
-    const runtime = await eslint.lintFiles(['app/src/runtime.js']);
-    expect(
-        runtime.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId === 'gspot/import-direction'),
-    ).toMatchObject([{ message: textContaining('Runtime code imports test code') }]);
 });

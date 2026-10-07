@@ -5,7 +5,7 @@ import { createEslint } from '#tests/harness/generated.ts';
 
 for (const language of ['javascript', 'typescript']) {
     test.each([7, 8])(
-        `${language} counts declared parameters with maximum %i${language === 'typescript' ? ' and does not count this' : ''}`,
+        `ESLint for ${language} counts declared parameters with maximum %i${language === 'typescript' ? ' and does not count this' : ''}`,
         async (maximum) => {
             await using directory = await testdir();
             const extension = { javascript: 'js', typescript: 'ts' }[language]!;

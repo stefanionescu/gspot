@@ -36,12 +36,3 @@ export const BOUNDARY_CASES = [
     { path: 'apps/api/app/qa/check.js', importPath: '../../storage/value.js', count: 0 },
     { path: 'apps/api/app/example.spec.js', importPath: '../storage/value.js', count: 0 },
 ] as const;
-
-export const BOUNDARY_LINT_SCRIPT = `import { ESLint } from 'eslint';
-const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
-const results = await eslint.lintFiles(JSON.parse(process.argv[1]));
-process.stdout.write(JSON.stringify(results.map(({ filePath, messages }) => ({
-    filePath,
-    findings: messages.filter(({ ruleId }) => ruleId === 'boundaries/dependencies'),
-}))));
-`;
