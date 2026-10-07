@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-996 unresolved review records remain. 523 come from the review of October 6, 2026 and the owner decisions of that day. 473 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+989 unresolved review records remain. 516 come from the review of October 6, 2026 and the owner decisions of that day. 473 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: test time limits sit in at least six places. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-96 records were implemented and verified in `c6aa35af7509807f32cd9427563731e801cd8d9e`, `0efd033dcb75419819619f6b78f4cfcc3ffea2f6`, `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`, `b0a6b494a4463d39a05d79e47f5460f5350e095d`, `b393b42d4ec011b652484efbc197578679073936`, `a86952675239b9eebbaafe8a26fae8eaab5ca7b3`, `1285f9d5eead1c60f4f7b892c92d744bab52792f`, `bce72e26bbc55fc48e976aea29c466d0ce2e91b9`, `843c4d79ed2780e3978163bc38b58c5d49899c19`, `a526beecc22f318603e4fc937f6f87e7e82aa697`, `062c6a171176c44b31556068b78fc3fd47f3b97f`, `310a538173b7ddd6f7d26de0ca983c5a4193f5f9`, `6d08311b00b6dff1eb6b1f5868fd41b00f6e850c`, `1ebc5f4266cf9b67a434a6aff6fa7151105d8d90`, `32f6190687acb9afbadf218ca5d188e7d0dfb0aa`, `d7cf41a0b684492e4fc1ebd20fa97515d3f970cd`, `d7062cffc1f4d4d0875574c73bb864e7e080c571`, `e58770319c843e67da1f286bfb33f9f22f339fb6` on October 7, 2026. Their original text is retained; current status and evidence are in each review file and [progress](findings/progress.json).
+103 records were implemented and verified in `c6aa35af7509807f32cd9427563731e801cd8d9e`, `0efd033dcb75419819619f6b78f4cfcc3ffea2f6`, `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`, `b0a6b494a4463d39a05d79e47f5460f5350e095d`, `b393b42d4ec011b652484efbc197578679073936`, `a86952675239b9eebbaafe8a26fae8eaab5ca7b3`, `1285f9d5eead1c60f4f7b892c92d744bab52792f`, `bce72e26bbc55fc48e976aea29c466d0ce2e91b9`, `843c4d79ed2780e3978163bc38b58c5d49899c19`, `a526beecc22f318603e4fc937f6f87e7e82aa697`, `062c6a171176c44b31556068b78fc3fd47f3b97f`, `310a538173b7ddd6f7d26de0ca983c5a4193f5f9`, `6d08311b00b6dff1eb6b1f5868fd41b00f6e850c`, `1ebc5f4266cf9b67a434a6aff6fa7151105d8d90`, `32f6190687acb9afbadf218ca5d188e7d0dfb0aa`, `d7cf41a0b684492e4fc1ebd20fa97515d3f970cd`, `d7062cffc1f4d4d0875574c73bb864e7e080c571`, `e58770319c843e67da1f286bfb33f9f22f339fb6`, `1c00f603d3de88d6ac3a0ff606c6306e838aa51c` on October 7, 2026. Their original text is retained; current status and evidence are in each review file and [progress](findings/progress.json).
 
 ## Review of October 6, 2026
 
@@ -36,12 +36,12 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | [This repository's own gspot.toml exceptions](findings/review/policy-exceptions.md)                   |           34 |
 | [Carve-outs](findings/review/carve-outs.md)                                                           |            1 |
 | [Source layout, names, and import graph](findings/review/source-layout.md)                            |           11 |
-| [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |           42 |
-| [Code: execution, tools, parsers, platform, repository, checks](findings/review/code-execution.md)    |           18 |
+| [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |           41 |
+| [Code: execution, tools, parsers, platform, repository, checks](findings/review/code-execution.md)    |           17 |
 | [Configurations and the ESLint plugin](findings/review/configurations-plugin.md)                      |           56 |
-| [Test layout and wiring](findings/review/tests-layout.md)                                             |           34 |
+| [Test layout and wiring](findings/review/tests-layout.md)                                             |           33 |
 | [Tests in tests/cli](findings/review/tests-cli.md)                                                    |          124 |
-| [Tests in tests/tools, tests/plugin, tests/packages, and the harness](findings/review/tests-tools.md) |           48 |
+| [Tests in tests/tools, tests/plugin, tests/packages, and the harness](findings/review/tests-tools.md) |           44 |
 | [READMEs, guides, and the docs site](findings/review/docs-site.md)                                    |           37 |
 | [Repository root, scripts, workflows, and dependencies](findings/review/repository-root.md)           |           23 |
 | [Found while verifying the older records](findings/review/verification.md)                            |           11 |

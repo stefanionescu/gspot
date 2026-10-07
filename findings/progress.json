@@ -1,5 +1,5 @@
 {
-    "openRecords": 996,
+    "openRecords": 989,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -180,7 +180,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 996,
+        "openRecords": 989,
         "records": 1092,
         "batches": [
             {
@@ -486,8 +486,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 32,
-                "unresolvedAssignments": 259
+                "completedAssignments": 34,
+                "unresolvedAssignments": 257
             },
             {
                 "id": "python",
@@ -1346,8 +1346,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 6,
-                "unresolvedAssignments": 463
+                "completedAssignments": 10,
+                "unresolvedAssignments": 459
             },
             {
                 "id": "scripts-repository",
@@ -1827,8 +1827,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 44,
-                "unresolvedAssignments": 45
+                "completedAssignments": 45,
+                "unresolvedAssignments": 44
             },
             {
                 "id": "configurations",
@@ -3366,10 +3366,13 @@
             "verification": []
         },
         "review/code-commands/024": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration (packaging implementation; rules independent review)",
+            "commit": "1c00f603d3de88d6ac3a0ff606c6306e838aa51c",
+            "verification": [
+                "Python preview computes one plan for installer and lock phases. Install, init, and add/remove compute generated outputs once and pass the same value through planning and installation. The duplicated preserveMode calculation is merged; deleting preserveMode belongs to the still-open code-commands/019.",
+                "Main combined acceptance passed 110 CLI tests and 481 assertions in sixteen files; the frozen native implementation passed 45 tests, zero failures or skips, and 443 assertions in eleven files on macOS. Real uv lock and sync cancellation passes for SIGINT and SIGTERM with owned processes and scratch removed. Root and CLI types and affected all-policy lint pass. Normal staged checks passed 147 with thirteen skips and zero findings in 79.936 seconds; commit checks passed 106 with three skips in 14.4 seconds; push checks passed 147 with thirteen skips in 71.5 seconds. Integrated production removes ten lines and 743 bytes; all authored changes remove 106 syntax-tree nodes while adding fifteen formatted lines and 495 bytes."
+            ]
         },
         "review/code-commands/025": {
             "status": "pending",
@@ -3738,10 +3741,13 @@
             "verification": []
         },
         "review/code-execution/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration (packaging implementation; rules independent review)",
+            "commit": "1c00f603d3de88d6ac3a0ff606c6306e838aa51c",
+            "verification": [
+                "One ToolProject description now owns native npm and Python commands, drift, preview, lockfile preparation, immutable scratch installation, and input verification. Duplicate implementations and obsolete types are deleted; native npm four-manager, private-Python, clone, and refusal transactions pass.",
+                "Main combined acceptance passed 110 CLI tests and 481 assertions in sixteen files; the frozen native implementation passed 45 tests, zero failures or skips, and 443 assertions in eleven files on macOS. Real uv lock and sync cancellation passes for SIGINT and SIGTERM with owned processes and scratch removed. Root and CLI types and affected all-policy lint pass. Normal staged checks passed 147 with thirteen skips and zero findings in 79.936 seconds; commit checks passed 106 with three skips in 14.4 seconds; push checks passed 147 with thirteen skips in 71.5 seconds. Integrated production removes ten lines and 743 bytes; all authored changes remove 106 syntax-tree nodes while adding fifteen formatted lines and 495 bytes."
+            ]
         },
         "review/code-execution/031": {
             "status": "pending",
@@ -6731,10 +6737,13 @@
             "verification": []
         },
         "review/tests-layout/009": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration (packaging implementation; rules independent review)",
+            "commit": "1c00f603d3de88d6ac3a0ff606c6306e838aa51c",
+            "verification": [
+                "installGeneratedPythonTools now uses the token-aware installToolProjects transaction and returns its environment PATH. No forwarding alias or credential bypass is added.",
+                "Main combined acceptance passed 110 CLI tests and 481 assertions in sixteen files; the frozen native implementation passed 45 tests, zero failures or skips, and 443 assertions in eleven files on macOS. Real uv lock and sync cancellation passes for SIGINT and SIGTERM with owned processes and scratch removed. Root and CLI types and affected all-policy lint pass. Normal staged checks passed 147 with thirteen skips and zero findings in 79.936 seconds; commit checks passed 106 with three skips in 14.4 seconds; push checks passed 147 with thirteen skips in 71.5 seconds. Integrated production removes ten lines and 743 bytes; all authored changes remove 106 syntax-tree nodes while adding fifteen formatted lines and 495 bytes."
+            ]
         },
         "review/tests-layout/012": {
             "status": "pending",
@@ -7061,22 +7070,31 @@
             "verification": []
         },
         "review/tests-tools/025": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration (packaging implementation; rules independent review)",
+            "commit": "1c00f603d3de88d6ac3a0ff606c6306e838aa51c",
+            "verification": [
+                "Fixture preparers stop after apply. Each installation test explicitly prepares its required lockfile and performs the one real installation it asserts. Native failure, private-index, clone, and staged cases retain their assertions.",
+                "Main combined acceptance passed 110 CLI tests and 481 assertions in sixteen files; the frozen native implementation passed 45 tests, zero failures or skips, and 443 assertions in eleven files on macOS. Real uv lock and sync cancellation passes for SIGINT and SIGTERM with owned processes and scratch removed. Root and CLI types and affected all-policy lint pass. Normal staged checks passed 147 with thirteen skips and zero findings in 79.936 seconds; commit checks passed 106 with three skips in 14.4 seconds; push checks passed 147 with thirteen skips in 71.5 seconds. Integrated production removes ten lines and 743 bytes; all authored changes remove 106 syntax-tree nodes while adding fifteen formatted lines and 495 bytes."
+            ]
         },
         "review/tests-tools/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration (packaging implementation; rules independent review)",
+            "commit": "1c00f603d3de88d6ac3a0ff606c6306e838aa51c",
+            "verification": [
+                "The suite prepares one managed environment containing all thirteen pinned Python tools. Ordinary Semgrep and secrets fixtures copy its complete owned installation, place its bin first, and perform no fixture environment installation. Current selected lockfiles retain actual resolution and immutable-input checks.",
+                "Main combined acceptance passed 110 CLI tests and 481 assertions in sixteen files; the frozen native implementation passed 45 tests, zero failures or skips, and 443 assertions in eleven files on macOS. Real uv lock and sync cancellation passes for SIGINT and SIGTERM with owned processes and scratch removed. Root and CLI types and affected all-policy lint pass. Normal staged checks passed 147 with thirteen skips and zero findings in 79.936 seconds; commit checks passed 106 with three skips in 14.4 seconds; push checks passed 147 with thirteen skips in 71.5 seconds. Integrated production removes ten lines and 743 bytes; all authored changes remove 106 syntax-tree nodes while adding fifteen formatted lines and 495 bytes."
+            ]
         },
         "review/tests-tools/027": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration (packaging implementation; rules independent review)",
+            "commit": "1c00f603d3de88d6ac3a0ff606c6306e838aa51c",
+            "verification": [
+                "The security test file and its data are deleted. Authored repository-rule defect/correction and original Bearer bytes are covered in semgrep generation; positioned malformed Bash executable behavior remains in the Semgrep tools check test.",
+                "Main combined acceptance passed 110 CLI tests and 481 assertions in sixteen files; the frozen native implementation passed 45 tests, zero failures or skips, and 443 assertions in eleven files on macOS. Real uv lock and sync cancellation passes for SIGINT and SIGTERM with owned processes and scratch removed. Root and CLI types and affected all-policy lint pass. Normal staged checks passed 147 with thirteen skips and zero findings in 79.936 seconds; commit checks passed 106 with three skips in 14.4 seconds; push checks passed 147 with thirteen skips in 71.5 seconds. Integrated production removes ten lines and 743 bytes; all authored changes remove 106 syntax-tree nodes while adding fifteen formatted lines and 495 bytes."
+            ]
         },
         "review/tests-tools/028": {
             "status": "pending",
@@ -7103,10 +7121,13 @@
             "verification": []
         },
         "review/tests-tools/032": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration (packaging implementation; rules independent review)",
+            "commit": "1c00f603d3de88d6ac3a0ff606c6306e838aa51c",
+            "verification": [
+                "PythonInstallation.plans and its unused import are deleted. TOOL_PYTHON_PROJECT remains because the shared installation helper now has a real manifest lookup caller.",
+                "Main combined acceptance passed 110 CLI tests and 481 assertions in sixteen files; the frozen native implementation passed 45 tests, zero failures or skips, and 443 assertions in eleven files on macOS. Real uv lock and sync cancellation passes for SIGINT and SIGTERM with owned processes and scratch removed. Root and CLI types and affected all-policy lint pass. Normal staged checks passed 147 with thirteen skips and zero findings in 79.936 seconds; commit checks passed 106 with three skips in 14.4 seconds; push checks passed 147 with thirteen skips in 71.5 seconds. Integrated production removes ten lines and 743 bytes; all authored changes remove 106 syntax-tree nodes while adding fifteen formatted lines and 495 bytes."
+            ]
         },
         "review/tests-tools/033": {
             "status": "pending",
@@ -9653,6 +9674,33 @@
                 "headSha": "e58770319c843e67da1f286bfb33f9f22f339fb6",
                 "status": "pending",
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37608413434"
+            }
+        },
+        {
+            "commit": "1c00f603d3de88d6ac3a0ff606c6306e838aa51c",
+            "completedRecords": [
+                "review/code-execution/029",
+                "review/code-commands/024",
+                "review/tests-tools/025",
+                "review/tests-tools/026",
+                "review/tests-tools/027",
+                "review/tests-tools/032",
+                "review/tests-layout/009"
+            ],
+            "unresolvedRecords": 989,
+            "validation": [
+                "Main combined acceptance passed 110 CLI tests and 481 assertions in sixteen files; the frozen native implementation passed 45 tests, zero failures or skips, and 443 assertions in eleven files on macOS. Real uv lock and sync cancellation passes for SIGINT and SIGTERM with owned processes and scratch removed. Root and CLI types and affected all-policy lint pass. Normal staged checks passed 147 with thirteen skips and zero findings in 79.936 seconds; commit checks passed 106 with three skips in 14.4 seconds; push checks passed 147 with thirteen skips in 71.5 seconds. Integrated production removes ten lines and 743 bytes; all authored changes remove 106 syntax-tree nodes while adding fifteen formatted lines and 495 bytes.",
+                "Independent seven-record source and evidence audit found no remaining binding obligations; main corrected only integrated naming, prose, and formatting failures and reran the full staged gate. Remote main matches the implementation commit; hooks ran without bypass. Generated output came from normal setup, install:checks, and apply."
+            ],
+            "limitations": [
+                "Native execution evidence is local macOS. The latest CI run is pending and provides no platform proof. The completed older run37602069910 had six successful jobs, eight failures, and four Windows tool shards cancelled at the sixty-minute outer bound; none of those shards proves completion or a test timeout value. Cross-platform verification and carve-outs/001 timing remain open. The initial helper025 raw failure log was overwritten; its contemporaneous structured counts are retained without a raw-output claim. Policy-edit installation removal, preserveMode deletion, the remaining scratch readers, broader harness cleanup, publication, tagging, account setup, and deployment are not closed by this checkpoint; main/001 remains partial."
+            ],
+            "ci": {
+                "databaseId": 37610590353,
+                "headSha": "1c00f603d3de88d6ac3a0ff606c6306e838aa51c",
+                "status": "pending",
+                "conclusion": "",
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37610590353"
             }
         }
     ]
