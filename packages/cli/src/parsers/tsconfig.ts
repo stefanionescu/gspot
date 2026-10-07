@@ -1,13 +1,17 @@
 import { z } from 'zod';
 import ts from 'typescript';
 import { readFileSync } from 'node:fs';
-import { dirname, relative } from 'node:path';
+import { memo } from '#cli/platform/memo.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { readText } from '#cli/platform/source.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { dirname, resolve, relative } from 'node:path';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { portableSegments } from '#cli/platform/root/rules.ts';
 import { TS_NO_INPUTS_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsconfig.ts';
+
+const TSCONFIG_MEMO = { create: () => new Map<string, ts.ParsedCommandLine | undefined>() };
 
 const typeScriptConfigSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 
@@ -38,7 +42,7 @@ function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): ts
     return parsed;
 }
 
-function configurationText(root: string, path: string): string | undefined {
+function configurationText(root: string, path: string, reads: ReadCache): string | undefined {
     const local = toPosix(relative(root, path));
     using files = openRoot(root, 'native');
     try {
@@ -50,7 +54,7 @@ function configurationText(root: string, path: string): string | undefined {
             if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
             return readFileSync(path, 'utf8');
         }
-        return readText(root, local);
+        return readText(root, local, reads);
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
         throw error;
@@ -61,13 +65,21 @@ function configurationText(root: string, path: string): string | undefined {
  * Resolves compiler options and inherited paths with the TypeScript compiler.
  * @param root the repository boundary for authored configuration
  * @param path the absolute configuration path
+ * @param reads the configuration cache owned by this run
  * @returns the parsed configuration, or undefined when the file is absent
  */
-export function getTsconfig(root: string, path: string): ts.ParsedCommandLine | undefined {
+export function getTsconfig(root: string, path: string, reads: ReadCache): ts.ParsedCommandLine | undefined {
+    const configurations = memo(reads, TSCONFIG_MEMO);
+    const key = JSON.stringify([root, resolve(path)]);
+    if (configurations.has(key)) return configurations.get(key);
     try {
-        const text = configurationText(root, path);
-        if (text === undefined) return undefined;
-        return parseTsconfig(path, text, { ...ts.sys, readFile: (file) => configurationText(root, file) });
+        const text = configurationText(root, path, reads);
+        const parsed =
+            text === undefined
+                ? undefined
+                : parseTsconfig(path, text, { ...ts.sys, readFile: (file) => configurationText(root, file, reads) });
+        configurations.set(key, parsed);
+        return parsed;
     } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
         throw new Error(`Cannot read TypeScript configuration ${path}: ${detail}`, { cause: error });

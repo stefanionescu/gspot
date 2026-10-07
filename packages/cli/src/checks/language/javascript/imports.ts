@@ -2,11 +2,11 @@ import { memo } from '#cli/platform/memo.ts';
 import type { Node, Tree } from 'web-tree-sitter';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
+import { modulePath } from '#cli/repository/modules.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { modulePath, getCompilerOptions } from '#cli/repository/modules.ts';
 import type { Edge, Importer, ImportIndex } from '#cli/types/checks/language/javascript.ts';
 
 const IMPORT_MEMO = { create: () => new Map<string, Promise<ImportIndex>>() };
@@ -61,11 +61,11 @@ function stringText(node: Node): string | undefined {
 
 // The edge one importing node adds, when its module resolves to a tracked file of the scope.
 function getNodeEdges(importer: Importer, node: Node): Edge[] {
-    const { input, path, owned, options } = importer;
+    const { input, path, owned } = importer;
     const specifier = importedModule(node);
     if (specifier === undefined) return [];
     // The file the import names; none for a package, a missing file, or a file of another kind.
-    const target = modulePath(input, path, specifier, options);
+    const target = modulePath(input, path, specifier);
     if (target === undefined) return [];
     if (!owned.has(target)) return [];
     return [
@@ -84,7 +84,7 @@ async function readImportEdges(input: CheckInput, path: string, owned: Set<strin
     const tree = await parseSource(path.endsWith('x') ? 'tsx' : 'typescript', text, input);
     try {
         assertParsed(tree, path);
-        const importer: Importer = { input, path, owned, options: getCompilerOptions(input, path) };
+        const importer: Importer = { input, path, owned };
         return tree.rootNode
             .descendantsOfType(['import_statement', 'export_statement', 'call_expression'])
             .flatMap((node) => getNodeEdges(importer, node));

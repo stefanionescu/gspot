@@ -3,14 +3,18 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { getTsconfig } from '#cli/parsers/tsconfig.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { aliasesFor } from '#cli/repository/aliases.ts';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { ALIAS_INPUTS, ALIAS_PROJECT } from '#tests/config/cli/repository/aliases.ts';
 
 test.each(ALIAS_INPUTS)('alias reads report malformed $path', async ({ path, diagnostic }) => {
     await using sandbox = await testdir({ [path]: '{ "compilerOptions": { "paths": {} },' });
-    expect(() => aliasesFor(sandbox.path, '')).toThrow(diagnostic.replace('{PATH}', join(sandbox.path, path)));
+    expect(() => aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toThrow(
+        diagnostic.replace('{PATH}', join(sandbox.path, path)),
+    );
 });
 
 test.each(ALIAS_INPUTS)(
@@ -19,19 +23,21 @@ test.each(ALIAS_INPUTS)(
         await using sandbox = await testdir();
         await using outside = await testdir({ [path]: valid });
         symlinkSync(join(outside.path, path), join(sandbox.path, path));
-        expect(() => aliasesFor(sandbox.path, '')).toThrow('Source link leaves the repository');
+        expect(() => aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toThrow(
+            'Source link leaves the repository',
+        );
     },
 );
 
 test('root and child aliases read their own declarations with compiler paths taking precedence', async () => {
     await using sandbox = await testdir(ALIAS_PROJECT);
-    expect(aliasesFor(sandbox.path, '')).toStrictEqual({
+    expect(aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({
         '#app/': 'src/',
         '#root/': 'root/',
         '@root/': 'typed/',
         '#shared/': 'compiler/',
     });
-    expect(aliasesFor(sandbox.path, 'web')).toStrictEqual({
+    expect(aliasesFor(sandbox.path, 'web', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({
         '#app/': 'web/src/',
         '@web/': 'web/typed/',
         '#shared/': 'web/compiler/',
@@ -47,12 +53,12 @@ test('alias reads follow an extends into a linked node_modules package', async (
     await createFileTree(dependency.path, { 'tsconfig.json': '{"compilerOptions":{"strict":true}}' });
     mkdirSync(join(sandbox.path, 'node_modules'));
     symlinkSync(dependency.path, join(sandbox.path, 'node_modules/shared-config'), 'dir');
-    expect(aliasesFor(sandbox.path, '')).toStrictEqual({});
+    expect(aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({});
 });
 
 test('alias discovery accepts absent configuration files', async () => {
     await using sandbox = await testdir();
-    expect(aliasesFor(sandbox.path, '')).toStrictEqual({});
+    expect(aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({});
 });
 
 test('inherited aliases resolve from the configuration that declares them', async () => {
@@ -61,12 +67,16 @@ test('inherited aliases resolve from the configuration that declares them', asyn
         'tsconfig.json': '{"extends":"./configs/tsconfig.json"}',
         'configs/tsconfig.json': '{"compilerOptions":{"paths":{"@app/*":["../src/*"]}}}',
     });
-    expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '@app/': 'src/' });
+    expect(aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({
+        '@app/': 'src/',
+    });
     writeFileSync(
         join(sandbox.path, 'configs/tsconfig.json'),
         '{"compilerOptions":{"baseUrl":"../app","paths":{"@app/*":["src/*"]}}}',
     );
-    expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '@app/': 'app/src/' });
+    expect(aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({
+        '@app/': 'app/src/',
+    });
 });
 
 test('generated compiler configurations extend their authored alias owners', async () => {
@@ -81,7 +91,9 @@ test('generated compiler configurations extend their authored alias owners', asy
         'tsconfig.json': '{"compilerOptions":{"paths":{"@app/*":["./src/*"]}}}',
     });
     const session = await openSession(sandbox.path);
-    expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '@app/': 'src/' });
+    expect(aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({
+        '@app/': 'src/',
+    });
     const generated = emitAll(session).files;
     const compiler = generated.find((file) => file.path === '.gspot/config/tsconfig.json')!;
     const child = generated.find((file) => file.path === '.gspot/config/web/tsconfig.json')!;
@@ -98,10 +110,37 @@ test('alias discovery accepts linked authored manifests and inherited compiler c
     });
     symlinkSync('settings/manifest.json', join(sandbox.path, 'package.json'));
     symlinkSync('settings/compiler.json', join(sandbox.path, 'tsconfig.json'));
-    expect(aliasesFor(sandbox.path, '')).toStrictEqual({ '#package/': 'src/', '#compiler/': 'app/' });
+    expect(aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({
+        '#package/': 'src/',
+        '#compiler/': 'app/',
+    });
 });
 
 test('alias discovery reports a missing authored base by its filename', async () => {
     await using sandbox = await testdir({ 'tsconfig.json': '{"extends":"./missing-base.json"}' });
-    expect(() => aliasesFor(sandbox.path, '')).toThrow('missing-base.json');
+    expect(() => aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toThrow(
+        'missing-base.json',
+    );
+});
+
+test('compiler configuration reads share one run snapshot and isolate roots and later runs', async () => {
+    await using first = await testdir({
+        'tsconfig.json': '{"extends":"./base.json"}',
+        'base.json': '{"compilerOptions":{"strict":true}}',
+    });
+    await using second = await testdir({ 'tsconfig.json': '{"compilerOptions":{"strict":false}}' });
+    const reads: ReadCache = { root: first.path, sources: new Map(), memo: new Map() };
+    const path = join(first.path, 'tsconfig.json');
+    const initial = getTsconfig(first.path, path, reads)!;
+    expect(initial.options.strict).toBe(true);
+    expect(getTsconfig(first.path, path, reads)).toBe(initial);
+    expect(getTsconfig(second.path, join(second.path, 'tsconfig.json'), reads)?.options.strict).toBe(false);
+    expect(() => getTsconfig(second.path, path, reads)).toThrow('Unsafe lifecycle path');
+    writeFileSync(join(first.path, 'base.json'), '{"compilerOptions":{"strict":false}}');
+    expect(getTsconfig(first.path, path, reads)).toBe(initial);
+    const next: ReadCache = { root: first.path, sources: new Map(), memo: new Map() };
+    expect(getTsconfig(first.path, path, next)?.options.strict).toBe(false);
+    writeFileSync(join(first.path, 'base.json'), '{');
+    const invalid: ReadCache = { root: first.path, sources: new Map(), memo: new Map() };
+    expect(() => getTsconfig(first.path, path, invalid)).toThrow('Cannot read TypeScript configuration');
 });

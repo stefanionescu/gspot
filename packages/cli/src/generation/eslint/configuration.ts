@@ -52,7 +52,7 @@ function directionRoles(architecture: ArchitectureSettings, harness: string[]): 
 
 // Each nested scope resolves imports against its own aliases and harness folders.
 function scopeBlocks(context: EslintContext): EslintBlock[] {
-    const { root, policy, scopes, nodeFiles } = context;
+    const { root, reads, policy, scopes, nodeFiles } = context;
     if (policy.level !== 'all') return [];
     const folders = [
         ...ESLINT_BOUNDARY_FOLDERS,
@@ -62,7 +62,7 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
         .filter((entry) => entry.scope.path !== '')
         .map((entry) => {
             const path = entry.scope.path;
-            const aliases = aliasesFor(root, path);
+            const aliases = aliasesFor(root, path, reads);
             const roles = directionRoles(policy.architecture, harnessFolders(policy, path));
             return {
                 files: [
@@ -181,10 +181,10 @@ function extraBlock(context: EslintContext): EslintConfiguration['verbatim'] {
  * @returns the values, ready to serialize into the configuration
  */
 export function eslintConfiguration(context: EslintContext): EslintConfiguration {
-    const { root, policy, scopes, selection, nodeFiles } = context;
+    const { root, reads, policy, scopes, selection, nodeFiles } = context;
     const { view } = selection;
     const tool = view.options('tools.eslint');
-    const aliases = aliasesFor(root, '');
+    const aliases = aliasesFor(root, '', reads);
     const limits = limitsOf(view, 'typescript', ESLINT_LIMITS);
     const internalPrefixes = ['./', '../', ...Object.keys(aliases)];
     const importStyle = tool['import_extensions'] as Record<string, string> | undefined;
@@ -241,7 +241,7 @@ export function eslintInputs(
     | 'eslintErrorRules'
     | 'eslintPresets'
 > {
-    const { root, scopes, policyFiles, repository } = session;
+    const { root, reads, scopes, policyFiles, repository } = session;
     const { policy } = policyFiles;
     const allRules = eslintAllRulesSchema.parse(ESLINT_ALL_RULES);
     const presets = new Map<string, EslintPresets>();
@@ -255,7 +255,7 @@ export function eslintInputs(
         tests: (selection.view.settings['tests'] ?? []) as string[],
         scripts: (selection.view.settings['tools.eslint.script_files'] ?? []) as string[],
     });
-    const context = { root, policy, scopes, selection, nodeFiles };
+    const context = { root, reads, policy, scopes, selection, nodeFiles };
     let configuration: EslintConfiguration | undefined;
     return {
         eslint: () => (configuration ??= eslintConfiguration(context)),

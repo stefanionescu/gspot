@@ -36,8 +36,12 @@ test.skipIf(!isPosix).each(['recommended', 'all'] as const)(
         const session = await openSession(sandbox.path);
         using log = openOwnership(sandbox.path);
         writeOutputs(session, log);
-        const rootConfig = getTsconfig(sandbox.path, join(sandbox.path, '.gspot/config/tsconfig.json'))!;
-        const appConfig = getTsconfig(sandbox.path, join(sandbox.path, '.gspot/config/app/tsconfig.json'))!;
+        const rootConfig = getTsconfig(sandbox.path, join(sandbox.path, '.gspot/config/tsconfig.json'), session.reads)!;
+        const appConfig = getTsconfig(
+            sandbox.path,
+            join(sandbox.path, '.gspot/config/app/tsconfig.json'),
+            session.reads,
+        )!;
         expect(rootConfig.fileNames).toStrictEqual([join(sandbox.path, 'source.ts')]);
         expect(appConfig.fileNames).toStrictEqual([
             join(sandbox.path, 'app/ambient.d.ts'),

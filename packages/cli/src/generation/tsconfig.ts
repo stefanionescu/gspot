@@ -20,8 +20,8 @@ import {
  * @returns the native compiler configuration
  */
 export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
-    const { root, target, scope, files, scopeEntries, options } = input;
-    const authored = getTsconfig(root, join(root, scope, 'tsconfig.json'));
+    const { root, reads, target, scope, files, scopeEntries, options } = input;
+    const authored = getTsconfig(root, join(root, scope, 'tsconfig.json'), reads);
     const prefix = toPosix(relative(dirname(target), scope || '.')) + '/';
     if (authored !== undefined) return { extends: `${prefix}tsconfig.json`, compilerOptions: options };
     const projectRoots = ts.getEffectiveTypeRoots({}, { getCurrentDirectory: () => join(root, scope) }) ?? [];

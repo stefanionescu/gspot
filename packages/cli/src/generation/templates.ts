@@ -120,10 +120,17 @@ export const eta = new Eta(ETA_OPTIONS);
  * @returns the template inputs, with empty fragment parts the generator fills per target.
  */
 export function templateInputs(session: Session, selection: ScopeSelection, manifests: Manifest[]): TemplateInputs {
-    const { root, scopes, version } = session;
+    const { root, reads, scopes, version } = session;
     const { policy } = session.policyFiles;
     const sourceFiles = session.repository.files;
     const { view } = selection;
+    const compilerContext = {
+        root,
+        reads,
+        files: sourceFiles,
+        scopeEntries: scopes.map((entry) => entry.scope),
+        scope: selection.scope.path,
+    };
     const files = (extension: string): string[] =>
         sourceFiles.filter((file) => file.path.endsWith(extension) && file.kind === 'source').map((file) => file.path);
     return {
@@ -131,24 +138,18 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
         ...eslintInputs(session, selection),
         javascriptConfig: (target) =>
             buildJsconfig({
-                root,
+                ...compilerContext,
                 declarationPaths: policy.declarations.flatMap((entry) => entry.paths),
-                files: sourceFiles,
-                scopeEntries: scopes.map((entry) => entry.scope),
                 importStyles: view.options('tools.eslint')['import_extensions'] as Record<string, string>,
                 target,
-                scope: selection.scope.path,
             }),
         scopeIgnorePatterns,
         editorconfigOverrides: () => editorconfigOverrides(policy),
         isAll: policy.level === 'all',
         typescriptConfig: (target) =>
             buildTsconfig({
-                root,
+                ...compilerContext,
                 target,
-                scope: selection.scope.path,
-                files: sourceFiles,
-                scopeEntries: scopes.map((entry) => entry.scope),
                 options: Object.fromEntries(
                     Object.entries(requiredTsconfigOptions(policy.level, view.configurations)).filter(
                         ([option]) => !view.rulesOff('typescript/tsconfig').includes(option),

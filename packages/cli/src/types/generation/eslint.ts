@@ -1,3 +1,4 @@
+import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { EslintAllRules } from '#cli/types/parsers/eslint.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
 import type { Policy, RawPolicy, ScopeSelection } from '#cli/types/policy/settings.ts';
@@ -38,6 +39,7 @@ export type EslintBlock = {
 /** Repository policy, resolved scopes, and authored Node paths used by native ESLint generation. */
 export type EslintContext = {
     root: string;
+    reads: ReadCache;
     policy: Policy;
     scopes: ScopeSelection[];
     selection: ScopeSelection;

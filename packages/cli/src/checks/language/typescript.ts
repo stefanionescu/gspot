@@ -23,7 +23,7 @@ export function tsconfig(input: CheckInput): Finding[] {
     ]);
     const required = requiredTsconfigOptions(input.policyFiles.policy.level, input.view.configurations);
     return [...candidates].flatMap((path) => {
-        const parsed = getTsconfig(input.root, join(input.root, path));
+        const parsed = getTsconfig(input.root, join(input.root, path), input.reads);
         if (parsed !== undefined)
             return Object.keys(required)
                 .filter((option) => parsed.options[option] !== true)

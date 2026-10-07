@@ -1,6 +1,7 @@
 import { toPosix } from '#cli/platform/paths.ts';
 import { getTsconfig } from '#cli/parsers/tsconfig.ts';
 import { join, dirname, resolve, relative } from 'node:path';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { TRAILING_STAR } from '#cli/config/repository/aliases.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 
@@ -29,13 +30,14 @@ function packageAliases(root: string, prefix: string): Record<string, string> {
  * Resolves package imports and TypeScript paths for one scope, with TypeScript paths taking precedence.
  * @param root the repository root.
  * @param scope the scope path, empty for the root.
+ * @param reads the run-owned compiler configuration cache
  * @returns aliases relative to the repository root.
  */
-export function aliasesFor(root: string, scope: string): Record<string, string> {
+export function aliasesFor(root: string, scope: string, reads: ReadCache): Record<string, string> {
     const prefix = scope === '' ? '' : `${scope}/`;
     const aliases = packageAliases(root, prefix);
     const path = join(root, prefix, 'tsconfig.json');
-    const config = getTsconfig(root, path);
+    const config = getTsconfig(root, path, reads);
     if (config === undefined) return aliases;
     const options = config.options;
     const paths = options.paths === undefined ? [] : Object.entries(options.paths);

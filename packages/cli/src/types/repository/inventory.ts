@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type { Ignore } from 'ignore';
 import type { Dirent } from 'node:fs';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { runnerSchema } from '#cli/parsers/schema/settings.ts';
 import type { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { fileKindSchema, vendoredSchema, generatedSchema } from '#cli/parsers/schema/inventory.ts';
@@ -76,7 +77,7 @@ export type ToolFile = {
 };
 
 /** Repository state used by module resolution without execution policy. */
-export type ModuleContext = { root: string; reads: object };
+export type ModuleContext = { root: string; reads: ReadCache };
 
 /** The declared tool runner and the file that supplies it. */
 export type RunnerSelection = Pick<Tooling, 'runner' | 'runnerFile'>;

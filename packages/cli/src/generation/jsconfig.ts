@@ -22,10 +22,10 @@ import {
  * @returns the jsconfig contents
  */
 export function buildJsconfig(input: JsconfigInput): Record<string, unknown> {
-    const { root, declarationPaths, target, scope, files, scopeEntries, importStyles } = input;
-    const jsconfigOwner = getTsconfig(root, join(root, scope, 'jsconfig.json'));
+    const { root, reads, declarationPaths, target, scope, files, scopeEntries, importStyles } = input;
+    const jsconfigOwner = getTsconfig(root, join(root, scope, 'jsconfig.json'), reads);
     const owner = jsconfigOwner === undefined ? 'tsconfig.json' : 'jsconfig.json';
-    const authored = jsconfigOwner ?? getTsconfig(root, join(root, scope, owner));
+    const authored = jsconfigOwner ?? getTsconfig(root, join(root, scope, owner), reads);
     const prefix = toPosix(relative(dirname(target), scope)) + '/';
     const compilerOptions: Record<string, unknown> = { ...JAVASCRIPT_OPTIONS, ['jsx']: JAVASCRIPT_IMPORTS.jsx };
     const jsconfig: Record<string, unknown> = { compilerOptions };

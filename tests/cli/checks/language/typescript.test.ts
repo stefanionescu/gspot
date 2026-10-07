@@ -75,7 +75,8 @@ test('nested configurations inherit the configuration an ancestor package names'
         join(sandbox.path, 'apps/web/tsconfig.json'),
         '{"extends":"@example/config","compilerOptions":{"strict":false}}',
     );
-    const overridden = tsconfig(input);
+    expect(tsconfig(input)).toStrictEqual(inherited);
+    const overridden = tsconfig(buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'));
     expect(
         overridden
             .filter((finding) => finding.rule === 'strict')

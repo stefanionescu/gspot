@@ -8,6 +8,7 @@ import { parseJsonRecord } from '#cli/parsers/json.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
@@ -42,15 +43,15 @@ function appendBuildMetadata(
     command.push('--tsBuildInfoFile', join(scratch, DOT_GSPOT, name));
 }
 
-function assertBuildInside(root: string, path: string, visited = new Set<string>()): void {
+function assertBuildInside(root: string, path: string, reads: ReadCache, visited = new Set<string>()): void {
     if (visited.has(path)) return;
     visited.add(path);
-    const config = getTsconfig(root, path);
+    const config = getTsconfig(root, path, reads);
     if (config === undefined) throw new Error(`Missing TypeScript project: ${path}`);
     using files = openRoot(root, 'native');
     assertOutputsInside(root, config, files);
     for (const reference of config.projectReferences ?? [])
-        assertBuildInside(root, ts.resolveProjectReferencePath(reference), visited);
+        assertBuildInside(root, ts.resolveProjectReferencePath(reference), reads, visited);
 }
 
 // Restrict the disposable JavaScript project to its scope and ambient roots, and retain its effective options.
@@ -63,7 +64,7 @@ function writeScopeProject(
     if (ownedInputs(session, planned).length === 0) return undefined;
     const scope = planned.scope.scope.path;
     const generatedPath = join(scratch, target);
-    const generated = getTsconfig(scratch, generatedPath);
+    const generated = getTsconfig(scratch, generatedPath, { root: scratch, sources: new Map(), memo: new Map() });
     if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
     const scopeFiles = generated.fileNames.filter(
         (path) =>
@@ -107,7 +108,11 @@ function restoreCommandPaths(result: CheckResult, scratch: string, root: string)
  * @returns compiler findings and the shared tool execution status
  */
 export async function tsc(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
-    const config = getTsconfig(session.root, join(session.root, planned.scope.scope.path, 'tsconfig.json'));
+    const config = getTsconfig(
+        session.root,
+        join(session.root, planned.scope.scope.path, 'tsconfig.json'),
+        session.reads,
+    );
     const hasReferences = (config?.projectReferences?.length ?? 0) > 0;
     const command = hasReferences
         ? ['tsc', '-b', '--pretty', 'false']
@@ -118,7 +123,12 @@ export async function tsc(session: ToolSession, planned: PlannedCheck): Promise<
         session.repository.scopes.map((scope) => scope.path),
     );
     const scratch = scratchFolder.path;
-    if (hasReferences) assertBuildInside(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
+    if (hasReferences)
+        assertBuildInside(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'), {
+            root: scratch,
+            sources: new Map(),
+            memo: new Map(),
+        });
     else appendBuildMetadata(command, config?.options, scratch, 'tsconfig.tsbuildinfo');
     const result = await runCheckCommand(session, planned, { command: command, workspace: scratch });
     return restoreCommandPaths(result, scratch, session.root);
