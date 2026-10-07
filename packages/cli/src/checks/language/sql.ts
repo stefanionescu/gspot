@@ -1,23 +1,18 @@
+import { parsePlPgSQL } from 'libpg-query';
 import { findingAt } from '#cli/checks/finding.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { readSource } from '#cli/platform/source.ts';
+import type { Node, ParseResult } from '@pgsql/types';
 import { trivialText } from '#cli/parsers/statements.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { parse, parsePlpgsql } from '#cli/parsers/sql/pg.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { parse, nodeOf, nodesOf } from '#cli/parsers/sql/pg.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { positionAt, parseSqlFile } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
+import type { SqlSource, SqlFileInput, SqlFunctionFindings } from '#cli/types/checks/language/sql.ts';
 import { LINE_COMMENT, PARSED_DIALECTS, OUTPUT_PARAMETERS } from '#cli/config/checks/language/sql.ts';
-
-import type {
-    SqlSource,
-    SqlFileInput,
-    FunctionOption,
-    FunctionParameter,
-    SqlFunctionFindings,
-} from '#cli/types/checks/language/sql.ts';
 
 function sources(input: CheckInput): SqlSource[] {
     return input.files
@@ -48,15 +43,14 @@ function countNodes(value: unknown, isStatement: (key: string, child: unknown) =
 }
 
 // The argument of a `CREATE FUNCTION` option, by name.
-function functionOption(statement: SqlStatementView, name: string): FunctionOption['DefElem']['arg'] | undefined {
-    const options = (statement.fields['options'] ?? []) as FunctionOption[];
-    return options.find(({ DefElem: option }) => option.defname === name)?.DefElem.arg;
+function functionOption(statement: SqlStatementView<'CreateFunctionStmt'>, name: string): Node | undefined {
+    return nodesOf(statement.fields.options, 'DefElem').find((option) => option.defname === name)?.arg;
 }
 
 // The executable statements of an SQL function: its standard body, or the string body parsed on its own.
-async function sqlBody(statement: SqlStatementView): Promise<number> {
-    const body = functionOption(statement, 'as')?.List?.items[0]?.String.sval;
-    let tree: unknown = statement.fields['sql_body'];
+async function sqlBody(statement: SqlStatementView<'CreateFunctionStmt'>): Promise<number> {
+    const body = nodeOf(nodeOf(functionOption(statement, 'as'), 'List')?.items?.[0], 'String')?.sval;
+    let tree: Node | ParseResult | undefined = statement.fields.sql_body;
     if (body !== undefined) {
         const parsedBody = await parse(body);
         if (parsedBody.error !== undefined)
@@ -69,13 +63,13 @@ async function sqlBody(statement: SqlStatementView): Promise<number> {
 // The executable statements of a function body, or undefined for a language this check does not read.
 async function bodyStatements(
     parsed: SqlFile,
-    statement: SqlStatementView,
+    statement: SqlStatementView<'CreateFunctionStmt'>,
     index: number,
 ): Promise<number | undefined> {
-    const language = functionOption(statement, 'language')?.String?.sval;
+    const language = nodeOf(functionOption(statement, 'language'), 'String')?.sval;
     if (language === 'plpgsql') {
         const end = parsed.statements[index + 1]?.start ?? parsed.source.length;
-        return countNodes(await parsePlpgsql(parsed.source.slice(statement.start, end)), isProceduralStatement);
+        return countNodes(await parsePlPgSQL(parsed.source.slice(statement.start, end)), isProceduralStatement);
     }
     return language === 'sql' ? sqlBody(statement) : undefined;
 }
@@ -83,15 +77,15 @@ async function bodyStatements(
 // The findings of one `CREATE FUNCTION` statement, and whether the function is trivial.
 async function functionFindings(
     analysis: SqlFileInput,
-    statement: SqlStatementView,
+    statement: SqlStatementView<'CreateFunctionStmt'>,
     index: number,
 ): Promise<SqlFunctionFindings> {
     const { input, source, threshold, maximum, parsed } = analysis;
     const at = { file: source.path, ...positionAt(source.text, statement.start) };
     const findings: Finding[] = [];
-    const parameters = (statement.fields['parameters'] ?? []) as FunctionParameter[];
+    const parameters = nodesOf(statement.fields.parameters, 'FunctionParameter');
     const count = parameters.filter(
-        ({ FunctionParameter: parameter }) => !OUTPUT_PARAMETERS.has(parameter.mode),
+        (parameter) => parameter.mode === undefined || !OUTPUT_PARAMETERS.has(parameter.mode),
     ).length;
     if (maximum !== undefined && count > maximum)
         findings.push(
@@ -130,28 +124,6 @@ async function fileFindings(analysis: SqlFileInput): Promise<Finding[]> {
                 'This file contains only trivial functions. Move them to their owner.',
             ),
         );
-    return findings;
-}
-
-/**
- * One finding for each file Postgres refuses to parse. Another dialect has no parser here, so its files pass.
- * @param input the check input
- * @returns the findings
- */
-export async function syntax(input: CheckInput): Promise<Finding[]> {
-    const sqlfluff = input.view.options('tools.sqlfluff');
-    const dialect = sqlfluff['dialect'] as string;
-    if (!PARSED_DIALECTS.has(dialect)) return [];
-    // The paths SQLFluff leaves out, such as templates with placeholders, are no SQL the parser reads either.
-    const excluded = ((sqlfluff['exclude'] as PathAllowance[] | undefined) ?? []).flatMap((entry) => entry.paths);
-    const isExcluded = pathMatcher(excluded);
-    const findings: Finding[] = [];
-    for (const source of sources(input).filter((entry) => !isExcluded(entry.path))) {
-        const parsed = await parseSqlFile(source.text, input.reads);
-        if (parsed.error === undefined) continue;
-        const { text, line, column } = parsed.error;
-        findings.push(findingAt(input, { file: source.path, line, column }, 'syntax', text));
-    }
     return findings;
 }
 

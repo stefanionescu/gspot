@@ -1,5 +1,6 @@
 // The SQL parser in a fresh process: concurrent parses each keep their own result.
 import { test, expect } from 'bun:test';
+import { parse } from '#cli/parsers/sql/pg.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 
@@ -16,4 +17,10 @@ test('concurrent SQL parsing returns independent results in a fresh process', ()
         { text: `syntax error at or near "${TYPO.select}"`, offset: 0 },
         null,
     ]);
+});
+
+test('empty SQL has no statements', async () => {
+    const result = await parse('');
+    expect(result.error).toBeUndefined();
+    expect(result.tree?.stmts ?? []).toStrictEqual([]);
 });

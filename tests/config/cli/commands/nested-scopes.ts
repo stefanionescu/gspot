@@ -1,4 +1,5 @@
-export const NESTED_SCOPES_POLICY = `configurations = ["format"]
+export const NESTED_SCOPES_POLICY = `level = "all"
+configurations = ["format"]
 [limits]
 file_lines = 250
 [format]

@@ -2,7 +2,7 @@
 title = "SQL"
 requires = ["format", "structure"]
 recommends = ["naming"]
-description = "SQLFluff checks layout and style in the project dialect. The PostgreSQL parser checks postgres syntax. At all, SQL checks line comments, file length, and PostgreSQL function structure."
+description = "SQLFluff checks layout and style in the project dialect. At all, SQL checks line comments, file length, and PostgreSQL function structure."
 
 [detect]
 extensions = [".sql", ".pgsql", ".psql"]
@@ -61,16 +61,6 @@ output = {format = "json", children = "violations", fields = {file = "filepath",
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database configuration names."
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
 help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule <code> --reason \"<why>\"."
-
-[[check]]
-name = "syntax"
-title = "Check SQL syntax"
-example = "The statement `SELECT FROM;` lacks a valid select expression and reports a parser error. Replace it with the intended valid query, such as `SELECT 1;`."
-level = "recommended"
-stage = "commit"
-summary = "Parses every SQL file with the parser Postgres itself uses, when the dialect is postgres."
-why = "A migration that does not parse fails at deploy, halfway through a release."
-help = "Correct the statement at the line and column the message names."
 
 [[check]]
 name = "file-lines"

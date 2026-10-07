@@ -1,18 +1,18 @@
 // The statements of one SQL file, each with its kind, its fields and where it starts in the text.
+import type { RawStmt } from '@pgsql/types';
 import { memo } from '#cli/platform/memo.ts';
 import { parse } from '#cli/parsers/sql/pg.ts';
 import { codePoints } from '#cli/platform/text.ts';
 import { maskPsqlSyntax } from '#cli/parsers/sql/lexer.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#cli/types/parsers/sql.ts';
+import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
 const SQL_MEMO = { create: () => new Map<string, Promise<SqlFile>>() };
 
-function statementView(bytes: Buffer, statement: SqlStatement): SqlStatementView {
-    const [kind = ''] = Object.keys(statement.stmt);
+function statementView(bytes: Buffer, statement: RawStmt): SqlStatementView[] {
+    if (statement.stmt === undefined) return [];
     const start = bytes.subarray(0, statement.stmt_location ?? 0).toString('utf8').length;
-    const fields = statement.stmt[kind];
-    return { kind, fields: fields === undefined ? {} : (fields as SqlNode), start };
+    return Object.entries(statement.stmt).map(([kind, fields]) => ({ kind, fields, start }) as SqlStatementView);
 }
 
 /**
@@ -35,7 +35,7 @@ async function parseSqlText(text: string): Promise<SqlFile> {
     return {
         source,
         variables,
-        statements: statements.map((statement) => statementView(bytes, statement)),
+        statements: statements.flatMap((statement) => statementView(bytes, statement)),
         error: undefined,
     };
 }

@@ -1,26 +1,21 @@
 // The access checks of the schema the migrations build: row security, grants, and definer functions.
-import { nodesOf } from '#cli/parsers/sql/pg.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { nodeOf, nodesOf } from '#cli/parsers/sql/pg.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
-import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 
 function isLooseDefiner(statement: SqlStatementView): boolean {
     if (statement.kind !== 'CreateFunctionStmt') return false;
-    const options = nodesOf(statement.fields['options'], 'DefElem');
+    const options = nodesOf(statement.fields.options, 'DefElem');
     const isDefiner = options.some(
-        (option) =>
-            option['defname'] === 'security' &&
-            ((option['arg'] as SqlNode | undefined)?.['Boolean'] as SqlNode | undefined)?.['boolval'] === true,
+        (option) => option.defname === 'security' && nodeOf(option.arg, 'Boolean')?.boolval === true,
     );
     const hasPath = options.some(
-        (option) =>
-            option['defname'] === 'set' &&
-            ((option['arg'] as SqlNode | undefined)?.['VariableSetStmt'] as SqlNode | undefined)?.['name'] ===
-                'search_path',
+        (option) => option.defname === 'set' && nodeOf(option.arg, 'VariableSetStmt')?.name === 'search_path',
     );
     return isDefiner && !hasPath;
 }
@@ -80,8 +75,8 @@ export function grants(input: CheckInput): Promise<Finding[]> {
         (statement: SqlStatementView): boolean => {
             return (
                 statement.kind === 'GrantStmt' &&
-                statement.fields['is_grant'] === true &&
-                statement.fields['privileges'] === undefined
+                statement.fields.is_grant === true &&
+                statement.fields.privileges === undefined
             );
         },
     );

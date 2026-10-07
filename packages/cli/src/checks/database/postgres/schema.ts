@@ -1,6 +1,6 @@
-import type { SqlNode } from '#cli/types/parsers/sql.ts';
-import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/pg.ts';
-import type { Schema, Location, Migration, SchemaState, StatementReader } from '#cli/types/checks/database/postgres.ts';
+import type { RangeVar, Constraint } from '@pgsql/types';
+import type { SqlStatementReaders } from '#cli/types/parsers/sql.ts';
+import { nodeOf, nodesOf, partsOf, readStatement } from '#cli/parsers/sql/pg.ts';
 
 import {
     KEY_KINDS,
@@ -8,11 +8,18 @@ import {
     SCHEMA_PART_INDEX,
     CONSTRAINT_SUFFIXES,
 } from '#cli/config/checks/database/postgres.ts';
+import type {
+    Schema,
+    Location,
+    Migration,
+    SchemaState,
+    StatementReader,
+    SchemaAlterations,
+} from '#cli/types/checks/database/postgres.ts';
 
-function qualifyRelation(relation: unknown): string {
-    if (relation === undefined || relation === null) return `${PUBLIC_SCHEMA}.`;
-    const node = relation as SqlNode;
-    return `${textOf(node['schemaname']) || PUBLIC_SCHEMA}.${textOf(node['relname'])}`;
+function qualifyRelation(relation: RangeVar | undefined): string {
+    const schema = relation?.schemaname ?? '';
+    return `${schema === '' ? PUBLIC_SCHEMA : schema}.${relation?.relname ?? ''}`;
 }
 
 function forgetTable(state: SchemaState, table: string): void {
@@ -28,8 +35,8 @@ function qualifyParts(parts: string[]): string {
 }
 
 // The name Postgres gives an unnamed constraint: the table, the key columns except for a primary key, and a suffix.
-function constraintName(node: SqlNode, table: string, kind: string, keys: string[]): string {
-    const declared = textOf(node['conname']);
+function constraintName(node: Constraint, table: string, kind: string, keys: string[]): string {
+    const declared = node.conname ?? '';
     if (declared !== '') return declared;
     const tableName = table.slice(table.indexOf('.') + 1);
     const suffix = CONSTRAINT_SUFFIXES[kind] ?? 'fkey';
@@ -52,10 +59,10 @@ function recordForeignKey(state: SchemaState, at: Location, name: string, column
 
 // One constraint of a table: a foreign key is recorded, and a primary or unique key counts as an index on its first
 // column.
-function recordConstraint(state: SchemaState, at: Location, node: SqlNode, column?: string): void {
-    const kind = textOf(node['contype']);
-    const keys = column === undefined ? partsOf(node['keys']) : [column];
-    const columns = column === undefined ? partsOf(node['fk_attrs']) : [column];
+function recordConstraint(state: SchemaState, at: Location, node: Constraint, column?: string): void {
+    const kind = node.contype ?? '';
+    const keys = column === undefined ? partsOf(node.keys) : [column];
+    const columns = column === undefined ? partsOf(node.fk_attrs) : [column];
     const isForeign = kind === 'CONSTR_FOREIGN';
     const name = constraintName(node, at.table, kind, isForeign ? columns : keys);
     const [first] = keys;
@@ -64,47 +71,47 @@ function recordConstraint(state: SchemaState, at: Location, node: SqlNode, colum
     if (isForeign) recordForeignKey(state, at, name, columns);
 }
 
-const readCreateTable: StatementReader = (state, migration, statement) => {
-    const table = qualifyRelation(statement.fields['relation']);
-    if (state.tables.has(table) && statement.fields['if_not_exists'] === true) return;
+const readCreateTable: StatementReader<'CreateStmt'> = (statement, state, migration) => {
+    const table = qualifyRelation(statement.fields.relation);
+    if (state.tables.has(table) && statement.fields.if_not_exists === true) return;
     forgetTable(state, table);
     const at = { migration, statement, table };
     state.tables.set(table, { path: migration.path, offset: statement.start, text: migration.text });
-    const columns = nodesOf(statement.fields['tableElts'], 'ColumnDef');
+    const columns = nodesOf(statement.fields.tableElts, 'ColumnDef');
     const inColumns = columns.flatMap((column) =>
-        nodesOf(column['constraints'], 'Constraint').map((node) => ({ node, column: textOf(column['colname']) })),
+        nodesOf(column.constraints, 'Constraint').map((node) => ({ node, column: column.colname ?? '' })),
     );
     for (const entry of inColumns) recordConstraint(state, at, entry.node, entry.column);
-    const inTable = nodesOf(statement.fields['tableElts'], 'Constraint');
+    const inTable = nodesOf(statement.fields.tableElts, 'Constraint');
     for (const node of inTable) recordConstraint(state, at, node);
 };
 
 // What each `ALTER TABLE` command changes in the state.
-const ALTERATIONS: Record<string, (state: SchemaState, at: Location, command: SqlNode) => void> = {
+const ALTERATIONS: SchemaAlterations = {
     AT_EnableRowSecurity: (state, at) => state.secured.add(at.table),
     AT_DisableRowSecurity: (state, at) => state.secured.delete(at.table),
     AT_DropConstraint: (state, at, command) => {
-        const name = textOf(command['name']);
+        const name = command.name ?? '';
         state.constraints.get(at.table)?.delete(name);
         state.indexes = state.indexes.filter((index) => index.table !== at.table || index.constraint !== name);
     },
     AT_AddConstraint: (state, at, command) => {
-        const node = (command['def'] as SqlNode | undefined)?.['Constraint'] as SqlNode | undefined;
+        const node = nodeOf(command.def, 'Constraint');
         if (node !== undefined) recordConstraint(state, at, node);
     },
 };
 
-const readAlterTable: StatementReader = (state, migration, statement) => {
-    const at: Location = { migration, statement, table: qualifyRelation(statement.fields['relation']) };
-    for (const command of nodesOf(statement.fields['cmds'], 'AlterTableCmd'))
-        ALTERATIONS[String(command['subtype'])]?.(state, at, command);
+const readAlterTable: StatementReader<'AlterTableStmt'> = (statement, state, migration) => {
+    const at: Location = { migration, statement, table: qualifyRelation(statement.fields.relation) };
+    for (const command of nodesOf(statement.fields.cmds, 'AlterTableCmd'))
+        if (command.subtype !== undefined) ALTERATIONS[command.subtype]?.(state, at, command);
 };
 
 // A dropped table leaves the state, so the checks ask nothing of a table the schema does not hold.
-const readDrop: StatementReader = (state, _migration, statement) => {
-    for (const item of nodesOf(statement.fields['objects'], 'List')) {
-        const parts = partsOf(item['items']);
-        switch (statement.fields['removeType']) {
+const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
+    for (const item of nodesOf(statement.fields.objects, 'List')) {
+        const parts = partsOf(item.items);
+        switch (statement.fields.removeType) {
             case 'OBJECT_TABLE': {
                 forgetTable(state, qualifyParts(parts));
                 break;
@@ -121,26 +128,29 @@ const readDrop: StatementReader = (state, _migration, statement) => {
                 );
                 break;
             }
+            default: {
+                break;
+            }
         }
     }
 };
 
-const READERS: Record<string, StatementReader> = {
+const READERS: SqlStatementReaders<void, [SchemaState, Migration]> = {
     DropStmt: readDrop,
     CreateStmt: readCreateTable,
     AlterTableStmt: readAlterTable,
-    CreatePolicyStmt: (state, _migration, statement) => {
-        const table = qualifyRelation(statement.fields['table']);
+    CreatePolicyStmt: (statement, state) => {
+        const table = qualifyRelation(statement.fields.table);
         const policies = state.policies.get(table) ?? new Set<string>();
-        policies.add(textOf(statement.fields['policy_name']));
+        policies.add(statement.fields.policy_name ?? '');
         state.policies.set(table, policies);
     },
-    IndexStmt: (state, _migration, statement) => {
-        const [first] = nodesOf(statement.fields['indexParams'], 'IndexElem');
-        const column = textOf(first?.['name']);
+    IndexStmt: (statement, state) => {
+        const [first] = nodesOf(statement.fields.indexParams, 'IndexElem');
+        const column = first?.name ?? '';
         if (column === '') return;
-        const table = qualifyRelation(statement.fields['relation']);
-        state.indexes.push({ table, name: textOf(statement.fields['idxname']), column, constraint: '' });
+        const table = qualifyRelation(statement.fields.relation);
+        state.indexes.push({ table, name: statement.fields.idxname ?? '', column, constraint: '' });
     },
 };
 // The state the checks read: policed tables, every foreign key, and the indexed columns of each table.
@@ -170,6 +180,6 @@ export function buildSchema(migrations: Migration[]): Schema {
         secured: new Set(),
     };
     for (const migration of migrations)
-        for (const statement of migration.statements) READERS[statement.kind]?.(state, migration, statement);
+        for (const statement of migration.statements) readStatement(statement, READERS, state, migration);
     return summarize(state);
 }

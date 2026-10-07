@@ -1,3 +1,5 @@
+import type { Node, ParseResult } from '@pgsql/types';
+
 /** Source span and kind of one PostgreSQL literal or psql client token. */
 export type SqlToken = {
     start: number;
@@ -11,36 +13,23 @@ export type SqlRange = { start: number; end: number };
 /** SQL parser input with client commands masked and substitution locations retained. */
 export type PreparedSql = { text: string; variables: SqlRange[] };
 
-/** One statement of a file, with where it starts and how long it is, in bytes. */
-export type SqlStatement = { stmt: SqlNode; stmt_location?: number; stmt_len?: number };
-
-/** One node of the parse tree: a table of one key, the node kind, whose value holds the fields. */
-export type SqlNode = Record<string, unknown>;
-
-/** The part of the Emscripten module the parser wrapper calls. */
-export type PgModule = {
-    lengthBytesUTF8: (text: string) => number;
-    stringToUTF8: (text: string, pointer: number, size: number) => void;
-    UTF8ToString: (pointer: number) => string;
-    getValue: (pointer: number, kind: 'i32') => number;
-    _malloc: (size: number) => number;
-    _free: (pointer: number) => void;
-    _wasm_parse_plpgsql: (query: number) => number;
-    _wasm_free_string: (result: number) => void;
-    _wasm_parse_query_raw: (query: number) => number;
-    _wasm_free_parse_result: (result: number) => void;
-};
-
-/** The parse tree of one file. */
-export type SqlTree = { version: number; stmts?: SqlStatement[] };
+/** PostgreSQL payload fields indexed by their native node kind. */
+export type SqlNodeFields = { [Entry in Node as keyof Entry]: Entry[keyof Entry] };
 
 /** The result of a parse: the tree, or the error. */
 export type SqlParse =
-    | { tree: SqlTree; error: undefined }
+    | { tree: ParseResult; error: undefined }
     | { tree: undefined; error: { text: string; offset: number } };
 
-/** One statement as the checks read it: the node kind, its fields, and the index of its first keyword. */
-export type SqlStatementView = { kind: string; fields: SqlNode; start: number };
+/** A statement retains the relation between its native kind and payload. */
+export type SqlStatementView<Kind extends keyof SqlNodeFields = keyof SqlNodeFields> = {
+    [Name in Kind]: { kind: Name; fields: SqlNodeFields[Name]; start: number };
+}[Kind];
+
+/** Kind-specific readers preserve native payload types and each caller's required context. */
+export type SqlStatementReaders<Result, Arguments extends unknown[] = []> = {
+    [Kind in keyof SqlNodeFields]?: (statement: SqlStatementView<Kind>, ...args: Arguments) => Result;
+};
 
 /** A parsed file: the statements, or the error with its line and column. */
 export type SqlFile = {
@@ -49,9 +38,3 @@ export type SqlFile = {
     statements: SqlStatementView[];
     error: { text: string; line: number; column: number } | undefined;
 };
-
-/** One process owns the asynchronous PostgreSQL parser initialization. */
-export type PgRuntime = { module: Promise<PgModule> | undefined };
-
-/** A native parse operation using one allocated input string. */
-export type PgCall<Result> = (query: number) => Result;

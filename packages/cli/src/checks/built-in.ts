@@ -76,6 +76,7 @@ import { importComments as pythonImportComments } from '#cli/checks/language/pyt
 import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { sleeps, disabled, recording, xctestCoverage, xctestReferences } from '#cli/checks/tool/xctest.ts';
 import { sitemap, purgecss, siteSize, brokenLinks, htmlValidate } from '#cli/checks/general/site/output.ts';
+import { fileLines as sqlFileLines, trivialFunctions as sqlTrivialFunctions } from '#cli/checks/language/sql.ts';
 import { relations as drizzleRelations, migrations as drizzleMigrationsFresh } from '#cli/checks/library/drizzle.ts';
 import { envFiles, trufflehog, envTemplate, gitleaksHistory, gitleaksBaseline } from '#cli/checks/general/secrets.ts';
 import { privateBeforePublic as swiftPrivateBeforePublic } from '#cli/checks/language/swift/private-before-public.ts';
@@ -93,11 +94,6 @@ import {
     trivialFunctions as pythonTrivialFunctions,
     placeholderDocstrings as pythonPlaceholderDocstrings,
 } from '#cli/checks/language/python/functions.ts';
-import {
-    syntax as sqlSyntax,
-    fileLines as sqlFileLines,
-    trivialFunctions as sqlTrivialFunctions,
-} from '#cli/checks/language/sql.ts';
 import {
     headers as cloudflareHeaders,
     wrangler as cloudflareWrangler,
@@ -232,7 +228,6 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'postgres/migrations-frozen': { run: runBuiltInCheck(migrationsFrozen) },
     'postgres/migration-docs': { run: runBuiltInCheck(migrationDocs) },
     'sql/trivial-functions': { run: runBuiltInCheck(sqlTrivialFunctions) },
-    'sql/syntax': { run: runBuiltInCheck(sqlSyntax) },
     'sql/file-lines': { run: runBuiltInCheck(sqlFileLines) },
     'docker/dockerignore': { run: runBuiltInCheck(dockerignore) },
     'docker/trivy-image': { run: runBuiltInCheck(trivyImage) },

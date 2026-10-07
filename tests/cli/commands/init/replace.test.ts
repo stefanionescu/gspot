@@ -11,6 +11,7 @@ import { writeSetup } from '#cli/commands/init/write.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { PYPROJECT } from '#tests/config/samples/python/source.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
@@ -123,10 +124,15 @@ test('an ignore file inside a scope is replaced at init, and the scoped check ru
     const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
     expect(policy).not.toContain('templates');
     expect(existsSync(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
+    const selected = await runGspot(sandbox.path, ['set', 'level', 'all']);
+    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const dialect = await runGspot(sandbox.path, ['set', 'tools.sqlfluff.dialect', 'postgres', '--scope', 'db']);
     expect(dialect.code, dialect.stdout + dialect.stderr).toBe(0);
-    const syntax = await runGspot(sandbox.path, ['check', '--only', 'sql/syntax']);
-    expect(syntax.code).toBe(0);
+    const checked = await runGspot(sandbox.path, ['check', '--only', 'sql/trivial-functions', '--json']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+        { check: 'sql/trivial-functions', scope: 'db', status: 'passed', fileCount: 1 },
+    ]);
 });
 
 test.each([

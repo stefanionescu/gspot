@@ -39,11 +39,17 @@ test('nested scopes inherit parent configurations and settings and check each fi
     expect(new Set(checks[1]?.findings.map((finding) => finding.file))).toStrictEqual(new Set(['api/worker/entry.sh']));
     writeFileSync(join(directory.path, 'api/entry.sh'), 'echo example\n');
     writeFileSync(join(directory.path, 'api/worker/entry.sh'), 'echo example\n');
-    const corrected = await runGspot(directory.path, ['check', '--only', 'bash/syntax', 'sql/syntax', '--json']);
+    const corrected = await runGspot(directory.path, [
+        'check',
+        '--only',
+        'bash/syntax',
+        'sql/trivial-functions',
+        '--json',
+    ]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
         { check: 'bash/syntax', scope: 'api', status: 'passed', findings: [] },
         { check: 'bash/syntax', scope: 'api/worker', status: 'passed', findings: [] },
-        { check: 'sql/syntax', scope: 'api/worker', status: 'passed', findings: [] },
+        { check: 'sql/trivial-functions', scope: 'api/worker', status: 'passed', findings: [] },
     ]);
 });

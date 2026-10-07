@@ -11,7 +11,8 @@ import { TEXT_FIX, TEXT_CHECK } from '#tests/config/cli/execution/fixers-passes.
 
 test('fix verification replaces read source bytes and preserves unrelated authored files', async () => {
     await using sandbox = await testdir();
-    const policy = `configurations = ["sql"]
+    const policy = `level = "all"
+configurations = ["sql"]
 [tools.sqlfluff]
 dialect = "postgres"
 [[check]]
@@ -25,12 +26,12 @@ format = "none"
 `;
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,
-        'query.sql': 'select from;\n',
+        'query.sql': 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n',
         'notes.txt': 'Authored notes.\n',
         'correct.cjs': String.raw`const fs = require("node:fs"); for (const path of process.argv.slice(2)) fs.writeFileSync(path, "select 1;\n");`,
     });
     const session = await openSession(sandbox.path);
-    const options = buildRunOptions({ only: ['sql/syntax', 'project/correct-sql'] });
+    const options = buildRunOptions({ only: ['sql/trivial-functions', 'project/correct-sql'] });
     const defect = await executeRun(session, options);
     expect(defect.report.exitCode).toBe(1);
     expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
@@ -39,7 +40,7 @@ format = "none"
     const corrected = await executeRun(session, { ...options, fix: true });
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
-        { check: 'sql/syntax', status: 'passed', findings: [] },
+        { check: 'sql/trivial-functions', status: 'passed', findings: [] },
         { check: 'project/correct-sql', status: 'passed', findings: [] },
     ]);
     expect(await Bun.file(join(sandbox.path, 'query.sql')).text()).toBe('select 1;\n');

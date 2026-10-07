@@ -112,29 +112,6 @@ test('SQL function analysis keeps quoted bodies strict and preserves psql source
     expect(await Bun.file(`${sandbox.path}/functions.sql`).text()).toBe(corrected);
 });
 
-test('the default ANSI dialect leaves PostgreSQL syntax and function parsing to its own dialect checker', async () => {
-    await using sandbox = await testdir();
-    const source = 'CREATE TABLE ;';
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['sql'], { level: 'all' }),
-        'query.sql': source,
-    });
-    const options = buildRunOptions({ only: ['sql/syntax', 'sql/trivial-functions'] });
-    const delegated = await executeRun(await openSession(sandbox.path), options);
-    expect(delegated.report.checks.map((check) => check.status)).toStrictEqual(['passed', 'passed']);
-    expect(delegated.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
-    await Bun.write(
-        `${sandbox.path}/gspot.toml`,
-        buildPolicy(['sql'], { tables: '[tools.sqlfluff]\ndialect = "postgres"\n', level: 'all' }),
-    );
-    const postgres = await executeRun(await openSession(sandbox.path), options);
-    expect(postgres.report.checks.find((check) => check.check === 'sql/syntax')).toMatchObject({
-        status: 'failed',
-        findings: [{ file: 'query.sql', rule: 'syntax' }],
-    });
-    expect(await Bun.file(`${sandbox.path}/query.sql`).text()).toBe(source);
-});
-
 test.each(FOREIGN_DIALECT_CASES)('the $dialect dialect bypasses PostgreSQL parsing', async ({ dialect, source }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -143,12 +120,12 @@ test.each(FOREIGN_DIALECT_CASES)('the $dialect dialect bypasses PostgreSQL parsi
             level: 'all',
         }),
         'query.sql': source,
+        'function.sql': 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n',
     });
-    const options = buildRunOptions({ only: ['sql/syntax', 'sql/trivial-functions'] });
+    const options = buildRunOptions({ only: ['sql/trivial-functions'] });
     const delegated = await executeRun(await openSession(sandbox.path), options);
     expect(delegated.report.exitCode).toBe(0);
     expect(delegated.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
-        { check: 'sql/syntax', status: 'passed', findings: [] },
         { check: 'sql/trivial-functions', status: 'passed', findings: [] },
     ]);
     await Bun.write(
@@ -157,10 +134,17 @@ test.each(FOREIGN_DIALECT_CASES)('the $dialect dialect bypasses PostgreSQL parsi
     );
     const postgres = await executeRun(await openSession(sandbox.path), options);
     expect(postgres.report.exitCode).toBe(1);
-    expect(postgres.report.checks.find(({ check }) => check === 'sql/syntax')).toMatchObject({
-        status: 'failed',
-        findings: [{ file: 'query.sql', rule: 'syntax' }],
-    });
+    expect(postgres.report.checks).toMatchObject([
+        {
+            check: 'sql/trivial-functions',
+            status: 'failed',
+            fileCount: 2,
+            findings: [
+                { file: 'function.sql', rule: 'trivial-function' },
+                { file: 'function.sql', rule: 'trivial-file' },
+            ],
+        },
+    ]);
 });
 
 test('SQL function structure follows the coverage level and preserves reasoned parser exclusions', async () => {
@@ -172,12 +156,10 @@ test('SQL function structure follows the coverage level and preserves reasoned p
         'wrapper.sql': 'CREATE FUNCTION wrapper() RETURNS int LANGUAGE sql RETURN 1;\n',
         'template.sql': 'CREATE TABLE {{table}};\n',
     });
-    const options = buildRunOptions({ only: ['sql/syntax', 'sql/trivial-functions'] });
+    const options = buildRunOptions({ only: ['sql/trivial-functions'] });
     const recommended = await executeRun(await openSession(sandbox.path), options);
     expect(recommended.report.exitCode).toBe(0);
-    expect(recommended.report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-        { check: 'sql/syntax', status: 'passed' },
-    ]);
+    expect(recommended.report.checks).toStrictEqual([]);
     await Bun.write(`${sandbox.path}/gspot.toml`, buildPolicy(['sql'], { tables, level: 'all' }));
     const strict = await executeRun(await openSession(sandbox.path), options);
     expect(strict.report.exitCode).toBe(1);
@@ -187,8 +169,4 @@ test('SQL function structure follows the coverage level and preserves reasoned p
         { file: 'wrapper.sql', rule: 'trivial-function' },
         { file: 'wrapper.sql', rule: 'trivial-file' },
     ]);
-    expect(strict.report.checks.find(({ check }) => check === 'sql/syntax')).toMatchObject({
-        status: 'passed',
-        findings: [],
-    });
 });

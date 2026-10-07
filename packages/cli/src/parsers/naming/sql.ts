@@ -1,46 +1,46 @@
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { textOf, nodesOf, partsOf } from '#cli/parsers/sql/pg.ts';
 import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import type { SqlNamed, Identifier } from '#cli/types/parsers/naming.ts';
+import { nodesOf, partsOf, readStatement } from '#cli/parsers/sql/pg.ts';
 import { positionAt, parseSqlFile } from '#cli/parsers/sql/statements.ts';
-import type { SqlFile, SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
+import type { SqlFile, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
 
-function addedColumns(fields: SqlNode): SqlNamed[] {
-    return nodesOf(fields['cmds'], 'AlterTableCmd')
-        .filter((command) => command['subtype'] === 'AT_AddColumn')
+function addedColumns({ fields }: SqlStatementView<'AlterTableStmt'>): SqlNamed[] {
+    return nodesOf(fields.cmds, 'AlterTableCmd')
+        .filter((command) => command.subtype === 'AT_AddColumn')
         .flatMap((command) =>
-            nodesOf([command['def']], 'ColumnDef').map((column) => ({
+            nodesOf(command.def === undefined ? [] : [command.def], 'ColumnDef').map((column) => ({
                 category: 'columns',
-                name: textOf(column['colname']),
+                name: column.colname ?? '',
             })),
         );
 }
 
-const READERS: Record<string, (fields: SqlNode) => SqlNamed[]> = {
-    CreateSchemaStmt: (fields) => [{ category: 'schemas', name: textOf(fields['schemaname']) }],
-    CreateStmt: (fields) => [
-        { category: 'tables', name: textOf((fields['relation'] as SqlNode | undefined)?.['relname']) },
-        ...nodesOf(fields['tableElts'], 'ColumnDef').map((column) => ({
+const READERS: SqlStatementReaders<SqlNamed[]> = {
+    CreateSchemaStmt: ({ fields }) => [{ category: 'schemas', name: fields.schemaname ?? '' }],
+    CreateStmt: ({ fields }) => [
+        { category: 'tables', name: fields.relation?.relname ?? '' },
+        ...nodesOf(fields.tableElts, 'ColumnDef').map((column) => ({
             category: 'columns',
-            name: textOf(column['colname']),
+            name: column.colname ?? '',
         })),
     ],
-    ViewStmt: (fields) => [{ category: 'tables', name: textOf((fields['view'] as SqlNode | undefined)?.['relname']) }],
+    ViewStmt: ({ fields }) => [{ category: 'tables', name: fields.view?.relname ?? '' }],
     AlterTableStmt: addedColumns,
-    IndexStmt: (fields) => [{ category: 'indexes', name: textOf(fields['idxname']) }],
-    CreateTrigStmt: (fields) => [{ category: 'triggers', name: textOf(fields['trigname']) }],
-    CreatePolicyStmt: (fields) => [{ category: 'policies', name: textOf(fields['policy_name']) }],
-    CreateFunctionStmt: (fields) => [
-        { category: 'functions', name: partsOf(fields['funcname']).at(-1) ?? '' },
-        ...nodesOf(fields['parameters'], 'FunctionParameter').map((parameter) => ({
+    IndexStmt: ({ fields }) => [{ category: 'indexes', name: fields.idxname ?? '' }],
+    CreateTrigStmt: ({ fields }) => [{ category: 'triggers', name: fields.trigname ?? '' }],
+    CreatePolicyStmt: ({ fields }) => [{ category: 'policies', name: fields.policy_name ?? '' }],
+    CreateFunctionStmt: ({ fields }) => [
+        { category: 'functions', name: partsOf(fields.funcname).at(-1) ?? '' },
+        ...nodesOf(fields.parameters, 'FunctionParameter').map((parameter) => ({
             category: 'parameters',
-            name: textOf(parameter['name']),
+            name: parameter.name ?? '',
         })),
     ],
 };
 
 function identifiers(file: string, source: string, statement: SqlStatementView, parsed: SqlFile): Identifier[] {
-    const named = READERS[statement.kind]?.(statement.fields) ?? [];
+    const named = readStatement(statement, READERS) ?? [];
     let offset = statement.start;
     return named
         .filter((entry) => entry.name !== '')

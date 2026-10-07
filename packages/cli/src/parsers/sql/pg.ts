@@ -1,107 +1,71 @@
-// The Postgres parser: libpg-query compiled to WebAssembly, loaded from the package.
-import { wasmPath } from '#cli/platform/assets.ts';
-import createModule from 'libpg-query/wasm/libpg-query.js';
-import { POINTER_BYTES, ERROR_POSITION_OFFSET } from '#cli/config/parsers/sql.ts';
-import type { PgCall, SqlNode, SqlTree, PgModule, SqlParse, PgRuntime } from '#cli/types/parsers/sql.ts';
-
-const state: PgRuntime = { module: undefined };
-
-async function pgModule(): Promise<PgModule> {
-    if (state.module !== undefined) return state.module;
-    state.module = createModule({ locateFile: () => wasmPath('libpg-query.wasm') });
-    return state.module;
-}
-
-function readParse(module: PgModule, result: number): SqlParse {
-    const treeAt = module.getValue(result, 'i32');
-    const errorAt = module.getValue(result + POINTER_BYTES + POINTER_BYTES, 'i32');
-    if (errorAt !== 0) {
-        const textAt = module.getValue(errorAt, 'i32');
-        const position = module.getValue(errorAt + ERROR_POSITION_OFFSET, 'i32');
-        return {
-            tree: undefined,
-            error: {
-                text: textAt === 0 ? 'The statement does not parse.' : module.UTF8ToString(textAt),
-                offset: Math.max(position - 1, 0),
-            },
-        };
-    }
-    return { tree: JSON.parse(module.UTF8ToString(treeAt)) as SqlTree, error: undefined };
-}
-
-// Keep the allocated UTF-8 input alive for either parser and release it even when the native call fails.
-function useCString<Result>(module: PgModule, text: string, call: PgCall<Result>): Result {
-    const size = module.lengthBytesUTF8(text) + 1;
-    const query = module._malloc(size);
-    try {
-        module.stringToUTF8(text, query, size);
-        return call(query);
-    } finally {
-        module._free(query);
-    }
-}
+// SQL payloads use PostgreSQL's native node union; procedural output has a separate external shape.
+import type { Node } from '@pgsql/types';
+import { SqlError, parse as parseSql } from 'libpg-query';
+import type { SqlParse, SqlNodeFields, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
 
 /**
- * Parses SQL text as Postgres reads it.
+ * Parses SQL text and retains syntax diagnostics without hiding parser-loading failures.
  * @param text the SQL
- * @returns the parse tree, or the error with the Unicode character offset it points at
+ * @returns the tree, or its zero-based Unicode diagnostic offset
  */
 export async function parse(text: string): Promise<SqlParse> {
-    const module = await pgModule();
-    return useCString(module, text, (query) => {
-        const result = module._wasm_parse_query_raw(query);
-        try {
-            return readParse(module, result);
-        } finally {
-            module._wasm_free_parse_result(result);
-        }
+    try {
+        // An empty SQL function body is valid input to PostgreSQL; the public API refuses an empty string.
+        return { tree: await parseSql(text === '' ? ' ' : text), error: undefined };
+    } catch (error) {
+        if (!(error instanceof SqlError) || error.sqlDetails === undefined) throw error;
+        return { tree: undefined, error: { text: error.message, offset: error.sqlDetails.cursorPosition } };
+    }
+}
+
+/**
+ * Selects one payload from PostgreSQL's one-key native node union.
+ * @param node the native node, when present
+ * @param kind the wanted native kind
+ * @returns that kind's typed fields, or nothing for a different kind
+ */
+export function nodeOf<Kind extends keyof SqlNodeFields>(
+    node: Node | undefined,
+    kind: Kind,
+): SqlNodeFields[Kind] | undefined {
+    if (node === undefined || !(kind in node)) return undefined;
+    return (node as Record<Kind, SqlNodeFields[Kind]>)[kind];
+}
+
+/**
+ * Selects the typed payloads of one kind from a native node list.
+ * @param list the optional node list
+ * @param kind the wanted native kind
+ * @returns the matching payloads in source order
+ */
+export function nodesOf<Kind extends keyof SqlNodeFields>(list: Node[] | undefined, kind: Kind): SqlNodeFields[Kind][] {
+    return (list ?? []).flatMap((node) => {
+        const fields = nodeOf(node, kind);
+        return fields === undefined ? [] : [fields];
     });
 }
 
 /**
- * Parse procedural bodies using the same PostgreSQL parser as SQL statements.
- * @param text the PL/pgSQL body
- * @returns the parse tree as the parser reports it
+ * Dispatches a correlated native statement to its typed reader.
+ * @param statement the parsed statement and source offset
+ * @param readers the readers indexed by native kind
+ * @param args the required reader context
+ * @returns the reader result, or nothing for a kind without a reader
  */
-export async function parsePlpgsql(text: string): Promise<unknown> {
-    const module = await pgModule();
-    return useCString(module, text, (query) => {
-        const result = module._wasm_parse_plpgsql(query);
-        try {
-            const value = module.UTF8ToString(result);
-            if (!value.startsWith('{')) throw new Error(value);
-            return JSON.parse(value) as unknown;
-        } finally {
-            module._wasm_free_string(result);
-        }
-    });
+export function readStatement<Result, Arguments extends unknown[]>(
+    statement: SqlStatementView,
+    readers: SqlStatementReaders<Result, Arguments>,
+    ...args: Arguments
+): Result | undefined {
+    const read = readers[statement.kind] as ((statement: SqlStatementView, ...args: Arguments) => Result) | undefined;
+    return read?.(statement, ...args);
 }
 
 /**
- * The nodes of one kind in a list field. Every item of a list is a table of one key, the node kind.
- * @param list the field, a list or nothing
- * @param kind the node kind wanted
- * @returns the fields of each node of that kind
+ * Reads the text parts of a qualified native name.
+ * @param list the optional list of String nodes
+ * @returns each part in source order
  */
-export function nodesOf(list: unknown, kind: string): SqlNode[] {
-    const items = Array.isArray(list) ? (list as SqlNode[]) : [];
-    return items.flatMap((item) => (item[kind] === undefined ? [] : [item[kind] as SqlNode]));
-}
-
-/**
- * The text of a field, or an empty string when the field holds something else.
- * @param field the field
- * @returns the text
- */
-export function textOf(field: unknown): string {
-    return typeof field === 'string' ? field : '';
-}
-
-/**
- * The texts of a list of String nodes, such as a qualified name.
- * @param list the field
- * @returns each part
- */
-export function partsOf(list: unknown): string[] {
-    return nodesOf(list, 'String').map((node) => textOf(node['sval']));
+export function partsOf(list: Node[] | undefined): string[] {
+    return nodesOf(list, 'String').map((node) => node.sval ?? '');
 }

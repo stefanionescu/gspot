@@ -58,10 +58,18 @@ test('a configuration below the Git root owns only its own project writes and ch
     expect(readFileSync(join(app, 'gspot.toml'), 'utf8')).toContain('level = "all"');
     writeFileSync(join(app, 'src/query.sql'), 'SELECT 2;\n');
     writeFileSync(join(directory.path, 'outside.sql'), 'SELECT FROM;\n');
-    const checked = await runGspot(source, ['check', '--changed', '--base', 'HEAD', '--only', 'sql/syntax', '--json']);
+    const checked = await runGspot(source, [
+        'check',
+        '--changed',
+        '--base',
+        'HEAD',
+        '--only',
+        'sql/trivial-functions',
+        '--json',
+    ]);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const checks = (JSON.parse(checked.stdout) as RunReport).checks;
     expect(checks.map(({ check, fileCount }) => ({ check, fileCount }))).toStrictEqual([
-        { check: 'sql/syntax', fileCount: 1 },
+        { check: 'sql/trivial-functions', fileCount: 1 },
     ]);
 });

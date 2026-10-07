@@ -113,7 +113,7 @@ test.skipIf(!isPosix)('built-in checks read edited SQL source when a session is 
     });
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({
-        only: ['sql/syntax', 'sql/trivial-functions', 'sql/file-lines'],
+        only: ['sql/trivial-functions', 'sql/file-lines'],
         isDryRun: true,
     });
     const clean = await executeRun(session, options);
@@ -123,8 +123,8 @@ test.skipIf(!isPosix)('built-in checks read edited SQL source when a session is 
             .filter((check) => check.scope === 'app')
             .map((check) => check.check)
             .toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual(['sql/file-lines', 'sql/syntax', 'sql/trivial-functions']);
-    await Bun.write(join(sandbox.path, path), 'select from;\n');
+    ).toStrictEqual(['sql/file-lines', 'sql/trivial-functions']);
+    await Bun.write(join(sandbox.path, path), 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n');
     const defect = await executeRun(session, options);
     expect(defect.report.exitCode).toBe(1);
     expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(containing({ file: path, line: 1 }));

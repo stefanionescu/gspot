@@ -1,6 +1,16 @@
-import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
+import type { AlterTableCmd } from '@pgsql/types';
+import type { SqlNodeFields, SqlStatementView } from '#cli/types/parsers/sql.ts';
 
-export type StatementReader = (state: SchemaState, migration: Migration, statement: SqlStatementView) => void;
+export type StatementReader<Kind extends keyof SqlNodeFields> = (
+    statement: SqlStatementView<Kind>,
+    state: SchemaState,
+    migration: Migration,
+) => void;
+
+/** Only PostgreSQL alteration kinds handled by schema state have a reader. */
+export type SchemaAlterations = Partial<
+    Record<NonNullable<AlterTableCmd['subtype']>, (state: SchemaState, at: Location, command: AlterTableCmd) => void>
+>;
 
 /** Where a fact was declared, so a finding points at it. */
 export type Declared = { path: string; offset: number; text: string };
