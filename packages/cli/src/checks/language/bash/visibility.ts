@@ -21,8 +21,8 @@ export const privatePrefix: Engine = async (input) => {
                 )
                 .map((candidate) => candidate.path)
                 .toSorted((a, b) => a.localeCompare(b));
-            const isPrivate = entry.name.startsWith('_');
-            if (isPrivate && callers.length > 0)
+            const isToolProject = entry.name.startsWith('_');
+            if (isToolProject && callers.length > 0)
                 return [
                     findingAt(
                         input,
@@ -31,7 +31,7 @@ export const privatePrefix: Engine = async (input) => {
                         `${entry.name} is private but ${callers.join(', ')} calls it.`,
                     ),
                 ];
-            if (!isPrivate && callers.length === 0)
+            if (!isToolProject && callers.length === 0)
                 return [
                     findingAt(
                         input,
@@ -56,8 +56,8 @@ export const privateBeforePublic: Engine = async (input) => {
         const findings = [];
         let isPublicSeen = false;
         for (const entry of file.functions) {
-            const isPrivate = entry.name.startsWith('_');
-            if (isPrivate && isPublicSeen)
+            const isToolProject = entry.name.startsWith('_');
+            if (isToolProject && isPublicSeen)
                 findings.push(
                     findingAt(
                         input,
@@ -66,7 +66,7 @@ export const privateBeforePublic: Engine = async (input) => {
                         `${entry.name} is private and sits below a public function.`,
                     ),
                 );
-            isPublicSeen ||= !isPrivate;
+            isPublicSeen ||= !isToolProject;
         }
         const main = file.functions.find((entry) => entry.name === 'main');
         const last = file.functions.at(-1);

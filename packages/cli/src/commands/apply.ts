@@ -1,13 +1,13 @@
 import { join, resolve } from 'node:path';
 import { findRoot } from '#cli/repository/root.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { printResult } from '#cli/output/messages.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { openSession } from '#cli/execution/session.ts';
 import type { CommandResult } from '#cli/types/output.ts';
 import type { Program } from '#cli/types/commands/program.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import { readVersionPin } from '#cli/lifecycle/version-pin.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';

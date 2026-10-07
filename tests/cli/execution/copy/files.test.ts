@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { prepareTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
 

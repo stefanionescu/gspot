@@ -1,5 +1,5 @@
 import { extensionsTagged } from '#cli/repository/tags.ts';
-import { isPrivateToolPath } from '#cli/repository/selectors.ts';
+import { isToolProjectPath } from '#cli/repository/selectors.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
@@ -14,7 +14,7 @@ export function structureSources(input: EngineInput): TrackedFile[] {
     return input.files.filter(
         (file) =>
             file.kind === 'source' &&
-            !isPrivateToolPath(file.path) &&
+            !isToolProjectPath(file.path) &&
             documents.every((extension) => !file.path.endsWith(extension)),
     );
 }

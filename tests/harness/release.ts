@@ -8,7 +8,7 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PublishedRelease } from '#automation/types/package.ts';
 
 /**
- * Initialize the consumer with Bash, Python, Swift, and automatic general checks, then install its private tools.
+ * Initialize the consumer with Bash, Python, Swift, and automatic general checks, then install its tool projects.
  * @param release the published release
  * @param installation the installed consumer
  * @returns the initialization report, after successful tool installation

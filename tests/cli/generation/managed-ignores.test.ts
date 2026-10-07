@@ -4,14 +4,13 @@ import { run } from '#cli/platform/spawn.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { gitignoreBlock } from '#cli/generation/outputs.ts';
 import { applyBlock } from '#cli/platform/managed-blocks.ts';
-import { parseManifest } from '#cli/parsers/configurations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { CONFIGURATION_TABLE } from '#tests/config/cli/generation/managed-ignores.ts';
+import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
 
 test.each([true, false])(
     'apply waits for Git before managing ignore entries with authored file=%s',

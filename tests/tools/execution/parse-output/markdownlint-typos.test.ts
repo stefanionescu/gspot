@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { checkedFindings } from '#cli/execution/output.ts';
 import { parseOutput } from '#cli/parsers/output/parse.ts';
 import { runTestCommand } from '#tests/harness/command.ts';

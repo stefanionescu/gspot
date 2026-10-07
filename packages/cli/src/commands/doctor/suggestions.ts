@@ -1,5 +1,6 @@
 import { emitAll } from '#cli/generation/outputs.ts';
 import { readPrefix } from '#cli/platform/source.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { duplicateMisePins } from '#cli/tools/mise.ts';
 import { getLintJobs } from '#cli/repository/survey.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
@@ -9,12 +10,11 @@ import { readManifests } from '#cli/repository/manifests.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import { detectUnselected } from '#cli/configurations/detect.ts';
+import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
-import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/doctor.ts';
 
 function recommendedConfigurations(session: Session, selected: Set<string>): Suggestions['recommended'] {

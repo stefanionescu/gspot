@@ -31,7 +31,7 @@ function runnerRows(answers: InitAnswers, everySelected: Manifest[]): InitPlan['
     if (python > 0)
         rows.push({
             path: TOOL_PYTHON_PROJECT,
-            note: `${String(python)} pinned Python tools; matching uv.lock and private environment`,
+            note: `${String(python)} pinned Python tools; matching uv.lock and tool environment`,
         });
     if (answers.runner === 'mise')
         rows.unshift({

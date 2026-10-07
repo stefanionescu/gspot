@@ -1,6 +1,6 @@
 // Build one check input from the session and inventory owned by its test.
 import { engineInput } from '#cli/execution/engines.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { EngineInputOptions } from '#tests/types/harness/input.ts';
 
@@ -11,7 +11,7 @@ import type { EngineInputOptions } from '#tests/types/harness/input.ts';
  * @param options the scope, source paths, and resources owned by the test
  * @returns the engine input
  */
-export function buildEngineInput(session: Session, check: string, options: EngineInputOptions = {}): EngineInput {
+export function buildEngineInput(session: ToolSession, check: string, options: EngineInputOptions = {}): EngineInput {
     const path = options.scope ?? '';
     const scope = session.scopes.find((entry) => entry.scope.path === path);
     if (scope === undefined) throw new Error(`The test repository has no scope at ${path || 'the root'}.`);

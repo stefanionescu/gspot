@@ -1,15 +1,15 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { statSync, chmodSync, readFileSync } from 'node:fs';
 import { typesFresh } from '#cli/checks/platform/supabase.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';

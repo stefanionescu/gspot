@@ -5,18 +5,19 @@ import { runText } from '#cli/output/reporter.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { note, warn } from '#cli/output/messages.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
+import type { StageFilter } from '#cli/types/planning.ts';
 import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
 import type { RevisionSource } from '#cli/types/execution/copy.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
 import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
 import { selectedPaths, refuseUnknownChecks } from '#cli/commands/check/selection.ts';
+import type { FixReport, RunReport, RunOptions } from '#cli/types/execution/runtime.ts';
 import type { Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
-import type { FixReport, RunReport, RunOptions, StageFilter } from '#cli/types/execution/runtime.ts';
 
 function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string {
     const failures = fixes.results.filter((result) => result.status === 'failed');
@@ -37,7 +38,7 @@ function reportFixes(fixes: FixReport, isDryRun: boolean, text: string): string 
 }
 
 // Warns when the configured hooks are not installed in the clone the report is published to.
-function warnAboutHooks(session: Session, revision: RevisionSource | undefined): void {
+function warnAboutHooks(session: ToolSession, revision: RevisionSource | undefined): void {
     if (revision?.content === 'commit') return;
     const hooks = hookStatus({
         policy: session.policyFiles.policy,
@@ -51,7 +52,7 @@ function warnAboutHooks(session: Session, revision: RevisionSource | undefined):
 
 // The changed set a run compares against: the revision's paths, the --changed ref, or nothing for a whole push.
 async function changedSet(
-    session: Session,
+    session: ToolSession,
     options: CheckOptions,
     signal: AbortSignal,
     revision: RevisionSource | undefined,
@@ -63,7 +64,7 @@ async function changedSet(
 
 // The staged set a run narrows to: the revision's, the index when asked, or nothing.
 async function stagedSet(
-    session: Session,
+    session: ToolSession,
     options: CheckOptions,
     signal: AbortSignal,
     revision: RevisionSource | undefined,
@@ -86,7 +87,7 @@ function buildResult(options: CheckOptions, outcome: Awaited<ReturnType<typeof e
 
 // What the run narrows to: the changed set, the staged set, and the stage.
 async function selectionsFor(
-    session: Session,
+    session: ToolSession,
     options: CheckOptions,
     signal: AbortSignal,
     revision: RevisionSource | undefined,
@@ -100,7 +101,7 @@ async function selectionsFor(
 
 // Runs the selected checks and formats their results.
 async function runSelected(
-    session: Session,
+    session: ToolSession,
     options: CheckOptions,
     signal: AbortSignal,
     revision: RevisionSource | undefined,

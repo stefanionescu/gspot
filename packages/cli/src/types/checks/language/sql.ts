@@ -1,5 +1,6 @@
 import type { SqlFile } from '#cli/types/parsers/sql.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 
 export type SqlSource = { path: string; text: string };
 

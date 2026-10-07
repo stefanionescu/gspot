@@ -1,4 +1,4 @@
-import type { Finding } from '#cli/types/execution/runtime.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
 import type { CheckCaseOutcome } from '#tests/types/harness/check-case.ts';
 

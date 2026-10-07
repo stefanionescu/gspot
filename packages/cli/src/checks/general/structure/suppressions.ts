@@ -4,6 +4,7 @@ import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { toolName } from '#cli/configurations/pins.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { isReasonAccepted } from '#cli/policy/errors/reasons.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
@@ -11,7 +12,7 @@ import type { SourceComment } from '#cli/types/parsers/comments.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { commentText, parseComments } from '#cli/parsers/comments.ts';
 import type { SuppressionForm } from '#cli/types/checks/general/structure.ts';
-import type { Finding, EngineInput, SuppressionComment } from '#cli/types/execution/runtime.ts';
+import type { EngineInput, SuppressionComment } from '#cli/types/execution/runtime.ts';
 
 // A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
 function reasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {

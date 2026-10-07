@@ -3,15 +3,16 @@ import { readSource } from '#cli/platform/source.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { sarifLogSchema } from '#cli/parsers/schema/sarif.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { CODEQL } from '#cli/config/checks/general/security.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { placeOf } from '#cli/checks/general/security/locations.ts';
 import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import type { AcceptedResult, CodeqlAnalysis, CodeqlLanguage } from '#cli/types/checks/general/security.ts';
 
 async function runCodeql(input: EngineInput, argv: string[], cwd: string): Promise<string> {

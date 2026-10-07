@@ -1,18 +1,16 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 import { GspotError } from '#cli/platform/errors.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
+import { HISTORY_CHECKS } from '#cli/config/planning.ts';
 import { hostPlatform } from '#cli/platform/environment.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import { isOutsideChildren } from '#cli/repository/selectors.ts';
-import { HISTORY_CHECKS } from '#cli/config/execution/runtime.ts';
-import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { filesFor, runsAtRoot, childScopes } from '#cli/planning/files.ts';
 import { toolPin, toolName, checkToolPin } from '#cli/configurations/pins.ts';
-import { filesFor, runsAtRoot, childScopes } from '#cli/execution/planning/files.ts';
-import type { Stage, PlanEntry, PlanInputs, PlanOptions } from '#cli/types/execution/planning.ts';
-import { skipFor, selectionStatus, restrictIgnoredPaths } from '#cli/execution/planning/skips.ts';
+import { skipFor, selectionStatus, restrictIgnoredPaths } from '#cli/planning/skips.ts';
+import type { Stage, Session, PlanEntry, PlanInputs, PlanOptions, PlannedCheck } from '#cli/types/planning.ts';
 
 function isStageWanted(filter: PlanOptions['stage'], stage: Stage): boolean {
     if (filter === 'any') return true;

@@ -4,7 +4,7 @@ import { rmSync, readFileSync } from 'node:fs';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
 import { textContaining } from '#tests/harness/expectations.ts';

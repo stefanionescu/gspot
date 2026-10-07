@@ -1,9 +1,9 @@
 // What each scope's view reads from nested tables: the rules an ignore turns off, and the value of each setting.
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { POLICY } from '#tests/config/cli/policy/scope-views.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 

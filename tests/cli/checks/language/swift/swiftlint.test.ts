@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { swiftlint } from '#cli/checks/language/swift/swiftlint.ts';
 

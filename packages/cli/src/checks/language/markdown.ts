@@ -1,7 +1,8 @@
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { parseBashSyntaxResult, findFenceSyntaxProblems } from '#cli/parsers/markdown.ts';
 
 /**

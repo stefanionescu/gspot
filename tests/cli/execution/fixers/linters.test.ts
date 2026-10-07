@@ -4,7 +4,7 @@ import { join, dirname } from 'node:path';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import type { RunOptions } from '#cli/types/execution/runtime.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

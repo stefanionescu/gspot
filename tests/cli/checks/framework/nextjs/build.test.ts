@@ -6,7 +6,7 @@ import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';

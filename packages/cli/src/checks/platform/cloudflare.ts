@@ -2,11 +2,12 @@ import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { portableSegments } from '#cli/platform/root/rules.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { COMPATIBILITY_DATE } from '#cli/config/checks/platform/cloudflare.ts';
 import { parseWrangler, headerProblems, redirectProblems } from '#cli/parsers/cloudflare.ts';
 

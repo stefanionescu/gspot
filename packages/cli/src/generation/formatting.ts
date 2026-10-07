@@ -3,10 +3,10 @@ import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { everyTable } from '#cli/policy/settings/entries.ts';
-import { UNREPRESENTABLE_SELECTOR } from '#cli/config/formatting.ts';
 import { NODE_MODULES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { byScopeDepth, expandedPaths } from '#cli/repository/selectors.ts';
 import type { Policy, FormatSettings } from '#cli/types/policy/settings.ts';
+import { UNREPRESENTABLE_SELECTOR } from '#cli/config/generation/formatting.ts';
 
 import type {
     ScopeFormat,

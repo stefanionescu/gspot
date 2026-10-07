@@ -4,7 +4,7 @@ import { rejects } from 'node:assert/strict';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { selectPush } from '#cli/repository/revisions/push.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';

@@ -3,11 +3,12 @@ import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { trivialText } from '#cli/parsers/statements.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { parse, parsePlpgsql } from '#cli/parsers/sql/pg.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { positionAt, parseSqlFile } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { LINE_COMMENT, PARSED_DIALECTS, OUTPUT_PARAMETERS } from '#cli/config/checks/language/sql.ts';
 
 import type {

@@ -1,12 +1,13 @@
 import type { z } from 'zod';
 import type { Drift } from '#cli/types/lifecycle/output.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { ToolSearch } from '#cli/types/tools/install.ts';
-import type { Session } from '#cli/types/execution/session.ts';
-import type { Stage, PlanOptions } from '#cli/types/execution/planning.ts';
-import type { ToolPin, Manifest, CheckSpec } from '#cli/types/configurations.ts';
-import type { resultSchema, findingSchema } from '#cli/parsers/schema/report.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
+import type { resultSchema } from '#cli/parsers/schema/report.ts';
+import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
+import type { PlanOptions, StageFilter, PlannedCheck } from '#cli/types/planning.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { ScopeView, PolicyFile, IgnoreEntry, ScopeSelection } from '#cli/types/policy/settings.ts';
 
@@ -22,19 +23,6 @@ export type FixResult = { check: string; changed: string[] } & (
 
 export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };
 
-export type PlannedCheck = {
-    commits?: string[];
-    scope: ScopeSelection;
-    spec: CheckSpec;
-    manifest?: Manifest;
-    files: TrackedFile[];
-    tool?: ToolPin;
-    skip?: { cause: RunReport['skips'][number]['cause']; note: string };
-    /** Changed paths absent from the readable tree that still trigger a project check. */
-    triggerPaths: string[];
-    messageFile?: string;
-};
-
 export type RunReportOptions = PlanOptions & {
     stage: StageFilter;
     onResult?: (result: CheckResult) => void;
@@ -46,14 +34,14 @@ export type RunReportOptions = PlanOptions & {
 
 export type Executable = {
     check: PlannedCheck;
-    run: (session: Session, planned: PlannedCheck, options?: CheckRunOptions) => Promise<CheckResult>;
+    run: (session: ToolSession, planned: PlannedCheck, options?: CheckRunOptions) => Promise<CheckResult>;
 };
 
 /** Selected staged paths and optional command or workspace supplied by a check. */
 export type CheckRunOptions = { staged?: Set<string>; command?: string[]; workspace?: string };
 
 export type Pass = {
-    session: Session;
+    session: ToolSession;
     options: RunOptions;
     staged: Set<string> | undefined;
     uses: Map<IgnoreEntry, IgnoreUse>;
@@ -116,7 +104,7 @@ export type RunReport = {
     ignores: { check: string; rule?: string; paths?: string[]; reason?: string; matched: number }[];
     skips: {
         check: string;
-        cause: 'level' | 'flag' | 'platform' | 'replaced' | 'setting' | 'condition' | 'ignore' | 'inputs';
+        cause: NonNullable<PlannedCheck['skip']>['cause'];
     }[];
     /** How many changed files the run left out: the unstaged ones when it read the index. */
     unstagedChanges: number;
@@ -128,7 +116,7 @@ export type RunReport = {
 };
 
 export type ReportInput = {
-    session: Session;
+    session: ToolSession;
     options: RunReportOptions;
     started: Date;
     planned: PlannedCheck[];
@@ -138,13 +126,6 @@ export type ReportInput = {
     fixes: FixReport | undefined;
 };
 
-export type Finding = Defined<z.infer<typeof findingSchema>>;
-
-/** Where a finding points: the file, and the line and column when the check knows them. */
-export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;
-
-export type StageFilter = Stage | 'all';
-
 /** Checks and fixer outcomes prepared for the subsequent execution pass. */
 export type ReplannedFixResult = { executables: Executable[]; fixes: FixReport | undefined };
 
@@ -153,6 +134,3 @@ export type IgnoredFindings = { kept: Finding[]; uses: IgnoreUse[] };
 
 /** A preview fixes a disposable copy and reports differences. */
 export type FixOptions = { isDryRun: boolean };
-
-/** A process failure that prevents check output from being interpreted. */
-export type ExecutionFailure = { status: 'error' | 'missing'; note: string };

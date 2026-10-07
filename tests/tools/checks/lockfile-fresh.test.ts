@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { rmSync, existsSync, readFileSync } from 'node:fs';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';

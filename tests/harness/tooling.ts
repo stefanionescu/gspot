@@ -1,6 +1,6 @@
 // What the init and selection tests start from: a discovery result naming configurations, and a minimal manifest.
 import type { Manifest } from '#cli/types/configurations.ts';
-import { parseManifest } from '#cli/parsers/configurations.ts';
+import { parseManifest } from '#cli/configurations/manifests.ts';
 import type { TestManifest } from '#tests/types/harness/tooling.ts';
 
 /**

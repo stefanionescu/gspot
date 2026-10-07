@@ -1,11 +1,11 @@
 import { isDeepStrictEqual } from 'node:util';
+import type { Session } from '#cli/types/planning.ts';
 import { assertNoProblems } from '#cli/policy/read.ts';
 import { removeValePackages } from '#cli/tools/vale.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { packageLockDrift } from '#cli/tools/npm/project.ts';
 import { CONFLICT_MARKERS } from '#cli/config/parsers/git.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import { preserveMode } from '#cli/lifecycle/ownership/log.ts';
 import { pythonLockDrift } from '#cli/tools/python/project.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';

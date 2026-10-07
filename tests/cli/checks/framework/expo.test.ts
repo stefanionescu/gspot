@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { expoDoctor } from '#cli/checks/framework/expo.ts';
 import { rejection } from '#tests/harness/expectations.ts';

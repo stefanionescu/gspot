@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { LINT_LINE, ANSIBLE_PROJECT_FILE } from '#cli/config/checks/tool/ansible.ts';
 
 async function lintProject(input: EngineInput, folder: string, skipped: string[]): Promise<Finding[]> {

@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { printResult } from '#cli/output/messages.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import type { CommandResult } from '#cli/types/output.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';

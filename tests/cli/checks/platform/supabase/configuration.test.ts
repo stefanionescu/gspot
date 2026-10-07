@@ -5,10 +5,10 @@ import * as processes from '#cli/platform/spawn.ts';
 import { renameSync, writeFileSync } from 'node:fs';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
 
@@ -20,7 +20,7 @@ import {
     supabaseConfiguration,
 } from '#cli/checks/platform/supabase.ts';
 
-function input(session: Session, scope: string, name: string): EngineInput {
+function input(session: ToolSession, scope: string, name: string): EngineInput {
     const spec = session.manifests.get('supabase')!.checks.find((check) => check.name === name)!;
     return buildEngineInput(session, spec.name, { scope: scope });
 }

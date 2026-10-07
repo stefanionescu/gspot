@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { commentText, parseComments } from '#cli/parsers/comments.ts';
 import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 

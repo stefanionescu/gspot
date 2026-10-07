@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { checkjs } from '#cli/checks/language/javascript/tsc.ts';
 
 test('a scope whose project lists no JavaScript file passes with nothing to compile', async () => {

@@ -2,8 +2,8 @@
 import { TAIL_LINES } from '#cli/config/execution/command.ts';
 import type { ScopeView } from '#cli/types/policy/settings.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
+import type { ExecutionFailure } from '#cli/types/tools/install.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
-import type { ExecutionFailure } from '#cli/types/execution/runtime.ts';
 
 /**
  * Classify process failures consistently for direct checks and engines.

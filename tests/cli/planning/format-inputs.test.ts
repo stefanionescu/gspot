@@ -3,19 +3,19 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { planRun, configuredChecks } from '#cli/execution/planning/plan.ts';
-import { applicableManifests } from '#cli/execution/planning/requirements.ts';
+import { planRun, configuredChecks } from '#cli/planning/plan.ts';
+import { applicableManifests } from '#cli/planning/requirements.ts';
 
 import {
     FORMAT_POLICY,
     EDITORCONFIG_INPUTS,
     PRETTIER_EXCLUSIONS,
     AUTHORED_IGNORE_CHECK,
-} from '#tests/config/cli/execution/planning/format-inputs.ts';
+} from '#tests/config/cli/planning/format-inputs.ts';
 
 test('EditorConfig selects source files beyond the formatter extensions and omits binary data', async () => {
     await using sandbox = await testdir();

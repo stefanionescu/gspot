@@ -1,6 +1,6 @@
 // The parts of the ESLint configuration that the policy and the rendered scope decide.
+import type { Session } from '#cli/types/planning.ts';
 import { aliasesFor } from '#cli/repository/aliases.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
 import { runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 import { eslintAllRulesSchema } from '#cli/parsers/schema/eslint.ts';
@@ -14,17 +14,17 @@ import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types
 import ESLINT_ALL_RULES from '../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
 
 import {
-    ESLINT_LIMITS,
-    DIRECTION_ROLES,
-    ESLINT_BOUNDARY_FOLDERS,
-    ESLINT_JAVASCRIPT_LIMITS,
-} from '#cli/config/eslint.ts';
-import {
     eslintRuleOptions,
     eslintIgnoreBlocks,
     manifestRuleBlocks,
     structuralRuleBlocks,
 } from '#cli/generation/eslint/blocks.ts';
+import {
+    ESLINT_LIMITS,
+    DIRECTION_ROLES,
+    ESLINT_BOUNDARY_FOLDERS,
+    ESLINT_JAVASCRIPT_LIMITS,
+} from '#cli/config/generation/eslint.ts';
 import {
     eslintModule,
     eslintErrorRules,

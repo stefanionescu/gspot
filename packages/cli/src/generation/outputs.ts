@@ -4,7 +4,9 @@ import { miseFile } from '#cli/generation/mise.ts';
 import type { RuleFile } from '#cli/types/rules.ts';
 import { npmProject } from '#cli/generation/npm.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
+import { configuredChecks } from '#cli/planning/plan.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import { bunfigChanges } from '#cli/generation/bunfig.ts';
 import { managedBlock } from '#cli/rules/instructions.ts';
@@ -13,20 +15,18 @@ import { parseToolProject } from '#cli/parsers/packages.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { templateInputs } from '#cli/generation/templates.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
 import { stylelintChanges } from '#cli/generation/stylelint.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import { commitlintChanges } from '#cli/generation/commitlint.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
-import { configuredChecks } from '#cli/execution/planning/plan.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import { emitConfigurations } from '#cli/generation/configurations.ts';
 import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/outputs.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { everyManifest, isConfigurationSelected } from '#cli/configurations/select.ts';
-import { requiredToolNames, applicableManifests } from '#cli/execution/planning/requirements.ts';
+import { requiredToolNames, applicableManifests } from '#cli/planning/requirements.ts';
 
 import {
     UV_LOCK,
@@ -137,8 +137,8 @@ function assertDistinctPaths(generated: Generated): void {
 export function gitignoreBlock(
     manifests: Iterable<Pick<Manifest, 'ignored'>> = configurationManifests().values(),
 ): string {
-    const privatePaths = [...Object.values(INSTALLATION_DIRECTORIES), STATE_DIRECTORY].map((path) => `${path}/`);
-    return [...new Set([...privatePaths, ...[...manifests].flatMap((manifest) => manifest.ignored)])].join('\n');
+    const toolProjectPaths = [...Object.values(INSTALLATION_DIRECTORIES), STATE_DIRECTORY].map((path) => `${path}/`);
+    return [...new Set([...toolProjectPaths, ...[...manifests].flatMap((manifest) => manifest.ignored)])].join('\n');
 }
 
 /**

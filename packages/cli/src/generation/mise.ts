@@ -4,7 +4,7 @@ import { misePins } from '#cli/configurations/pins.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import type { MisePin, Manifest } from '#cli/types/configurations.ts';
-import { GSPOT_MISE_TOOL, MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
+import { CLI_PINS, GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
 
 /**
  * One mise tool line: a bare version, or a table when the tool has platforms or backend options.
@@ -30,7 +30,7 @@ export function miseFile(manifests: Manifest[], version: string): GeneratedFile 
     const lines = [
         headerFor(MISE_CONFIG_PATH, version).trimEnd(),
         '',
-        `min_version = "${MISE_MIN_VERSION}"`,
+        `min_version = "${CLI_PINS.mise}"`,
         '',
         '[tools]',
         miseToolLine({ name: GSPOT_MISE_TOOL, version }),

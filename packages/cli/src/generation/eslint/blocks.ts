@@ -1,8 +1,8 @@
 // The rule blocks of the generated ESLint configuration: policy overrides, structural ceilings, manifest exclusions,
 // and the selector groups of framework fragments.
 import { isDeepStrictEqual } from 'node:util';
-import { LINT_CHECK } from '#cli/config/eslint.ts';
 import { isRecord } from '#cli/platform/objects.ts';
+import { LINT_CHECK } from '#cli/config/generation/eslint.ts';
 import { activeIgnores } from '#cli/policy/settings/ignores.ts';
 import { eslintNodePatterns } from '#cli/generation/eslint/output.ts';
 import { everyTable, policyValue } from '#cli/policy/settings/entries.ts';

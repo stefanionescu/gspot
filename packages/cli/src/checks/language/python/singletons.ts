@@ -1,8 +1,9 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { CLASS_CALL } from '#cli/config/checks/language/python.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import type { SingletonAllowance } from '#cli/types/checks/language/python.ts';
 import { assignmentOf, visitPythonModules } from '#cli/parsers/python/source.ts';
 

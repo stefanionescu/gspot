@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import * as inspections from '#cli/tools/inspect.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';

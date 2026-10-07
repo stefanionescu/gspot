@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { Finding } from '#cli/types/execution/runtime.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { matchSchema } from '#cli/parsers/schema/ast-grep.ts';
 import type { ScriptSyntax, ScriptFunction } from '#cli/types/parsers/bash.ts';
 

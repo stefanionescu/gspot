@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import type { Finding, RunReport } from '#cli/types/execution/runtime.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { containing, containingAll, textContaining } from '#tests/harness/expectations.ts';
 
 test.each([false, true])(

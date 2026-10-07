@@ -9,7 +9,7 @@ import { PLAN_INIT } from '#tests/config/tools/commands/init.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
-import { buildToolsPath, installPrivateTools } from '#tests/harness/install.ts';
+import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';
 
 // The ESLint pointer is written for editors; the other deleted files get no pointer, because each check names
 // its configuration by path.
@@ -51,7 +51,7 @@ test(
         for (const path of ['.markdownlint.jsonc', '.eslintrc.json', '.prettierrc'])
             expect(existsSync(join(sandbox.path, path))).toBe(false);
         expect(existsSync(join(sandbox.path, 'quality', 'lint.sh'))).toBe(true);
-        await installPrivateTools(sandbox.path);
+        await installToolProjects(sandbox.path);
         const applied = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
         expect((JSON.parse(applied.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);

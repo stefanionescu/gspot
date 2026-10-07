@@ -1,7 +1,7 @@
 import type { CommandResult } from '#cli/types/output.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Proposal } from '#cli/types/policy/settings.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
 
 export type PreparedPolicy = Proposal & { original: FileCopy };
@@ -18,4 +18,4 @@ export type PolicyCommitResult = CommandResult & {
         error?: 'preparation' | 'apply';
         message?: string;
     };
-} & ({ applied: ApplyReport; session: Session } | { applied?: never; session?: never });
+} & ({ applied: ApplyReport; session: ToolSession } | { applied?: never; session?: never });

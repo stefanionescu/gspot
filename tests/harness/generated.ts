@@ -4,8 +4,8 @@ import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 

@@ -11,7 +11,7 @@ import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
-import { buildToolsPath, installPrivateTools } from '#tests/harness/install.ts';
+import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';
 
 test(
     'init --yes writes the policy and check passes over a clean script',
@@ -45,7 +45,7 @@ test(
         expect(record.checks).toMatchObject([{ check: 'bash/shfmt', status: 'passed' }]);
         const reconciled = await spawnGspot(sandbox.path, ['apply'], environment);
         expect(reconciled.code, reconciled.stdout + reconciled.stderr).toBe(0);
-        await installPrivateTools(sandbox.path);
+        await installToolProjects(sandbox.path);
         const drift = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json'], environment);
         expect((JSON.parse(drift.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
         expect(drift.code).toBe(0);

@@ -1,9 +1,10 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { PythonModule } from '#cli/types/parsers/python.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { visitPythonModules } from '#cli/parsers/python/source.ts';
 import { IMPORTS, DIRECTIVE } from '#cli/config/checks/language/python.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 // The runs of top-level import statements, from the first import of each to the last. Only comments may lie between two imports of a run.
 function importRuns(module: PythonModule): [Node, Node][] {

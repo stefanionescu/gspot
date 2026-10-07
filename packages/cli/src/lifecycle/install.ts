@@ -4,19 +4,19 @@ import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
+import { CLI_PINS } from '#cli/config/configurations.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
-import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { preserveMode } from '#cli/lifecycle/ownership/log.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import type { LockPreparation } from '#cli/types/tools/install.ts';
+import { applicableManifests } from '#cli/planning/requirements.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { installTree } from '#cli/lifecycle/ownership/installations.ts';
 import { getHookPlan, installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
-import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import { toolPin, pythonPins, collectPins } from '#cli/configurations/pins.ts';
 import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { packageInstallSteps, installPackageProject, preparePackageProject } from '#cli/tools/npm/project.ts';
@@ -149,8 +149,8 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
             if (session.policyFiles.policy.run_with !== 'mise') return '';
             const read = await runTool(['mise', '--version'], { cwd: session.root });
             const version = semver.coerce(read.stdout);
-            if (read.code !== 0 || version === null || semver.lt(version, MISE_MIN_VERSION))
-                throw new GspotError('tool', `Install mise ${MISE_MIN_VERSION} or newer to read ${MISE_CONFIG_PATH}.`);
+            if (read.code !== 0 || version === null || semver.lt(version, CLI_PINS.mise))
+                throw new GspotError('tool', `Install mise ${CLI_PINS.mise} or newer to read ${MISE_CONFIG_PATH}.`);
             const notes: string[] = [];
             const env = await registryEnvironment(session.root);
             for (const command of preview.steps) {
@@ -226,7 +226,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
     },
 ];
 
-async function runInstallationPhases(session: Session, context: InstallationContext): Promise<string[]> {
+async function runInstallationPhases(session: ToolSession, context: InstallationContext): Promise<string[]> {
     const manifests = applicableManifests(session);
     const failures: GspotError[] = [];
     const { preparation, phases } = installationPlan(session, context.refreshLocks);
@@ -253,7 +253,7 @@ function isInstallationFailure(error: unknown): error is GspotError {
  * @param refreshLocks include fresh resolution of every declared tool pin.
  * @returns the applicable phases and their acquisition commands.
  */
-export function installationPlan(session: Session, refreshLocks = false): InstallationPlan {
+export function installationPlan(session: ToolSession, refreshLocks = false): InstallationPlan {
     const manifests = applicableManifests(session);
     const generated = emitAll(session);
     const [first, ...remaining] = installations;
@@ -278,7 +278,7 @@ export function installationPlan(session: Session, refreshLocks = false): Instal
  * @returns the installation summary and exit code, with a repair command for acquisition failures.
  */
 export async function installTools(
-    session: Session,
+    session: ToolSession,
     log: Log,
     { refreshLocks }: LockPreparation,
 ): Promise<InstallationResult> {

@@ -3,8 +3,8 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { readText } from '#cli/platform/source.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
-import type { Session } from '#cli/types/execution/session.ts';
-import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { ConfigurationFile } from '#cli/types/configurations.ts';
 import { targetInScope, configurationName } from '#cli/configurations/declarations.ts';
 import type { CommandPart, Substitutions, CommandInvocation } from '#cli/types/execution/command.ts';
@@ -47,7 +47,7 @@ function existingFileArguments(root: string, part: string): string[] | undefined
     return statSync(path, { throwIfNoEntry: false }) === undefined ? [] : [groups['flag'] ?? '', toPlatform(path)];
 }
 
-function allConfigurations(session: Session, planned: PlannedCheck): ConfigurationFile[] {
+function allConfigurations(session: ToolSession, planned: PlannedCheck): ConfigurationFile[] {
     // A check's own targets come first because configurationPath selects the first matching target.
     const own = planned.manifest?.configs ?? [];
     const every = session.manifests
@@ -57,7 +57,7 @@ function allConfigurations(session: Session, planned: PlannedCheck): Configurati
     return [...own, ...every];
 }
 
-function configurationPath(session: Session, planned: PlannedCheck, name: string): string {
+function configurationPath(session: ToolSession, planned: PlannedCheck, name: string): string {
     const target = allConfigurations(session, planned).find(
         (config) => !config.fragment && configurationName(config.target) === name,
     );
@@ -65,7 +65,12 @@ function configurationPath(session: Session, planned: PlannedCheck, name: string
     return targetInScope(planned.scope.scope.path, target);
 }
 
-function plainPart(session: Session, planned: PlannedCheck, part: string, substitutions: Substitutions): CommandPart[] {
+function plainPart(
+    session: ToolSession,
+    planned: PlannedCheck,
+    part: string,
+    substitutions: Substitutions,
+): CommandPart[] {
     if (part === FILES_PLACEHOLDER) return substitutions.files;
     if (part === FILE_PLACEHOLDER) return [{ file: true }];
     if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}')) {
@@ -80,7 +85,7 @@ function plainPart(session: Session, planned: PlannedCheck, part: string, substi
 }
 
 // The nested config files a check reads: its scope's own, its pointers, and those between an input and its scope.
-function nestedConfigurations(session: Session, planned: PlannedCheck): string[] {
+function nestedConfigurations(session: ToolSession, planned: PlannedCheck): string[] {
     const nested = planned.spec.nested_config_file;
     if (nested === undefined) return [];
     const scope = planned.scope.scope.path;
@@ -114,7 +119,7 @@ function nestedConfigurations(session: Session, planned: PlannedCheck): string[]
  * @returns the configuration paths, relative to the root
  */
 export function commandConfigurations(
-    session: Session,
+    session: ToolSession,
     planned: PlannedCheck,
     command = planned.spec.command ?? [],
 ): string[] {
@@ -146,7 +151,7 @@ export function commandConfigurations(
  * @param command the command with configuration placeholders
  * @returns repository-relative paths for the isolated workspace
  */
-export function isolatedFiles(session: Session, planned: PlannedCheck, command: string[]): string[] {
+export function isolatedFiles(session: ToolSession, planned: PlannedCheck, command: string[]): string[] {
     const scope = planned.scope.scope.path;
     const owned = (planned.manifest?.configs ?? [])
         .filter((config) => !config.fragment)
@@ -169,7 +174,7 @@ export function isolatedFiles(session: Session, planned: PlannedCheck, command: 
  * @returns the expanded value
  */
 export function substituteValue(
-    session: Session,
+    session: ToolSession,
     planned: PlannedCheck,
     part: string,
     substitutions: Substitutions,
@@ -200,7 +205,7 @@ export function substituteValue(
  * @returns argument text and file markers
  */
 export function substitute(
-    session: Session,
+    session: ToolSession,
     planned: PlannedCheck,
     command: string[],
     substitutions: Substitutions,

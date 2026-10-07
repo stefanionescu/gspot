@@ -5,9 +5,14 @@ import { readSource } from '#cli/platform/source.ts';
 import { LINE_FEED } from '#cli/config/parsers/source.ts';
 import { resolve, relative, isAbsolute } from 'node:path';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/types/execution/runtime.ts';
-import type { TypoEntry, EslintReport, EslintDiagnostic, MarkdownlintEntry } from '#cli/types/parsers/output.ts';
 
+import type {
+    Finding,
+    TypoEntry,
+    EslintReport,
+    EslintDiagnostic,
+    MarkdownlintEntry,
+} from '#cli/types/parsers/output.ts';
 import {
     typosEntrySchema,
     eslintReportSchema,

@@ -6,13 +6,14 @@ import parseExpression from 'spdx-expression-parse';
 import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { normalizedPythonIdentity } from '#cli/parsers/packages.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { reportSchema, allowlistSchema, pythonReportSchema } from '#cli/parsers/schema/licenses.ts';
 
 import type {

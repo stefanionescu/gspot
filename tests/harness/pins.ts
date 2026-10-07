@@ -1,4 +1,4 @@
-// Tool pins for inspection tests: a binary found on a path and a library found in the private installation.
+// Tool pins for inspection tests: a binary found on a path and a library found in the tool project.
 
 import executables from 'which';
 import { spyOn } from 'bun:test';

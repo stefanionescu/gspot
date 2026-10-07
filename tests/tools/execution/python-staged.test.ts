@@ -4,7 +4,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';

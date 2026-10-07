@@ -3,7 +3,7 @@ import { test, spyOn, expect } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';

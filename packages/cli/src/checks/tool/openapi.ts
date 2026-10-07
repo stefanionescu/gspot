@@ -4,14 +4,15 @@ import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { parseCommand } from '#cli/parsers/command.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { nativeSegments } from '#cli/platform/root/rules.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { SPECTRAL_LINE } from '#cli/config/checks/tool/openapi.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import type { ConfigurationFile } from '#cli/types/configurations.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 function documentPath(input: EngineInput): string | undefined {
     const document = input.view.options('tools.openapi')['document'] as string;

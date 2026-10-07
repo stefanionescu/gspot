@@ -1,10 +1,10 @@
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { ownersOf } from '#cli/configurations/owners.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { ownedInputs, configuredChecks } from '#cli/execution/planning/plan.ts';
+import { ownedInputs, configuredChecks } from '#cli/planning/plan.ts';
 import type { Explanation, PathExplanation } from '#cli/types/commands/explain.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {

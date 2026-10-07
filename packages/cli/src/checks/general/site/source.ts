@@ -3,11 +3,12 @@ import { join, posix } from 'node:path';
 import { directoryOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { WebManifest } from '#cli/types/parsers/site.ts';
 import { webManifestSchema } from '#cli/parsers/schema/site.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { FULL_PERCENTAGE } from '#cli/config/platform/runtime.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS } from '#cli/config/checks/general/site.ts';
 
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.

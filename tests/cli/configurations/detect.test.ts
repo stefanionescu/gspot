@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { detectUnselected, detectConfigurations } from '#cli/configurations/detect.ts';

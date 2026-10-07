@@ -37,7 +37,7 @@ export async function removeConfigurations(
 }
 
 /**
- * A PATH for pinned mise tools and workspace commands; sandboxes own their private projects.
+ * A PATH for pinned mise tools and workspace commands; sandboxes own their tool projects.
  * @param names the tool names as mise knows them (`taplo`, `npm:v8r`).
  * @returns the PATH value.
  */
@@ -75,7 +75,7 @@ export function buildSandboxPath(names: string[]): string {
 }
 
 /**
- * Run gspot init. Remove the named configurations and install the private tools.
+ * Run gspot init. Remove the named configurations and install the tool projects.
  * @param cwd the test repository, with one commit.
  * @param argv the init command line.
  * @param environment verbatim variables, such as the PATH of the tools.
@@ -109,7 +109,7 @@ export async function install(
 }
 
 /** Install generated, locked tool projects through the public command. */
-export async function installPrivateTools(cwd: string): Promise<void> {
+export async function installToolProjects(cwd: string): Promise<void> {
     await using registry = await createInstallationRegistry(cwd, runTestCommand);
     const outcome = await spawnGspot(cwd, ['install'], registry.environment);
     if (outcome.code !== 0)

@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { getCheckRunner } from '#cli/execution/engines.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { applyFixers } from '#cli/execution/fixers.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { waitForExit, waitForFile } from '#tests/harness/process.ts';
 import { planFixer, buildFixerPolicy } from '#tests/harness/fixer.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';

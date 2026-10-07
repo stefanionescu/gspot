@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';

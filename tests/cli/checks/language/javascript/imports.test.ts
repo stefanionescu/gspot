@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { ROUTE, ROUTES_POLICY } from '#tests/config/cli/checks/imports.ts';
 import { getScopeImports } from '#cli/checks/language/javascript/imports.ts';

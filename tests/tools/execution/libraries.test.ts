@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 

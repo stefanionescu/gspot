@@ -1,18 +1,18 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { gitOutput } from '#tests/harness/git.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import type { Session } from '#cli/types/planning.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
-import type { Session } from '#cli/types/execution/session.ts';
 import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
 import { NESTED_POLICY, PROJECT_OPTIONS } from '#tests/config/cli/execution/impact.ts';
 

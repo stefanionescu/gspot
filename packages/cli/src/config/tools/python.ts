@@ -6,5 +6,5 @@ export const UV_VENV_ARGUMENTS = ['venv', '--relocatable', '.venv'] as const;
 export const UV_INSTALL_ARGUMENTS = ['sync', '--locked', '--no-install-project'] as const;
 /** The exact mise tool requested before Python lock resolution. */
 export const UV_MISE_PIN = `${UV_INSTALLER.name}@${UV_INSTALLER.version}`;
-/** A uv acquisition command independent of the private Python environment of gspot. */
+/** A uv acquisition command independent of the Python tool environment of gspot. */
 export const UV_ACQUISITION = `python -m pip install uv==${UV_INSTALLER.version}`;

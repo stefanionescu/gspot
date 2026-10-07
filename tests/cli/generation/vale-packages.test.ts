@@ -3,7 +3,7 @@ import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 
 test('generated vocabulary combines shipped and project words without duplicates', async () => {
     await using sandbox = await testdir();

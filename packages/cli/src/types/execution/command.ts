@@ -1,6 +1,7 @@
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
-import type { Session } from '#cli/types/execution/session.ts';
-import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
+import type { CheckResult } from '#cli/types/execution/runtime.ts';
 
 export type CommandPart = string | { file: true };
 
@@ -37,7 +38,7 @@ export type PreparedCommand = {
 };
 
 export type CommandRun = {
-    session: Session;
+    session: ToolSession;
     planned: PlannedCheck;
     tool: ToolPin;
     command: string[];

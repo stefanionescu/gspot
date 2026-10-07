@@ -1,5 +1,5 @@
 import { GspotError } from '#cli/platform/errors.ts';
-import type { Finding } from '#cli/types/execution/runtime.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { SemgrepReport } from '#cli/types/parsers/semgrep.ts';
 import { SEMGREP_PARSE_EXIT } from '#cli/config/parsers/output.ts';
 import { semgrepReportSchema } from '#cli/parsers/schema/semgrep.ts';

@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { installPrivateTools } from '#tests/harness/install.ts';
+import { installToolProjects } from '#tests/harness/install.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
@@ -41,7 +41,7 @@ test(
         commitAll(sandbox.path);
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installPrivateTools(sandbox.path);
+        await installToolProjects(sandbox.path);
         for (const level of ['recommended', 'all', 'recommended']) {
             const selected = await spawnGspot(sandbox.path, ['set', 'level', level]);
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);

@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { rmSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';

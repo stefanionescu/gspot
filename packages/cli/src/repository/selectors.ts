@@ -115,21 +115,21 @@ export function isOutsideChildren(path: string, children: string[]): boolean {
 }
 
 /**
- * Whether a repository path belongs to a private gspot tool project.
+ * Whether a repository path belongs to a gspot tool project.
  * @param path the repository-relative path
  * @returns whether a .gspot folder contains the file
  */
-export function isPrivateToolPath(path: string): boolean {
+export function isToolProjectPath(path: string): boolean {
     return path.split('/').some((part) => part.toLowerCase() === DOT_GSPOT);
 }
 
 /**
- * Whether a repository path belongs to private tools or installed npm dependencies.
+ * Whether a repository path belongs to tool projects or installed npm dependencies.
  * @param path the repository-relative path
  * @returns whether project discovery must leave out the path
  */
 export function isToolingPath(path: string): boolean {
-    return isPrivateToolPath(path) || path.split('/').includes('node_modules');
+    return isToolProjectPath(path) || path.split('/').includes('node_modules');
 }
 
 /**

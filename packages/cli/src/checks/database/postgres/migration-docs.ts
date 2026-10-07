@@ -1,8 +1,9 @@
 // The documented migration layout: a boxed header with the file name and a purpose, boxed sections, and a labeled block above each table and function.
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import type { Migration, DocProblem } from '#cli/types/checks/database/postgres.ts';
 
 import {

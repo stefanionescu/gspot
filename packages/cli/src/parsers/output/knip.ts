@@ -1,8 +1,7 @@
 import { GspotError } from '#cli/platform/errors.ts';
-import type { Finding } from '#cli/types/execution/runtime.ts';
-import type { KnipReport } from '#cli/types/parsers/output.ts';
 import { knipReportSchema } from '#cli/parsers/schema/report.ts';
 import { KNIP_ISSUE_MESSAGES } from '#cli/config/parsers/output.ts';
+import type { Finding, KnipReport } from '#cli/types/parsers/output.ts';
 
 /**
  * Read Knip's JSON categories without losing grouped symbols or source positions.

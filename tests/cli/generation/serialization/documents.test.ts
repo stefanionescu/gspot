@@ -7,7 +7,7 @@ import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { bodyPointer } from '#cli/generation/pointers.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';

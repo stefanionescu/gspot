@@ -4,7 +4,7 @@ import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';

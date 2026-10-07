@@ -3,10 +3,11 @@ import { commitAll } from '#tests/harness/git.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
+import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { install, buildToolsPath } from '#tests/harness/install.ts';
-import type { Finding, RunReport } from '#cli/types/execution/runtime.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { CLEAN, SHELLED, ANSIBLE_INIT } from '#tests/config/tools/configurations/tool/ansible.ts';
 

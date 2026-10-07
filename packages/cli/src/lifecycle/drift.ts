@@ -14,8 +14,8 @@ import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { pythonLockDrift } from '#cli/tools/python/project.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import type { Ownership } from '#cli/types/lifecycle/ownership.ts';
+import { DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/drift.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
-import { DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/output.ts';
 import { RETAINED_KINDS, RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {

@@ -1,7 +1,8 @@
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/config/checks/tool/xcode.ts';
 
 /**

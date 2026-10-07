@@ -3,13 +3,14 @@ import { isRecord } from '#cli/platform/objects.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { lockedPackages } from '#cli/parsers/lockfiles.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { everyTable } from '#cli/policy/settings/entries.ts';
 import { directoryOf, expandPaths } from '#cli/platform/paths.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { normalizedPythonIdentity } from '#cli/parsers/packages.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { PathPattern } from '#cli/types/checks/general/structure.ts';
 import { DOT_GSPOT, POLICY_FILE } from '#cli/config/platform/locations.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import type { LicenseException } from '#cli/types/checks/general/licenses.ts';
 import { pathTokens, proseLines, cleanPathToken } from '#cli/parsers/markdown.ts';
 

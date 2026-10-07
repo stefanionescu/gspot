@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { cloneFindings } from '#cli/checks/general/duplication.ts';

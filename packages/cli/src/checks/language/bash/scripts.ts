@@ -2,7 +2,7 @@ import { memo } from '#cli/platform/memo.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parseBashScript } from '#cli/parsers/bash.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
-import { isPrivateToolPath } from '#cli/repository/selectors.ts';
+import { isToolProjectPath } from '#cli/repository/selectors.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { ScriptFile, ScriptIndex } from '#cli/types/checks/language/bash.ts';
@@ -41,7 +41,7 @@ async function readScriptIndex(input: EngineInput, files: TrackedFile[]): Promis
  */
 export function getScriptIndex(input: EngineInput): Promise<ScriptIndex> {
     const files = input.files.filter(
-        (file) => file.kind === 'source' && file.tags.includes(SCRIPT_TAG) && !isPrivateToolPath(file.path),
+        (file) => file.kind === 'source' && file.tags.includes(SCRIPT_TAG) && !isToolProjectPath(file.path),
     );
     const perScope = memo(input.reads, SCRIPT_MEMO);
     const key = JSON.stringify([input.scope, files.map((file) => file.path)]);

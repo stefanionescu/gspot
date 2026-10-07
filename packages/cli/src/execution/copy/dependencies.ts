@@ -159,7 +159,7 @@ async function copyTree(source: string, target: string, cancelSignal?: AbortSign
     await chmod(target, sourceStat.mode & MODE_BITS);
 }
 
-// Copies one package folder into the copy. The private tools of gspot run in place, like its Python environment:
+// Copies one package folder into the copy. The tool projects of gspot run in place, like its Python environment:
 // the manifest and lock guard has matched them, and no check writes into them.
 async function copyDependency(
     root: string,
@@ -167,8 +167,8 @@ async function copyDependency(
     { folder, dependency }: DependencyFolder,
     cancelSignal?: AbortSignal,
 ): Promise<void> {
-    const isPrivate = basename(folder) === DOT_GSPOT;
-    const pending = isPrivate ? (getOwnership(join(root, dirname(folder))).installing ?? []) : [];
+    const isToolProject = basename(folder) === DOT_GSPOT;
+    const pending = isToolProject ? (getOwnership(join(root, dirname(folder))).installing ?? []) : [];
     assertDependencyReady(checkout, folder, pending);
     const source = join(root, folder, dependency);
     const target = join(checkout, folder, dependency);
@@ -177,7 +177,7 @@ async function copyDependency(
             'Installed dependencies are tracked in the selected revision. Untrack them before checking again.',
         ]);
     const kind = process.platform === 'win32' ? 'junction' : 'dir';
-    await (isPrivate ? symlink(source, target, kind) : copyTree(source, target, cancelSignal));
+    await (isToolProject ? symlink(source, target, kind) : copyTree(source, target, cancelSignal));
 }
 
 /**

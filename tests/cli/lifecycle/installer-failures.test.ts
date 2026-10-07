@@ -3,12 +3,12 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { CLI_PINS } from '#cli/config/configurations.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
-import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -34,7 +34,7 @@ test.each([...INSTALLATION_FAILURES])(
                 code,
                 missing: code === 127,
                 duration: 0,
-                stdout: `mise ${isRepaired ? MISE_MIN_VERSION : version}`,
+                stdout: `mise ${isRepaired ? CLI_PINS.mise : version}`,
                 stderr: '',
             });
         });
@@ -135,7 +135,7 @@ test('a repository that already runs hooks keeps them, gets the gspot lines, and
             code: 0,
             missing: false,
             duration: 0,
-            stdout: `mise ${MISE_MIN_VERSION}`,
+            stdout: `mise ${CLI_PINS.mise}`,
             stderr: '',
         });
     });

@@ -2,8 +2,8 @@
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { scripts } from '#cli/checks/language/html.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { ACTIVE_URLS, INERT_MARKUP } from '#tests/config/cli/checks/language/html.ts';
 

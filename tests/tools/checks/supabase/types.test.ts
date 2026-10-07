@@ -9,7 +9,7 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { isRecord } from '#cli/platform/objects.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { runTestCommand } from '#tests/harness/command.ts';

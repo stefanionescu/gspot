@@ -5,13 +5,14 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { parseJsonRecord } from '#cli/parsers/json.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { JSCPD } from '#cli/config/checks/general/duplication.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { cloneReportSchema } from '#cli/parsers/schema/duplication.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { CloneScope, CloneReport } from '#cli/types/checks/general/duplication.ts';
 

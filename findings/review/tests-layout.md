@@ -1,6 +1,6 @@
 # Test Layout and Wiring
 
-38 unresolved review records remain.
+34 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -212,3 +212,14 @@ Source moves and renames take their tests and their config and types mirrors wit
 - `tests/config/**`: the review read every file, but cut lines longer than 170 to 220 characters while reading. Those lines are inline source strings, and the cut does not affect structure.
 - Read in full: all 28 harness files, all 50 type files, all 14 sample files, `tests/package.json`, `tests/bunfig.toml`, root `package.json`, `bunfig.toml`, `tsconfig.json`, `mise.toml`, `mise.test.toml`, `scripts/{plugin,package,deadline,test-tools,workspace}.ts`, `scripts/registry/*`, `scripts/config/{plugin,package,paths,registry}.ts`, `scripts/types/{registry,package}.ts`, the test jobs in `.github/workflows/ci.yml`, `.github/actions/setup/action.yml`, the test parts of `gspot.toml` and `CONTRIBUTING.md`, `findings/areas/test-structure.md`, and `findings/images/tests.png`.
 - `scripts/{binaries,build,pins,eslint-presets}.ts`, `scripts/release/*`, `.github/workflows/{release,database,docs}.yml`: only grepped for test wiring.
+
+## Implementation status on October 7, 2026
+
+The original records above are retained. These records are complete at `c6aa35af7509807f32cd9427563731e801cd8d9e`.
+
+| ID                        | Status   | Implementation and verification evidence                                                                                                                                                                                               |
+| ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-layout/004` | complete | npm registry, private Python index, constants and types moved into their flat harness owners; duplicate registry alias/folder removed. Credential/Bun-lock probes and 5 focused tests with 52 assertions passed.                       |
+| `review/tests-layout/028` | complete | All six prescribed copy tests moved into execution/copy with their owner imports. Focused copy tests and staged checks passed.                                                                                                         |
+| `review/tests-layout/032` | complete | Script tests and constants moved to scripts owners, with owner-approved flat release paths. Deleted archive tests and obsolete harness-budget test retained their prescribed deletion. Focused scripts tests and staged checks passed. |
+| `review/tests-layout/046` | complete | AGENTS states behavioral test config/type mirrors, singleton flattening and shared samples. Staged documentation checks passed.                                                                                                        |

@@ -1,8 +1,8 @@
 // What this machine can and cannot do: which pinned tools ship for it, the modes it keeps, and the modules it links.
 import { join, dirname } from 'node:path';
+import { missingBuild } from '#cli/planning/skips.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { hostPlatform } from '#cli/platform/environment.ts';
-import { missingBuild } from '#cli/execution/planning/skips.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { testModules, installedModules } from '#tests/harness/environment.ts';
 import { mkdirSync, existsSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';

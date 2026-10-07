@@ -16,7 +16,7 @@ import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { COMMITS_INIT } from '#tests/config/tools/commands/commits.ts';
-import { buildToolsPath, installPrivateTools } from '#tests/harness/install.ts';
+import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';
 import { COMMIT_MESSAGES, DERIVED_SCOPE_POLICY } from '#tests/config/tools/configurations/general/commits.ts';
 
 // The message check refuses a bad message, and a later range check rejects a bypassed hook.
@@ -114,7 +114,7 @@ test(
         commitAll(sandbox.path);
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installPrivateTools(sandbox.path);
+        await installToolProjects(sandbox.path);
         const draft = join(sandbox.path, 'draft.txt');
         const command = ['check', '--only', 'commits/commitlint', '--message-file', draft, '--json'];
         for (const { message, rule } of COMMIT_MESSAGES) {
@@ -211,7 +211,7 @@ test(
         expect(git(source, ['init', '-q']).code).toBe(0);
         const applied = await spawnGspot(source, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installPrivateTools(source);
+        await installToolProjects(source);
         expect(git(source, ['add', '-A']).code).toBe(0);
         expect(git(source, ['commit', '-qm', 'chore: initialize']).code).toBe(0);
         const base = git(source, ['rev-parse', 'HEAD']).stdout.trim();
@@ -220,7 +220,7 @@ test(
         const selected = git(source, ['rev-parse', 'HEAD']).stdout.trim();
         expect(git(sandbox.path, ['clone', '--depth=1', pathToFileURL(source).href, 'checkout']).code).toBe(0);
         const checkout = join(sandbox.path, 'checkout');
-        await installPrivateTools(checkout);
+        await installToolProjects(checkout);
         const options = {
             command: ['check', '--hook', 'pre-push', '--json', '--only'],
             env: { PATH: buildToolsPath(['commitlint']) },

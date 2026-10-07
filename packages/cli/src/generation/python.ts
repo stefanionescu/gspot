@@ -6,9 +6,9 @@ import { TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
 import { pythonPins, pythonConstraints } from '#cli/configurations/pins.ts';
 
 /**
- * Keep Python lint dependencies in a private project owned by gspot.
+ * Keep Python lint dependencies in a tool project owned by gspot.
  * @param manifests the selected manifests
- * @returns the private Python project files, or none without Python tools
+ * @returns the Python tool project files, or none without Python tools
  */
 export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
     const dependencies = pythonPins(manifests);

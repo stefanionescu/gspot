@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';

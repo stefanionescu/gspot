@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { proposeMerge } from '#cli/lifecycle/ownership/plans.ts';

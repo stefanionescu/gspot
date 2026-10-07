@@ -4,7 +4,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { testModules } from '#tests/harness/environment.ts';

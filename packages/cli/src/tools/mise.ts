@@ -2,7 +2,7 @@ import { readText } from '#cli/platform/source.ts';
 import { parseMiseToolKeys } from '#cli/parsers/mise.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { MISE_BACKENDS } from '#cli/config/configurations.ts';
-import { PRIVATE_PIN_FILES } from '#cli/config/tools/mise.ts';
+import { TOOL_PROJECT_FILES } from '#cli/config/tools/mise.ts';
 import type { DuplicateMisePin } from '#cli/types/tools/install.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import { misePin, misePins, collectPins, toolProjectPackage } from '#cli/configurations/pins.ts';
@@ -34,7 +34,7 @@ export function duplicateMisePins(root: string, manifests: Manifest[], runner: s
         const pin = toolProjectPackage(tool, runner);
         return pin === undefined
             ? []
-            : [{ tool: tool.name, version: pin.version, gspotFile: PRIVATE_PIN_FILES[pin.kind] }];
+            : [{ tool: tool.name, version: pin.version, gspotFile: TOOL_PROJECT_FILES[pin.kind] }];
     });
     if (runner === 'mise') {
         const names = new Map(

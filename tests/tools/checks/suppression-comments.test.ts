@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { parseAlerts } from '#cli/parsers/vale.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 import { RUFF_DIRECTIVES, VALE_DIRECTIVES } from '#tests/config/tools/checks/suppression-comments.ts';

@@ -4,7 +4,7 @@ import { join, dirname } from 'node:path';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import { textContaining } from '#tests/harness/expectations.ts';

@@ -6,12 +6,12 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { collectPins } from '#cli/configurations/pins.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
+import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
-import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import type { NpmLock } from '#tests/types/cli/commands/mobile-reconciliation.ts';
 import { EXPO_DEPENDENCIES, NATIVE_DEPENDENCIES } from '#tests/config/samples/react.ts';
 

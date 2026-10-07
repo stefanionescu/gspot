@@ -4,15 +4,13 @@ import { tagEntry } from '#cli/repository/tags.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { toolName } from '#cli/configurations/pins.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
-import type { Session } from '#cli/types/execution/session.ts';
-import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
 import { configurationName } from '#cli/configurations/declarations.ts';
 import { DOT_GSPOT, POLICY_FILE } from '#cli/config/platform/locations.ts';
-import type { PlanEntry, PlanInputs } from '#cli/types/execution/planning.ts';
-import { isInScope, pathMatcher, isOutsideChildren, isPrivateToolPath } from '#cli/repository/selectors.ts';
+import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/planning.ts';
+import { isInScope, pathMatcher, isOutsideChildren, isToolProjectPath } from '#cli/repository/selectors.ts';
 
 // Every tracked file under the scope.
 function projectFiles(context: PlanInputs, scopePath: string, runs: CheckSpec['runs']): TrackedFile[] {
@@ -29,7 +27,7 @@ function projectOwned(context: PlanInputs, entry: PlanEntry, scopePath: string):
     const owners = spec.files ?? (manifest?.configuration.kind === 'language' ? manifest.files : undefined);
     const candidates = projectFiles(context, scopePath, spec.runs);
     const applicationInputs =
-        manifest === undefined ? candidates : candidates.filter((file) => !isPrivateToolPath(file.path));
+        manifest === undefined ? candidates : candidates.filter((file) => !isToolProjectPath(file.path));
     if (owners !== undefined && ownedBy(owners, scope.selected, applicationInputs, scopePath).length === 0) return [];
     return spec.runs === 'scope' ? candidates : candidates.filter((file) => file.kind !== 'binary');
 }
@@ -85,7 +83,7 @@ function missingTriggers(context: PlanInputs, entry: PlanEntry, scopePath: strin
     const paths = [...context.narrow].filter(
         (path) =>
             !readable.has(path) &&
-            (manifest === undefined || !isPrivateToolPath(path)) &&
+            (manifest === undefined || !isToolProjectPath(path)) &&
             isInScope(path, scopePath) &&
             (spec.runs !== 'scope' || isOutsideChildren(path, children)),
     );

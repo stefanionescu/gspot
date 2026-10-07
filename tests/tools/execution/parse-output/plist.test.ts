@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
+import { planRun } from '#cli/planning/plan.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { GspotError } from '#cli/platform/errors.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { checkedFindings } from '#cli/execution/output.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';

@@ -1,4 +1,4 @@
-/** The private npm and Python tool projects use one unscoped name supported by both registries. */
+/** The npm and Python tool projects use one unscoped name supported by both registries. */
 export const TOOLS_PROJECT = 'gspot-tools';
 
 export const CONFIGURATION_DIRECTORY = '.gspot/config';
@@ -41,5 +41,5 @@ export const RULES_DIRECTORY = '.gspot/rules';
 
 export const MISE_CONFIG_PATH = '.mise/conf.d/gspot-tools.toml';
 
-/** The private folder written and replaced for each installation kind. */
+/** The tool project folder written and replaced for each installation kind. */
 export const INSTALLATION_DIRECTORIES = { npm: NODE_MODULES_DIRECTORY, python: PYTHON_ENVIRONMENT_DIRECTORY } as const;

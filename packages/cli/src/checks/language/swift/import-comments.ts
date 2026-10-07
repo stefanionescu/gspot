@@ -1,7 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { visitSwiftSources } from '#cli/parsers/swift.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { COMMENTS, DIRECTIVE } from '#cli/config/checks/language/swift.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 /**
  * Comments written among a file's imports, from the first import to the last. A tool directive is not a comment.

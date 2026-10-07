@@ -15,13 +15,13 @@ import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { toPosix, environmentBin, executableNames } from '#cli/platform/paths.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
 
-// The folders a tool of the private kind, or a host tool, is located in. A copy has no private tools or virtual
+// The folders a tool-project executable, or a host tool, is located in. A copy has no tool projects or virtual
 // environments of its own: they run from the working tree the copy stands for.
 function searchDirectories(root: string, options: LocateOptions): string[] {
-    const { searchFolders, privateKind, installedRoot = root } = options;
-    if (privateKind === 'npm') return [join(installedRoot, NODE_MODULES_DIRECTORY, '.bin')];
-    if (privateKind === 'python') return [environmentBin(join(installedRoot, PYTHON_ENVIRONMENT_DIRECTORY))];
-    // A copy's private tools run from the original working tree.
+    const { searchFolders, toolProjectKind, installedRoot = root } = options;
+    if (toolProjectKind === 'npm') return [join(installedRoot, NODE_MODULES_DIRECTORY, '.bin')];
+    if (toolProjectKind === 'python') return [environmentBin(join(installedRoot, PYTHON_ENVIRONMENT_DIRECTORY))];
+    // A copy's tool projects run from the original working tree.
     return [...new Set(searchFolders)].flatMap((folder) => [
         join(
             basename(folder) === DOT_GSPOT ? join(installedRoot, relative(root, folder)) : folder,
@@ -83,7 +83,7 @@ function versionAbove(files: Root | undefined, root: string, start: string, name
 /**
  * Read package metadata from a tool project installation or a native host installation.
  * @param files the tool project installation boundary, or undefined for a host installation.
- * @param root the repository root owning the private boundary.
+ * @param root the repository root owning the tool-project boundary.
  * @param manifest the absolute package.json path.
  * @returns the validated package fields, or undefined when the file is absent.
  */
@@ -124,7 +124,7 @@ export function locateRepositoryCandidates(root: string, name: string, options: 
  */
 export function locateCandidates(root: string, name: string, options: LocateOptions): string[] {
     const found = locateRepositoryCandidates(root, name, options);
-    if (isAbsolute(name) || options.privateKind !== undefined) return found;
+    if (isAbsolute(name) || options.toolProjectKind !== undefined) return found;
     return [...found, ...hostCandidates(options.installedRoot ?? root, name, executableNames(name))];
 }
 

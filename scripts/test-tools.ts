@@ -1,8 +1,8 @@
 // Write test-tool pins that the base generated mise configuration does not pin.
 import { stringify } from 'smol-toml';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { CLI_PINS } from '#cli/config/configurations.ts';
 import { parseMiseToolKeys } from '#cli/parsers/mise.ts';
-import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
 import { misePins, collectPins } from '#cli/configurations/pins.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -20,5 +20,5 @@ for (const tool of collectPins(manifests)) {
     tools[`pipx:${pin.name}`] = { version: pin.version, depends: ['uv'] };
 }
 const remainingTools = Object.fromEntries(Object.entries(tools).filter(([name]) => !managed.has(name)));
-writeFileSync(TEST_TOOLS_PATH, TEST_TOOLS_HEADER + stringify({ min_version: MISE_MIN_VERSION, tools: remainingTools }));
+writeFileSync(TEST_TOOLS_PATH, TEST_TOOLS_HEADER + stringify({ min_version: CLI_PINS.mise, tools: remainingTools }));
 console.error('Wrote %s', TEST_TOOLS_PATH);

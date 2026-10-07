@@ -4,12 +4,13 @@ import { relative, isAbsolute } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { assetPath } from '#cli/platform/assets.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { astGrepReportSchema } from '#cli/parsers/schema/ast-grep.ts';
+import type { Engine, EngineInput } from '#cli/types/execution/runtime.ts';
 import { COUNT_RULES, OUTER_LEVELS } from '#cli/config/checks/language/bash.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
-import type { Engine, Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import type { ScriptIndex, AstGrepMatch, BashCountRule } from '#cli/types/checks/language/bash.ts';
 
 /**

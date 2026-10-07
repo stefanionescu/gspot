@@ -32,7 +32,7 @@ missing fails, and `doctor` names the tool.
 
 ## The policy and the locks disagree
 
-`gspot install` prepares missing or stale required locks in temporary projects before installing. If a package install fails, the previous locks and private package environments remain. Repair package-manager or registry errors and retry. To resolve the declared pins again intentionally, run `gspot install --refresh-locks`; an integrity failure alone does not change a committed lock. See [Join a repository](/guides/join/).
+`gspot install` prepares missing or stale required locks in scratch copies before installing. If a package install fails, the previous locks and installed tool projects remain. Repair package-manager or registry errors and retry. To resolve the declared pins again intentionally, run `gspot install --refresh-locks`; an integrity failure alone does not change a committed lock. See [Join a repository](/guides/join/).
 
 ## The gspot version differs from the pin
 

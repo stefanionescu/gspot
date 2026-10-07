@@ -6,11 +6,13 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { isEnvironmentFile } from '#cli/repository/kind.ts';
 import { runGit, runGitBinary } from '#cli/platform/git.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { getBlobs } from '#cli/repository/revisions/objects.ts';
 import { decodeUtf8, escapeRegExp } from '#cli/platform/text.ts';
@@ -20,8 +22,8 @@ import { getPushBase } from '#cli/repository/revisions/changes.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { GITLEAKS_BASELINE } from '#cli/config/platform/locations.ts';
 import type { EnvironmentSettings } from '#cli/types/policy/settings.ts';
+import type { CheckResult, EngineInput } from '#cli/types/execution/runtime.ts';
 import type { SecretScan, BaselineReason } from '#cli/types/checks/general/secrets.ts';
-import type { Finding, CheckResult, EngineInput, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
 import {
     DIFF_TREE,
@@ -34,7 +36,7 @@ import {
 } from '#cli/config/checks/general/secrets.ts';
 
 // The commits under review: the ones the run supplies, or every commit after the push base.
-async function scannedCommits(session: Session, planned: PlannedCheck): Promise<string[] | undefined> {
+async function scannedCommits(session: ToolSession, planned: PlannedCheck): Promise<string[] | undefined> {
     if (planned.commits !== undefined) return planned.commits;
     const base = await getPushBase(session.root, session.cancelSignal);
     const listed = await runGit(session.root, ['rev-list', `${base}..HEAD`, '--'], {
@@ -44,7 +46,7 @@ async function scannedCommits(session: Session, planned: PlannedCheck): Promise<
 }
 
 // The NUL-separated fields of a commit's raw change list, which must be UTF-8 and complete.
-async function changeFields(session: Session, commit: string): Promise<string[]> {
+async function changeFields(session: ToolSession, commit: string): Promise<string[]> {
     const read = await runGitBinary(session.root, [...DIFF_TREE, commit, '--'], { cancelSignal: session.cancelSignal });
     if (read.code !== 0) throw new Error('Cannot read the changed objects for verified secret scanning.');
     const text = decodeUtf8(read.stdout);
@@ -94,7 +96,7 @@ async function appendMetadata(scan: SecretScan, commit: string): Promise<void> {
 }
 
 // Writes the enumerator input for every commit, then runs TruffleHog over it.
-async function scanCommits(session: Session, planned: PlannedCheck, commits: string[]): Promise<CheckResult> {
+async function scanCommits(session: ToolSession, planned: PlannedCheck, commits: string[]): Promise<CheckResult> {
     using folder = scratchFolder('gspot-verified-secrets-');
     const scratch = folder.path;
     const scan: SecretScan = { session, enumeratorFile: join(scratch, 'commits.jsonl') };
@@ -163,7 +165,7 @@ export function gitleaksBaseline(input: EngineInput): Finding[] {
  * @param planned the planned check
  * @returns the check result
  */
-export async function gitleaksHistory(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function gitleaksHistory(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result: CheckResult = {
         check: planned.spec.name,
@@ -234,7 +236,7 @@ export function envFiles(input: EngineInput): Finding[] {
  * @param planned the planned check
  * @returns the check result
  */
-export async function trufflehog(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function trufflehog(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const base: CheckResult = {
         check: planned.spec.name,

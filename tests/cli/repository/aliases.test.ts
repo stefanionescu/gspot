@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { aliasesFor } from '#cli/repository/aliases.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { ALIAS_INPUTS, ALIAS_PROJECT } from '#tests/config/cli/repository/aliases.ts';
 

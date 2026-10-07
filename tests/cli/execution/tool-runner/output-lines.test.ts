@@ -1,9 +1,9 @@
 // Check engines split tool output on LF, so the runner hands them LF wherever the tool ran.
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { runEngineTool, runCommandCheck } from '#cli/execution/command/runner.ts';
 import { HEADER_FAILURE } from '#tests/config/cli/execution/tool-runner/output.ts';

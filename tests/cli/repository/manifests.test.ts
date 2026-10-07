@@ -4,10 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { npmToolNames } from '#cli/configurations/pins.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
-import { parseManifest } from '#cli/parsers/configurations.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { rmSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
 import { readManifests, readPackageManifest, getProjectDependencies } from '#cli/repository/manifests.ts';
 
 import {

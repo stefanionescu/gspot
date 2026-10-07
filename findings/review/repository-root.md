@@ -1,6 +1,6 @@
 # Repository Root, Scripts, Workflows, and Package Wiring
 
-28 unresolved review records remain.
+26 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -246,3 +246,12 @@ Checked against HEAD 3e1445a2d on 2026-10-06. Light commands only: no tests, lin
 - `docs/public/**` other than the brand mark folder; `docs/wrangler.jsonc` was read.
 - `findings/**`: only the repository records, the binary records, and the grep hits cited above.
 - `packages/eslint-plugin/src/**`: outside this brief, except `src/config/build.ts`.
+
+## Implementation status on October 7, 2026
+
+The original records above are retained. These records are complete at `c6aa35af7509807f32cd9427563731e801cd8d9e`.
+
+| ID                           | Status   | Implementation and verification evidence                                                                                                                                                               |
+| ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/repository-root/002` | complete | Plugin builds no longer rewrite tracked ESLint data. Explicit maintenance captures the gspot preset; a plugin test compares the shipped recommended preset. Plugin build and preset comparison passed. |
+| `review/repository-root/035` | complete | Embedded Python replaced by the approved executable tests/harness/ruff_wheel.py and python3 caller. Ruff, format, pydoclint and basedpyright staged checks passed; private-index tests passed.         |

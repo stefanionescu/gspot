@@ -1,5 +1,6 @@
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
-import { DRIFT_HELP, DRIFT_MESSAGES } from '#cli/config/lifecycle/drift.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import { DRIFT_HELP, DRIFT_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 
 /**
  * Reports managed files that differ from gspot apply output, are missing, contain merge conflict markers, or have a gspot header without a current generator.

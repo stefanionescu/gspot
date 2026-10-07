@@ -2,7 +2,7 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 
 test('reason comments cannot add JavaScript statements or ignore entries', async () => {

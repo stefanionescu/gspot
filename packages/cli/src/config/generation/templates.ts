@@ -20,3 +20,6 @@ export const TOKEN_IGNORES = [
 
 /** Front matter is not prose. */
 export const BLOCK_IGNORES = [String.raw`(?s)^---\n.*?\n---\n`];
+
+/** Yarn tool projects use a local node_modules tree with the shared package cache. */
+export const YARN_TOOL_PROJECT_SETTINGS = 'nodeLinker: node-modules\nenableGlobalCache: true\n';

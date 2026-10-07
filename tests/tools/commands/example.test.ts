@@ -5,10 +5,11 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import example from '#docs/src/config/example.json';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { installPrivateTools } from '#tests/harness/install.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import { installToolProjects } from '#tests/harness/install.ts';
+import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import type { Finding, RunReport } from '#cli/types/execution/runtime.ts';
 
 // The fields a recorded finding holds, in one order, so a run compares with the record whatever order it reports in.
 function recorded(findings: readonly Pick<Finding, 'check' | 'file' | 'line' | 'column' | 'rule' | 'message'>[]) {
@@ -37,7 +38,7 @@ test(
         commitAll(sandbox.path);
         const applied = await spawnGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installPrivateTools(sandbox.path);
+        await installToolProjects(sandbox.path);
         gitOutput(sandbox.path, ['add', '-A']);
         gitOutput(sandbox.path, ['commit', '-qm', 'chore: Set up gspot', '--no-verify']);
         await createFileTree(

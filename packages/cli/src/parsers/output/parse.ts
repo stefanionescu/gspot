@@ -6,9 +6,7 @@ import { stripVTControlCharacters } from 'node:util';
 import { parseJson } from '#cli/parsers/output/json.ts';
 import { knipFindings } from '#cli/parsers/output/knip.ts';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
-import type { Finding } from '#cli/types/execution/runtime.ts';
 import { semgrepFindings } from '#cli/parsers/output/semgrep.ts';
-import type { Parsing, OutputSpec, OutputPaths, RegexParser, ParsingCheck } from '#cli/types/parsers/output.ts';
 
 import {
     typosFindings,
@@ -16,6 +14,14 @@ import {
     trufflehogFindings,
     markdownlintFindings,
 } from '#cli/parsers/output/reports.ts';
+import type {
+    Finding,
+    Parsing,
+    OutputSpec,
+    OutputPaths,
+    RegexParser,
+    ParsingCheck,
+} from '#cli/types/parsers/output.ts';
 import {
     DEFAULT_PATTERN,
     LEADING_DOT_SLASH,

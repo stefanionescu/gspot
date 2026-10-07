@@ -6,7 +6,7 @@ import { surveyRepository } from '#cli/repository/survey.ts';
 import { hasToolSection } from '#cli/parsers/tool/configuration.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { isGlob, pathMatcher, isPrivateToolPath } from '#cli/repository/selectors.ts';
+import { isGlob, pathMatcher, isToolProjectPath } from '#cli/repository/selectors.ts';
 import type { Tooling, ToolFile, TrackedFile } from '#cli/types/repository/inventory.ts';
 
 function hasSection(root: string, path: string, replace: NonNullable<ToolPin['replace']>[number]): boolean {
@@ -46,7 +46,7 @@ function getReplacedConfigs(
  * @returns tool configurations with their containing files and sections
  */
 function getToolConfigs(root: string, paths: Iterable<string>): ToolFile[] {
-    const inventory = new Set([...paths].filter((path) => !isPrivateToolPath(path)));
+    const inventory = new Set([...paths].filter((path) => !isToolProjectPath(path)));
     return [...configurationManifests().values()].flatMap((manifest) =>
         manifest.tools.flatMap((tool) =>
             (tool.replace ?? []).flatMap((replace) => getReplacedConfigs(root, inventory, tool.name, replace)),

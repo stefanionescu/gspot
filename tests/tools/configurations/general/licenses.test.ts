@@ -8,7 +8,7 @@ import { buildInitArguments } from '#tests/harness/init.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { buildSandboxPath, installPrivateTools } from '#tests/harness/install.ts';
+import { buildSandboxPath, installToolProjects } from '#tests/harness/install.ts';
 import { ROOT, LICENSE_CHECK } from '#tests/config/tools/configurations/general/licenses.ts';
 
 test(
@@ -37,7 +37,7 @@ test(
             const prepared = await spawnGspot(root, command, environment);
             expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
         }
-        await installPrivateTools(root);
+        await installToolProjects(root);
         const baseline = await spawnGspot(root, LICENSE_CHECK, environment);
         expect(baseline.code, baseline.stdout + baseline.stderr).toBe(0);
         expect((JSON.parse(baseline.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);

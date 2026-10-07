@@ -1,7 +1,9 @@
 import type { z } from 'zod';
+import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { outputSchema } from '#cli/parsers/schema/output.ts';
 
 import type {
+    findingSchema,
     knipReportSchema,
     typosEntrySchema,
     eslintReportSchema,
@@ -28,3 +30,8 @@ export type Parsing = OutputPaths & { spec: ParsingCheck; stdout: string; text: 
 
 /** Manifest field mappings and public metadata for one JSON finding. */
 export type JsonFindingSpec = { check: string; help: string; output: OutputSpec };
+
+export type Finding = Defined<z.infer<typeof findingSchema>>;
+
+/** Where a finding points: the file, and the line and column when the check knows them. */
+export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;

@@ -1,10 +1,11 @@
 // Render completed checks without reading process settings or repeating hook diagnostics.
 import { colors } from '#cli/output/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { FAILED_STATUSES } from '#cli/config/execution/runtime.ts';
 import { EXIT_ERROR, MS_PER_SECOND } from '#cli/config/platform/runtime.ts';
+import type { RunReport, CheckResult } from '#cli/types/execution/runtime.ts';
 import type { Columns, OutputOptions, ProgressStream } from '#cli/types/output.ts';
-import type { Finding, RunReport, CheckResult } from '#cli/types/execution/runtime.ts';
 
 import {
     FILES_WIDTH,

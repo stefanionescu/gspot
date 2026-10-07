@@ -5,7 +5,7 @@ import { readManifests } from '#cli/repository/manifests.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
-import { isInScope, pathMatcher, filenameMatcher, isPrivateToolPath } from '#cli/repository/selectors.ts';
+import { isInScope, pathMatcher, filenameMatcher, isToolProjectPath } from '#cli/repository/selectors.ts';
 
 import type {
     Layout,
@@ -26,7 +26,7 @@ function dependencyMap(projectManifests: ProjectManifest[], scope: string): Map<
 
 function layout(files: TrackedFile[], projectManifests: ProjectManifest[], scope: string): Layout {
     const candidates = files.filter(
-        (file) => file.kind === 'source' && !isPrivateToolPath(file.path) && isInScope(file.path, scope),
+        (file) => file.kind === 'source' && !isToolProjectPath(file.path) && isInScope(file.path, scope),
     );
     const extensionCounts = new Map<string, number>();
     const shebangs = new Set(

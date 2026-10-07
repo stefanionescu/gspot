@@ -2,14 +2,21 @@
 import ignore from 'ignore';
 import { readText } from '#cli/platform/source.ts';
 import { toolName } from '#cli/configurations/pins.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { coversScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
-import type { Host, Skip, PlanOptions, NativeIgnore, SelectionStatus } from '#cli/types/execution/planning.ts';
+
+import type {
+    Host,
+    Skip,
+    Session,
+    PlanOptions,
+    NativeIgnore,
+    PlannedCheck,
+    SelectionStatus,
+} from '#cli/types/planning.ts';
 
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
 function conditionSkip(check: PlannedCheck, hasGit: boolean): Skip {

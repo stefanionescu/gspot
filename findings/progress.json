@@ -1,5 +1,5 @@
 {
-    "openRecords": 1092,
+    "openRecords": 1072,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,13 +151,15 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1092,
+        "openRecords": 1072,
         "records": 1092,
         "batches": [
             {
                 "id": "levels",
                 "status": "pending",
-                "records": ["slices/kits-other-languages/007"]
+                "records": ["slices/kits-other-languages/007"],
+                "completedAssignments": 0,
+                "unresolvedAssignments": 1
             },
             {
                 "id": "policy-execution",
@@ -454,7 +456,9 @@
                     "review/code-execution/047",
                     "review/code-execution/048",
                     "review/code-commands/052"
-                ]
+                ],
+                "completedAssignments": 0,
+                "unresolvedAssignments": 291
             },
             {
                 "id": "python",
@@ -499,7 +503,9 @@
                     "slices/tests-integration-commands/040",
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
-                ]
+                ],
+                "completedAssignments": 0,
+                "unresolvedAssignments": 39
             },
             {
                 "id": "javascript-web",
@@ -604,7 +610,9 @@
                     "slices/tests-integration-checks/039",
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
-                ]
+                ],
+                "completedAssignments": 0,
+                "unresolvedAssignments": 99
             },
             {
                 "id": "swift-bash-sql",
@@ -692,7 +700,9 @@
                     "slices/tests-integration-generation/012",
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
-                ]
+                ],
+                "completedAssignments": 0,
+                "unresolvedAssignments": 82
             },
             {
                 "id": "frameworks-platforms",
@@ -829,7 +839,9 @@
                     "slices/tests-integration-execution/007",
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
-                ]
+                ],
+                "completedAssignments": 0,
+                "unresolvedAssignments": 131
             },
             {
                 "id": "test-quality",
@@ -1304,11 +1316,13 @@
                     "review/verification/025",
                     "review/verification/026",
                     "review/verification/029"
-                ]
+                ],
+                "completedAssignments": 0,
+                "unresolvedAssignments": 469
             },
             {
                 "id": "scripts-repository",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "main/001",
                     "slices/config/015",
@@ -1442,11 +1456,13 @@
                     "review/repository-root/046",
                     "review/repository-root/047",
                     "review/owner-decisions/007"
-                ]
+                ],
+                "completedAssignments": 8,
+                "unresolvedAssignments": 124
             },
             {
                 "id": "installation-docs",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "main/001",
                     "main/064",
@@ -1585,7 +1601,9 @@
                     "review/docs-site/046",
                     "review/docs-site/048",
                     "review/docs-site/049"
-                ]
+                ],
+                "completedAssignments": 2,
+                "unresolvedAssignments": 135
             },
             {
                 "id": "policy-file",
@@ -1682,11 +1700,13 @@
                     "review/policy-exceptions/060",
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
-                ]
+                ],
+                "completedAssignments": 0,
+                "unresolvedAssignments": 91
             },
             {
                 "id": "layout",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "review/source-layout/001",
                     "review/source-layout/002",
@@ -1777,11 +1797,13 @@
                     "review/tests-layout/044",
                     "review/tests-layout/045",
                     "review/tests-layout/046"
-                ]
+                ],
+                "completedAssignments": 8,
+                "unresolvedAssignments": 81
             },
             {
                 "id": "configurations",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "review/configurations-plugin/001",
                     "review/configurations-plugin/002",
@@ -1842,11 +1864,13 @@
                     "review/configurations-plugin/064",
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
-                ]
+                ],
+                "completedAssignments": 1,
+                "unresolvedAssignments": 58
             },
             {
                 "id": "names",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "review/glossary/001",
                     "review/glossary/002",
@@ -1876,7 +1900,9 @@
                     "review/glossary/027",
                     "review/glossary/028",
                     "review/glossary/029"
-                ]
+                ],
+                "completedAssignments": 1,
+                "unresolvedAssignments": 27
             }
         ],
         "overlapPolicy": "Each starting record retains its ID and original quotation. Overlapping records appear in every applicable batch. Batch assignment does not close a finding. Second-pass slice corrections precede area and main-summary reconciliation."
@@ -3151,9 +3177,14 @@
         },
         "main/001": {
             "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "npm-only packaging and release workflow prepared; CLI/plugin/docs builds and packed-plugin consumers passed."
+            ],
+            "remaining": [
+                "Release preparation and final verification remain. External first npm publication, trusted publisher/account setup, Cloudflare repository secrets/domain setup, release tag/publication and deployment are outside this implementation boundary."
+            ]
         },
         "main/017": {
             "status": "partial",
@@ -3164,8 +3195,11 @@
         "main/064": {
             "status": "partial",
             "owner": "rules",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "DOCS-REVIEW merged, naming casing/ownership sections moved and TASKS moved; generated rules refreshed."
+            ],
+            "remaining": ["Playwright, NextIntl and Node rule applicability records remain."]
         },
         "main/097": {
             "status": "pending",
@@ -4152,10 +4186,13 @@
             "verification": []
         },
         "review/configurations-plugin/054": {
-            "status": "pending",
+            "status": "complete",
             "owner": "rules",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "TASKS moved into engineering agent rules in shipped and generated selections. gspot apply and staged drift checks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/configurations-plugin/055": {
             "status": "pending",
@@ -4332,10 +4369,13 @@
             "verification": []
         },
         "review/docs-site/021": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Schema URL and latest-release description updated. Docs build passed 314 pages; docs TypeScript and staged checks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/docs-site/024": {
             "status": "pending",
@@ -4458,10 +4498,13 @@
             "verification": []
         },
         "review/docs-site/049": {
-            "status": "pending",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Authored AGENTS rule gives one check name in manifest and code. Staged documentation checks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/glossary/001": {
             "status": "pending",
@@ -4488,10 +4531,13 @@
             "verification": []
         },
         "review/glossary/005": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": ["Prescribed files, types and toolProjectPackage names moved; pins/type checks passed."],
+            "remaining": [
+                "Remaining private-tool-project terminology must be removed; real private-registry terminology remains."
+            ]
         },
         "review/glossary/006": {
             "status": "pending",
@@ -4542,10 +4588,13 @@
             "verification": []
         },
         "review/glossary/014": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Copy folders, FileCopy/FileCopies, copyFiles and copyIntoScratch replace old snapshot/workspace names; callers and comments updated. Focused copy tests and staged checks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/glossary/015": {
             "status": "pending",
@@ -4632,46 +4681,69 @@
             "verification": []
         },
         "review/owner-decisions/001": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Removed archives, flags, build and release assets; npm mise pin and source launcher retained. CLI build, serialization/pin tests, staged checks and commit hooks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/owner-decisions/002": {
-            "status": "pending",
+            "status": "complete",
             "owner": "rules",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Authored and installed TALKING match the original historical bytes; both level-selection checks pass. WRITING replacement removed; staged drift check passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/owner-decisions/003": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Restored all six historical groups and 83 terms; group-disable controls removed. Restored-term/recommended-boundary tests passed; naming checks passed in all five scopes.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/owner-decisions/004": {
-            "status": "pending",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Domain and schema URLs use generativespotting.com; Workers route and source docs dispatch updated. Docs build passed 314 pages and local fragments. Live setup stays in main/001.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/owner-decisions/005": {
-            "status": "pending",
+            "status": "partial",
             "owner": "registry",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Scoped packed registry, private token protection and Python credential index implemented; registry/auth/Bun-lock probes passed."
+            ],
+            "remaining": [
+                "Package launcher still failed because shfmt was absent from consumer PATH; affected package/tool acceptance remains pending."
+            ]
         },
         "review/owner-decisions/006": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Release and docs workflow environments removed; repository secrets and workflow trusted-publisher instructions retained. Authenticated actions/pinact and staged workflow checks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/owner-decisions/007": {
-            "status": "pending",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "CONTRIBUTING and its links removed. AGENTS now owns check-name, test-layout and three schema-home rules. Staged documentation and architecture checks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/policy-exceptions/003": {
             "status": "pending",
@@ -5052,10 +5124,13 @@
             "verification": []
         },
         "review/repository-root/002": {
-            "status": "pending",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Plugin builds no longer rewrite tracked ESLint data. Explicit maintenance captures the gspot preset; a plugin test compares the shipped recommended preset. Plugin build and preset comparison passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/repository-root/003": {
             "status": "pending",
@@ -5094,10 +5169,13 @@
             "verification": []
         },
         "review/repository-root/015": {
-            "status": "pending",
+            "status": "partial",
             "owner": "registry",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Runner, packing, scoped npmrc and cancellation consolidated; SIGINT/SIGTERM cleanup tests passed."
+            ],
+            "remaining": ["Successful affected package/tool runs remain pending runner native PATH repair."]
         },
         "review/repository-root/016": {
             "status": "pending",
@@ -5160,16 +5238,20 @@
             "verification": []
         },
         "review/repository-root/034": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": ["Duplicate plugin JSON_INDENT removed; builds no longer refresh tracked presets."],
+            "remaining": ["Merge remaining maintenance formatting blocks into writeFormattedJson."]
         },
         "review/repository-root/035": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Embedded Python replaced by the approved executable tests/harness/ruff_wheel.py and python3 caller. Ruff, format, pydoclint and basedpyright staged checks passed; private-index tests passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/repository-root/037": {
             "status": "pending",
@@ -5196,10 +5278,13 @@
             "verification": []
         },
         "review/repository-root/042": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Approved flat plugin build and compiler-generated declarations pass strict packed NodeNext plus Node/Bun imports."
+            ],
+            "remaining": ["Explicit all-rules data refresh or prescribed code-commands/029 removal remains."]
         },
         "review/repository-root/045": {
             "status": "pending",
@@ -5214,10 +5299,13 @@
             "verification": []
         },
         "review/repository-root/047": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": ["Release source/test/constants use the owner-approved flat paths."],
+            "remaining": [
+                "Mise tasks, database workflow/test move and gate removal remain; timeout depends on measured carve-outs/001."
+            ]
         },
         "review/source-layout/001": {
             "status": "pending",
@@ -5232,10 +5320,13 @@
             "verification": []
         },
         "review/source-layout/003": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Pins, mise pin calculations and npm tool names have one configurations owner; pin types moved with it. Focused pins/schema tests: 76 passed, 213 assertions. CLI/root typechecks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/source-layout/004": {
             "status": "pending",
@@ -5250,10 +5341,13 @@
             "verification": []
         },
         "review/source-layout/006": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "toolProjectPackage merged into configurations/pins.ts; installation tests merged into its pins test. Focused pin tests and staged architecture check passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/source-layout/007": {
             "status": "pending",
@@ -5286,10 +5380,13 @@
             "verification": []
         },
         "review/source-layout/012": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Configuration assets, excludeErrors, FIRST_READ, agent_rules schema, relativePath and Level moved to their prescribed owners. Policy no longer imports agent rules; rules import policy. Focused rules/schema tests and staged architecture passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/source-layout/013": {
             "status": "pending",
@@ -5508,10 +5605,13 @@
             "verification": []
         },
         "review/source-layout/053": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "AGENTS lists file-format, policy and ownership-log schema homes after source-layout/012. Staged docs path checks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/source-layout/055": {
             "status": "pending",
@@ -6282,10 +6382,13 @@
             "verification": []
         },
         "review/tests-layout/004": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "npm registry, private Python index, constants and types moved into their flat harness owners; duplicate registry alias/folder removed. Credential/Bun-lock probes and 5 focused tests with 52 assertions passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/tests-layout/005": {
             "status": "pending",
@@ -6402,10 +6505,13 @@
             "verification": []
         },
         "review/tests-layout/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "All six prescribed copy tests moved into execution/copy with their owner imports. Focused copy tests and staged checks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/tests-layout/029": {
             "status": "pending",
@@ -6426,10 +6532,13 @@
             "verification": []
         },
         "review/tests-layout/032": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "Script tests and constants moved to scripts owners, with owner-approved flat release paths. Deleted archive tests and obsolete harness-budget test retained their prescribed deletion. Focused scripts tests and staged checks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/tests-layout/033": {
             "status": "pending",
@@ -6498,10 +6607,13 @@
             "verification": []
         },
         "review/tests-layout/046": {
-            "status": "pending",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": []
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "verification": [
+                "AGENTS states behavioral test config/type mirrors, singleton flattening and shared samples. Staged documentation checks passed.",
+                "gspot check --staged: 160 checks; only anonymous GitHub API rate limit interrupted actions/pinact. Authenticated staged actions/pinact passed. Commit hooks: 106 checks passed, no findings; commit message check passed."
+            ]
         },
         "review/tests-tools/001": {
             "status": "pending",
@@ -8435,5 +8547,56 @@
             "commit": null,
             "verification": []
         }
-    }
+    },
+    "implementationCheckpoints": [
+        {
+            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "completedRecords": [
+                "review/owner-decisions/001",
+                "review/owner-decisions/002",
+                "review/owner-decisions/003",
+                "review/owner-decisions/004",
+                "review/owner-decisions/006",
+                "review/owner-decisions/007",
+                "review/source-layout/003",
+                "review/source-layout/006",
+                "review/source-layout/012",
+                "review/source-layout/053",
+                "review/repository-root/002",
+                "review/repository-root/035",
+                "review/docs-site/021",
+                "review/docs-site/049",
+                "review/tests-layout/004",
+                "review/tests-layout/028",
+                "review/tests-layout/032",
+                "review/tests-layout/046",
+                "review/glossary/014",
+                "review/configurations-plugin/054"
+            ],
+            "unresolvedRecords": 1072,
+            "validation": [
+                "mise run setup",
+                "mise run build:plugin",
+                "mise run build:cli",
+                "mise run build:docs: 314 pages and local fragments",
+                "Focused pins/schema: 76 tests, 213 assertions",
+                "Focused integrated ownership: 106 tests, 279 assertions",
+                "Private registry/Bun/Python: 5 tests, 52 assertions",
+                "Strict packed plugin NodeNext, Node 24.2 and Bun 1.4.2 ESM/CommonJS consumers",
+                "gspot check --staged; authenticated actions/pinact followup; mandatory commit hooks passed",
+                "Mandatory pre-push hook: 147 checks passed, 13 skipped, zero findings; push main succeeded."
+            ],
+            "limitations": [
+                "No full suite or CI platform result yet",
+                "Package launcher: SIGTERM passed; initialization/check failed missing shfmt on inherited PATH",
+                "gspot doctor reports unresolved suggestions/readiness",
+                "No package publication, release tag, live account setup or deployment"
+            ],
+            "ci": {
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37566858503",
+                "status": "pending",
+                "platformResults": {}
+            }
+        }
+    ]
 }

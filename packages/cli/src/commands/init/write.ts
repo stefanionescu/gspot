@@ -2,8 +2,8 @@
 import { isDeepStrictEqual } from 'node:util';
 import { colors } from '#cli/output/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';

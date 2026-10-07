@@ -6,7 +6,7 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

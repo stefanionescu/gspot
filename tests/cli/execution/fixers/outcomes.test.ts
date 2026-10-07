@@ -4,7 +4,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { applyFixers } from '#cli/execution/fixers.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';

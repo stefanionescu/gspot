@@ -1,21 +1,22 @@
 import ts from 'typescript';
 import { join, dirname, relative } from 'node:path';
+import { ownedInputs } from '#cli/planning/plan.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { parseJsonRecord } from '#cli/parsers/json.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
-import { ownedInputs } from '#cli/execution/planning/plan.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import type { CheckResult } from '#cli/types/execution/runtime.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
 import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
-import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
 import { DOT_GSPOT, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 // Both source reads and emitted paths must stay inside the disposable project tree.
@@ -54,7 +55,7 @@ function assertBuildInside(root: string, path: string, visited = new Set<string>
 
 // Restrict the disposable JavaScript project to its scope and ambient roots, and retain its effective options.
 function writeScopeProject(
-    session: Session,
+    session: ToolSession,
     scratch: string,
     planned: PlannedCheck,
     target: string,
@@ -105,7 +106,7 @@ function restoreCommandPaths(result: CheckResult, scratch: string, root: string)
  * @param planned the compiler check for one scope
  * @returns compiler findings and the shared tool execution status
  */
-export async function tsc(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function tsc(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const config = getTsconfig(session.root, join(session.root, planned.scope.scope.path, 'tsconfig.json'));
     const hasReferences = (config?.projectReferences?.length ?? 0) > 0;
     const command = hasReferences
@@ -124,12 +125,12 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
 }
 
 /**
- * Check JavaScript with the repository's ambient types instead of the private tool installation.
+ * Check JavaScript with the repository's ambient types instead of the tool project installation.
  * @param session the selected repository and tool reads
  * @param planned the JavaScript compiler check
  * @returns compiler diagnostics with source paths and the command status
  */
-export async function checkjs(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function checkjs(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.scope.path;
     const jsconfig = planned.manifest?.configs.find(
         (entry) => entry.target === `${CONFIGURATION_DIRECTORY}/jsconfig.json`,

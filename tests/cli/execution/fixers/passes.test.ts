@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';

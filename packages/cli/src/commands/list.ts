@@ -1,14 +1,14 @@
 import { resolve } from 'node:path';
 import { findRoot } from '#cli/repository/root.ts';
+import type { Session } from '#cli/types/planning.ts';
 import { printResult } from '#cli/output/messages.ts';
 import { Argument } from '@commander-js/extra-typings';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
+import { selectionStatus } from '#cli/planning/skips.ts';
 import type { CommandResult } from '#cli/types/output.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 import { detectUnselected } from '#cli/configurations/detect.ts';
-import { selectionStatus } from '#cli/execution/planning/skips.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/options.ts';
 import { everyTable, listSettings } from '#cli/policy/settings/entries.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';

@@ -62,7 +62,7 @@ function readToolVersion(root: string, cwd: string, path: string, tool: ToolPin)
     return parseVersionOutput(tool, result, installedVersion, miseVersion(path, tool));
 }
 
-// The inspection of a library whose private package.json declares a version.
+// The inspection of a library whose tool-project package.json declares a version.
 function libraryInspection(root: string, tool: ToolPin, path: string, found: string, hint: string): ToolInspection {
     const want = tool.version === undefined ? {} : { want: tool.version };
     const floor = tool.min_version ?? tool.version ?? found;
@@ -117,7 +117,7 @@ function pinnedInspection(inspected: Inspected, want: string): ToolInspection {
     return { name: tool.name, state, path, want, found: read.version, hint, floor };
 }
 
-// Project compilers keep their native ownership; a declared private package supplies the compiler when absent.
+// Project compilers keep their native ownership; a declared tool-project package supplies the compiler when absent.
 function inspectProjectExecutable(
     context: ToolSearch,
     cwd: string,
@@ -139,13 +139,13 @@ function inspectProjectExecutable(
     });
     if (project !== undefined) return executableInspection({ root, cwd, tool, path: project, hint });
     if (isInstallationPending(context, tool, runner)) return pendingInspection(tool);
-    const [privatePath] = locateCandidates(root, tool.name, {
+    const [toolProjectPath] = locateCandidates(root, tool.name, {
         searchFolders: [cwd, root],
-        privateKind: installation.kind,
+        toolProjectKind: installation.kind,
         installedRoot: context.installedRoot,
     });
-    if (privatePath !== undefined)
-        return pinnedInspection({ root, cwd, tool, path: privatePath, hint }, tool.version ?? installation.version);
+    if (toolProjectPath !== undefined)
+        return pinnedInspection({ root, cwd, tool, path: toolProjectPath, hint }, tool.version ?? installation.version);
     return undefined;
 }
 
@@ -168,7 +168,7 @@ function inspectExecutable(context: ToolSearch, cwd: string, tool: ToolPin, runn
     const hint = installHint(tool, runner);
     const [path] = locateCandidates(root, tool.name, {
         searchFolders,
-        privateKind: tool.system === true ? undefined : kind,
+        toolProjectKind: tool.system === true ? undefined : kind,
         installedRoot: context.installedRoot,
     });
     if (path === undefined) return missingInspection(tool, hint);
@@ -197,7 +197,7 @@ function pendingInspection(tool: ToolPin): ToolInspection {
     };
 }
 
-// The accepted floor applies equally to host tools and pinned private tools.
+// The accepted floor applies equally to host tools and pinned tool-project tools.
 function isBelowFloor(found: string, floor: string): boolean {
     const version = semver.coerce(found);
     const lowest = semver.coerce(floor);

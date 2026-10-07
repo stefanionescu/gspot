@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { unlinkSync, symlinkSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { preparePolicy } from '#cli/commands/policy-edit.ts';
 import type { RawPolicy } from '#cli/types/policy/settings.ts';
+import { applicableManifests } from '#cli/planning/requirements.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
-import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import { AUTOMATIC_GENERAL_CONFIGURATIONS } from '#tests/config/harness/policy.ts';
 
 import {
@@ -26,7 +26,7 @@ import {
     NEXT_BUILD_ROUTES,
     NEXT_BUILD_TABLES,
     NODE_REQUIREMENTS,
-} from '#tests/config/cli/execution/planning/selection.ts';
+} from '#tests/config/cli/planning/selection.ts';
 
 test('a check version prerequisite cannot lower its tool-wide requirement', async () => {
     await using sandbox = await testdir({

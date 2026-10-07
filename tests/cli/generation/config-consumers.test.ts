@@ -4,9 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { npmPins } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { configuredChecks } from '#cli/execution/planning/plan.ts';
-import { applicableManifests } from '#cli/execution/planning/requirements.ts';
+import { openSession } from '#cli/commands/session.ts';
+import { configuredChecks } from '#cli/planning/plan.ts';
+import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { StylelintConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {

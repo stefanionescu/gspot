@@ -2,7 +2,7 @@ import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import type { Planned } from '#cli/types/lifecycle/output.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import type { ToolOwner, InstalledOutput } from '#cli/types/tools/install.ts';
@@ -22,13 +22,13 @@ export type InstallationContext = {
 /** One installation phase and the commands shown by its preview. */
 export type InstallationStep = {
     preview: (
-        session: Session,
+        session: ToolSession,
         manifests: Manifest[],
         generated: Generated,
         refreshLocks: boolean,
     ) => InstallationPreview;
     run: (
-        session: Session,
+        session: ToolSession,
         manifests: Manifest[],
         context: InstallationContext,
         preview: InstallationPreview,

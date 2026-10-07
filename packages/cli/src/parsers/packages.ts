@@ -212,7 +212,7 @@ export function declaredPackageInstaller(manifest: PackageManifest): PackageInst
 }
 
 /**
- * Validate a private npm project and identify its package manager and lock file.
+ * Validate an npm tool project and identify its package manager and lock file.
  * @param text the generated or recorded package.json contents
  * @returns the declared manager, dependencies, and repository-relative lock path
  */
@@ -287,5 +287,5 @@ export function manifestParser(path: string): ManifestParser | undefined {
  */
 export function packageLockFile(installer: LockName): ToolProjectLockfileName {
     for (const entry of LOCKFILES) if ('private' in entry && entry.client === installer) return entry.file;
-    throw new Error(`The lockfile registry declares no private lock for ${installer}.`);
+    throw new Error(`The lockfile registry declares no tool project lock for ${installer}.`);
 }

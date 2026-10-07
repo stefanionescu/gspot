@@ -2,7 +2,7 @@ import { format } from 'prettier';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import { managedBlock } from '#cli/rules/instructions.ts';
 import { everyManifest } from '#cli/configurations/select.ts';

@@ -1,4 +1,4 @@
-// Matching and registry portability for private npm tool locks.
+// Matching and registry portability for npm tool-project locks.
 import semver from 'semver';
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';

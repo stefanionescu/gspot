@@ -1,6 +1,7 @@
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import type { CommandInvocation } from '#cli/types/execution/command.ts';
-import type { Finding, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
 /** Findings and process status accumulated across one check's commands. */
 export type CommandRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };

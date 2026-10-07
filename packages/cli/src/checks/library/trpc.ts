@@ -1,7 +1,8 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { ArchitectureElement } from '#cli/types/policy/settings.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { getScopeImports } from '#cli/checks/language/javascript/imports.ts';
 
 /**

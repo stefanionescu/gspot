@@ -1,7 +1,6 @@
 // Findings from a tool that prints JSON: the manifest names where the list is and which field holds what.
 import { valueAt } from '#cli/platform/objects.ts';
-import type { Finding } from '#cli/types/execution/runtime.ts';
-import type { OutputSpec, JsonFindingSpec } from '#cli/types/parsers/output.ts';
+import type { Finding, OutputSpec, JsonFindingSpec } from '#cli/types/parsers/output.ts';
 
 function listAt(value: unknown, path: string | undefined): unknown[] {
     const found = path === undefined || path === '' ? value : valueAt(value, path.split('.'));

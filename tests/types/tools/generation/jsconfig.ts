@@ -1,4 +1,4 @@
-import type { Finding } from '#cli/types/execution/runtime.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 
 /** Authored compiler inputs, expected native diagnostics and source correction for one JavaScript project. */
 export type JsconfigCase = {

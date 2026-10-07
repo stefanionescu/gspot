@@ -1,5 +1,6 @@
+import type { StageFilter } from '#cli/types/planning.ts';
 import type { CommandResult, OutputOptions } from '#cli/types/output.ts';
-import type { RunReport, CheckResult, StageFilter } from '#cli/types/execution/runtime.ts';
+import type { RunReport, CheckResult } from '#cli/types/execution/runtime.ts';
 import type { PushInput, StagedPaths, ChangedPaths, PushSelection } from '#cli/types/repository/revisions.ts';
 
 export type Checked = PushReport['revisions'][number];

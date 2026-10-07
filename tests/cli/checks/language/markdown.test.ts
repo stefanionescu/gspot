@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';

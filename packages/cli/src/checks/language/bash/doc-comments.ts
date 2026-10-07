@@ -1,6 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { Engine } from '#cli/types/execution/runtime.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
-import type { Engine, Finding } from '#cli/types/execution/runtime.ts';
 import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { WORD, VAGUE_WORDS, BASH_DOC_SECTIONS, SHELLCHECK_DIRECTIVE } from '#cli/config/checks/language/bash.ts';
 

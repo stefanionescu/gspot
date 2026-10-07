@@ -1,4 +1,5 @@
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 
 /** The fixture contract owned by this behavior's tests. */
 export type SiteReportCase = {

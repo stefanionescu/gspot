@@ -81,6 +81,3 @@ export const YARN_ARGUMENTS = {
     classic: { lock: ['yarn', 'install'], install: ['yarn', 'install', '--frozen-lockfile'] },
     berry: { lock: ['yarn', 'install', '--mode=update-lockfile'], install: ['yarn', 'install', '--immutable'] },
 } as const;
-
-/** Private Yarn projects use a local node_modules tree with the shared package cache. */
-export const YARN_PRIVATE_SETTINGS = 'nodeLinker: node-modules\nenableGlobalCache: true\n';

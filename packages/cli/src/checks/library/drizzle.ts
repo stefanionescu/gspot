@@ -3,11 +3,12 @@ import { globPaths } from '#cli/platform/paths.ts';
 import { join, dirname, basename } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { typescriptNodes } from '#cli/parsers/typescript.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 function generatedContents(cwd: string): Map<string, Buffer> {
     const paths = globPaths(cwd, ['**/*', '!**/node_modules/**', '!**/.venv/**', '!**/.gspot/**'], { dot: true });

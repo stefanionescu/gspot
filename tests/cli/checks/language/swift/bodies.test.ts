@@ -1,7 +1,7 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { getSwiftFunctions } from '#cli/parsers/swift.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { parseTestSource } from '#tests/harness/syntax.ts';

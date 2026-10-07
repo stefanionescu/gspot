@@ -1,6 +1,6 @@
 # Configurations and the ESLint Plugin
 
-59 unresolved review records remain.
+58 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -130,3 +130,11 @@ All 17 rules are enabled by some generated ESLint tool file. `require-server-onl
 - **Read rule ids, messages, and path filters, not every pattern line:** `language/swift/semgrep/swift.yml.tmpl`, `framework/express/semgrep/express.yml.tmpl`, and `framework/fastapi/semgrep/fastapi.yml.tmpl`.
 - **Summarized with a script, not line by line:** `general/naming/policy.json`.
 - **Listed but not read:** `tests/plugin/rules/*.test.ts` (17 files, 1,305 lines).
+
+## Implementation status on October 7, 2026
+
+The original records above are retained. These records are complete at `c6aa35af7509807f32cd9427563731e801cd8d9e`.
+
+| ID                                 | Status   | Implementation and verification evidence                                                                                  |
+| ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `review/configurations-plugin/054` | complete | TASKS moved into engineering agent rules in shipped and generated selections. gspot apply and staged drift checks passed. |

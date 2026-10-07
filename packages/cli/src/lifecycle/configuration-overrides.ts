@@ -1,6 +1,6 @@
+import type { Session } from '#cli/types/planning.ts';
 import { selectForInit } from '#cli/lifecycle/selection.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
-import type { Session } from '#cli/types/execution/session.ts';
 
 import type {
     InitInputs,

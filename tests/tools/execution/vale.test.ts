@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { parseAlerts } from '#cli/parsers/vale.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { vale } from '#cli/checks/general/vale.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { runEngineCheck } from '#cli/execution/engines.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';

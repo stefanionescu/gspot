@@ -5,15 +5,16 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { walkRoot } from '#cli/platform/root/open.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { xccovSchema } from '#cli/parsers/schema/xctest.ts';
 import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
 import { FULL_PERCENTAGE } from '#cli/config/platform/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { prepareBuild } from '#cli/checks/language/swift/cache.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import type { CoverageFloor, CoverageReport } from '#cli/types/checks/tool/xctest.ts';
 
 import {

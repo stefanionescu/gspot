@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import { LOCKS } from '#tests/config/cli/checks/general/structure/license-locks.ts';
 import { staleAllowlists } from '#cli/checks/general/structure/stale-allowlists.ts';

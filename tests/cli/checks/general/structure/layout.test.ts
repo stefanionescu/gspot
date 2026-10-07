@@ -5,7 +5,7 @@ import { commitAll } from '#tests/harness/git.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { PAGE } from '#tests/config/cli/checks/general/structure/layout.ts';

@@ -1,19 +1,18 @@
 import { npmPins } from '#cli/configurations/pins.ts';
 import { isYarnBerry } from '#cli/parsers/packages.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { YARN_PRIVATE_SETTINGS } from '#cli/config/tools/npm.ts';
-import { JSON_INDENT } from '#cli/config/generation/templates.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
+import { JSON_INDENT, YARN_TOOL_PROJECT_SETTINGS } from '#cli/config/generation/templates.ts';
 
 /**
- * Generate the npm tools as a private project without adding dependencies to the repository.
+ * Generate the npm tools as a tool project without adding dependencies to the repository.
  * @param manifests the selected manifests.
  * @param installer the package manager the repository uses, or undefined without one.
  * @param runner the task runner the policy names, or undefined.
- * @returns the private project's files, or none without a package manager.
+ * @returns the tool project's files, or none without a package manager.
  */
 export function npmProject(
     manifests: Manifest[],
@@ -40,7 +39,7 @@ export function npmProject(
     if (isYarnBerry(installer))
         files.push({
             path: YARN_SETTINGS,
-            content: YARN_PRIVATE_SETTINGS,
+            content: YARN_TOOL_PROJECT_SETTINGS,
             readOnly: true,
             kind: 'config',
         });

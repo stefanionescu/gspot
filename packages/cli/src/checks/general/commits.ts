@@ -2,14 +2,15 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { runGit } from '#cli/platform/git.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
+import type { CheckResult } from '#cli/types/execution/runtime.ts';
 import { getPushBase } from '#cli/repository/revisions/changes.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import type { CommitSelection } from '#cli/types/repository/revisions.ts';
-import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
-async function pushedCommits(session: Session, planned: PlannedCheck): Promise<CommitSelection> {
+async function pushedCommits(session: ToolSession, planned: PlannedCheck): Promise<CommitSelection> {
     if (planned.commits !== undefined) return planned.commits;
     const base = await getPushBase(session.root, session.cancelSignal);
     const listed = await runGit(session.root, ['rev-list', `${base}..HEAD`, '--'], {
@@ -25,7 +26,7 @@ async function pushedCommits(session: Session, planned: PlannedCheck): Promise<C
  * @param planned the planned check
  * @returns the check result
  */
-export async function commitlintRange(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function commitlintRange(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result: CheckResult = {
         check: planned.spec.name,

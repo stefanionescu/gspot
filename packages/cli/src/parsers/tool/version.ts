@@ -23,7 +23,7 @@ function versionFailure(result: SpawnResult, tool: ToolPin, text: string): Parse
  * Interpret an executable version response for both installation and later inspections.
  * @param tool the pin.
  * @param result what the version command printed and how it exited.
- * @param installedPackage the version the private npm package declares, when the tool is one.
+ * @param installedPackage the version the npm tool package declares, when the tool is one.
  * @param installedMiseVersion the version mise installed, when the tool is a mise tool.
  * @returns the version, or the state and note of a tool that gave none.
  */

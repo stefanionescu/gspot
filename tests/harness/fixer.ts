@@ -1,8 +1,7 @@
 // A test repository with one fixer check whose fix command each test replaces with its own script.
-import { planRun } from '#cli/execution/planning/plan.ts';
+import { planRun } from '#cli/planning/plan.ts';
 import { FIXER_POLICY } from '#tests/config/harness/fixer.ts';
-import type { Session } from '#cli/types/execution/session.ts';
-import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 
 /**
  * The planned fixer of the sandbox with its command replaced by a script.

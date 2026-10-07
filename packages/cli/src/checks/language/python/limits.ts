@@ -1,6 +1,7 @@
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { visitPythonModules } from '#cli/parsers/python/source.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 /**
  * Report Python files above the configured code-line ceiling.

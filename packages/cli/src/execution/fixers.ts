@@ -6,7 +6,8 @@ import { unlinkSync, writeFileSync } from 'node:fs';
 import { readSource } from '#cli/platform/source.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import type { PreparedCommand } from '#cli/types/execution/command.ts';
@@ -14,8 +15,8 @@ import { isolatedFiles } from '#cli/execution/command/placeholders.ts';
 import { copyFiles, copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/execution/runtime.ts';
 import { prepareCommand, commandEnvironment } from '#cli/execution/command/runner.ts';
+import type { FixReport, FixResult, FixOptions } from '#cli/types/execution/runtime.ts';
 import { hasToolError, toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
-import type { FixReport, FixResult, FixOptions, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
     const contents = new Map<string, Buffer | undefined>();
@@ -52,7 +53,7 @@ function fixFailure(planned: PlannedCheck, result: SpawnResult): string | undefi
     return [`${planned.spec.name} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': ');
 }
 
-async function runFix(session: Session, planned: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
+async function runFix(session: ToolSession, planned: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
     const check = planned.spec.name;
     const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const before = contentsOf(prepared.root, paths);
@@ -77,7 +78,7 @@ async function runFix(session: Session, planned: PlannedCheck, prepared: Prepare
 }
 
 async function isolatedFix(
-    session: Session,
+    session: ToolSession,
     planned: PlannedCheck,
     root: string,
     command: string[],
@@ -124,7 +125,7 @@ function mergedResult(first: FixResult | undefined, next: FixResult): FixResult 
 // Each pass after the first reruns the fixers over the files the pass before changed, so a formatter formats what a
 // codemod wrote after it.
 async function fixerPasses(
-    session: Session,
+    session: ToolSession,
     checks: PlannedCheck[],
     root: string,
     paths: string[],
@@ -153,7 +154,7 @@ async function fixerPasses(
  * @param workingDirectory the repository or scratch root
  * @returns the fix outcome, including changes made before a failure
  */
-async function runFixer(session: Session, planned: PlannedCheck, workingDirectory: string): Promise<FixResult> {
+async function runFixer(session: ToolSession, planned: PlannedCheck, workingDirectory: string): Promise<FixResult> {
     const check = planned.spec.name;
     if (session.cancelSignal?.aborted === true)
         return { check, status: 'failed', changed: [], note: 'The fix was canceled.' };
@@ -195,7 +196,11 @@ async function runFixer(session: Session, planned: PlannedCheck, workingDirector
  * @param options whether to run in a scratch copy and report diffs
  * @returns the fix results, changed paths, and dry-run diffs
  */
-export async function applyFixers(session: Session, planned: PlannedCheck[], options: FixOptions): Promise<FixReport> {
+export async function applyFixers(
+    session: ToolSession,
+    planned: PlannedCheck[],
+    options: FixOptions,
+): Promise<FixReport> {
     const { isDryRun } = options;
     const checks = planned.filter((check) => check.spec.fix !== undefined);
     const paths = [

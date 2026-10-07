@@ -5,11 +5,12 @@ import { readText } from '#cli/platform/source.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { getIniSection } from '#cli/parsers/tool/configuration.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { importLinterSchema } from '#cli/parsers/schema/python/imports.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { BROKEN_CONTRACT, PYTHON_MANIFEST, IMPORT_CONTRACT_FILES } from '#cli/config/checks/language/python.ts';
 
 function contractConfiguration(input: EngineInput): string | undefined {

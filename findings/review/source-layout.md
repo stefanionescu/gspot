@@ -1,6 +1,6 @@
 # Source Layout: `packages/cli/src` and `packages/eslint-plugin/src`
 
-51 unresolved review records remain.
+47 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -425,3 +425,14 @@ These code paths exist for one situation: one OS, one configuration, one check, 
 ## Not read
 
 Scripts read the header comment, export list and import list of every file: 577 CLI files and 53 plugin files. Function bodies were not read line by line except in the files cited above. These were read in full: `commands/policy-edit.ts`, `commands/apply.ts`, all of `tools/` except `inspect.ts`, `locate.ts`, `vale.ts` and `npm/*` (outlines only), `configurations/declarations.ts`, `configurations/takeover.ts`, `commands/init/replaced.ts`, `checks/registry.ts`, `checks/general/gspot.ts`, `execution/engines.ts`, `execution/finding.ts`, `execution/reproduce.ts`, `lifecycle/rule-diff.ts`, `lifecycle/ownership/installations.ts`, `lifecycle/merge/document.ts`, every file under 35 lines, and the config/types files named in the findings. Line-by-line duplication belongs to the code reviewers.
+
+## Implementation status on October 7, 2026
+
+The original records above are retained. These records are complete at `c6aa35af7509807f32cd9427563731e801cd8d9e`.
+
+| ID                         | Status   | Implementation and verification evidence                                                                                                                                                                                                            |
+| -------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/source-layout/003` | complete | Pins, mise pin calculations and npm tool names have one configurations owner; pin types moved with it. Focused pins/schema tests: 76 passed, 213 assertions. CLI/root typechecks passed.                                                            |
+| `review/source-layout/006` | complete | toolProjectPackage merged into configurations/pins.ts; installation tests merged into its pins test. Focused pin tests and staged architecture check passed.                                                                                        |
+| `review/source-layout/012` | complete | Configuration assets, excludeErrors, FIRST_READ, agent_rules schema, relativePath and Level moved to their prescribed owners. Policy no longer imports agent rules; rules import policy. Focused rules/schema tests and staged architecture passed. |
+| `review/source-layout/053` | complete | AGENTS lists file-format, policy and ownership-log schema homes after source-layout/012. Staged docs path checks passed.                                                                                                                            |

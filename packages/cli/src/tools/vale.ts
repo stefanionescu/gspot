@@ -13,7 +13,7 @@ import { inspectTool, isToolAvailable } from '#cli/tools/inspect.ts';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform/modes.ts';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 
-// Read package names only from the private Vale configuration managed by this repository.
+// Read package names only from the generated Vale configuration managed by this repository.
 function configuredPackages(files: Root): string[] | undefined {
     const source = files.read(VALE_CONFIG);
     if (source === undefined) return undefined;

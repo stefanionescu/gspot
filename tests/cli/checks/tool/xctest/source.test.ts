@@ -1,10 +1,10 @@
 // Test repository for the xctest configuration: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
+import { planRun } from '#cli/planning/plan.ts';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';

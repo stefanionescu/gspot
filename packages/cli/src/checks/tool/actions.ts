@@ -2,13 +2,14 @@ import { join } from 'node:path';
 import type { Scalar, Document } from 'yaml';
 import { readSource } from '#cli/platform/source.ts';
 import { copyFiles } from '#cli/execution/copy/files.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
+import type { CheckResult } from '#cli/types/execution/runtime.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { isMap, isSeq, isAlias, isScalar, parseDocument } from 'yaml';
 import { ACTIONLINT_COMMAND } from '#cli/config/checks/tool/actions.ts';
-import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
 function stepReferences(steps: unknown): unknown[] {
     if (!isSeq(steps)) return [];
@@ -70,7 +71,7 @@ export function actionlintSource(text: string): string {
  * @param planned the planned check
  * @returns the check result
  */
-export async function actionlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function actionlint(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const replacements = new Map<string, string>();
     for (const file of session.repository.files) {
         if (!/\.ya?ml$/u.test(file.path)) continue;

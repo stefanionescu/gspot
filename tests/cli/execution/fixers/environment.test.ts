@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { applyFixers } from '#cli/execution/fixers.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { planFixer, buildFixerPolicy } from '#tests/harness/fixer.ts';
 

@@ -4,7 +4,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { envFiles } from '#cli/checks/general/secrets.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';

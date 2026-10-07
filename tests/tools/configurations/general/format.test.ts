@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
-import { buildToolsPath, installPrivateTools } from '#tests/harness/install.ts';
+import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';
 import { FORMAT_CASES, FORMAT_OVERRIDES_POLICY } from '#tests/config/samples/formatting.ts';
 
 async function expectFormatterCorrection(root: string): Promise<void> {
@@ -55,7 +55,7 @@ test('formatter overrides drive CLI findings and correction without EditorConfig
     });
     const applied = await spawnGspot(directory.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    await installPrivateTools(directory.path);
+    await installToolProjects(directory.path);
     await expectFormatterCorrection(directory.path);
     const { path: root } = directory;
     const reason = 'Generated outputs retain their upstream layout except the reviewed file.';

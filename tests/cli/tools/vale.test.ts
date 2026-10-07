@@ -4,7 +4,7 @@ import { throws } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { hasValePackages, removeValePackages, installValePackages } from '#cli/tools/vale.ts';

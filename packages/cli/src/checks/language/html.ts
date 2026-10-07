@@ -2,11 +2,12 @@ import type { Node } from 'web-tree-sitter';
 import { decodeHTMLAttribute } from 'entities';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ParsedSource } from '#cli/types/parsers/source.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import type { MarkupAttribute } from '#cli/types/checks/language/html.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 import {
     LETTERS,

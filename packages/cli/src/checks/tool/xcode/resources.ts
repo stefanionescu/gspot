@@ -3,8 +3,9 @@ import { join, posix } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { parseJsonDocument } from '#cli/parsers/json.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/tool/xcode.ts';
 import { stringsFileSchema, assetContentsSchema } from '#cli/parsers/schema/xcode.ts';
 

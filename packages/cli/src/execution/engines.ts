@@ -3,18 +3,18 @@ import { join } from 'node:path';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { emptyResult } from '#cli/execution/report.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { GENERATED_DRIFT_CHECK } from '#cli/config/execution/runtime.ts';
 
 import type {
     Engine,
-    Finding,
     Executable,
     CheckResult,
     EngineInput,
-    PlannedCheck,
     CheckRegistry,
     EngineOutcome,
 } from '#cli/types/execution/runtime.ts';
@@ -51,7 +51,10 @@ function engineResult(
  * @param planned the planned check with its scope and files
  * @returns the engine input
  */
-export function engineInput(session: Session, planned: Pick<PlannedCheck, 'scope' | 'spec' | 'files'>): EngineInput {
+export function engineInput(
+    session: ToolSession,
+    planned: Pick<PlannedCheck, 'scope' | 'spec' | 'files'>,
+): EngineInput {
     const input: EngineInput = {
         root: session.root,
         scope: planned.scope.scope.path,
@@ -89,7 +92,7 @@ export function engineInput(session: Session, planned: Pick<PlannedCheck, 'scope
  * @returns the check result with its findings
  */
 export async function runEngineCheck(
-    session: Session,
+    session: ToolSession,
     engine: Engine,
     planned: PlannedCheck,
     staged?: Set<string>,

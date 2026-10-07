@@ -7,32 +7,32 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import { planRun, isActive } from '#cli/planning/plan.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { getCheckRunner } from '#cli/execution/engines.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { IgnoreEntry } from '#cli/types/policy/settings.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { planRun, isActive } from '#cli/execution/planning/plan.ts';
 import { emptyResult, buildRunReport } from '#cli/execution/report.ts';
 import { POLICY_CHECK, RAN_STATUSES, FAILED_STATUSES } from '#cli/config/execution/runtime.ts';
 
 import type {
     Pass,
-    Finding,
     IgnoreUse,
     Executable,
     RunOptions,
     RunOutcome,
     CheckResult,
-    PlannedCheck,
     IgnoredFindings,
     ReplannedFixResult,
 } from '#cli/types/execution/runtime.ts';
 
 // The wrong lines of gspot.toml that reading dropped, reported as one failed check so the rest of the run stands.
-function policyProblemsResult(session: Session): CheckResult | undefined {
+function policyProblemsResult(session: ToolSession): CheckResult | undefined {
     const { problems } = session.policyFiles;
     if (problems.length === 0) return undefined;
     const findings = problems.map((problem) => ({
@@ -45,13 +45,13 @@ function policyProblemsResult(session: Session): CheckResult | undefined {
 }
 
 // The plan and, for each planned check, the function that runs it.
-function planExecutables(session: Session, options: RunOptions): Executable[] {
+function planExecutables(session: ToolSession, options: RunOptions): Executable[] {
     const planned = planRun(session, options);
     return planned.map((check) => ({ check, run: getCheckRunner(check.spec, options.checks) }));
 }
 
 // Rereads the repository after fixers changed it, so the run that follows sees the corrected files.
-async function refreshAfterFixes(session: Session, opened: Session): Promise<void> {
+async function refreshAfterFixes(session: ToolSession, opened: ToolSession): Promise<void> {
     const { declarations, scopes, exclude } = session.policyFiles.policy;
     session.repository = await readRepository(session.root, declarations, scopes, exclude);
     opened.repository = session.repository;
@@ -60,7 +60,7 @@ async function refreshAfterFixes(session: Session, opened: Session): Promise<voi
 }
 
 // The result of a check that cannot run: canceled, skipped by the plan, or in need of a Docker daemon.
-function unrunnable(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
+function unrunnable(session: ToolSession, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
     if (
@@ -156,7 +156,7 @@ async function runChecks(pass: Pass, executables: Executable[]): Promise<CheckRe
 }
 
 // The session of one run: fresh reads, a disposable stack for its resources, and the cancel signal.
-function runSession(opened: Session, options: RunOptions, resources: DisposableStack): Session {
+function runSession(opened: ToolSession, options: RunOptions, resources: DisposableStack): ToolSession {
     const session = {
         ...opened,
         reads: { root: opened.root, sources: new Map<string, Buffer>(), memo: new Map() },
@@ -168,7 +168,11 @@ function runSession(opened: Session, options: RunOptions, resources: DisposableS
 }
 
 // The plan, replanned after fixers changed the repository so the run sees the corrected files.
-async function replanAfterFixes(session: Session, opened: Session, options: RunOptions): Promise<ReplannedFixResult> {
+async function replanAfterFixes(
+    session: ToolSession,
+    opened: ToolSession,
+    options: RunOptions,
+): Promise<ReplannedFixResult> {
     const executables = planExecutables(session, options);
     if (!options.fix) return { executables, fixes: undefined };
     const fixes = await applyFixers(
@@ -193,7 +197,7 @@ function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
  * @param options stage, skips, and fix flags
  * @returns the report, the plan, and the fix report when --fix ran
  */
-export async function executeRun(opened: Session, options: RunOptions): Promise<RunOutcome> {
+export async function executeRun(opened: ToolSession, options: RunOptions): Promise<RunOutcome> {
     using resources = new DisposableStack();
     const session = runSession(opened, options, resources);
     const started = new Date();

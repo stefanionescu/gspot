@@ -4,12 +4,13 @@ import { chmodSync, writeFileSync } from 'node:fs';
 import { compact } from '#cli/platform/objects.ts';
 import { copyFiles } from '#cli/execution/copy/files.ts';
 import { visitSwiftSources } from '#cli/parsers/swift.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
+import type { CheckResult } from '#cli/types/execution/runtime.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import type { InlineDocumentation } from '#cli/types/checks/language/swift.ts';
 import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
-import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
 import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/config/checks/language/swift.ts';
 
 // The grammar can expose comment-shaped extras inside strings. Those are literal content.
@@ -65,7 +66,7 @@ function restoreInline(result: CheckResult, checked: CheckResult, candidates: In
  * @param planned the native check, scope, and selected files
  * @returns native findings with inline documentation positions restored
  */
-export async function swiftlint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function swiftlint(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result = await runCommandCheck(session, planned, { command: SWIFTLINT_COMMAND });
     if (

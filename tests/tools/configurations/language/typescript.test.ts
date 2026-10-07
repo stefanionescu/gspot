@@ -6,7 +6,7 @@ import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
-import { installPrivateTools } from '#tests/harness/install.ts';
+import { installToolProjects } from '#tests/harness/install.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
@@ -24,7 +24,7 @@ const repository: RepositoryScenario = {
         appendFileSync(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
         const applied = await spawnGspot(root, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installPrivateTools(root);
+        await installToolProjects(root);
         const formatted = await spawnGspot(root, ['check', '--only', 'format/prettier', '--fix'], environment);
         expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     },

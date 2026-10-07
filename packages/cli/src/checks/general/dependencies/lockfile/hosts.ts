@@ -2,7 +2,8 @@ import { posix } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { LOCKFILE_URL, NPM_DOWNLOAD, JAVASCRIPT_CLIENTS } from '#cli/config/checks/general/dependencies.ts';
 
 function urlProblem(url: URL, hosts: Set<string>): string | undefined {

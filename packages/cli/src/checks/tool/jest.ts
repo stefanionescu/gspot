@@ -6,9 +6,10 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { reportSchema, coverageSchema, thresholdsSchema } from '#cli/parsers/schema/jest.ts';
 import type { Suite, JestRun, TestReport, JestSettings } from '#cli/types/checks/tool/jest.ts';
 

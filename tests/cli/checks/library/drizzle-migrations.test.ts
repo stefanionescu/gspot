@@ -1,13 +1,13 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
-import { planRun } from '#cli/execution/planning/plan.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { migrations } from '#cli/checks/library/drizzle.ts';
 import type { MigrationProject } from '#tests/types/cli/checks/library/drizzle.ts';

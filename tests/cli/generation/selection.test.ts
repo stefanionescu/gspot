@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import type { LicenseAllowlist } from '#cli/types/checks/general/licenses.ts';
 
 test('manual language choices include security output without selecting security separately', async () => {

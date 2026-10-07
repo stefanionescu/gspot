@@ -1,7 +1,7 @@
 import { compact } from '#cli/platform/objects.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
-import { ESLINT_BROWSER_CONFIGURATIONS } from '#cli/config/eslint.ts';
 import { isInScope, pathExpressions } from '#cli/repository/selectors.ts';
+import { ESLINT_BROWSER_CONFIGURATIONS } from '#cli/config/generation/eslint.ts';
 import type { EslintSettings, EslintRuntimeBlock } from '#cli/types/generation/eslint.ts';
 
 function frameworkRuntime(configurations: string[]): string | undefined {

@@ -1,4 +1,4 @@
-// A test repository with its private tools installed: the files, the selected configurations, and the level each framework test starts from.
+// A test repository with its tool projects installed: the files, the selected configurations, and the level each framework test starts from.
 import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -25,7 +25,7 @@ function buildManifest(dependencies: Record<string, string> | undefined): Record
     return { 'package.json': `${JSON.stringify(manifest, null, 4)}\n` };
 }
 
-// Initializes the configurations with their private tools installed, selects the level, and returns the command environment.
+// Initializes the configurations with their tool projects installed, selects the level, and returns the command environment.
 async function installTools(root: string, sandbox: RepositorySetup): Promise<Record<string, string>> {
     const environment = { PATH: buildSandboxPath(['typos', 'ec', 'ast-grep', ...(sandbox.tools ?? [])]) };
     const argv = ['init', '--yes', '--configurations', ...sandbox.configurations, ...(sandbox.init ?? QUIET_INIT)];
@@ -37,7 +37,7 @@ async function installTools(root: string, sandbox: RepositorySetup): Promise<Rec
 }
 
 /**
- * Creates a repository, installs its configurations and private tools, and returns the command environment.
+ * Creates a repository, installs its configurations and tool projects, and returns the command environment.
  * @param root the empty sandbox
  * @param sandbox what the repository holds and selects
  * @returns the PATH every gspot command of the test runs with
@@ -58,7 +58,7 @@ export async function prepareTestRepository(
     sandbox.before?.(root);
     commitAll(root);
     if (sandbox.installs !== false) return installTools(root, sandbox);
-    // Checks gspot runs itself need only the policy: no generated file, private tool, or lockfile.
+    // Checks gspot runs itself need only the policy: no generated file, tool project, or lockfile.
     await Bun.write(join(root, 'gspot.toml'), buildPolicy(sandbox.configurations, { level: sandbox.level ?? 'all' }));
     return {};
 }

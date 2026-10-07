@@ -1,6 +1,6 @@
 # READMEs, Guides, Reference Generation, and the Docs Site
 
-39 unresolved review records remain.
+37 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -107,3 +107,12 @@ The commands exist and work as the guide shows (`gspot export <file>`, `gspot in
 - The review did not build the site. Findings about rendered output come from reading the source and Starlight's installed `dist` components.
 - The review read the rest of the area in full: the README files, CONTRIBUTING.md, `AGENTS.md`, every page under docs/src/content, and every file under docs/src.
 - It also read astro.config.ts, links.ts, package.json, wrangler.jsonc, tsconfig.json, docs.yml, and release.yml in full.
+
+## Implementation status on October 7, 2026
+
+The original records above are retained. These records are complete at `c6aa35af7509807f32cd9427563731e801cd8d9e`.
+
+| ID                     | Status   | Implementation and verification evidence                                                                                  |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `review/docs-site/021` | complete | Schema URL and latest-release description updated. Docs build passed 314 pages; docs TypeScript and staged checks passed. |
+| `review/docs-site/049` | complete | Authored AGENTS rule gives one check name in manifest and code. Staged documentation checks passed.                       |

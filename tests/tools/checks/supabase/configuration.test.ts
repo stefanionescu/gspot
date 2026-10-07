@@ -4,8 +4,8 @@ import { writeFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { denoLint } from '#cli/checks/platform/supabase.ts';
 

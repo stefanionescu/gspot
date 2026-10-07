@@ -1,7 +1,8 @@
 import { resolve } from 'node:path';
 import { findRoot } from '#cli/repository/root.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { missingBuild } from '#cli/planning/skips.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import type { CommandResult } from '#cli/types/output.ts';
 import { collectPins } from '#cli/configurations/pins.ts';
@@ -10,14 +11,13 @@ import { hostPlatform } from '#cli/platform/environment.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { colors, printResult } from '#cli/output/messages.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { readVersionPin } from '#cli/lifecycle/version-pin.ts';
 import { EXIT_FINDINGS } from '#cli/config/platform/runtime.ts';
-import { missingBuild } from '#cli/execution/planning/skips.ts';
 import type { ToolInspection } from '#cli/types/tools/install.ts';
+import { applicableManifests } from '#cli/planning/requirements.ts';
 import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
-import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import { readIndexEntries, getSubmodulePaths } from '#cli/repository/tracked.ts';
@@ -72,7 +72,7 @@ function versionLine(report: DoctorReport): string {
  * @param pinned the version `.gspot/version` pins, if any
  * @returns the report, with exit code 1 when tools or hook integration need correction
  */
-function buildDoctorReport(session: Session, pinned: string | undefined): DoctorReport {
+function buildDoctorReport(session: ToolSession, pinned: string | undefined): DoctorReport {
     const platform = hostPlatform();
     // A tool with no build for this host is left out: the checks that need it skip here.
     const tools = collectPins(applicableManifests(session))

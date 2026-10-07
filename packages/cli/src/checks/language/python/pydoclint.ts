@@ -1,15 +1,16 @@
 import { parse } from 'smol-toml';
 import { posix } from 'node:path';
 import { emptyResult } from '#cli/execution/report.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { readText, readSource } from '#cli/platform/source.ts';
 import { RAN_STATUSES } from '#cli/config/execution/runtime.ts';
+import type { CheckResult } from '#cli/types/execution/runtime.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { pyprojectSchema } from '#cli/parsers/schema/python/style.ts';
 import type { PythonDocstringStyle } from '#cli/types/parsers/python.ts';
 import { docstringOf, parsePythonModule } from '#cli/parsers/python/source.ts';
-import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
 import type { DocstringConfiguration } from '#cli/types/checks/language/python.ts';
 
 import {
@@ -21,7 +22,7 @@ import {
     PYDOCLINT_DEFAULT_STYLE,
 } from '#cli/config/checks/language/python.ts';
 
-async function sourceStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
+async function sourceStyle(session: ToolSession, path: string): Promise<PythonDocstringStyle | undefined> {
     const module = await parsePythonModule(
         path,
         readSource(session.root, path, session.reads).toString('utf8'),
@@ -40,7 +41,7 @@ async function sourceStyle(session: Session, path: string): Promise<PythonDocstr
     }
 }
 
-async function docstringGroups(session: Session, files: TrackedFile[], declared: PythonDocstringStyle | undefined) {
+async function docstringGroups(session: ToolSession, files: TrackedFile[], declared: PythonDocstringStyle | undefined) {
     const groups = new Map<PythonDocstringStyle | undefined, TrackedFile[]>();
     for (const file of files) {
         const style = declared ?? (await sourceStyle(session, file.path));
@@ -75,7 +76,7 @@ export function docstringConfiguration(text: string, convention?: unknown): Docs
  * @param planned the scoped docstring check
  * @returns findings across style batches, preserving earlier findings if a later command fails
  */
-export async function pydoclint(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function pydoclint(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const configured = docstringConfiguration(
         readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST)) ?? '',
         planned.scope.view.settings['tools.ruff.docstring_convention'],

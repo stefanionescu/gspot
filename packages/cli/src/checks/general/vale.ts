@@ -3,6 +3,7 @@ import { hasValePackages } from '#cli/tools/vale.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { join, relative, isAbsolute } from 'node:path';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ValeAlert } from '#cli/types/parsers/vale.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import { VALE_CONFIG } from '#cli/config/platform/locations.ts';
@@ -11,8 +12,8 @@ import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { VALE_STDIN, SCRIPT_GRAMMAR } from '#cli/config/checks/general/prose.ts';
 import type { ProseRoute, ProseRouteGroup } from '#cli/types/checks/general/prose.ts';
 

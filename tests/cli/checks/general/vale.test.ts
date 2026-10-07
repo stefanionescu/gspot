@@ -5,7 +5,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';

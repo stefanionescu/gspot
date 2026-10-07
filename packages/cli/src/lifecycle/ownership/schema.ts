@@ -86,7 +86,7 @@ export const ownershipSchema = z
             )
             .optional(),
         installing: z.array(z.enum(INSTALLATION_KINDS)).optional(),
-        // The private tool folders gspot installed whole, by kind.
+        // The tool-project folders gspot installed whole, by kind.
         installed: z.array(z.enum(INSTALLATION_KINDS)).optional(),
         pending: z
             .array(

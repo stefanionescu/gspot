@@ -1,11 +1,12 @@
 // The access checks of the schema the migrations build: row security, grants, and definer functions.
 import { nodesOf } from '#cli/parsers/sql/pg.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 function isLooseDefiner(statement: SqlStatementView): boolean {
     if (statement.kind !== 'CreateFunctionStmt') return false;

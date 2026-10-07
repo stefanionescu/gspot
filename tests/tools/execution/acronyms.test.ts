@@ -4,7 +4,7 @@ import { parseAlerts } from '#cli/parsers/vale.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 
 test('native acronym checks honor emitted project vocabulary and retain unknown-word and definition coverage', async () => {

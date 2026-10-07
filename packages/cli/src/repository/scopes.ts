@@ -33,7 +33,7 @@ function assertWorkspaceInsideRoot(root: string, patterns: string[]): void {
         const parts = pattern.split('/');
         return parts.map((_part, index) => parts.slice(0, index + 1).join('/'));
     });
-    // Private tools and installed dependencies are never authored workspace projects.
+    // Tool projects and installed dependencies are never authored workspace projects.
     const excluded = [DOT_GSPOT, '.git', ...DEPENDENCY_FOLDERS].map((folder) => `!**/${folder}/**`);
     const paths = globPaths(root, [...ancestors, ...excluded], {
         dot: true,

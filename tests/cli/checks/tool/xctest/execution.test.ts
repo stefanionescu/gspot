@@ -4,7 +4,7 @@ import * as spawn from '#cli/platform/spawn.ts';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
 import { buildFolder } from '#cli/checks/language/swift/cache.ts';

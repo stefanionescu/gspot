@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';

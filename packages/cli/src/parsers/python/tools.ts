@@ -44,7 +44,7 @@ function indexLocation(root: string, value: string): string {
 }
 
 /**
- * Compare a private Python project with the pins and constraints recorded in its uv lock.
+ * Compare a Python tool project with the pins and constraints recorded in its uv lock.
  * @param project the generated pyproject.toml contents
  * @param lock the recorded uv.lock contents
  * @returns whether both validated inputs describe the same requirements

@@ -296,6 +296,14 @@ paths = [
 ]
 
 [[architecture.modules]]
+name = "planning"
+paths = [
+    "packages/cli/src/planning/**",
+    "packages/cli/src/config/planning.ts",
+    "packages/cli/src/types/planning.ts",
+]
+
+[[architecture.modules]]
 name = "tools"
 paths = [
     "packages/cli/src/tools/**",
@@ -323,7 +331,6 @@ paths = [
 name = "configurations"
 paths = [
     "packages/cli/src/configurations/**",
-    "packages/cli/src/parsers/configurations.ts",
     "packages/cli/src/parsers/schema/configurations/**",
     "packages/cli/src/config/configurations.ts",
     "packages/cli/src/types/configurations.ts",
@@ -338,13 +345,17 @@ paths = [
 ]
 
 [[architecture.modules]]
-name = "tool-output"
-paths = ["packages/cli/src/parsers/output/**"]
-
-[[architecture.modules]]
 name = "parsers"
 paths = [
-    "packages/cli/src/parsers/**",
+    "packages/cli/src/parsers/*.ts",
+    "packages/cli/src/parsers/naming/**",
+    "packages/cli/src/parsers/output/**",
+    "packages/cli/src/parsers/python/**",
+    "packages/cli/src/parsers/sql/**",
+    "packages/cli/src/parsers/toml/**",
+    "packages/cli/src/parsers/tool/**",
+    "packages/cli/src/parsers/schema/*.ts",
+    "packages/cli/src/parsers/schema/python/**",
     "packages/cli/src/config/parsers/**",
     "packages/cli/src/types/parsers/**",
 ]
@@ -369,6 +380,7 @@ to = ["main", "commands", "platform"]
 [[architecture.imports_allowed]]
 from = "commands"
 to = [
+    "planning",
     "commands",
     "checks",
     "output",
@@ -387,6 +399,7 @@ to = [
 [[architecture.imports_allowed]]
 from = "checks"
 to = [
+    "planning",
     "checks",
     "execution",
     "lifecycle",
@@ -401,12 +414,12 @@ to = [
 
 [[architecture.imports_allowed]]
 from = "output"
-to = ["output", "execution", "platform"]
+to = ["output", "execution", "parsers", "platform"]
 
 [[architecture.imports_allowed]]
 from = "execution"
 to = [
-    "tool-output",
+    "planning",
     "execution",
     "lifecycle",
     "generation",
@@ -421,8 +434,8 @@ to = [
 [[architecture.imports_allowed]]
 from = "lifecycle"
 to = [
+    "planning",
     "parsers",
-    "execution",
     "lifecycle",
     "generation",
     "tools",
@@ -435,10 +448,9 @@ to = [
 [[architecture.imports_allowed]]
 from = "generation"
 to = [
+    "planning",
     "parsers",
-    "execution",
     "generation",
-    "tools",
     "policy",
     "rules",
     "configurations",
@@ -447,10 +459,14 @@ to = [
 ]
 
 [[architecture.imports_allowed]]
+from = "planning"
+to = ["planning", "policy", "repository", "configurations", "parsers", "platform"]
+
+[[architecture.imports_allowed]]
 from = "tools"
 to = [
+    "planning",
     "parsers",
-    "execution",
     "generation",
     "tools",
     "policy",
@@ -856,16 +872,6 @@ reason = "git check-ref-format validates every refspec first and permits at most
 rule = "js/http-to-file-access"
 paths = ["packages/cli/scripts/grammars.ts"]
 reason = "Every downloaded byte is checked against the pinned SHA-256 digest before the cache file is written."
-
-[[architecture.imports_allowed]]
-from = "tool-output"
-to = [
-    "tool-output",
-    "parsers",
-    "execution",
-    "repository",
-    "platform",
-]
 
 [[structure.prefix_collisions_allowed]]
 paths = ["mise.toml", "mise.test.toml"]

@@ -5,10 +5,11 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { readSource } from '#cli/platform/source.ts';
 import { parseDirectives } from '#cli/parsers/nginx.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Mount, NginxMounts } from '#cli/types/checks/tool/nginx.ts';
-import type { Finding, EngineInput, EngineOutcome } from '#cli/types/execution/runtime.ts';
+import type { EngineInput, EngineOutcome } from '#cli/types/execution/runtime.ts';
 import { NGINX_MAIN, LOCAL_NAMES, HOST_PATTERNS, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/tool/nginx.ts';
 
 // Include paths use the main configuration directory, matching nginx prefix semantics.

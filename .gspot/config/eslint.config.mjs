@@ -253,6 +253,14 @@ export default [
             ]
         },
         {
+            "category": "planning",
+            "pattern": [
+                "packages/cli/src/planning/**",
+                "packages/cli/src/config/planning.ts",
+                "packages/cli/src/types/planning.ts"
+            ]
+        },
+        {
             "category": "tools",
             "pattern": [
                 "packages/cli/src/tools/**",
@@ -280,7 +288,6 @@ export default [
             "category": "configurations",
             "pattern": [
                 "packages/cli/src/configurations/**",
-                "packages/cli/src/parsers/configurations.ts",
                 "packages/cli/src/parsers/schema/configurations/**",
                 "packages/cli/src/config/configurations.ts",
                 "packages/cli/src/types/configurations.ts"
@@ -295,15 +302,17 @@ export default [
             ]
         },
         {
-            "category": "tool-output",
-            "pattern": [
-                "packages/cli/src/parsers/output/**"
-            ]
-        },
-        {
             "category": "parsers",
             "pattern": [
-                "packages/cli/src/parsers/**",
+                "packages/cli/src/parsers/*.ts",
+                "packages/cli/src/parsers/naming/**",
+                "packages/cli/src/parsers/output/**",
+                "packages/cli/src/parsers/python/**",
+                "packages/cli/src/parsers/sql/**",
+                "packages/cli/src/parsers/toml/**",
+                "packages/cli/src/parsers/tool/**",
+                "packages/cli/src/parsers/schema/*.ts",
+                "packages/cli/src/parsers/schema/python/**",
                 "packages/cli/src/config/parsers/**",
                 "packages/cli/src/types/parsers/**"
             ]
@@ -336,7 +345,7 @@ export default [
         "**/Tests/**",
         "**/*Tests.swift"
     ]
-}, "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"main"}},"allow":{"to":{"file":{"categories":{"anyOf":["main","commands","platform"]}}}}},{"from":{"file":{"categories":"commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["commands","checks","output","execution","lifecycle","generation","tools","policy","rules","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["checks","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"output"}},"allow":{"to":{"file":{"categories":{"anyOf":["output","execution","platform"]}}}}},{"from":{"file":{"categories":"execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["tool-output","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","execution","lifecycle","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","execution","generation","tools","policy","rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","execution","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["rules","policy","parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","platform"]}}}}},{"from":{"file":{"categories":"platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["platform"]}}}}},{"from":{"file":{"categories":"plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["plugin"]}}}}},{"from":{"file":{"categories":"tool-output"}},"allow":{"to":{"file":{"categories":{"anyOf":["tool-output","parsers","execution","repository","platform"]}}}}}]}]}, files: ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "scripts/gspot"]},
+}, "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"main"}},"allow":{"to":{"file":{"categories":{"anyOf":["main","commands","platform"]}}}}},{"from":{"file":{"categories":"commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","commands","checks","output","execution","lifecycle","generation","tools","policy","rules","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","checks","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"output"}},"allow":{"to":{"file":{"categories":{"anyOf":["output","execution","parsers","platform"]}}}}},{"from":{"file":{"categories":"execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","lifecycle","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","policy","rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","policy","repository","configurations","parsers","platform"]}}}}},{"from":{"file":{"categories":"tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["rules","policy","parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","platform"]}}}}},{"from":{"file":{"categories":"platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["platform"]}}}}},{"from":{"file":{"categories":"plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["plugin"]}}}}}]}]}, files: ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "scripts/gspot"]},
 
 
 stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[0], "ignores": ["docs/**","packages/cli/**","packages/eslint-plugin/**","tests/**"], "rules": {}, files: [["**/*.{ts,mts,cts,tsx}", "**/*"]]}),

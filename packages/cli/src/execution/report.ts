@@ -1,8 +1,9 @@
 // The report a run ends with: every result, the ignores that matched, the skips, and the exit code.
-import type { Session } from '#cli/types/execution/session.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { FAILED_STATUSES } from '#cli/config/execution/runtime.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/platform/runtime.ts';
-import type { FixReport, RunReport, CheckResult, ReportInput, PlannedCheck } from '#cli/types/execution/runtime.ts';
+import type { FixReport, RunReport, CheckResult, ReportInput } from '#cli/types/execution/runtime.ts';
 
 // Name each failed or unavailable check and failed fixer once.
 function failedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
@@ -12,7 +13,7 @@ function failedChecks(results: CheckResult[], fixes: FixReport | undefined): str
 }
 
 // Identify incomplete runs caused by cancellation, unavailable checks, or failed fixers.
-function isIncomplete(session: Session, results: CheckResult[], fixes: FixReport | undefined): boolean {
+function isIncomplete(session: ToolSession, results: CheckResult[], fixes: FixReport | undefined): boolean {
     if (session.cancelSignal?.aborted === true) return true;
     if (results.some((result) => result.status === 'missing' || result.status === 'error')) return true;
     return fixes?.results.some((result) => result.status === 'failed') === true;

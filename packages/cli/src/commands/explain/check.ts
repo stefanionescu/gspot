@@ -4,7 +4,7 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { toolName } from '#cli/configurations/pins.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { parseRuffRuleSummary } from '#cli/parsers/tool/rule.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
@@ -95,7 +95,7 @@ function getFacts(check: CheckSpec, configuration: Found['configuration']): Chec
 
 // The lines about this repository: a [[check]] entry's command and paths, or whether the configuration is selected.
 function repositoryLines(
-    session: Session | undefined,
+    session: ToolSession | undefined,
     declared: RepositoryDefinition | undefined,
     configuration: Found['configuration'],
 ): string[] {
@@ -115,7 +115,7 @@ function repositoryLines(
 }
 
 function describeCheck(
-    session: Session | undefined,
+    session: ToolSession | undefined,
     found: Found,
     declared: RepositoryDefinition | undefined,
     facts: CheckFacts,
@@ -146,7 +146,7 @@ function describeCheck(
     return `${lines.join('\n')}\n`;
 }
 
-function getRuleSummary(session: Session | undefined, tool: string, rule: string): string | undefined {
+function getRuleSummary(session: ToolSession | undefined, tool: string, rule: string): string | undefined {
     const summarize = RULE_SUMMARIZERS[tool];
     if (!summarize) return undefined;
     const pin = getToolPin(tool);
@@ -160,7 +160,7 @@ function getRuleSummary(session: Session | undefined, tool: string, rule: string
  * @param checkName the check
  * @returns the explanation, or undefined when no check has the name
  */
-export function explainCheck(session: Session | undefined, checkName: string): Explanation | undefined {
+export function explainCheck(session: ToolSession | undefined, checkName: string): Explanation | undefined {
     const declared = session?.policyFiles.policy.checks.find((entry) => entry.name === checkName);
     const found: Found | undefined =
         allChecks(configurationManifests().values()).get(checkName) ??
@@ -202,7 +202,7 @@ export function explainCheck(session: Session | undefined, checkName: string): E
  * @param rule the rule
  * @returns the explanation, or undefined when no check runs the tool
  */
-export function explainToolRule(session: Session | undefined, tool: string, rule: string): Explanation | undefined {
+export function explainToolRule(session: ToolSession | undefined, tool: string, rule: string): Explanation | undefined {
     const plugin = getRulePlugin(tool, 'eslint');
     const engine = plugin === undefined ? tool : 'eslint';
     const identifier = plugin === undefined ? rule : `${tool}/${rule}`;

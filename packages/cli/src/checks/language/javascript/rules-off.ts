@@ -1,14 +1,15 @@
 import { posix } from 'node:path';
-import { LINT_CHECK } from '#cli/config/eslint.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import { LINT_CHECK } from '#cli/config/generation/eslint.ts';
 import { ESLINT_FILE } from '#cli/config/platform/locations.ts';
 import { readEslintCoverage } from '#cli/tools/eslint/client.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { EslintCoverageResponse } from '#cli/types/parsers/eslint.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { eslintAllRulesSchema, eslintCoverageResponseSchema } from '#cli/parsers/schema/eslint.ts';
 import type { MissingEslintRule, RequiredEslintRules } from '#cli/types/checks/language/javascript.ts';
 import { RULE_OFF_PATHS, REQUIRED_ESLINT_LANGUAGE_CONTRACTS } from '#cli/config/checks/language/javascript.ts';

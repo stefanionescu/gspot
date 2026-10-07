@@ -5,7 +5,7 @@ import { CHECKS } from '#cli/checks/registry.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { SITE_CONSUMERS } from '#tests/config/cli/execution/prerequisites.ts';

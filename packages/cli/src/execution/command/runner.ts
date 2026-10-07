@@ -6,28 +6,24 @@ import { join, dirname, delimiter } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import { copyFiles } from '#cli/execution/copy/files.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { OutputPaths } from '#cli/types/parsers/output.ts';
+import { checkCompanions } from '#cli/planning/requirements.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/parsers/command.ts';
+import type { ExecutionFailure } from '#cli/types/tools/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { toolPin, checkToolPin } from '#cli/configurations/pins.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
-import { checkCompanions } from '#cli/execution/planning/requirements.ts';
 import { checkedFindings, recordInvocation } from '#cli/execution/output.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform/runtime.ts';
 import { toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
 import type { ParsedFindings, CommandRunState } from '#cli/types/execution/output.ts';
+import type { CheckResult, EngineInput, CheckRunOptions } from '#cli/types/execution/runtime.ts';
 
-import type {
-    CheckResult,
-    EngineInput,
-    PlannedCheck,
-    CheckRunOptions,
-    ExecutionFailure,
-} from '#cli/types/execution/runtime.ts';
 import {
     substitute,
     isolatedFiles,
@@ -45,7 +41,7 @@ import type {
 } from '#cli/types/execution/command.ts';
 
 function batchedCommands(
-    session: Session,
+    session: ToolSession,
     planned: PlannedCheck,
     command: string[],
     substitutions: Substitutions,
@@ -92,7 +88,7 @@ function commandOutcome(planned: PlannedCheck, result: SpawnResult, paths: Outpu
 }
 
 async function runCommands(
-    session: Session,
+    session: ToolSession,
     planned: PlannedCheck,
     tool: ToolPin,
     prepared: PreparedCommand,
@@ -143,7 +139,7 @@ function engineTool(
 
 // A nested tool runs from its selected installation even inside an isolated source copy.
 function companionEnvironment(
-    input: Session | EngineInput,
+    input: ToolSession | EngineInput,
     names: string[] | undefined,
     env: Record<string, string>,
 ): Record<string, string> {
@@ -157,7 +153,7 @@ function companionEnvironment(
 
 // The result of a nested-configuration check whose configuration is not generated yet, or undefined.
 function missingConfiguration(
-    session: Session,
+    session: ToolSession,
     planned: PlannedCheck,
     command: string[],
     base: CheckResult,
@@ -203,7 +199,7 @@ async function runInWorkspace(run: CommandRun, workspace: string | undefined): P
 }
 
 // A declared companion tool must be usable before this command runs.
-function unavailableCompanion(session: Session, planned: PlannedCheck): ExecutionFailure | undefined {
+function unavailableCompanion(session: ToolSession, planned: PlannedCheck): ExecutionFailure | undefined {
     for (const name of checkCompanions(planned.scope, planned.spec)) {
         const required = checkToolPin(toolPin(session.manifests.values(), name), planned.spec);
         const availability = toolAvailability(required, inspectTool(session, required));
@@ -218,7 +214,7 @@ function unavailableCompanion(session: Session, planned: PlannedCheck): Executio
  * @param planned the selected check and files
  * @returns paths and environment shared by tool inspection and execution
  */
-export function commandEnvironment(session: Session, planned: PlannedCheck): CommandEnvironment {
+export function commandEnvironment(session: ToolSession, planned: PlannedCheck): CommandEnvironment {
     const { spec, scope } = planned;
     const runsInScope = spec.cwd === 'scope' || (spec.runs === 'scope' && spec.cwd !== 'root');
     const cwd = runsInScope ? join(session.root, scope.scope.path) : session.root;
@@ -251,7 +247,7 @@ export function commandEnvironment(session: Session, planned: PlannedCheck): Com
  * @returns the working directory and commands
  */
 export function prepareCommand(
-    session: Session,
+    session: ToolSession,
     planned: PlannedCheck,
     command: string[],
     environment: CommandEnvironment,
@@ -274,7 +270,7 @@ export function prepareCommand(
  * @returns the check result with attributed findings
  */
 export async function runCommandCheck(
-    session: Session,
+    session: ToolSession,
     planned: PlannedCheck,
     options: CheckRunOptions = {},
 ): Promise<CheckResult> {

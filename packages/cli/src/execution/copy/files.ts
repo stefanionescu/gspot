@@ -160,7 +160,7 @@ export async function copyIntoScratch(root: string, paths: string[], scopePaths:
         fileLinks: [],
     };
     try {
-        // The private tools of gspot run in place, so their folders stay out of the copy.
+        // The tool projects of gspot run in place, so their folders stay out of the copy.
         const projects = paths.flatMap((path) =>
             PROJECT_MANIFESTS.includes(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
                 ? [posix.dirname(path)]

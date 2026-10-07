@@ -1,9 +1,10 @@
 import { findingAt } from '#cli/execution/finding.ts';
 import { visitSwiftSources } from '#cli/parsers/swift.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { rolePaths } from '#cli/policy/settings/entries.ts';
+import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { ENVIRONMENT_READ } from '#cli/config/checks/language/swift.ts';
-import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 /**
  * Report process environment reads outside the declared owner; skip when no owner is declared.

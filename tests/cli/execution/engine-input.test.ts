@@ -4,12 +4,12 @@ import { CHECKS } from '#cli/checks/registry.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { engineInput } from '#cli/execution/engines.ts';
-import { openSession } from '#cli/execution/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { planRun, ownedInputs } from '#cli/execution/planning/plan.ts';
+import { planRun, ownedInputs } from '#cli/planning/plan.ts';
 import { SOURCE_CORRECTIONS } from '#tests/config/cli/execution/engine-input.ts';
 
 test.each(SOURCE_CORRECTIONS)(

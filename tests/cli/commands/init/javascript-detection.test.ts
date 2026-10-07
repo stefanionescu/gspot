@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';

@@ -1,6 +1,6 @@
 // Generate provider workflows from the same installation, version, and check selections.
 import { Scalar, Document, stringify } from 'yaml';
-import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
+import { CLI_PINS } from '#cli/config/configurations.ts';
 import { HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 import { hashCommentHeader } from '#cli/generation/headers.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
@@ -35,7 +35,7 @@ function pinned({ name, sha, version }: ActionPin): Scalar {
 function setupSteps(pipeline: Pipeline): Record<string, unknown>[] {
     if (pipeline.isMise)
         return [
-            { uses: pinned(MISE_ACTION), with: { version: MISE_MIN_VERSION, cache: false } },
+            { uses: pinned(MISE_ACTION), with: { version: CLI_PINS.mise, cache: false } },
             { run: `${HOOK_RUNNERS.mise.command} install` },
             { run: `${HOOK_RUNNERS.mise.command} doctor` },
         ];

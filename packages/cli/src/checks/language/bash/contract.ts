@@ -2,10 +2,11 @@
 import semver from 'semver';
 import { findingAt } from '#cli/execution/finding.ts';
 import type { CodeLine } from '#cli/types/parsers/bash.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { codeLines, withoutDeclaration } from '#cli/parsers/bash.ts';
+import type { Engine, EngineInput } from '#cli/types/execution/runtime.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import type { ScriptFile, ScriptReport } from '#cli/types/checks/language/bash.ts';
-import type { Engine, Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 import {
     EXIT_CALL,

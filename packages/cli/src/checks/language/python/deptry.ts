@@ -7,14 +7,16 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { escapeRegExp } from '#cli/platform/text.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { readText, readSource } from '#cli/platform/source.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { deptrySchema } from '#cli/parsers/schema/python/dependencies.ts';
-import type { Finding, CheckResult, EngineInput, PlannedCheck } from '#cli/types/execution/runtime.ts';
+import type { CheckResult, EngineInput } from '#cli/types/execution/runtime.ts';
 
 import {
     PIP_INSTALL,
@@ -29,7 +31,7 @@ import {
  * @param planned the dependency check and its scope.
  * @returns the native dependency findings, including undeclared application imports.
  */
-export async function deptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function deptry(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const text = readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST));
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;

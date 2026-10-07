@@ -6,17 +6,17 @@ import { scopeView } from '#cli/policy/settings/view.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { acquirePythonInstaller } from '#cli/tools/python/uv.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
+import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { FILE_PREFIX_BYTES } from '#cli/config/repository/inventory.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import type { Policy, PolicyFile, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/client.ts';
 import type { PackageInstaller, PackageInstallerIdentity } from '#cli/types/parsers/packages.ts';
@@ -37,7 +37,7 @@ function scopeSelections(policy: Policy, scopes: ScopeEntry[], manifests: Map<st
  * @param policyFiles the policy as read, read here by default
  * @returns the session
  */
-export async function openSession(root: string, policyFiles: PolicyFile = readPolicy(root)): Promise<Session> {
+export async function openSession(root: string, policyFiles: PolicyFile = readPolicy(root)): Promise<ToolSession> {
     const manifests = configurationManifests();
     const { policy } = policyFiles;
     const repository = await readRepository(root, policy.declarations, policy.scopes, policy.exclude);
@@ -68,7 +68,7 @@ export async function openSession(root: string, policyFiles: PolicyFile = readPo
     );
     let resolved: PackageInstaller | undefined;
     let resolvedPython: Promise<string> | undefined;
-    const session: Session = {
+    const session: ToolSession = {
         pythonInstaller: () => (resolvedPython ??= acquirePythonInstaller(root, policyFiles.policy.run_with)),
         packageInstaller() {
             if (installer === undefined) return undefined;

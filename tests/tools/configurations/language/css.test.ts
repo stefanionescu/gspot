@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
-import { installPrivateTools } from '#tests/harness/install.ts';
+import { installToolProjects } from '#tests/harness/install.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
@@ -32,7 +32,7 @@ beforeAll(async () => {
         });
         const applied = await spawnGspot(root, ['apply']);
         if (applied.code !== 0) throw new Error(applied.stdout + applied.stderr);
-        await installPrivateTools(root);
+        await installToolProjects(root);
     } finally {
         budget[Symbol.dispose]();
     }

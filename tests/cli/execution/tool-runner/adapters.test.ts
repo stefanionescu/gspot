@@ -4,7 +4,7 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { waitForFile } from '#tests/harness/process.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';

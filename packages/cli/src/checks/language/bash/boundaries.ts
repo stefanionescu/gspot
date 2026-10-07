@@ -1,8 +1,9 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/execution/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
-import type { Engine, Finding, EngineInput } from '#cli/types/execution/runtime.ts';
+import type { Engine, EngineInput } from '#cli/types/execution/runtime.ts';
 import type { ScriptFile, ScriptIndex, SourceAnnotations } from '#cli/types/checks/language/bash.ts';
 
 import {

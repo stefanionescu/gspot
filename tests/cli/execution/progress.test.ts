@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import type { CheckResult } from '#cli/types/execution/runtime.ts';
 

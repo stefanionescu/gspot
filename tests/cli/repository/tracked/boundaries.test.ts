@@ -6,7 +6,7 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { trackedEntries } from '#cli/repository/tracked.ts';

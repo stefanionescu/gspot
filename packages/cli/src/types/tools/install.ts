@@ -1,6 +1,5 @@
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { PolicyFile } from '#cli/types/policy/settings.ts';
-import type { ExecutionFailure } from '#cli/types/execution/runtime.ts';
 import type { ToolPin, InstallationKind } from '#cli/types/configurations.ts';
 
 export type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
@@ -50,10 +49,10 @@ export type LockDrift = { path: string; kind?: 'missing' | 'changed' };
 export type LockPreparation = { refreshLocks: boolean };
 /** A tool version also declared in repository-owned setup. */
 export type DuplicateMisePin = { tool: string; version: string; gspotFile: string };
-/** Folders and private-installation ownership restricting executable discovery. */
+/** Folders and tool-project ownership restricting executable discovery. */
 export type LocateOptions = {
     searchFolders: string[];
-    privateKind?: InstallationKind | undefined;
+    toolProjectKind?: InstallationKind | undefined;
     installedRoot?: string | undefined;
 };
 
@@ -64,3 +63,6 @@ export type ValeInstallation = {
     timeoutSeconds: number;
     cancelSignal?: AbortSignal | undefined;
 };
+
+/** A process failure that prevents check output from being interpreted. */
+export type ExecutionFailure = { status: 'error' | 'missing'; note: string };

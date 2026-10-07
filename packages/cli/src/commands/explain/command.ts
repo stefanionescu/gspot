@@ -4,12 +4,12 @@ import { hasPolicy } from '#cli/policy/read.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { printResult } from '#cli/output/messages.ts';
-import { openSession } from '#cli/execution/session.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
 import { similar, codeList } from '#cli/platform/text.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import type { Program } from '#cli/types/commands/program.ts';
-import type { Session } from '#cli/types/execution/session.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { SettingSpec } from '#cli/types/configurations.ts';
 import { DIRECTION_TEXTS } from '#cli/config/commands/explain.ts';
 import { checkStageSchema } from '#cli/parsers/schema/command.ts';
@@ -85,7 +85,7 @@ function scopeLines(key: string, spec: SettingSpec, entry: SettingScope): string
     ];
 }
 
-function explainSetting(session: Session | undefined, key: string): Explanation | undefined {
+function explainSetting(session: ToolSession | undefined, key: string): Explanation | undefined {
     if (session === undefined) return undefined;
     const scopes = session.scopes.flatMap((selection) => {
         const match = specFor(selection.surface, key);
@@ -133,7 +133,7 @@ function buildSubjectSuggestion(subject: string, candidates: string[]): string {
     return ' Did you mean ' + codeList(matches) + '?';
 }
 
-function buildUnknownSubjectDiagnostic(session: Session | undefined, subject: string): string {
+function buildUnknownSubjectDiagnostic(session: ToolSession | undefined, subject: string): string {
     const checks = knownChecks(session?.policyFiles.policy.checks ?? []);
     if (subject.includes('/')) {
         return `There is no check called \`${subject}\`.${buildSubjectSuggestion(subject, checks)}`;
@@ -152,7 +152,7 @@ function buildUnknownSubjectDiagnostic(session: Session | undefined, subject: st
 
 // A check retains its meaning; a tracked path precedes a tool rule with the same first folder.
 function explainSlashed(
-    session: Session | undefined,
+    session: ToolSession | undefined,
     subject: string,
     file: Explanation | undefined,
 ): Explanation | undefined {
@@ -163,7 +163,7 @@ function explainSlashed(
     return explainToolRule(session, subject.slice(0, slash), subject.slice(slash + 1));
 }
 
-function explainNamed(session: Session | undefined, subject: string): Explanation | undefined {
+function explainNamed(session: ToolSession | undefined, subject: string): Explanation | undefined {
     const named = explainSetting(session, subject) ?? explainConfiguration(subject);
     if (named !== undefined) return named;
     if (!readEslintRuleNames().rules.includes(subject)) return undefined;
@@ -177,7 +177,7 @@ function explainNamed(session: Session | undefined, subject: string): Explanatio
  * @returns the requested explanation
  * @throws GspotError when no subject or file matches, with the closest known names
  */
-export function explain(session: Session | undefined, subject: string): Explanation {
+export function explain(session: ToolSession | undefined, subject: string): Explanation {
     const file = explainPath(session, subject);
     if (file !== undefined && subject.startsWith('./')) return file;
     let explanation: Explanation | undefined;

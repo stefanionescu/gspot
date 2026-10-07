@@ -41,5 +41,5 @@ export type Log = {
     finish(): void;
 };
 
-/** Side folders for atomic replacement and recovery of one private tool installation. */
+/** Side folders for atomic replacement and recovery of one tool project installation. */
 export type InstallationFolders = { folder: string; staging: string; previous: string };
