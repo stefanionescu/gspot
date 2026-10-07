@@ -54,7 +54,6 @@ function identifiers(file: string, source: string, statement: SqlStatementView, 
                     {
                         ...positionAt(source, found === -1 ? statement.start : found),
                         category: entry.category,
-
                         name: entry.name,
                     },
                 ),

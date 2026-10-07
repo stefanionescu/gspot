@@ -1,7 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { visitSwiftSources } from '#cli/parsers/swift.ts';
+import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { readSwift, disposeSwift } from '#cli/parsers/swift.ts';
 import { COMMENTS, DIRECTIVE } from '#cli/config/checks/language/swift.ts';
 
 /**
@@ -10,29 +11,29 @@ import { COMMENTS, DIRECTIVE } from '#cli/config/checks/language/swift.ts';
  * @returns the findings for that check
  */
 export async function importComments(input: CheckInput): Promise<Finding[]> {
-    return visitSwiftSources(input, ({ sources }) =>
-        sources.flatMap((source) => {
-            const nodes = source.tree.rootNode.namedChildren;
-            const imports = nodes.filter((node) => node.type === 'import_declaration');
-            const [first] = imports;
-            const last = imports.at(-1);
-            if (first === undefined || last === undefined) return [];
-            return nodes
-                .filter(
-                    (node) =>
-                        COMMENTS.has(node.type) &&
-                        node.startIndex > first.startIndex &&
-                        node.startPosition.row <= last.endPosition.row &&
-                        !DIRECTIVE.test(node.text),
-                )
-                .map((node) =>
-                    findingAt(
-                        input,
-                        { file: source.path, line: node.startPosition.row + 1 },
-                        'import-comment',
-                        'No comments among imports. Say it where the import is used, or above the block.',
-                    ),
-                );
-        }),
-    );
+    using parsed = await visitParsed(input, readSwift, disposeSwift);
+    const { sources } = parsed.value;
+    return sources.flatMap((source) => {
+        const nodes = source.tree.rootNode.namedChildren;
+        const imports = nodes.filter((node) => node.type === 'import_declaration');
+        const [first] = imports;
+        const last = imports.at(-1);
+        if (first === undefined || last === undefined) return [];
+        return nodes
+            .filter(
+                (node) =>
+                    COMMENTS.has(node.type) &&
+                    node.startIndex > first.startIndex &&
+                    node.startPosition.row <= last.endPosition.row &&
+                    !DIRECTIVE.test(node.text),
+            )
+            .map((node) =>
+                findingAt(
+                    input,
+                    { file: source.path, line: node.startPosition.row + 1 },
+                    'import-comment',
+                    'No comments among imports. Say it where the import is used, or above the block.',
+                ),
+            );
+    });
 }

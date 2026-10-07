@@ -264,7 +264,7 @@ export default [
             "category": "tools",
             "pattern": [
                 "packages/cli/src/tools/**",
-                "packages/cli/src/config/tools/**",
+                "packages/cli/src/config/tools/!(vale).ts",
                 "packages/cli/src/types/tools/**"
             ]
         },
@@ -290,6 +290,7 @@ export default [
                 "packages/cli/src/configurations/**",
                 "packages/cli/src/parsers/schema/configurations/**",
                 "packages/cli/src/config/configurations.ts",
+                "packages/cli/src/config/tools/vale.ts",
                 "packages/cli/src/types/configurations.ts"
             ]
         },

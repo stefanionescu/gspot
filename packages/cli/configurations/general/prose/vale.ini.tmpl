@@ -1,5 +1,4 @@
 <%
-const packages = ['Google', 'Microsoft', 'write-good', 'proselint', 'alex', 'RedHat', 'Harper'];
 const rules = isAll
     ? {
           'Vale.Spelling': 'NO',
@@ -110,13 +109,13 @@ const document = {
             StylesPath: 'vale/styles',
             MinAlertLevel: 'suggestion',
             SkippedScopes: 'script, style, pre, figure, table',
-            ...(isAll ? { Packages: packages.join(', ') } : {}),
+            ...(isAll ? { Packages: prose.packages.join(', ') } : {}),
             Vocab: 'gspot',
         },
     },
     formats: { options: Object.fromEntries(prose.formats) },
     '*': {
-        BasedOnStyles: isAll ? ['Vale', 'gspot', ...packages] : ['gspot'],
+        BasedOnStyles: isAll ? ['Vale', 'gspot', ...prose.packages] : ['gspot'],
         options: { BlockIgnores: prose.blockIgnores.join(', '), TokenIgnores: prose.tokenIgnores.join(', ') },
         rules,
     },

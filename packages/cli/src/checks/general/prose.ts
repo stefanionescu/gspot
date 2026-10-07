@@ -1,10 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { parseAlerts } from '#cli/parsers/vale.ts';
 import { hasValePackages } from '#cli/tools/vale.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { join, relative, isAbsolute } from 'node:path';
-import type { Finding } from '#cli/types/parsers/output.ts';
-import type { ValeAlert } from '#cli/types/parsers/vale.ts';
+import { parseAlerts } from '#cli/parsers/output/reports.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
@@ -14,6 +12,7 @@ import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Finding, ValeAlert } from '#cli/types/parsers/output.ts';
 import { VALE_STDIN, SCRIPT_GRAMMAR } from '#cli/config/checks/general/prose.ts';
 import type { ProseRoute, ProseRouteGroup } from '#cli/types/checks/general/prose.ts';
 
@@ -66,7 +65,8 @@ async function stdinAlerts(input: CheckInput, route: ProseRoute): Promise<ValeAl
  * @returns the findings
  */
 export async function vale(input: CheckInput): Promise<Finding[]> {
-    if (!hasValePackages(input.root)) throw new Error('The Vale packages are not installed. Run: gspot install');
+    if (!hasValePackages(input.root, input.policyFiles.policy.level))
+        throw new Error('The Vale packages are not installed. Run: gspot install');
     const groups = routeGroups(input.files.filter((file) => file.kind === 'source'));
     const findings: Finding[] = [];
     for (const group of groups) {

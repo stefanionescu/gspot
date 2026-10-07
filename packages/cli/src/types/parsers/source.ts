@@ -27,3 +27,6 @@ export type ParserState = {
 
 /** Text and its one-based source line for asset parsing and syntax diagnostics. */
 export type NumberedLine = { text: string; number: number };
+
+/** A parsed value borrowed until this handle or its run owner is disposed. */
+export type ParsedVisit<Value> = { value: Value; [Symbol.dispose](): void };

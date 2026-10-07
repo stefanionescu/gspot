@@ -9,10 +9,16 @@ import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
 import type {
     ParseReads,
     GrammarName,
+    ParsedVisit,
     ParserState,
+    SourceInput,
     ParsedSource,
     ParsedSourceInput,
 } from '#cli/types/parsers/source.ts';
+
+const PARSED_MEMO = {
+    create: () => new WeakMap<object, WeakMap<DisposableStack, Map<string, Promise<unknown>>>>(),
+};
 
 const TREE_MEMO = { create: () => new Map<string, Tree>() };
 
@@ -109,4 +115,56 @@ export function grammarFor(path: string, language: string): GrammarName | undefi
     if (language === 'javascript') return 'javascript';
     if (language !== 'typescript') return undefined;
     return path.endsWith('.tsx') ? 'tsx' : 'typescript';
+}
+
+/**
+ * Lend selected observations until a standalone handle or their run owner is disposed.
+ * @param input the selected paths, source reads, and optional run owner.
+ * @param read the parser that owns the observations.
+ * @param dispose the operation that releases the observations.
+ * @returns a handle. Its value must stay within its ownership lifetime.
+ */
+export async function visitParsed<Value>(
+    input: SourceInput,
+    read: (input: SourceInput) => Promise<Value>,
+    dispose: (value: Value) => void,
+): Promise<ParsedVisit<Value>> {
+    if (input.resources === undefined) {
+        const value = await read(input);
+        return {
+            value,
+            [Symbol.dispose]() {
+                dispose(value);
+            },
+        };
+    }
+    const readers = memo(input.reads, PARSED_MEMO);
+    let owners = readers.get(read);
+    if (owners === undefined) {
+        owners = new WeakMap();
+        readers.set(read, owners);
+    }
+    let entries = owners.get(input.resources);
+    if (entries === undefined) {
+        entries = new Map();
+        owners.set(input.resources, entries);
+    }
+    const key = JSON.stringify([input.root, input.files.map((file) => file.path)]);
+    let pending = entries.get(key);
+    if (pending === undefined) {
+        pending = read(input);
+        entries.set(key, pending);
+        try {
+            // Only this reader creates its entries; its return type owns the parsed value.
+            const value = (await pending) as Value;
+            input.resources.defer(() => {
+                entries.delete(key);
+                dispose(value);
+            });
+        } catch (error) {
+            entries.delete(key);
+            throw error;
+        }
+    }
+    return { value: (await pending) as Value, [Symbol.dispose]() {} };
 }

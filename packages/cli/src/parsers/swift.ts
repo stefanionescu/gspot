@@ -1,12 +1,9 @@
 import type { Node } from 'web-tree-sitter';
-import { memo } from '#cli/platform/memo.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { SourceInput } from '#cli/types/parsers/source.ts';
 import type { ParsedSwift, SwiftSource, SwiftFunction } from '#cli/types/parsers/swift.ts';
 import { ACCESSOR_NODES, FUNCTION_NAMES, SWIFT_BODY_NODES } from '#cli/config/parsers/swift.ts';
-
-const SOURCE_MEMO = { create: () => new WeakMap<DisposableStack, Map<string, Promise<ParsedSwift>>>() };
 
 function accessorName(node: Node, label: string): string {
     let owner = node.parent;
@@ -17,7 +14,12 @@ function accessorName(node: Node, label: string): string {
     return name === undefined ? label : `${label} of ${name}`;
 }
 
-async function readSources(input: SourceInput): Promise<ParsedSwift> {
+/**
+ * Read selected Swift sources and their function observations.
+ * @param input the selected files and source reads
+ * @returns parsed observations whose trees must be disposed
+ */
+export async function readSwift(input: SourceInput): Promise<ParsedSwift> {
     const sources: SwiftSource[] = [];
     try {
         for (const file of input.files) {
@@ -62,44 +64,9 @@ export function getSwiftFunctions(source: SwiftSource): SwiftFunction[] {
 }
 
 /**
- * Visit Swift observations once per run, or dispose them when a standalone visit ends.
- * @param input the selected files, source reads, and optional run disposal owner
- * @param visit the reader that borrows the sources and functions
- * @returns the reader's result, after standalone trees have been disposed
+ * Release the tree handles owned by Swift observations.
+ * @param parsed the observations whose readers have finished
  */
-export async function visitSwiftSources<Result>(
-    input: SourceInput,
-    visit: (parsed: ParsedSwift) => Result | Promise<Result>,
-): Promise<Result> {
-    if (input.resources === undefined) {
-        const parsed = await readSources(input);
-        try {
-            return await visit(parsed);
-        } finally {
-            for (const source of parsed.sources) source.tree.delete();
-        }
-    }
-    const owners = memo(input.reads, SOURCE_MEMO);
-    let entries = owners.get(input.resources);
-    if (entries === undefined) {
-        entries = new Map();
-        owners.set(input.resources, entries);
-    }
-    const key = JSON.stringify([input.root, input.files]);
-    let pending = entries.get(key);
-    if (pending === undefined) {
-        pending = readSources(input);
-        entries.set(key, pending);
-        try {
-            const parsed = await pending;
-            input.resources.defer(() => {
-                entries.delete(key);
-                for (const source of parsed.sources) source.tree.delete();
-            });
-        } catch (error) {
-            entries.delete(key);
-            throw error;
-        }
-    }
-    return visit(await pending);
+export function disposeSwift(parsed: ParsedSwift): void {
+    for (const source of parsed.sources) source.tree.delete();
 }

@@ -4,12 +4,10 @@ import { runTool } from '#cli/tools/run.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { locateCandidates } from '#cli/tools/locate.ts';
-import { buildToolsPath } from '#tests/harness/install.ts';
 import * as environment from '#cli/platform/environment.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
@@ -260,36 +258,6 @@ test.skipIf(!isPosix).each([0, 1])(
         } finally {
             which.mockRestore();
             home.mockRestore();
-        }
-    },
-);
-
-test.each(['installed', 'missing'] as const)(
-    'sandbox discovery uses the declared mise pin when the native tool is %s',
-    async (state) => {
-        await using sandbox = await testdir();
-        const executable = join(sandbox.path, 'bin', 'typos');
-        const pin = toolPin(configurationManifests().values(), 'typos');
-        const calls: string[][] = [];
-        const lookup = spyOn(processes, 'runBlocking').mockImplementation((command) => {
-            calls.push(command);
-            return {
-                code: state === 'installed' ? 0 : 1,
-                stdout: state === 'installed' ? `${executable}\n` : '',
-                stderr: state === 'installed' ? '' : 'Fixture pinned mise tool unavailable',
-                duration: 1,
-                missing: false,
-            };
-        });
-        try {
-            if (state === 'installed') expect(buildToolsPath(['typos'])).toStartWith(join(sandbox.path, 'bin'));
-            else
-                expect(() => buildToolsPath(['typos'])).toThrow(
-                    `Required test tool typos is unavailable. Run mise install typos@${pin.version!}. Fixture pinned mise tool unavailable`,
-                );
-            expect(calls).toStrictEqual([['mise', 'which', 'typos', '--tool', `typos@${pin.version!}`]]);
-        } finally {
-            lookup.mockRestore();
         }
     },
 );

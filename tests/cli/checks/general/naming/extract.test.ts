@@ -7,6 +7,7 @@ import {
     PYTHON_NAMES,
     TYPESCRIPT_NAMES,
     SOURCE_ORDER_CASES,
+    AUTHORED_NAME_CASES,
     SWIFT_EXTRACTOR_SOURCE,
     PYTHON_EXTRACTOR_SOURCE,
     TYPESCRIPT_EXTRACTOR_SOURCE,
@@ -97,3 +98,13 @@ test('JavaScript destructured and arrow parameters remain declarations and exclu
         { name: 'inputValue', category: 'parameters' },
     ]);
 });
+
+test.each(AUTHORED_NAME_CASES)(
+    '$language authored names retain source coordinates and omit discarded bindings',
+    async ({ file, language, source, expected }) => {
+        const found = await identifiersOf(file, source, language);
+        expect(found.map(({ name, category, line, column }) => ({ name, category, line, column }))).toStrictEqual(
+            expected,
+        );
+    },
+);

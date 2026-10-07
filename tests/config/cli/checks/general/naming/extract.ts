@@ -119,3 +119,37 @@ export const SOURCE_ORDER_CASES = [
         expected: ['first_value', 'load_value', 'inner_value'],
     },
 ];
+
+export const AUTHORED_NAME_CASES = [
+    {
+        file: 'source.py',
+        language: 'python',
+        source: '_ = 1\nvalue_name = 2\n',
+        expected: [{ name: 'value_name', category: 'variables', line: 2, column: 1 }],
+    },
+    {
+        file: 'source.sh',
+        language: 'bash',
+        source: '_=1\nvalue_name=2\n',
+        expected: [{ name: 'value_name', category: 'variables', line: 2, column: 1 }],
+    },
+    {
+        file: 'source.ts',
+        language: 'typescript',
+        source: 'const _ = 1;\nclass Book { #value = 1; ["computed"] = 2; }\n',
+        expected: [
+            { name: 'Book', category: 'classes', line: 2, column: 7 },
+            { name: 'value', category: 'properties', line: 2, column: 14 },
+        ],
+    },
+    {
+        file: 'source.swift',
+        language: 'swift',
+        source: 'let `class` = 1\nlet _ = 2\nfunc `repeat`(`default`: Int) {}\n',
+        expected: [
+            { name: 'class', category: 'constants', line: 1, column: 5 },
+            { name: 'repeat', category: 'functions', line: 3, column: 6 },
+            { name: 'default', category: 'parameters', line: 3, column: 15 },
+        ],
+    },
+];

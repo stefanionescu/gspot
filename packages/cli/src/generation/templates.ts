@@ -4,6 +4,7 @@ import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 import { collectPins } from '#cli/configurations/pins.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
 import { buildJsconfig } from '#cli/generation/jsconfig.ts';
@@ -124,6 +125,9 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
     const { policy } = session.policyFiles;
     const sourceFiles = session.repository.files;
     const { view } = selection;
+    const compilerOptions = Object.entries(requiredTsconfigOptions(policy.level, view.configurations)).filter(
+        ([option]) => !view.rulesOff('typescript/tsconfig').includes(option),
+    );
     const compilerContext = {
         root,
         reads,
@@ -150,13 +154,10 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
             buildTsconfig({
                 ...compilerContext,
                 target,
-                options: Object.fromEntries(
-                    Object.entries(requiredTsconfigOptions(policy.level, view.configurations)).filter(
-                        ([option]) => !view.rulesOff('typescript/tsconfig').includes(option),
-                    ),
-                ),
+                options: Object.fromEntries(compilerOptions),
             }),
         prose: {
+            packages: VALE_PACKAGES,
             rules: styleRules(),
             blockIgnores: BLOCK_IGNORES,
             tokenIgnores: TOKEN_IGNORES,

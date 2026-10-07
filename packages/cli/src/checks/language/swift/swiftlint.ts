@@ -3,10 +3,11 @@ import type { Node } from 'web-tree-sitter';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { compact } from '#cli/platform/objects.ts';
 import { copyFiles } from '#cli/execution/copy/files.ts';
-import { visitSwiftSources } from '#cli/parsers/swift.ts';
+import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
+import { readSwift, disposeSwift } from '#cli/parsers/swift.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import type { InlineDocumentation } from '#cli/types/checks/language/swift.ts';
@@ -74,43 +75,42 @@ export async function swiftlint(session: ToolSession, planned: PlannedCheck): Pr
         planned.scope.view.rulesOff(planned.check.name).includes(DOC_RULE)
     )
         return result;
-    return visitSwiftSources({ ...session, files: planned.files }, async ({ sources }) => {
-        const candidates = sources.flatMap((source): InlineDocumentation[] => {
-            const comments = source.tree.rootNode
-                .descendantsOfType(['comment', 'multiline_comment'])
-                .filter((node) => isSourceComment(node));
-            const inline = comments.filter(
-                (comment) =>
-                    comment.type === 'multiline_comment' &&
-                    comment.text.startsWith('/**') &&
-                    (source.lines[comment.startPosition.row] ?? '').slice(0, comment.startPosition.column).trim() !==
-                        '',
-            );
-            return inline.length === 0 ? [] : [{ source, comments, inline }];
-        });
-        if (candidates.length === 0) return result;
-        using workspace = copyFiles(session.root, [
-            ...session.repository.files.map((file) => file.path),
-            ...commandConfigurations(session, planned, SWIFTLINT_COMMAND),
-        ]);
-        for (const { source, comments } of candidates) {
-            const path = join(workspace.root, source.path);
-            chmodSync(path, PRIVATE_FILE);
-            writeFileSync(path, commentSource(source.text, comments));
-        }
-        const checked = await runCheckCommand({ ...session, root: workspace.root }, planned, {
-            command: SWIFTLINT_COMMAND,
-        });
-        if (!['passed', 'failed'].includes(checked.status))
-            return {
-                ...result,
-                status: checked.status,
-                ...compact({ note: checked.note }),
-                duration: performance.now() - started,
-            };
-        restoreInline(result, checked, candidates);
-        if (result.findings.length > 0) result.status = 'failed';
-        result.duration = performance.now() - started;
-        return result;
+    using parsed = await visitParsed({ ...session, files: planned.files }, readSwift, disposeSwift);
+    const { sources } = parsed.value;
+    const candidates = sources.flatMap((source): InlineDocumentation[] => {
+        const comments = source.tree.rootNode
+            .descendantsOfType(['comment', 'multiline_comment'])
+            .filter((node) => isSourceComment(node));
+        const inline = comments.filter(
+            (comment) =>
+                comment.type === 'multiline_comment' &&
+                comment.text.startsWith('/**') &&
+                (source.lines[comment.startPosition.row] ?? '').slice(0, comment.startPosition.column).trim() !== '',
+        );
+        return inline.length === 0 ? [] : [{ source, comments, inline }];
     });
+    if (candidates.length === 0) return result;
+    using workspace = copyFiles(session.root, [
+        ...session.repository.files.map((file) => file.path),
+        ...commandConfigurations(session, planned, SWIFTLINT_COMMAND),
+    ]);
+    for (const { source, comments } of candidates) {
+        const path = join(workspace.root, source.path);
+        chmodSync(path, PRIVATE_FILE);
+        writeFileSync(path, commentSource(source.text, comments));
+    }
+    const checked = await runCheckCommand({ ...session, root: workspace.root }, planned, {
+        command: SWIFTLINT_COMMAND,
+    });
+    if (!['passed', 'failed'].includes(checked.status))
+        return {
+            ...result,
+            status: checked.status,
+            ...compact({ note: checked.note }),
+            duration: performance.now() - started,
+        };
+    restoreInline(result, checked, candidates);
+    if (result.findings.length > 0) result.status = 'failed';
+    result.duration = performance.now() - started;
+    return result;
 }

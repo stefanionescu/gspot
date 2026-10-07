@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 
 test('generated vocabulary combines shipped and project words without duplicates', async () => {
     await using sandbox = await testdir();
@@ -42,6 +43,10 @@ test.each(['recommended', 'all'] as const)(
         const configuration = output.files.find((file) => file.path === '.gspot/config/vale.ini')!;
         expect(configuration.content).not.toContain('gspot.link-text = NO');
         expect(configuration.content).not.toContain('gspot.defaults');
+        expect(configuration.content.includes(`Packages = ${VALE_PACKAGES.join(', ')}`)).toBe(level === 'all');
+        expect(configuration.content).toContain(
+            `BasedOnStyles = ${level === 'all' ? ['Vale', 'gspot', ...VALE_PACKAGES].join(', ') : 'gspot'}`,
+        );
         expect(output.blocks.find((block) => block.path === '.gitignore')!.block).not.toContain('styles/Readability/');
     },
 );

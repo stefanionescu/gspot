@@ -1,5 +1,7 @@
+import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { parseJson } from '#cli/parsers/output/json.ts';
+import { parseAlerts } from '#cli/parsers/output/reports.ts';
 
 describe('JSON finding fields', () => {
     test('a flat list maps its fields to a finding', () => {
@@ -97,5 +99,56 @@ describe('JSON report validation', () => {
         expect(() => parseJson('x/y', { format: 'json', children: 'messages' }, '[{}]', 'help')).toThrow(
             'array messages',
         );
+    });
+});
+
+describe('vale output', () => {
+    test('JSON output parses native source and stdin locations into alerts', () => {
+        const alerts = parseAlerts(
+            JSON.stringify({
+                'docs/a.md': [
+                    { Line: 3, Span: [10, 15], Check: 'gspot.marketing', Message: "Marketing word 'robust'." },
+                ],
+                'stdin.rb': [
+                    { Line: 2, Span: [5, 6], Check: 'Google.We', Message: 'Try not to use first-person plural.' },
+                ],
+            }),
+        );
+        expect(alerts).toStrictEqual([
+            { file: 'docs/a.md', line: 3, column: 10, check: 'gspot.marketing', message: "Marketing word 'robust'." },
+            {
+                file: 'stdin.rb',
+                line: 2,
+                column: 5,
+                check: 'Google.We',
+                message: 'Try not to use first-person plural.',
+            },
+        ]);
+    });
+
+    test('native paths and filenames with control characters retain their complete locations', () => {
+        const path = join('docs', 'café:part\nname.md');
+        expect(
+            parseAlerts(
+                JSON.stringify({
+                    [path]: [{ Line: 3, Span: [10, 15], Check: 'gspot.marketing', Message: 'Marketing word.' }],
+                }) + '\r\n',
+            ),
+        ).toStrictEqual([
+            {
+                file: 'docs/café:part\nname.md',
+                line: 3,
+                column: 10,
+                check: 'gspot.marketing',
+                message: 'Marketing word.',
+            },
+        ]);
+    });
+
+    test.each(['diagnostic text', '{"file.md":[{}]}'])('malformed output %s cannot become a clean result', (output) => {
+        expect(() => parseAlerts(output)).toThrow(output.startsWith('{') ? 'Line' : 'JSON Parse error');
+    });
+    test('an empty native report has no alerts', () => {
+        expect(parseAlerts('{}')).toStrictEqual([]);
     });
 });

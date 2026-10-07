@@ -12,8 +12,16 @@ import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
 import { statSync, lstatSync, existsSync, readdirSync } from 'node:fs';
 import type { Tooling, TrackedFile, RunnerSelection } from '#cli/types/repository/inventory.ts';
-import { HOOK_DIRECTORIES, MISE_HOOK_DIRECTORY, HOOK_CONFIGURATION_FILES } from '#cli/config/repository/hooks.ts';
 
+import {
+    LEFTHOOK_NAMES,
+    HOOK_DIRECTORIES,
+    LEFTHOOK_PREFIXES,
+    LEFTHOOK_EXTENSIONS,
+    MISE_HOOK_DIRECTORY,
+    LEFTHOOK_CONFIG_PREFIX,
+    LEFTHOOK_YAML_EXTENSION_COUNT,
+} from '#cli/config/repository/hooks.ts';
 import {
     LINT_PAIRS,
     LINT_WORDS,
@@ -108,9 +116,21 @@ export function getHooks(root: string): Tooling['hooks'] {
     const packageHooks = manifest !== undefined && Object.hasOwn(manifest, 'simple-git-hooks');
     const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
     const location = hooksPath === '' ? undefined : hooksDirectory(root);
-    const present: string[] = HOOK_CONFIGURATION_FILES.filter(
-        (name) => lstatSync(join(root, name), { throwIfNoEntry: false }) !== undefined,
-    );
+    const hookNames = [
+        ...LEFTHOOK_NAMES.flatMap((name) => [
+            ...LEFTHOOK_EXTENSIONS.slice(0, LEFTHOOK_YAML_EXTENSION_COUNT).flatMap((extension) =>
+                LEFTHOOK_PREFIXES.slice(0, -1).map((prefix) => `${prefix}${name}.${extension}`),
+            ),
+            ...LEFTHOOK_EXTENSIONS.slice(0, LEFTHOOK_YAML_EXTENSION_COUNT).map(
+                (extension) => `${LEFTHOOK_CONFIG_PREFIX}${name}.${extension}`,
+            ),
+            ...LEFTHOOK_EXTENSIONS.slice(LEFTHOOK_YAML_EXTENSION_COUNT).flatMap((extension) =>
+                LEFTHOOK_PREFIXES.map((prefix) => `${prefix}${name}.${extension}`),
+            ),
+        ]),
+        '.pre-commit-config.yaml',
+    ];
+    const present = hookNames.filter((name) => lstatSync(join(root, name), { throwIfNoEntry: false }) !== undefined);
     const lefthook = present.find((name) => name !== '.pre-commit-config.yaml');
     return [
         ...(location === undefined

@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
+import { addIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import type { Identifier, ExtractSink } from '#cli/types/parsers/naming.ts';
 
 import {
@@ -9,20 +9,6 @@ import {
     IMPLICIT_PARAMETERS,
     PYTHON_PARAMETER_NODES,
 } from '#cli/config/parsers/naming.ts';
-
-function add(sink: ExtractSink, node: Node, category: string): void {
-    const name = node.text;
-    if (name === '' || name === '_') return;
-    sink.out.push(
-        createIdentifier(sink, {
-            line: node.startPosition.row + 1,
-            column: node.startPosition.column + 1,
-            category,
-
-            name,
-        }),
-    );
-}
 
 // The block that holds a definition: the body of a class, the body of a function, or the module.
 
@@ -35,7 +21,7 @@ function addClasses(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType('class_definition')) {
         const name = node.childForFieldName('name');
         const bases = node.childForFieldName('superclasses')?.text ?? '';
-        if (name !== null) add(sink, name, EXCEPTION_BASE.test(bases) ? 'exceptions' : 'classes');
+        if (name !== null) addIdentifier(sink, name, EXCEPTION_BASE.test(bases) ? 'exceptions' : 'classes');
     }
 }
 
@@ -57,14 +43,14 @@ function addParameters(sink: ExtractSink, definition: Node): void {
         .filter((parameter) => PYTHON_PARAMETER_NODES.has(parameter.type) || SPLAT_NODES.has(parameter.type))
         .map((parameter) => parameterName(parameter));
     for (const name of names)
-        if (name?.type === 'identifier' && !IMPLICIT_PARAMETERS.has(name.text)) add(sink, name, 'parameters');
+        if (name?.type === 'identifier' && !IMPLICIT_PARAMETERS.has(name.text)) addIdentifier(sink, name, 'parameters');
 }
 
 function addFunctions(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType('function_definition')) {
         addParameters(sink, node);
         const name = node.childForFieldName('name');
-        if (name !== null) add(sink, name, holderOf(node) === 'class_definition' ? 'methods' : 'functions');
+        if (name !== null) addIdentifier(sink, name, holderOf(node) === 'class_definition' ? 'methods' : 'functions');
     }
 }
 
@@ -78,11 +64,11 @@ function addAssignments(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType('assignment')) {
         const left = node.childForFieldName('left');
         if (left?.type !== 'identifier') continue;
-        add(sink, left, bindingCategory(node, left.text));
+        addIdentifier(sink, left, bindingCategory(node, left.text));
     }
     for (const node of root.descendantsOfType('type_alias_statement')) {
         const left = node.childForFieldName('left') ?? node.namedChildren[0] ?? null;
-        if (left !== null) add(sink, left, 'type_aliases');
+        if (left !== null) addIdentifier(sink, left, 'type_aliases');
     }
 }
 

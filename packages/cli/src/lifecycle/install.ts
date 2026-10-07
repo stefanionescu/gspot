@@ -186,23 +186,22 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
             notes: [],
             steps:
                 manifests.some((manifest) => manifest.tools.some((tool) => tool.name === 'vale')) &&
-                !hasValePackages(session.root)
+                !hasValePackages(session.root, session.policyFiles.policy.level)
                     ? [['vale', '--config', VALE_CONFIG, 'sync']]
                     : [],
         }),
         run: async (session, manifests) => {
-            if (hasValePackages(session.root)) return '';
+            if (hasValePackages(session.root, session.policyFiles.policy.level)) return '';
             const problem = await installValePackages({
+                level: session.policyFiles.policy.level,
                 search: session,
                 tool: toolPin(manifests, 'vale'),
                 timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),
                 cancelSignal: session.cancelSignal,
             });
-            if (problem !== undefined) {
-                const failure = `Vale package installation failed: ${problem}. Run: gspot install`;
-                throw new GspotError('installation', failure);
-            }
-            return `installed Vale packages in ${STYLES_DIRECTORY}`;
+            if (problem === undefined) return `installed Vale packages in ${STYLES_DIRECTORY}`;
+            const failure = `Vale package installation failed: ${problem}. Run: gspot install`;
+            throw new GspotError('installation', failure);
         },
     },
     {

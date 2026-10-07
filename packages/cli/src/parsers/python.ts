@@ -1,14 +1,23 @@
 import type { Node } from 'web-tree-sitter';
-import { memo } from '#cli/platform/memo.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { isDocstring } from '#cli/parsers/statements.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { ParseReads, SourceInput } from '#cli/types/parsers/source.ts';
 import type { ParsedPython, PythonModule, PythonExports, PythonFunction } from '#cli/types/parsers/python.ts';
 
-const MODULE_MEMO = { create: () => new WeakMap<DisposableStack, Map<string, Promise<ParsedPython>>>() };
+// The value assigned to __all__ by a statement, or undefined when the statement assigns something else.
+function exportList(statement: Node): Node | undefined {
+    const assignment = assignmentOf(statement);
+    if (assignment?.childForFieldName('left')?.text !== '__all__') return undefined;
+    return assignment.childForFieldName('right') ?? undefined;
+}
 
-async function readModules(input: SourceInput): Promise<ParsedPython> {
+/**
+ * Read selected Python sources and their function observations.
+ * @param input the selected files and source reads
+ * @returns parsed observations whose trees must be disposed
+ */
+export async function readPython(input: SourceInput): Promise<ParsedPython> {
     const modules: PythonModule[] = [];
     try {
         for (const file of input.files) {
@@ -21,13 +30,6 @@ async function readModules(input: SourceInput): Promise<ParsedPython> {
         for (const module of modules) module.tree.delete();
         throw error;
     }
-}
-
-// The value assigned to __all__ by a statement, or undefined when the statement assigns something else.
-function exportList(statement: Node): Node | undefined {
-    const assignment = assignmentOf(statement);
-    if (assignment?.childForFieldName('left')?.text !== '__all__') return undefined;
-    return assignment.childForFieldName('right') ?? undefined;
 }
 
 /**
@@ -111,44 +113,9 @@ export function exportedNames(module: PythonModule): PythonExports | undefined {
 }
 
 /**
- * Visit Python observations once per run, or dispose them when a standalone visit ends.
- * @param input the selected files, source reads, and optional run disposal owner
- * @param visit the reader that borrows the modules and functions
- * @returns the reader's result, after standalone trees have been disposed
+ * Release the tree handles owned by Python observations.
+ * @param parsed the observations whose readers have finished
  */
-export async function visitPythonModules<Result>(
-    input: SourceInput,
-    visit: (parsed: ParsedPython) => Result | Promise<Result>,
-): Promise<Result> {
-    if (input.resources === undefined) {
-        const parsed = await readModules(input);
-        try {
-            return await visit(parsed);
-        } finally {
-            for (const module of parsed.modules) module.tree.delete();
-        }
-    }
-    const owners = memo(input.reads, MODULE_MEMO);
-    let entries = owners.get(input.resources);
-    if (entries === undefined) {
-        entries = new Map();
-        owners.set(input.resources, entries);
-    }
-    const key = JSON.stringify([input.root, input.files]);
-    let pending = entries.get(key);
-    if (pending === undefined) {
-        pending = readModules(input);
-        entries.set(key, pending);
-        try {
-            const parsed = await pending;
-            input.resources.defer(() => {
-                entries.delete(key);
-                for (const module of parsed.modules) module.tree.delete();
-            });
-        } catch (error) {
-            entries.delete(key);
-            throw error;
-        }
-    }
-    return visit(await pending);
+export function disposePython(parsed: ParsedPython): void {
+    for (const source of parsed.modules) source.tree.delete();
 }

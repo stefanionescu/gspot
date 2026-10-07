@@ -9,11 +9,13 @@ import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type {
     Finding,
     TypoEntry,
+    ValeAlert,
     EslintReport,
     EslintDiagnostic,
     MarkdownlintEntry,
 } from '#cli/types/parsers/output.ts';
 import {
+    alertsSchema,
     typosEntrySchema,
     eslintReportSchema,
     historyMetadataSchema,
@@ -219,4 +221,21 @@ export function trufflehogFindings(check: string, stdout: string, help: string):
         }
     }
     return findings;
+}
+
+/**
+ * Validates native Vale JSON before converting alerts to source locations.
+ * @param stdout the output
+ * @returns the alerts
+ */
+export function parseAlerts(stdout: string): ValeAlert[] {
+    return Object.entries(alertsSchema.parse(JSON.parse(stdout))).flatMap(([file, alerts]) =>
+        alerts.map((alert) => ({
+            file: toPosix(file),
+            line: alert.Line,
+            column: alert.Span[0],
+            check: alert.Check,
+            message: alert.Message,
+        })),
+    );
 }

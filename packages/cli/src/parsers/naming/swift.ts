@@ -1,26 +1,12 @@
 import type { Node } from 'web-tree-sitter';
-import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
+import { addIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import type { Identifier, ExtractSink } from '#cli/types/parsers/naming.ts';
 import { MEMBER_PARENTS, SWIFT_TYPE_NODES, SWIFT_FUNCTION_NODES } from '#cli/config/parsers/naming.ts';
-
-function add(sink: ExtractSink, node: Node, category: string): void {
-    const name = node.text.replaceAll('`', '');
-    if (name === '' || name === '_') return;
-    sink.out.push(
-        createIdentifier(sink, {
-            line: node.startPosition.row + 1,
-            column: node.startPosition.column + 1,
-            category,
-
-            name,
-        }),
-    );
-}
 
 function addTypes(sink: ExtractSink, root: Node): void {
     for (const node of root.descendantsOfType(SWIFT_TYPE_NODES)) {
         const name = node.childForFieldName('name');
-        if (name?.type === 'type_identifier') add(sink, name, 'types');
+        if (name?.type === 'type_identifier') addIdentifier(sink, name, 'types', name.text.replaceAll('`', ''));
     }
 }
 
@@ -29,7 +15,7 @@ function addParameters(sink: ExtractSink, owner: Node): void {
     for (const parameter of owner.namedChildren) {
         if (parameter.type !== 'parameter') continue;
         const name = parameter.childrenForFieldName('name').find((child) => child.type === 'simple_identifier');
-        if (name) add(sink, name, 'parameters');
+        if (name) addIdentifier(sink, name, 'parameters', name.text.replaceAll('`', ''));
     }
 }
 
@@ -39,7 +25,12 @@ function addFunctions(sink: ExtractSink, root: Node): void {
         addParameters(sink, node);
         const name = node.childForFieldName('name');
         if (name?.type !== 'simple_identifier') continue;
-        add(sink, name, MEMBER_PARENTS.has(node.parent?.type ?? '') ? 'methods' : 'functions');
+        addIdentifier(
+            sink,
+            name,
+            MEMBER_PARENTS.has(node.parent?.type ?? '') ? 'methods' : 'functions',
+            name.text.replaceAll('`', ''),
+        );
     }
 }
 
@@ -57,7 +48,7 @@ function addBindings(sink: ExtractSink, root: Node): void {
         const category = bindingCategory(node);
         for (const pattern of node.childrenForFieldName('name')) {
             const bound = pattern.childForFieldName('bound_identifier');
-            if (bound) add(sink, bound, category);
+            if (bound) addIdentifier(sink, bound, category, bound.text.replaceAll('`', ''));
         }
     }
 }
@@ -65,7 +56,8 @@ function addBindings(sink: ExtractSink, root: Node): void {
 function addCases(sink: ExtractSink, root: Node): void {
     for (const entry of root.descendantsOfType('enum_entry'))
         for (const name of entry.childrenForFieldName('name'))
-            if (name.type === 'simple_identifier') add(sink, name, 'enum_cases');
+            if (name.type === 'simple_identifier')
+                addIdentifier(sink, name, 'enum_cases', name.text.replaceAll('`', ''));
 }
 
 /**

@@ -1,24 +1,18 @@
-// Inspect and synchronize configured Vale style packages in managed storage.
+// Inspect and synchronize shipped Vale style packages in managed storage.
 import { join, dirname } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Root } from '#cli/types/platform/root.ts';
-import { parseValePackages } from '#cli/parsers/vale.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import type { Policy } from '#cli/types/policy/settings.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
+import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import type { ValeInstallation } from '#cli/types/tools/install.ts';
 import { installationDiagnostics } from '#cli/tools/credentials.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/inspect.ts';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform/modes.ts';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
-
-// Read package names only from the generated Vale configuration managed by this repository.
-function configuredPackages(files: Root): string[] | undefined {
-    const source = files.read(VALE_CONFIG);
-    if (source === undefined) return undefined;
-    return parseValePackages(source.bytes.toString('utf8'));
-}
 
 // The folder a package file belongs to: a top folder of the styles, or a folder of its config folder. A loose file
 // beside the packages belongs to none.
@@ -54,8 +48,11 @@ function stageInputs(files: Root, work: string): void {
 }
 
 // Replaces every installed package with its synced copy, and deletes a package the configuration does not name.
-function replacePackages(files: Root, work: string): void {
+function replacePackages(files: Root, work: string): string | undefined {
     using synced = openRoot(work);
+    for (const folder of VALE_PACKAGE_FOLDERS)
+        if (synced.stat(`${STYLES_DIRECTORY}/${folder}`)?.isDirectory() !== true)
+            return `Vale setup output is missing: ${STYLES_DIRECTORY}/${folder}`;
     const outputs = listStyleFiles(synced).filter((path) => isValePackageFile(path));
     const folders = new Set(outputs.flatMap((path) => folderOfFile(path)));
     for (const folder of installedPackageFolders(files)) if (!folders.has(folder)) files.removeTree(folder);
@@ -66,6 +63,7 @@ function replacePackages(files: Root, work: string): void {
             folder,
             outputs.filter((path) => path.startsWith(`${folder}/`)),
         );
+    return undefined;
 }
 
 /**
@@ -82,13 +80,14 @@ function installedPackageFolders(files: Root): string[] {
 /**
  * Check whether configured upstream styles are available for a prose check.
  * @param root the repository root
- * @returns whether every required directory exists
+ * @param level the selected check level
+ * @returns whether the config and required package directories exist
  */
-export function hasValePackages(root: string): boolean {
+export function hasValePackages(root: string, level: Policy['level']): boolean {
     using files = openRoot(root);
-    const needed = configuredPackages(files);
-    if (needed === undefined) return false;
-    return needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true);
+    if (files.read(VALE_CONFIG) === undefined) return false;
+    if (level === 'recommended') return true;
+    return VALE_PACKAGE_FOLDERS.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory() === true);
 }
 
 /**
@@ -116,20 +115,21 @@ export function removeValePackages(root: string): void {
 }
 
 /**
- * Downloads the upstream packages the config names, and replaces the installed ones with them. Needs the network.
+ * Downloads the upstream packages shipped at the selected level, and replaces the installed ones with them. Needs the network.
  * @param request the tool search, selected Vale pin, deadline, and cancellation
  * @returns what went wrong, or undefined when the packages are in place
  */
 export async function installValePackages(request: ValeInstallation): Promise<string | undefined> {
-    const { search, tool, timeoutSeconds, cancelSignal } = request;
+    const { search, tool, level, timeoutSeconds, cancelSignal } = request;
     const { root } = search;
+    using files = openRoot(root);
+    using workFolder = scratchFolder('gspot-vale-');
+    const work = workFolder.path;
+    stageInputs(files, work);
+    if (level === 'recommended') return undefined;
     const inspection = inspectTool(search, tool);
     if (!isToolAvailable(inspection))
         return inspection.note ?? `Vale is ${inspection.state}. ${inspection.hint ?? 'Run: gspot install'}`;
-    using workFolder = scratchFolder('gspot-vale-');
-    const work = workFolder.path;
-    using files = openRoot(root);
-    stageInputs(files, work);
     const result = await runTool([inspection.path, '--config', join(work, VALE_CONFIG), 'sync'], {
         cwd: work,
         cancelSignal,
@@ -138,6 +138,5 @@ export async function installValePackages(request: ValeInstallation): Promise<st
     if (result.isCanceled === true) return 'Vale package sync was canceled.';
     if (result.isTimedOut === true) return 'Vale package sync exceeded its tool deadline.';
     if (result.code !== 0) return installationDiagnostics(result, []);
-    replacePackages(files, work);
-    return undefined;
+    return replacePackages(files, work);
 }

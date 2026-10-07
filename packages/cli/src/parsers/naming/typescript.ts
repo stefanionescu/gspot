@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
+import { addIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import type { Identifier, ExtractSink } from '#cli/types/parsers/naming.ts';
 
 import {
@@ -12,24 +12,15 @@ import {
     TYPESCRIPT_PARAMETER_NODES,
 } from '#cli/config/parsers/naming.ts';
 
-function add(sink: ExtractSink, node: Node | null, category: string): void {
-    if (node === null || !NAME_NODES.has(node.type)) return;
-    const name = node.type === 'private_property_identifier' ? node.text.slice(1) : node.text;
-    if (name === '' || name === '_') return;
-    sink.out.push(
-        createIdentifier(sink, {
-            line: node.startPosition.row + 1,
-            column: node.startPosition.column + 1,
-            category,
-
-            name,
-        }),
-    );
-}
-
 function addPattern(sink: ExtractSink, node: Node | null, category: string): void {
     if (node === null) return;
-    if (NAME_NODES.has(node.type)) add(sink, node, category);
+    if (NAME_NODES.has(node.type))
+        addIdentifier(
+            sink,
+            node,
+            category,
+            node.type === 'private_property_identifier' ? node.text.slice(1) : node.text,
+        );
     else if (PATTERN_FIELDS[node.type] !== undefined)
         addPattern(sink, node.childForFieldName(PATTERN_FIELDS[node.type] ?? ''), category);
     else if (PATTERN_LISTS.has(node.type)) for (const child of node.namedChildren) addPattern(sink, child, category);
@@ -73,14 +64,14 @@ function addNamed(sink: ExtractSink, root: Node): void {
                         (node.childForFieldName('name')?.text === 'constructor' || node.parent?.type === 'object')
                     ),
             );
-        for (const node of nodes) add(sink, node.childForFieldName('name'), category);
+        for (const node of nodes) addPattern(sink, node.childForFieldName('name'), category);
     }
 }
 
 function addEnumCases(sink: ExtractSink, root: Node): void {
     for (const body of root.descendantsOfType('enum_body')) {
         const cases = body.namedChildren.filter((child) => child.type === 'property_identifier');
-        for (const child of cases) add(sink, child, 'enum_cases');
+        for (const child of cases) addIdentifier(sink, child, 'enum_cases');
     }
 }
 

@@ -4,6 +4,7 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import { getBlobs, getHeadEntries } from '#cli/repository/revisions/objects.ts';
+import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { FROZEN_ALL, FROZEN_NONE, MIGRATION_DOWN } from '#cli/config/checks/database/postgres.ts';
 
 const COMMITTED_MIGRATIONS_MEMO = { create: () => new Map<string, Promise<Map<string, string>>>() };
@@ -13,7 +14,7 @@ async function readCommittedMigrations(input: CheckInput, paths: string[]): Prom
     const committed = await getHeadEntries(input.root, input.cancelSignal);
     const selected = new Set(paths);
     const entries = committed.filter(
-        (entry) => selected.has(entry.path) && (entry.mode === '100644' || entry.mode === '100755'),
+        (entry) => selected.has(entry.path) && entry.mode !== SYMLINK_MODE && entry.mode !== GITLINK_MODE,
     );
     const blobs = await getBlobs(
         input.root,

@@ -86,6 +86,9 @@ if (suite !== undefined && options.length === 1 && options[0] === '--help') {
     process.on('SIGTERM', stop);
     try {
         await using work = await testdir();
+        // Each run owns its cache because packed workspace bytes change without a version change.
+        const bunCache = join(work.path, 'bun-cache');
+        setEnvironmentVariable('BUN_INSTALL_CACHE_DIR', bunCache);
         const execute: typeof run = async (command, commandOptions) => {
             controller.signal.throwIfAborted();
             const result = await run(command, { ...commandOptions, cancelSignal: controller.signal });
@@ -118,6 +121,7 @@ if (suite !== undefined && options.length === 1 && options[0] === '--help') {
         const npmrc = join(work.path, '.npmrc');
         if (registry !== undefined) writeFileSync(npmrc, `@gspothq:registry=${registry.url}/\n`, { mode: 0o600 });
         const env = {
+            BUN_INSTALL_CACHE_DIR: bunCache,
             GSPOT_PACKAGE_ARCHIVES: archives,
             ...(nativePath === undefined ? {} : { PATH: nativePath }),
             ...(registry === undefined ? {} : { NPM_CONFIG_USERCONFIG: npmrc }),

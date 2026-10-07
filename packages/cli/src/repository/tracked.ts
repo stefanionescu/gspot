@@ -8,12 +8,13 @@ import { readSource } from '#cli/platform/source.ts';
 import { runGitBlocking } from '#cli/platform/git.ts';
 import { parseIndexEntries } from '#cli/parsers/git.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
-import { EXECUTABLE_BITS } from '#cli/config/platform/modes.ts';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform/root.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { isOutsideGit, inspectWorkTree } from '#cli/repository/root.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
+import { ENTRY_MODES, GITLINK_MODE } from '#cli/config/repository/revisions.ts';
+import { EXECUTABLE_BITS, EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import type { RawEntry, PathIgnore, PendingDirectory, DirectoryContents } from '#cli/types/repository/inventory.ts';
 
 // A link to a folder, or one that leaves the repository, is left out, so no check reads past it. A dangling link is
@@ -156,7 +157,7 @@ export function readIndexEntries(root: string): GitIndexEntry[] {
  * @returns sorted, unique submodule paths
  */
 export function getSubmodulePaths(entries: GitIndexEntry[]): string[] {
-    return [...new Set(entries.filter((entry) => entry.mode === '160000').map((entry) => entry.path))].toSorted(
+    return [...new Set(entries.filter((entry) => entry.mode === GITLINK_MODE).map((entry) => entry.path))].toSorted(
         (left, right) => left.localeCompare(right),
     );
 }
@@ -176,7 +177,11 @@ export function trackedEntries(root: string, exclude: string[] = []): RawEntry[]
     // Windows file systems keep no executable bit, so the same index listing supplies it.
     const executables =
         process.platform === 'win32'
-            ? new Set(index.filter((entry) => entry.mode === '100755').map((entry) => entry.path))
+            ? new Set(
+                  index
+                      .filter((entry) => entry.mode !== GITLINK_MODE && ENTRY_MODES[entry.mode] === EXECUTABLE_FILE)
+                      .map((entry) => entry.path),
+              )
             : undefined;
     return [...new Set(paths)]
         .filter(

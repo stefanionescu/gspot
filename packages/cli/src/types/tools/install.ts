@@ -1,5 +1,5 @@
 import type { FileCopy } from '#cli/types/platform/root.ts';
-import type { PolicyFile } from '#cli/types/policy/settings.ts';
+import type { Policy, PolicyFile } from '#cli/types/policy/settings.ts';
 import type { ToolPin, InstallationKind } from '#cli/types/configurations.ts';
 
 export type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
@@ -58,6 +58,7 @@ export type LocateOptions = {
 
 /** The tool search, selected pin, and process limits of Vale package acquisition. */
 export type ValeInstallation = {
+    level: Policy['level'];
     search: ToolSearch;
     tool: ToolPin;
     timeoutSeconds: number;

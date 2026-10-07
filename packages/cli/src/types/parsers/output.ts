@@ -35,3 +35,6 @@ export type Finding = Defined<z.infer<typeof findingSchema>>;
 
 /** Where a finding points: the file, and the line and column when the check knows them. */
 export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;
+
+/** A Vale diagnostic normalized to a repository path and one-based source location. */
+export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };

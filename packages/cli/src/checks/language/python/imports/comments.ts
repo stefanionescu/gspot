@@ -1,9 +1,10 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
+import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { visitPythonModules } from '#cli/parsers/python.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { PythonModule } from '#cli/types/parsers/python.ts';
+import { readPython, disposePython } from '#cli/parsers/python.ts';
 import { IMPORTS, DIRECTIVE } from '#cli/config/checks/language/python.ts';
 
 // The runs of top-level import statements, from the first import of each to the last. Only comments may lie between two imports of a run.
@@ -28,29 +29,29 @@ function importRuns(module: PythonModule): [Node, Node][] {
  * @returns the findings for that check
  */
 export async function importComments(input: CheckInput): Promise<Finding[]> {
-    return visitPythonModules(input, ({ modules }) =>
-        modules.flatMap((module) => {
-            const findings: Finding[] = [];
-            const comments = module.tree.rootNode.namedChildren.filter((node) => node.type === 'comment');
-            for (const [first, last] of importRuns(module)) {
-                for (const node of comments) {
-                    if (
-                        node.startIndex <= first.startIndex ||
-                        node.startPosition.row > last.endPosition.row ||
-                        DIRECTIVE.test(node.text)
-                    )
-                        continue;
-                    findings.push(
-                        findingAt(
-                            input,
-                            { file: module.path, line: node.startPosition.row + 1 },
-                            'import-comment',
-                            'No comments among imports. Say it where the import is used, or above the block.',
-                        ),
-                    );
-                }
+    using parsed = await visitParsed(input, readPython, disposePython);
+    const { modules } = parsed.value;
+    return modules.flatMap((module) => {
+        const findings: Finding[] = [];
+        const comments = module.tree.rootNode.namedChildren.filter((node) => node.type === 'comment');
+        for (const [first, last] of importRuns(module)) {
+            for (const node of comments) {
+                if (
+                    node.startIndex <= first.startIndex ||
+                    node.startPosition.row > last.endPosition.row ||
+                    DIRECTIVE.test(node.text)
+                )
+                    continue;
+                findings.push(
+                    findingAt(
+                        input,
+                        { file: module.path, line: node.startPosition.row + 1 },
+                        'import-comment',
+                        'No comments among imports. Say it where the import is used, or above the block.',
+                    ),
+                );
             }
-            return findings;
-        }),
-    );
+        }
+        return findings;
+    });
 }

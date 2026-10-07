@@ -1,47 +1,51 @@
 import { testdir } from 'testdirs';
 import { Tree } from 'web-tree-sitter';
 import { test, spyOn, expect } from 'bun:test';
-import { visitSwiftSources } from '#cli/parsers/swift.ts';
+import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
+import { readSwift, disposeSwift } from '#cli/parsers/swift.ts';
 import { SWIFT_SOURCES } from '#tests/config/cli/parsers/swift.ts';
 
-test('Swift observations are shared within one owner and remain isolated between scopes', async () => {
+test('Swift observations reuse selected paths while isolating scopes and resource owners', async () => {
     await using sandbox = await testdir(SWIFT_SOURCES);
     const reads: ReadCache = { root: sandbox.path, sources: new Map(), memo: new Map() };
-    const resources = new DisposableStack();
-    using spies = new DisposableStack();
+    using resources = new DisposableStack();
     const input = { root: sandbox.path, reads, resources, files: [{ path: 'app/Order.swift', kind: 'source' }] };
-    try {
-        const first = await visitSwiftSources(input, (parsed) => ({
-            parsed,
-            deletion: spies.use(spyOn(parsed.sources[0]!.tree, 'delete')),
-        }));
-        expect(first.parsed.functions.map(({ path, name }) => ({ path, name }))).toStrictEqual([
-            { path: 'app/Order.swift', name: 'total' },
-            { path: 'app/Order.swift', name: 'closure' },
-        ]);
-        await visitSwiftSources(input, (parsed) => {
-            expect(parsed).toBe(first.parsed);
-            expect(parsed.sources[0]!.tree.rootNode.text).toBe(SWIFT_SOURCES['app/Order.swift']);
-        });
-        await visitSwiftSources({ ...input, files: [{ path: 'worker/Order.swift', kind: 'source' }] }, (parsed) => {
-            expect(parsed).not.toBe(first.parsed);
-            expect(parsed.functions.map(({ path, name }) => ({ path, name }))).toStrictEqual([
-                { path: 'worker/Order.swift', name: 'deliver' },
-            ]);
-        });
-        expect(first.deletion).not.toHaveBeenCalled();
-        resources.dispose();
-        expect(first.deletion).toHaveBeenCalledTimes(1);
-        using nextResources = new DisposableStack();
-        await visitSwiftSources({ ...input, resources: nextResources }, (parsed) => {
-            expect(parsed).not.toBe(first.parsed);
-            expect(parsed.sources[0]!.tree.rootNode.text).toBe(SWIFT_SOURCES['app/Order.swift']);
-        });
-    } finally {
-        resources.dispose();
-    }
+    using first = await visitParsed(input, readSwift, disposeSwift);
+    using deletion = spyOn(first.value.sources[0]!.tree, 'delete');
+    expect(first.value.functions.map(({ path, name }) => ({ path, name }))).toStrictEqual([
+        { path: 'app/Order.swift', name: 'total' },
+        { path: 'app/Order.swift', name: 'closure' },
+    ]);
+    const selectedFiles = input.files.map((file) => ({ ...file, prefix: Buffer.from('changed metadata') }));
+    using repeated = await visitParsed(
+        {
+            ...input,
+            files: selectedFiles,
+        },
+        readSwift,
+        disposeSwift,
+    );
+    expect(repeated.value).toBe(first.value);
+    expect(repeated.value.sources[0]!.tree.rootNode.text).toBe(SWIFT_SOURCES['app/Order.swift']);
+    using scoped = await visitParsed(
+        { ...input, files: [{ path: 'worker/Order.swift', kind: 'source' }] },
+        readSwift,
+        disposeSwift,
+    );
+    expect(scoped.value).not.toBe(first.value);
+    expect(scoped.value.functions.map(({ path, name }) => ({ path, name }))).toStrictEqual([
+        { path: 'worker/Order.swift', name: 'deliver' },
+    ]);
+    first[Symbol.dispose]();
+    expect(deletion).not.toHaveBeenCalled();
+    resources.dispose();
+    expect(deletion).toHaveBeenCalledTimes(1);
+    using nextResources = new DisposableStack();
+    using next = await visitParsed({ ...input, resources: nextResources }, readSwift, disposeSwift);
+    expect(next.value).not.toBe(first.value);
+    expect(next.value.sources[0]!.tree.rootNode.text).toBe(SWIFT_SOURCES['app/Order.swift']);
 });
 
 test('standalone Swift readers dispose selected trees after both success and failure', async () => {
@@ -53,24 +57,29 @@ test('standalone Swift readers dispose selected trees after both success and fai
         files: [
             { path: 'app/Order.swift', kind: 'source' },
             { path: 'worker/Order.swift', kind: 'source' },
-            { path: 'generated/Order.swift', kind: 'generated' },
-            { path: 'app/readme.md', kind: 'source' },
+            { path: 'generated/order.swift', kind: 'generated' },
+            { path: 'api/readme.md', kind: 'source' },
         ],
     };
     using deletion = spyOn(Tree.prototype, 'delete');
-    const names = await visitSwiftSources(input, async ({ functions }) => {
+    {
+        using parsed = await visitParsed(input, readSwift, disposeSwift);
         await Promise.resolve();
-        return functions.map(({ name }) => name);
-    });
-    expect(names).toStrictEqual(['total', 'closure', 'deliver']);
+        expect(parsed.value.functions.map(({ name }) => name)).toStrictEqual(['total', 'closure', 'deliver']);
+        expect(deletion).not.toHaveBeenCalled();
+    }
     expect(deletion).toHaveBeenCalledTimes(2);
     deletion.mockClear();
     expect(
         await rejection(
-            visitSwiftSources(input, ({ sources }) => {
-                expect(sources.map(({ path }) => path)).toStrictEqual(['app/Order.swift', 'worker/Order.swift']);
+            (async () => {
+                using parsed = await visitParsed(input, readSwift, disposeSwift);
+                expect(parsed.value.sources.map(({ path }) => path)).toStrictEqual([
+                    'app/Order.swift',
+                    'worker/Order.swift',
+                ]);
                 throw new Error('The Swift reader failed.');
-            }),
+            })(),
         ),
     ).toBe('The Swift reader failed.');
     expect(deletion).toHaveBeenCalledTimes(2);

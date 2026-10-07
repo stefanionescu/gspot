@@ -44,7 +44,13 @@ export type TemplateInputs = {
     /** Stable Ruff rules declared by the scope's frameworks and tools at the selected level. */
     ruffRules: string[];
     typescriptConfig: (targetPath: string) => Record<string, unknown>;
-    prose: { blockIgnores: string[]; tokenIgnores: string[]; rules: string[]; formats: [string, string][] };
+    prose: {
+        packages: string[];
+        blockIgnores: string[];
+        tokenIgnores: string[];
+        rules: string[];
+        formats: [string, string][];
+    };
     version: string;
     scope: string;
     scopes: PolicyScope[];
