@@ -6,7 +6,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { LOOP_COUNTS, COUNTED_LOOPS, CORRECTED_LOOPS } from '#tests/config/tools/checks/loop-counts.ts';
+import { LOOP_COUNTS, COUNTED_LOOPS, CORRECTED_LOOPS } from '#tests/config/tools/configurations/language/bash/loops.ts';
 
 test(
     'native Bash counts include C-style branches and nesting while omitting loop header assignments in each scope',

@@ -7,7 +7,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { DIALECT_SOURCES, DIALECT_CORRECTIONS } from '#tests/config/tools/checks/shellcheck.ts';
+import { DIALECT_SOURCES, DIALECT_CORRECTIONS } from '#tests/config/tools/configurations/language/bash/shellcheck.ts';
 
 test.each(['recommended', 'all'] as const)(
     '%s preserves native shell dialect diagnostics, one cd owner, and source bytes',

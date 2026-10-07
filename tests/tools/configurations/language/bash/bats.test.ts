@@ -9,7 +9,7 @@ import { isMacos } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { BATS_MINIMUM_FILES } from '#tests/config/tools/checks/bats-minimum.ts';
+import { BATS_MINIMUM_FILES } from '#tests/config/tools/configurations/language/bash/bats.ts';
 
 test.skipIf(!isMacos).each(['recommended', 'all'] as const)(
     '%s allows syntax checks on stock macOS Bash and reports the Bats version prerequisite',
