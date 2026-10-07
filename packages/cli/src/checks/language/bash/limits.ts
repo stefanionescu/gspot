@@ -59,7 +59,7 @@ function nestingDepth(matches: AstGrepMatch[]): number {
  * @param rule the count query and its size limit
  * @param input the check context
  * @param index the shell index
- * @returns the findings; a missing ast-grep raises MissingToolError
+ * @returns the findings
  */
 async function countFindings(rule: BashCountRule, input: CheckInput, index: ScriptIndex): Promise<Finding[]> {
     const ceiling = input.view.limit(rule.limit, 'bash');

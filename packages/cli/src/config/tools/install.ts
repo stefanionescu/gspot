@@ -22,11 +22,11 @@ export const INSTALL_OUTPUT_LIMIT = 4000;
 
 export const SECRET_ENVIRONMENT_KEY = /(?:token|password|secret|credential|private[_-]?key|(?:^|[:_])(?:auth|key))$/iu;
 
+export const HTTP_URL = /^https?:\/\//u;
+
 export const URL_CREDENTIALS = /(https?:\/\/)[^\s/@]+@/giu;
 
 export const CREDENTIAL_ASSIGNMENT =
     /((?:_authToken|_auth|_password|password|token|secret|credential)\s*[=:]\s*)(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/giu;
 
 export const AUTHORIZATION_HEADER = /(authorization\s*:\s*)(?:bearer|basic)\s+[^\s]+/giu;
-
-export const HTTP_URL = /^https?:\/\//u;

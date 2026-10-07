@@ -1,11 +1,11 @@
-// Path spelling and glob walks, with explicit hidden-file and symbolic-link selection.
+// Path spelling and native glob selection, with explicit hidden-file and symbolic-link handling.
 import picomatch from 'picomatch';
 import type { Dirent } from 'node:fs';
-import { sep, join, posix, isAbsolute } from 'node:path';
 import { EXECUTABLE_LAYOUTS } from '#cli/config/platform/paths.ts';
+import { sep, join, posix, relative, isAbsolute } from 'node:path';
+import { globSync, statSync, lstatSync, realpathSync } from 'node:fs';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
-import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
-import type { GlobWalk, PathEntry, GlobOptions, DirectoryEntry } from '#cli/types/platform/paths.ts';
+import type { GlobScan, GlobQuery, PathEntry, GlobOptions, DirectoryEntry } from '#cli/types/platform/paths.ts';
 
 const hostLayout = EXECUTABLE_LAYOUTS[process.platform === 'win32' ? 'windows' : 'posix'];
 
@@ -17,84 +17,84 @@ function assertInsideFolder(pattern: string): void {
     if (climbs) throw new Error(`A path pattern cannot leave its folder: ${pattern}`);
 }
 
-// Whether a walked entry is a folder to descend into or a file to match. A link is followed only on request.
-function entryKind(absolute: string, entry: Dirent, options: GlobWalk['options']): 'file' | 'folder' {
-    if (!entry.isSymbolicLink()) return entry.isDirectory() ? 'folder' : 'file';
-    if (!options.followSymlinks) return 'file';
-    const target = statSync(absolute, { throwIfNoEntry: false });
-    if (target === undefined && options.refuseBrokenLinks) throw new Error(`A link points at nothing: ${absolute}`);
-    return target?.isDirectory() === true ? 'folder' : 'file';
+// A literal names one existing entry; following a broken link selects nothing.
+function selectLiteral(path: string, { cwd, options, visit }: GlobScan): void {
+    const entry = (options.followSymlinks ? statSync : lstatSync)(join(cwd, path), { throwIfNoEntry: false });
+    if (entry !== undefined && (!options.onlyFiles || !entry.isDirectory())) visit(path);
 }
 
-// The path of a folder entry, or undefined for a hidden entry the walk skips. A hidden entry is walked only when the
-// options or the pattern name one.
-function entryPath(walk: GlobWalk, folder: string, entry: Dirent): string | undefined {
-    if (walk.skipsHidden && entry.name.startsWith('.')) return undefined;
-    return folder === '' ? entry.name : `${folder}/${entry.name}`;
-}
-
-// Visits one entry of a walked folder, and says whether to enter it: a folder that is not pruned.
-function visitEntry(walk: GlobWalk, path: string, entry: Dirent): boolean {
-    const isFolder = entryKind(join(walk.cwd, path), entry, walk.options) === 'folder';
-    if ((!isFolder || !walk.options.onlyFiles) && walk.matches(path)) walk.visit(path);
-    return isFolder && walk.isPruned?.(path) !== true;
-}
-
-// Whether a walk that follows links reached this folder before, through another link.
-function isRevisited(walk: GlobWalk, absolute: string): boolean {
-    if (!walk.options.followSymlinks) return false;
-    const real = realpathSync(absolute);
-    if (walk.visited.has(real)) return true;
-    walk.visited.add(real);
-    return false;
-}
-
-// Walks one folder, as deep as the pattern reaches.
-function walkFolder(walk: GlobWalk, folder: string, level: number): void {
-    const absolute = join(walk.cwd, folder);
-    if (level > walk.depth || isRevisited(walk, absolute)) return;
-    for (const entry of readdirSync(absolute, { withFileTypes: true })) {
-        const path = entryPath(walk, folder, entry);
-        if (path !== undefined && visitEntry(walk, path, entry)) walkFolder(walk, path, level + 1);
-    }
-}
-
-// Visits the one path a pattern without wildcards names, when it exists.
-function visitLiteral(cwd: string, path: string, options: GlobWalk['options'], visit: GlobWalk['visit']): void {
-    const stat = (options.followSymlinks ? statSync : lstatSync)(join(cwd, path), { throwIfNoEntry: false });
-    if (stat !== undefined && (!options.onlyFiles || !stat.isDirectory())) visit(path);
-}
-
-// Walks the entries under the fixed base folder of one pattern.
-function walkPattern(
-    cwd: string,
-    pattern: string,
-    settings: Omit<GlobWalk, 'cwd' | 'matches' | 'depth' | 'skipsHidden' | 'visited'>,
-): void {
-    const { base, glob } = picomatch.scan(pattern);
-    const parts = base.split('/').filter((part) => part !== '' && part !== '.');
-    const blocked =
-        !settings.options.followSymlinks &&
+// Resolve the fixed prefix before native glob expansion can follow it through a link.
+function patternPrefix(pattern: string, selection: GlobScan): ReturnType<typeof picomatch.scan> | undefined {
+    const { cwd, options } = selection;
+    const parsed = picomatch.scan(pattern);
+    const parts = parsed.base.split('/').filter((part) => part !== '' && part !== '.');
+    if (
+        !options.followSymlinks &&
         parts.some((_, index) => {
-            const count = index + 1;
-            const entry = lstatSync(join(cwd, ...parts.slice(0, count)), { throwIfNoEntry: false });
-            return entry?.isSymbolicLink() === true && (glob !== '' || count < parts.length);
-        });
-    if (blocked) return;
-    if (glob === '') {
-        visitLiteral(cwd, base, settings.options, settings.visit);
-        return;
+            const entry = lstatSync(join(cwd, ...parts.slice(0, index + 1)), { throwIfNoEntry: false });
+            return entry?.isSymbolicLink() === true && (parsed.glob !== '' || index + 1 < parts.length);
+        })
+    )
+        return undefined;
+    if (parsed.glob === '') {
+        selectLiteral(parsed.base, selection);
+        return undefined;
     }
-    if (statSync(join(cwd, base), { throwIfNoEntry: false })?.isDirectory() !== true) return;
-    const walk: GlobWalk = {
-        ...settings,
-        cwd,
-        matches: picomatch(pattern, { dot: settings.options.dot }),
-        depth: glob.includes('**') ? Infinity : glob.split('/').length,
-        skipsHidden: !settings.options.dot && !/(?:^|\/)\./u.test(glob),
-        visited: new Set(),
+    return statSync(join(cwd, parsed.base), { throwIfNoEntry: false })?.isDirectory() === true ? parsed : undefined;
+}
+
+// Hidden directories and link aliases need explicit native queries at the supported Node floor.
+function scanFolders(cwd: string, base: string, hidden: boolean, query: GlobQuery): void {
+    const frontier = new Set([base]);
+    for (const folder of frontier) {
+        const directories = query(folder, '**/*');
+        const next = directories.filter((path) => lstatSync(join(cwd, path)).isSymbolicLink());
+        if (hidden) next.push(...[folder, ...directories].flatMap((directory) => query(directory, '.*')));
+        for (const child of next) frontier.add(child);
+    }
+}
+
+// Native globstar queries apply exclusion callbacks on the supported Node 24.2 floor.
+function scanPattern(pattern: string, selection: GlobScan): void {
+    const { cwd, options, visit } = selection;
+    const parsed = patternPrefix(pattern, selection);
+    if (parsed === undefined) return;
+    const { base, glob } = parsed;
+    const matches = picomatch(pattern, { dot: options.dot });
+    const visited = new Map([[realpathSync(join(cwd, base)), base]]);
+    const atBoundary = (path: string): boolean => {
+        const depth = glob.includes('**') ? Infinity : glob.split('/').length;
+        const level = posix.relative(base, path).split('/').length;
+        return selection.isPruned(path) || level >= depth;
     };
-    walkFolder(walk, base, 1);
+    const pathOf = (entry: Dirent): string => {
+        const parent = toPosix(relative(cwd, entry.parentPath));
+        const first = options.followSymlinks ? visited.get(realpathSync(entry.parentPath)) : undefined;
+        return toPosix(join(first ?? parent, entry.name));
+    };
+    const isFolder = (entry: Dirent, path: string): boolean =>
+        entry.isDirectory() ||
+        (options.followSymlinks &&
+            entry.isSymbolicLink() &&
+            statSync(join(cwd, path), { throwIfNoEntry: false })?.isDirectory() === true);
+    const hasDuplicateTarget = (path: string): boolean => {
+        const real = realpathSync(join(cwd, path));
+        const first = visited.get(real);
+        visited.set(real, first ?? path);
+        return first !== undefined && first !== path;
+    };
+    const exclude = (entry: Dirent): boolean => {
+        const path = pathOf(entry);
+        const folder = isFolder(entry, path);
+        if ((!folder || !options.onlyFiles) && matches(path)) visit(path);
+        if (!folder) return entry.isSymbolicLink() && !options.followSymlinks;
+        return atBoundary(path) || (options.followSymlinks && hasDuplicateTarget(path));
+    };
+    const query = (folder: string, pattern: string): string[] =>
+        globSync(pattern, { cwd: join(cwd, folder), withFileTypes: true, exclude })
+            .filter((entry) => !exclude(entry) && isFolder(entry, pathOf(entry)))
+            .map((entry) => pathOf(entry));
+    scanFolders(cwd, base, options.dot || /(?:^|\/)\./u.test(glob), query);
 }
 
 /**
@@ -135,7 +135,7 @@ export function toPosix(path: string): string {
 }
 
 /**
- * A path a tool printed, with forward slashes whatever platform wrote it: fixtures and Windows tools spell
+ * A path a tool printed, with forward slashes whatever platform wrote it: test inputs and Windows tools spell
  * backslashes on every platform.
  * @param path the path as the tool printed it
  * @returns the path with forward slashes
@@ -187,20 +187,21 @@ export function globPaths(cwd: string, patterns: string | string[], options: Glo
     const list = [patterns].flat();
     for (const pattern of list) assertInsideFolder(pattern);
     const excluded = list.filter((pattern) => pattern.startsWith('!')).map((pattern) => pattern.slice(1));
-    const isExcluded = excluded.length === 0 ? undefined : picomatch(excluded, { dot: true });
+    const isExcluded = picomatch(excluded, { dot: true });
     // A folder whose whole content is excluded is not walked.
     const pruned = excluded
         .filter((pattern) => pattern.endsWith('/**'))
         .map((pattern) => pattern.slice(0, -'/**'.length));
     const found = new Set<string>();
-    const settings = {
-        options: { dot: false, onlyFiles: true, followSymlinks: false, refuseBrokenLinks: false, ...options },
-        ...(pruned.length === 0 ? {} : { isPruned: picomatch(pruned, { dot: true }) }),
-        visit: (path: string) => {
-            if (isExcluded?.(path) !== true) found.add(path);
+    const selection: GlobScan = {
+        cwd,
+        options: { dot: false, onlyFiles: true, followSymlinks: false, ...options },
+        isPruned: picomatch(pruned, { dot: true }),
+        visit: (path) => {
+            if (!isExcluded(path)) found.add(path);
         },
     };
-    for (const pattern of list.filter((entry) => !entry.startsWith('!'))) walkPattern(cwd, pattern, settings);
+    for (const pattern of list.filter((entry) => !entry.startsWith('!'))) scanPattern(pattern, selection);
     return [...found];
 }
 

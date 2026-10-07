@@ -40,7 +40,7 @@ function licenseProblem(name: string, license: string, exception: LicenseExcepti
     return `${name} reports ${license}, and its exception names ${exception.license}; the exception no longer holds.`;
 }
 
-// Read through the files filesystem and verify the generated configuration against the selected policy.
+// Read through the repository filesystem and verify the generated configuration against the selected policy.
 function readAllowlist(input: CheckInput): LicenseAllowlist {
     const target = input.manifests.get('licenses')?.configs.find((config) => !config.fragment);
     if (target === undefined) throw new Error('The license configuration has no configuration target.');

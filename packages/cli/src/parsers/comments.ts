@@ -188,7 +188,7 @@ export function commentText(text: string): string {
 }
 
 /**
- * Read actual comment text and line locations for suppression discovery and inline filtering.
+ * Read comment text and line locations for suppression discovery.
  * @param path the source path, whose extension selects its syntax
  * @param text the source text
  * @returns comments in source order, with whether each occupies its line alone

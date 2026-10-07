@@ -81,3 +81,29 @@ test('a denied asset existence read is an execution error and a genuinely missin
     expect(fs.readFileSync(join(sandbox.path, assetManifest), 'utf8')).toBe(content);
     expect(fs.readFileSync(target)).toStrictEqual(Buffer.from([0, 1, 2]));
 });
+
+test.each(['logo-mark', 'logo_mark', 'Logo Mark'])(
+    'Xcode asset %s accepts its camel-case symbol and reports an unrelated symbol',
+    async (name) => {
+        await using sandbox = await testdir();
+        const path = `App/Assets.xcassets/${name}.imageset/Contents.json`;
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['xcode'], { level: 'all' }),
+            [path]: '{"images":[{"filename":"logo.png"}]}\n',
+            [`App/Assets.xcassets/${name}.imageset/logo.png`]: new Uint8Array([0, 1, 2]),
+            'App/Home.swift': 'let logo = Image(.logoMark)\n',
+        });
+        const session = await openSession(sandbox.path);
+        const options = buildRunOptions({ stage: 'commit', only: ['xcode/assets'] });
+        const referenced = await executeRun(session, options);
+        expect(referenced.report.exitCode).toBe(0);
+        expect(referenced.report.checks[0]?.findings).toStrictEqual([]);
+        fs.writeFileSync(join(sandbox.path, 'App/Home.swift'), 'let logo = Image(.differentLogo)\n');
+        const orphan = await executeRun(session, options);
+        expect(orphan.report.exitCode).toBe(1);
+        expect(orphan.report.checks[0]?.findings).toMatchObject([
+            { file: path, rule: 'orphan-asset', message: `No source names the asset ${name}.` },
+        ]);
+        expect(orphan.report.checks[0]?.findings).toHaveLength(1);
+    },
+);

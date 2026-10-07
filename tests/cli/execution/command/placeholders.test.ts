@@ -29,4 +29,7 @@ test('an isolated Markdown command retains the companion configuration owned by 
     expect(paths).toContain('.gspot/config/markdownlint-cli2.mjs');
     expect(paths).toContain('.gspot/config/markdownlint.jsonc');
     expect(paths).toContain('README.md');
+    expect(() => isolatedFiles(session, planned, ['markdownlint-cli2', '{config:absent}'])).toThrow(
+        'Check markdown/markdownlint names {config:absent} and no configuration writes it.',
+    );
 });

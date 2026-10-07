@@ -1,3 +1,4 @@
+import { camelCase } from 'scule';
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
@@ -12,25 +13,12 @@ import { definedClasses, moduleImporters } from '#cli/parsers/css.ts';
 function sheetFindings(input: CheckInput, sheet: string, defined: CssClass[], importers: Importer[]): Finding[] {
     const name = posix.basename(sheet);
     if (importers.length === 0) return [];
-    const known = new Set(
-        defined.flatMap((entry) => [
-            entry.name,
-            entry.name.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) => letter.toUpperCase()),
-        ]),
-    );
+    const known = new Set(defined.flatMap((entry) => [entry.name, camelCase(entry.name)]));
     const read = new Set(importers.flatMap((file) => file.classes.map((entry) => entry.name)));
     const unused = importers.some((file) => file.isDynamic)
         ? []
         : defined
-              .filter(
-                  (entry) =>
-                      !read.has(entry.name) &&
-                      !read.has(
-                          entry.name.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) =>
-                              letter.toUpperCase(),
-                          ),
-                      ),
-              )
+              .filter((entry) => !read.has(entry.name) && !read.has(camelCase(entry.name)))
               .map((entry) =>
                   findingAt(
                       input,

@@ -16,14 +16,3 @@ export function parseJsonc(text: string): unknown {
         );
     return value;
 }
-
-/**
- * The value of JSON with comments and trailing commas, for a reader that reports a broken file its own way.
- * @param text the text
- * @returns the value, or undefined when the text does not parse
- */
-export function jsoncValue(text: string): unknown {
-    const errors: ParseError[] = [];
-    const value: unknown = parse(text, errors, { allowTrailingComma: true });
-    return errors.length === 0 ? value : undefined;
-}

@@ -1,3 +1,4 @@
+import { camelCase } from 'scule';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
@@ -13,13 +14,6 @@ function setName(path: string): string {
     const folder = path.slice(0, path.lastIndexOf('/'));
     const name = posix.basename(folder);
     return name.slice(0, name.lastIndexOf('.'));
-}
-
-// The symbol Xcode writes for an asset: the name in lower camel case, with the separators gone.
-function symbolOf(name: string): string {
-    const words = name.split(NOT_WORD).filter((word) => word !== '');
-    const joined = words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join('');
-    return joined.charAt(0).toLowerCase() + joined.slice(1);
 }
 
 function imageFindings(input: CheckInput, path: string): Finding[] {
@@ -45,7 +39,9 @@ function orphanFindings(input: CheckInput, sets: string[]): Finding[] {
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
         .filter((path) => {
             const name = setName(path);
-            return swift.every((text) => !text.includes(`"${name}"`) && !text.includes(`.${symbolOf(name)}`));
+            return swift.every(
+                (text) => !text.includes(`"${name}"`) && !text.includes(`.${camelCase(name.split(NOT_WORD))}`),
+            );
         })
         .map((path) =>
             findingAt(input, { file: path, line: 1 }, 'orphan-asset', `No source names the asset ${setName(path)}.`),

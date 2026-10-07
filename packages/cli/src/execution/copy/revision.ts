@@ -1,4 +1,4 @@
-// Check out Git revision content without replacing authored working-tree files.
+// Write Git revision content without replacing authored working-tree files.
 import { join, relative } from 'node:path';
 import { gitText } from '#cli/platform/git.ts';
 import { existsSync, realpathSync } from 'node:fs';
@@ -73,7 +73,7 @@ async function populateRevision(
 }
 
 /**
- * Check out Git revision content without checkout filters, stashing, or working-tree writes.
+ * Write Git revision content without checkout filters, stashing, or working-tree writes.
  * @param root repository directory
  * @param source selected revision
  * @param action operation using the disposable copy

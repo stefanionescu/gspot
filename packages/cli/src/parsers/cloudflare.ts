@@ -1,5 +1,5 @@
 import { parse as parseToml } from 'smol-toml';
-import { jsoncValue } from '#cli/parsers/jsonc.ts';
+import { parseJsonc } from '#cli/parsers/jsonc.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import type { NumberedLine } from '#cli/types/parsers/source.ts';
 import type { WranglerParse } from '#cli/types/parsers/cloudflare.ts';
@@ -21,7 +21,7 @@ function contentLines(text: string): NumberedLine[] {
 export function parseWrangler(text: string, path: string): WranglerParse {
     try {
         if (path.endsWith('.toml')) return { table: parseToml(text), problem: undefined };
-        const parsed = jsoncValue(text);
+        const parsed = parseJsonc(text);
         return isRecord(parsed)
             ? { table: parsed, problem: undefined }
             : { table: undefined, problem: 'The file does not parse as JSON with comments.' };

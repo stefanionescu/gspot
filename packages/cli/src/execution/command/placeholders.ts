@@ -61,7 +61,7 @@ function configurationPath(session: ToolSession, planned: PlannedCheck, name: st
     const target = allConfigurations(session, planned).find(
         (config) => !config.fragment && configurationName(config.target) === name,
     );
-    if (!target) throw new Error(`Check ${planned.check.name} names {config:${name}} and no configuration renders it.`);
+    if (!target) throw new Error(`Check ${planned.check.name} names {config:${name}} and no configuration writes it.`);
     return targetInScope(planned.scope.scope.path, target);
 }
 

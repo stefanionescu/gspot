@@ -13,6 +13,8 @@ describe('development assets', () => {
             [`${CHECKOUT}/packages/cli/package.json`]: readFileSync(join(root, 'packages/cli/package.json'), 'utf8'),
             [`${CHECKOUT}/packages/cli/configurations/language/bash/manifest.toml`]: ASSETS_CONFIGURATION,
             [`${CHECKOUT}/assets-reader.ts`]: ASSET_READER_SCRIPT,
+            [`${CHECKOUT}/packages/cli/configurations/.index.json`]: '{}',
+            [`${CHECKOUT}/packages/cli/configurations/language/bash/.meta/state.json`]: '{}',
             [`${CHECKOUT}/packages/cli/grammars/undeclared.wasm`]: 'not a declared asset',
         });
         const cwd = join(sandbox.path, CHECKOUT);
@@ -33,7 +35,11 @@ describe('development assets', () => {
         expect(result.code, result.stderr).toBe(0);
         expect(JSON.parse(result.stdout)).toStrictEqual({
             text: ASSETS_CONFIGURATION,
-            files: ['configurations/language/bash/manifest.toml'],
+            files: [
+                'configurations/.index.json',
+                'configurations/language/bash/.meta/state.json',
+                'configurations/language/bash/manifest.toml',
+            ],
         });
     });
 });
