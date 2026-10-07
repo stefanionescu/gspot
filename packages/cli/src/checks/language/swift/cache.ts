@@ -75,22 +75,19 @@ export function buildFolder(root: string): string {
 /**
  * Prepare and claim one build folder without following existing output links.
  * @param folder the build folder
- * @returns the locked root, which the caller closes
+ * @returns the locked root, which the caller disposes
  */
 export function openBuildCache(folder: string): Root {
     const home = cacheDirectory();
     mkdirSync(home, { recursive: true, mode: PRIVATE_DIRECTORY });
     using boundary = openRoot(home);
     boundary.mkdir(toPosix(relative(home, folder)), PRIVATE_DIRECTORY);
-    const files = openRoot(folder, 'native');
-    try {
-        files.claim('build.lock');
-        assertBuildLinksInside(folder, files);
-        return files;
-    } catch (error) {
-        files.close();
-        throw error;
-    }
+    using resources = new DisposableStack();
+    const files = resources.use(openRoot(folder, 'native'));
+    files.claim('build.lock');
+    assertBuildLinksInside(folder, files);
+    resources.move();
+    return files;
 }
 
 /**
@@ -116,20 +113,17 @@ export function prepareBuildSources(root: string, paths: string[], folder: strin
  * Claim a native build folder and prepare the exact source files its consumer needs.
  * @param input the repository and selected source files
  * @param folder the native consumer's build folder
- * @returns the source path and locked root. The caller disposes a successful result; failures close it
+ * @returns the source path and locked root. The caller disposes a successful result; failures release it
  */
 export function prepareBuild(input: Pick<CheckInput, 'root' | 'files'>, folder: string): PreparedSwiftBuild {
-    const files = openBuildCache(folder);
-    try {
-        const source = prepareBuildSources(
-            input.root,
-            input.files.map((file) => file.path),
-            folder,
-            files,
-        );
-        return { files, source };
-    } catch (error) {
-        files.close();
-        throw error;
-    }
+    using resources = new DisposableStack();
+    const files = resources.use(openBuildCache(folder));
+    const source = prepareBuildSources(
+        input.root,
+        input.files.map((file) => file.path),
+        folder,
+        files,
+    );
+    resources.move();
+    return { files, source };
 }

@@ -1,49 +1,21 @@
 // Scopes come from gspot.toml or, during initialization, from tracked project files.
 import picomatch from 'picomatch';
-import { posix } from 'node:path';
+import { realpathSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
+import { posix, relative } from 'node:path';
 import type { Package } from '@manypkg/tools';
 import { parseJsonc } from '#cli/parsers/jsonc.ts';
 import { readText } from '#cli/platform/source.ts';
-import { openRoot } from '#cli/platform/root/open.ts';
-import { toPosix, globPaths } from '#cli/platform/paths.ts';
-import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import { portableSegments } from '#cli/platform/root/rules.ts';
+import { GspotError } from '#cli/platform/errors.ts';
+import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
+import { ROOT_SCOPE } from '#cli/config/repository/inventory.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
 import { isGlob, isInScope, isToolingPath } from '#cli/repository/selectors.ts';
 import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
-import { ROOT_SCOPE, DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 import { rushProjectsSchema, workspacePatternsSchema } from '#cli/parsers/schema/repository.ts';
-
-// Validate filesystem access before the workspace resolver reads package manifests.
-function assertWorkspaceInsideRoot(root: string, patterns: string[]): void {
-    using files = openRoot(root);
-    const normalized = patterns.map((pattern) => {
-        const negate = pattern.startsWith('!') ? '!' : '';
-        const path = pattern.slice(negate.length).replace(/^\.\//u, '').replace(/\/$/u, '');
-        // Glob characters are not path characters; replace them so the segment rules check the rest.
-        portableSegments(path.replaceAll(/[!*?[\]{}()|+@]/gu, 'x'));
-        return `${negate}${path}`;
-    });
-    const ancestors = normalized.flatMap((pattern) => {
-        if (pattern.startsWith('!')) return [pattern];
-        const parts = pattern.split('/');
-        return parts.map((_part, index) => parts.slice(0, index + 1).join('/'));
-    });
-    // Tool projects and installed dependencies are never authored workspace projects.
-    const excluded = [DOT_GSPOT, '.git', ...DEPENDENCY_FOLDERS].map((folder) => `!**/${folder}/**`);
-    const paths = globPaths(root, [...ancestors, ...excluded], {
-        dot: true,
-        onlyFiles: false,
-    });
-    // Every visited path is read through the root boundary, which refuses a link that leaves the repository.
-    for (const path of paths) {
-        if (files.stat(path)?.isDirectory() === true) readText(root, `${path}/package.json`);
-    }
-}
 
 function workspacePackages(root: string): Package[] {
     const manifest = readPackageManifest(root, 'package.json');
@@ -70,15 +42,13 @@ function workspacePackages(root: string): Package[] {
     for (const { tool, path, parse, schema } of declarations) {
         const source = readText(root, path);
         if (source === undefined || !tool.isMonorepoRootSync(root)) continue;
-        const patterns = schema.parse(parse(source));
-        assertWorkspaceInsideRoot(root, patterns);
+        schema.parse(parse(source));
         return tool.getPackagesSync(root).packages;
     }
     if (manifest === undefined) return [];
     const { workspaces: declaration = [] } = manifest;
     const workspaces = Array.isArray(declaration) ? declaration : declaration.packages;
     if (workspaces.length === 0) return [];
-    assertWorkspaceInsideRoot(root, workspaces);
     return YarnTool.getPackagesSync(root).packages;
 }
 
@@ -129,9 +99,11 @@ export function proposedScopes(
  * @returns the root-relative folders
  */
 export function packageWorkspaces(root: string): string[] {
-    return workspacePackages(root)
-        .map((found) => toPosix(found.relativeDir))
-        .filter((path) => path !== '' && path !== '.');
+    const packages = workspacePackages(root);
+    for (const found of packages)
+        if (!isInside(relative(realpathSync(root), realpathSync(found.dir))))
+            throw new GspotError('filesystem', `Workspace package leaves the repository: ${found.relativeDir}`);
+    return packages.map((found) => toPosix(found.relativeDir)).filter((path) => path !== '' && path !== '.');
 }
 
 /**

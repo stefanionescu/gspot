@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
 import { unlinkSync, symlinkSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -12,6 +11,7 @@ import { buildInitOptions } from '#tests/harness/init.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { preparePolicy } from '#cli/commands/policy-edit.ts';
 import type { RawPolicy } from '#cli/types/policy/settings.ts';
+import { planRun, configuredChecks } from '#cli/planning/plan.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
 import { AUTOMATIC_GENERAL_CONFIGURATIONS } from '#tests/config/harness/policy.ts';
@@ -27,6 +27,23 @@ import {
     NEXT_BUILD_TABLES,
     NODE_REQUIREMENTS,
 } from '#tests/config/cli/planning/selection.ts';
+
+test('a nested Next.js check replaces TypeScript only in its own scope', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['typescript'], {
+            tables: '[[scope]]\npath = "app"\nconfigurations = ["typescript", "nextjs"]',
+        }),
+        'source.ts': 'export const port = 8080;\n',
+        'app/source.ts': 'export const port = 3000;\n',
+    });
+    const configured = configuredChecks(await openSession(sandbox.path), true)
+        .filter((entry) => ['typescript/tsc', 'nextjs/tsc'].includes(entry.check.name))
+        .map((entry) => [entry.scope.scope.path, entry.check.name]);
+    expect(configured).toStrictEqual([
+        ['', 'typescript/tsc'],
+        ['app', 'nextjs/tsc'],
+    ]);
+});
 
 test('a check version prerequisite cannot lower its tool-wide requirement', async () => {
     await using sandbox = await testdir({

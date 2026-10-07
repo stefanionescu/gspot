@@ -3,6 +3,7 @@ import { rejects } from 'node:assert/strict';
 import { gitOutput } from '#tests/harness/git.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { readAttributes } from '#cli/repository/kind.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
 import { rmSync, mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
@@ -105,6 +106,21 @@ test('an unreadable attributes file cannot become an empty rule set', async () =
         kind: 'generated',
         kindSource: '.gitattributes',
     });
+});
+
+test('Git attributes use native precedence without decoding the working-tree file', async () => {
+    await using sandbox = await testdir();
+    gitOutput(sandbox.path, ['init', '-q']);
+    await createFileTree(sandbox.path, {
+        '.git/info/attributes': '*.ts linguist-generated\n',
+        'source.ts': 'export {};\n',
+    });
+    writeFileSync(join(sandbox.path, '.gitattributes'), Buffer.from([0xff, 0x0a]));
+    expect(readAttributes(sandbox.path, ['source.ts'], true).get('source.ts')).toMatchObject({
+        'linguist-generated': 'set',
+    });
+    expect(() => readAttributes(sandbox.path, ['source.ts'], false)).toThrow('.gitattributes is not UTF-8 text.');
+    expect(readFileSync(join(sandbox.path, '.gitattributes'))).toStrictEqual(Buffer.from([0xff, 0x0a]));
 });
 
 test('repository inventory recognizes every generated header format outside the private directory', async () => {

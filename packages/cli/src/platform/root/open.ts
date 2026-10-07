@@ -141,9 +141,6 @@ export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Roo
         claim: (path) => {
             claimPath(bounds, path);
         },
-        close: () => {
-            releaseClaims(bounds);
-        },
         [Symbol.dispose]: () => {
             releaseClaims(bounds);
         },

@@ -125,6 +125,18 @@ export function kindOf(file: FileClassification, rules: FileClassificationRules)
  * @returns the parsed rules, or none when the optional file is absent
  */
 export function readAttributes(root: string, paths: string[], hasGit: boolean): Map<string, Record<string, string>> {
+    if (paths.length === 0) return new Map();
+    if (hasGit) {
+        const result = runGitBlocking(
+            root,
+            ['check-attr', '--stdin', '-z', 'linguist-generated', 'linguist-vendored', 'text', 'filter'],
+            {
+                stdin: paths.join('\0') + '\0',
+            },
+        );
+        if (result.code !== 0) throw new Error(`Git attribute resolution failed: ${result.stderr.trim()}`);
+        return gitAttributes(result.stdout);
+    }
     const files = [
         ...new Set(['.gitattributes', ...paths.filter((path) => posix.basename(path) === '.gitattributes')]),
     ];
@@ -138,18 +150,6 @@ export function readAttributes(root: string, paths: string[], hasGit: boolean): 
         matcher: pathMatcher([entry.pattern]),
         attributes: entry.attributes,
     }));
-    if (paths.length === 0) return new Map();
-    if (hasGit) {
-        const result = runGitBlocking(
-            root,
-            ['check-attr', '--stdin', '-z', 'linguist-generated', 'linguist-vendored', 'text', 'filter'],
-            {
-                stdin: paths.join('\0') + '\0',
-            },
-        );
-        if (result.code !== 0) throw new Error(`Git attribute resolution failed: ${result.stderr.trim()}`);
-        return gitAttributes(result.stdout);
-    }
     const attributes = new Map<string, Record<string, string>>();
     for (const path of paths) {
         let effective: Record<string, string> = {};

@@ -73,9 +73,7 @@ function openLog(files: Root): Log {
         save();
     }
     return {
-        [Symbol.dispose]() {
-            files.close();
-        },
+        [Symbol.dispose]: files[Symbol.dispose],
         files,
         state,
         save,
@@ -145,16 +143,13 @@ export function isRecorded(file: FileCopy | undefined, recorded: Identity | unde
  * @returns the context, which the command disposes
  */
 export function openOwnership(root: string): Log {
-    const files = openRoot(root);
-    try {
-        files.claim(`${STATE_DIRECTORY}/writer.lock`);
-        const log = openLog(files);
-        recoverInstallations(log);
-        return log;
-    } catch (error) {
-        files.close();
-        throw error;
-    }
+    using resources = new DisposableStack();
+    const files = resources.use(openRoot(root));
+    files.claim(`${STATE_DIRECTORY}/writer.lock`);
+    const log = openLog(files);
+    recoverInstallations(log);
+    resources.move();
+    return log;
 }
 
 /**

@@ -2,8 +2,6 @@ import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
 import { escapeRegExp } from '#cli/platform/text.ts';
-import { walkRoot } from '#cli/platform/root/open.ts';
-import type { Root } from '#cli/types/platform/root.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { xccovSchema } from '#cli/parsers/schema/xctest.ts';
@@ -72,22 +70,6 @@ function disabledNodes(root: Node, lines: string[]): Node[] {
         return !hasReason(reasonArgument) && !COMMENT_LINE.test(lines[attribute.startPosition.row - 1] ?? '');
     });
     return [...calls, ...attributes];
-}
-
-// Delete the previous result bundle's files before their containing folders.
-function removePreviousBundle(files: Root): void {
-    if (files.stat('coverage.xcresult') === undefined) return;
-    const directories = ['coverage.xcresult'];
-    walkRoot(files, 'coverage.xcresult', (path) => {
-        if (files.stat(path)?.isDirectory() === true) {
-            directories.push(path);
-            return true;
-        }
-        const previous = files.read(path);
-        if (previous !== undefined) files.remove(path, previous);
-        return false;
-    });
-    for (const directory of directories.toReversed()) files.rmdir(directory);
 }
 
 // Runs the tests with coverage on, then prints the coverage report of the result bundle.
@@ -235,7 +217,7 @@ export async function xctestCoverage(input: CheckInput): Promise<Finding[]> {
     using files = prepared.files;
     const { source } = prepared;
     const cwd = join(source, input.scope);
-    removePreviousBundle(files);
+    files.removeTree('coverage.xcresult');
     const output = await measureCoverage(input, plan.argv, bundle, cwd);
     const report = xccovSchema.parse(JSON.parse(output));
     return coverageShortfalls(report, floors).map((text) => findingAt(input, { file: '', line: 1 }, 'coverage', text));

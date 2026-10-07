@@ -201,8 +201,10 @@ test('a failed Swift source preparation releases its build claim before a later 
     expect(await rejection(swiftBuild(input))).toContain('ENOENT');
     expect(run).not.toHaveBeenCalled();
     expect(existsSync(join(plan.folder, 'build.lock'))).toBe(false);
-    const next = openBuildCache(plan.folder);
-    next.close();
+    {
+        using next = openBuildCache(plan.folder);
+        expect(next.read('build.lock')).toBeDefined();
+    }
     expect(existsSync(join(plan.folder, 'build.lock'))).toBe(false);
 });
 

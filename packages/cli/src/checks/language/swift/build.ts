@@ -140,14 +140,12 @@ export async function swiftPeriphery(input: CheckInput): Promise<Finding[]> {
         'xcode',
         '--disable-update-check',
     ];
+    using resources = new DisposableStack();
     const prepared = prepareBuild(input, folder);
-    try {
-        const result = await runCheckTool(input, argv, { cwd: join(prepared.source, input.scope) });
-        const output = `${result.stdout}\n${result.stderr}`.replaceAll(prepared.source, input.root);
-        const found = diagnostics(input, output, new Set(['error', 'warning']), 'unused');
-        if (found.length === 0 && result.code !== 0) throw new Error(toolOutputDetail(result, 'Periphery failed'));
-        return found;
-    } finally {
-        prepared.files.close();
-    }
+    resources.use(prepared.files);
+    const result = await runCheckTool(input, argv, { cwd: join(prepared.source, input.scope) });
+    const output = `${result.stdout}\n${result.stderr}`.replaceAll(prepared.source, input.root);
+    const found = diagnostics(input, output, new Set(['error', 'warning']), 'unused');
+    if (found.length === 0 && result.code !== 0) throw new Error(toolOutputDetail(result, 'Periphery failed'));
+    return found;
 }

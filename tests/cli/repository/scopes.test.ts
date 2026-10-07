@@ -76,27 +76,28 @@ test.each(['pnpm-workspace.yaml', 'lerna.json', 'rush.json'])(
     },
 );
 
-test.each(['../outside', 'packages/*'])(
-    'workspace preflight refuses escaped or linked package patterns: %s',
-    async (pattern) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
-            'project/package.json': '{}',
-            'project/pnpm-workspace.yaml': `packages: [${JSON.stringify(pattern)}]\n`,
-            'project/packages/.keep': '',
-            'outside/package.json': '{"name":"outside"}',
-            'outside/app/package.json': '{"name":"outside-app"}',
-        });
-        const root = join(directory.path, 'project');
-        symlinkSync('../../outside', join(root, 'packages/linked'));
-        expect(() => packageWorkspaces(root)).toThrow(/lifecycle/iu);
-        expect(readFileSync(join(directory.path, 'outside/package.json'), 'utf8')).toBe('{"name":"outside"}');
-        unlinkSync(join(root, 'packages/linked'));
-        writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
-        await createFileTree(root, { 'packages/app/package.json': '{"name":"inside"}' });
-        expect(packageWorkspaces(root)).toStrictEqual(['packages/app']);
-    },
-);
+test.each([
+    ['pnpm-workspace.yaml', 'packages: ["../outside"]\n', '../outside'],
+    ['rush.json', '{"projects":[{"packageName":"outside","projectFolder":"packages/linked"}]}', 'packages/linked'],
+])('workspace discovery refuses an external package folder from %s', async (path, declaration, escaped) => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'project/package.json': '{}',
+        [`project/${path}`]: declaration,
+        'project/packages/.keep': '',
+        'outside/package.json': '{"name":"outside"}',
+        'outside/app/package.json': '{"name":"outside-app"}',
+    });
+    const root = join(directory.path, 'project');
+    symlinkSync('../../outside', join(root, 'packages/linked'));
+    expect(() => packageWorkspaces(root)).toThrow(`Workspace package leaves the repository: ${escaped}`);
+    expect(readFileSync(join(directory.path, 'outside/package.json'), 'utf8')).toBe('{"name":"outside"}');
+    expect(packageWorkspaces(join(root, 'packages'))).toStrictEqual([]);
+    unlinkSync(join(root, 'packages/linked'));
+    writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
+    await createFileTree(root, { 'packages/app/package.json': '{"name":"inside"}' });
+    expect(packageWorkspaces(root)).toStrictEqual(['packages/app']);
+});
 
 test('broad workspace patterns ignore private environments containing external interpreter links', async () => {
     await using directory = await testdir();

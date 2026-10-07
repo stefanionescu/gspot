@@ -53,22 +53,18 @@ async function populateRevision(
         throw new GspotError('selection', [
             `Git holds ${collision[0]} and ${collision[1]}, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.`,
         ]);
-    const files = openRoot(checkout, 'native');
+    using files = openRoot(checkout, 'native');
     // Write links last so a tracked link can never redirect another tracked write.
     const ordered = [
         ...entries.filter((entry) => entry.mode !== SYMLINK_MODE),
         ...entries.filter((entry) => entry.mode === SYMLINK_MODE),
     ];
-    try {
-        for (const [index, entry] of ordered.entries()) {
-            if (index % WRITE_BATCH === 0) {
-                await setImmediate();
-                cancelSignal?.throwIfAborted();
-            }
-            writeEntry(files, entry, objects);
+    for (const [index, entry] of ordered.entries()) {
+        if (index % WRITE_BATCH === 0) {
+            await setImmediate();
+            cancelSignal?.throwIfAborted();
         }
-    } finally {
-        files.close();
+        writeEntry(files, entry, objects);
     }
 }
 

@@ -16,50 +16,42 @@ import {
 
 test('native replacement and removal preserve read-only identities', async () => {
     await using directory = await testdir();
-    const root = openRoot(directory.path);
+    using root = openRoot(directory.path);
     const original = { bytes: Buffer.from([0, 255, 10]), mode: fileMode({ mode: 0o444 }) };
     const replacement = { bytes: Buffer.from('replacement'), mode: fileMode({ mode: 0o644 }) };
-    try {
-        root.write('config/input', original, undefined);
-        expect(root.read('config/input')).toStrictEqual(original);
-        root.write('config/input', replacement, original);
-        expect(root.read('config/input')).toStrictEqual(replacement);
-        root.write('config/input', original, replacement);
-        expect(() => {
-            root.remove('config/input', replacement);
-        }).toThrow('changed');
-        expect(root.read('config/input')).toStrictEqual(original);
-        root.remove('config/input', original);
-        expect(root.read('config/input')).toBeUndefined();
-    } finally {
-        root.close();
-    }
+    root.write('config/input', original, undefined);
+    expect(root.read('config/input')).toStrictEqual(original);
+    root.write('config/input', replacement, original);
+    expect(root.read('config/input')).toStrictEqual(replacement);
+    root.write('config/input', original, replacement);
+    expect(() => {
+        root.remove('config/input', replacement);
+    }).toThrow('changed');
+    expect(root.read('config/input')).toStrictEqual(original);
+    root.remove('config/input', original);
+    expect(root.read('config/input')).toBeUndefined();
 });
 
 test.skipIf(!isPosix)(
     'root lifecycle mutations: replacements preserve expected bytes and modes and refuse subsequent edits',
     async () => {
         await using directory = await testdir();
-        const root = openRoot(directory.path);
-        try {
-            const original = { bytes: Buffer.from([0, 255, 10]), mode: 0o640 };
-            root.write('config/input', original, undefined);
-            expect(root.read('config/input')).toStrictEqual(original);
-            const next = { bytes: Buffer.from('replacement\n'), mode: 0o444 };
-            root.write('config/input', next, original);
-            expect(root.read('config/input')).toStrictEqual(next);
-            expect(() => {
-                root.write('config/input', original, original);
-            }).toThrow('changed');
-            expect(() => {
-                root.remove('config/input', original);
-            }).toThrow('changed');
-            expect(root.read('config/input')).toStrictEqual(next);
-            root.remove('config/input', next);
-            expect(root.read('config/input')).toBeUndefined();
-        } finally {
-            root.close();
-        }
+        using root = openRoot(directory.path);
+        const original = { bytes: Buffer.from([0, 255, 10]), mode: 0o640 };
+        root.write('config/input', original, undefined);
+        expect(root.read('config/input')).toStrictEqual(original);
+        const next = { bytes: Buffer.from('replacement\n'), mode: 0o444 };
+        root.write('config/input', next, original);
+        expect(root.read('config/input')).toStrictEqual(next);
+        expect(() => {
+            root.write('config/input', original, original);
+        }).toThrow('changed');
+        expect(() => {
+            root.remove('config/input', original);
+        }).toThrow('changed');
+        expect(root.read('config/input')).toStrictEqual(next);
+        root.remove('config/input', next);
+        expect(root.read('config/input')).toBeUndefined();
     },
 );
 
@@ -73,22 +65,18 @@ test.skipIf(!isPosix).each(['portable', 'native'] as const)(
         symlinkSync(outside, join(project, 'escape'));
         symlinkSync(join(outside, 'sentinel'), join(project, 'linked'));
         linkSync(join(outside, 'sentinel'), join(project, 'hardlinked'));
-        const root = openRoot(project, format);
-        try {
-            for (const { path, refusal } of UNSAFE_DESTINATIONS) {
-                expect(() => {
-                    root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined);
-                }).toThrow(refusal);
-                expect(() => {
-                    root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
-                }).toThrow(refusal);
-                expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
-            }
-            root.mkdir('.gspot/state/private', 0o700);
-            expect(statSync(join(project, '.gspot/state/private')).mode & 0o777).toBe(0o700);
-        } finally {
-            root.close();
+        using root = openRoot(project, format);
+        for (const { path, refusal } of UNSAFE_DESTINATIONS) {
+            expect(() => {
+                root.write(path, { bytes: Buffer.from('lost'), mode: 0o600 }, undefined);
+            }).toThrow(refusal);
+            expect(() => {
+                root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
+            }).toThrow(refusal);
+            expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
         }
+        root.mkdir('.gspot/state/private', 0o700);
+        expect(statSync(join(project, '.gspot/state/private')).mode & 0o777).toBe(0o700);
     },
 );
 
@@ -96,27 +84,23 @@ test.skipIf(!isPosix)(
     'root lifecycle mutations: native snapshot names retain POSIX bytes while refusing traversal and private links',
     async () => {
         await using directory = await testdir();
-        const root = openRoot(directory.path, 'native');
+        using root = openRoot(directory.path, 'native');
         const path = 'folder/a\n"é:?.txt';
         const original = { bytes: Buffer.from('inside'), mode: 0o640 };
-        try {
-            root.write(path, original, undefined);
-            expect(root.read(path)).toStrictEqual(original);
-            expect(() => portableSegments(path)).toThrow('Unsafe lifecycle path');
-            const link = { bytes: Buffer.from(path), mode: 0o777, isLink: true as const };
-            root.write('linked', link, undefined);
-            expect(root.readKeepingLinks('linked')).toStrictEqual(link);
-            for (const unsafe of ['../outside', '/outside', 'folder/../outside', 'nul\0suffix']) {
-                expect(() => {
-                    root.write(unsafe, original, undefined);
-                }).toThrow('Unsafe lifecycle path');
-            }
+        root.write(path, original, undefined);
+        expect(root.read(path)).toStrictEqual(original);
+        expect(() => portableSegments(path)).toThrow('Unsafe lifecycle path');
+        const link = { bytes: Buffer.from(path), mode: 0o777, isLink: true as const };
+        root.write('linked', link, undefined);
+        expect(root.readKeepingLinks('linked')).toStrictEqual(link);
+        for (const unsafe of ['../outside', '/outside', 'folder/../outside', 'nul\0suffix']) {
             expect(() => {
-                root.write('private-link', { ...link, bytes: Buffer.from('.gspot/state/ownership.json') }, undefined);
-            }).toThrow('Lifecycle metadata');
-        } finally {
-            root.close();
+                root.write(unsafe, original, undefined);
+            }).toThrow('Unsafe lifecycle path');
         }
+        expect(() => {
+            root.write('private-link', { ...link, bytes: Buffer.from('.gspot/state/ownership.json') }, undefined);
+        }).toThrow('Lifecycle metadata');
     },
 );
 
@@ -128,25 +112,21 @@ test.skipIf(!isPosix)(
         const project = join(directory.path, 'project');
         symlinkSync('../outside', join(project, 'escape'));
         symlinkSync('../outside/sentinel', join(project, 'escaped-file'));
-        const root = openRoot(project);
-        try {
-            for (const { target, refusal } of LINK_TARGET_REFUSALS) {
-                expect(() => {
-                    root.write('tool', { bytes: Buffer.from(target), mode: 0o777, isLink: true }, undefined);
-                }).toThrow(refusal);
-                expect(root.read('tool')).toBeUndefined();
-                expect(readFileSync(join(directory.path, 'outside/sentinel'), 'utf8')).toBe('outside');
-            }
-            const next = { bytes: Buffer.from('target'), mode: 0o777, isLink: true as const };
-            root.write('tool', next, undefined);
-            expect(root.readKeepingLinks('tool')).toStrictEqual(next);
-            expect(readFileSync(join(project, 'tool'), 'utf8')).toBe('inside');
-            root.remove('tool', next);
+        using root = openRoot(project);
+        for (const { target, refusal } of LINK_TARGET_REFUSALS) {
+            expect(() => {
+                root.write('tool', { bytes: Buffer.from(target), mode: 0o777, isLink: true }, undefined);
+            }).toThrow(refusal);
             expect(root.read('tool')).toBeUndefined();
-            expect(readFileSync(join(project, 'target'), 'utf8')).toBe('inside');
-        } finally {
-            root.close();
+            expect(readFileSync(join(directory.path, 'outside/sentinel'), 'utf8')).toBe('outside');
         }
+        const next = { bytes: Buffer.from('target'), mode: 0o777, isLink: true as const };
+        root.write('tool', next, undefined);
+        expect(root.readKeepingLinks('tool')).toStrictEqual(next);
+        expect(readFileSync(join(project, 'tool'), 'utf8')).toBe('inside');
+        root.remove('tool', next);
+        expect(root.read('tool')).toBeUndefined();
+        expect(readFileSync(join(project, 'target'), 'utf8')).toBe('inside');
     },
 );
 
@@ -194,26 +174,22 @@ test('empty-directory removal bounds parents and preserves nonempty directories'
     await createFileTree(sandbox.path, { 'project/.keep': '', 'outside/kept/value': 'external' });
     const root = join(sandbox.path, 'project');
     symlinkSync('../outside', join(root, 'linked'));
-    const files = openRoot(root);
-    try {
-        expect(() => {
-            files.rmdir('linked/kept');
-        }).toThrow('Unsafe lifecycle parent');
-        expect(() => {
-            files.rmdir('../outside/kept');
-        }).toThrow('Unsafe lifecycle path');
-        files.mkdir('cache/empty', 0o700);
-        files.rmdir('cache/empty');
-        expect(files.stat('cache/empty')).toBeUndefined();
-        files.write('cache/kept/value', { bytes: Buffer.from('retained'), mode: 0o600 }, undefined);
-        expect(() => {
-            files.rmdir('cache/kept');
-        }).toThrow('ENOTEMPTY');
-        expect(files.read('cache/kept/value')?.bytes.toString()).toBe('retained');
-        expect(readFileSync(join(sandbox.path, 'outside/kept/value'), 'utf8')).toBe('external');
-    } finally {
-        files.close();
-    }
+    using files = openRoot(root);
+    expect(() => {
+        files.rmdir('linked/kept');
+    }).toThrow('Unsafe lifecycle parent');
+    expect(() => {
+        files.rmdir('../outside/kept');
+    }).toThrow('Unsafe lifecycle path');
+    files.mkdir('cache/empty', 0o700);
+    files.rmdir('cache/empty');
+    expect(files.stat('cache/empty')).toBeUndefined();
+    files.write('cache/kept/value', { bytes: Buffer.from('retained'), mode: 0o600 }, undefined);
+    expect(() => {
+        files.rmdir('cache/kept');
+    }).toThrow('ENOTEMPTY');
+    expect(files.read('cache/kept/value')?.bytes.toString()).toBe('retained');
+    expect(readFileSync(join(sandbox.path, 'outside/kept/value'), 'utf8')).toBe('external');
 });
 
 test.skipIf(!isMacos)(

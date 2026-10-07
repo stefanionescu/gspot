@@ -10,11 +10,10 @@ test('build cache rejects external output links and concurrent writers', async (
     await using outside = await testdir();
     const folder = join(buildFolder(sandbox.path), 'swift', 'compile');
     try {
-        const owner = openBuildCache(folder);
-        try {
+        {
+            using owner = openBuildCache(folder);
+            expect(owner.read('build.lock')).toBeDefined();
             expect(() => openBuildCache(folder)).toThrow('Another lifecycle writer');
-        } finally {
-            owner.close();
         }
         const authored = join(outside.path, 'authored');
         writeFileSync(authored, 'preserved');
@@ -24,8 +23,10 @@ test('build cache rejects external output links and concurrent writers', async (
         expect(existsSync(join(folder, 'build.lock'))).toBe(false);
         rmSync(join(folder, 'package'));
         mkdirSync(join(folder, 'package'));
-        const corrected = openBuildCache(folder);
-        corrected.close();
+        {
+            using corrected = openBuildCache(folder);
+            expect(corrected.read('build.lock')).toBeDefined();
+        }
         expect(existsSync(join(folder, 'build.lock'))).toBe(false);
     } finally {
         rmSync(buildFolder(sandbox.path), { recursive: true, force: true });

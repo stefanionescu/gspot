@@ -44,8 +44,6 @@ export type Root = {
     /** Acquire a writer claim, replacing a claim whose process has exited. */
     claim(path: string): void;
     /** Release the writer claims still owned by this root. */
-    close(): void;
-    /** Release the writer claims still owned by this root. */
     [Symbol.dispose](): void;
 };
 

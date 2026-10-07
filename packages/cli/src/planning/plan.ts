@@ -160,9 +160,9 @@ export function isActive(check: PlannedCheck): boolean {
  * @returns every check the policy turns on, in each scope it applies to
  */
 export function configuredChecks(session: Session, includeUnsupported = false): PlannedCheck[] {
-    return skipReplacedChecks(planScopes(session, { stage: 'any', skips: [], includeUnsupported }).flat()).filter(
-        (check) => isActive(check) && check.skip === undefined,
-    );
+    return planScopes(session, { stage: 'any', skips: [], includeUnsupported })
+        .flatMap((planned) => skipReplacedChecks(planned))
+        .filter((check) => isActive(check) && check.skip === undefined);
 }
 
 /**
