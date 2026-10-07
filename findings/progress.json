@@ -1,5 +1,5 @@
 {
-    "openRecords": 1005,
+    "openRecords": 999,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1005,
+        "openRecords": 999,
         "records": 1092,
         "batches": [
             {
@@ -457,8 +457,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 25,
-                "unresolvedAssignments": 266
+                "completedAssignments": 31,
+                "unresolvedAssignments": 260
             },
             {
                 "id": "python",
@@ -3478,16 +3478,22 @@
             "verification": []
         },
         "review/code-execution/001": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "d7062cffc1f4d4d0875574c73bb864e7e080c571",
+            "verification": [
+                "The shared parsed visitor keys root and file paths, excluding prefix buffers and other metadata. Python and Swift callers use this one visitor. The implementation was committed in 1ebc5f4266cf9b67a434a6aff6fa7151105d8d90; existing same-path/different-metadata reuse and different-path noncollision acceptance now pass in the combined checkpoint.",
+                "Combined acceptance passed 251 tests and 1,230 assertions across 34 files in 19.64 seconds, root and CLI types, and affected full-policy lint. Normal apply reports 149 files up to date. Staged checks passed 67 with 10 skips and zero findings; normal commit checks passed 49 with three skips and no findings. Production removes 68 lines and 300 syntax-tree nodes; all authored changes remove 50 lines and 114 nodes."
+            ]
         },
         "review/code-execution/002": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "d7062cffc1f4d4d0875574c73bb864e7e080c571",
+            "verification": [
+                "configuredChecks applies replacement filtering to each scope before flattening, matching execution planning. A nested Next.js scope retains the root TypeScript check while replacing TypeScript only in its own scope. The new regression fails with the original implementation and passes with this fix.",
+                "Combined acceptance passed 251 tests and 1,230 assertions across 34 files in 19.64 seconds, root and CLI types, and affected full-policy lint. Normal apply reports 149 files up to date. Staged checks passed 67 with 10 skips and zero findings; normal commit checks passed 49 with three skips and no findings. Production removes 68 lines and 300 syntax-tree nodes; all authored changes remove 50 lines and 114 nodes."
+            ]
         },
         "review/code-execution/003": {
             "status": "complete",
@@ -3523,10 +3529,13 @@
             "verification": []
         },
         "review/code-execution/008": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "d7062cffc1f4d4d0875574c73bb864e7e080c571",
+            "verification": [
+                "Deleted the XCTest previous-result walker and its Root/walkRoot imports. The bounded native removeTree operation removes coverage.xcresult, with existing external result-link refusal, read-only prior bundle removal, authored-byte preservation and corrected-run acceptance passing.",
+                "Combined acceptance passed 251 tests and 1,230 assertions across 34 files in 19.64 seconds, root and CLI types, and affected full-policy lint. Normal apply reports 149 files up to date. Staged checks passed 67 with 10 skips and zero findings; normal commit checks passed 49 with three skips and no findings. Production removes 68 lines and 300 syntax-tree nodes; all authored changes remove 50 lines and 114 nodes."
+            ]
         },
         "review/code-execution/009": {
             "status": "pending",
@@ -3535,10 +3544,13 @@
             "verification": []
         },
         "review/code-execution/010": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "d7062cffc1f4d4d0875574c73bb864e7e080c571",
+            "verification": [
+                "Git attribute evaluation returns its native result before reading or compiling authored attribute declarations. The non-Git branch retains ordered rules and nested precedence. A new native Git regression proves info/attributes precedence without decoding invalid working-tree UTF-8; the non-Git branch still refuses that text. Original implementation fails this regression.",
+                "Combined acceptance passed 251 tests and 1,230 assertions across 34 files in 19.64 seconds, root and CLI types, and affected full-policy lint. Normal apply reports 149 files up to date. Staged checks passed 67 with 10 skips and zero findings; normal commit checks passed 49 with three skips and no findings. Production removes 68 lines and 300 syntax-tree nodes; all authored changes remove 50 lines and 114 nodes."
+            ]
         },
         "review/code-execution/011": {
             "status": "pending",
@@ -3644,10 +3656,14 @@
             "verification": []
         },
         "review/code-execution/024": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "d7062cffc1f4d4d0875574c73bb864e7e080c571",
+            "verification": [
+                "Deleted Root.close, all six production calls and all 19 test calls. Ordinary consumers use lexical disposal; constructor cleanup transfers the same live root through native DisposableStack.move, preserving returned Log and Swift claim ownership. The Log uses the native root disposal callback. Failed construction releases claims and later writers can reacquire; all original test assertions remain, with three new live-claim assertions.",
+                "Native transfer probes pass on Node 24.2.0, Node 24.20.0 and Bun 1.4.2. The combined tests cover failure recovery, replacement races, competing writers, Swift cache refusal/correction and revision cleanup.",
+                "Combined acceptance passed 251 tests and 1,230 assertions across 34 files in 19.64 seconds, root and CLI types, and affected full-policy lint. Normal apply reports 149 files up to date. Staged checks passed 67 with 10 skips and zero findings; normal commit checks passed 49 with three skips and no findings. Production removes 68 lines and 300 syntax-tree nodes; all authored changes remove 50 lines and 114 nodes."
+            ]
         },
         "review/code-execution/025": {
             "status": "complete",
@@ -3659,10 +3675,13 @@
             ]
         },
         "review/code-execution/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "d7062cffc1f4d4d0875574c73bb864e7e080c571",
+            "verification": [
+                "Deleted the duplicated ancestor glob/read preflight. Actual package folders returned by native workspace resolvers must have real paths inside the repository. Real pnpm parent-folder and Rush linked-folder refusals preserve external bytes and recover after correction; subfolders do not adopt a parent workspace. Scope acceptance passed 17 tests and 47 assertions.",
+                "Combined acceptance passed 251 tests and 1,230 assertions across 34 files in 19.64 seconds, root and CLI types, and affected full-policy lint. Normal apply reports 149 files up to date. Staged checks passed 67 with 10 skips and zero findings; normal commit checks passed 49 with three skips and no findings. Production removes 68 lines and 300 syntax-tree nodes; all authored changes remove 50 lines and 114 nodes."
+            ]
         },
         "review/code-execution/027": {
             "status": "complete",
@@ -9542,6 +9561,32 @@
                 "headSha": "d7cf41a0b684492e4fc1ebd20fa97515d3f970cd",
                 "status": "pending",
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37601679985"
+            }
+        },
+        {
+            "commit": "d7062cffc1f4d4d0875574c73bb864e7e080c571",
+            "completedRecords": [
+                "review/code-execution/001",
+                "review/code-execution/002",
+                "review/code-execution/008",
+                "review/code-execution/010",
+                "review/code-execution/024",
+                "review/code-execution/026"
+            ],
+            "unresolvedRecords": 999,
+            "validation": [
+                "Combined acceptance passed 251 tests and 1,230 assertions across 34 files in 19.64 seconds, root and CLI types, and affected full-policy lint. Normal apply reports 149 files up to date. Staged checks passed 67 with 10 skips and zero findings; normal commit checks passed 49 with three skips and no findings. Production removes 68 lines and 300 syntax-tree nodes; all authored changes remove 50 lines and 114 nodes.",
+                "Normal push checks passed 67 with 10 skips and zero findings in 24.1 seconds; remote main matches the implementation commit."
+            ],
+            "limitations": [
+                "Focused execution ran on macOS; full cross-platform verification remains incomplete. Pending and cancelled CI jobs prove no platform behavior. All other starting findings and main/001 external publication requirements remain open; no publication or deployment occurred."
+            ],
+            "ci": {
+                "databaseId": 37603700742,
+                "headSha": "d7062cffc1f4d4d0875574c73bb864e7e080c571",
+                "status": "pending",
+                "conclusion": "",
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37603700742"
             }
         }
     ]
