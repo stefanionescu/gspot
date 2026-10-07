@@ -8,11 +8,13 @@ import { checkRun } from '#cli/execution/built-in.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import { createReadCache } from '#cli/platform/source.ts';
 import { planRun, isActive } from '#cli/planning/plan.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
+import { readIndexEntries } from '#cli/repository/tracked.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { IgnoreEntry } from '#cli/types/policy/settings.ts';
@@ -53,9 +55,9 @@ function planExecutables(session: ToolSession, options: RunOptions): Executable[
 // Rereads the repository after fixers changed it, so the run that follows sees the corrected files.
 async function refreshAfterFixes(session: ToolSession, opened: ToolSession): Promise<void> {
     const { declarations, scopes, exclude } = session.policyFiles.policy;
-    session.repository = await readRepository(session.root, declarations, scopes, exclude);
+    session.reads = createReadCache(session.root);
+    session.repository = await readRepository(session.root, declarations, scopes, exclude, session.reads);
     opened.repository = session.repository;
-    session.reads = { root: session.root, sources: new Map(), memo: new Map() };
     session.inspections.clear();
 }
 
@@ -156,10 +158,11 @@ async function runChecks(pass: Pass, executables: Executable[]): Promise<CheckRe
 }
 
 // The session of one run: fresh reads, a disposable stack for its resources, and the cancel signal.
-function runSession(opened: ToolSession, options: RunOptions, resources: DisposableStack): ToolSession {
+async function runSession(opened: ToolSession, options: RunOptions, resources: DisposableStack): Promise<ToolSession> {
     const session = {
         ...opened,
-        reads: { root: opened.root, sources: new Map<string, Buffer>(), memo: new Map() },
+        reads: createReadCache(opened.root),
+        repository: { ...opened.repository, index: await readIndexEntries(opened.root, options.cancelSignal) },
         resources,
         ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
     };
@@ -199,7 +202,7 @@ function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
  */
 export async function executeRun(opened: ToolSession, options: RunOptions): Promise<RunOutcome> {
     using resources = new DisposableStack();
-    const session = runSession(opened, options, resources);
+    const session = await runSession(opened, options, resources);
     const started = new Date();
     const { executables, fixes } = await replanAfterFixes(session, opened, options);
     const planned = executables.map(({ check }) => check);

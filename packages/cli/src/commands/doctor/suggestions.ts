@@ -73,7 +73,9 @@ function unownedConfigs(session: Session, tooling: Tooling, tools: Set<string>, 
                         output.path === config.path && output.changes.some((field) => field.path[0] === config.key),
                 ),
         )
-        .filter((config) => !hasHeader(readPrefix(session.root, config.path, HEADER_BYTES).toString('utf8')))
+        .filter(
+            (config) => !hasHeader(readPrefix(session.root, config.path, HEADER_BYTES, session.reads).toString('utf8')),
+        )
         .flatMap((config) =>
             session.manifests
                 .values()

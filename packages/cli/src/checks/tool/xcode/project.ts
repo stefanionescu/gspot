@@ -2,14 +2,15 @@ import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
+import { parseIndexRevision } from '#cli/parsers/git.ts';
 import { parseJsonDocument } from '#cli/parsers/json.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { testPlanSchema } from '#cli/parsers/schema/xcode.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { getBlobs } from '#cli/repository/revisions/objects.ts';
 import { readPbxproj, testTargets } from '#cli/parsers/xcode.ts';
 import { SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
-import { getBlobs, getCachedEntries } from '#cli/repository/revisions/objects.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
 
@@ -113,7 +114,7 @@ export function testPlans(input: CheckInput): Finding[] {
 export async function symlinks(input: CheckInput): Promise<Finding[]> {
     const folders = trackedByExtension(input, [XCODE_PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
     if (folders.length === 0 || !input.hasGit) return [];
-    const entries = await getCachedEntries(input.root, { kind: 'index' }, input.reads, input.cancelSignal);
+    const entries = parseIndexRevision(input.index);
     const links = entries.filter(
         (entry) =>
             entry.mode === SYMLINK_MODE &&

@@ -1,10 +1,16 @@
 // Tool requirements derived from the same applicable check plan used by execution.
+import { scopeOf } from '#cli/repository/scopes.ts';
+import { ownedBy } from '#cli/configurations/owners.ts';
 import { configuredChecks } from '#cli/planning/plan.ts';
+import { selectionStatus } from '#cli/planning/skips.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
-import type { ScopeSelection } from '#cli/types/policy/settings.ts';
-import type { Session, PlannedCheck } from '#cli/types/planning.ts';
+import { isToolProjectPath } from '#cli/repository/selectors.ts';
+import { allowlistSchema } from '#cli/parsers/schema/licenses.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { declaredArchitectures } from '#cli/policy/settings/lookup.ts';
+import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
+import type { Session, PlannedCheck, LicenseProject } from '#cli/types/planning.ts';
 import { toolPin, checkToolPin, toolProjectPackage } from '#cli/configurations/pins.ts';
 
 /**
@@ -25,12 +31,50 @@ export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration):
 }
 
 /**
+ * Select each consumer project with its effective license policy and authored scope.
+ * @param files the check's actual repository inventory.
+ * @param scopes the existing effective selections.
+ * @param policy the validated repository policy.
+ * @param check the license check declaration.
+ * @returns the consumer projects that require installed license reports.
+ */
+export function licenseProjects(
+    files: TrackedFile[],
+    scopes: ScopeSelection[],
+    policy: Policy,
+    check: CheckDeclaration,
+): LicenseProject[] {
+    return files.flatMap((file) => {
+        if (isToolProjectPath(file.path)) return [];
+        const scope = scopeOf(
+            file.path,
+            scopes.map((selection) => selection.scope),
+        );
+        const selection = scopes.find((entry) => entry.scope.path === scope.path);
+        if (selection === undefined) throw new Error(`No selection covers the scope ${scope.path}.`);
+        if (
+            !selection.selected.some(
+                (manifest) =>
+                    manifest.configuration.name === 'licenses' &&
+                    ownedBy(check.files ?? manifest.files, selection.selected, [file], selection.scope.path).length > 0,
+            )
+        )
+            return [];
+        const configuration = allowlistSchema.parse(selection.view.options('licenses'));
+        return configuration.allowed.length === 0 && configuration.exceptions.length === 0
+            ? []
+            : [{ manifest: file.path, selection, configuration, skip: selectionStatus(policy, selection, check) }];
+    });
+}
+
+/**
  * Read executable, fixer, and companion tools consumed by an applicable check.
  * @param check the check with its conditions, scopes, and exclusions resolved
- * @param runner the declared installation integration
+ * @param session the effective scope selections and installation integration.
  * @returns required tool names, including manifest-specific scanner branches
  */
-export function requiredToolNames(check: PlannedCheck, runner: string | undefined): string[] {
+export function requiredToolNames(check: PlannedCheck, session: Pick<Session, 'scopes' | 'policyFiles'>): string[] {
+    const runner = session.policyFiles.policy.run_with;
     const names = new Set(
         [check.tool?.name, ...checkCompanions(check.scope, check.check), check.check.fix?.[0]].flatMap((name) => {
             if (name === undefined) return [];
@@ -41,8 +85,12 @@ export function requiredToolNames(check: PlannedCheck, runner: string | undefine
         }),
     );
     if (check.check.name === 'licenses/packages') {
-        if (check.files.some((file) => file.path.endsWith('package.json'))) names.add('license-checker-rseidelsohn');
-        if (check.files.some((file) => file.path.endsWith('pyproject.toml'))) names.add('pip-licenses');
+        const projects = licenseProjects(check.files, session.scopes, session.policyFiles.policy, check.check).filter(
+            ({ skip }) => skip === undefined,
+        );
+        if (projects.some(({ manifest }) => manifest.endsWith('package.json')))
+            names.add('license-checker-rseidelsohn');
+        if (projects.some(({ manifest }) => manifest.endsWith('pyproject.toml'))) names.add('pip-licenses');
     }
     if ([...names].some((name) => toolProjectPackage(toolPin(check.scope.selected, name), runner)?.kind === 'npm'))
         names.add('node');
@@ -58,7 +106,7 @@ export function requiredToolNames(check: PlannedCheck, runner: string | undefine
 export function applicableManifests(session: Session): Manifest[] {
     const checks = configuredChecks(session, true);
     const architectures = declaredArchitectures(session.policyFiles.policy, session.scopes);
-    const needed = new Set(checks.flatMap((check) => requiredToolNames(check, session.policyFiles.policy.run_with)));
+    const needed = new Set(checks.flatMap((check) => requiredToolNames(check, session)));
     const selected = everyManifest(session.scopes);
     const owners = new Set(selected);
     for (const name of needed) {

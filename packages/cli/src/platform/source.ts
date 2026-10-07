@@ -1,20 +1,20 @@
 // Reading the bytes of a repository file: a bounded prefix, its text, or the whole file a run may hold once.
 import { decodeUtf8 } from '#cli/platform/text.ts';
-import { openRoot } from '#cli/platform/root/open.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { openSync, readSync, closeSync, readFileSync } from 'node:fs';
+import { sourcePath, canonicalPath } from '#cli/platform/root/reads.ts';
 
 /**
  * Reads a bounded prefix, closing the descriptor even when reading fails.
  * @param root the repository root.
  * @param path the root-relative file.
  * @param limit the maximum byte count.
+ * @param reads the canonical root owned by this session.
  * @returns the bytes read.
  */
-export function readPrefix(root: string, path: string, limit: number): Buffer {
+export function readPrefix(root: string, path: string, limit: number, reads?: ReadCache): Buffer {
     const buffer = Buffer.alloc(limit);
-    using files = openRoot(root, 'native');
-    const source: string = files.realPath(path);
+    const source = sourcePath(reads?.root === root ? reads.root : canonicalPath(root), path);
     const descriptor = openSync(source, 'r');
     let offset = 0;
     try {
@@ -40,8 +40,7 @@ export function readSource(root: string, path: string, reads?: ReadCache): Buffe
     const read = reads?.root === root ? reads.sources : undefined;
     const held = read?.get(path);
     if (held !== undefined) return held;
-    using files = openRoot(root, 'native');
-    const bytes = readFileSync(files.realPath(path));
+    const bytes = readFileSync(sourcePath(reads?.root === root ? reads.root : canonicalPath(root), path));
     read?.set(path, bytes);
     return bytes;
 }
@@ -63,4 +62,13 @@ export function readText(root: string, path: string, reads?: ReadCache): string 
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
         throw error;
     }
+}
+
+/**
+ * Bind source bytes and derived values to one canonical repository root.
+ * @param root the repository directory
+ * @returns the session-owned read cache
+ */
+export function createReadCache(root: string): ReadCache {
+    return { root: canonicalPath(root), sources: new Map(), memo: new Map() };
 }

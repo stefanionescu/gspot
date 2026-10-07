@@ -61,6 +61,7 @@ export type CheckOutcome = { findings: Finding[]; files: string[] };
 export type BuiltInCheck = (input: CheckInput) => Finding[] | CheckOutcome | Promise<Finding[] | CheckOutcome>;
 
 export type CheckInput = {
+    index: Repository['index'];
     installedRoot?: string;
     policyFiles: PolicyFile;
     selection: ScopeSelection;
@@ -74,8 +75,8 @@ export type CheckInput = {
     cancelSignal?: AbortSignal;
     scopeRoot: string;
     repositoryFiles?: TrackedFile[];
-    /** Every scope's selection, for a check that runs once. */
-    selections?: ScopeSelection[];
+    /** Every effective scope selection supplied by the open session. */
+    selections: ScopeSelection[];
     root: string;
     scope: string;
     view: ScopeView;

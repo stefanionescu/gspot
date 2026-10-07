@@ -35,8 +35,6 @@ export const STATE_DIRECTORY = '.gspot/state';
 /** The folder of the hook scripts gspot writes, which core.hooksPath names. */
 export const HOOKS_DIRECTORY = '.gspot/hooks';
 
-export const ESLINT_FILE = '.gspot/config/eslint.config.mjs';
-
 export const RULES_DIRECTORY = '.gspot/rules';
 
 export const MISE_CONFIG_PATH = '.mise/conf.d/gspot-tools.toml';

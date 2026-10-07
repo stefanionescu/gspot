@@ -58,10 +58,12 @@ export function checkInput(session: ToolSession, planned: Pick<PlannedCheck, 'sc
         files: planned.files,
         policyFiles: session.policyFiles,
         selection: planned.scope,
+        selections: session.scopes,
         manifests: session.manifests,
         inspections: session.inspections,
         scopeEntries: session.repository.scopes,
         attributes: session.repository.attributes,
+        index: session.repository.index,
         hasGit: session.repository.hasGit,
         reads: session.reads,
         ...(session.installedRoot === undefined ? {} : { installedRoot: session.installedRoot }),
@@ -70,7 +72,6 @@ export function checkInput(session: ToolSession, planned: Pick<PlannedCheck, 'sc
     };
     if (planned.check.runs === 'once') {
         input.repositoryFiles = session.repository.files;
-        input.selections = session.scopes;
     }
     return input;
 }

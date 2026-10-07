@@ -3,14 +3,15 @@ import ignore from 'ignore';
 import type { Stats } from 'node:fs';
 import { isInside } from '#cli/platform/paths.ts';
 import { join, posix, relative } from 'node:path';
+import { decodeUtf8 } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { runGitBlocking } from '#cli/platform/git.ts';
 import { parseIndexEntries } from '#cli/parsers/git.ts';
+import { inspectWorkTree } from '#cli/repository/root.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
+import { isOutsideGit, runGitBinary } from '#cli/platform/git.ts';
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/config/platform/root.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
-import { isOutsideGit, inspectWorkTree } from '#cli/repository/root.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 import { statSync, lstatSync, readdirSync, realpathSync } from 'node:fs';
 import { ENTRY_MODES, GITLINK_MODE } from '#cli/config/repository/revisions.ts';
@@ -123,9 +124,13 @@ function walkPaths(root: string): string[] {
 }
 
 // Share Git listing failure classification while each caller owns its output format and non-Git behavior.
-function listGitFiles(root: string, options: string[]): string | undefined {
-    const listed = runGitBlocking(root, ['ls-files', ...options, '-z']);
-    if (listed.code === 0) return listed.stdout;
+async function listGitFiles(root: string, options: string[], cancelSignal?: AbortSignal): Promise<string | undefined> {
+    const listed = await runGitBinary(root, ['ls-files', ...options, '-z'], { cancelSignal });
+    if (listed.code === 0) {
+        const text = decodeUtf8(listed.stdout);
+        if (text === undefined) throw new GspotError('selection', ['Revision paths must be valid UTF-8.']);
+        return text;
+    }
     if (isOutsideGit(root, inspectWorkTree(root))) return undefined;
     throw new GspotError('selection', [
         `Git ls-files failed in ${root} (exit ${String(listed.code)}): ${listed.stderr.trim()}`,
@@ -133,21 +138,13 @@ function listGitFiles(root: string, options: string[]): string | undefined {
 }
 
 /**
- * Paths in the Git index, including tracked deletions. A non-Git directory has none.
- * @param root the repository root
- * @returns the indexed paths
- */
-export function indexedPaths(root: string): string[] {
-    return [...new Set(readIndexEntries(root).map((entry) => entry.path))];
-}
-
-/**
  * Read the index once for paths, executable bits, and gitlinks. A non-Git directory has none.
  * @param root the repository root
+ * @param cancelSignal command cancellation
  * @returns validated entries, retaining stages of conflicted working files
  */
-export function readIndexEntries(root: string): GitIndexEntry[] {
-    const listed = listGitFiles(root, ['--stage']);
+export async function readIndexEntries(root: string, cancelSignal?: AbortSignal): Promise<GitIndexEntry[]> {
+    const listed = await listGitFiles(root, ['--stage'], cancelSignal);
     return listed === undefined ? [] : parseIndexEntries(listed);
 }
 
@@ -166,12 +163,20 @@ export function getSubmodulePaths(entries: GitIndexEntry[]): string[] {
  * Tracked and about-to-be-tracked files, root-relative posix, sorted. Falls back to a gitignore walk without git.
  * @param root the repository root
  * @param exclude the paths to leave out
+ * @param indexEntries the repository-owned index, read here for standalone discovery
  * @returns the entries with size, executable bit, and symlink flag
  */
-export function trackedEntries(root: string, exclude: string[] = []): RawEntry[] {
-    const listed = listGitFiles(root, ['--cached', '--others', '--exclude-standard']);
-    const paths = listed === undefined ? walkPaths(root) : listed.split('\0').filter((path) => path !== '');
-    const index = readIndexEntries(root);
+export async function trackedEntries(
+    root: string,
+    exclude: string[] = [],
+    indexEntries?: GitIndexEntry[],
+): Promise<RawEntry[]> {
+    const index = indexEntries ?? (await readIndexEntries(root));
+    const listed = await listGitFiles(root, ['--others', '--exclude-standard']);
+    const paths =
+        listed === undefined
+            ? walkPaths(root)
+            : [...index.map((entry) => entry.path), ...listed.split('\0').filter(Boolean)];
     const submodules = getSubmodulePaths(index);
     const isExcluded = pathMatcher(exclude);
     // Windows file systems keep no executable bit, so the same index listing supplies it.

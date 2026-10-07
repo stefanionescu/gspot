@@ -1,12 +1,20 @@
-export const LOCKFILE_CASES: [string, string][] = [
-    ['package-lock.json', '{"lockfileVersion":3,"packages":{"node_modules/example":{"version":"1.2.3"}}}'],
-    ['bun.lock', '{"lockfileVersion":1,"packages":{"example":["example@1.2.3","",{},"sha512-fixture"]}}'],
-    ['pnpm-lock.yaml', 'lockfileVersion: "9.0"\npackages:\n  example@1.2.3(peer@2.0.0): {}\n'],
+/** Root development requirements exclude production and workspace dependencies. */
+export const ROOT_DEPENDENCIES = [
     [
-        'yarn.lock',
-        '__metadata:\n  version: 8\n  cacheKey: 10c0\n"example@npm:^1.0.0":\n  version: 1.2.3\n  resolution: "example@npm:1.2.3"\n',
+        'npm',
+        '{"packages":{"":{"devDependencies":{"eslint":"9.39.5"},"dependencies":{"runtime":"1.0.0"}},"apps/api":{"devDependencies":{"typescript":"5.9.3"}}}}',
+        { eslint: '9.39.5' },
     ],
-    ['uv.lock', 'version = 1\n[[package]]\nname = "example"\nversion = "1.2.3"\n'],
-    ['poetry.lock', '[[package]]\nname = "example"\nversion = "1.2.3"\n'],
-    ['pdm.lock', '[[package]]\nname = "example"\nversion = "1.2.3"\n'],
-];
+    ['npm', '{"packages":{"":{"dependencies":{"runtime":"1.0.0"}}}}', {}],
+    [
+        'bun',
+        '{"workspaces":{"":{"devDependencies":{"eslint":"9.39.5"},"dependencies":{"runtime":"1.0.0"}},"apps/api":{"devDependencies":{"typescript":"5.9.3"}}}}',
+        { eslint: '9.39.5' },
+    ],
+    ['bun', '{"workspaces":{}}', {}],
+    [
+        'pnpm',
+        'importers:\n  .:\n    devDependencies:\n      eslint:\n        specifier: 9.39.5\n        version: 9.39.5\n    dependencies:\n      runtime:\n        specifier: 1.0.0\n  apps/api:\n    devDependencies:\n      typescript:\n        specifier: 5.9.3\n',
+        { eslint: '9.39.5' },
+    ],
+] as const;

@@ -1,12 +1,12 @@
 // A tool-project installation as one unit: written beside its folder, swapped in by a rename, and recorded by kind
 // instead of file by file. A crash between the renames leaves the previous folder where recovery finds it.
 import { toPosix } from '#cli/platform/paths.ts';
-import { openRoot } from '#cli/platform/root/open.ts';
+import { sourcePath } from '#cli/platform/root/reads.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
+import { join, posix, basename, relative } from 'node:path';
 import type { InstalledOutput } from '#cli/types/tools/install.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import type { InstallationKind } from '#cli/types/configurations.ts';
-import { join, posix, dirname, basename, relative } from 'node:path';
 import { MODE_BITS, EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import type { Log, InstallationFolders } from '#cli/types/lifecycle/ownership.ts';
 
@@ -21,6 +21,7 @@ import {
     constants,
     fstatSync,
     lstatSync,
+    readdirSync,
     readFileSync,
     readlinkSync,
     realpathSync,
@@ -133,21 +134,20 @@ export function deleteInstallation(log: Log, kind: InstallationKind): void {
 export function readInstalledTree(directory: string, kind: InstallationKind): InstalledOutput[] {
     const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
     const outputs: InstalledOutput[] = [];
-    using parent = openRoot(dirname(directory), 'native');
-    if (parent.stat(basename(directory))?.isDirectory() !== true)
-        throw new Error(`Installed output is not a directory: ${directory}`);
+    const entry = lstatSync(directory, { throwIfNoEntry: false });
+    if (entry?.isSymbolicLink() === true) throw new Error(`Unsafe lifecycle destination: ${basename(directory)}`);
+    if (entry?.isDirectory() !== true) throw new Error(`Installed output is not a directory: ${directory}`);
     const root = realpathSync(directory);
-    using files = openRoot(root, 'native');
     const cacheDirectory = kind === 'python' ? '__pycache__' : undefined;
     const collect = (prefix: string | undefined, output: string, ancestors: string[]): void => {
         const canonical = join(root, prefix ?? '');
         if (ancestors.includes(canonical)) throw new Error(`Installed directory link forms a cycle: ${output}`);
-        for (const name of files.list(prefix)) {
+        for (const name of readdirSync(canonical).toSorted((left, right) => left.localeCompare(right))) {
             const realPath = posix.join(prefix ?? '', name);
             const outputPath = posix.join(output, name);
             const path = `${destination}/${outputPath}`;
             assertMutationTarget(path);
-            const source = files.realPath(realPath);
+            const source = sourcePath(root, realPath);
             if (lstatSync(source).isDirectory()) {
                 if (name === cacheDirectory) continue;
                 collect(toPosix(relative(root, source)), outputPath, [...ancestors, canonical]);

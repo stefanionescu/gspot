@@ -1,8 +1,7 @@
 // Filesystem operations confined to one directory: each call checks its path.
 // Concurrent hostile directory replacement is outside this contract.
+import { posix } from 'node:path';
 import type { Stats } from 'node:fs';
-import { isInside } from '#cli/platform/paths.ts';
-import { join, posix, relative } from 'node:path';
 import { sameEntry } from '#cli/platform/root/rules.ts';
 import { claimPath, writeLink, replaceEntry } from '#cli/platform/root/writes.ts';
 import type { Root, Bounds, FileCopy, PathFormat } from '#cli/types/platform/root.ts';
@@ -11,19 +10,12 @@ import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, renameSync, unlinkS
 import {
     boundsOf,
     readEntry,
+    sourcePath,
     checkedPath,
     preparedPath,
     validateRead,
     canonicalPath,
 } from '#cli/platform/root/reads.ts';
-
-// The real path of an entry, refusing a resolved destination outside the root.
-function sourceOf(bounds: Bounds, path: string): string {
-    const target = canonicalPath(join(bounds.canonical, ...bounds.partsOf(path)));
-    const local = relative(bounds.canonical, target);
-    if (!isInside(local)) throw new Error(`Source link leaves the repository: ${path}`);
-    return target;
-}
 
 // The sorted names in a directory inside the root, or none when it is absent.
 function listOf(bounds: Bounds, path: string | undefined): string[] {
@@ -115,9 +107,9 @@ export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Roo
         removeTree: (path) => {
             removeTree(bounds, path);
         },
-        realPath: (path) => sourceOf(bounds, path),
+        realPath: (path) => sourcePath(bounds.canonical, path, bounds.partsOf),
         assertInside: (path) => {
-            sourceOf(bounds, path);
+            sourcePath(bounds.canonical, path, bounds.partsOf);
         },
         list: (path) => listOf(bounds, path),
         stat: (path) => statOf(bounds, path),

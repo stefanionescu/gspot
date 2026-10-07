@@ -15,16 +15,6 @@ export const eslintRuleNamesSchema = z.strictObject({
 /** The installed public export read only by the explicit copy producer. */
 export const eslintRuleModuleSchema = z.object({ builtinRules: z.map(z.string(), z.unknown()) });
 
-export const eslintCoverageRequestSchema = z.strictObject({
-    root: z.string().min(1),
-    paths: z.array(z.string().min(1)),
-});
-export const eslintCoverageResponseSchema = z.record(z.string(), z.array(z.string()));
-
-export const workerArgumentsSchema = z.tuple([z.string().min(1), z.string().min(1)]);
-
-export const eslintRuleSettingsSchema = z.record(z.string(), z.unknown());
-
 /** JSON fields that a preset contributes to rule applicability and settings. */
 export const eslintPresetBlockSchema = z.strictObject({
     files: z.array(z.union([z.string(), z.array(z.string())])).optional(),
@@ -82,6 +72,3 @@ export function captureEslintPreset(
     });
     return eslintPresetSchema.parse({ package: packageName, version, source, blocks });
 }
-
-/** Resolved rules returned by ESLint for one source path. */
-export const eslintResolvedConfigurationSchema = z.object({ rules: eslintRuleSettingsSchema.optional() }).optional();

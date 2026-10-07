@@ -55,3 +55,24 @@ test('license configuration retains scoped exceptions and inherited license allo
     for (const path of ['.gspot/config/licenses.json', '.gspot/config/sibling/licenses.json'])
         expect(parsed.get(path)!.exceptions).toStrictEqual([]);
 });
+
+test.each([{ configurations: ['licenses'] }, { configurations: [] }])(
+    'exceptions alone activate descendant license tools without a root manifest: $configurations',
+    async ({ configurations }) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy([...configurations], {
+                tables: '[[licenses.exceptions]]\npackage = "example@1.0.0"\nlicense = "MIT"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "docs"\nconfigurations = ["licenses"]\n',
+            }),
+            'docs/package.json': '{"name":"docs","private":true}',
+        });
+        const generated = emitAll(await openSession(sandbox.path));
+        expect(generated.files.some(({ path }) => path === '.gspot/config/licenses.json')).toBe(true);
+        expect(generated.files.find(({ path }) => path === '.gspot/config/docs/licenses.json')?.content).toContain(
+            'example@1.0.0',
+        );
+        expect(generated.files.find(({ path }) => path === '.gspot/package.json')?.content).toContain(
+            'license-checker-rseidelsohn',
+        );
+        expect(generated.files.find(({ path }) => path === '.gspot/pyproject.toml')).toBeUndefined();
+    },
+);

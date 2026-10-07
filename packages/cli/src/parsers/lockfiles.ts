@@ -1,136 +1,18 @@
-// Shared dependency lockfile readers provide installed identities and root pins.
+// Dependency lockfile readers provide root pins and format metadata.
 import { parse as parseYaml } from 'yaml';
 import { parseSyml } from '@yarnpkg/parsers';
 import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/parsers/jsonc.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { normalizedPythonPackage } from '#cli/parsers/packages.ts';
 import type { Lockfile, LockfileName } from '#cli/types/parsers/lockfiles.ts';
 import type { DependencyMap, PackageInstaller } from '#cli/types/parsers/packages.ts';
 
 import {
-    npmVersionSchema,
     bunLockfileSchema,
     npmLockfileSchema,
-    npmPackagesSchema,
-    yarnRecordsSchema,
     pnpmLockfileSchema,
-    pnpmPackagesSchema,
-    yarnPackagesSchema,
-    bunIdentitiesSchema,
-    npmDependencySchema,
     pnpmSpecifiersSchema,
-    pythonLockfileSchema,
-    npmDependenciesSchema,
 } from '#cli/parsers/schema/lockfiles.ts';
-
-// The name@version a pnpm lockfile key names: an optional scope, the name, @ or /, then the version up to ( or _.
-function pnpmIdentity(key: string): string | undefined {
-    const identity = key.startsWith('/') ? key.slice(1) : key;
-    const scopeEnd = identity.startsWith('@') ? identity.indexOf('/') : -1;
-    if (identity.startsWith('@') && scopeEnd <= 1) return undefined;
-    const separator = identity.slice(scopeEnd + 1).search(/[@/]/u);
-    if (separator < 1) return undefined;
-    const nameEnd = scopeEnd + 1 + separator;
-    const rest = identity.slice(nameEnd + 1);
-    const versionEnd = rest.search(/[(_]/u);
-    const version = versionEnd === -1 ? rest : rest.slice(0, versionEnd);
-    return version === '' ? undefined : `${identity.slice(0, nameEnd)}@${version}`;
-}
-
-function pythonLockfile(text: string): Set<string> {
-    const lockfile = pythonLockfileSchema.parse(parseLockfile('uv.lock', text));
-    return new Set(lockfile.package.map(({ name, version }) => `${normalizedPythonPackage(name)}@${version}`));
-}
-
-function npmDependencyTree(parsed: unknown): Set<string> {
-    const lockfile = npmDependenciesSchema.parse(parsed);
-    const pending = Object.entries(lockfile.dependencies);
-    const identities = new Set<string>();
-    while (pending.length > 0) {
-        const item = pending.pop();
-        if (item === undefined) break;
-        const [name, value] = item;
-        const entry = npmDependencySchema.parse(value);
-        identities.add(
-            entry.version.startsWith('npm:') ? entry.version.slice('npm:'.length) : `${name}@${entry.version}`,
-        );
-        pending.push(...(entry.dependencies === undefined ? [] : Object.entries(entry.dependencies)));
-    }
-    return identities;
-}
-
-const LOCKFILE_READERS = new Map<string, (text: string) => Set<string>>([
-    ['uv.lock', pythonLockfile],
-    ['poetry.lock', pythonLockfile],
-    ['pdm.lock', pythonLockfile],
-    [
-        'package-lock.json',
-        (text) => {
-            const parsed: unknown = parseLockfile('package-lock.json', text);
-            const version = npmVersionSchema.parse(parsed).lockfileVersion;
-            if (version === 1) return npmDependencyTree(parsed);
-            const lockfile = npmPackagesSchema.parse(parsed);
-            return new Set(
-                Object.entries(lockfile.packages).flatMap(([path, entry]) => {
-                    if (entry.version === undefined) return [];
-                    const name = entry.name ?? path.split('node_modules/').at(-1);
-                    return name === undefined || name === '' ? [] : [`${name}@${entry.version}`];
-                }),
-            );
-        },
-    ],
-    [
-        'bun.lock',
-        (text) => {
-            const lockfile = bunIdentitiesSchema.parse(parseLockfile('bun.lock', text));
-            return new Set(
-                Object.values(lockfile.packages)
-                    .map(([identity]) => identity)
-                    .filter((identity) => /@\d/u.test(identity)),
-            );
-        },
-    ],
-    [
-        'pnpm-lock.yaml',
-        (text) => {
-            const lockfile = pnpmPackagesSchema.parse(parseLockfile('pnpm-lock.yaml', text));
-            return new Set(
-                Object.keys(lockfile.packages).map((key) => {
-                    const identity = pnpmIdentity(key);
-                    if (identity === undefined)
-                        throw new Error('Cannot read a resolved package identity from the pnpm lockfile.');
-                    return identity;
-                }),
-            );
-        },
-    ],
-    [
-        'yarn.lock',
-        (text) => {
-            const entries = yarnRecordsSchema.parse(parseLockfile('yarn.lock', text));
-            const lockfile = yarnPackagesSchema.parse(
-                Object.fromEntries(Object.entries(entries).filter(([name]) => name !== '__metadata')),
-            );
-            return new Set(
-                Object.entries(lockfile).flatMap(([descriptors, entry]) => {
-                    if (entry.version === undefined) return [];
-                    const descriptor = entry.resolution ?? descriptors.split(/,\s*/u, 1)[0] ?? descriptors;
-                    const separator = descriptor.indexOf('@', 1);
-                    if (separator < 1)
-                        throw new Error('Cannot read a resolved package identity from the Yarn lockfile.');
-                    const reference = descriptor.slice(separator + 1);
-                    if (reference.startsWith('npm:')) {
-                        const alias = reference.slice('npm:'.length);
-                        const versionSeparator = alias.lastIndexOf('@');
-                        if (versionSeparator > 0) return [`${alias.slice(0, versionSeparator)}@${entry.version}`];
-                    }
-                    return [`${descriptor.slice(0, separator)}@${entry.version}`];
-                }),
-            );
-        },
-    ],
-]);
 
 /**
  * Parse a supported textual lockfile using its native syntax.
@@ -167,21 +49,6 @@ export function rootLockfileDependencies(
     const pinned = pnpmLockfileSchema.parse(parseLockfile('pnpm-lock.yaml', content)).importers['.']?.devDependencies;
     const entries = pnpmSpecifiersSchema.parse(pinned);
     return Object.fromEntries(Object.entries(entries).map(([key, value]) => [key, value.specifier]));
-}
-
-/**
- * Read resolved package identities from supported textual dependency lockfiles.
- * @param filename the lockfile name, which names its format
- * @param text the lockfile text
- * @returns each resolved package as name@version
- */
-export function lockfilePackages(filename: string, text: string): Set<string> {
-    const read = LOCKFILE_READERS.get(filename);
-    if (read === undefined)
-        throw new Error(
-            `Cannot read packages from ${filename}. gspot reads uv.lock, poetry.lock, pdm.lock, package-lock.json, bun.lock, pnpm-lock.yaml, and yarn.lock.`,
-        );
-    return read(text);
 }
 
 /**

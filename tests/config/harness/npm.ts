@@ -28,10 +28,4 @@ export const PACKAGE_PROJECTS = [
 export const VERSION_TIMEOUT_MS = 15_000;
 
 /** Package-manager fixtures exercise Prettier and native EditorConfig acquisition, not application analyzers. */
-export const EXCLUDED_PACKAGE_CHECKS = [
-    'files/v8r',
-    'javascript/eslint',
-    'javascript/tsc',
-    'javascript/knip',
-    'javascript/rules-off',
-];
+export const EXCLUDED_PACKAGE_CHECKS = ['files/v8r', 'javascript/eslint', 'javascript/tsc', 'javascript/knip'];

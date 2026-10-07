@@ -1,8 +1,11 @@
+import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+import { throws } from 'node:assert/strict';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { readText, readPrefix, readSource } from '#cli/platform/source.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
+import { readText, readPrefix, readSource, createReadCache } from '#cli/platform/source.ts';
 import { rmSync, linkSync, mkdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('source reads distinguish missing optional text, required bytes, and invalid UTF-8', async () => {
@@ -56,11 +59,43 @@ test('run-owned reads hold one repository snapshot and uncached reads observe la
     await using second = await testdir();
     await createFileTree(first.path, { 'source.txt': 'first' });
     await createFileTree(second.path, { 'source.txt': 'second' });
-    const reads: ReadCache = { root: first.path, sources: new Map(), memo: new Map() };
+    const reads = createReadCache(first.path);
     expect(readText(first.path, 'source.txt', reads)).toBe('first');
     writeFileSync(join(first.path, 'source.txt'), 'edited');
     expect(readText(first.path, 'source.txt', reads)).toBe('first');
     expect(readText(first.path, 'source.txt')).toBe('edited');
     expect(readText(second.path, 'source.txt', reads)).toBe('second');
     expect(reads.sources.get('source.txt')).toStrictEqual(Buffer.from('first'));
+});
+
+test('canonical reads resolve an aliased root once and retain source errors until correction', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'project/source.txt': 'original', 'project/gspot.toml': buildPolicy([]) });
+    const alias = join(directory.path, 'alias');
+    symlinkSync('project', alias, 'dir');
+    using resources = new DisposableStack();
+    const paths = resources.use(spyOn(fs, 'realpathSync'));
+    const reads = createReadCache(alias);
+    expect(reads.root).toBe(fs.realpathSync(join(directory.path, 'project')));
+    expect(readPrefix(reads.root, 'source.txt', 4, reads).toString()).toBe('orig');
+    expect(readSource(reads.root, 'source.txt', reads).toString()).toBe('original');
+    expect(paths.mock.calls.filter(([path]) => path === alias)).toHaveLength(1);
+    const session = await openSession(alias);
+    expect(session.root).toBe(reads.root);
+    for (const code of ['EIO', 'EACCES']) {
+        const failure = Object.assign(new Error('Source read failed.'), { code });
+        reads.sources.clear();
+        const unavailable = resources.use(
+            spyOn(fs, 'readFileSync').mockImplementationOnce(() => {
+                throw failure;
+            }),
+        );
+        throws(
+            () => readSource(reads.root, 'source.txt', reads),
+            (error) => error === failure,
+        );
+        expect(reads.sources.has('source.txt')).toBe(false);
+        unavailable.mockRestore();
+        expect(readSource(reads.root, 'source.txt', reads).toString()).toBe('original');
+    }
 });

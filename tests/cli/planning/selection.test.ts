@@ -103,7 +103,7 @@ test.each(MANUAL_SELECTIONS)(
             ).toStrictEqual(level === 'all' ? [undefined, undefined] : []);
             expect(
                 checks.filter((check) => check.check.name === 'licenses/packages').map((check) => check.skip?.cause),
-            ).toStrictEqual(['setting', 'setting']);
+            ).toStrictEqual([undefined]);
             expect(names).toContain('semgrep');
             expect(names.includes('jscpd')).toBe(level === 'all');
             expect(names).not.toContain('license-checker-rseidelsohn');
@@ -114,7 +114,7 @@ test.each(MANUAL_SELECTIONS)(
         const configured = await openSession(sandbox.path);
         expect(
             planRun(configured, { stage: 'all', skips: [], only: ['licenses/packages'] }).map((check) => check.skip),
-        ).toStrictEqual([undefined, undefined]);
+        ).toStrictEqual([undefined]);
         expect(
             applicableManifests(configured).flatMap((manifest) => manifest.tools.map((tool) => tool.name)),
         ).toContain('license-checker-rseidelsohn');

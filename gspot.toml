@@ -549,7 +549,6 @@ until = "2026-10-17"
 [tools.knip]
 entry = [
     "packages/eslint-plugin/src/plugin.ts",
-    "packages/cli/src/tools/eslint/worker.ts",
     "docs/src/content/reference/collection.ts",
     "docs/src/route-metadata.ts",
 ]
@@ -643,14 +642,6 @@ reason = "A lint plugin that runs at development time and is linked dynamically;
 package = "lightningcss@1.33.0"
 license = "MPL-2.0"
 reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."
-
-[[ignore]]
-check = "security/semgrep"
-rule = "gspot.javascript.no-dynamic-require"
-paths = [
-    "packages/cli/src/tools/eslint/worker.ts",
-]
-reason = "These configuration evaluators intentionally execute repository-selected modules and installed tool APIs in the configuration subprocess. Static imports select the CLI dependencies instead of the repository dependencies and cannot preserve executable configuration. Other security rules remain active for these exact files."
 
 
 [[ignore]]

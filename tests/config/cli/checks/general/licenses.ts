@@ -21,6 +21,7 @@ export const NPM_SCANNERS = {
 
 export const SCANNER_FAILURES = [
     { name: 'malformed JSON', stdout: '{', code: 0, diagnostic: 'JSON' },
+    { name: 'empty installed report', stdout: '[]', code: 0, diagnostic: 'The license scan found no packages' },
     { name: 'scanner failure', stdout: '[]', code: 1, diagnostic: 'fixture diagnostic' },
 ];
 
@@ -44,21 +45,39 @@ export const LICENSE_EXCEPTIONS = [
         license: 'GPL-3.0-only',
         package: 'strict@2.0.0',
         exception: 'GPL-3.0-only',
-        findings: ['reports GPL-3.0-only'],
+        findings: [
+            { rule: 'disallowed-license', diagnostic: 'strict@1.0.0 reports GPL-3.0-only' },
+            { rule: 'stale-exception', diagnostic: 'strict@2.0.0 is absent from the installed project dependencies' },
+        ],
     },
     {
         name: 'stale exception',
         license: 'GPL-3.0-only',
         package: 'strict@1.0.0',
         exception: 'LGPL-3.0-only',
-        findings: ['the exception no longer holds'],
+        findings: [{ rule: 'disallowed-license', diagnostic: 'the exception no longer holds' }],
     },
     {
         name: 'changed license',
         license: 'MIT',
         package: 'strict@1.0.0',
         exception: 'LGPL-3.0-only',
-        findings: ['reports MIT'],
+        findings: [{ rule: 'disallowed-license', diagnostic: 'reports MIT' }],
+    },
+    {
+        name: 'normalized Python identity',
+        installed: 'Strict_Package',
+        license: 'GPL-3.0-only',
+        package: 'strict.package@1.0.0',
+        exception: 'GPL-3.0-only',
+        findings: [],
     },
     { name: 'corrected exception', license: 'MIT', package: 'strict@1.0.0', exception: 'MIT', findings: [] },
+];
+
+/** JavaScript identities stay exact while Python identities normalize in their own reports. */
+export const PROJECT_FINDINGS = [
+    { file: 'package.json', message: 'unknown@1.0.0 reports UNKNOWN' },
+    { file: 'package.json', message: 'python.package@2.0.0 reports GPL-3.0-only' },
+    { file: 'pyproject.toml', message: 'prohibited-python@2.0.0 reports GPL-3.0-only' },
 ];

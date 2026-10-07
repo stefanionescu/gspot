@@ -56,7 +56,15 @@ export function parseGitEntries(output: Uint8Array, kind: 'index' | 'commit'): G
     const text = decodeUtf8(output);
     if (text === undefined) throw new GspotError('selection', ['Revision paths must be valid UTF-8.']);
     if (kind === 'commit') return entryLines(text).map((line) => parseEntry(TREE_ENTRY.exec(line)));
-    const entries = parseIndexEntries(text);
+    return parseIndexRevision(parseIndexEntries(text));
+}
+
+/**
+ * Project a shared index into immutable revision entries, refusing conflicts.
+ * @param entries validated working-tree index entries
+ * @returns entries from the resolved index
+ */
+export function parseIndexRevision(entries: GitIndexEntry[]): GitEntry[] {
     if (entries.some((entry) => entry.stage !== 0)) throw new GspotError('selection', [UNSUPPORTED_ENTRY]);
     return entries.map(({ mode, hash, path }) => ({ mode, hash, path }));
 }

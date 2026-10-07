@@ -110,8 +110,6 @@ export async function suppressionComments(
  * @returns the findings
  */
 export async function suppressions(input: CheckInput): Promise<Finding[]> {
-    if (input.selections === undefined)
-        throw new Error('The suppressions check needs every scope selection. Its manifest must say runs = "once".');
     const comments = await suppressionComments(
         input.root,
         input.selections,

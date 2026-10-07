@@ -1,6 +1,7 @@
 // Tool subprocesses share their output environment, configured deadline, and cancellation boundary.
 import { run } from '#cli/platform/spawn.ts';
 import { TOOL_ENV } from '#cli/config/tools/install.ts';
+import { getGitEnvironment } from '#cli/platform/git.ts';
 import type { ToolRunOptions } from '#cli/types/tools/run.ts';
 import { TOOL_DEADLINE } from '#cli/config/policy/settings.ts';
 import { MS_PER_SECOND } from '#cli/config/platform/runtime.ts';
@@ -23,9 +24,15 @@ export async function runTool(command: string[], options: ToolRunOptions): Promi
             duration: 0,
             isCanceled: true,
         };
+    const selected = await getGitEnvironment(prepared.cwd, command, {
+        env: { ...TOOL_ENV, ...prepared.env },
+        timeoutMs: timeoutSeconds * MS_PER_SECOND,
+        cancelSignal,
+    });
+    if ('failure' in selected) return selected.failure;
     return run(command, {
         ...prepared,
-        env: { ...TOOL_ENV, ...prepared.env },
+        env: selected.env,
         timeoutMs: timeoutSeconds * MS_PER_SECOND,
         cancelSignal,
     });

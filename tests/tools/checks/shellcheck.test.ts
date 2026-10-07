@@ -10,14 +10,14 @@ import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { DIALECT_SOURCES, DIALECT_CORRECTIONS } from '#tests/config/tools/checks/shellcheck.ts';
 
 test.each(['recommended', 'all'] as const)(
-    '%s checks native shell dialects, keeps one cd owner, and formats POSIX scripts with tabs',
+    '%s preserves native shell dialect diagnostics, one cd owner, and source bytes',
     async (level) => {
         await using sandbox = await testdir();
-        const environment = { PATH: buildToolsPath(['shellcheck', 'shfmt']) };
+        const environment = { PATH: buildToolsPath(['shellcheck']) };
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['bash'], {
                 level,
-                tables: '[format]\nindent_style = "tab"\n[[scope]]\npath = "app"\n',
+                tables: '[[scope]]\npath = "app"\n',
             }),
             ...DIALECT_SOURCES,
         });
@@ -59,16 +59,6 @@ test.each(['recommended', 'all'] as const)(
             { scope: '', status: 'passed', fileCount: 6, findings: [] },
             { scope: 'app', status: 'passed', fileCount: 2, findings: [] },
         ]);
-        const formatted = await spawnGspot(
-            sandbox.path,
-            ['check', '--only', 'bash/shfmt', '--fix', '--json'],
-            environment,
-        );
-        expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
-        for (const path of ['posix.sh', 'dash.sh', 'app/posix.sh'])
-            expect(readFileSync(join(sandbox.path, path), 'utf8')).toContain('\n\tprintf ');
-        const stable = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shfmt', '--json'], environment);
-        expect(stable.code, stable.stdout + stable.stderr).toBe(0);
     },
     NATIVE_TEST_TIMEOUT_MS,
 );

@@ -10,6 +10,7 @@ import { hostPlatform } from '#cli/platform/environment.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
+import { getSubmodulePaths } from '#cli/repository/tracked.ts';
 import { readVersionPin } from '#cli/lifecycle/version-pin.ts';
 import { selectRuleFiles } from '#cli/agent-rules/assemble.ts';
 import { EXIT_FINDINGS } from '#cli/config/platform/runtime.ts';
@@ -20,7 +21,6 @@ import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
-import { readIndexEntries, getSubmodulePaths } from '#cli/repository/tracked.ts';
 import { VERSION_GAP, COLUMN_WIDTHS, TOOL_STATE_COLORS, SUGGESTION_SECTIONS } from '#cli/config/commands/doctor.ts';
 
 function versionText(tool: ToolInspection): string {
@@ -85,7 +85,7 @@ function buildDoctorReport(session: ToolSession, pinned: string | undefined): Do
     if (policy.ci !== undefined)
         ci = policy.ci.provider === 'github' ? GITHUB_WORKFLOW : `${GITLAB_WORKFLOW} (include from .gitlab-ci.yml)`;
     return {
-        submodules: getSubmodulePaths(readIndexEntries(session.root)),
+        submodules: getSubmodulePaths(session.repository.index),
         tools,
         suggestions: getSuggestions(session),
         hooks: hooks.text,

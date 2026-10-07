@@ -1,32 +1,38 @@
 // Write Git revision content without replacing authored working-tree files.
-import { join, relative } from 'node:path';
 import { gitText } from '#cli/platform/git.ts';
-import { existsSync, realpathSync } from 'node:fs';
+import { join, dirname, relative } from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 import { GspotError } from '#cli/platform/errors.ts';
-import { openRoot } from '#cli/platform/root/open.ts';
-import type { Root } from '#cli/types/platform/root.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import { writeLink } from '#cli/platform/root/writes.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { WRITE_BATCH } from '#cli/config/execution/copy.ts';
 import { DIRECTORY_MODE } from '#cli/config/platform/modes.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
+import { fileMode, nativeSegments } from '#cli/platform/root/rules.ts';
 import { getBlobs, getEntries } from '#cli/repository/revisions/objects.ts';
+import { chmodSync, mkdirSync, existsSync, realpathSync, writeFileSync } from 'node:fs';
 import { ENTRY_MODES, GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { copyValePackages, copyInstalledDependencies } from '#cli/execution/copy/dependencies.ts';
 
 // Writes one tracked entry into the copy: a directory for a gitlink, otherwise the blob with its mode.
-function writeEntry(files: Root, entry: GitEntry, objects: Map<string, Buffer>): void {
+function writeEntry(checkout: string, entry: GitEntry, objects: Map<string, Buffer>): void {
+    const target = join(checkout, ...nativeSegments(entry.path));
     if (entry.mode === GITLINK_MODE) {
-        files.mkdir(entry.path, DIRECTORY_MODE);
+        mkdirSync(target, { recursive: true, mode: DIRECTORY_MODE });
+        chmodSync(target, DIRECTORY_MODE);
         return;
     }
     const bytes = objects.get(entry.hash);
     if (bytes === undefined) throw new GspotError('selection', ['A requested Git blob was not returned.']);
-    const mode = ENTRY_MODES[entry.mode];
+    const mode = fileMode({ mode: ENTRY_MODES[entry.mode] });
+    mkdirSync(dirname(target), { recursive: true });
     // A tracked link keeps its target, wherever it points, as a Git checkout keeps it.
-    if (entry.mode === SYMLINK_MODE) files.link(entry.path, { bytes, mode, isLink: true });
-    else files.write(entry.path, { bytes, mode }, undefined);
+    if (entry.mode === SYMLINK_MODE) writeLink(target, bytes, mode);
+    else {
+        writeFileSync(target, bytes, { flag: 'wx', mode });
+        chmodSync(target, mode);
+    }
 }
 
 // Two tracked paths that differ only by letter case, or undefined when every path folds to its own spelling.
@@ -53,7 +59,6 @@ async function populateRevision(
         throw new GspotError('selection', [
             `Git holds ${collision[0]} and ${collision[1]}, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.`,
         ]);
-    using files = openRoot(checkout, 'native');
     // Write links last so a tracked link can never redirect another tracked write.
     const ordered = [
         ...entries.filter((entry) => entry.mode !== SYMLINK_MODE),
@@ -64,7 +69,7 @@ async function populateRevision(
             await setImmediate();
             cancelSignal?.throwIfAborted();
         }
-        writeEntry(files, entry, objects);
+        writeEntry(checkout, entry, objects);
     }
 }
 

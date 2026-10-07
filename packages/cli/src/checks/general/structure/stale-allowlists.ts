@@ -1,17 +1,12 @@
-import { basename } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { isRecord } from '#cli/platform/objects.ts';
+import { expandPaths } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { everyTable } from '#cli/policy/settings/lookup.ts';
-import { lockfilePackages } from '#cli/parsers/lockfiles.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { directoryOf, expandPaths } from '#cli/platform/paths.ts';
-import { normalizedPythonIdentity } from '#cli/parsers/packages.ts';
-import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { PathPattern } from '#cli/types/checks/general/structure.ts';
-import { DOT_GSPOT, POLICY_FILE } from '#cli/config/platform/locations.ts';
-import type { LicenseException } from '#cli/types/checks/general/licenses.ts';
 import { pathTokens, proseLines, cleanPathToken } from '#cli/parsers/markdown.ts';
 
 function listedPaths(value: unknown): string[] {
@@ -69,55 +64,6 @@ function referencedPaths(input: CheckInput): Set<string> {
     return referenced;
 }
 
-function licenseFindings(input: CheckInput): Finding[] {
-    const policy = input.policyFiles.policy;
-    const lockfiles = new Map<string, Set<string>>();
-    return everyTable(policy).flatMap(({ scope = '', table }) => {
-        const exceptions = (table.configurationSettings?.['licenses']?.['exceptions'] ?? []) as LicenseException[];
-        if (exceptions.length === 0) return [];
-        const paths = input.files.filter(({ path }) => {
-            if (path.split('/').includes(DOT_GSPOT)) return false;
-            if (
-                ![
-                    'package-lock.json',
-                    'bun.lock',
-                    'pnpm-lock.yaml',
-                    'yarn.lock',
-                    'uv.lock',
-                    'poetry.lock',
-                    'pdm.lock',
-                ].includes(basename(path))
-            )
-                return false;
-            const folder = directoryOf(path);
-            return isInScope(path, scope) || isInScope(scope, folder);
-        });
-        if (paths.length === 0)
-            throw new Error('License exceptions require a dependency lockfile in their project or workspace.');
-        const packages = paths.map(({ path }) => {
-            let names = lockfiles.get(path);
-            if (names === undefined) {
-                names = lockfilePackages(basename(path), readSource(input.root, path, input.reads).toString('utf8'));
-                lockfiles.set(path, names);
-            }
-            return { names, python: ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path)) };
-        });
-        const where = scope === '' ? 'licenses.exceptions' : `scope ${scope}`;
-        return exceptions.flatMap((exception): Finding[] => {
-            const pythonIdentity = normalizedPythonIdentity(exception.package);
-            if (packages.some(({ names, python }) => names.has(python ? pythonIdentity : exception.package))) return [];
-            return [
-                findingAt(
-                    input,
-                    { file: POLICY_FILE, line: 1 },
-                    'unlocked-package',
-                    `${exception.package} under ${where} is absent from its dependency lockfiles. Remove the exception or correct its exact version.`,
-                ),
-            ];
-        });
-    });
-}
-
 /**
  * One finding per policy pattern that matches no tracked file or folder. The policy is one per repository, so the root scope reports.
  * @param input the check input
@@ -126,7 +72,7 @@ function licenseFindings(input: CheckInput): Finding[] {
 export function staleAllowlists(input: CheckInput): Finding[] {
     const candidates = [...expandPaths(input.files.map((file) => file.path))];
     const references = referencedPaths(input);
-    const findings = policyPatterns(input)
+    return policyPatterns(input)
         .filter((entry) => {
             const matches = pathMatcher([entry.pattern]);
             if (candidates.some((path) => matches(path))) return false;
@@ -140,5 +86,4 @@ export function staleAllowlists(input: CheckInput): Finding[] {
                 `${entry.pattern} under ${entry.where} matches no tracked file or folder.`,
             ),
         );
-    return [...findings, ...licenseFindings(input)];
 }

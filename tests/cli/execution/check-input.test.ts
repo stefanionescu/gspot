@@ -62,7 +62,7 @@ test('check inputs expose selected files and reserve the repository inventory fo
     const rootCheck = planned.find((entry) => entry.check.name === 'docs/stale-paths')!;
     const repositoryInput = checkInput(session, rootCheck);
     expect(repositoryInput.repositoryFiles).toBe(session.repository.files);
-    expect(repositoryInput.selections).toBe(session.scopes);
+    for (const input of [scopeInput, repositoryInput]) expect(input.selections).toBe(session.scopes);
     expect(repositoryInput.repositoryFiles?.map((file) => file.path)).toContain('unrelated/private.txt');
     expect(ownedInputs(session, project).map((file) => file.path)).toStrictEqual(['apps/web/value.test.js']);
     expect(scopeInput.scopeRoot).toBe(join(sandbox.path, 'apps/web'));

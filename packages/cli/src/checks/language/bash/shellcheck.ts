@@ -1,3 +1,4 @@
+import { compact } from '#cli/platform/objects.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -12,8 +13,6 @@ import { runCheckCommand } from '#cli/execution/command/check.ts';
  * @returns findings from every dialect group, with shared native failure handling
  */
 export async function shellcheck(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
-    const command = planned.check.command;
-    if (command === undefined) return runCheckCommand(session, planned);
     const groups = Map.groupBy(planned.files, (file) => {
         if (readSource(session.root, file.path, session.reads).toString('utf8').startsWith('#!')) return undefined;
         return file.tags.includes('bats') ? 'bats' : 'bash';
@@ -23,9 +22,10 @@ export async function shellcheck(session: ToolSession, planned: PlannedCheck): P
         const checked = await runCheckCommand(
             session,
             { ...planned, files },
-            {
-                command: dialect === undefined ? command : command.toSpliced(1, 0, `--shell=${dialect}`),
-            },
+            compact({
+                command:
+                    dialect === undefined ? undefined : planned.check.command?.toSpliced(1, 0, `--shell=${dialect}`),
+            }),
         );
         result.findings.push(...checked.findings);
         result.duration += checked.duration;

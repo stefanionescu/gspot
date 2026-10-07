@@ -32,7 +32,6 @@ import { trivyImage, dockerignore } from '#cli/checks/tool/docker.ts';
 import { tsc, checkjs } from '#cli/checks/language/javascript/tsc.ts';
 import { docComments } from '#cli/checks/language/bash/doc-comments.ts';
 import { loneFiles } from '#cli/checks/general/structure/lone-files.ts';
-import { rulesOff } from '#cli/checks/language/javascript/rules-off.ts';
 import { bashBoundaries } from '#cli/checks/language/bash/boundaries.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
@@ -134,7 +133,6 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'structure/large-files': { run: runBuiltInCheck(largeFiles) },
     'structure/tracked-dependencies': { run: runBuiltInCheck(trackedDependencies) },
     'typescript/tsconfig': { run: runBuiltInCheck(tsconfig) },
-    'javascript/rules-off': { run: runBuiltInCheck(rulesOff) },
     'docs/headings': { run: runBuiltInCheck(headings) },
     'docs/stale-paths': { run: runBuiltInCheck(stalePaths) },
     'docs/readme-present': { run: runBuiltInCheck(readmePresent) },

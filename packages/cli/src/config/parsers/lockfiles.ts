@@ -1,11 +1,3 @@
-/** The npm lockfile format that carries both the packages table and the old dependencies tree. */
-export const HYBRID_LOCKFILE = 2;
-
-/** The npm lockfile format that carries the packages table alone. */
-export const PACKAGES_LOCKFILE = 3;
-
-export const LOCKFILE_VERSIONS = [HYBRID_LOCKFILE, PACKAGES_LOCKFILE] as const;
-
 /** Lockfile clients, runner priority, tool projects, and native verification. */
 export const LOCKFILES = [
     {

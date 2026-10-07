@@ -1,5 +1,4 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { indexedPaths } from '#cli/repository/tracked.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
@@ -16,7 +15,7 @@ function dependencyFolder(path: string): string | undefined {
  * @returns the findings
  */
 export function trackedDependencies(input: CheckInput): Finding[] {
-    const tracked = indexedPaths(input.root);
+    const tracked = [...new Set(input.index.map((entry) => entry.path))];
     const counts = new Map<string, number>();
     for (const path of tracked) {
         const folder = dependencyFolder(path);

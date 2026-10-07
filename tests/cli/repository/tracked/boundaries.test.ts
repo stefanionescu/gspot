@@ -112,7 +112,7 @@ test.skipIf(!isPosix)(
         });
         fs.symlinkSync('../../outside', join(root, 'pruned', 'external'));
         fs.symlinkSync('source\nfiles', join(root, 'linked-directory'));
-        const entries = trackedEntries(root);
+        const entries = await trackedEntries(root);
         expect(entries.map((entry) => entry.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
             '.gitignore',
             'source\nfiles/.gitignore',
@@ -120,9 +120,11 @@ test.skipIf(!isPosix)(
             'source\nfiles/keep.log',
         ]);
         fs.symlinkSync('../outside/private.ts', join(root, 'external.ts'));
-        expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
+        const linked = await trackedEntries(root);
+        expect(linked.map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
         fs.unlinkSync(join(root, 'external.ts'));
-        expect(trackedEntries(root).map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
+        const unlinked = await trackedEntries(root);
+        expect(unlinked.map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
     },
 );
 
@@ -130,7 +132,8 @@ test.skipIf(!isPosix)('a non-Git walk omits named pipes from readable source fil
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     expect(processes.runBlocking(['mkfifo', 'stream.ts'], { cwd: sandbox.path }).code).toBe(0);
-    expect(trackedEntries(sandbox.path).map((entry) => entry.path)).toStrictEqual(['source.ts']);
+    const entries = await trackedEntries(sandbox.path);
+    expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
 });
 
 test.skipIf(!isPosix)('Bash findings retain newline and colon directory names without Git', async () => {

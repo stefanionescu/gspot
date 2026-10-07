@@ -1,11 +1,9 @@
-// Build the CLI and ESLint coverage worker as Node modules beside the configurations, rules, and grammars.
+// Build the CLI as a Node module beside its configurations, rules, and grammars.
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { buildEslintWorker } from './eslint-worker.ts';
 import { rmSync, chmodSync, copyFileSync } from 'node:fs';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { ESLINT_WORKER_FILES } from '#cli/config/tools/eslint.ts';
 import { assertManifests } from '#cli/configurations/problems.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { validateEslintPresets } from '#cli/generation/eslint/presets.ts';
@@ -29,7 +27,6 @@ const result = await Bun.build({
     sourcemap: 'none',
 });
 if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\n'));
-await buildEslintWorker(distribution);
 chmodSync(join(distribution, 'gspot.js'), EXECUTABLE_FILE);
 copyFileSync(join(root, '../..', 'LICENSE.md'), join(distribution, 'LICENSE.md'));
-console.log(`built packages/cli/dist/gspot.js and ${ESLINT_WORKER_FILES.bundle}`);
+console.log('built packages/cli/dist/gspot.js');

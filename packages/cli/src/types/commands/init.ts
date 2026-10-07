@@ -1,7 +1,7 @@
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { TomlTable, PolicyScope } from '#cli/types/policy/settings.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
-import type { Tooling, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Tooling, Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 
 import type {
     CiChoice,
@@ -17,6 +17,7 @@ export type Choice<T extends string> = { value: T; label: string; hint?: string 
 export type Planning = {
     root: string;
     hasGit: boolean;
+    index: Repository['index'];
     options: InitOptions;
     tooling: Tooling;
     selection: InitSelection;

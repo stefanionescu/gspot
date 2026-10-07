@@ -63,3 +63,22 @@ test(
     },
     NATIVE_TEST_TIMEOUT_MS,
 );
+
+test(
+    'native installed font metadata justifies its root exception in a descendant without a root manifest',
+    async () => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy(['licenses'], {
+                tables: 'run_with = "mise"\n[licenses]\nallowed = ["MIT"]\n[[licenses.exceptions]]\npackage = "@fontsource/inter@5.2.8"\nlicense = "OFL-1.1"\nreason = "Documentation distributes the font."\n[[scope]]\npath = "docs"\n',
+            }),
+            'docs/package.json': '{"name":"docs","private":true,"dependencies":{"@fontsource/inter":"5.2.8"}}',
+            'docs/node_modules/@fontsource/inter/package.json':
+                '{"name":"@fontsource/inter","version":"5.2.8","license":"OFL-1.1"}',
+        });
+        const applied = await runGspot(sandbox.path, ['apply', '--json']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const session = await openSession(sandbox.path);
+        expect(await licensesPackages(buildCheckInput(session, 'licenses/packages'))).toStrictEqual([]);
+    },
+    NATIVE_TEST_TIMEOUT_MS,
+);

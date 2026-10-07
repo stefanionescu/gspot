@@ -1,13 +1,15 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
+import { test, spyOn, expect } from 'bun:test';
+import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { envFiles } from '#cli/checks/general/secrets.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { STAGED_CASES } from '#tests/config/cli/checks/general/secrets/env/files.ts';
 
 test('tracked-file checks distinguish environment files from templates in nested folders', async () => {
@@ -57,4 +59,39 @@ ${entry.ignore}`,
     ]);
     expect(await Bun.file(join(sandbox.path, '.env')).text()).toBe('PUBLIC_EXAMPLE=value\n');
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+});
+
+test('checks share one index within a run and see corrections in the next run', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': buildPolicy(['secrets', 'xcode'], { level: 'all' }),
+        'App.xcodeproj/project.pbxproj': '{}\n',
+        '.env': 'EXAMPLE=value\n',
+        'node_modules/example/index.js': 'export {};\n',
+    });
+    expect(git(directory.path, ['init', '-q']).code).toBe(0);
+    expect(git(directory.path, ['add', '-f', '.']).code).toBe(0);
+    const session = await openSession(directory.path);
+    using resources = new DisposableStack();
+    const reads = resources.use(spyOn(processes, 'runBinary'));
+    const blocking = resources.use(spyOn(processes, 'runBlocking'));
+    const indexReads = () => [...reads.mock.calls, ...blocking.mock.calls].filter(([argv]) => argv.includes('--stage'));
+    const options = buildRunOptions({
+        only: ['secrets/env-files', 'structure/tracked-dependencies', 'xcode/symlinks'],
+    });
+    const before = await executeRun(session, options);
+    expect(before.report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
+        { check: 'secrets/env-files', status: 'failed' },
+        { check: 'xcode/symlinks', status: 'passed' },
+        { check: 'structure/tracked-dependencies', status: 'failed' },
+    ]);
+    expect(indexReads()).toHaveLength(1);
+    expect([...reads.mock.calls, ...blocking.mock.calls].some(([argv]) => argv.includes('--cached'))).toBe(false);
+    expect(git(directory.path, ['rm', '-r', '--cached', '--', '.env', 'node_modules']).code).toBe(0);
+    const after = await executeRun(session, options);
+    expect(after.report.exitCode).toBe(0);
+    expect(after.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
+    expect(indexReads()).toHaveLength(2);
+    expect(session.repository.index.some((entry) => entry.path === '.env')).toBe(true);
+    expect(await Bun.file(join(directory.path, '.env')).text()).toBe('EXAMPLE=value\n');
 });

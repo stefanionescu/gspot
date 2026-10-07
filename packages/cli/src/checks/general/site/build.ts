@@ -1,18 +1,17 @@
-import { statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { memo } from '#cli/platform/memo.ts';
-import { toPosix } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { readSource } from '#cli/platform/source.ts';
 import { contentDigest } from '#cli/platform/text.ts';
 import { parseCommand } from '#cli/parsers/command.ts';
+import { scratchEntries } from '#cli/platform/scratch.ts';
+import { toPosix, isInside } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
 import type { SiteBuild } from '#cli/types/checks/general/site.ts';
+import { statSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { portableSegments, assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { OUTPUT_TAIL_LINES, SHOWN_DIFFERENCES } from '#cli/config/checks/general/site.ts';
 
@@ -26,9 +25,10 @@ async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> 
     const command = site['build'] as string;
     const result = await runCheckTool(input, parseCommand(command), { cwd });
     const output = join(cwd, outputPath);
-    using files = openRoot(scratch);
-    const isBuilt: boolean =
-        result.code === 0 && files.stat(toPosix(relative(scratch, output)))?.isDirectory() === true;
+    const built = result.code === 0 ? lstatSync(output, { throwIfNoEntry: false }) : undefined;
+    if (built?.isSymbolicLink() === true)
+        throw new Error(`Unsafe lifecycle destination: ${toPosix(relative(scratch, output))}`);
+    const isBuilt = built?.isDirectory() === true;
     const outputTail = [result.stderr, result.stdout]
         .join('\n')
         .trim()
@@ -39,7 +39,7 @@ async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> 
 }
 
 function outputDigests(folder: string): Map<string, string> {
-    return new Map(filesUnder(folder).map((path) => [path, contentDigest(readSource(folder, path))]));
+    return new Map(filesUnder(folder).map((path) => [path, contentDigest(readFileSync(join(folder, path)))]));
 }
 
 /**
@@ -49,14 +49,18 @@ function outputDigests(folder: string): Map<string, string> {
  */
 export function filesUnder(folder: string): string[] {
     if (statSync(folder, { throwIfNoEntry: false }) === undefined) return [];
-    using files = openRoot(folder, 'native');
-    const found: string[] = [];
-    walkRoot(files, '', (path) => {
-        const entry = statSync(files.realPath(path));
-        if (entry.isFile()) found.push(path);
-        return entry.isDirectory();
-    });
-    return found.toSorted((left, right) => left.localeCompare(right));
+    const root = realpathSync.native(folder);
+    return [...scratchEntries(root)]
+        .flatMap((entry) => {
+            const absolute = join(entry.parentPath, entry.name);
+            const path = toPosix(relative(root, absolute));
+            if (!isInside(relative(root, realpathSync.native(absolute))))
+                throw new Error(`Source link leaves the repository: ${path}`);
+            const stat = statSync(absolute);
+            if (stat.isDirectory()) throw new Error(`Unsafe lifecycle directory: ${path}`);
+            return stat.isFile() ? [path] : [];
+        })
+        .toSorted((left, right) => left.localeCompare(right));
 }
 
 /**

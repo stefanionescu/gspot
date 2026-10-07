@@ -163,9 +163,11 @@ export function emitAll(session: Session): Generated {
     const seen = new Set<string>();
     for (const selection of scopes) {
         const inputs = templateInputs(session, selection, manifests);
-        const scopeChecks = checks.filter((check) => check.scope.scope.path === selection.scope.path);
+        const scopeChecks = checks.filter(
+            (check) => check.scope.scope.path === selection.scope.path || check.check.runs === 'once',
+        );
         const scopeConsumers = {
-            tools: new Set(scopeChecks.flatMap((check) => requiredToolNames(check, policy.run_with))),
+            tools: new Set(scopeChecks.flatMap((check) => requiredToolNames(check, session))),
             checks: new Set(scopeChecks.map((check) => check.check.name)),
         };
         emitConfigurations({ root, files, scopes, inputs, selection }, generated, seen, {

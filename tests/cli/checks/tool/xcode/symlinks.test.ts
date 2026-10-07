@@ -45,15 +45,14 @@ test.skipIf(!isPosix)(
                 rule: 'symlink',
             }),
         ]);
-        input.reads = { root: sandbox.path, sources: new Map(), memo: new Map() };
-        expect(await symlinks(input)).toStrictEqual([]);
+        const corrected = buildCheckInput(await openSession(sandbox.path), check.name);
+        expect(await symlinks(corrected)).toStrictEqual([]);
         const index = readFileSync(join(sandbox.path, '.git', 'index'));
         writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
-        input.reads = { root: sandbox.path, sources: new Map(), memo: new Map() };
-        await rejects(symlinks(input), { message: /Git could not read the entries of this revision/u });
+        await rejects(openSession(sandbox.path), { message: /Git ls-files failed/u });
         writeFileSync(join(sandbox.path, '.git', 'index'), index);
-        input.reads = { root: sandbox.path, sources: new Map(), memo: new Map() };
-        expect(await symlinks(input)).toStrictEqual([]);
+        const recovered = buildCheckInput(await openSession(sandbox.path), check.name);
+        expect(await symlinks(recovered)).toStrictEqual([]);
         expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe('let value = 1\n');
     },
 );

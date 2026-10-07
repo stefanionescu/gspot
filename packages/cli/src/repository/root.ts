@@ -1,35 +1,9 @@
 // Configuration-root discovery and Git work-tree state.
-import { statSync, lstatSync } from 'node:fs';
+import { statSync } from 'node:fs';
 import { join, dirname, resolve } from 'node:path';
-import { runGitBlocking } from '#cli/platform/git.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
-import { NOT_REPOSITORY_CODE } from '#cli/config/repository/root.ts';
-
-function hasGitEntry(directory: string): boolean {
-    try {
-        lstatSync(join(directory, '.git'));
-        return true;
-    } catch (error) {
-        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
-    }
-    const parent = dirname(directory);
-    return parent !== directory && hasGitEntry(parent);
-}
-
-/**
- * Distinguishes an absent work tree from broken Git metadata after a failed command.
- * @param root the inspected directory
- * @param inspection the work-tree probe result
- * @returns true only when Git and the ancestor metadata agree that no repository exists
- */
-export function isOutsideGit(root: string, inspection: SpawnResult): boolean {
-    return (
-        inspection.code === NOT_REPOSITORY_CODE &&
-        inspection.stderr.startsWith('fatal: not a git repository (or any ') &&
-        !hasGitEntry(resolve(root))
-    );
-}
+import { isOutsideGit, runGitBlocking } from '#cli/platform/git.ts';
 
 /**
  * Ask Git whether a directory belongs to a work tree, using stable diagnostic language.

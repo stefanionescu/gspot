@@ -99,6 +99,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const planning: Planning = {
         root,
         hasGit: repo.hasGit,
+        index: session.repository.index,
         options,
         tooling,
         selection,

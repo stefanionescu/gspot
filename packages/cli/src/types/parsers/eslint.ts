@@ -1,17 +1,5 @@
 import type { z } from 'zod';
-
-import type {
-    eslintPresetsSchema,
-    eslintAllRulesSchema,
-    eslintRuleNamesSchema,
-    eslintCoverageRequestSchema,
-    eslintCoverageResponseSchema,
-} from '#cli/parsers/schema/eslint.ts';
-
-/** Repository source paths whose active rules must be inspected. */
-export type EslintCoverageRequest = z.infer<typeof eslintCoverageRequestSchema>;
-/** Active rule names reported for every inspected source path. */
-export type EslintCoverageResponse = z.infer<typeof eslintCoverageResponseSchema>;
+import type { eslintPresetsSchema, eslintAllRulesSchema, eslintRuleNamesSchema } from '#cli/parsers/schema/eslint.ts';
 
 /** Default rules that are active only at level all. */
 export type EslintAllRules = z.output<typeof eslintAllRulesSchema>;

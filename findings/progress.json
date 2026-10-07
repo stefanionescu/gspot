@@ -177,6 +177,24 @@
             "scope": "Required ESLint rule applicability",
             "decision": "Preserve the owner level boundary and Pages applicability when replacing required-rule tests for review/code-execution/048. Test on/off expectations at both levels, including all-only complexity and declaration order and the all-only Next.js HTML-link rule for Pages projects. This resolves the literal both-level on requirement without weakening applicability or deleting required-rule coverage.",
             "evidence": ["User answer: Preserve level and Pages applicability; test on/off expectations"]
+        },
+        {
+            "date": "2026-10-07",
+            "scope": "Canonical policy missing array-of-tables emission",
+            "decision": "Allow the comment-preserving, native-encoding full-file emission fallback of review/policy-format/007 for the reproduced toml-patch failure when adding a missing array-of-tables section, as well as non-contiguous input. Keep unrelated dependency failures visible.",
+            "evidence": [
+                "User answer: Allow fallback for missing array-of-tables sections",
+                "The preserved toml-patch 3.0.5 probe reports Node not found at ignore with the required writer options."
+            ]
+        },
+        {
+            "date": "2026-10-07",
+            "scope": "ShellCheck shebang dialect applicability",
+            "decision": "Preserve shebang dialects and retain the minimal wrapper for review/code-execution/047. Do not set shell=bash in shellcheckrc or delete the wrapper when that setting overrides POSIX and dash shebangs. This overrides the prescribed plain manifest command; preserve Bats applicability and all other obligations.",
+            "evidence": [
+                "User answer: Preserve shebang dialects; retain the minimal wrapper and record an override of /047.",
+                "Pinned ShellCheck 0.11.0 accepts the shebang-free Bats sample, but shell=bash suppresses SC3010 for both sh and dash controls; --norc and --shell=sh retain those findings."
+            ]
         }
     ],
     "implementationBatches": {
@@ -3889,10 +3907,15 @@
             "verification": []
         },
         "review/code-execution/047": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Pinned ShellCheck0.11.0 accepts the shebang-free Bats probe. Controlled sh/dash tests prove shell=bash suppresses SC3010; the owner approved retaining the minimal dialect wrapper. /tmp/gspot-shellcheck-feasibility.json."
+            ],
+            "remaining": [
+                "Complete the minimal-wrapper review and native applicability acceptance under the recorded owner override; integrate and pass normal staged/commit/push gates."
+            ]
         },
         "review/code-execution/048": {
             "status": "in-progress",
@@ -6947,10 +6970,15 @@
             ]
         },
         "review/tests-tools/001": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Assigned the exact shared case-loop contract in a separate worktree at f6ca11e16 after the registry and suite-installation prerequisites. Existing25runFindingCase users and extra-test setup are being inventoried before consolidation."
+            ],
+            "remaining": [
+                "Retain every distinct scenario and applicability condition through the prescribed central test owner; validate native cases, types, policy checks and actual reduction before integration."
+            ]
         },
         "review/tests-tools/006": {
             "status": "pending",
@@ -7001,10 +7029,15 @@
             "verification": []
         },
         "review/tests-tools/014": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Frozen independent patch removes only duplicate shfmt steps: -10lines/-643bytes. Native2pass0fail28assertions and CLI23pass0fail176assertions; types, full-policy lint and formatting pass. /tmp/gspot-shellcheck-tools014-evidence.json."
+            ],
+            "remaining": [
+                "Integrate the frozen one-owner deletion with a coherent related checkpoint and complete mandatory gates."
+            ]
         },
         "review/tests-tools/015": {
             "status": "pending",

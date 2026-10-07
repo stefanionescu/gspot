@@ -40,10 +40,7 @@ test.each(['recommended', 'all'] as const)(
             'guide.md',
         );
         expect(checks.some((check) => check.check.name === 'duplication/jscpd')).toBe(level === 'all');
-        expect(checks.find((check) => check.check.name === 'licenses/packages')?.skip).toMatchObject({
-            cause: 'setting',
-            note: 'requires project setting licenses.allowed',
-        });
+        expect(checks.find((check) => check.check.name === 'licenses/packages')?.skip).toBeUndefined();
         expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
     },
 );

@@ -10,7 +10,12 @@ export type LicenseException = z.infer<typeof allowlistSchema>['exceptions'][num
 export type LicenseAllowlist = z.infer<typeof allowlistSchema>;
 
 /** Installed dependency licenses associated with the project that owns them. */
-export type ProjectLicenses = { manifest: string; packages: LicensedPackage[]; packageKey: (name: string) => string };
+export type ProjectLicenses = {
+    manifest: string;
+    packages: LicensedPackage[];
+    packageKey: (name: string) => string;
+    configuration: LicenseAllowlist;
+};
 
 /** The installed scanner and package identity convention of one project format. */
 export type LicenseScanner = {

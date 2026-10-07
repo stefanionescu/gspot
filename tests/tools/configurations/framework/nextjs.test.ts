@@ -2,15 +2,14 @@
 // type checking to the Next.js check, and the i18n rules.
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { rmSync, writeFileSync } from 'node:fs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
-import { rmSync, chmodSync, writeFileSync } from 'node:fs';
 import { containing } from '#tests/harness/expectations.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { NEXT_PAGE, NEXT_LAYOUT } from '#tests/config/samples/nextjs.ts';
@@ -29,33 +28,6 @@ async function checked(repository: TestRepository, checks: string[], code: numbe
     );
     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(code);
     return JSON.parse(outcome.stdout) as RunReport;
-}
-
-// The framework rules reject a disabled requirement and accept its restoration.
-async function requiredRules(repository: TestRepository): Promise<void> {
-    const config = join(repository.root, '.gspot/config/eslint.config.mjs');
-    const written = await Bun.file(config).text();
-    await checked(repository, ['javascript/rules-off'], 0);
-    chmodSync(config, OWNER_WRITABLE_FILE);
-    // A later block that turns a required rule off is what javascript/rules-off exists to see.
-    const disabled = written.replace('"react/no-danger":"error"', '"react/no-danger":"off"');
-    expect(disabled).not.toBe(written);
-    await Bun.write(config, disabled);
-    try {
-        const seen = await checked(repository, ['javascript/rules-off'], 1);
-        expect(seen.checks[0]!.findings).toContainEqual(
-            containing({
-                file: '.gspot/config/eslint.config.mjs',
-                rule: 'rule-off',
-                line: 1,
-                message:
-                    'Enable react/no-danger for 2 files (app/layout.tsx, app/page.tsx). The react configuration requires this rule.',
-            }),
-        );
-    } finally {
-        await Bun.write(config, written);
-    }
-    await checked(repository, ['javascript/rules-off'], 0);
 }
 
 // Type checking delegates to the Next.js check only when that check runs.
@@ -184,11 +156,6 @@ describe('the nextjs configuration', () => {
         );
     }
 
-    test(
-        'the framework rules reject a disabled requirement',
-        () => requiredRules(testRepository),
-        NATIVE_TEST_TIMEOUT_MS,
-    );
     test(
         'type checking delegates to the Next.js check only when it runs',
         () => delegation(testRepository),

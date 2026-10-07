@@ -5,11 +5,11 @@ import { duplicateMisePins } from '#cli/tools/mise.ts';
 import { getLintJobs } from '#cli/repository/survey.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { getSubmodulePaths } from '#cli/repository/tracked.ts';
 import type { Tooling } from '#cli/types/repository/inventory.ts';
 import type { DuplicateMisePin } from '#cli/types/tools/install.ts';
 import { npmPins, misePins, pythonPins } from '#cli/configurations/pins.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
-import { readIndexEntries, getSubmodulePaths } from '#cli/repository/tracked.ts';
 import type { InitPlan, Planning, InitAnswers, InitFileRow } from '#cli/types/commands/init.ts';
 import { CI_SETUP, HOOKS_ROW, COLUMN_GAP, REASON_WIDTH, CONFIGURATION_WIDTH } from '#cli/config/commands/init.ts';
 
@@ -137,7 +137,7 @@ export function buildInitPlan(
             .filter((id) => !selection.selectedIds.has(id)),
     };
     const agents = policy.agentRules.enabled ? [...new Set(['AGENTS.md', ...policy.agentRules.instruction_files])] : [];
-    const submodules = getSubmodulePaths(readIndexEntries(root));
+    const submodules = getSubmodulePaths(planning.index);
     const change = [
         { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
         ...runnerRows(answers, requirements),

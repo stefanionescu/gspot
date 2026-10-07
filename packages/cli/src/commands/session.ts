@@ -3,6 +3,7 @@ import { readPolicy } from '#cli/policy/read.ts';
 import { npmPins } from '#cli/configurations/pins.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { scopeView } from '#cli/policy/settings/view.ts';
+import { createReadCache } from '#cli/platform/source.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
@@ -17,7 +18,7 @@ import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { FILE_PREFIX_BYTES } from '#cli/config/repository/inventory.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { Policy, PolicyFile, ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/client.ts';
 import type { PackageInstaller, PackageInstallerIdentity } from '#cli/types/parsers/packages.ts';
 
@@ -33,14 +34,16 @@ function scopeSelections(policy: Policy, scopes: ScopeEntry[], manifests: Map<st
 
 /**
  * Opens a repository session. Throws GspotError (policy or selection) when gspot.toml or configuration selection is invalid.
- * @param root the repository root
+ * @param rootPath the repository root
  * @param policyFiles the policy as read, read here by default
  * @returns the session
  */
-export async function openSession(root: string, policyFiles: PolicyFile = readPolicy(root)): Promise<ToolSession> {
+export async function openSession(rootPath: string, policyFiles = readPolicy(rootPath)): Promise<ToolSession> {
+    const reads = createReadCache(rootPath);
+    const root = reads.root;
     const manifests = configurationManifests();
     const { policy } = policyFiles;
-    const repository = await readRepository(root, policy.declarations, policy.scopes, policy.exclude);
+    const repository = await readRepository(root, policy.declarations, policy.scopes, policy.exclude, reads);
     // Init plans native configuration before the policy becomes a tracked file.
     if (!repository.files.some((file) => file.path === POLICY_FILE) && !pathMatcher(policy.exclude)(POLICY_FILE)) {
         const bytes = Buffer.from(policyFiles.text);
@@ -54,13 +57,11 @@ export async function openSession(root: string, policyFiles: PolicyFile = readPo
             size: bytes.length,
         });
     }
-    const automatic = detectConfigurations(repository.files, manifests, [])
-        .filter(
-            ({ configuration, kind }) =>
-                kind === 'general' &&
-                (manifests.get(configuration)?.configuration.when?.git !== true || repository.hasGit),
-        )
-        .map(({ configuration }) => configuration);
+    const automatic = detectConfigurations(repository.files, manifests, []).flatMap(({ configuration, kind }) =>
+        kind === 'general' && (manifests.get(configuration)?.configuration.when?.git !== true || repository.hasGit)
+            ? [configuration]
+            : [],
+    );
     const scopes = scopeSelections(
         { ...policy, configurations: [...new Set([...policy.configurations, ...automatic])] },
         repository.scopes,
@@ -70,7 +71,7 @@ export async function openSession(root: string, policyFiles: PolicyFile = readPo
     let resolvedPython: Promise<string> | undefined;
     const session: ToolSession = {
         pythonInstaller: (cancelSignal) => {
-            resolvedPython ??= acquirePythonInstaller(root, policyFiles.policy.run_with, cancelSignal);
+            resolvedPython ??= acquirePythonInstaller(root, policy.run_with, cancelSignal);
             return resolvedPython;
         },
         packageInstaller() {
@@ -86,15 +87,14 @@ export async function openSession(root: string, policyFiles: PolicyFile = readPo
         scopes,
         inspections: new Map(),
         getPendingInstallations: (path) => getOwnership(path).installing,
-        reads: { root, sources: new Map(), memo: new Map() },
+        reads,
     };
-    const runner = policyFiles.policy.run_with;
-    const needsPackages = Object.keys(npmPins(applicableManifests(session), runner)).length > 0;
-    const installer: PackageInstallerIdentity | undefined = needsPackages
-        ? await selectPackageInstaller(
-              root,
-              repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
-          )
-        : undefined;
+    const installer: PackageInstallerIdentity | undefined =
+        Object.keys(npmPins(applicableManifests(session), policy.run_with)).length > 0
+            ? await selectPackageInstaller(
+                  root,
+                  repository.files.filter((file) => file.kind === 'source').map((file) => file.path),
+              )
+            : undefined;
     return session;
 }

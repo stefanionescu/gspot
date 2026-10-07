@@ -1,14 +1,11 @@
 // Read immutable Git entries and objects for revision copies and checks.
-import { memo } from '#cli/platform/memo.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
 import { runGit, runGitBinary } from '#cli/platform/git.ts';
-import type { ReadCache } from '#cli/types/platform/reads.ts';
+import { readIndexEntries } from '#cli/repository/tracked.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
-import { parseGitBlobs, parseGitEntries } from '#cli/parsers/git.ts';
-
-const ENTRY_MEMO = { create: () => new Map<string, Promise<GitEntry[]>>() };
+import { parseGitBlobs, parseGitEntries, parseIndexRevision } from '#cli/parsers/git.ts';
 
 /**
  * Read complete index or tree entries without Git path quoting. Reject unresolved conflicts.
@@ -18,8 +15,8 @@ const ENTRY_MEMO = { create: () => new Map<string, Promise<GitEntry[]>>() };
  * @returns validated entries
  */
 export async function getEntries(root: string, source: Revision, cancelSignal?: AbortSignal): Promise<GitEntry[]> {
-    const argv = source.kind === 'index' ? ['ls-files', '--stage', '-z'] : ['ls-tree', '-r', '-z', source.hash];
-    const read = await runGitBinary(root, argv, { cancelSignal });
+    if (source.kind === 'index') return parseIndexRevision(await readIndexEntries(root, cancelSignal));
+    const read = await runGitBinary(root, ['ls-tree', '-r', '-z', source.hash], { cancelSignal });
     if (read.code !== 0)
         throw new GspotError('selection', [
             `Git could not read the entries of this revision: ${Buffer.from(read.stderr).toString('utf8').trim()}. Resolve Git errors before checking again.`,
@@ -52,30 +49,6 @@ export async function getBlobs(
             `Git could not read the objects of this revision: ${Buffer.from(result.stderr).toString('utf8').trim()}`,
         ]);
     return parseGitBlobs(Buffer.from(result.stdout), objects);
-}
-
-/**
- * Share an immutable Git entry read between checks in the same run.
- * @param root repository directory
- * @param source index or full commit object to inspect
- * @param reads the run-owned cache
- * @param cancelSignal command cancellation
- * @returns validated index or tree entries
- */
-export function getCachedEntries(
-    root: string,
-    source: Revision,
-    reads: ReadCache,
-    cancelSignal?: AbortSignal,
-): Promise<GitEntry[]> {
-    const entries = memo(reads, ENTRY_MEMO);
-    const key = JSON.stringify([root, source]);
-    let read = entries.get(key);
-    if (read === undefined) {
-        read = getEntries(root, source, cancelSignal);
-        entries.set(key, read);
-    }
-    return read;
 }
 
 /**

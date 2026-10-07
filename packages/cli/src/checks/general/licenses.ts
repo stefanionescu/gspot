@@ -1,19 +1,23 @@
-import { join } from 'node:path';
 import { statSync } from 'node:fs';
 import satisfies from 'spdx-satisfies';
 import { isDeepStrictEqual } from 'node:util';
 import { findingAt } from '#cli/checks/finding.ts';
 import parseExpression from 'spdx-expression-parse';
+import { join, dirname, basename } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { POLICY_FILE } from '#cli/config/platform/locations.ts';
+import { licenseProjects } from '#cli/planning/requirements.ts';
 import { normalizedPythonIdentity } from '#cli/parsers/packages.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
+import { everyTable, policyValue } from '#cli/policy/settings/lookup.ts';
 import { reportSchema, allowlistSchema, pythonReportSchema } from '#cli/parsers/schema/licenses.ts';
 
 import type {
@@ -114,40 +118,74 @@ async function pythonLicenses(input: CheckInput, start: string): Promise<License
         .map((entry) => ({ name: `${entry.Name}@${entry.Version}`, license: entry.License }));
 }
 
-const SCANNERS = new Map<string, LicenseScanner>([
-    ['package.json', { scan: javascriptLicenses, packageKey: (name) => name }],
-    ['pyproject.toml', { scan: pythonLicenses, packageKey: normalizedPythonIdentity }],
-]);
-
-/**
- * One finding for each installed package whose license is neither allowed nor covered by an exception that still holds.
- * @param input the check input
- * @returns the findings
- */
-export async function licensesPackages(input: CheckInput): Promise<Finding[]> {
-    if ((input.view.settings['licenses.allowed'] as string[]).length === 0) return [];
-    const configuration = readAllowlist(input);
-    const start = input.scopeRoot;
-    const scans: ProjectLicenses[] = [];
-    for (const [manifest, { scan, packageKey }] of SCANNERS) {
-        if (statSync(join(start, manifest), { throwIfNoEntry: false }) === undefined) continue;
-        const packages = await scan(input, start);
-        scans.push({ manifest: input.scope === '' ? manifest : `${input.scope}/${manifest}`, packages, packageKey });
-    }
-    if (scans.length === 0) throw new Error('No supported dependency manifest is available for license scanning.');
-    const allow = new Set(configuration.allowed);
-    return scans.flatMap(({ manifest, packages, packageKey }) => {
-        const exceptions = new Map(configuration.exceptions.map((entry) => [packageKey(entry.package), entry]));
+// Each installed project uses its deepest selected scope, while authored exceptions keep their table origin.
+async function scanLicenses(input: CheckInput) {
+    const inventories: ProjectLicenses[] = [];
+    const projects = licenseProjects(input.files, input.selections, input.policyFiles.policy, input.check);
+    for (const { manifest, selection, skip } of projects) {
+        if (skip !== undefined) continue;
+        const scanner: LicenseScanner =
+            basename(manifest) === 'package.json'
+                ? { scan: javascriptLicenses, packageKey: (name) => name }
+                : { scan: pythonLicenses, packageKey: normalizedPythonIdentity };
+        const scope = selection.scope.path;
+        const selected = {
+            ...input,
+            selection,
+            scope,
+            scopeRoot: join(input.root, dirname(manifest)),
+            view: selection.view,
+        };
+        const configuration = readAllowlist(selected);
+        const packages = await scanner.scan(selected, selected.scopeRoot);
         if (packages.length === 0)
             throw new Error(
                 'The license scan found no packages. Install the selected project dependencies before scanning.',
             );
+        inventories.push({ manifest, packages, packageKey: scanner.packageKey, configuration });
+    }
+    return { inventories, skipped: projects.filter(({ skip }) => skip !== undefined).map(({ manifest }) => manifest) };
+}
+
+/**
+ * Report prohibited installed licenses, changed exception licenses, and authored exceptions for absent packages.
+ * @param input the repository-wide check input.
+ * @returns findings from each selected installed project and each authored exception origin.
+ */
+export async function licensesPackages(input: CheckInput): Promise<Finding[]> {
+    const { inventories, skipped } = await scanLicenses(input);
+    const findings = inventories.flatMap(({ manifest, packages, packageKey, configuration }) => {
+        const allow = new Set(configuration.allowed);
+        const exceptions = new Map(configuration.exceptions.map((entry) => [packageKey(entry.package), entry]));
         return packages.flatMap(({ name, license }) => {
             const exception = exceptions.get(packageKey(name));
             if (exception === undefined && isAllowed(license, allow)) return [];
             const text = licenseProblem(name, license, exception);
-            if (text === undefined) return [];
-            return [findingAt(input, { file: manifest, line: 1 }, 'disallowed-license', text)];
+            return text === undefined
+                ? []
+                : [findingAt(input, { file: manifest, line: 1 }, 'disallowed-license', text)];
         });
     });
+    const stale = everyTable(input.policyFiles.policy).flatMap(({ table, scope = '' }) => {
+        const authored = policyValue(table, 'licenses.exceptions');
+        if (authored === undefined || skipped.some((manifest) => isInScope(manifest, scope))) return [];
+        const exceptions = allowlistSchema.shape.exceptions.parse(authored.value);
+        const projects = inventories.filter(({ manifest }) => isInScope(manifest, scope));
+        const where = scope === '' ? '' : ` in ${scope}`;
+        return exceptions
+            .filter((exception) => {
+                for (const { packages, packageKey } of projects)
+                    if (packages.some(({ name }) => packageKey(name) === packageKey(exception.package))) return false;
+                return true;
+            })
+            .map((exception) =>
+                findingAt(
+                    input,
+                    { file: POLICY_FILE, line: 1 },
+                    'stale-exception',
+                    `${exception.package} is absent from the installed project dependencies${where}. Remove the exception or correct its exact version.`,
+                ),
+            );
+    });
+    return [...findings, ...stale];
 }

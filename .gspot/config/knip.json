@@ -72,7 +72,6 @@
         "node",
         "osv-scanner",
         "pinact",
-        "pip-licenses",
         "prettier",
         "pydoclint",
         "ruff",
@@ -96,7 +95,6 @@
         ".": {
             "entry": [
                 "packages/eslint-plugin/src/plugin.ts",
-                "packages/cli/src/tools/eslint/worker.ts",
                 "docs/src/content/reference/collection.ts",
                 "docs/src/route-metadata.ts",
                 "src/main.{ts,js}",
@@ -124,7 +122,6 @@
         },
         "packages/cli": {
             "entry": [
-                "src/tools/eslint/worker.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/server.{ts,js}",

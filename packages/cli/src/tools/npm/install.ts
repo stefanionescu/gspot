@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { SETUP } from '#cli/config/tools/install.ts';
-import { openRoot } from '#cli/platform/root/open.ts';
 import { yarnSettings } from '#cli/tools/npm/yarn.ts';
 import { executableNames } from '#cli/platform/paths.ts';
 import { toolVersionState } from '#cli/tools/inspect.ts';
@@ -14,6 +13,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseVersionOutput } from '#cli/parsers/tool/version.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { isYarnBerry, packageLockfile } from '#cli/parsers/packages.ts';
+import { sourcePath, canonicalPath } from '#cli/platform/root/reads.ts';
 import type { PackageRun, PackageExecution } from '#cli/types/tools/npm.ts';
 import { stripBunRegistryUrls, stripYarnRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
 
@@ -201,14 +201,14 @@ export async function assertPackageVersions(
     dependencies: Record<string, string>,
     selected: Iterable<ToolPin>,
 ): Promise<void> {
-    using files = openRoot(work, 'native');
+    const root = canonicalPath(work);
     // A Windows shim is a command file from npm or an executable from Bun; the first that exists is the wrapper.
     for (const tool of selected) {
         if (!needsVersionCheck(tool, dependencies)) continue;
         const name =
             executableNames(tool.name).find((candidate) => existsSync(join(work, 'node_modules', '.bin', candidate))) ??
             tool.name;
-        await assertNativeVersion(work, files.realPath(`node_modules/.bin/${name}`), tool);
+        await assertNativeVersion(work, sourcePath(root, `node_modules/.bin/${name}`), tool);
     }
 }
 

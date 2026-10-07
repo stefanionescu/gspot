@@ -1,6 +1,7 @@
 // Resolving and reading paths inside one root: every parent must be a real directory and every file private.
 import type { Stats } from 'node:fs';
-import { join, posix } from 'node:path';
+import { isInside } from '#cli/platform/paths.ts';
+import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { PORTABLE_LINK_TARGET } from '#cli/config/platform/root.ts';
@@ -165,4 +166,17 @@ export function canonicalPath(path: string): string {
             );
         throw error;
     }
+}
+
+/**
+ * Resolve an authored source while refusing links outside its canonical root.
+ * @param root the canonical directory
+ * @param path the root-relative source
+ * @param partsOf the owner's path validation
+ * @returns the contained native path
+ */
+export function sourcePath(root: string, path: string, partsOf = nativeSegments): string {
+    const target = canonicalPath(join(root, ...partsOf(path)));
+    if (!isInside(relative(root, target))) throw new Error(`Source link leaves the repository: ${path}`);
+    return target;
 }

@@ -16,6 +16,7 @@ import {
     SCANNERS,
     NPM_SCANNERS,
     LICENSE_SETTINGS,
+    PROJECT_FINDINGS,
     SCANNER_FAILURES,
     LICENSE_EXCEPTIONS,
     CONFIGURATION_FAILURES,
@@ -71,13 +72,27 @@ test.each(SCANNER_FAILURES)(
     async ({ stdout, code, diagnostic }) => {
         await using sandbox = await testdir();
         await preparePythonProject(sandbox.path);
+        await createFileTree(sandbox.path, {
+            'app/pyproject.toml': '[project]\nname = "app"\nversion = "0.0.0"\n',
+            'app/.venv/installed': 'installed',
+        });
         const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
         const directories: string[] = [];
         using resources = new DisposableStack();
         resources.use(
             spyOn(processes, 'run').mockImplementation((_argv, options) => {
                 directories.push(options.cwd);
-                return Promise.resolve({ code, missing: false, stderr: 'fixture diagnostic', duration: 1, stdout });
+                return Promise.resolve(
+                    directories.length === 1
+                        ? {
+                              code: 0,
+                              missing: false,
+                              stderr: '',
+                              duration: 1,
+                              stdout: '[{"Name":"present","Version":"1.0.0","License":"MIT"}]',
+                          }
+                        : { code, missing: false, stderr: 'fixture diagnostic', duration: 1, stdout },
+                );
             }),
         );
         expect(await rejection(licensesPackages(selected))).toContain(diagnostic);
@@ -128,7 +143,10 @@ test('a license configuration linked outside the repository is refused without c
 
 test('combined license scans preserve manifest order, license alternatives, unknown licenses, and isolated Python settings', async () => {
     await using sandbox = await testdir();
-    await preparePythonProject(sandbox.path);
+    await preparePythonProject(
+        sandbox.path,
+        `${LICENSE_SETTINGS}[[licenses.exceptions]]\npackage = "choice@1.0.0"\nlicense = "MIT OR GPL-3.0-only"\nreason = "Reviewed both installed license alternatives."\n[[licenses.exceptions]]\npackage = "Python_Package@2.0.0"\nlicense = "GPL-3.0-only"\nreason = "Reviewed the installed Python package."\n`,
+    );
     const scanner = process.platform === 'win32' ? NPM_SCANNERS.windows : NPM_SCANNERS.posix;
     const pin = toolPin(configurationManifests().values(), 'license-checker-rseidelsohn');
     await createFileTree(sandbox.path, {
@@ -143,39 +161,38 @@ test('combined license scans preserve manifest order, license alternatives, unkn
     chmodSync(join(sandbox.path, scanner.path), 0o755);
     const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
     const directories: string[] = [];
-    using resources = new DisposableStack();
-    resources.use(
-        spyOn(processes, 'run').mockImplementation((command, options) => {
-            directories.push(options.cwd);
-            return Promise.resolve({
-                code: 0,
-                missing: false,
-                duration: 1,
-                stderr: '',
-                stdout: JSON.stringify(
-                    command[0]!.includes('license-checker-rseidelsohn')
-                        ? { 'choice@1.0.0': { licenses: ['MIT', 'GPL-3.0-only'] }, 'unknown@1.0.0': {} }
-                        : [{ Name: 'python-package', Version: '2.0.0', License: 'GPL-3.0-only' }],
-                ),
-            });
-        }),
-    );
+    using output = spyOn(processes, 'run').mockImplementation((command, options) => {
+        directories.push(options.cwd);
+        return Promise.resolve({
+            code: 0,
+            missing: false,
+            duration: 1,
+            stderr: '',
+            stdout: JSON.stringify(
+                command[0]!.includes('license-checker-rseidelsohn')
+                    ? {
+                          'choice@1.0.0': { licenses: ['MIT', 'GPL-3.0-only'] },
+                          'unknown@1.0.0': {},
+                          'python.package@2.0.0': { licenses: 'GPL-3.0-only' },
+                      }
+                    : [
+                          { Name: 'python-package', Version: '2.0.0', License: 'GPL-3.0-only' },
+                          { Name: 'prohibited-python', Version: '2.0.0', License: 'GPL-3.0-only' },
+                      ],
+            ),
+        });
+    });
     const findings = await licensesPackages(selected);
-    expect(findings).toMatchObject([
-        {
-            file: 'package.json',
+    expect(findings).toMatchObject(
+        PROJECT_FINDINGS.map(({ file, message }) => ({
+            file,
             line: 1,
             rule: 'disallowed-license',
-            message: textContaining('unknown@1.0.0 reports UNKNOWN'),
-        },
-        {
-            file: 'pyproject.toml',
-            line: 1,
-            rule: 'disallowed-license',
-            message: textContaining('python-package@2.0.0 reports GPL-3.0-only'),
-        },
-    ]);
-    expect(findings).toHaveLength(2);
+            message: textContaining(message),
+        })),
+    );
+    expect(findings).toHaveLength(3);
+    expect(output).toHaveBeenCalledTimes(2);
     expect(directories[0]).toBe(sandbox.path);
     const pythonDirectory = directories.find((directory) => directory !== sandbox.path);
     expect(pythonDirectory).toBeDefined();
@@ -184,7 +201,7 @@ test('combined license scans preserve manifest order, license alternatives, unkn
 
 test.each(LICENSE_EXCEPTIONS)(
     'license matching preserves $name',
-    async ({ license, package: name, exception, findings }) => {
+    async ({ license, package: name, exception, findings, installed = 'strict' }) => {
         await using sandbox = await testdir();
         await preparePythonProject(
             sandbox.path,
@@ -198,15 +215,15 @@ test.each(LICENSE_EXCEPTIONS)(
                 missing: false,
                 duration: 1,
                 stderr: '',
-                stdout: JSON.stringify([{ Name: 'strict', Version: '1.0.0', License: license }]),
+                stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', License: license }]),
             }),
         );
         expect(await licensesPackages(selected)).toStrictEqual(
-            findings.map((diagnostic) =>
+            findings.map(({ rule, diagnostic }) =>
                 containing({
-                    file: 'pyproject.toml',
+                    file: rule === 'stale-exception' ? 'gspot.toml' : 'pyproject.toml',
                     line: 1,
-                    rule: 'disallowed-license',
+                    rule,
                     message: textContaining(diagnostic),
                 }),
             ),

@@ -1,10 +1,12 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
+import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { statSync, writeFileSync } from 'node:fs';
 import * as childProcess from 'node:child_process';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/spawn.ts';
 import { readPrefix } from '#cli/platform/source.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { rejection } from '#tests/harness/expectations.ts';
@@ -36,7 +38,7 @@ test('repository file discovery > keeps tracked deletions out of readable entrie
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', 'source.ts']);
     fs.rmSync(join(sandbox.path, 'source.ts'));
-    expect(trackedEntries(sandbox.path)).toStrictEqual([]);
+    expect(await trackedEntries(sandbox.path)).toStrictEqual([]);
 });
 
 test('repository file discovery > classifies a dangling tracked symlink without reading its absent target', async () => {
@@ -80,7 +82,7 @@ test('repository file discovery > walks a non-Git directory while honoring its i
         'source.ts': 'export {};\n',
         'ignored.ts': 'export {};\n',
     });
-    const entries = trackedEntries(sandbox.path);
+    const entries = await trackedEntries(sandbox.path);
     expect(entries.map((entry) => entry.path)).toStrictEqual(['.gitignore', 'source.ts']);
 });
 
@@ -96,10 +98,10 @@ test('repository file discovery > reports a corrupt Git index instead of switchi
     expect(expectedRoot.ino).toBeGreaterThan(0n);
     expect(actualRoot.dev).toBe(expectedRoot.dev);
     expect(actualRoot.ino).toBe(expectedRoot.ino);
-    const entries = trackedEntries(cwd);
+    const entries = await trackedEntries(cwd);
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
     writeFileSync(join(cwd, '.git', 'index'), 'corrupt index');
-    expect(() => trackedEntries(cwd)).toThrow(/Git ls-files failed/u);
+    await rejects(trackedEntries(cwd), { message: /Git ls-files failed/u });
 });
 
 test('repository file discovery > reports invalid Git metadata instead of treating the directory as non-Git', async () => {
@@ -108,7 +110,7 @@ test('repository file discovery > reports invalid Git metadata instead of treati
         '.git/sentinel': 'incomplete metadata',
         'source.ts': 'export {};\n',
     });
-    expect(() => trackedEntries(sandbox.path)).toThrow(/Git ls-files failed/u);
+    await rejects(trackedEntries(sandbox.path), { message: /Git ls-files failed/u });
     expect(() => findRoot(sandbox.path)).toThrow('Git root discovery failed');
     expect(() => isGitRepository(sandbox.path)).toThrow('Git work-tree discovery failed');
 });
@@ -116,22 +118,30 @@ test('repository file discovery > reports invalid Git metadata instead of treati
 test('repository file discovery > reports a missing Git executable instead of returning a successful walk', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
-    const missing = spyOn(childProcess, 'spawnSync').mockReturnValue({
-        pid: 0,
-        output: [null, Buffer.alloc(0), Buffer.alloc(0)],
-        stdout: Buffer.alloc(0),
-        stderr: Buffer.alloc(0),
-        status: null,
-        signal: null,
-        error: Object.assign(new Error('Cannot run Git: git executable not found'), { code: 'ENOENT' }),
-    });
-    try {
-        expect(() => trackedEntries(sandbox.path)).toThrow(/git executable not found/u);
-        expect(() => findRoot(sandbox.path)).toThrow('git executable not found');
-        expect(() => isGitRepository(sandbox.path)).toThrow('git executable not found');
-    } finally {
-        missing.mockRestore();
-    }
+    using resources = new DisposableStack();
+    resources.use(
+        spyOn(childProcess, 'spawnSync').mockReturnValue({
+            pid: 0,
+            output: [null, Buffer.alloc(0), Buffer.alloc(0)],
+            stdout: Buffer.alloc(0),
+            stderr: Buffer.alloc(0),
+            status: null,
+            signal: null,
+            error: Object.assign(new Error('Cannot run Git: git executable not found'), { code: 'ENOENT' }),
+        }),
+    );
+    resources.use(
+        spyOn(processes, 'runBinary').mockResolvedValue({
+            code: 127,
+            stdout: Buffer.alloc(0),
+            stderr: 'Cannot run Git: git executable not found',
+            missing: true,
+            duration: 0,
+        }),
+    );
+    await rejects(trackedEntries(sandbox.path), { message: /git executable not found/u });
+    expect(() => findRoot(sandbox.path)).toThrow('git executable not found');
+    expect(() => isGitRepository(sandbox.path)).toThrow('git executable not found');
 });
 
 test('non-Git discovery applies nested ignore overrides without sharing them with sibling directories', async () => {
@@ -152,7 +162,8 @@ test('non-Git discovery applies nested ignore overrides without sharing them wit
         '.gspot/state/private.txt': 'ownership metadata',
     });
     fs.symlinkSync('source.ts', join(sandbox.path, 'linked.ts'));
-    expect(trackedEntries(sandbox.path).map((entry) => entry.path)).toStrictEqual([
+    const entries = await trackedEntries(sandbox.path);
+    expect(entries.map((entry) => entry.path)).toStrictEqual([
         '.gitignore',
         'nested/.gitignore',
         'nested/deeper/keep.log',
@@ -173,7 +184,7 @@ test.each(REPLACED_PARENT_PATHS)(
         writeFileSync(join(sandbox.path, 'src'), 'replacement');
         let error: unknown;
         try {
-            trackedEntries(sandbox.path);
+            await trackedEntries(sandbox.path);
         } catch (error_) {
             error = error_;
         }
@@ -184,7 +195,8 @@ test.each(REPLACED_PARENT_PATHS)(
         expect(fs.readFileSync(join(sandbox.path, 'src'), 'utf8')).toBe('replacement');
         fs.unlinkSync(join(sandbox.path, 'src'));
         await createFileTree(sandbox.path, { [path]: 'restored' });
-        expect(trackedEntries(sandbox.path).map((entry) => entry.path)).toStrictEqual([path]);
+        const entries = await trackedEntries(sandbox.path);
+        expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
     },
 );
 
@@ -202,7 +214,8 @@ test('on Windows, tracked discovery takes the executable bit from the Git index'
     const platform = process.platform;
     Object.defineProperty(process, 'platform', { value: 'win32' });
     try {
-        expect(trackedEntries(sandbox.path).map(({ path, executable }) => ({ path, executable }))).toStrictEqual([
+        const entries = await trackedEntries(sandbox.path);
+        expect(entries.map(({ path, executable }) => ({ path, executable }))).toStrictEqual([
             { path: 'indexed.sh', executable: true },
             { path: 'local.sh', executable: false },
         ]);
@@ -221,12 +234,13 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
         stdin: [1, 2, 3].map((stage) => `100644 ${hash} ${String(stage)}\tsource.txt\n`).join(''),
     });
     expect(update.code, update.stderr).toBe(0);
-    expect(readIndexEntries(sandbox.path).map(({ path, stage }) => ({ path, stage }))).toStrictEqual([
+    const index = await readIndexEntries(sandbox.path);
+    expect(index.map(({ path, stage }) => ({ path, stage }))).toStrictEqual([
         { path: 'source.txt', stage: 1 },
         { path: 'source.txt', stage: 2 },
         { path: 'source.txt', stage: 3 },
     ]);
-    expect(trackedEntries(sandbox.path)).toStrictEqual([
+    expect(await trackedEntries(sandbox.path)).toStrictEqual([
         { path: 'source.txt', size: Buffer.byteLength('working content\n'), executable: false, symlink: false },
     ]);
     expect(await rejection(getEntries(sandbox.path, { kind: 'index' }))).toContain('Resolve index conflicts');
@@ -238,31 +252,20 @@ test('a failed index listing cannot report a Windows executable as an ordinary f
     gitOutput(sandbox.path, ['init', '-q']);
     gitOutput(sandbox.path, ['add', 'source.sh']);
     gitOutput(sandbox.path, ['update-index', '--chmod=+x', 'source.sh']);
-    // The path listing succeeds; the subsequent index read fails at the native process boundary.
     using resources = new DisposableStack();
     resources.use(
-        spyOn(childProcess, 'spawnSync')
-            .mockReturnValue({
-                pid: 0,
-                output: [null, Buffer.alloc(0), Buffer.from('Index access denied.')],
-                stdout: Buffer.alloc(0),
-                stderr: Buffer.from('Index access denied.'),
-                status: 128,
-                signal: null,
-            })
-            .mockReturnValueOnce({
-                pid: 0,
-                output: [null, Buffer.from('source.sh\0'), Buffer.alloc(0)],
-                stdout: Buffer.from('source.sh\0'),
-                stderr: Buffer.alloc(0),
-                status: 0,
-                signal: null,
-            }),
+        spyOn(processes, 'runBinary').mockResolvedValueOnce({
+            code: 128,
+            stdout: Buffer.alloc(0),
+            stderr: 'Index access denied.',
+            missing: false,
+            duration: 0,
+        }),
     );
     const platform = process.platform;
     Object.defineProperty(process, 'platform', { value: 'win32' });
     try {
-        expect(() => trackedEntries(sandbox.path)).toThrow('Index access denied.');
+        await rejects(trackedEntries(sandbox.path), { message: /Index access denied\./u });
     } finally {
         Object.defineProperty(process, 'platform', { value: platform });
     }

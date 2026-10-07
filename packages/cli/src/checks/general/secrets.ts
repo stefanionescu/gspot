@@ -6,7 +6,6 @@ import { readSource } from '#cli/platform/source.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
-import { indexedPaths } from '#cli/repository/tracked.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
@@ -217,7 +216,7 @@ export async function gitleaksHistory(session: ToolSession, planned: PlannedChec
  * @returns the findings
  */
 export function envFiles(input: CheckInput): Finding[] {
-    const tracked = indexedPaths(input.root);
+    const tracked = [...new Set(input.index.map((entry) => entry.path))];
     return tracked
         .filter(isEnvironmentFile)
         .map((path) =>

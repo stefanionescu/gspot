@@ -46,7 +46,6 @@ test('TypeScript-only input activates Knip and does not generate an unused JavaS
     expect(paths).toContain('.gspot/config/knip.json');
     expect(paths).not.toContain('.gspot/config/jsconfig.json');
     expect(configuredChecks(session).map((check) => check.check.name)).toContain('javascript/knip');
-    expect(configuredChecks(session).map((check) => check.check.name)).toContain('javascript/rules-off');
 });
 
 test('ignoring SwiftLint and Periphery retains SwiftFormat without their config files', async () => {

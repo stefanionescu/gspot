@@ -1,5 +1,7 @@
+import type { z } from 'zod';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
+import type { allowlistSchema } from '#cli/parsers/schema/licenses.ts';
 import type { PolicyFile, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { ToolPin, Manifest, ParsedCheck, CheckDeclaration } from '#cli/types/configurations.ts';
@@ -76,3 +78,11 @@ export type PlannedCheck = {
 };
 
 export type StageFilter = Stage | 'all';
+
+/** A selected installed consumer and the effective license policy governing its report. */
+export type LicenseProject = {
+    manifest: string;
+    selection: ScopeSelection;
+    configuration: z.output<typeof allowlistSchema>;
+    skip: SelectionStatus | undefined;
+};

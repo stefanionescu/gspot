@@ -32,7 +32,7 @@ test.each(['index', 'commit'] as const)(
         gitOutput(sandbox.path, ['commit', '-qm', 'Gitlink']);
         mkdirSync(join(sandbox.path, 'vendor'));
         symlinkSync(outside.path, join(sandbox.path, path), 'dir');
-        expect(getSubmodulePaths(readIndexEntries(sandbox.path))).toStrictEqual([path]);
+        expect(getSubmodulePaths(await readIndexEntries(sandbox.path))).toStrictEqual([path]);
         const session = await openSession(sandbox.path);
         expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
         const result = await doctorCommand(sandbox.path);
@@ -45,7 +45,7 @@ test.each(['index', 'commit'] as const)(
             expect(gitOutput(snapshot, ['write-tree'])).toBe(expected);
             expect(readdirSync(join(snapshot, path))).toStrictEqual([]);
             expect(await Bun.file(join(snapshot, 'source.txt')).text()).toBe('selected source');
-            expect(getSubmodulePaths(readIndexEntries(snapshot))).toStrictEqual([path]);
+            expect(getSubmodulePaths(await readIndexEntries(snapshot))).toStrictEqual([path]);
         });
         expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{');
         expect(await Bun.file(join(outside.path, 'source.txt')).text()).toBe('outside source');
@@ -117,7 +117,7 @@ if (isPosix)
         });
         writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
         await rejects(getEntries(sandbox.path, { kind: 'index' }), {
-            message: /Git could not read the entries of this revision/u,
+            message: /Git ls-files failed/u,
         });
         writeFileSync(join(sandbox.path, '.git', 'HEAD'), 'broken');
         await rejects(getHeadEntries(sandbox.path));

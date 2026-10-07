@@ -1,9 +1,8 @@
 // Inspect and synchronize shipped Vale style packages in managed storage.
-import { join, dirname } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { toPosix } from '#cli/platform/paths.ts';
+import { join, dirname, relative } from 'node:path';
 import type { Root } from '#cli/types/platform/root.ts';
-import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
@@ -11,6 +10,8 @@ import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import type { ValeInstallation } from '#cli/types/tools/install.ts';
 import { installationDiagnostics } from '#cli/tools/credentials.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/inspect.ts';
+import { scratchFolder, scratchEntries } from '#cli/platform/scratch.ts';
+import { lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform/modes.ts';
 import { VALE_CONFIG, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 
@@ -24,13 +25,12 @@ function folderOfFile(path: string): string[] {
 }
 
 // Replaces one package folder with its synced copy: written beside it, then renamed in.
-function swapPackage(files: Root, synced: Root, folder: string, paths: string[]): void {
+function swapPackage(files: Root, work: string, folder: string, paths: string[]): void {
     const next = `${folder}.next`;
     files.removeTree(next);
     for (const path of paths) {
-        const content = synced.read(path);
-        if (content === undefined) throw new Error(`Vale setup output disappeared: ${path}`);
-        files.write(`${next}${path.slice(folder.length)}`, { bytes: content.bytes, mode: READ_ONLY_FILE }, undefined);
+        const bytes = readFileSync(join(work, path));
+        files.write(`${next}${path.slice(folder.length)}`, { bytes, mode: READ_ONLY_FILE }, undefined);
     }
     files.removeTree(folder);
     files.renameDirectory(next, folder);
@@ -49,17 +49,26 @@ function stageInputs(files: Root, work: string): void {
 
 // Replaces every installed package with its synced copy, and deletes a package the configuration does not name.
 function replacePackages(files: Root, work: string): string | undefined {
-    using synced = openRoot(work);
-    for (const folder of VALE_PACKAGE_FOLDERS)
-        if (synced.stat(`${STYLES_DIRECTORY}/${folder}`)?.isDirectory() !== true)
-            return `Vale setup output is missing: ${STYLES_DIRECTORY}/${folder}`;
-    const outputs = listStyleFiles(synced).filter((path) => isValePackageFile(path));
+    const missing = VALE_PACKAGE_FOLDERS.find((folder) => {
+        const path = `${STYLES_DIRECTORY}/${folder}`;
+        const entry = lstatSync(join(work, path), { throwIfNoEntry: false });
+        if (entry?.isSymbolicLink() === true) throw new Error(`Unsafe lifecycle destination: ${path}`);
+        return entry?.isDirectory() !== true;
+    });
+    if (missing !== undefined) return `Vale setup output is missing: ${STYLES_DIRECTORY}/${missing}`;
+    const outputs = Array.from(scratchEntries(join(work, STYLES_DIRECTORY)), (entry) => {
+        const path = toPosix(relative(work, join(entry.parentPath, entry.name)));
+        if (entry.isSymbolicLink()) throw new Error(`Unsafe lifecycle destination: ${path}`);
+        if (!entry.isFile() || lstatSync(join(work, path)).nlink !== 1)
+            throw new Error(`Lifecycle destination is not a private regular file: ${path}`);
+        return path;
+    }).filter((path) => isValePackageFile(path));
     const folders = new Set(outputs.flatMap((path) => folderOfFile(path)));
     for (const folder of installedPackageFolders(files)) if (!folders.has(folder)) files.removeTree(folder);
     for (const folder of folders)
         swapPackage(
             files,
-            synced,
+            work,
             folder,
             outputs.filter((path) => path.startsWith(`${folder}/`)),
         );
