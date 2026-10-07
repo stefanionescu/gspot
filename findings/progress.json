@@ -1,5 +1,5 @@
 {
-    "openRecords": 1008,
+    "openRecords": 1005,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1008,
+        "openRecords": 1005,
         "records": 1092,
         "batches": [
             {
@@ -457,8 +457,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 24,
-                "unresolvedAssignments": 267
+                "completedAssignments": 25,
+                "unresolvedAssignments": 266
             },
             {
                 "id": "python",
@@ -1865,8 +1865,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 1,
-                "unresolvedAssignments": 58
+                "completedAssignments": 3,
+                "unresolvedAssignments": 56
             },
             {
                 "id": "names",
@@ -3701,12 +3701,15 @@
             ]
         },
         "review/code-execution/033": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "d7cf41a0b684492e4fc1ebd20fa97515d3f970cd",
             "verification": [
                 "Removed duplicate sql/syntax source, built-in registry and manifest entry. Remaining sql/trivial-functions retains the single dialect/exclusion matcher. Scope, changed-path, reused-source, fixer and package-consumer contracts updated to retained checks; package consumer acceptance still pending.",
-                "Integrated focused58pass0fail318assertions12files7.43s includes SQL public parsing, PostgreSQL checks and updated command/fixer callers. Root/CLI types and full-policy lint of10affected files pass. Initial55pass3fail retained; corrected dialect expectations prove a native trivial function reports only in PostgreSQL. /tmp/gspot-sql-syntax-main-focused-final.log. Old sql/syntax references absent in packages/tests; generated files, staged gate and commit pending."
+                "Integrated focused58pass0fail318assertions12files7.43s includes SQL public parsing, PostgreSQL checks and updated command/fixer callers. Root/CLI types and full-policy lint of10affected files pass. Initial55pass3fail retained; corrected dialect expectations prove a native trivial function reports only in PostgreSQL. /tmp/gspot-sql-syntax-main-focused-final.log. Old sql/syntax references absent in packages/tests; generated files, staged gate and commit pending.",
+                "The sql/syntax source, manifest entry, built-in registry and tests were removed in the earlier SQL checkpoint. The retained check has one dialect/exclusion implementation. Updated package acceptance now asserts both actual SQL findings, their rules, file and line, and preserves correction and authored bytes.",
+                "Corrected whole language-consumer test passed 45 assertions in 291.66 seconds. Actual freshly packed SQL and PL/pgSQL passed 39 assertions across Node 24.20.0, Bun 1.4.2 and Bun 1.4.2 without Node on PATH; native focused SQL passed 17 tests and 66 assertions. Both native PostgreSQL imports now load only when parsing: docs build and all built links/fragments passed for 312 pages.",
+                "Normal plugin build, install:checks and apply succeeded. Staged acceptance passed 147 checks with 13 skips and zero findings; normal commit hooks passed. Production removes 51 lines, 3,467 bytes and 324 AST nodes. Focused execution is macOS evidence; full cross-platform verification remains pending."
             ]
         },
         "review/code-execution/034": {
@@ -3994,10 +3997,14 @@
             "verification": []
         },
         "review/configurations-plugin/001": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "rules implementation; main integration",
+            "commit": "d7cf41a0b684492e4fc1ebd20fa97515d3f970cd",
+            "verification": [
+                "Deleted inactive instances-in-registry rule, configuration, type, tests, plugin entry, CLI enablement, repository override, authored rule catalogue and public reference entries. Live packages, tests, docs and policy contain no instances-in-registry references. Native options and import-boundary contracts remain.",
+                "Full focused plugin/generated-ESLint acceptance passed 524 tests and 814 assertions in 44 files. The final literal node configuration and native predicate passed 108 tests with 17 assertions; root, CLI, plugin and docs types passed. Actual packed Node ESM/CommonJS consumer and strict NodeNext declarations passed seven assertions.",
+                "Normal plugin build, install:checks and apply succeeded. Staged acceptance passed 147 checks with 13 skips and zero findings; normal commit hooks passed. Production removes 51 lines, 3,467 bytes and 324 AST nodes. Focused execution is macOS evidence; full cross-platform verification remains pending."
+            ]
         },
         "review/configurations-plugin/002": {
             "status": "pending",
@@ -4042,14 +4049,17 @@
             "verification": []
         },
         "review/configurations-plugin/009": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "rules implementation; main integration",
-            "commit": null,
+            "commit": "d7cf41a0b684492e4fc1ebd20fa97515d3f970cd",
             "verification": [
                 "Exact fixes/owners/tests dispatched from bce72e26bbc55fc48e976aea29c466d0ce2e91b9 into isolated refactor/plugin-create-rule worktree through /tmp/gspot-plugin-wave2-packet.md. Mechanical constructor rename remains separate from transparent-callback behavior; main reserves exact CLI parser suppression removal. No integration/closure acceptance yet.",
                 "Frozen native-predicate implementation integrated in main worktree, including exact CLI and plugin suppression deletions; main plugin433pass0fail27assertions19files422ms and root/plugin types pass. Main names avoid banned wrapper vocabulary.",
                 "Actual repository install initially reused stale Bun1.4.2 same-version package bytes despite refreshed integrity. Isolated reproduction proved native extracted-cache reuse, not portable URL stripping; force/no-cache did not fix it. Shared automation now owns one temporary BUN_INSTALL_CACHE_DIR alongside run-owned registry and archives; normal install:checks succeeds and actual installed bundle contains new predicate. Full-policy affected callback/source/runner lint passes with both suppressions removed; cancellation2pass0fail8assertions919ms. Generated Bun lock was updated only through install command.",
-                "Packed Node consumer1pass0fail7assertions3.59s: ESM/CommonJS and strict NodeNext declarations. Separate actual packed Bun1.4.2 consumer with Node absent from PATH passed ESM/CommonJS, bothlevels/options/boundaries, required conditional/logical callback and IIFE diagnostics, strict NodeNext declarations; copied installed bundle SHA256 matches main dist. macOS only. /tmp/gspot-bun-mutable-package-audit.md. No staged gate/commit/closure yet."
+                "Packed Node consumer1pass0fail7assertions3.59s: ESM/CommonJS and strict NodeNext declarations. Separate actual packed Bun1.4.2 consumer with Node absent from PATH passed ESM/CommonJS, bothlevels/options/boundaries, required conditional/logical callback and IIFE diagnostics, strict NodeNext declarations; copied installed bundle SHA256 matches main dist. macOS only. /tmp/gspot-bun-mutable-package-audit.md. No staged gate/commit/closure yet.",
+                "Conditional and logical function values are transparent; conditional tests and logical left operands retain their own roles, and TypeScript assertions remain transparent. Added RuleTester cases and removed both prescribed suppressions. Old guard regression recorded 87 passes and 11 failures; final guard passed all 98 cases.",
+                "Final guard/configuration acceptance passed 108 tests with 17 assertions. Actual packaged plugin acceptance passed for Node; recorded separate packed Bun acceptance includes Node absent from PATH.",
+                "Normal plugin build, install:checks and apply succeeded. Staged acceptance passed 147 checks with 13 skips and zero findings; normal commit hooks passed. Production removes 51 lines, 3,467 bytes and 324 AST nodes. Focused execution is macOS evidence; full cross-platform verification remains pending."
             ]
         },
         "review/configurations-plugin/011": {
@@ -9509,6 +9519,29 @@
                 "run": 37599188118,
                 "status": "pending",
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37599188118"
+            }
+        },
+        {
+            "commit": "d7cf41a0b684492e4fc1ebd20fa97515d3f970cd",
+            "completedRecords": [
+                "review/configurations-plugin/001",
+                "review/configurations-plugin/009",
+                "review/code-execution/033"
+            ],
+            "unresolvedRecords": 1005,
+            "validation": [
+                "Normal plugin build, install:checks and apply succeeded. Staged acceptance passed 147 checks with 13 skips and zero findings; normal commit hooks passed. Production removes 51 lines, 3,467 bytes and 324 AST nodes. Focused execution is macOS evidence; full cross-platform verification remains pending.",
+                "Normal push hooks passed 147 checks with 13 skips and zero findings in 57.2 seconds; remote main matches the implementation commit."
+            ],
+            "limitations": [
+                "CI status is recorded after the normal push; no cancelled or pending CI job proves platform behavior. The whole repository remains incomplete. main/001 remains partial and no live publication or deployment occurred."
+            ],
+            "ci": {
+                "conclusion": "",
+                "databaseId": 37601679985,
+                "headSha": "d7cf41a0b684492e4fc1ebd20fa97515d3f970cd",
+                "status": "pending",
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37601679985"
             }
         }
     ]
