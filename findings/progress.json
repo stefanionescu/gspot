@@ -1,5 +1,5 @@
 {
-    "openRecords": 1012,
+    "openRecords": 1008,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1012,
+        "openRecords": 1008,
         "records": 1092,
         "batches": [
             {
@@ -457,8 +457,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 20,
-                "unresolvedAssignments": 271
+                "completedAssignments": 24,
+                "unresolvedAssignments": 267
             },
             {
                 "id": "python",
@@ -3574,10 +3574,16 @@
             ]
         },
         "review/code-execution/015": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main integration; installed license inventory owner",
             "commit": null,
-            "verification": []
+            "verification": [
+                "An initial installed-scan replacement passed 51 focused tests but failed the real combined staged gate for five scopes because inherited exceptions were audited independently at each recipient. The partial patch was preserved and excluded from the integrated checkpoint. Read-only origin diagnosis: /tmp/gspot-license-origin-contract.md."
+            ],
+            "remaining": [
+                "Audit each authored exception once over the actual selected installed-project inventory in its origin subtree; retain effective local license enforcement and error results for incomplete inventories.",
+                "Complete shared selection/inventory and exceptions-only activation prerequisites, then rerun origin-domain tests and the real repository staged gate."
+            ]
         },
         "review/code-execution/016": {
             "status": "pending",
@@ -3598,16 +3604,22 @@
             "verification": []
         },
         "review/code-execution/019": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owners",
+            "commit": "32f6190687acb9afbadf218ca5d188e7d0dfb0aa",
+            "verification": [
+                "Git-disabled prerequisites now name the actual skipped check in their diagnostics; focused no-Git selection acceptance passes.",
+                "108 focused tests with 826 assertions across six files passed, plus the actual shallow-repository tools case (19 assertions), root and CLI types, affected policy lint, and normal apply freshness. Staged checks passed 147 with 13 skips and no findings; normal commit and push hooks passed."
+            ]
         },
         "review/code-execution/020": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owners",
+            "commit": "32f6190687acb9afbadf218ca5d188e7d0dfb0aa",
+            "verification": [
+                "Removed refspec expansion and the shallow full-tree fallback. One native cat-file batch validates live tips; Git log and rev-list use the configured remote exclusion consistently, and missing references remain errors. CLI push cases and an actual shallow Git repository pass.",
+                "108 focused tests with 826 assertions across six files passed, plus the actual shallow-repository tools case (19 assertions), root and CLI types, affected policy lint, and normal apply freshness. Staged checks passed 147 with 13 skips and no findings; normal commit and push hooks passed."
+            ]
         },
         "review/code-execution/021": {
             "status": "complete",
@@ -3638,10 +3650,13 @@
             "verification": []
         },
         "review/code-execution/025": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owners",
+            "commit": "32f6190687acb9afbadf218ca5d188e7d0dfb0aa",
+            "verification": [
+                "File discovery now uses native real paths and root-relative containment checks. Missing roots and preserved EIO/EACCES errors follow their distinct contracts without message matching or an unnecessary root wrapper.",
+                "108 focused tests with 826 assertions across six files passed, plus the actual shallow-repository tools case (19 assertions), root and CLI types, affected policy lint, and normal apply freshness. Staged checks passed 147 with 13 skips and no findings; normal commit and push hooks passed."
+            ]
         },
         "review/code-execution/026": {
             "status": "pending",
@@ -3677,10 +3692,13 @@
             "verification": []
         },
         "review/code-execution/032": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owners",
+            "commit": "32f6190687acb9afbadf218ca5d188e7d0dfb0aa",
+            "verification": [
+                "Swift types and variables and Python classes and exceptions retain native spelling through case and character limits, while word limits and other category and path rules stay enforced. Removed the separate shippedCase calculation and preserved first-defined defaults.",
+                "108 focused tests with 826 assertions across six files passed, plus the actual shallow-repository tools case (19 assertions), root and CLI types, affected policy lint, and normal apply freshness. Staged checks passed 147 with 13 skips and no findings; normal commit and push hooks passed."
+            ]
         },
         "review/code-execution/033": {
             "status": "in-progress",
@@ -9471,6 +9489,27 @@
             "limitations": [
                 "Evidence is focused implementation acceptance on macOS; Linux/macOS/Windows full final CI and release preparation remain pending. main/001 remains partial; no live publication or deployment occurred."
             ]
+        },
+        {
+            "commit": "32f6190687acb9afbadf218ca5d188e7d0dfb0aa",
+            "completedRecords": [
+                "review/code-execution/019",
+                "review/code-execution/020",
+                "review/code-execution/025",
+                "review/code-execution/032"
+            ],
+            "unresolvedRecords": 1008,
+            "validation": [
+                "108 focused tests with 826 assertions across six files passed, plus the actual shallow-repository tools case (19 assertions), root and CLI types, affected policy lint, and normal apply freshness. Staged checks passed 147 with 13 skips and no findings; normal commit and push hooks passed."
+            ],
+            "limitations": [
+                "Focused acceptance ran on macOS. Full cross-platform verification remains pending; skips prove no platform behavior. main/001 remains partial; no publication or deployment occurred."
+            ],
+            "ci": {
+                "run": 37599188118,
+                "status": "pending",
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37599188118"
+            }
         }
     ]
 }
