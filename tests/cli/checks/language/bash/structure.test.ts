@@ -1,88 +1,18 @@
 // The built-in Bash checks on test scripts, run in-process: each fires on its defect and accepts the correction.
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { runFindingCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
-import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import type { CaseChanges } from '#tests/types/harness/preservation.ts';
-import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
-import { CLEAN, REPOSITORY } from '#tests/config/cli/checks/language/bash/structure.ts';
-import { BASH_CASES, TOOL_CHECKS, BASH_CASES_MAIN as MAIN } from '#tests/config/samples/bash.ts';
-import type { RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
-
-// What a check accepts beside the clean scripts: a guarded settings file, a boundary header, the environment owner.
-const CORRECTIONS: Record<string, (repository: Pick<CaseChanges, 'files'>) => Record<string, string>> = {
-    'bash/guards': () => ({
-        'scripts/settings.sh':
-            '#!/usr/bin/env bash\n[[ -n ${SETTINGS_READY:-} ]] && return 0\nreadonly SETTINGS_READY=1\nreadonly PORT=8080\n',
-    }),
-    'bash/boundaries': () => ({
-        'deploy/step.sh': CLEAN.replace(
-            '#!/usr/bin/env bash',
-            '#!/usr/bin/env bash\n# Boundary: Owns deployment steps and their explicit input values.',
-        ),
-    }),
-    'bash/env-owner': (repository) => ({ 'scripts/environment.sh': repository.files['scripts/environment.sh']! }),
-};
-
-describe('the built-in bash checks', () => {
-    const repository: RepositoryScenario = {
-        ...REPOSITORY,
-        prepare: (root) => {
-            markExecutable(root, 'scripts/build.sh');
-        },
-        corrected: (entry) => ({
-            files: {
-                ...Object.fromEntries(Object.keys(entry.files).map((path) => [path, CLEAN])),
-                ...CORRECTIONS[entry.check]?.(entry),
-            },
-        }),
-    };
-    const resources = new AsyncDisposableStack();
-    let testRepository: OwnedTestRepository;
-    beforeAll(async () => {
-        const budget = openTestBudget(suiteTimeout());
-        try {
-            testRepository = resources.use(await createTestRepository(repository, runGspot));
-        } finally {
-            budget[Symbol.dispose]();
-        }
-    }, suiteTimeout());
-    afterAll(async () => {
-        await resources.disposeAsync();
-    });
-    for (const entry of BASH_CASES.filter((entry) => !TOOL_CHECKS.includes(entry.check))) {
-        const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
-        const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
-        test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
-            `${entry.check} reports ${where} and accepts the correction`,
-            async () => {
-                const { failed: outcome, passed: correction } = await runFindingCase(testRepository, entry, repository);
-                expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
-                expect(outcome.report.checks[0]?.findings).toContainEqual(
-                    containing({ check: entry.check, ...entry.expected }),
-                );
-                expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
-                expect(correction.report.checks).toMatchObject([
-                    { check: entry.check, status: 'passed', findings: [] },
-                ]);
-            },
-            suiteTimeout(),
-        );
-    }
-});
+import { BASH_CASES_MAIN as MAIN } from '#tests/config/samples/bash.ts';
 
 test.each([
     ['4.3', false],

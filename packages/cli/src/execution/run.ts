@@ -157,19 +157,6 @@ async function runChecks(pass: Pass, executables: Executable[]): Promise<CheckRe
     });
 }
 
-// The session of one run: fresh reads, a disposable stack for its resources, and the cancel signal.
-async function runSession(opened: ToolSession, options: RunOptions, resources: DisposableStack): Promise<ToolSession> {
-    const session = {
-        ...opened,
-        reads: createReadCache(opened.root),
-        repository: { ...opened.repository, index: await readIndexEntries(opened.root, options.cancelSignal) },
-        resources,
-        ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
-    };
-    session.inspections.clear();
-    return session;
-}
-
 // The plan, replanned after fixers changed the repository so the run sees the corrected files.
 async function replanAfterFixes(
     session: ToolSession,
@@ -202,7 +189,25 @@ function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
  */
 export async function executeRun(opened: ToolSession, options: RunOptions): Promise<RunOutcome> {
     using resources = new DisposableStack();
-    const session = await runSession(opened, options, resources);
+    const index = await readIndexEntries(opened.root, options.cancelSignal).then(
+        (value) => ({ value }),
+        (error: unknown) => ({ error }),
+    );
+    const session: ToolSession = {
+        ...opened,
+        reads: createReadCache(opened.root),
+        repository: {
+            ...opened.repository,
+            // Each consuming check reports the same failed read through its execution boundary.
+            get index() {
+                if ('error' in index) throw index.error;
+                return index.value;
+            },
+        },
+        resources,
+        ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
+    };
+    session.inspections.clear();
     const started = new Date();
     const { executables, fixes } = await replanAfterFixes(session, opened, options);
     const planned = executables.map(({ check }) => check);

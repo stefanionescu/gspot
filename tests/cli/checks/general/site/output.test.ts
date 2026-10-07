@@ -1,21 +1,16 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { containing } from '#tests/harness/expectations.ts';
 import { testModules } from '#tests/harness/environment.ts';
 import * as toolRunner from '#cli/execution/command/check.ts';
-import { runFindingCase } from '#tests/harness/check-case.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { cachedBuild } from '#cli/checks/general/site/build.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
-import { OUTPUT_CASES } from '#tests/config/cli/checks/general/site/output.ts';
+import { SITE_POLICY, SITE_BUILD_SCRIPT } from '#tests/config/samples/site.ts';
 import { purgecss, brokenLinks, htmlValidate } from '#cli/checks/general/site/output.ts';
-import { SITE_POLICY, SITE_BUILD_SCRIPT, STATIC_SITE_FILES } from '#tests/config/samples/site.ts';
 
 test.each([
     {
@@ -88,15 +83,4 @@ test.each([
     } finally {
         command.mockRestore();
     }
-});
-
-test.each(OUTPUT_CASES)('$check reports its built-output defect and accepts the correction', async (entry) => {
-    const repository = { configurations: ['site'], files: STATIC_SITE_FILES, modules: false, installs: false };
-    await using testRepository = await createTestRepository(repository, runGspot);
-    const { failed: outcome, passed: correction } = await runFindingCase(testRepository, entry, repository);
-    expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-    expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
-    expect(outcome.report.checks[0]?.findings).toContainEqual(containing({ check: entry.check, ...entry.expected }));
-    expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
-    expect(correction.report.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
 });

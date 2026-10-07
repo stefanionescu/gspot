@@ -1,0 +1,314 @@
+import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { commitAll } from '#tests/harness/git.ts';
+import { spawnGspot } from '#tests/harness/gspot.ts';
+import { GUIDE } from '#tests/config/samples/docs.ts';
+import { hasLinuxDocker } from '#tests/harness/docker.ts';
+import { CLEAN_SWIFT } from '#tests/config/samples/swift.ts';
+import { runFindingCase } from '#tests/harness/check-case.ts';
+import { chmodSync, mkdirSync, appendFileSync } from 'node:fs';
+import { installToolProjects } from '#tests/harness/install.ts';
+import { installedModules } from '#tests/harness/environment.ts';
+import { createTestRepository } from '#tests/harness/repository.ts';
+import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
+import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import { SCENARIOS } from '#tests/config/tools/configurations/cases.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import * as postgres from '#tests/config/tools/configurations/postgres.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
+import * as libraries from '#tests/config/tools/configurations/libraries.ts';
+import { HEAD, BASH_CASES, TOOL_CHECKS } from '#tests/config/samples/bash.ts';
+import * as languageSql from '#tests/config/tools/configurations/language/sql.ts';
+import * as toolOpenapi from '#tests/config/tools/configurations/tool/openapi.ts';
+import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python/source.ts';
+import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.ts';
+import * as languagePython from '#tests/config/tools/configurations/language/python.ts';
+import { suiteTimeout, openTestBudget, runTestCommand } from '#tests/harness/command.ts';
+import * as frameworkNextjs from '#tests/config/tools/configurations/framework/nextjs.ts';
+import { ARCHITECTURE } from '#tests/config/tools/configurations/language/typescript/source.ts';
+import * as languageBashChecks from '#tests/config/tools/configurations/language/bash/checks.ts';
+import type { RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import * as languageSwiftChecks from '#tests/config/tools/configurations/language/swift/checks.ts';
+import * as markdownDocsProse from '#tests/config/tools/configurations/general/markdown-docs-prose.ts';
+import type { BashBoundary, ConfigurationCallbacks } from '#tests/types/tools/configurations/cases.ts';
+import * as languageTypescriptChecks from '#tests/config/tools/configurations/language/typescript/checks.ts';
+
+/**
+ * Read the declared boundary used by the installed configuration.
+ * @param name the Bash size setting
+ * @returns its declared numeric default
+ */
+function defaultLimit(name: string): number {
+    const value = configurationManifests()
+        .get('structure')!
+        .settings.find((setting) => setting.name === name)!.default;
+    if (typeof value !== 'number') throw new TypeError(`The declared ${name} default must be numeric.`);
+    return value;
+}
+
+/**
+ * Produce exactly this many nested Bash blocks.
+ * @param depth the count of nested conditions
+ * @returns the function body
+ */
+function nestedConditions(depth: number): string {
+    const opening = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (index + 1))}if [[ -n "$1" ]]; then`);
+    const closing = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (depth - index))}fi`);
+    return [...opening, `${' '.repeat(4 * (depth + 1))}echo "$1"`, ...closing].join('\n');
+}
+
+const fileLines = defaultLimit('limits.bash.file_lines');
+const functionLines = defaultLimit('limits.bash.function_lines');
+const branches = defaultLimit('limits.bash.branches');
+const nesting = defaultLimit('limits.bash.nesting');
+const assignments = defaultLimit('limits.bash.assignments');
+// HEAD contributes the set and shopt commands; every readonly statement adds one code line.
+const filesAtLimit = Array.from(
+    { length: fileLines - 2 },
+    (_, index) => `readonly VALUE_${String(index)}=${String(index)}`,
+).join('\n');
+const bodyAtLimit = Array.from({ length: functionLines }, (_, index) => `    echo "line ${String(index)}"`).join('\n');
+const branchesAtLimit = Array.from(
+    { length: branches },
+    (_, index) => `    if [[ "$1" == "${String(index)}" ]]; then echo "$1"; fi`,
+).join('\n');
+const assignmentsAtLimit = Array.from({ length: assignments }, (_, index) => `    total="\${1}${String(index)}"`).join(
+    '\n',
+);
+const BOUNDARIES: BashBoundary[] = [
+    {
+        source: `${HEAD}${filesAtLimit}\nreadonly EXTRA=1\n`,
+        corrected: `${HEAD}${filesAtLimit}\n`,
+        expected: {
+            file: 'scripts/long.sh',
+            rule: 'file-lines',
+            line: 1,
+            message: `This file has ${String(fileLines + 1)} code lines, over the ceiling of ${String(fileLines)}.`,
+        },
+    },
+    {
+        source: `${HEAD}# main: prints each line.\nmain() {\n${bodyAtLimit}\n    echo "$1"\n}\n\nmain "$@"\n`,
+        corrected: `${HEAD}# main: prints each line.\nmain() {\n${bodyAtLimit}\n}\n\nmain "$@"\n`,
+        expected: {
+            file: 'scripts/tall.sh',
+            rule: 'function-lines',
+            line: 9,
+            message: `main has ${String(functionLines + 1)} code lines, over the ceiling of ${String(functionLines)}.`,
+        },
+    },
+    {
+        source: `${HEAD}# main: selects a branch.\nmain() {\n${branchesAtLimit}\n    if [[ -n "$1" ]]; then echo "$1"; fi\n}\n\nmain "$@"\n`,
+        corrected: `${HEAD}# main: selects a branch.\nmain() {\n${branchesAtLimit}\n}\n\nmain "$@"\n`,
+        expected: {
+            file: 'scripts/branchy.sh',
+            rule: 'branches',
+            line: 9,
+            message: `main has ${String(branches + 1)} branches, over the ceiling of ${String(branches)}.`,
+        },
+    },
+    {
+        source: `${HEAD}# main: selects nested conditions.\nmain() {\n${nestedConditions(nesting + 1)}\n}\n\nmain "$@"\n`,
+        corrected: `${HEAD}# main: selects nested conditions.\nmain() {\n${nestedConditions(nesting)}\n}\n\nmain "$@"\n`,
+        expected: {
+            file: 'scripts/deep.sh',
+            rule: 'nesting',
+            line: 9,
+            message: `main has ${String(nesting + 1)} levels of nesting, over the ceiling of ${String(nesting)}.`,
+        },
+    },
+    {
+        source: `${HEAD}# main: updates its value.\nmain() {\n${assignmentsAtLimit}\n    total="$1"\n    echo "\${total}"\n}\n\nmain "$@"\n`,
+        corrected: `${HEAD}# main: updates its value.\nmain() {\n${assignmentsAtLimit}\n    echo "\${total}"\n}\n\nmain "$@"\n`,
+        expected: {
+            file: 'scripts/mutable.sh',
+            rule: 'assignments',
+            line: 9,
+            message: `main has ${String(assignments + 1)} assignments, over the ceiling of ${String(assignments)}.`,
+        },
+    },
+];
+const CALLBACKS = new Map<RepositoryScenario, ConfigurationCallbacks>([
+    [
+        libraries.REPOSITORY,
+        {
+            corrected: (entry) => ({
+                files: Object.fromEntries(Object.keys(entry.files).map((path) => [path, COMPONENT_SOURCE])),
+            }),
+        },
+    ],
+    [postgres.REPOSITORY, { prepare: commitAll }],
+    [
+        toolOpenapi.REPOSITORY,
+        {
+            files: {
+                ...toolOpenapi.REPOSITORY.files,
+                'write-document.js': `await Bun.write('openapi.yaml', ${JSON.stringify(toolOpenapi.DOCUMENT)});\n`,
+            },
+        },
+    ],
+    [
+        languagePython.REPOSITORY,
+        {
+            corrected: (entry) => ({
+                files: { ...languagePython.CORRECTIONS[entry.check], [MODULE_PATH]: CLEAN_MODULE },
+            }),
+        },
+    ],
+    [
+        languageSql.REPOSITORY,
+        {
+            prepare: async (root, environment) => {
+                const exclusion = {
+                    paths: ['db/report.sql'],
+                    reason: 'A script for psql, which the linter cannot read.',
+                };
+                const excluded = await spawnGspot(
+                    root,
+                    ['set', 'tools.sqlfluff.exclude', JSON.stringify(exclusion)],
+                    environment,
+                );
+                if (excluded.code !== 0)
+                    throw new Error(`The exclusion was not set: ${excluded.stdout}${excluded.stderr}`);
+            },
+            corrected: (entry) => ({
+                files: Object.fromEntries(Object.keys(entry.files).map((file) => [file, languageSql.SQL_CLEAN])),
+            }),
+        },
+    ],
+    [
+        languageTypescriptChecks.REPOSITORY,
+        {
+            prepare: async (root, environment) => {
+                mkdirSync(join(root, 'node_modules'));
+
+                appendFileSync(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
+                const applied = await spawnGspot(root, ['apply'], environment);
+                if (applied.code !== 0) throw new Error(applied.stdout + applied.stderr);
+                await installToolProjects(root);
+                const formatted = await spawnGspot(root, ['check', '--only', 'format/prettier', '--fix'], environment);
+                if (formatted.code !== 0) throw new Error(formatted.stdout + formatted.stderr);
+            },
+        },
+    ],
+    [
+        languageSwiftChecks.REPOSITORY,
+        {
+            corrected: (entry) => ({
+                files: Object.fromEntries(
+                    Object.keys(entry.files).map((path, index) => [
+                        path,
+                        CLEAN_SWIFT.replaceAll('greeting', index === 0 ? 'greetPerson' : 'greetVisitor').replaceAll(
+                            'hello',
+                            `welcome ${String(index)}`,
+                        ),
+                    ]),
+                ),
+            }),
+        },
+    ],
+    [
+        languageBashChecks.REPOSITORY,
+        {
+            before: (root) => {
+                chmodSync(join(root, 'scripts/build.sh'), 0o755);
+            },
+            corrected: (entry) => ({
+                files: Object.fromEntries(Object.keys(entry.files).map((path) => [path, languageBashChecks.CLEAN])),
+            }),
+            cases: [
+                ...BASH_CASES.filter((entry) => TOOL_CHECKS.includes(entry.check)),
+                ...BOUNDARIES.map((entry) => ({
+                    check: 'bash/limits',
+                    files: { [entry.expected.file]: entry.source },
+                    expected: entry.expected,
+                    corrected: { files: { [entry.expected.file]: entry.corrected } },
+                })),
+            ],
+        },
+    ],
+    [
+        markdownDocsProse.REPOSITORY,
+        {
+            corrected: (entry) => ({
+                files: Object.fromEntries(
+                    Object.keys(entry.files).map((path) => [path, markdownDocsProse.CORRECTIONS[entry.check] ?? GUIDE]),
+                ),
+            }),
+        },
+    ],
+    [
+        frameworkNextjs.REPOSITORY,
+        {
+            prepare: async (root, environment) => {
+                const configured = await spawnGspot(
+                    root,
+                    ['set', 'tools.next.build_flags', '--', '--webpack'],
+                    environment,
+                );
+                if (configured.code !== 0) throw new Error(configured.stdout + configured.stderr);
+            },
+            dirname: join(installedModules, '../..', `gspot-test-${randomUUID()}`),
+        },
+    ],
+    [
+        frameworkVue.REPOSITORY,
+        {
+            prepare: async (root) => {
+                const installed = await runTestCommand(['bun', 'install'], { cwd: root });
+                if (installed.code !== 0) throw new Error(installed.stdout + installed.stderr);
+            },
+        },
+    ],
+]);
+
+for (const declared of SCENARIOS) {
+    const callbacks = CALLBACKS.get(declared.repository);
+    let scenario = declared;
+    if (callbacks !== undefined) {
+        const { cases = declared.cases, ...repository } = callbacks;
+        scenario = { ...declared, cases, repository: { ...declared.repository, ...repository } };
+    }
+    describe.skipIf(scenario.platforms !== undefined && !scenario.platforms.includes(process.platform))(
+        scenario.name,
+        () => {
+            const resources = new AsyncDisposableStack();
+            let repository: OwnedTestRepository;
+            beforeAll(async () => {
+                const budget = openTestBudget(suiteTimeout());
+                try {
+                    repository = resources.use(await createTestRepository(scenario.repository, spawnGspot));
+                } finally {
+                    budget[Symbol.dispose]();
+                }
+            }, suiteTimeout());
+            afterAll(async () => {
+                await resources.disposeAsync();
+            });
+            for (const entry of scenario.cases) {
+                const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
+                const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
+                test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
+                    `${entry.check} reports ${where} and accepts the correction`,
+                    async () => {
+                        const { failed, passed } = await runFindingCase(repository, entry, scenario.repository);
+                        const { message, ...position } = entry.expected;
+                        expect(failed.code, `${entry.check}: ${failed.stdout}${failed.stderr}`).toBe(1);
+                        expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+                        expect(failed.report.checks[0]?.findings).toContainEqual(
+                            containing({
+                                check: entry.check,
+                                ...position,
+                                ...(message === undefined ? {} : { message: textContaining(message) }),
+                            }),
+                        );
+                        expect(passed.code, `${entry.check} corrected: ${passed.stdout}${passed.stderr}`).toBe(0);
+                        expect(passed.report.checks).toMatchObject([
+                            { check: entry.check, status: 'passed', findings: [] },
+                        ]);
+                    },
+                    suiteTimeout(),
+                );
+            }
+        },
+    );
+}

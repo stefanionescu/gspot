@@ -134,7 +134,7 @@ export function proposeReplacement(log: Log, request: ReplacementRequest): Plann
     // An edited owned file is preserved unless the caller reviewed those exact bytes and authorizes the replacement.
     if (isPreservedReplacement(request, existing, current))
         return { path, before: current, previous: existing, status: 'preserved' };
-    if (existing !== undefined && isMatch(current, installed))
+    if (existing !== undefined && isMatch(current, installed) && isMatch(current, existing.installed))
         return { path, before: current, previous: existing, status: 'unchanged' };
     return planChange(path, current, existing, next, kind);
 }

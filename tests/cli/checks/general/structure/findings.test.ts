@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { git } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
-import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -13,7 +12,7 @@ import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
 import type { RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
-import { CASES, REPOSITORY, OVER_LIMIT_KB } from '#tests/config/cli/checks/general/structure/findings.ts';
+import { REPOSITORY, OVER_LIMIT_KB } from '#tests/config/cli/checks/general/structure/findings.ts';
 
 const repository: RepositoryScenario = {
     ...REPOSITORY,
@@ -36,29 +35,7 @@ afterAll(async () => {
     await resources.disposeAsync();
 });
 
-// eslint-disable-next-line max-lines-per-function -- reason: Bun requires this callback to group the tests. The rule also counts the nested test bodies.
 describe('the structure configuration', () => {
-    for (const entry of CASES) {
-        const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
-        const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
-        test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
-            `${entry.check} reports ${where} and accepts the correction`,
-            async () => {
-                const { failed: outcome, passed: correction } = await runFindingCase(testRepository, entry, repository);
-                expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
-                expect(outcome.report.checks[0]?.findings).toContainEqual(
-                    containing({ check: entry.check, ...entry.expected }),
-                );
-                expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
-                expect(correction.report.checks).toMatchObject([
-                    { check: entry.check, status: 'passed', findings: [] },
-                ]);
-            },
-            suiteTimeout(),
-        );
-    }
-
     test('structure/large-files reports an oversized file and accepts its removal', async () => {
         const entry: FindingCase = {
             check: 'structure/large-files',

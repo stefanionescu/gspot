@@ -822,7 +822,7 @@ languages = ["javascript-typescript", "actions"]
 rule = "js/file-system-race"
 paths = [
     "tests/cli/commands/agents.test.ts",
-    "tests/cli/checks/framework/nextjs/build.test.ts",
+    "tests/cli/checks/framework/nextjs.test.ts",
     "tests/cli/checks/language/swift/build/isolation.test.ts",
     "tests/tools/npm/project.test.ts",
     "tests/harness/preservation.ts",

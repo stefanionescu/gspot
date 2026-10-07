@@ -28,7 +28,7 @@ export const CASES: FindingCase[] = [
         check: 'docker/compose',
         docker: true,
         files: { 'api/compose.yml': 'services:\n    api:\n        image: example/image\n        bogus: true\n' },
-        expected: { file: 'api/compose.yml' },
+        expected: { file: 'api/compose.yml', message: 'bogus' },
     },
     {
         check: 'docker/hadolint',

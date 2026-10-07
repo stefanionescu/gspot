@@ -2,9 +2,7 @@
 import { join } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { Level } from '#cli/types/configurations.ts';
-import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { runFindingCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
@@ -12,7 +10,7 @@ import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
-import { CASES, REPOSITORY, SWAGGER_DEPENDENCY } from '#tests/config/tools/configurations/framework/nestjs.ts';
+import { REPOSITORY, SWAGGER_DEPENDENCY } from '#tests/config/tools/configurations/framework/nestjs.ts';
 
 // Declaring an API documentation dependency makes its native lint contract applicable.
 async function swaggerContracts(repository: OwnedTestRepository, level: Level): Promise<void> {
@@ -73,26 +71,6 @@ describe('the nestjs configuration', () => {
     afterAll(async () => {
         await resources.disposeAsync();
     });
-    for (const entry of CASES) {
-        const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
-        const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
-        test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
-            `${entry.check} reports ${where} and accepts the correction`,
-            async () => {
-                const { failed: outcome, passed: correction } = await runFindingCase(testRepository, entry, REPOSITORY);
-                expect(outcome.code, `${entry.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
-                expect(outcome.report.checks[0]?.findings).toContainEqual(
-                    containing({ check: entry.check, ...entry.expected }),
-                );
-                expect(correction.code, `${entry.check} corrected: ${correction.stdout}${correction.stderr}`).toBe(0);
-                expect(correction.report.checks).toMatchObject([
-                    { check: entry.check, status: 'passed', findings: [] },
-                ]);
-            },
-            suiteTimeout(),
-        );
-    }
 
     test.each(['recommended', 'all'] as const)(
         '%s enforces Swagger contracts only when the project declares Swagger',

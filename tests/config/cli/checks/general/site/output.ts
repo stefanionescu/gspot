@@ -1,7 +1,9 @@
+import { STATIC_SITE_FILES } from '#tests/config/samples/site.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
+import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 
 /** Built-output checks run without acquiring tools. */
-export const OUTPUT_CASES: FindingCase[] = [
+export const CASES: FindingCase[] = [
     {
         check: 'site/size',
         files: {},
@@ -17,3 +19,11 @@ export const OUTPUT_CASES: FindingCase[] = [
         expected: { file: 'dist/sitemap.xml', rule: 'missing-page', line: 1 },
     },
 ];
+
+/** Authored inputs and configuration selection for the built-output checks. */
+export const REPOSITORY: RepositoryScenario = {
+    configurations: ['site'],
+    files: STATIC_SITE_FILES,
+    modules: false,
+    installs: false,
+};

@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { identify, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { proposeBlock, proposeMerge, proposeRetirement, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
@@ -189,4 +189,30 @@ test('retirement plans refuse the whole batch when a later read is stale', async
         expect(log.files.read('second.json')).toBeUndefined();
         expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
     }
+});
+
+test('reviewed matching bytes refresh ownership without rewriting the file', async () => {
+    await using directory = await testdir();
+    const path = 'config.txt';
+    const next = { bytes: Buffer.from('installed\n'), mode: getKeptMode(0o644) };
+    {
+        using log = openOwnership(directory.path);
+        applyPlan(log, proposeReplacement(log, { path, next, kind: 'config' }));
+        writeFileSync(join(directory.path, path), 'reviewed\n');
+        const reviewed = log.files.read(path)!;
+        const request = { path, next: reviewed, kind: 'config' as const };
+        expect(applyPlan(log, proposeReplacement(log, request))).toBe('preserved');
+        expect(log.entryFor(path)?.installed).toStrictEqual(identify(next));
+        const plan = proposeReplacement(log, { ...request, expected: reviewed, canReplace: true });
+        writeFileSync(join(directory.path, path), 'intervening edit\n');
+        expect(() => applyPlan(log, plan)).toThrow('changed after its plan');
+        expect(log.entryFor(path)?.installed).toStrictEqual(identify(next));
+        writeFileSync(join(directory.path, path), reviewed.bytes);
+        expect(applyPlan(log, plan)).toBe('unchanged');
+        expect(log.files.read(path)).toStrictEqual(reviewed);
+        expect(log.entryFor(path)?.installed).toStrictEqual(identify(reviewed));
+        expect(proposeReplacement(log, request).entry).toBeUndefined();
+    }
+    using reopened = openOwnership(directory.path);
+    expect(reopened.entryFor(path)?.installed).toStrictEqual(identify(reopened.files.read(path)!));
 });
