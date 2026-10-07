@@ -1,5 +1,5 @@
 {
-    "openRecords": 957,
+    "openRecords": 951,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -207,7 +207,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 957,
+        "openRecords": 951,
         "records": 1092,
         "batches": [
             {
@@ -1373,8 +1373,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 32,
-                "unresolvedAssignments": 437
+                "completedAssignments": 38,
+                "unresolvedAssignments": 431
             },
             {
                 "id": "scripts-repository",
@@ -2084,11 +2084,16 @@
             "verification": []
         },
         "areas/checks/044": {
-            "status": "in-progress",
-            "owner": "rules",
+            "status": "pending",
+            "owner": "main",
             "commit": null,
             "verification": [
-                "Related TypeScript007 and Nextjs044 compiler-sharing implementation is isolated and pending. Core five-record copier checkpoint excludes scoped compiler behavior. Native behavior checks pass provisionally but authored compiler pair still grows; no closure or integration claim."
+                "Related TypeScript007 and Nextjs044 compiler-sharing implementation is isolated and pending. Core five-record copier checkpoint excludes scoped compiler behavior. Native behavior checks pass provisionally but authored compiler pair still grows; no closure or integration claim.",
+                "Native TypeScript5.9.3 public Program feasibility probe at5b:79 assertions each Bun1.4.2 and Node24.2darwin. Actual imported-only declaration and triple-slash closure fixes native private-copy diagnostics, but separate reference/config traversal and physical ancestor dependencies remain necessary. Installed store alias is not equivalent to authorized dependency read; post-read classification cannot prove authored boundaries. Unsafe substitution adds7lines363bytes46AST over the growing candidate; safe smaller full producer not demonstrated. ProbeSHA4e2de10ab690be82eaee91fe26025d825f124f243e3e7b5d530b9f846be2528c; no product edits or integration proposed. Actual Next typegen/live asynchronous host cancellation and cross-platform acceptance unproven."
+            ],
+            "remaining": [
+                "Shared Next compiler and scoped reference/checkjs dependency closure remain unimplemented; all growing candidates are frozen.",
+                "A safe full implementation with less code and actual native Next acceptance has not been demonstrated."
             ]
         },
         "areas/checks/045": {
@@ -3609,7 +3614,8 @@
             "commit": "5b5d2591f8b1ff40ab25e5be8828958724a6c9b7",
             "verification": [
                 "Frozen ordinary-only patch4f4cab95125ed44de9b60bf8487aa46ae118cf06cc3d207ea33b9b868036472a integrated after5553bac3e. Only tsc.ts changes: ordinary --noEmit runs from canonical source root, temporary incremental metadata stays in owned scratch; reference/fullrepository/checkjs/Next paths and original parser remain unchanged. Actual source4fewerlines45fewerbytes1moreASTnode. Agent27focused/99assertions and original4native/32assertions55.51s pass; native defect/correction/cwd/noEmit/source+config+metadata+binary bytes/modes/preabort/liveabort/cleanup probe30assertions each Bun1.4.2/Node24.2darwin passes. Main combined gates pending; no closure.",
-                "Integrated and pushed5b5d2591f8b1ff40ab25e5be8828958724a6c9b7; only ordinary compiler branch. Main27pass0fail99assertions5files1.97s; native original4pass0fail32assertions64.96s; root/CLItypes and actual single-owner full-policy ESLint/Prettier pass. Nativeapply149unchanged0writes. Staged59pass3skip0findings28.297s; commit43pass1skip0findings7.7s plus message1pass; normalpush59pass3skip0findings26.5s. Frozen sourceSHA7e8a3145d9f940e82f9e95474b5685c60203f6287ad5fc7c1a84c88dc64b9bf1 exact. Independentreviewpasses; commandConfigurations empty for this shipped check because manifest has no env or nested_config_file declarations, not merely because command has no placeholder. Bun1.4.2/Node24.2darwin actual native30assertions each. Source4fewerlines45fewerbytes1moreASTnode; original nativeabsoluteoutput56.052s measurement only, noaddedtimer. CI37646169102 pending; no platform inference."
+                "Integrated and pushed5b5d2591f8b1ff40ab25e5be8828958724a6c9b7; only ordinary compiler branch. Main27pass0fail99assertions5files1.97s; native original4pass0fail32assertions64.96s; root/CLItypes and actual single-owner full-policy ESLint/Prettier pass. Nativeapply149unchanged0writes. Staged59pass3skip0findings28.297s; commit43pass1skip0findings7.7s plus message1pass; normalpush59pass3skip0findings26.5s. Frozen sourceSHA7e8a3145d9f940e82f9e95474b5685c60203f6287ad5fc7c1a84c88dc64b9bf1 exact. Independentreviewpasses; commandConfigurations empty for this shipped check because manifest has no env or nested_config_file declarations, not merely because command has no placeholder. Bun1.4.2/Node24.2darwin actual native30assertions each. Source4fewerlines45fewerbytes1moreASTnode; original nativeabsoluteoutput56.052s measurement only, noaddedtimer. CI37646169102 pending; no platform inference.",
+                "Native TypeScript5.9.3 public Program feasibility probe at5b:79 assertions each Bun1.4.2 and Node24.2darwin. Actual imported-only declaration and triple-slash closure fixes native private-copy diagnostics, but separate reference/config traversal and physical ancestor dependencies remain necessary. Installed store alias is not equivalent to authorized dependency read; post-read classification cannot prove authored boundaries. Unsafe substitution adds7lines363bytes46AST over the growing candidate; safe smaller full producer not demonstrated. ProbeSHA4e2de10ab690be82eaee91fe26025d825f124f243e3e7b5d530b9f846be2528c; no product edits or integration proposed. Actual Next typegen/live asynchronous host cancellation and cross-platform acceptance unproven."
             ],
             "remaining": [
                 "Scoped reference/checkjs dependency closure and shared Next compiler behavior remain unimplemented. Full growing candidate and imported-only ambient declaration omission preserved separately.",
@@ -6080,51 +6086,63 @@
             "verification": []
         },
         "review/tests-cli/011": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "0647516836af7c902574e6c2ce9443be3ce2901c",
             "verification": [
-                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending."
+                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending.",
+                "Vale assertion keeps one Google style and actual group path, native options/source/ownership/idempotence contracts retained.",
+                "Integrated and pushed0647516836af7c902574e6c2ce9443be3ce2901c; actual main95pass0fail378assertions7files15.25s, root/CLItypes and actual10file all-policy ESLint/Prettier pass. Structure3pass0findings; nativeapply149unchanged0writes. Staged71pass10skip0findings26.582s; commit55pass3skip0findings12.5s plus message1pass; normalpush71pass10skip0findings26.3s and origin exactverified. IndependentID-by-ID reviewpasses. Exact11-owner source hashes retained, source31fewerlines79fewerbytes163moreASTnodes; no all-counter reduction claim. Wrong-cwd initial main command ran no tests and retained; corrected7-file run is acceptance. CI37647389994 pending; no cross-platform assumption."
             ]
         },
         "review/tests-cli/012": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "0647516836af7c902574e6c2ce9443be3ce2901c",
             "verification": [
-                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending."
+                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending.",
+                "Tailwind at-rule expectations read actual shipped CSS Eta source with real templateInputs/recordRules; copied constant removed and all4scenarios retained.",
+                "Integrated and pushed0647516836af7c902574e6c2ce9443be3ce2901c; actual main95pass0fail378assertions7files15.25s, root/CLItypes and actual10file all-policy ESLint/Prettier pass. Structure3pass0findings; nativeapply149unchanged0writes. Staged71pass10skip0findings26.582s; commit55pass3skip0findings12.5s plus message1pass; normalpush71pass10skip0findings26.3s and origin exactverified. IndependentID-by-ID reviewpasses. Exact11-owner source hashes retained, source31fewerlines79fewerbytes163moreASTnodes; no all-counter reduction claim. Wrong-cwd initial main command ran no tests and retained; corrected7-file run is acceptance. CI37647389994 pending; no cross-platform assumption."
             ]
         },
         "review/tests-cli/013": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "0647516836af7c902574e6c2ce9443be3ce2901c",
             "verification": [
-                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending."
+                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending.",
+                "Native hint package names come from manifest installers and host prefix from actual OS commands; manual XML/mise/doctor/check/hint paths preserved. Dead hints config and duplicate name table removed.",
+                "Integrated and pushed0647516836af7c902574e6c2ce9443be3ce2901c; actual main95pass0fail378assertions7files15.25s, root/CLItypes and actual10file all-policy ESLint/Prettier pass. Structure3pass0findings; nativeapply149unchanged0writes. Staged71pass10skip0findings26.582s; commit55pass3skip0findings12.5s plus message1pass; normalpush71pass10skip0findings26.3s and origin exactverified. IndependentID-by-ID reviewpasses. Exact11-owner source hashes retained, source31fewerlines79fewerbytes163moreASTnodes; no all-counter reduction claim. Wrong-cwd initial main command ran no tests and retained; corrected7-file run is acceptance. CI37647389994 pending; no cross-platform assumption."
             ]
         },
         "review/tests-cli/014": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "0647516836af7c902574e6c2ce9443be3ce2901c",
             "verification": [
-                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending."
+                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending.",
+                "One two-tool real native-version runner computes below/at actualminfloor for Gitleaks and Next; exact Next.js outputpattern and host versus ok states, freshinspection cache and allothermetadata/shim failures retained. Copiedversiontable removed.",
+                "Integrated and pushed0647516836af7c902574e6c2ce9443be3ce2901c; actual main95pass0fail378assertions7files15.25s, root/CLItypes and actual10file all-policy ESLint/Prettier pass. Structure3pass0findings; nativeapply149unchanged0writes. Staged71pass10skip0findings26.582s; commit55pass3skip0findings12.5s plus message1pass; normalpush71pass10skip0findings26.3s and origin exactverified. IndependentID-by-ID reviewpasses. Exact11-owner source hashes retained, source31fewerlines79fewerbytes163moreASTnodes; no all-counter reduction claim. Wrong-cwd initial main command ran no tests and retained; corrected7-file run is acceptance. CI37647389994 pending; no cross-platform assumption."
             ]
         },
         "review/tests-cli/015": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "0647516836af7c902574e6c2ce9443be3ce2901c",
             "verification": [
-                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending."
+                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending.",
+                "Actual Ruff floor/pin drives lower/higher prerequisite assertion instead of duplicateversionliteral; unknown-tool/applicability cases retained.",
+                "Integrated and pushed0647516836af7c902574e6c2ce9443be3ce2901c; actual main95pass0fail378assertions7files15.25s, root/CLItypes and actual10file all-policy ESLint/Prettier pass. Structure3pass0findings; nativeapply149unchanged0writes. Staged71pass10skip0findings26.582s; commit55pass3skip0findings12.5s plus message1pass; normalpush71pass10skip0findings26.3s and origin exactverified. IndependentID-by-ID reviewpasses. Exact11-owner source hashes retained, source31fewerlines79fewerbytes163moreASTnodes; no all-counter reduction claim. Wrong-cwd initial main command ran no tests and retained; corrected7-file run is acceptance. CI37647389994 pending; no cross-platform assumption."
             ]
         },
         "review/tests-cli/016": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "0647516836af7c902574e6c2ce9443be3ce2901c",
             "verification": [
-                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending."
+                "Frozen six-ID packetab08b007350ff7bf9f6cdb725a3889c22c7b714b3de8e94cc663b2fbcde91f52 integrated after5b5d2591f; exact11-owner hashes including deleted hints config match. Actual main95pass0fail378assertions7files15.25s; root/CLItypes and affected real10file all-policy ESLint/Prettier pass. Independent review passes preserved style/group/native options, actual CSS Eta inputs, installer/OS hint choices, below/at real Gitleaks and Next native-version processes with exact states/patterns, dynamic Ruff floor and rules-directory paths. Source31fewerlines79fewerbytes163moreASTnodes; no claim allcountersdecrease. First main command used wrongcwd and matched no files; corrected cwd executes actual selected7files, first log retained. Structure/nativeapply/staged/commit/push/platformCI pending.",
+                "Guide-path assertions derive actual RULES_DIRECTORY platformowner; complete path/agent selection bytes remain tested.",
+                "Integrated and pushed0647516836af7c902574e6c2ce9443be3ce2901c; actual main95pass0fail378assertions7files15.25s, root/CLItypes and actual10file all-policy ESLint/Prettier pass. Structure3pass0findings; nativeapply149unchanged0writes. Staged71pass10skip0findings26.582s; commit55pass3skip0findings12.5s plus message1pass; normalpush71pass10skip0findings26.3s and origin exactverified. IndependentID-by-ID reviewpasses. Exact11-owner source hashes retained, source31fewerlines79fewerbytes163moreASTnodes; no all-counter reduction claim. Wrong-cwd initial main command ran no tests and retained; corrected7-file run is acceptance. CI37647389994 pending; no cross-platform assumption."
             ]
         },
         "review/tests-cli/017": {
@@ -10124,7 +10142,77 @@
                 "jobsVerified": {
                     "package": "success",
                     "docs": "success"
-                }
+                },
+                "reviewedJobs": {
+                    "test (ubuntu-24.04)": {
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "pass": 3119,
+                        "skip": 12,
+                        "fail": 3,
+                        "assertions": 11981,
+                        "failures": [
+                            "pnpm native version inspection in generated Prettier test",
+                            "pnpm native version inspection in init selection test",
+                            "Postgres history assertion watches obsolete runBinary boundary"
+                        ]
+                    },
+                    "test (macos-15)": {
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "pass": 3128,
+                        "skip": 3,
+                        "fail": 3,
+                        "assertions": 12025,
+                        "failures": [
+                            "pnpm native version inspection in generated Prettier test",
+                            "pnpm native version inspection in init selection test",
+                            "Postgres history assertion watches obsolete runBinary boundary"
+                        ]
+                    },
+                    "check": {
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "passed": 6,
+                        "failed": 4,
+                        "findings": 12,
+                        "failures": [
+                            "CodeQL filesystem race findings in Jest, dependency copying, Xcode resources, cloned outputs",
+                            "External Node globals and unreleased plugin documentation return 404",
+                            "Semgrep flags nginx example in shipped Bash operations guide"
+                        ]
+                    },
+                    "tools (linux 2/4)": {
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "pass": 137,
+                        "skip": 10,
+                        "fail": 3,
+                        "failures": [
+                            "Built site check failed",
+                            "SQLFluff private tool project has no python3 for executable shim (two tests)"
+                        ]
+                    },
+                    "tools (linux 3/4)": {
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "pass": 74,
+                        "fail": 2,
+                        "failures": [
+                            "Add/remove test still assumes automatic installation",
+                            "nginx push check fixture has no Git repository"
+                        ]
+                    },
+                    "tools (macos 3/4)": {
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "pass": 73,
+                        "skip": 2,
+                        "fail": 1,
+                        "failures": ["Add/remove test still assumes automatic installation"]
+                    }
+                },
+                "acceptance": "Linux package consumer and docs jobs passed; reviewed CLI/check/tools failures and ongoing Windows jobs are not acceptance."
             }
         },
         {
@@ -10151,8 +10239,9 @@
             "ci": {
                 "databaseId": 37644737427,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37644737427",
-                "status": "pending",
-                "conclusion": ""
+                "status": "completed",
+                "conclusion": "cancelled",
+                "acceptance": "Cancelled while queued; no platform verification."
             }
         },
         {
@@ -10170,6 +10259,34 @@
             "ci": {
                 "databaseId": 37646169102,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37646169102",
+                "status": "completed",
+                "conclusion": "cancelled",
+                "acceptance": "Cancelled while queued; no platform verification."
+            }
+        },
+        {
+            "commit": "0647516836af7c902574e6c2ce9443be3ce2901c",
+            "completedRecords": [
+                "review/tests-cli/011",
+                "review/tests-cli/012",
+                "review/tests-cli/013",
+                "review/tests-cli/014",
+                "review/tests-cli/015",
+                "review/tests-cli/016"
+            ],
+            "unresolvedRecords": 951,
+            "validation": [
+                "95focused tests378assertions pass; root/CLItypes, affected all-policy lint/format, structure3check/nativeapply pass.",
+                "Native Gitleaks/Next version subprocess below/at actualfloors and allhint/style/guide distinctions preserved; independent exactID reviewpasses.",
+                "Normalstaged/commit/message/push gatespass; original1092records1648assignments2259quotedrows490originalclosedrows retained."
+            ],
+            "limitations": [
+                "CurrentplatformCI pending; fakehost hints and localnative subprocess evidence do not prove allplatformsuite behavior.",
+                "W3 publicschema/writer/effective namespace and remainingdomain/release obligations remain open."
+            ],
+            "ci": {
+                "databaseId": 37647389994,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37647389994",
                 "status": "pending",
                 "conclusion": ""
             }

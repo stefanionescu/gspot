@@ -161,6 +161,7 @@ test.each(IGNORE_CASES)('generated Prettier ignore patterns give $file ignored=$
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': stringify(IGNORE_POLICY),
+        'package.json': '{"packageManager":"pnpm@9.0.0"}',
         'source.ts': 'export const value = 1;\n',
         [file]: 'const value={enabled:true};\n',
     });

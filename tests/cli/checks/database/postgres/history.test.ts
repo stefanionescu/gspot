@@ -172,14 +172,11 @@ test('history reads only selected migration blobs and shares reads without mixin
     const childHash = gitOutput(sandbox.path, ['rev-parse', 'HEAD:apps/api/migrations/2_api.sql']);
     const session = await openSession(sandbox.path);
     const requests: string[] = [];
-    const runBinary = processes.runBinary;
-    using resources = new DisposableStack();
-    resources.use(
-        spyOn(processes, 'runBinary').mockImplementation((argv, options) => {
-            if (argv[0] === 'git' && argv[1] === 'cat-file') requests.push(options.stdin!);
-            return runBinary(argv, options);
-        }),
-    );
+    const runStream = processes.runStream;
+    using _stream = spyOn(processes, 'runStream').mockImplementation((argv, options, output) => {
+        if (argv[0] === 'git' && argv[1] === 'cat-file') requests.push(options.stdin!);
+        return runStream(argv, options, output);
+    });
     expect(await migrationOrder(buildCheckInput(session, 'postgres/migration-order'))).toStrictEqual([]);
     expect(await migrationsFrozen(buildCheckInput(session, 'postgres/migrations-frozen'))).toStrictEqual([]);
     expect(

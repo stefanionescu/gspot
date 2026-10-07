@@ -139,7 +139,7 @@ test.each([
 test('init proposes workspace scopes without a lockfile and preserves files after resolver failure', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'package.json': '{"private":true,"workspaces":["packages/*"]}',
+        'package.json': '{"private":true,"packageManager":"pnpm@9.0.0","workspaces":["packages/*"]}',
         'packages/api/package.json': '{"name":"api"}',
         'packages/api/source.js': 'export const port = 8080;\n',
     });
