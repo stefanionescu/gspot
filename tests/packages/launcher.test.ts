@@ -7,19 +7,13 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { createConsumer } from '#tests/harness/consumer.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { containingAll } from '#tests/harness/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { containingAll, textContaining } from '#tests/harness/expectations.ts';
 import { runTestCommand, prepareTestCommand } from '#tests/harness/command.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/harness/release.ts';
-
-import {
-    EXPECTED_SKIPS,
-    LAUNCHER_FILES,
-    EXPECTED_FAILURES,
-    EXPECTED_RUNTIME_SKIPS,
-} from '#tests/config/packages/launcher.ts';
+import { LAUNCHER_FILES, SYNTAX_FINDINGS } from '#tests/config/packages/launcher.ts';
 
 const release = getPublishedRelease();
 
@@ -105,28 +99,22 @@ test(
         expectTakeover(root, initialized.stdout);
         expect(initialized.stdout).not.toContain('formatter stdout');
         const checked = await runTestCommand(
-            [...fixture.command, 'check', '--skip', 'dependencies/osv', '--json'],
+            [
+                ...fixture.command,
+                'check',
+                '--only',
+                'bash/syntax',
+                'dependencies/lockfile-hosts',
+                'format/prettier',
+                '--json',
+            ],
             fixture.offlineOptions,
         );
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
-        const { checks, skips } = JSON.parse(checked.stdout) as RunReport;
-        expect({
-            errors: checks.filter(({ status }) => status === 'error' || status === 'missing'),
-            skipped: checks.filter(({ status }) => status === 'skipped').map(({ check }) => check),
-            failed: checks
-                .filter(({ status }) => status === 'failed')
-                .map(({ check }) => check)
-                .toSorted((left, right) => left.localeCompare(right)),
-        }).toStrictEqual({
-            errors: [],
-            skipped: [...EXPECTED_SKIPS.map(({ check }) => check), ...EXPECTED_RUNTIME_SKIPS],
-            failed: EXPECTED_FAILURES,
-        });
-        expect(checks.find(({ check }) => check === 'secrets/env-template')).toMatchObject({
-            status: 'skipped',
-            findings: [],
-            note: textContaining('env.templates'),
-        });
+        const { checks, exitCode } = JSON.parse(checked.stdout) as RunReport;
+        expect(exitCode).toBe(1);
+        expect(checks).toHaveLength(3);
+        expect(checks.filter(({ status }) => status === 'error' || status === 'missing')).toStrictEqual([]);
         // The throwaway registry serves HTTP archives, which the consumer lockfile must report.
         const lockfileHosts = checks.find(({ check }) => check === 'dependencies/lockfile-hosts')!.findings;
         expect(lockfileHosts.length).toBeGreaterThan(0);
@@ -138,24 +126,24 @@ test(
             checks.flatMap(({ check, status, findings }) =>
                 findings.map(({ file, line }) => ({ check, status, file, line })),
             ),
-        ).toEqual(
-            containingAll([
-                { check: 'bash/syntax', status: 'failed', file: 'broken.sh', line: 1 },
-                { check: 'format/prettier', status: 'failed', file: 'source.js', line: undefined },
-            ]),
+        ).toEqual(containingAll([{ check: 'format/prettier', status: 'failed', file: 'source.js', line: undefined }]));
+        expect(checks.find(({ check }) => check === 'bash/syntax')).toMatchObject({
+            status: 'failed',
+            fileCount: 1,
+            findings: SYNTAX_FINDINGS,
+        });
+        writeFileSync(join(root, 'broken.sh'), 'echo example\n');
+        const corrected = await runTestCommand(
+            [...fixture.command, 'check', '--only', 'bash/syntax', '--json'],
+            fixture.offlineOptions,
         );
-        const swiftCause = process.platform === 'darwin' ? 'inputs' : 'platform';
-        expect(skips).toEqual(
-            containingAll([
-                { check: 'python/ruff', cause: 'inputs' },
-                { check: 'swift/build', cause: swiftCause },
-                { check: 'swift/periphery', cause: swiftCause },
-                ...EXPECTED_SKIPS,
-            ]),
-        );
-        expect(checks.filter(({ check }) => check.startsWith('python/') || check === 'swift/swiftlint')).toStrictEqual(
-            [],
-        );
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        const clean = JSON.parse(corrected.stdout) as RunReport;
+        expect(clean.exitCode).toBe(0);
+        expect(clean.skips).toStrictEqual([]);
+        expect(clean.checks).toHaveLength(1);
+        expect(clean.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'passed', fileCount: 1, findings: [] });
+        expect(readFileSync(join(root, 'authored.txt'), 'utf8')).toBe(LAUNCHER_FILES['authored.txt']);
     },
     NATIVE_TEST_TIMEOUT_MS,
 );

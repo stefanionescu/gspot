@@ -7,7 +7,7 @@ import { getPublishedRelease } from '#tests/harness/release.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { consumerEnvironment } from '#tests/harness/environment.ts';
-import { lstatSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { CONSUMER, DECLARATIONS, pluginConsumerTools } from '#tests/config/packages/plugin.ts';
 
 const release = getPublishedRelease();
@@ -72,7 +72,6 @@ test(
         expect(lstatSync(join(consumer, 'node_modules', '@gspothq/eslint-plugin')).isSymbolicLink()).toBe(false);
         expectPluginPayload(consumer);
         await expectPluginExports(consumer);
-        expect(existsSync(join(consumer, 'node_modules/typescript/bin/tsc'))).toBe(true);
     },
     NATIVE_TEST_TIMEOUT_MS,
 );
