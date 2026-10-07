@@ -1,5 +1,5 @@
 {
-    "openRecords": 1057,
+    "openRecords": 1045,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1057,
+        "openRecords": 1045,
         "records": 1092,
         "batches": [
             {
@@ -1798,8 +1798,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 14,
-                "unresolvedAssignments": 75
+                "completedAssignments": 26,
+                "unresolvedAssignments": 63
             },
             {
                 "id": "configurations",
@@ -5431,22 +5431,31 @@
             ]
         },
         "review/source-layout/013": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Rename to `agent-rules/`, `config/agent-rules.ts` and `types/agent-rules.ts`, matching the `[agent_rules]` key.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/014": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Rename the generation type to `CapturedRules` and the `[agent_rules]` type to `AgentRules`. Keep `generation/rules.ts`, which names only the rules of tools once the agent rules move to `agent-rules/` (review/source-layout/013), and rename `collectRuleSettings` to `collectRules`. `AgentRules` lives in `types/agent-rules.ts` (review/source-layout/013).",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/015": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Move `ruleSettingsSchema` into `parsers/schema/tool-rule.ts`, beside the other schema for the rules of tools. Delete `parsers/schema/rules.ts` and its `no-trivial-files` suppression.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/016": {
             "status": "pending",
@@ -5461,10 +5470,13 @@
             "verification": []
         },
         "review/source-layout/018": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Rename to `checks/general/prose.ts`.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/019": {
             "status": "pending",
@@ -5573,10 +5585,13 @@
             "verification": []
         },
         "review/source-layout/039": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Rename to `policy/settings/lookup.ts`.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/040": {
             "status": "pending",
@@ -5591,40 +5606,58 @@
             "verification": []
         },
         "review/source-layout/042": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Rename them `docstringStyleSchema` (file `docstrings.ts`) and `pythonToolProjectSchema`.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/043": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Move to `types/parsers/document.ts`.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/044": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Rename `output/` to `terminal/` (with `config/terminal.ts` and `types/terminal.ts`). Rename `generation/eslint/output.ts` to `serialize.ts` and `types/lifecycle/output.ts` to `types/lifecycle/apply.ts`.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/045": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Rename to `commands/add-remove.ts` and `types/commands/add-remove.ts`.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/046": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Rename to `commands/init/takeover.ts` and the function to `planTakeover`.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/047": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Rename to `commands/check/arguments.ts`.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/049": {
             "status": "pending",
@@ -5639,10 +5672,13 @@
             "verification": []
         },
         "review/source-layout/051": {
-            "status": "pending",
+            "status": "complete",
             "owner": "packaging",
-            "commit": null,
-            "verification": []
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "verification": [
+                "Rename `types/execution/runtime.ts` to `types/execution/check.ts`.",
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed."
+            ]
         },
         "review/source-layout/052": {
             "status": "pending",
@@ -8949,6 +8985,32 @@
                     "Both Supabase freshness/scoped tests ran: 2 pass, 0 fail, 20 assertions, no skips; 127.34s. Shared runner installed manifest tools once. Evidence: /tmp/gspot-ci-b0a6-database.log."
                 ]
             }
+        },
+        {
+            "commit": "b393b42d4ec011b652484efbc197578679073936",
+            "completedRecords": [
+                "review/source-layout/013",
+                "review/source-layout/014",
+                "review/source-layout/015",
+                "review/source-layout/018",
+                "review/source-layout/039",
+                "review/source-layout/042",
+                "review/source-layout/043",
+                "review/source-layout/044",
+                "review/source-layout/045",
+                "review/source-layout/046",
+                "review/source-layout/047",
+                "review/source-layout/051"
+            ],
+            "unresolvedRecords": 1045,
+            "validation": [
+                "Root/CLI TypeScript passed; 87 focused tests, 416 assertions, 5.66s. All 573 CLI files have one module; all 2,818 direct imports obey declared edges. Import-format AST audit preserves bindings/statements. Staged gate: 147 pass, 13 skip, zero findings, 86.03s; mandatory commit hook: 106 pass, 3 skip, zero findings; message hook passed.",
+                "gspot apply regenerated ESLint architecture paths/labels; old source owners and aliases removed; authored implementation seven lines smaller."
+            ],
+            "limitations": [
+                "Full CLI/plugin task before integration: 3042 pass, 3 skip, 9 fail; known baseline/fixture acceptance gaps remain. Mechanical focused tests and staged gates pass; no full-suite acceptance is claimed.",
+                "No publication, release tag, deployment or live account configuration."
+            ]
         }
     ]
 }
