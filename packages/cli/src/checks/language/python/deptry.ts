@@ -6,7 +6,6 @@ import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { escapeRegExp } from '#cli/platform/text.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
@@ -40,7 +39,7 @@ export async function deptry(session: ToolSession, planned: PlannedCheck): Promi
             'deptry',
             '.',
             '--no-ansi',
-            ...[String.raw`(^|.*[/\\])${escapeRegExp(DOT_GSPOT)}([/\\]|$)`, ...exclusions].flatMap((pattern) => [
+            ...[String.raw`(^|.*[/\\])${RegExp.escape(DOT_GSPOT)}([/\\]|$)`, ...exclusions].flatMap((pattern) => [
                 '--extend-exclude',
                 pattern,
             ]),

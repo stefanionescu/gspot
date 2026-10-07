@@ -12,7 +12,7 @@
             "scope": "Test, script, and package organization",
             "decision": "The current user plan requires four test directories: cli, plugin, tools, and packages. Config and types mirror their behavioral owners, and the shared harness stays flat. Scripts own suite and registry orchestration. This supersedes the inherited five-family decision.",
             "evidence": [
-                "The user\u2019s implementation plan in this conversation",
+                "The user’s implementation plan in this conversation",
                 "tests/package.json",
                 "tests/bunfig.toml",
                 "mise.toml",
@@ -148,6 +148,35 @@
             "scope": "Private Python index support script filename",
             "decision": "Use tests/harness/ruff_wheel.py for the standalone program required by review/repository-root/035. This replaces its historical kebab-case path and follows the repository Python snake-case naming rule.",
             "evidence": ["User reply: Use ruff_wheel.py."]
+        },
+        {
+            "date": "2026-10-07",
+            "scope": "Canonical policy array layout",
+            "decision": "Keep Taplo defaults. The canonical emitter may correct toml-patch array spacing and trailing commas while preserving comments, native value encoding, and spaced inline tables. This supersedes the earlier proposal limited to a dependency spacing fix and resolves the policy-format/007 spacing and commented multiline-array conflicts. Do not change Taplo options or retain duplicate writers.",
+            "evidence": [
+                "User answer: Keep Taplo defaults; permit a minimal dependency fix that gives arrays compact spacing while preserving spaced inline tables.",
+                "Later user answer: Keep Taplo defaults; allow the emitter to correct toml-patch’s array layout while preserving comments and native value encoding."
+            ]
+        },
+        {
+            "date": "2026-10-07",
+            "scope": "Paired-file source ownership",
+            "decision": "Retain checks/general/dependencies/lockfile/{fresh,hosts}.ts and checks/language/python/imports/{comments,linter}.ts. Keep prefix-collision enforcement. This overrides the four flattening paths prescribed by review/source-layout/020 and /021; all other obligations in those records remain.",
+            "evidence": [
+                "User answer: Keep prefix-collision enforcement; retain the existing two-file folders and record this as an owner override of /020 and /021."
+            ]
+        },
+        {
+            "date": "2026-10-07",
+            "scope": "Native code-point iteration",
+            "decision": "Use [...text] as the native code-point replacement prescribed by review/code-execution/035 instead of Array.from(text), retaining shipped unicorn/prefer-spread enforcement.",
+            "evidence": ["User answer: Use `[...text]` as the native code-point replacement"]
+        },
+        {
+            "date": "2026-10-07",
+            "scope": "Required ESLint rule applicability",
+            "decision": "Preserve the owner level boundary and Pages applicability when replacing required-rule tests for review/code-execution/048. Test on/off expectations at both levels, including all-only complexity and declaration order and the all-only Next.js HTML-link rule for Pages projects. This resolves the literal both-level on requirement without weakening applicability or deleting required-rule coverage.",
+            "evidence": ["User answer: Preserve level and Pages applicability; test on/off expectations"]
         }
     ],
     "implementationBatches": {

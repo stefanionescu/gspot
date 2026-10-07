@@ -55,26 +55,6 @@ export function decodeUtf8(bytes: Uint8Array): string | undefined {
 }
 
 /**
- * The code points of a text, one string each.
- * @param text the text
- * @returns the code points in order
- */
-export function codePoints(text: string): string[] {
-    const characters: string[] = [];
-    for (const character of text) characters.push(character);
-    return characters;
-}
-
-/**
- * Escape literal text for insertion into a regular expression pattern.
- * @param text the literal text
- * @returns text with regular expression operators escaped
- */
-export function escapeRegExp(text: string): string {
-    return text.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`);
-}
-
-/**
  * Quote one argument for a POSIX shell command shown to the reader.
  * @param value the argument
  * @returns the argument, quoted when it needs to be

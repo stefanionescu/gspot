@@ -1,5 +1,4 @@
 // Findings from validated structured reports produced by named tools.
-import { codePoints } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { LINE_FEED } from '#cli/config/parsers/source.ts';
@@ -83,7 +82,8 @@ function typoPosition(
         throw new GspotError('output', `Typos reported a position outside the source: ${path}`);
     return {
         line: entry.line_num,
-        column: codePoints(sourceLine.subarray(0, entry.byte_offset).toString('utf8')).length + 1,
+        // eslint-disable-next-line @typescript-eslint/no-misused-spread -- reason: Typos columns count Unicode code points, not graphemes.
+        column: [...sourceLine.subarray(0, entry.byte_offset).toString('utf8')].length + 1,
     };
 }
 

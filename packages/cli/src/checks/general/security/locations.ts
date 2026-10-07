@@ -1,6 +1,5 @@
 import { TextDecoder } from 'node:util';
 import { sep, relative } from 'node:path';
-import { codePoints } from '#cli/platform/text.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
@@ -43,7 +42,8 @@ function sourceText(run: SarifRun, index: number | undefined, root: string, file
 
 // Decode offsets as code points, then report columns in the unit declared by the producer.
 function offsetPosition(text: string, offset: number, run: SarifRun): Required<Omit<SarifPlace, 'file'>> {
-    const characters = codePoints(text);
+    // eslint-disable-next-line @typescript-eslint/no-misused-spread -- reason: SARIF offsets count Unicode code points, not graphemes.
+    const characters = [...text];
     if (offset > characters.length) throw new Error('CodeQL reported a character offset beyond the source file.');
     const prefix = characters.slice(0, offset).join('');
     const breaks = run.newlineSequences ?? ['\r\n', '\n'];
@@ -61,7 +61,8 @@ function offsetPosition(text: string, offset: number, run: SarifRun): Required<O
     const tail = prefix.slice(start);
     return {
         line,
-        column: (run.columnKind === 'unicodeCodePoints' ? codePoints(tail).length : tail.length) + 1,
+        // eslint-disable-next-line @typescript-eslint/no-misused-spread -- reason: SARIF declares columns as Unicode code points.
+        column: (run.columnKind === 'unicodeCodePoints' ? [...tail].length : tail.length) + 1,
     };
 }
 

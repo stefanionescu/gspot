@@ -1,5 +1,13 @@
 import type { Result } from 'execa';
 
+// TypeScript 5.9 omits this API provided by the supported Node and Bun runtimes.
+declare global {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: Native constructor augmentation needs interface merging.
+    interface RegExpConstructor {
+        escape(text: string): string;
+    }
+}
+
 /** What kind of failure a GspotError reports; the command layer maps it to output and an exit code. */
 export type ErrorCode =
     | 'filesystem'

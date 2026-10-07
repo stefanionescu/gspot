@@ -1,4 +1,5 @@
 import { join, posix } from 'node:path';
+import { decodeUtf8 } from '#cli/platform/text.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/platform/source.ts';
@@ -15,7 +16,6 @@ import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { getBlobs } from '#cli/repository/revisions/objects.ts';
-import { decodeUtf8, escapeRegExp } from '#cli/platform/text.ts';
 import { parseGitleaksBaseline } from '#cli/parsers/gitleaks.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { statSync, writeFileSync, appendFileSync } from 'node:fs';
@@ -285,7 +285,7 @@ export function envTemplate(input: CheckInput): Finding[] {
         ...readers.map(
             (reader) =>
                 new RegExp(
-                    String.raw`(?<![\p{ID_Continue}$.])${escapeRegExp(reader)}\(\s*['"](?<key>[A-Z][A-Z0-9_]*)['"]`,
+                    String.raw`(?<![\p{ID_Continue}$.])${RegExp.escape(reader)}\(\s*['"](?<key>[A-Z][A-Z0-9_]*)['"]`,
                     'gu',
                 ),
         ),

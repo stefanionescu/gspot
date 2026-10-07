@@ -2,7 +2,6 @@
 import type { RawStmt } from '@pgsql/types';
 import { memo } from '#cli/platform/memo.ts';
 import { parse } from '#cli/parsers/sql/pg.ts';
-import { codePoints } from '#cli/platform/text.ts';
 import { maskPsqlSyntax } from '#cli/parsers/sql/lexer.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
@@ -28,7 +27,8 @@ async function parseSqlText(text: string): Promise<SqlFile> {
     const parsed = await parse(source);
     const bytes = Buffer.from(source, 'utf8');
     if (parsed.error !== undefined) {
-        const offset = codePoints(source).slice(0, parsed.error.offset).join('').length;
+        // eslint-disable-next-line @typescript-eslint/no-misused-spread -- reason: The SQL parser reports offsets in Unicode code points, not graphemes.
+        const offset = [...source].slice(0, parsed.error.offset).join('').length;
         return { source, variables, statements: [], error: { text: parsed.error.text, ...positionAt(text, offset) } };
     }
     const statements = parsed.tree.stmts ?? [];

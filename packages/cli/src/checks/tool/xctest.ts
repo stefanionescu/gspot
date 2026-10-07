@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
-import { escapeRegExp } from '#cli/platform/text.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { xccovSchema } from '#cli/parsers/schema/xctest.ts';
@@ -237,7 +236,7 @@ export function xctestReferences(input: CheckInput): Finding[] {
             if (part === '{test}') return '[^/]+';
             if (part === '*') return '[^/]*';
             if (part === '?') return '[^/]';
-            return escapeRegExp(part);
+            return RegExp.escape(part);
         })
         .join('');
     const reference = new RegExp(`^(?<base>(?:[^/]+/)*)${pattern}$`, 'u');
@@ -247,7 +246,7 @@ export function xctestReferences(input: CheckInput): Finding[] {
         const base = file.path.slice(0, at);
         const name = file.path.slice(at, -'.swift'.length);
         const patterns = owners.get(base) ?? [];
-        patterns.push(new RegExp(`^${pattern.replace('(?<file>[^/]+)', () => escapeRegExp(name))}$`, 'u'));
+        patterns.push(new RegExp(`^${pattern.replace('(?<file>[^/]+)', () => RegExp.escape(name))}$`, 'u'));
         owners.set(base, patterns);
     }
     return input.files.flatMap(({ path }): Finding[] => {
