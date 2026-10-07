@@ -1,10 +1,30 @@
 // A tool-project installation as one unit: written beside its folder, swapped in by a rename, and recorded by kind
 // instead of file by file. A crash between the renames leaves the previous folder where recovery finds it.
-import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
+import { toPosix } from '#cli/platform/paths.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
+import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { InstalledOutput } from '#cli/types/tools/install.ts';
+import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import type { InstallationKind } from '#cli/types/configurations.ts';
-import { INSTALLATION_DIRECTORIES } from '#cli/config/platform/locations.ts';
+import { join, posix, dirname, basename, relative } from 'node:path';
+import { MODE_BITS, EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import type { Log, InstallationFolders } from '#cli/types/lifecycle/ownership.ts';
+
+import {
+    NODE_MODULES_DIRECTORY,
+    INSTALLATION_DIRECTORIES,
+    PYTHON_ENVIRONMENT_DIRECTORY,
+} from '#cli/config/platform/locations.ts';
+import {
+    openSync,
+    closeSync,
+    constants,
+    fstatSync,
+    lstatSync,
+    readFileSync,
+    readlinkSync,
+    realpathSync,
+} from 'node:fs';
 
 // The folder an installation is staged in before the swap, and the one the previous installation waits in.
 
@@ -19,6 +39,34 @@ function setKind(log: Log, field: 'installing' | 'installed', kind: Installation
     const kinds = isPresent ? [...others, kind].toSorted((left, right) => left.localeCompare(right)) : others;
     log.state[field] = kinds.length === 0 ? undefined : kinds;
     log.save();
+}
+
+// Read a link's target without a separate filesystem check.
+function linkTarget(entry: string): string | undefined {
+    try {
+        return readlinkSync(entry);
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'EINVAL') return undefined;
+        throw error;
+    }
+}
+
+// Preserve file links at their original location and copy their bytes inside a directory alias.
+function installedFile(directory: string, realPath: string, outputPath: string, source: string): FileCopy {
+    if (realPath === outputPath) {
+        const entry = join(directory, realPath);
+        const link = linkTarget(entry);
+        if (link !== undefined)
+            return { bytes: Buffer.from(link), mode: lstatSync(entry).mode & MODE_BITS, isLink: true };
+    }
+    const descriptor = openSync(source, constants.O_RDONLY | constants.O_NONBLOCK);
+    try {
+        const stat = fstatSync(descriptor);
+        if (!stat.isFile()) throw new Error(`Unsupported installed entry: ${realPath}`);
+        return { bytes: readFileSync(descriptor), mode: stat.mode & MODE_BITS };
+    } finally {
+        closeSync(descriptor);
+    }
 }
 
 /**
@@ -74,4 +122,38 @@ export function deleteInstallation(log: Log, kind: InstallationKind): void {
     if (log.state.installed?.includes(kind) !== true) return;
     log.files.removeTree(INSTALLATION_DIRECTORIES[kind]);
     setKind(log, 'installed', kind, false);
+}
+
+/**
+ * Reads a complete isolated installation before the owner swaps it in. A link cycle or a link that leaves it is refused.
+ * @param directory the isolated installation
+ * @param kind whether the installation is the npm project or the Python environment
+ * @returns every file, at its destination under .gspot/node_modules or .gspot/.venv
+ */
+export function readInstalledTree(directory: string, kind: InstallationKind): InstalledOutput[] {
+    const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
+    const outputs: InstalledOutput[] = [];
+    using parent = openRoot(dirname(directory), 'native');
+    if (parent.stat(basename(directory))?.isDirectory() !== true)
+        throw new Error(`Installed output is not a directory: ${directory}`);
+    const root = realpathSync(directory);
+    using files = openRoot(root, 'native');
+    const cacheDirectory = kind === 'python' ? '__pycache__' : undefined;
+    const collect = (prefix: string | undefined, output: string, ancestors: string[]): void => {
+        const canonical = join(root, prefix ?? '');
+        if (ancestors.includes(canonical)) throw new Error(`Installed directory link forms a cycle: ${output}`);
+        for (const name of files.list(prefix)) {
+            const realPath = posix.join(prefix ?? '', name);
+            const outputPath = posix.join(output, name);
+            const path = `${destination}/${outputPath}`;
+            assertMutationTarget(path);
+            const source = files.realPath(realPath);
+            if (lstatSync(source).isDirectory()) {
+                if (name === cacheDirectory) continue;
+                collect(toPosix(relative(root, source)), outputPath, [...ancestors, canonical]);
+            } else outputs.push({ path, file: installedFile(directory, realPath, outputPath, source) });
+        }
+    };
+    collect(undefined, '', []);
+    return outputs;
 }

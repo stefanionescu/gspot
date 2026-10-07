@@ -14,12 +14,12 @@ import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { toolProjectPackage } from '#cli/configurations/pins.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { installTree } from '#cli/lifecycle/ownership/installations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { FlagCommand } from '#tests/types/tools/manifest-flags-in-help.ts';
 import { HELP_TIMEOUT_MS } from '#tests/config/tools/manifest-flags-in-help.ts';
 import { installPackageProject, preparePackageProject } from '#cli/tools/npm/project.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python/project.ts';
+import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
 
 const manifests = [...configurationManifests().values()];
 const context = { root, inspections: new Map(), policyFiles: readPolicy(root) };
@@ -121,8 +121,8 @@ beforeAll(async () => {
             sandbox.path,
             {
                 read: log.files.read.bind(log.files),
-                installTree: (kind, outputs) => {
-                    installTree(log, kind, outputs);
+                installTree: (kind, directory) => {
+                    installTree(log, kind, readInstalledTree(directory, kind));
                 },
             },
             'uv',
@@ -134,8 +134,8 @@ beforeAll(async () => {
             sandbox.path,
             {
                 read: log.files.read.bind(log.files),
-                installTree: (kind, outputs) => {
-                    installTree(log, kind, outputs);
+                installTree: (kind, directory) => {
+                    installTree(log, kind, readInstalledTree(directory, kind));
                 },
             },
             supported.map(({ tool }) => tool),

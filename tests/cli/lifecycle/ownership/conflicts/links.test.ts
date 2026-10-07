@@ -4,10 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { readInstalledTree } from '#cli/tools/installed-files.ts';
-import { installTree } from '#cli/lifecycle/ownership/installations.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { proposeRetirement, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
 import { chmodSync, lstatSync, unlinkSync, symlinkSync, readFileSync, readlinkSync, writeFileSync } from 'node:fs';
 
 test('installation publishes internal directory aliases as owned files without following external links', async () => {

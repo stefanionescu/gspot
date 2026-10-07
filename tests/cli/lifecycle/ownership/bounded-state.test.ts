@@ -4,11 +4,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { readInstalledTree } from '#cli/tools/installed-files.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { proposeBlock, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
-import { installTree, deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
+import { installTree, readInstalledTree, deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
 
 test('an installation is one record, and removing it deletes the folder', async () => {
     await using directory = await testdir();

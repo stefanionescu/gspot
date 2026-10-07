@@ -10,7 +10,6 @@ import { readTree } from '#tests/harness/preservation.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { acquirePythonInstaller } from '#cli/tools/python/uv.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import type { InstalledOutput } from '#cli/types/tools/install.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python/project.ts';
 import { AUTHORED_UV_INDEX, PRIVATE_PYTHON_LOCK, PRIVATE_PYTHON_PROJECT } from '#tests/config/samples/python/tools.ts';
@@ -121,13 +120,13 @@ test.each(['venv', 'sync'])(
             let diagnosticError: unknown;
             {
                 using log = openOwnership(repository.path);
-                const staged: InstalledOutput[][] = [];
+                const staged: string[] = [];
                 diagnosticError = await installPythonProject(
                     repository.path,
                     {
                         read: log.files.read.bind(log.files),
-                        installTree: (_kind, outputs) => {
-                            staged.push(outputs);
+                        installTree: (_kind, directory) => {
+                            staged.push(directory);
                         },
                     },
                     'unavailable-uv',
@@ -168,13 +167,13 @@ test('a successful uv operation refuses a password in its temporary lock and pre
     let diagnosticError: unknown;
     {
         using log = openOwnership(repository.path);
-        const staged: InstalledOutput[][] = [];
+        const staged: string[] = [];
         diagnosticError = await installPythonProject(
             repository.path,
             {
                 read: log.files.read.bind(log.files),
-                installTree: (_kind, outputs) => {
-                    staged.push(outputs);
+                installTree: (_kind, directory) => {
+                    staged.push(directory);
                 },
             },
             'synthetic-uv',

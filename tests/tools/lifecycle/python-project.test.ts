@@ -11,7 +11,6 @@ import { isPosix } from '#tests/config/harness/platforms.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
-import type { InstalledOutput } from '#cli/types/tools/install.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installPythonProject } from '#cli/tools/python/project.ts';
@@ -144,15 +143,15 @@ test.skipIf(!isPosix)(
         writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
         {
             using log = openOwnership(repository.path);
-            const staged: InstalledOutput[][] = [];
+            const staged: string[] = [];
             expect(
                 await rejection(
                     installPythonProject(
                         repository.path,
                         {
                             read: log.files.read.bind(log.files),
-                            installTree: (_kind, outputs) => {
-                                staged.push(outputs);
+                            installTree: (_kind, directory) => {
+                                staged.push(directory);
                             },
                         },
                         'uv',
@@ -198,14 +197,14 @@ test.skipIf(!isPosix)(
         let refused: string;
         {
             using log = openOwnership(root);
-            const staged: InstalledOutput[][] = [];
+            const staged: string[] = [];
             refused = await rejection(
                 installPythonProject(
                     root,
                     {
                         read: log.files.read.bind(log.files),
-                        installTree: (_kind, outputs) => {
-                            staged.push(outputs);
+                        installTree: (_kind, directory) => {
+                            staged.push(directory);
                         },
                     },
                     join(artifacts.path, 'bin/uv'),

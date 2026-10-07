@@ -9,7 +9,6 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { installPackageProject } from '#cli/tools/npm/project.ts';
-import type { InstalledOutput } from '#cli/types/tools/install.ts';
 import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { rejection, containingAll } from '#tests/harness/expectations.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
@@ -125,7 +124,7 @@ test.each(['missing', 'stale'] as const)(
             chmodSync(lockPath, 0o644);
             writeFileSync(lockPath, lock.toString('utf8').replaceAll(prettierManifest.version, '0.0.0'));
         }
-        const staged: InstalledOutput[][] = [];
+        const staged: string[] = [];
         const { tools } = fixture;
         expect(
             await rejection(
@@ -133,8 +132,8 @@ test.each(['missing', 'stale'] as const)(
                     fixture.root,
                     {
                         read: log.files.read.bind(log.files),
-                        installTree: (_kind, outputs) => {
-                            staged.push(outputs);
+                        installTree: (_kind, directory) => {
+                            staged.push(directory);
                         },
                     },
                     tools,

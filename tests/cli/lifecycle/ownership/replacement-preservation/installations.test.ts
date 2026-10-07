@@ -6,12 +6,11 @@ import { getCliSourcePath } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { proposeMerge } from '#cli/lifecycle/ownership/plans.ts';
-import { readInstalledTree } from '#cli/tools/installed-files.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
-import { installTree } from '#cli/lifecycle/ownership/installations.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { rmSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
 
 const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
 

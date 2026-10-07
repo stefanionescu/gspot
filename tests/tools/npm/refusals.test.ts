@@ -8,7 +8,6 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { installPackageProject } from '#cli/tools/npm/project.ts';
-import type { InstalledOutput } from '#cli/types/tools/install.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { chmodSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
@@ -30,15 +29,15 @@ test.each([PACKAGE_PROJECTS[0]])(
         const requestsBefore = registry.requests;
         {
             using log = openOwnership(root);
-            const staged: InstalledOutput[][] = [];
+            const staged: string[] = [];
             expect(
                 await rejection(
                     installPackageProject(
                         root,
                         {
                             read: log.files.read.bind(log.files),
-                            installTree: (_kind, outputs) => {
-                                staged.push(outputs);
+                            installTree: (_kind, directory) => {
+                                staged.push(directory);
                             },
                         },
                         tools,
@@ -73,15 +72,15 @@ test('native wrapper download failure preserves the lock and publishes no partia
     try {
         {
             using log = openOwnership(root);
-            const staged: InstalledOutput[][] = [];
+            const staged: string[] = [];
             expect(
                 await rejection(
                     installPackageProject(
                         root,
                         {
                             read: log.files.read.bind(log.files),
-                            installTree: (_kind, outputs) => {
-                                staged.push(outputs);
+                            installTree: (_kind, directory) => {
+                                staged.push(directory);
                             },
                         },
                         tools,
@@ -120,15 +119,15 @@ test('a reinstall the registry answers with 404 keeps the working tools and leav
     const before = readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-install-'));
     {
         using log = openOwnership(root);
-        const staged: InstalledOutput[][] = [];
+        const staged: string[] = [];
         expect(
             await rejection(
                 installPackageProject(
                     root,
                     {
                         read: log.files.read.bind(log.files),
-                        installTree: (_kind, outputs) => {
-                            staged.push(outputs);
+                        installTree: (_kind, directory) => {
+                            staged.push(directory);
                         },
                     },
                     tools,
@@ -159,15 +158,15 @@ test('a tool project file that changes during the install is refused and nothing
     });
     {
         using log = openOwnership(root);
-        const staged: InstalledOutput[][] = [];
+        const staged: string[] = [];
         expect(
             await rejection(
                 installPackageProject(
                     root,
                     {
                         read: log.files.read.bind(log.files),
-                        installTree: (_kind, outputs) => {
-                            staged.push(outputs);
+                        installTree: (_kind, directory) => {
+                            staged.push(directory);
                         },
                     },
                     tools,

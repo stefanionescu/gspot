@@ -14,11 +14,11 @@ import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import type { LockPreparation } from '#cli/types/tools/install.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
-import { installTree } from '#cli/lifecycle/ownership/installations.ts';
 import { getHookPlan, installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
 import { toolPin, pythonPins, collectPins } from '#cli/configurations/pins.ts';
 import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
+import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
 import { packageInstallSteps, installPackageProject, preparePackageProject } from '#cli/tools/npm/project.ts';
 import { installPythonProject, preparePythonProject, pythonInstallationPlan } from '#cli/tools/python/project.ts';
 
@@ -296,8 +296,8 @@ export async function installTools(
                 if (!context.original.has(path)) context.original.set(path, log.files.read(path));
                 return context.original.get(path);
             },
-            installTree: (kind, outputs) => {
-                context.trees.set(kind, outputs);
+            installTree: (kind, directory) => {
+                context.trees.set(kind, readInstalledTree(directory, kind));
             },
         },
     };

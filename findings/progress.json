@@ -1,5 +1,5 @@
 {
-    "openRecords": 1045,
+    "openRecords": 1036,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1045,
+        "openRecords": 1036,
         "records": 1092,
         "batches": [
             {
@@ -1798,8 +1798,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 26,
-                "unresolvedAssignments": 63
+                "completedAssignments": 35,
+                "unresolvedAssignments": 54
             },
             {
                 "id": "configurations",
@@ -5380,10 +5380,12 @@
             ]
         },
         "review/source-layout/007": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Separate scratch-directory callback patch integrated locally; root/CLI types and staged gate pending. Native isolated acceptance: 26 pass, 242 assertions, five files, 155s, including npm/Python scratch lifetime probes."
+            ]
         },
         "review/source-layout/008": {
             "status": "complete",
@@ -5416,10 +5418,13 @@
             ]
         },
         "review/source-layout/011": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "packaging implementation; main integration",
+            "commit": "a86952675239b9eebbaafe8a26fae8eaab5ca7b3",
+            "verification": [
+                "Move it into `config/configurations.ts`, the manifest contract. Both validation and substitution can import it there.",
+                "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines."
+            ]
         },
         "review/source-layout/012": {
             "status": "complete",
@@ -5458,10 +5463,13 @@
             ]
         },
         "review/source-layout/016": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "packaging implementation; main integration",
+            "commit": "a86952675239b9eebbaafe8a26fae8eaab5ca7b3",
+            "verification": [
+                "Merge `compareRules` into `lifecycle/drift.ts` (147 lines). Move `tests/cli/lifecycle/rule-diff.test.ts` with it.",
+                "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines."
+            ]
         },
         "review/source-layout/017": {
             "status": "pending",
@@ -5525,40 +5533,58 @@
             "verification": []
         },
         "review/source-layout/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "packaging implementation; main integration",
+            "commit": "a86952675239b9eebbaafe8a26fae8eaab5ca7b3",
+            "verification": [
+                "Move `namingTerms()` to `configurations/manifests.ts`, which loads configuration assets. Keep the schemas where they are.",
+                "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines."
+            ]
         },
         "review/source-layout/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "packaging implementation; main integration",
+            "commit": "a86952675239b9eebbaafe8a26fae8eaab5ca7b3",
+            "verification": [
+                "Move to `checks/finding.ts`.",
+                "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines."
+            ]
         },
         "review/source-layout/030": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "packaging implementation; main integration",
+            "commit": "a86952675239b9eebbaafe8a26fae8eaab5ca7b3",
+            "verification": [
+                "Move to `execution/command/findings.ts`. Merge its config and types into `config/execution/command.ts` and `types/execution/command.ts`.",
+                "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines."
+            ]
         },
         "review/source-layout/032": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "packaging implementation; main integration",
+            "commit": "a86952675239b9eebbaafe8a26fae8eaab5ca7b3",
+            "verification": [
+                "Merge `parsers/credentials.ts` and `tools/diagnostics.ts` into `tools/credentials.ts`. Do it after `review/source-layout/033`, which moves `parsers/python/tools.ts`, the reason `registryPasswords` sits in parsers today.",
+                "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines."
+            ]
         },
         "review/source-layout/033": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "packaging implementation; main integration",
+            "commit": "a86952675239b9eebbaafe8a26fae8eaab5ca7b3",
+            "verification": [
+                "Split into `tools/python/lockfiles.ts` and `tools/python/registry.ts`, and rename `tools/npm/locks.ts` to `tools/npm/lockfiles.ts` to match. Merge `config/parsers/python-tools.ts` into `config/tools/python.ts`. `parsers/python/` then holds only `source.ts`; rename it `parsers/python.ts` and drop `gspot.toml:596`.",
+                "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines."
+            ]
         },
         "review/source-layout/034": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "packaging implementation; main integration",
+            "commit": "a86952675239b9eebbaafe8a26fae8eaab5ca7b3",
+            "verification": [
+                "Inline the literal at `tools/npm/project.ts:127` and `tools/python/project.ts:179`, then delete the file.",
+                "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines."
+            ]
         },
         "review/source-layout/035": {
             "status": "pending",
@@ -5594,10 +5620,13 @@
             ]
         },
         "review/source-layout/040": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "packaging implementation; main integration",
+            "commit": "a86952675239b9eebbaafe8a26fae8eaab5ca7b3",
+            "verification": [
+                "Merge into `lifecycle/merge/document.ts`.",
+                "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines."
+            ]
         },
         "review/source-layout/041": {
             "status": "pending",
@@ -9020,6 +9049,29 @@
                 "status": "pending",
                 "head": "a7f52291230775a7f356a8aac8d8150b7e3f4d2f"
             }
+        },
+        {
+            "commit": "a86952675239b9eebbaafe8a26fae8eaab5ca7b3",
+            "completedRecords": [
+                "review/source-layout/011",
+                "review/source-layout/016",
+                "review/source-layout/028",
+                "review/source-layout/029",
+                "review/source-layout/030",
+                "review/source-layout/032",
+                "review/source-layout/033",
+                "review/source-layout/034",
+                "review/source-layout/040"
+            ],
+            "unresolvedRecords": 1036,
+            "validation": [
+                "Root and CLI TypeScript passed; 194 focused tests, 596 assertions, 24 files. Check-family acceptance: 657 pass, two platform skips. Main ownership audit: 565 files, 2,807 imports, zero violations. Full staged gate: zero findings, exit 0, 83.623s. Commit hook: 106 pass, three skip, zero findings, 14.9s; message hook passed. Main integration review confirms optional lock reads, lazy naming cache and format dispatch preserve behavior; authored TypeScript reduced by four lines.",
+                "Removed three stale Python architecture/folder declarations and regenerated with gspot apply. Original owners and compatibility aliases are absent."
+            ],
+            "limitations": [
+                "Platform skips do not prove platform behavior. Broader baseline CLI/tool fixture failures remain tracked; this checkpoint does not claim full-suite or cross-platform acceptance.",
+                "Release publication, tagging, live account setup and deployment remain unperformed."
+            ]
         }
     ]
 }

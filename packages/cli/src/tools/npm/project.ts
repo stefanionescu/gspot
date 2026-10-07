@@ -12,7 +12,6 @@ import type { InstallFiles } from '#cli/types/tools/npm.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import type { ToolProject } from '#cli/types/parsers/packages.ts';
-import { readInstalledTree } from '#cli/tools/installed-files.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 import type { LockDrift, ToolOwner, LockPreparation } from '#cli/types/tools/install.ts';
@@ -90,7 +89,7 @@ async function installFromInputs(
     await installPackageLock(root, work, project.installer);
     await assertPackageVersions(work, project.dependencies, tools);
     assertInputsUnchanged(owner, work, project, inputs);
-    owner.installTree('npm', readInstalledTree(join(work, 'node_modules'), 'npm'));
+    owner.installTree('npm', join(work, 'node_modules'));
 }
 
 /**

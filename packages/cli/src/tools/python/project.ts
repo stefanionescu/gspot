@@ -10,7 +10,6 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
-import { readInstalledTree } from '#cli/tools/installed-files.ts';
 import { pythonLockMatches } from '#cli/tools/python/lockfiles.ts';
 import { parsePythonSettings } from '#cli/tools/python/registry.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
@@ -136,7 +135,7 @@ async function installInWork(
     await relocateInterpreter(work);
     if (!isDeepStrictEqual(owner.read(TOOL_PYTHON_PROJECT), project) || !isDeepStrictEqual(owner.read(UV_LOCK), lock))
         throw new GspotError('installation', 'Python tool inputs changed during installation. Retry the command.');
-    owner.installTree('python', readInstalledTree(join(work, '.venv'), 'python'));
+    owner.installTree('python', join(work, '.venv'));
 }
 
 /**
