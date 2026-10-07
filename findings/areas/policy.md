@@ -1,6 +1,10 @@
 # Policy, Kits, Rules, Config, and Types
 
-Architecture material from the original audit follows. Current repository decisions are recorded in [progress](../progress.json).
+Architecture material from the original audit follows. It is history: where it disagrees with a later decision or with the target trees in [the source layout review](../review/source-layout.md) and [the test layout review](../review/tests-layout.md), those win.
+
+Superseded here: "(config/ deleted)" and "(types/ deleted)" do not apply. `config/` and `types/` stay in every package, grouped by behavior. Only one-file mirror folders are flattened into their parent (decision of October 4, 2026; answer to `review/policy-exceptions/013`). `kits/` is `packages/cli/src/configurations/`, and `profiles.ts` is the templates code (`policy/templates.ts`). No line below that folds a `config/` or `types/` file into a source file applies either, such as `types/policy/toml.ts` into `toml-layout.ts` or the Policy types into `normalize.ts`. The `agent_rules` schema (`rulesSchema`) goes to `policy/schema/agent-rules.ts`, not `rules/assemble.ts` (`review/source-layout/012` and its answer of October 6, 2026).
+
+Names follow [the glossary](../review/glossary.md), which wins over every name below: `problems` are `errors` (`policy/errors/`), `CheckSpec` and `SettingSpec` are `CheckDeclaration` and `SettingDeclaration`, a `Proposal` is a plan, and a `NamingRule` is a naming override. Current repository decisions are recorded in [progress](../progress.json).
 
 ## Target layout
 

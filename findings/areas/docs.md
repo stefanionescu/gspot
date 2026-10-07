@@ -1,6 +1,8 @@
 # READMEs, Guides, Reference, and the Docs Site
 
-Architecture material from the original audit follows. Current repository decisions are recorded in [progress](../progress.json).
+Architecture material from the original audit follows. It is history: where it disagrees with a later decision or with the target trees in [the source layout review](../review/source-layout.md) and [the test layout review](../review/tests-layout.md), those win. Superseded here: the site moves from gspot.dev to generativespotting.com (`review/owner-decisions/004`). "Kit" pages and concepts are "configuration" pages, and "Team profiles" are templates. Every Node.js line, in the README Requirements and in the README install outline below, names Node.js 24.2 or newer, or Bun 1.4.2 or newer. That replaces Node.js 22 (answer to owner question Q13; `review/owner-decisions/001`).
+
+Names follow [the glossary](../review/glossary.md), which wins over every name below: 'Custom checks' are command checks, 'The policy file' is gspot.toml, and 'native tools' are executable tools. Current repository decisions are recorded in [progress](../progress.json).
 
 ## Target layout
 

@@ -1,6 +1,10 @@
 # Test Structure: Tiers, Harness, and Samples
 
-Architecture material from the original audit follows. Current repository decisions are recorded in [progress](../progress.json).
+Architecture material from the original audit follows. It is history, not the target. The decisions in [progress](../progress.json) and [the test layout review](../review/tests-layout.md) win where it differs.
+
+`tests/config/` and `tests/types/` stay as mirrors, and a one-file mirror folder is flattened. Samples live in `tests/config/samples/`, the harness is flat, and Verdaccio and `scripts/registry/` are deleted. The small local npm registry moves to `tests/harness/registry.ts` with the Python index beside it, not into `npm.ts` or `uv.ts` (review/owner-decisions/005). Every suite has one per-test limit (review/carve-outs/001). `tests/tools/kits/` is `tests/tools/configurations/`.
+
+Names follow [the glossary](../review/glossary.md), which wins over every name below. The harness is never a support folder, an engine input is a check input, and the registry is the local npm registry in `tests/harness/registry.ts`.
 
 ## Target layout
 

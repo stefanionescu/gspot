@@ -1,6 +1,8 @@
 # Commands, Lifecycle, Generation, and Output
 
-Architecture material from the original audit follows. Current repository decisions are recorded in [progress](../progress.json).
+Architecture material from the original audit follows. It is history: where it disagrees with a later decision or with the target trees in [the source layout review](../review/source-layout.md) and [the test layout review](../review/tests-layout.md), those win. Superseded here: `commands/kits.ts` (the add and remove commands are `commands/configurations.ts`, and the product term is "configuration"). The five config readers under `lifecycle/rule-diff/` are superseded too (deleted; the rule diff compares recorded rule data, owner-questions D9). The same applies to `output/`, which `review/source-layout/044` renames to `terminal/`, and to the condition on the registry rule (settled, owner-questions `areas/commands.md` Q2).
+
+Names follow [the glossary](../review/glossary.md), which wins over every name below. A kit is a configuration, a preview or proposal is a plan or a dry run, and the Eta template code is `eta.ts`. What gspot writes is generated files, not outputs. Current repository decisions are recorded in [progress](../progress.json).
 
 ## Target layout
 

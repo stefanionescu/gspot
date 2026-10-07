@@ -2,7 +2,7 @@
     {
         "id": "additional/next-app-router-links",
         "source": "findings/additional.md",
-        "line": 7,
+        "line": 19,
         "section": "Next.js link validation",
         "finding": "The native no-html-link-for-pages rule returns no finding for an App Router anchor pointing to an existing local app/about/page.jsx route, even with the correct scope root and all level. Its App Router path normalization differs from href normalization. Preserve the Pages Router coverage and establish App Router positive and defect cases before choosing a repair or replacement.",
         "owner": "Next.js link validation",
@@ -15,7 +15,13 @@
         "outcome": null,
         "verification": [
             "Original failing positive case: /tmp/gspot-next-xcode-regressions.log.",
-            "Primary installed implementation inspected in tests/node_modules/@next/eslint-plugin-next/dist/utils/url.js and rules/no-html-link-for-pages.js. Pages Router regression is separately passing; it does not prove App Router coverage."
+            "Primary installed implementation inspected in tests/node_modules/@next/eslint-plugin-next/dist/utils/url.js and rules/no-html-link-for-pages.js. Pages Router regression is separately passing; it does not prove App Router coverage.",
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "packages/cli/configurations/framework/nextjs/eslint.fragment.js.tmpl:1-2 enables no-html-link-for-pages when app/ exists; tests/cli/generation/eslint/nextjs.test.ts covers only Pages Router",
+                "remains": "In `packages/cli/configurations/framework/nextjs/eslint.fragment.js.tmpl:1`, compute `hasRoutes` from `pages/` and `src/pages/` only (drop `app/` and `src/app/`), so `@next/next/no-html-link-for-pages` is on only for the Pages Router. The upstream rule misreads App Router paths: `parseUrlForAppDir` in `@next/eslint-plugin-next` 16.3.6 reads subfolders with `parseUrlForPages`, so `app/about/page.jsx` becomes `/about/page`. Report this upstream. In `tests/cli/generation/eslint/nextjs.test.ts`, keep the Pages Router case and add a sandbox with only `app/about/page.jsx` and `<a href=\"/about\">` that asserts the generated configuration sets the rule to `off`."
+            }
         ],
         "originalLine": 5
     }

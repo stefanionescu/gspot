@@ -9,7 +9,14 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/generation/every-template.test.ts:68-71",
+                "remains": "In `tests/cli/generation/every-template.test.ts:68-71`, fail on a generated file whose extension has no entry in `PARSERS`. Add an INI parser for `.cfg` and `.ini` (`sqlfluff.cfg`, `gixy.cfg`, `vale.ini`). List the plain-text tool files that have no parser by name (`trivy-findings.tpl`, `editorconfig`, `prettierignore`, `semgrepignore`, `shellcheckrc`, `swiftformat`, `trivyignore`), so a new format cannot pass unread."
+            }
+        ],
         "originalLine": 23
     },
     {
@@ -20,9 +27,16 @@
         "finding": "| `cli/generation/every-template.test.ts:66-73` | `written` holds the selected kits, not files that were written. `generated.length > kits.length` passes when one kit renders nothing. | Rename `written` to `selected`. Assert that the target of every non-fragment config of each manifest is in the output. |",
         "owner": "`cli/generation/every-template.test.ts:66-73`",
         "location": null,
-        "status": "open",
+        "status": "partial",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "partial",
+                "evidence": "tests/cli/generation/every-template.test.ts:60,67",
+                "remains": "In `tests/cli/generation/every-template.test.ts:67`, replace `expect(generated.length).toBeGreaterThan(configurations.length)` with a check that the target of every non-fragment `[[tool_file]]` (`[[config]]` today) of each selected manifest is among the generated paths."
+            }
+        ],
         "originalLine": 25
     }
 ]

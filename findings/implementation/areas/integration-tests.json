@@ -9,7 +9,14 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/doctor.test.ts:122",
+                "remains": "Delete `expect(inspected).toHaveBeenCalled()` at `tests/cli/commands/doctor.test.ts:122`; the state and exit-code assertions below it already prove the call."
+            }
+        ],
         "originalLine": 16
     },
     {
@@ -22,7 +29,14 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/agents.test.ts:127",
+                "remains": "Move the test \"generated attributes preserve LF through autocrlf checkout\" from `tests/cli/commands/agents.test.ts:127` to `tests/cli/generation/attributes.test.ts`, and keep only its CRLF checkout byte check; drop its eol check, which repeats `tests/cli/generation/attributes.test.ts:10`."
+            }
+        ],
         "originalLine": 18
     },
     {
@@ -35,943 +49,1094 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/ci.test.ts:167-193",
+                "remains": "In the test at `tests/cli/commands/ci.test.ts:167-193`, delete the initial run (lines 174-175) and the fixed run (lines 186-190), which repeat the invalid-then-fixed job of the test at line 143. For the missing base commit (lines 180-181), run the test once to read the exit code and the stderr line the job prints, then assert both instead of `not.toBe(0)`."
+            }
+        ],
         "originalLine": 19
-    },
-    {
-        "id": "areas/integration-tests/005",
-        "source": "findings/areas/integration-tests.md",
-        "line": 12,
-        "section": "Findings",
-        "finding": "| `cli/commands/ci.test.ts:162` (in the test at line 150) | `runsManualStageAlone` searches the generated YAML for the string `--only project/audit` and never runs the manual job. This is a generation assertion inside a run test. | Run the `manual-ubuntu` steps and assert that only `project/audit` runs, or move the YAML check to a generation test. |",
-        "owner": "`cli/commands/ci.test.ts:162` (in the test at line 150)",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 20
     },
     {
         "id": "areas/integration-tests/006",
         "source": "findings/areas/integration-tests.md",
-        "line": 13,
+        "line": 12,
         "section": "Findings",
         "finding": "| `cli/commands/ci.test.ts:236` \"init reads %s before its remote...\", `cli/lifecycle/ci.test.ts:8` \"no-workflow guidance includes setup...\", and `cli/lifecycle/init.test.ts:19` \"initialization CI preference uses %s\" | Three tables test the same CI provider choice. A GitLab file wins over a GitHub remote in two of them. Jenkinsfile and Bitbucket give `none` in two of them. `lifecycle/ci.test.ts` only checks that the text contains \"gspot install\". The README.md row is named \"init reads README.md before its remote\", which is wrong. | Keep the `askQuestions` table in `lifecycle/init.test.ts` for the provider choice. Keep one CLI row for the plan notes. Delete `lifecycle/ci.test.ts` and rows 1, 2 and 4 of `ci.test.ts:236`. |",
         "owner": "`cli/commands/ci.test.ts:236` \"init reads %s before its remote...\", `cli/lifecycle/ci.test.ts:8` \"no-workflow guidance includes setup...\", and `cli/lifecycle/init.test.ts:19` \"initialization CI preference uses %s\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/ci.test.ts:223; tests/cli/lifecycle/ci.test.ts:7; tests/cli/lifecycle/init.test.ts:19",
+                "remains": "Keep the `askQuestions` table as the one test of the CI provider choice; it moves from `tests/cli/lifecycle/init.test.ts:19` to `tests/cli/commands/init/ci.test.ts` (`review/tests-layout/039`). In `tests/cli/commands/ci.test.ts:223`, delete the `Jenkinsfile`, the `.gitlab-ci.yml` with `application`, and the `README.md` rows, and keep the rows that check plan notes. Move the `plan.retained` assertion of `tests/cli/lifecycle/ci.test.ts` into `tests/cli/commands/init/ci.test.ts`, then delete `lifecycle/ci.test.ts`."
+            }
+        ],
         "originalLine": 21
     },
     {
         "id": "areas/integration-tests/007",
         "source": "findings/areas/integration-tests.md",
-        "line": 14,
+        "line": 13,
         "section": "Findings",
         "finding": "| `cli/commands/declarations.test.ts:9` and `:76` | Both tests run the same flow for two settings, `generated` and `exclude`: the check passes, `set --remove` runs, the same broken file fails, the file is fixed, and the check passes. | Merge them into one table over `generated` and `exclude`. Drop the final corrected run. |",
         "owner": "`cli/commands/declarations.test.ts:9` and `:76`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/declarations.test.ts:9,78",
+                "remains": "Merge the two tests at `tests/cli/commands/declarations.test.ts:9` and `:78`, which run the same flow, into one `test.each` table over `generated` and `exclude`, and drop the final fixed runs (lines 38-43 and 97-102)."
+            }
+        ],
         "originalLine": 22
     },
     {
         "id": "areas/integration-tests/009",
         "source": "findings/areas/integration-tests.md",
-        "line": 15,
+        "line": 14,
         "section": "Findings",
         "finding": "| `cli/commands/levels.test.ts:30`, `expectNamingAllowance` | This repeats `reasons.test.ts:36`, \"named allowances follow require_reasons=%s and removal restores enforcement\": add the allowance, the check passes, remove it, and `banned-term` returns. | Delete the allowance part from the levels test. Keep the level and `enable` behavior there. |",
         "owner": "`cli/commands/levels.test.ts:30`, `expectNamingAllowance`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/levels.test.ts:29,76",
+                "remains": "Delete the allowed-name part (`expectNamingAllowance`) from `tests/cli/commands/levels.test.ts:29,76`; keep the level and `enable` behavior there. When review/policy-format/021 deletes `require_reasons`, reduce `reasons.test.ts:35` to the one remaining behavior: a reason is always required."
+            }
+        ],
         "originalLine": 24
     },
     {
         "id": "areas/integration-tests/010",
         "source": "findings/areas/integration-tests.md",
-        "line": 16,
+        "line": 15,
         "section": "Findings",
         "finding": "| `cli/commands/list.test.ts:40-41` | `doctor --settings` exits 2. This doctor flag case sits in a list test and only shows that the parser rejects an unknown option. | Delete the two lines. |",
         "owner": "`cli/commands/list.test.ts:40-41`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/list.test.ts:43-44",
+                "remains": "Delete the two `doctor --settings` lines at `tests/cli/commands/list.test.ts:43-44`; they only show that the argument parser rejects an unknown doctor option, inside a list test."
+            }
+        ],
         "originalLine": 25
     },
     {
         "id": "areas/integration-tests/011",
         "source": "findings/areas/integration-tests.md",
-        "line": 17,
+        "line": 16,
         "section": "Findings",
         "finding": "| `cli/commands/init/refusals.test.ts:15`, \"a preview writes nothing and prints parseable JSON\" | The dry-run tests at line 70 and in `init/selection.test.ts` cover this. They parse the JSON and check that nothing was written. | Delete. |",
         "owner": "`cli/commands/init/refusals.test.ts:15`, \"a preview writes nothing and prints parseable JSON\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/init/refusals.test.ts:16",
+                "remains": "Delete the test \"a preview writes nothing and prints parseable JSON\" at `tests/cli/commands/init/refusals.test.ts:16`; the dry-run tests in `tests/cli/commands/init/selection.test.ts` parse the JSON and check that nothing was written."
+            }
+        ],
         "originalLine": 26
     },
     {
         "id": "areas/integration-tests/012",
         "source": "findings/areas/integration-tests.md",
-        "line": 18,
+        "line": 17,
         "section": "Findings",
         "finding": "| `cli/commands/init/refusals.test.ts:25`, rows \"a choice outside its list\" and \"an unknown hook\" | Both rows reach the same argument-parser choice check. The hook row runs `check`, not `init`, inside a file about init. | Keep one row. If the hook case stays, move it to `check/refusals.test.ts`. |",
         "owner": "`cli/commands/init/refusals.test.ts:25`, rows \"a choice outside its list\" and \"an unknown hook\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/init/refusals.test.ts:26-29",
+                "remains": "Delete the 'an unknown hook' row from the table at `tests/cli/commands/init/refusals.test.ts:26-30`: it runs `check`, not `init`, and reaches the same argument-parser choice check as 'a choice outside its list'."
+            }
+        ],
         "originalLine": 27
     },
     {
         "id": "areas/integration-tests/013",
         "source": "findings/areas/integration-tests.md",
-        "line": 19,
+        "line": 18,
         "section": "Findings",
         "finding": "| `cli/commands/init/refusals.test.ts:54` and `:70` | Neither test is a refusal. They test recommended kits, scopes and plan flags. The `.prettierrc.json` removal note repeats `init/replace.test.ts:58`. | Move line 54 to `init/selection.test.ts`. Delete line 70, or move its hooks, CI and runner checks to the selection file. |",
         "owner": "`cli/commands/init/refusals.test.ts:54` and `:70`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/init/refusals.test.ts:98,112",
+                "remains": "Move the tests at `tests/cli/commands/init/refusals.test.ts:97` and `:113` to `tests/cli/commands/init/selection.test.ts`; neither is a refusal. In the second, drop the `.prettierrc.json` removal note, which repeats `tests/cli/commands/init/replace.test.ts`."
+            }
+        ],
         "originalLine": 28
     },
     {
         "id": "areas/integration-tests/014",
         "source": "findings/areas/integration-tests.md",
-        "line": 20,
+        "line": 19,
         "section": "Findings",
         "finding": "| `cli/commands/init/refusals.test.ts:92`, \"init refuses invalid %s content %s before writing\" | Six full `init` runs test one behavior: a manifest read error stops init. The field-type cases belong to the manifest reader, which `repository/manifests.test.ts:108` already tests. | Keep one CLI row. Move the field-type rows to `repository/manifests.test.ts`. |",
         "owner": "`cli/commands/init/refusals.test.ts:92`, \"init refuses invalid %s content %s before writing\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/init/refusals.test.ts:134-149",
+                "remains": "Keep one row of the table \"init refuses invalid %s content %s before writing\" at `tests/cli/commands/init/refusals.test.ts:134-149` (a manifest read error stops init before writing), and move the field-type rows to `tests/cli/repository/manifests.test.ts` as direct manifest-reader cases."
+            }
+        ],
         "originalLine": 29
-    },
-    {
-        "id": "areas/integration-tests/015",
-        "source": "findings/areas/integration-tests.md",
-        "line": 21,
-        "section": "Findings",
-        "finding": "| `cli/commands/init/refusals.test.ts:119`, \"init from a profile address that answers 404 exits 2 and writes nothing\" | The fetch call count and \"answered 404\" repeat `tests/unit/cli/policy/profiles/sources.test.ts:20`. `toHaveBeenCalledTimes(1)` is an internal call count. | Keep only the exit 2 and unchanged-tree assertions. |",
-        "owner": "`cli/commands/init/refusals.test.ts:119`, \"init from a profile address that answers 404 exits 2 and writes nothing\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 30
     },
     {
         "id": "areas/integration-tests/016",
         "source": "findings/areas/integration-tests.md",
-        "line": 22,
+        "line": 20,
         "section": "Findings",
         "finding": "| `cli/commands/python-ownership.test.ts:12` and `:44` | These test the `python/pip-installs` and `python/import-linter` checks but sit in the commands folder. The second test is not about ownership, and line 59 pins a whole note sentence. | Move both to `tests/integration/cli/checks/language/python/`. Assert the status and the setting name, not the sentence. |",
         "owner": "`cli/commands/python-ownership.test.ts:12` and `:44`",
         "location": null,
-        "status": "open",
+        "status": "partial",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "partial",
+                "evidence": "tests/cli/checks/language/python/installation.test.ts:20,51,66",
+                "remains": "In `tests/cli/checks/language/python/installation.test.ts:66`, assert the check status and the setting name instead of the whole note sentence."
+            }
+        ],
         "originalLine": 31
     },
     {
         "id": "areas/integration-tests/017",
         "source": "findings/areas/integration-tests.md",
-        "line": 23,
+        "line": 21,
         "section": "Findings",
         "finding": "| `cli/commands/reasons.test.ts:75` \"inline suppression reasons follow require_reasons=%s\" and `:104` \"shared noqa text is attributed only to the tool that reads the file\" | These are `structure/suppressions` check tests. With `required = true`, line 75 repeats the `shellcheck-no-reason` row of `checks/general/structure/planted.test.ts:73`. `execution/suppression-comments.test.ts:39` covers where the reason sits. | Move line 104 to the structure checks. Delete the `required = true` half of line 75. |",
         "owner": "`cli/commands/reasons.test.ts:75` \"inline suppression reasons follow require_reasons=%s\" and `:104` \"shared noqa text is attributed only to the tool that reads the file\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/reasons.test.ts:69,98",
+                "remains": "Delete the test at `tests/cli/commands/reasons.test.ts:69`: its `required = true` half repeats `tests/config/cli/checks/general/structure/findings.ts:116`, and its `required = false` half goes away when `review/policy-format/021` deletes `require_reasons`. Move the test at `tests/cli/commands/reasons.test.ts:98` to `tests/cli/checks/general/structure/suppressions.test.ts`."
+            }
+        ],
         "originalLine": 32
     },
     {
         "id": "areas/integration-tests/019",
         "source": "findings/areas/integration-tests.md",
-        "line": 24,
+        "line": 22,
         "section": "Findings",
         "finding": "| `cli/commands/roots.test.ts:22-23`, \"init refuses a symlinked managed directory...\" | These lines assert that `outside/mutation.lock` and `outside/ownership.json` do not exist. No code writes either name at that place: the lock is `.gspot/state/writer.lock` and the log is `.gspot/state/ownership.json`. The lines cannot fail. | Assert that `readdirSync(outside)` equals `['sentinel']`, as `storage.test.ts:26` does. |",
         "owner": "`cli/commands/roots.test.ts:22-23`, \"init refuses a symlinked managed directory...\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/roots.test.ts:23-24",
+                "remains": "Replace the two absence checks at `tests/cli/commands/roots.test.ts:23-24` with `expect(readdirSync(outside)).toStrictEqual(['sentinel'])`, which fails on any write outside the configuration root."
+            }
+        ],
         "originalLine": 34
     },
     {
         "id": "areas/integration-tests/020",
         "source": "findings/areas/integration-tests.md",
-        "line": 25,
+        "line": 23,
         "section": "Findings",
         "finding": "| `cli/commands/storage.test.ts:10` and `cli/commands/roots.test.ts:13` | Both test that gspot refuses a `.gspot` that links outside the repository, one for `check` and one for `init`. The guard is the same. | Use one table over the commands that write, in one file. |",
         "owner": "`cli/commands/storage.test.ts:10` and `cli/commands/roots.test.ts:13`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/storage.test.ts:10; tests/cli/commands/roots.test.ts:14",
+                "remains": "Merge the test at `tests/cli/commands/storage.test.ts:10` into `tests/cli/commands/roots.test.ts:14` as one table over the writing commands `init` and `check`, and delete `storage.test.ts`. Then `review/tests-layout/033` has no `storage` file to move."
+            }
+        ],
         "originalLine": 35
     },
     {
         "id": "areas/integration-tests/022",
         "source": "findings/areas/integration-tests.md",
-        "line": 26,
+        "line": 24,
         "section": "Findings",
         "finding": "| `cli/commands/selectors.test.ts:169`, \"index checks copy matching locked dependencies and refuse a different working lock\" | The lock-mismatch half repeats `repository/snapshot/dependencies.test.ts:145` and `:227`, which test the same \"do not match the revision manifests and locks\" refusal directly. | Keep the copy-and-preserve part. Delete the lock-mismatch half. |",
         "owner": "`cli/commands/selectors.test.ts:169`, \"index checks copy matching locked dependencies and refuse a different working lock\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/check/snapshot.test.ts:126,167-176",
+                "remains": "In the test at `tests/cli/commands/check/snapshot.test.ts:126`, keep the copy-and-preserve part and delete the lockfile-mismatch half (lines 167-176), which repeats `tests/cli/repository/snapshot/dependencies.test.ts:170,249`."
+            }
+        ],
         "originalLine": 37
-    },
-    {
-        "id": "areas/integration-tests/023",
-        "source": "findings/areas/integration-tests.md",
-        "line": 27,
-        "section": "Findings",
-        "finding": "| `cli/commands/check/selection.test.ts:179`, \"a staged environment file stops the commit hook before any check runs\" | The JSON refusal repeats `checks/env-files.test.ts:10`. Only the `ran.txt` assertion is new. | Move the \"no check ran\" assertion into the env-files test and delete this test. |",
-        "owner": "`cli/commands/check/selection.test.ts:179`, \"a staged environment file stops the commit hook before any check runs\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 38
     },
     {
         "id": "areas/integration-tests/024",
         "source": "findings/areas/integration-tests.md",
-        "line": 28,
+        "line": 25,
         "section": "Findings",
         "finding": "| `cli/commands/changed.test.ts:52-54,66-80` and `cli/repository/staged.test.ts:56,66,99` | The CLI tests and the function tests repeat each other. An invalid ref gives \"Git merge-base failed\" in both. A deleted upstream is named in both. A new branch takes the remote default in both. | Keep the reference-resolution cases in `staged.test.ts`. In `changed.test.ts`, keep only the \"use --changed=<ref>\" message and the comparison label. |",
         "owner": "`cli/commands/changed.test.ts:52-54,66-80` and `cli/repository/staged.test.ts:56,66,99`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/changed.test.ts:59-69,72-96; tests/cli/repository/staged.test.ts:64,74,107",
+                "remains": "Keep the reference-resolution cases (an invalid ref, a deleted upstream, the remote default for a new branch) only in `tests/cli/repository/staged.test.ts:64,74,107`. In `tests/cli/commands/changed.test.ts:59-69,72-96`, delete those cases and keep only the `use --changed --base <ref>` message and the comparison label."
+            }
+        ],
         "originalLine": 39
     },
     {
         "id": "areas/integration-tests/025",
         "source": "findings/areas/integration-tests.md",
-        "line": 29,
+        "line": 26,
         "section": "Findings",
         "finding": "| `cli/commands/cancellation.test.ts:197`, \"staged cancellation during dependency copying removes partial output...\" | This repeats `repository/snapshot/dependencies.test.ts:170` at the CLI tier, with 4,000 files and a child process. The exit code and the JSON error are already covered at line 50 of the same file. | Delete. |",
         "owner": "`cli/commands/cancellation.test.ts:197`, \"staged cancellation during dependency copying removes partial output...\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/cancellation.test.ts:249-302",
+                "remains": "Delete the test \"staged cancellation during dependency copying removes partial output\" at `tests/cli/commands/cancellation.test.ts:249-302`; `tests/cli/repository/snapshot/dependencies.test.ts:170` covers the copy cancellation, and the test at line 50 of the same file covers the exit code and the JSON error."
+            }
+        ],
         "originalLine": 40
     },
     {
         "id": "areas/integration-tests/026",
         "source": "findings/areas/integration-tests.md",
-        "line": 30,
+        "line": 27,
         "section": "Findings",
         "finding": "| `cli/commands/explain.test.ts:49-58`, \"explain > setting explanations include nested-only settings...\" | The second run after changing 95 to 96 only shows that explain reads the file again. | Delete the second run. |",
         "owner": "`cli/commands/explain.test.ts:49-58`, \"explain > setting explanations include nested-only settings...\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/explain/selection.test.ts:40-50",
+                "remains": "Delete the second run after changing 95 to 96 in `tests/cli/commands/explain/selection.test.ts:40-50`; it only shows that explain reads the file again."
+            }
+        ],
         "originalLine": 41
     },
     {
         "id": "areas/integration-tests/027",
         "source": "findings/areas/integration-tests.md",
-        "line": 31,
+        "line": 28,
         "section": "Findings",
         "finding": "| `cli/execution/ast-grep.test.ts:52` and `:32` | `processRun.mock.calls.length > 1` and `command.slice(5)` assert how many processes start and where the files sit in argv. The behavior, that every file is sent and every match is kept, is already asserted. | Drop the call count. Read the batch from the file arguments instead of a fixed offset. |",
         "owner": "`cli/execution/ast-grep.test.ts:52` and `:32`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/checks/language/bash/limits.test.ts:35,62",
+                "remains": "In the batching test at `tests/cli/checks/language/bash/limits.test.ts:12-67`, delete `expect(processRun.mock.calls.length).toBeGreaterThan(1)` (line 62) and read each batch from the file arguments of the command (the arguments after the rule file) instead of `command.slice(5)` (line 35). `review/tests-cli/026` replaces the 5,000-file tree of the same test."
+            }
+        ],
         "originalLine": 42
     },
     {
         "id": "areas/integration-tests/028",
         "source": "findings/areas/integration-tests.md",
-        "line": 32,
+        "line": 29,
         "section": "Findings",
         "finding": "| `cli/execution/ast-grep.test.ts:59`, \"ast-grep rejects %s and accepts corrected execution\" | All four rows repeat the same clean run at lines 92-95. | Assert the rejection in each row. Test the clean run once. |",
         "owner": "`cli/execution/ast-grep.test.ts:59`, \"ast-grep rejects %s and accepts corrected execution\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/checks/language/bash/limits.test.ts:69-115",
+                "remains": "In the table \"ast-grep rejects %s and accepts corrected execution\" at `tests/cli/checks/language/bash/limits.test.ts:69-115`, assert only the rejection in each row and move the clean run (lines 111-113) into one separate test."
+            }
+        ],
         "originalLine": 43
     },
     {
         "id": "areas/integration-tests/029",
         "source": "findings/areas/integration-tests.md",
-        "line": 33,
+        "line": 30,
         "section": "Findings",
         "finding": "| `cli/execution/comment-syntax.test.ts:16`, \"suppression comments in %s distinguish strings and templates...\" | All five extensions go through one function, `javascriptComments` (`comments.ts:186`). The `mts`, `cts` and `tsx` rows repeat `ts`, and the source holds no JSX. | Keep the `js` and `ts` rows. JSX is covered by the next test. |",
         "owner": "`cli/execution/comment-syntax.test.ts:16`, \"suppression comments in %s distinguish strings and templates...\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/comment-syntax.test.ts:16",
+                "remains": "Keep only the `js` and `ts` rows of the table at `tests/cli/execution/comment-syntax.test.ts:16` and delete the `mts`, `cts`, and `tsx` rows, which go through the same `javascriptComments` (`packages/cli/src/parsers/comments.ts:152-159`); the next test covers JSX. `review/tests-layout/035` moves the file to `tests/cli/parsers/comments.test.ts`."
+            }
+        ],
         "originalLine": 44
     },
     {
         "id": "areas/integration-tests/030",
         "source": "findings/areas/integration-tests.md",
-        "line": 34,
+        "line": 31,
         "section": "Findings",
         "finding": "| `cli/execution/comment-syntax.test.ts:77-140` | These are pure calls of `sourceComments(path, text)` with no file or session, so they are unit tests. The JavaScript and TypeScript part overlaps `suppression-comments.test.ts:10`. | Move them to `tests/unit/cli/checks/general/structure/`. Merge the JavaScript and TypeScript cases with suppression-comments. |",
         "owner": "`cli/execution/comment-syntax.test.ts:77-140`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/comment-syntax.test.ts:77-140",
+                "remains": "Merge the JavaScript and TypeScript cases of `tests/cli/execution/comment-syntax.test.ts:77-140` with `tests/cli/checks/general/structure/suppressions.test.ts:12`. The move of the file to `tests/cli/parsers/comments.test.ts` is `review/tests-layout/035`."
+            }
+        ],
         "originalLine": 45
-    },
-    {
-        "id": "areas/integration-tests/034",
-        "source": "findings/areas/integration-tests.md",
-        "line": 35,
-        "section": "Findings",
-        "finding": "| `cli/execution/fixers/linters.test.ts:12`, \"$configuration correction status agrees with native residual diagnostics\" | It runs real ESLint and Stylelint fixers. It is the same table as `tests/tools/cli/execution/fixers.test.ts:64` for SQLFluff and markdownlint. | Move both rows into the tools-tier table. |",
-        "owner": "`cli/execution/fixers/linters.test.ts:12`, \"$configuration correction status agrees with native residual diagnostics\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 49
     },
     {
         "id": "areas/integration-tests/035",
         "source": "findings/areas/integration-tests.md",
-        "line": 36,
+        "line": 32,
         "section": "Findings",
         "finding": "| `cli/execution/fixers/isolation.test.ts:115-116`, \"removes the scratch directory after a failed correction...\" | The test cuts the scratch path out of the note text and asserts the internal `gspot-fix-` folder prefix. | Point `os.tmpdir` at a sandbox folder, as the test at line 123 does, and assert that the folder is empty. |",
         "owner": "`cli/execution/fixers/isolation.test.ts:115-116`, \"removes the scratch directory after a failed correction...\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/fixers/isolation.test.ts:118-119",
+                "remains": "In `tests/cli/execution/fixers/isolation.test.ts:118-119`, point `os.tmpdir` at a sandbox folder, as the next test in the file does, and assert that the folder is empty after the failed fix, instead of cutting the scratch path out of the note and asserting the `gspot-fix-` prefix."
+            }
+        ],
         "originalLine": 50
     },
     {
         "id": "areas/integration-tests/036",
         "source": "findings/areas/integration-tests.md",
-        "line": 37,
+        "line": 33,
         "section": "Findings",
         "finding": "| `cli/execution/fixers/outcomes.test.ts:37` and `:55` | Two tables classify the same `runFixer` status from the exit code and the bytes. Their changed and partial rows overlap. | Merge them into one table with an `exit_codes` column. |",
         "owner": "`cli/execution/fixers/outcomes.test.ts:37` and `:55`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/fixers/outcomes.test.ts:37,55",
+                "remains": "Merge the two `runFixer` classification tables at `tests/cli/execution/fixers/outcomes.test.ts:37` and `:55` into one table with an `exit_codes` column, and drop the overlapping changed and partial rows."
+            }
+        ],
         "originalLine": 51
     },
     {
         "id": "areas/integration-tests/037",
         "source": "findings/areas/integration-tests.md",
-        "line": 38,
+        "line": 34,
         "section": "Findings",
         "finding": "| `cli/execution/identity.test.ts:23`, \"a check keeps its name in the report and in its findings\" | Line 28 asserts that the parsed policy holds the name the test just wrote, which compares a constant with itself. The other two lines repeat check names that every report test asserts. | Delete the test. |",
         "owner": "`cli/execution/identity.test.ts:23`, \"a check keeps its name in the report and in its findings\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/count-pattern.test.ts:23-31",
+                "remains": "Delete the test \"a check keeps its name in the report and in its findings\" at `tests/cli/execution/count-pattern.test.ts:23-31`: line 28 compares the policy with the name the test just wrote, and the other two lines repeat check IDs that every report test asserts."
+            }
+        ],
         "originalLine": 52
-    },
-    {
-        "id": "areas/integration-tests/038",
-        "source": "findings/areas/integration-tests.md",
-        "line": 39,
-        "section": "Findings",
-        "finding": "| `cli/execution/identity.test.ts:33`, \"counted failures survive final filtering without diagnostic locations\" | The child CLI run at lines 47-59 repeats the in-process result and checks only the exit code. Line 61 edits `session.policyFiles.policy` in memory to fake a fix. The file name \"identity\" does not describe this test or the test at line 66. | Drop the child run. Edit `gspot.toml` and open a new session. Rename the file, for example to `count-pattern.test.ts`. |",
-        "owner": "`cli/execution/identity.test.ts:33`, \"counted failures survive final filtering without diagnostic locations\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 53
     },
     {
         "id": "areas/integration-tests/039",
         "source": "findings/areas/integration-tests.md",
-        "line": 40,
+        "line": 35,
         "section": "Findings",
         "finding": "| `cli/execution/parse-output/contract.test.ts:48` and `:65` | Each assertion accepts either an empty result or a `GspotError`. It fails only if the parser throws another error type. These are pure `parseOutput` calls with no files. | Move them to unit. Assert the one outcome each format gives for empty output and for foreign output. |",
         "owner": "`cli/execution/parse-output/contract.test.ts:48` and `:65`",
         "location": null,
-        "status": "open",
+        "status": "partial",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "partial",
+                "evidence": "tests/cli/execution/parse-output/contract.test.ts:30-56",
+                "remains": "In `tests/cli/execution/parse-output/contract.test.ts`, the empty-output case (lines 30-38) and the line-format case (lines 47-56) accept an empty result or a `GspotError`. Run each case once per format to read its outcome, then assert that one outcome per format. The file stays in `tests/cli` (four-suite decision of October 4, 2026)."
+            }
+        ],
         "originalLine": 54
     },
     {
         "id": "areas/integration-tests/040",
         "source": "findings/areas/integration-tests.md",
-        "line": 41,
+        "line": 36,
         "section": "Findings",
         "finding": "| `cli/execution/parse-output/declared-checks.test.ts:145`, \"a [[check]] entry > reruns a repository check when an input outside its selected paths changes\" | gspot keeps no result cache, so every run executes the command and the test cannot fail. The third run repeats the first. | Delete. |",
         "owner": "`cli/execution/parse-output/declared-checks.test.ts:145`, \"a [[check]] entry > reruns a repository check when an input outside its selected paths changes\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/parse-output/declared-checks.test.ts:144",
+                "remains": "Delete the test \"a [[check]] entry > reruns a repository check when an input outside its selected paths changes\" at `tests/cli/execution/parse-output/declared-checks.test.ts:144`; gspot keeps no result cache, so the test cannot fail."
+            }
+        ],
         "originalLine": 55
     },
     {
         "id": "areas/integration-tests/041",
         "source": "findings/areas/integration-tests.md",
-        "line": 42,
+        "line": 37,
         "section": "Findings",
         "finding": "| `cli/execution/parse-output/declared-checks.test.ts:14,50,87` | These pass fixed process results to `checkedFindings` for kit checks (`actions/pinact`, `spelling/typos`, `javascript/eslint`). The file is named for declared checks. | Move them to the findings tests of kit checks in unit (`tests/unit/cli/execution/broken-tool.test.ts` owns this). |",
         "owner": "`cli/execution/parse-output/declared-checks.test.ts:14,50,87`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/parse-output/declared-checks.test.ts:30,67,107",
+                "remains": "Move the three configuration `checkedFindings` cases (pinact, typos, eslint) at `tests/cli/execution/parse-output/declared-checks.test.ts:30,67,107` to `tests/cli/execution/output-failures.test.ts`, which owns the findings tests of configuration checks."
+            }
+        ],
         "originalLine": 56
-    },
-    {
-        "id": "areas/integration-tests/042",
-        "source": "findings/areas/integration-tests.md",
-        "line": 43,
-        "section": "Findings",
-        "finding": "| `cli/execution/parse-output/formats.test.ts:125-200` | These are pure `parseOutput` calls with no files: unit tests in the integration tier. | Move them to `tests/unit/cli/execution/`. |",
-        "owner": "`cli/execution/parse-output/formats.test.ts:125-200`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 57
     },
     {
         "id": "areas/integration-tests/043",
         "source": "findings/areas/integration-tests.md",
-        "line": 44,
+        "line": 38,
         "section": "Findings",
         "finding": "| `cli/execution/policy-findings.test.ts:23` and `:45` | Both repeat `commands/check/policy-errors.test.ts:52`: a missing reason is a `gspot/policy` finding, the other checks still run, and apply refuses. `tests/unit/cli/policy/read-policy/recovery.test.ts:10` repeats it too. | Delete the file. |",
         "owner": "`cli/execution/policy-findings.test.ts:23` and `:45`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/policy-findings.test.ts:16,41",
+                "remains": "Delete `tests/cli/execution/policy-findings.test.ts`; its two tests (lines 16 and 41) repeat `tests/cli/commands/check/policy-errors.test.ts:52` and `tests/cli/policy/read-policy/recovery.test.ts:18`."
+            }
+        ],
         "originalLine": 58
     },
     {
         "id": "areas/integration-tests/044",
         "source": "findings/areas/integration-tests.md",
-        "line": 45,
+        "line": 39,
         "section": "Findings",
         "finding": "| `cli/execution/progress.test.ts:11`, \"completion callbacks publish filtered results before the remaining check finishes\" | The `project/waiting` check gives up after 100 polls of 10 ms. On a slow runner, the first callback can arrive after 1 second and the test fails with no bug. | Bound the wait by the check timeout, or end the waiting check from the callback. |",
         "owner": "`cli/execution/progress.test.ts:11`, \"completion callbacks publish filtered results before the remaining check finishes\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/progress.test.ts:37",
+                "remains": "Make the `project/waiting` command at `tests/cli/execution/progress.test.ts:37` poll until the `completed` file exists, with no attempt cap. The `onResult` callback already writes that file when `project/fast` completes, and the one per-test limit of review/carve-outs/001 bounds the wait."
+            }
+        ],
         "originalLine": 59
-    },
-    {
-        "id": "areas/integration-tests/045",
-        "source": "findings/areas/integration-tests.md",
-        "line": 46,
-        "section": "Findings",
-        "finding": "| `cli/execution/resource-reads.test.ts:115`, \"a dry run creates no files\" | `isDryRun` changes behavior only when `fix` is on (`execute.ts:162`), and the check writes nothing either way. The test passes even if dry run is ignored. It also sits in a file about resource reads. | Delete it, or run it with `fix: true` and a fixer that writes, in the fixer tests. |",
-        "owner": "`cli/execution/resource-reads.test.ts:115`, \"a dry run creates no files\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 60
     },
     {
         "id": "areas/integration-tests/046",
         "source": "findings/areas/integration-tests.md",
-        "line": 47,
+        "line": 40,
         "section": "Findings",
         "finding": "| `cli/execution/structure.test.ts` (whole file) and `:99`, \"%s retains shared folder enforcement and reads corrections\" | These are `structure/*` check tests in the execution folder. Line 99 repeats the lone-files and prefix-collisions rows of `checks/general/structure/planted.test.ts:37-60`, and its three language rows run the same check code. | Move the file to `checks/general/structure/`. Delete line 99, or keep one row. |",
         "owner": "`cli/execution/structure.test.ts` (whole file) and `:99`, \"%s retains shared folder enforcement and reads corrections\"",
         "location": null,
-        "status": "open",
+        "status": "partial",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "partial",
+                "evidence": "tests/cli/checks/general/structure/layout.test.ts:100-104",
+                "remains": "Delete the three-language table test at `tests/cli/checks/general/structure/layout.test.ts:100-129`; the Bash lone-files and prefix-collisions rows of `CASES` in `tests/config/cli/checks/general/structure/findings.ts` cover both checks and their fixes (`areas/unit-tests/008` deletes the JavaScript rows)."
+            }
+        ],
         "originalLine": 61
-    },
-    {
-        "id": "areas/integration-tests/047",
-        "source": "findings/areas/integration-tests.md",
-        "line": 48,
-        "section": "Findings",
-        "finding": "| `cli/execution/scopes/xcode.test.ts:98`, row `recommended` of \"orphan assets follow %s and tracked scoped exceptions\" | At the recommended level the check does not run. The corrected run and the ignore run at lines 113-121 pass whatever the code does. | Run the later steps only for `all`. |",
-        "owner": "`cli/execution/scopes/xcode.test.ts:98`, row `recommended` of \"orphan assets follow %s and tracked scoped exceptions\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 62
-    },
-    {
-        "id": "areas/integration-tests/048",
-        "source": "findings/areas/integration-tests.md",
-        "line": 49,
-        "section": "Findings",
-        "finding": "| `cli/execution/scopes/trpc.test.ts:7`, \"tRPC resolves the configured server boundary for %s...\" | Six full CLI runs vary only the form of the import statement. This tests the import extractor through the CLI, in a folder about scopes. | Move it to the checks tier and test the import forms against the extractor in unit. Keep one CLI row. |",
-        "owner": "`cli/execution/scopes/trpc.test.ts:7`, \"tRPC resolves the configured server boundary for %s...\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 63
     },
     {
         "id": "areas/integration-tests/049",
         "source": "findings/areas/integration-tests.md",
-        "line": 50,
+        "line": 41,
         "section": "Findings",
         "finding": "| `cli/execution/tool-runner/adapters.test.ts:67`, \"an adapter reads a changed executable version on the next command instead of reusing its old success\" | Every run opens a new session, so nothing could reuse an old result. The test only shows that a version below the floor is `missing`. `tools/inspect/versions.test.ts:87` tests the per-session cache. | Rename it to the floor behavior, or delete it. |",
         "owner": "`cli/execution/tool-runner/adapters.test.ts:67`, \"an adapter reads a changed executable version on the next command instead of reusing its old success\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/tool-runner/adapters.test.ts:79-103",
+                "remains": "Rename the test at `tests/cli/execution/tool-runner/adapters.test.ts:79` to \"an adapter reports a version below the floor as missing\"."
+            }
+        ],
         "originalLine": 64
-    },
-    {
-        "id": "areas/integration-tests/050",
-        "source": "findings/areas/integration-tests.md",
-        "line": 51,
-        "section": "Findings",
-        "finding": "| `cli/execution/vale.test.ts:15`, \"Vale rejects %s and accepts corrected execution\" | After each failure, every row repeats the same success flow at lines 47-67. The test mocks spawn and inspection, and `tests/tools/cli/execution/vale.test.ts` runs the real tool. | Keep the failure assertion in each row. Test the output parse and the timeout argument once. |",
-        "owner": "`cli/execution/vale.test.ts:15`, \"Vale rejects %s and accepts corrected execution\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 65
     },
     {
         "id": "areas/integration-tests/051",
         "source": "findings/areas/integration-tests.md",
-        "line": 52,
+        "line": 42,
         "section": "Findings",
         "finding": "| `cli/execution/workspace.test.ts:20`, \"dependency copies let concurrent native process output drain\" | `drained` must be true when `scratchCopy` returns. If the copy of 2,048 files finishes before the producer writes 8 MB, the test fails with no bug. | Make the producer start writing only after the copy starts, or assert that both finish without a deadlock instead of their order. |",
         "owner": "`cli/execution/workspace.test.ts:20`, \"dependency copies let concurrent native process output drain\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/execution/workspace.test.ts:51-54",
+                "remains": "In `tests/cli/execution/workspace.test.ts:51-54`, assert that `scratchCopy` and the producer both finish without a deadlock, and drop the assertion that `drained` is true when `scratchCopy` returns."
+            }
+        ],
         "originalLine": 66
     },
     {
         "id": "areas/integration-tests/052",
         "source": "findings/areas/integration-tests.md",
-        "line": 53,
+        "line": 43,
         "section": "Findings",
         "finding": "| `cli/generation/hooks.test.ts:28-43`, \"the hook scripts under the %s runner parse and run one check each\" | The test asserts the script text: the header line, the `cd` quoting, `cygpath -w` and the exact `exec` lines. Only `sh -n` checks behavior. | Run each hook with a fake `gspot`, `npm` and `mise` on PATH that records argv, cwd and `GSPOT_HOOK`, then assert those values. |",
         "owner": "`cli/generation/hooks.test.ts:28-43`, \"the hook scripts under the %s runner parse and run one check each\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/generation/hooks.test.ts:13-48",
+                "remains": "In `tests/cli/generation/hooks.test.ts:13-48`, run each hook script with a fake `gspot`, `npm`, and `mise` on PATH that record argv, cwd, and `GSPOT_HOOK`, and assert those values instead of the header line, the `cd` quoting, `cygpath -w`, and the exact `exec` lines."
+            }
+        ],
         "originalLine": 67
     },
     {
         "id": "areas/integration-tests/053",
         "source": "findings/areas/integration-tests.md",
-        "line": 54,
+        "line": 44,
         "section": "Findings",
         "finding": "| `cli/generation/level-contract.test.ts:12`, \"a scope resolves its own tool settings over the root defaults\" | It reads `scope.view.settings`, an internal shape, and it is not about levels. `commands/nested-scopes.test.ts:39` and `commands/explain.test.ts:23` test inheritance through the CLI. | Delete. |",
         "owner": "`cli/generation/level-contract.test.ts:12`, \"a scope resolves its own tool settings over the root defaults\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/generation/level-contract.test.ts:20",
+                "remains": "Delete the test \"a scope resolves its own tool settings over the root defaults\" at `tests/cli/generation/level-contract.test.ts:20`: it reads the internal `scope.view.settings` and is not about levels; `tests/cli/commands/nested-scopes.test.ts` and `tests/cli/commands/explain/selection.test.ts` test inheritance through the CLI."
+            }
+        ],
         "originalLine": 68
-    },
-    {
-        "id": "areas/integration-tests/054",
-        "source": "findings/areas/integration-tests.md",
-        "line": 55,
-        "section": "Findings",
-        "finding": "| `cli/generation/level-contract.test.ts:37`, \"experimental activation is refused before generation\" | This is a pure `assertPolicyComplete` call, so it is a policy unit test. | Move it to `tests/unit/cli/policy/`. |",
-        "owner": "`cli/generation/level-contract.test.ts:37`, \"experimental activation is refused before generation\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 69
     },
     {
         "id": "areas/integration-tests/055",
         "source": "findings/areas/integration-tests.md",
-        "line": 56,
+        "line": 45,
         "section": "Findings",
         "finding": "| `cli/generation/managed-ignores.test.ts:75`, \"a manifest cannot hide authored paths through %s\" | This is a pure `parseManifest` call. Each of the four rows repeats the same valid-manifest check at lines 84-86, and `.toThrow()` has no message. | Move it to `tests/unit/cli/kits/manifests/`. Assert the message and check the valid manifest once. |",
         "owner": "`cli/generation/managed-ignores.test.ts:75`, \"a manifest cannot hide authored paths through %s\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/generation/managed-ignores.test.ts:83-96",
+                "remains": "Move the four `parseManifest` rows at `tests/cli/generation/managed-ignores.test.ts:83-96` to `tests/cli/parsers/configurations/`, assert the refusal message in each row instead of a bare `toThrow()`, and check the valid manifest once."
+            }
+        ],
         "originalLine": 70
     },
     {
         "id": "areas/integration-tests/056",
         "source": "findings/areas/integration-tests.md",
-        "line": 57,
+        "line": 46,
         "section": "Findings",
         "finding": "| `cli/generation/plugin-levels/functions.test.ts:39,67,91,125,165` | Most cases repeat `tests/unit/plugin/rules/no-trivial-functions.test.ts`: object-property callbacks, recursion, casts, constructor state and getters. Only the cross-file uses in `consumer.ts` need the generated configuration. | Keep one test that the generated configuration enables the rule at `all`, plus the cross-file cases. Delete line 165 and the single-file cases at lines 39 and 125. |",
         "owner": "`cli/generation/plugin-levels/functions.test.ts:39,67,91,125,165`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/generation/eslint/functions.test.ts:7,35,90,128",
+                "remains": "In `tests/cli/generation/eslint/functions.test.ts`, delete the single-file tests at line 7 (\"generated lint accepts JavaScript method node shapes\") and line 90 (\"generated file ownership keeps constructor state ...\") and the object-property test at line 128; they repeat `tests/plugin/rules/no-trivial-functions.test.ts`. Keep the tests at lines 35 and 59, which need the generated configuration."
+            }
+        ],
         "originalLine": 71
     },
     {
         "id": "areas/integration-tests/057",
         "source": "findings/areas/integration-tests.md",
-        "line": 58,
+        "line": 47,
         "section": "Findings",
         "finding": "| `cli/generation/plugin-levels/jest.test.ts:13`, \"generated %s lint validates the native expect arguments of %s\" | `jest/valid-expect` has no level condition (`kits/tool/jest/eslint.fragment.js.tmpl:16`). The `recommended` and `all` rows of each runtime run the same branch. | Keep one level per runtime. |",
         "owner": "`cli/generation/plugin-levels/jest.test.ts:13`, \"generated %s lint validates the native expect arguments of %s\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/generation/eslint/jest.test.ts:8-12",
+                "remains": "In the table at `tests/cli/generation/eslint/jest.test.ts:8-12`, keep one level per runtime and delete the other level's rows: `jest/valid-expect` has no level condition (`packages/cli/configurations/tool/jest/eslint.fragment.js.tmpl:2`)."
+            }
+        ],
         "originalLine": 72
     },
     {
         "id": "areas/integration-tests/058",
         "source": "findings/areas/integration-tests.md",
-        "line": 59,
+        "line": 48,
         "section": "Findings",
         "finding": "| `cli/generation/selection.test.ts:12`, \"security output follows the selected security configuration\" | `toContain('rules:')` passes for any YAML file that holds that word. The file name \"selection\" does not describe its three tests: security output, layout and licenses. | Parse the YAML and assert a Bash rule id. Rename the file. |",
         "owner": "`cli/generation/selection.test.ts:12`, \"security output follows the selected security configuration\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/generation/selection.test.ts:19",
+                "remains": "In the security-output test at `tests/cli/generation/selection.test.ts:10-25`, parse the generated YAML and assert a Bash rule id instead of `toContain('rules:')` (line 19). Move that test to a new `tests/cli/generation/semgrep.test.ts` and the license test at line 27 to a new `tests/cli/generation/licenses.test.ts`, and delete `selection.test.ts`, whose name describes neither."
+            }
+        ],
         "originalLine": 73
     },
     {
         "id": "areas/integration-tests/059",
         "source": "findings/areas/integration-tests.md",
-        "line": 60,
+        "line": 49,
         "section": "Findings",
         "finding": "| `cli/generation/shared-settings.test.ts:83-85` | The expected `per-file-ignores` is built from the same two constants that the generator joins (`TEST_FILE_GLOBS` and the pytest default). A wrong value in either constant still passes. | Assert one concrete entry, for example that `**/test_*.py` gets `S101`. |",
         "owner": "`cli/generation/shared-settings.test.ts:83-85`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/generation/shared-settings.test.ts:103-105",
+                "remains": "In `tests/cli/generation/shared-settings.test.ts:103-105`, replace the expected `per-file-ignores` built from `DEFAULT_TEST_PATTERNS` and the manifest constant with one literal assertion: `**/test_*.py` gets `S101`."
+            }
+        ],
         "originalLine": 74
-    },
-    {
-        "id": "areas/integration-tests/060",
-        "source": "findings/areas/integration-tests.md",
-        "line": 61,
-        "section": "Findings",
-        "finding": "| `cli/generation/serialization/toml.test.ts:120`, \"an OSV expiry cannot inject another TOML table\" | `.toThrow()` without a message passes for any failure during emission. | Assert the message that names the bad `until` value. |",
-        "owner": "`cli/generation/serialization/toml.test.ts:120`, \"an OSV expiry cannot inject another TOML table\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 75
     },
     {
         "id": "areas/integration-tests/061",
         "source": "findings/areas/integration-tests.md",
-        "line": 62,
+        "line": 50,
         "section": "Findings",
         "finding": "| `cli/lifecycle/apply/installation.test.ts:24`, \"an npm runner preserves the authored scripts and adds no task of its own\" | The policy sets `runner = \"bun\"`, not npm. | Fix the name or the policy. |",
         "owner": "`cli/lifecycle/apply/installation.test.ts:24`, \"an npm runner preserves the authored scripts and adds no task of its own\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/lifecycle/apply/installation.test.ts:31-34",
+                "remains": "Rename the test at `tests/cli/lifecycle/apply/installation.test.ts:31` to \"a bun runner preserves the authored scripts and adds no task of its own\"; the policy sets `run_with = \"bun\"`."
+            }
+        ],
         "originalLine": 76
     },
     {
         "id": "areas/integration-tests/062",
         "source": "findings/areas/integration-tests.md",
-        "line": 63,
+        "line": 51,
         "section": "Findings",
         "finding": "| `cli/lifecycle/installer-failures.test.ts:112`, \"a repository that already runs hooks keeps them...\" | This repeats the \"another hooks folder\" row of `lifecycle/hooks.test.ts:34`. Only the `mise install` call is new, and the test is not about an installer failure. | Move the `mise install` assertion into that row and delete this test. |",
         "owner": "`cli/lifecycle/installer-failures.test.ts:112`, \"a repository that already runs hooks keeps them...\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/lifecycle/installer-failures.test.ts:117",
+                "remains": "Move the `mise install` assertion of the test at `tests/cli/lifecycle/installer-failures.test.ts:117` into the \"another hooks folder\" row of `tests/cli/lifecycle/hooks.test.ts:56`, and delete the test at `:117`, which repeats that row and is not about an installer failure."
+            }
+        ],
         "originalLine": 77
     },
     {
         "id": "areas/integration-tests/063",
         "source": "findings/areas/integration-tests.md",
-        "line": 64,
+        "line": 52,
         "section": "Findings",
         "finding": "| `cli/lifecycle/ownership/bounded-state.test.ts:16,19,36,57,76-77,88,140`, `replacement-preservation/installations.test.ts:97`, `recovery/links.test.ts:82-85,92-95`, `cli/policy/profile.test.ts:127,132` | These assert private fields of `.gspot/state/ownership.json`: `installs`, `installations`, `pending`, `block.created` and `adopted`. Renaming a field breaks the tests with no behavior change. | Assert behavior instead: what the next `openOwner`, restoration or install does. |",
         "owner": "`cli/lifecycle/ownership/bounded-state.test.ts:16,19,36,57,76-77,88,140`, `replacement-preservation/installations.test.ts:97`, `recovery/links.test.ts:82-85,92-95`, `cli/policy/profile.test.ts:127,132`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/lifecycle/ownership/bounded-state.test.ts:19,23,39,57,71-72,90,164; recovery/links.test.ts:80-96; tests/cli/policy/template.test.ts:175,182",
+                "remains": "Assert behavior instead of the private fields of `.gspot/state/ownership.json` in `tests/cli/lifecycle/ownership/bounded-state.test.ts:19,23,39,57,71-72,90,164` and `tests/cli/lifecycle/ownership/recovery/links.test.ts:80-96`: assert what the next `openOwner`, restoration, or install does. The `pending` assertion at `tests/cli/policy/template.test.ts:175,182` goes with the export test that `review/commands-templates/005` deletes."
+            }
+        ],
         "originalLine": 78
     },
     {
         "id": "areas/integration-tests/064",
         "source": "findings/areas/integration-tests.md",
-        "line": 65,
+        "line": 53,
         "section": "Findings",
         "finding": "| `cli/lifecycle/ownership/bounded-state.test.ts:105`, \"a replaced file keeps no copy, and giving it back deletes it\" | `not.toContain('recovery')` cannot fail, because no code creates a `recovery` entry under `.gspot/state`. | Delete the line, or assert the exact listing of `.gspot/state`. |",
         "owner": "`cli/lifecycle/ownership/bounded-state.test.ts:105`, \"a replaced file keeps no copy, and giving it back deletes it\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/lifecycle/ownership/bounded-state.test.ts:114",
+                "remains": "Delete `not.toContain('recovery')` at `tests/cli/lifecycle/ownership/bounded-state.test.ts:114`."
+            }
+        ],
         "originalLine": 79
     },
     {
         "id": "areas/integration-tests/065",
         "source": "findings/areas/integration-tests.md",
-        "line": 66,
+        "line": 54,
         "section": "Findings",
         "finding": "| `cli/lifecycle/ownership/conflicts/plans.test.ts:8,56,87,122,143` | All five tests (six cases) end in the same freshness check (`assertPlanFresh`, `lifecycle/ownership/apply.ts:11`) with the message \"File changed after its plan\". Lines 122 and 143 repeat line 87 with other plan kinds. | Keep one single-plan case and one batch case. |",
         "owner": "`cli/lifecycle/ownership/conflicts/plans.test.ts:8,56,87,122,143`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/lifecycle/ownership/conflicts/plans.test.ts:11,52,85,137,172",
+                "remains": "In `tests/cli/lifecycle/ownership/conflicts/plans.test.ts`, delete the tests at line 137 (restoration plans) and line 172 (retirement plans), which repeat the batch refusal of line 85 with other plan kinds. Keep the single-plan case at line 11 and the batch case at line 85."
+            }
+        ],
         "originalLine": 80
     },
     {
         "id": "areas/integration-tests/066",
         "source": "findings/areas/integration-tests.md",
-        "line": 67,
+        "line": 55,
         "section": "Findings",
         "finding": "| `cli/lifecycle/ownership/conflicts/links.test.ts:112`, \"lifecycle ownership: later edits survive both apply and a prune\" | It is not about links. It repeats the preserved cases of `configuration-preservation.test.ts` and `conflicts/documents.test.ts:27`. | Delete. |",
         "owner": "`cli/lifecycle/ownership/conflicts/links.test.ts:112`, \"lifecycle ownership: later edits survive both apply and a prune\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/lifecycle/ownership/conflicts/links.test.ts:122",
+                "remains": "Delete the test \"lifecycle ownership: later edits survive both apply and a prune\" at `tests/cli/lifecycle/ownership/conflicts/links.test.ts:122`; it is not about links and repeats `tests/cli/lifecycle/ownership/configuration-preservation.test.ts` and `tests/cli/lifecycle/ownership/conflicts/documents.test.ts:27`."
+            }
+        ],
         "originalLine": 81
     },
     {
         "id": "areas/integration-tests/067",
         "source": "findings/areas/integration-tests.md",
-        "line": 68,
+        "line": 56,
         "section": "Findings",
         "finding": "| `cli/lifecycle/ownership/recovery/links.test.ts:53`, \"an interrupted replacement %s publication settles and releases its writer lock\" | It repeats `recovery/batches.test.ts:40` with one file. Nothing asserts the lock, and the test is not about links. | Delete it, or move it to batches and assert that a second writer can take the lock. |",
         "owner": "`cli/lifecycle/ownership/recovery/links.test.ts:53`, \"an interrupted replacement %s publication settles and releases its writer lock\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/lifecycle/ownership/recovery/links.test.ts:52-98",
+                "remains": "Delete the test at `tests/cli/lifecycle/ownership/recovery/links.test.ts:52-98`; `recovery/batches.test.ts` covers the same interrupted publication with more files."
+            }
+        ],
         "originalLine": 82
     },
     {
         "id": "areas/integration-tests/068",
         "source": "findings/areas/integration-tests.md",
-        "line": 69,
+        "line": 57,
         "section": "Findings",
         "finding": "| `cli/platform/filesystem.test.ts:9` and `:32` | Both run the same write, replace and refused-remove sequence. Line 32 adds only the refused stale write. | Merge line 32 into line 9. |",
         "owner": "`cli/platform/filesystem.test.ts:9` and `:32`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/platform/root.test.ts:18,40",
+                "remains": "Merge the test at `tests/cli/platform/root.test.ts:40` into the test at `:18`: both run the same write, replace, and refused-remove sequence; keep the refused stale write of `:40` as one more step of `:18`."
+            }
+        ],
         "originalLine": 83
-    },
-    {
-        "id": "areas/integration-tests/069",
-        "source": "findings/areas/integration-tests.md",
-        "line": 70,
-        "section": "Findings",
-        "finding": "| `cli/platform/filesystem.test.ts:169` and `:192` | These are pure calls of `mutationPath` and `fileMode`, so they are unit tests. | Move them to `tests/unit/cli/platform/`. |",
-        "owner": "`cli/platform/filesystem.test.ts:169` and `:192`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 84
     },
     {
         "id": "areas/integration-tests/071",
         "source": "findings/areas/integration-tests.md",
-        "line": 71,
+        "line": 58,
         "section": "Findings",
         "finding": "| `cli/policy/key-paths.test.ts:8-99` and `:114` | These are pure `parsePolicyText` calls in the integration tier. Rows repeat `tests/unit/cli/policy/read-policy/recovery.test.ts:10` (a missing ignore reason) and `settings.test.ts:34,49` (an unknown key, a rule set to off). Line 114 repeats line 88 and `recovery.test.ts:70`. | Move the new rows (quoted key, inline table, nested array of tables, CRLF) to `tests/unit/cli/policy/read-policy/`. Delete the repeats and line 114. |",
         "owner": "`cli/policy/key-paths.test.ts:8-99` and `:114`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/policy/key-paths.test.ts:9,65,113",
+                "remains": "In `tests/cli/policy/key-paths.test.ts`, delete the rows that repeat other tests: \"a missing ignore reason\" (line 9; repeats `tests/cli/policy/read-policy/recovery.test.ts:18`) and \"an unknown nested key\" (lines 64-68, the `kitz` row; repeats `tests/cli/policy/read-policy/settings.test.ts`), and delete the test at line 113, which repeats line 87. The file already sits in `tests/cli/policy/`."
+            }
+        ],
         "originalLine": 86
-    },
-    {
-        "id": "areas/integration-tests/072",
-        "source": "findings/areas/integration-tests.md",
-        "line": 72,
-        "section": "Findings",
-        "finding": "| `cli/policy/profile.test.ts:74`, \"profile export refuses unsafe destination %s...\" | `toBeInstanceOf(Error)` passes for any failure, even a missing policy. The four path rows repeat the `mutationPath` checks in `filesystem.test.ts:169`. | Assert the refusal message. Keep one path row and the two link rows. |",
-        "owner": "`cli/policy/profile.test.ts:74`, \"profile export refuses unsafe destination %s...\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 87
-    },
-    {
-        "id": "areas/integration-tests/073",
-        "source": "findings/areas/integration-tests.md",
-        "line": 73,
-        "section": "Findings",
-        "finding": "| `cli/policy/write.test.ts:101`, \"policy edits keep a trailing array comma and write inline tables without one\" | This is a pure `proposePolicy` call. | Move it to unit. |",
-        "owner": "`cli/policy/write.test.ts:101`, \"policy edits keep a trailing array comma and write inline tables without one\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 88
-    },
-    {
-        "id": "areas/integration-tests/074",
-        "source": "findings/areas/integration-tests.md",
-        "line": 74,
-        "section": "Findings",
-        "finding": "| `cli/policy/write.test.ts:204`, \"writePolicy > a dry run writes nothing\" | The test calls only `preparePolicy`, which has no write path, so it tests no dry-run flag. | Delete. |",
-        "owner": "`cli/policy/write.test.ts:204`, \"writePolicy > a dry run writes nothing\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 89
     },
     {
         "id": "areas/integration-tests/075",
         "source": "findings/areas/integration-tests.md",
-        "line": 75,
+        "line": 59,
         "section": "Findings",
         "finding": "| `cli/repository/scopes.test.ts:104` and `cli/commands/init/selection.test.ts:54` | Both use the same fixture to make the same claim: every folder with a project file is a scope, and lint-only packages are set aside. One test calls `proposedScopes` and the other runs `init`. | Keep the function test. Reduce the init test to one scope and the `noLongerRuns` entry. |",
         "owner": "`cli/repository/scopes.test.ts:104` and `cli/commands/init/selection.test.ts:54`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/commands/init/selection.test.ts:93-113; tests/cli/repository/scopes.test.ts:138",
+                "remains": "Reduce the init test at `tests/cli/commands/init/selection.test.ts:93-113` to one scope and the `noLongerRuns` entry; the function test at `tests/cli/repository/scopes.test.ts:138` keeps the full claim that every folder with a project file is a scope."
+            }
+        ],
         "originalLine": 90
     },
     {
         "id": "areas/integration-tests/076",
         "source": "findings/areas/integration-tests.md",
-        "line": 76,
+        "line": 60,
         "section": "Findings",
         "finding": "| `cli/repository/kinds.test.ts:35` and `cli/repository/tracked/discovery.test.ts:77` | Both check a one-rule `.gitignore` in a walk without Git. `tracked/discovery.test.ts:136` covers this with nested rules. | Delete both. |",
         "owner": "`cli/repository/kinds.test.ts:35` and `cli/repository/tracked/discovery.test.ts:77`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/repository/kinds.test.ts:44; tests/cli/repository/tracked/discovery.test.ts:76",
+                "remains": "Delete the one-rule `.gitignore` walk tests at `tests/cli/repository/kinds.test.ts:44` and `tests/cli/repository/tracked/discovery.test.ts:76`; the test at `tests/cli/repository/tracked/discovery.test.ts:137` covers the walk without Git with nested rules."
+            }
+        ],
         "originalLine": 91
     },
     {
         "id": "areas/integration-tests/077",
         "source": "findings/areas/integration-tests.md",
-        "line": 77,
+        "line": 61,
         "section": "Findings",
         "finding": "| `cli/repository/snapshot/letter-case.test.ts:12`, \"a staged check over two spellings of one path passes or refuses with a selection error\" | The test accepts either a pass or a selection error, and the check never reads the files. On a case-folding file system, a snapshot that keeps only one spelling and passes still passes the test. | Detect case folding in the test. On a case-sensitive file system, assert that both spellings reach the check with their own bytes. On a case-folding one, assert the refusal. |",
         "owner": "`cli/repository/snapshot/letter-case.test.ts:12`, \"a staged check over two spellings of one path passes or refuses with a selection error\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/repository/snapshot/letter-case.test.ts:12-43",
+                "remains": "In `tests/cli/repository/snapshot/letter-case.test.ts:12-43`, detect case folding in the sandbox before the run. On a case-sensitive file system, assert that both spellings reach the check with their own bytes; on a case-folding one, assert the selection refusal. Delete the assertion that accepts either outcome."
+            }
+        ],
         "originalLine": 92
     },
     {
         "id": "areas/integration-tests/078",
         "source": "findings/areas/integration-tests.md",
-        "line": 78,
+        "line": 62,
         "section": "Findings",
         "finding": "| `cli/repository/snapshot/gitlinks.test.ts:37-39` | A snapshot test asserts the doctor report and its text layout (`submodule <path>`, with two spaces). `lifecycle/init.test.ts:78` covers the submodule note. | Move the doctor lines to `doctor.test.ts` and assert only the JSON field. |",
         "owner": "`cli/repository/snapshot/gitlinks.test.ts:37-39`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/repository/snapshot/gitlinks.test.ts:38-40",
+                "remains": "Move the doctor lines of `tests/cli/repository/snapshot/gitlinks.test.ts:38-40` to `tests/cli/commands/doctor.test.ts`, and assert the submodule entry of `doctor --json` instead of the text layout `submodule  <path>`."
+            }
+        ],
         "originalLine": 93
-    },
-    {
-        "id": "areas/integration-tests/079",
-        "source": "findings/areas/integration-tests.md",
-        "line": 79,
-        "section": "Findings",
-        "finding": "| `cli/repository/xcode-project.test.ts:66,75,90` | Lines 66 and 75 are pure `readPbxproj` calls. Line 90 runs the full CLI four times to test parser errors. The file tests a check but sits in the repository folder. | Move the parser cases to unit. Keep one CLI row for exit 2, in the checks tier. |",
-        "owner": "`cli/repository/xcode-project.test.ts:66,75,90`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 94
     },
     {
         "id": "areas/integration-tests/080",
         "source": "findings/areas/integration-tests.md",
-        "line": 80,
+        "line": 63,
         "section": "Findings",
         "finding": "| `cli/repository/tracked/boundaries.test.ts:16`, \"opening a session reads less than one megabyte with a two-megabyte source\" | The test counts bytes through `fs.readSync` and `fs.readFileSync` spies. A read through another API is invisible, so the test passes even when the bound is broken. Line 29 pins the internal 4,096-byte prefix size. | Measure through behavior, for example with a file whose tail cannot be read. Otherwise drop the spy totals. |",
         "owner": "`cli/repository/tracked/boundaries.test.ts:16`, \"opening a session reads less than one megabyte with a two-megabyte source\"",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "tests/cli/repository/tracked/boundaries.test.ts:16-45",
+                "remains": "Delete the test \"opening a session reads less than one megabyte with a two-megabyte source\" at `tests/cli/repository/tracked/boundaries.test.ts:16-45`. Its byte totals come from `fs.readSync` and `fs.readFileSync` spies, which miss reads through any other API, so it cannot prove the bound, and line 29 pins the internal 4,096-byte prefix."
+            }
+        ],
         "originalLine": 95
-    },
-    {
-        "id": "areas/integration-tests/083",
-        "source": "findings/areas/integration-tests.md",
-        "line": 81,
-        "section": "Findings",
-        "finding": "| `cli/tools/inspect/placement.test.ts:61`, \"the private installation of %s under %s is %s\" | This is a pure `privateToolInstallation` call. Line 74 computes the expected version with the same lookup that the function makes. | Move it to unit. Write the expected version in each row. |",
-        "owner": "`cli/tools/inspect/placement.test.ts:61`, \"the private installation of %s under %s is %s\"",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 98
     },
     {
         "id": "areas/integration-tests/084",
         "source": "findings/areas/integration-tests.md",
-        "line": 82,
+        "line": 64,
         "section": "Findings",
         "finding": "| Extra correction runs: `commands/declarations.test.ts:40-45,99-104`, `commands/nested-scopes.test.ts:64-72`, `commands/typed-tables.test.ts:46-48`, `commands/local-override.test.ts:44-46`, `execution/fixers/execution.test.ts:92-98`, `execution/fixers/outcomes.test.ts:29-34`, `execution/parse-output/declared-checks.test.ts:190-195,245-250`, `execution/tool-runner/adapters.test.ts:56-59,87-89`, `generation/eslint-ignores.test.ts:19` (third pass), `lifecycle/init.test.ts:197-201`, `repository/manifests.test.ts:101-105,118-119`, `repository/existing-tooling.test.ts:24-27` | After a failure, the test fixes the input and runs again only to see a pass. Each run uses a fresh session or process, so no state could stick. Other tests already cover the pass path. In table tests the run repeats in every row, for example six times in `manifests.test.ts:68`. | Delete these correction runs. Keep a correction run only where a reused session or cache makes the second run a separate behavior. |",
         "owner": "Extra correction runs: `commands/declarations.test.ts:40-45,99-104`, `commands/nested-scopes.test.ts:64-72`, `commands/typed-tables.test.ts:46-48`, `commands/local-override.test.ts:44-46`, `execution/fixers/execution.test.ts:92-98`, `execution/fixers/outcomes.test.ts:29-34`, `execution/parse-output/declared-checks.test.ts:190-195,245-250`, `execution/tool-runner/adapters.test.ts:56-59,87-89`, `generation/eslint-ignores.test.ts:19` (third pass), `lifecycle/init.test.ts:197-201`, `repository/manifests.test.ts:101-105,118-119`, `repository/existing-tooling.test.ts:24-27`",
         "location": null,
-        "status": "open",
+        "status": "partial",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "partial",
+                "evidence": "see remains",
+                "remains": "Delete these fix runs (all under tests/cli): `commands/declarations.test.ts:38-43,97-102`; `commands/nested-scopes.test.ts:42-44`; `commands/typed-tables.test.ts:44-45`; `execution/fixers/outcomes.test.ts:27-33`; `execution/parse-output/declared-checks.test.ts:190-192,244-247`; `execution/tool-runner/adapters.test.ts:67-70,100-102`; `lifecycle/init.test.ts:135-137,194-198`; `lifecycle/apply/publication.test.ts:79-81,146-151`; `repository/manifests.test.ts:59-62,124-126,164,182-183`; `repository/existing-tooling.test.ts:170-171,184-187`; `repository/kinds.test.ts:101-107`; `repository/scopes.test.ts:67-75,94-97`; `repository/xcode-project.test.ts:120-122`; `repository/tracked/boundaries.test.ts:151-154`; `repository/tracked/discovery.test.ts:185-187`. Keep a fix run only where a reused session or cache makes the second run a separate behavior. The third apply at `publication.test.ts:152-153` is `slices/tests-integration-lifecycle/003`, and `init.test.ts:165-167` goes with the test that `review/tests-cli/066` deletes."
+            }
+        ],
         "originalLine": 99
     },
     {
         "id": "areas/integration-tests/085",
         "source": "findings/areas/integration-tests.md",
-        "line": 83,
+        "line": 65,
         "section": "Findings",
         "finding": "| Pinned sentences: `execution/impact.test.ts:177-179`, `commands/local-override.test.ts:41`, `execution/prerequisites.test.ts:39`, `repository/xcode-project.test.ts:61`, `commands/ignores.test.ts:131`, `commands/remove.test.ts:28`, `commands/levels.test.ts:40,46`, `lifecycle/hooks.test.ts:28-31` | These assert whole sentences of human-readable text that no contract fixes. Rewording a message breaks the test with no change in behavior. | Assert the JSON field, the rule id or a key token such as a path, key or check name. |",
         "owner": "Pinned sentences: `execution/impact.test.ts:177-179`, `commands/local-override.test.ts:41`, `execution/prerequisites.test.ts:39`, `repository/xcode-project.test.ts:61`, `commands/ignores.test.ts:131`, `commands/remove.test.ts:28`, `commands/levels.test.ts:40,46`, `lifecycle/hooks.test.ts:28-31`",
         "location": null,
-        "status": "open",
+        "status": "partial",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "partial",
+                "evidence": "see remains",
+                "remains": "Command feedback lines and refusal texts are contracts: the rule 'Assert contractual values' in `TESTING.md` asks tests to assert them, and commits c761ce27e, 5935a72c1, and a08fcd84c pin them on purpose. Keep the assertions at `tests/cli/commands/ignores.test.ts:105,249`, `tests/cli/commands/levels.test.ts:39,45`, and `tests/cli/lifecycle/hooks.test.ts:30,50`. Finding messages are not contracts: at `tests/cli/execution/impact.test.ts:174`, assert the check ID `sandbox/unknown`; at `tests/cli/repository/xcode-project.test.ts:40`, assert the rule, the file, and the path `Second/Shared.swift`."
+            }
+        ],
         "originalLine": 100
     }
 ]

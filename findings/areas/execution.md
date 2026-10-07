@@ -1,6 +1,6 @@
 # Execution, Tools, Repository, Platform, and Parsers
 
-Architecture material from the original audit follows. Current repository decisions are recorded in [progress](../progress.json).
+Architecture material from the original audit follows. It is history: where it disagrees with a later decision or with the target trees in [the source layout review](../review/source-layout.md) and [the test layout review](../review/tests-layout.md), those win. Superseded here: `tools/pins.ts` moves to `configurations/pins.ts` (`review/source-layout/003`), and the tool-output parsers live in `parsers/output/`, not `execution/output/`. Names follow [the glossary](../review/glossary.md), which wins over every name below: `snapshot/` is `execution/copy/` with `files.ts` for `workspace.ts`, an engine is a built-in check, `command/runner.ts` is `command/check.ts`, and a lock file is a lockfile. Current repository decisions are recorded in [progress](../progress.json).
 
 ## Target layout
 

@@ -9,7 +9,14 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "`packages/cli/configurations/library/drizzle/manifest.toml:36-46` (no `runs`); `packages/cli/src/checks/library/drizzle.ts:22-41` matches only `relations(<table>`",
+                "remains": "In `packages/cli/configurations/library/drizzle/manifest.toml:36-46`, set `runs = \"scope\"` on `drizzle/relations`. The built-in check then reads the `relations()` calls in every `.ts` file of the scope, not only the staged files of a commit hook. Keep the check. Accepting `defineRelations` and correcting the why are in `slices/kits-frameworks-tools/021`."
+            }
+        ],
         "originalLine": 25
     },
     {
@@ -22,124 +29,174 @@
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "`packages/cli/src/checks/library/drizzle.ts:12-15` still globs the whole copy and hard-codes `node_modules`, `.venv`, `.gspot`; `SCRATCH_DIRECTORIES` is at `packages/cli/src/config/execution/snapshot.ts:11`",
+                "remains": "In `packages/cli/src/checks/library/drizzle.ts:12-15`, build the excluded folders from `SCRATCH_DIRECTORIES` (`packages/cli/src/config/execution/snapshot.ts:11`) and `DOT_GSPOT` (`packages/cli/src/config/platform/locations.ts:28`) instead of the literals `node_modules`, `.venv`, and `.gspot`. Rename `generatedContents` to `copiedFiles`."
+            }
+        ],
         "originalLine": 26
-    },
-    {
-        "id": "slices/checks-other/028",
-        "source": "findings/slices/checks-other.md",
-        "line": 11,
-        "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
-        "finding": "| `tool/ansible.ts:40-46` `lint`; `tool/xcode/resources.ts:48` `orphanFindings` | Level logic is hidden inside the engines. ansible/lint skips seven rules below level all, and neither the manifest nor the docs say so. xcode/assets runs at level recommended and its summary promises that \"some source names every asset\", but that rule runs only at level all. | Declare it in the manifests. Make orphan assets a separate check at level all. Make the ansible skip list a setting with a `default_all`. |",
-        "owner": "`tool/ansible.ts:40-46` `lint`; `tool/xcode/resources.ts:48` `orphanFindings`",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": [],
-        "originalLine": 38
     },
     {
         "id": "slices/checks-other/030",
         "source": "findings/slices/checks-other.md",
-        "line": 12,
+        "line": 11,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/docker/dockerignore.ts:20-21` `dockerignore` | Looks for `.dockerignore` only beside each Dockerfile. BuildKit first reads `<Dockerfile name>.dockerignore` beside the Dockerfile, and otherwise `.dockerignore` at the build context root, which compose `build.context` often puts elsewhere. Both layouts get a false `missing-file`. | Accept `<name>.dockerignore`. Read the context from the compose files, or report only when no ignore file applies. |",
         "owner": "`tool/docker/dockerignore.ts:20-21` `dockerignore`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "`packages/cli/src/checks/tool/docker.ts:79-90` looks only for `<folder>/.dockerignore`",
+                "remains": "In `packages/cli/src/checks/tool/docker.ts:79-90`, accept `<Dockerfile name>.dockerignore` beside the Dockerfile, and `.dockerignore` at the build context root that a Compose file's `build.context` names. Report `missing-file` only when none of these files exists."
+            }
+        ],
         "originalLine": 40
     },
     {
         "id": "slices/checks-other/031",
         "source": "findings/slices/checks-other.md",
-        "line": 13,
+        "line": 12,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/docker/trivy-image.ts:83-113` `trivyImage`, `scanImage` | Secrets that Trivy finds are reported under the rule `vulnerability`. The message keeps the first 20 items (`SHOWN_FINDINGS`) and does not say that more were dropped. An image named in two compose files is scanned twice. | Use the rule `secret` for secrets. Append \"and N more\". Scan each image once and report it on each file. |",
         "owner": "`tool/docker/trivy-image.ts:83-113` `trivyImage`, `scanImage`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "`packages/cli/src/checks/tool/docker.ts:62,117-128` puts secrets under rule `vulnerability`, cuts at `SHOWN_FINDINGS` without \"and N more\", and scans once per Compose file",
+                "remains": "In `packages/cli/src/checks/tool/docker.ts`, report Trivy secret results under a new rule `secret` instead of `vulnerability` (`:62`). When a message cuts the list at `SHOWN_FINDINGS` (`:117-128`), append \"and N more\". Scan each image name once per run and report its results on every Compose file that names it."
+            }
+        ],
         "originalLine": 41
     },
     {
         "id": "slices/checks-other/036",
         "source": "findings/slices/checks-other.md",
-        "line": 14,
+        "line": 13,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/xcode/pbxproj.ts:227` `readPbxproj` `@param directory`; `tool/xcode/project.ts:26-29`, `:35`, `:42-43` | The doc says `directory` is \"relative to the repository root\". `orphanSources` passes `posix.join(input.root, …)`, an absolute path, and then strips `input.root` again with two `posix.relative` calls. | Pass the repository-relative folder and delete the round trip. |",
         "owner": "`tool/xcode/pbxproj.ts:227` `readPbxproj` `@param directory`; `tool/xcode/project.ts:26-29`, `:35`, `:42-43`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "`packages/cli/src/parsers/xcode.ts:210` doc says \"relative\"; `packages/cli/src/checks/tool/xcode/project.ts:28-45` passes an absolute path, then strips it again",
+                "remains": "In `packages/cli/src/checks/tool/xcode/project.ts:28-45`, pass the repository-relative project folder to `readPbxproj` (`packages/cli/src/parsers/xcode.ts:210`) and delete the two `posix.relative` calls that strip `input.root` again."
+            }
+        ],
         "originalLine": 46
     },
     {
         "id": "slices/checks-other/037",
         "source": "findings/slices/checks-other.md",
-        "line": 15,
+        "line": 14,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/xcode/project.ts:136` `trackedByExtension`, `:13` `folderOf` | Callers pass `.xcodeproj/project.pbxproj` and `Contents.json`, which are not extensions, and the parameter is called `endings`. `folderOf` has the `Of` suffix. | Rename them `scopeSourcesEndingWith` and `projectFolder`. |",
         "owner": "`tool/xcode/project.ts:136` `trackedByExtension`, `:13` `folderOf`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "`packages/cli/src/checks/tool/xcode/project.ts:15` `folderOf`, `:145` `trackedByExtension(input, endings)`",
+                "remains": "In `packages/cli/src/checks/tool/xcode/project.ts`, rename `trackedByExtension(input, endings)` (`:145`) to `scopeSourcesByEnding` and `folderOf` (`:15`) to `projectFolder`."
+            }
+        ],
         "originalLine": 47
     },
     {
         "id": "slices/checks-other/038",
         "source": "findings/slices/checks-other.md",
-        "line": 16,
+        "line": 15,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/xcode/resources.ts:20` `setName`, `:27` `symbolOf`, `:33` `imageFindings`, `:49` `swift` | `setName` reads as \"assign the name\" (in the verb table, `set` means assign), but it returns the asset set's name. `imageFindings` also reports syntax errors in every Contents.json. `swift` holds the text of .swift, .storyboard, .xib, and .plist files. | Rename them `assetSetName`, `assetSymbol`, `contentsFindings`, and `sourceTexts`. |",
         "owner": "`tool/xcode/resources.ts:20` `setName`, `:27` `symbolOf`, `:33` `imageFindings`, `:49` `swift`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "`packages/cli/src/checks/tool/xcode/resources.ts:11` `setName`, `:18` `symbolOf`, `:24` `imageFindings`, `:40` `swift`",
+                "remains": "In `packages/cli/src/checks/tool/xcode/resources.ts`, rename `setName` (`:11`) to `assetSetName`, `symbolOf` (`:18`) to `assetSymbol`, `imageFindings` (`:24`) to `contentsFindings`, and `swift` (`:40`) to `sourceTexts`."
+            }
+        ],
         "originalLine": 48
     },
     {
         "id": "slices/checks-other/039",
         "source": "findings/slices/checks-other.md",
-        "line": 17,
+        "line": 16,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `tool/xcode/resources.ts:27-31` `symbolOf` | Xcode drops a trailing \"Color\" or \"Image\" from generated asset symbols (`BrandColor` becomes `.brand`). An asset used that way is reported as an orphan (verify against Xcode 15 and later). | Strip the suffix as Xcode does. |",
         "owner": "`tool/xcode/resources.ts:27-31` `symbolOf`",
         "location": null,
         "status": "open",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "open",
+                "evidence": "`packages/cli/src/checks/tool/xcode/resources.ts:18-22` does not strip a trailing `Color` or `Image`",
+                "remains": "In `symbolOf` (`packages/cli/src/checks/tool/xcode/resources.ts:18-22`), drop a trailing `Color` or `Image` from the asset name before matching sources, as Xcode's generated asset symbols do (`BrandColor` becomes `.brand`). `review/code-execution/036` replaces the hand-written case conversion in the same function with scule's `camelCase`."
+            }
+        ],
         "originalLine": 49
     },
     {
         "id": "slices/checks-other/046",
         "source": "findings/slices/checks-other.md",
-        "line": 18,
+        "line": 17,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| Messages: `postgres/migration-docs.ts:24`, `:26`, `:28`, `:37`; `postgres/history.ts:108`; `cloudflare.ts:41`, `:89`, `:105`, `:107`; `supabase/project.ts:118`; `xcode/settings.ts:30`; `xcode/project.ts:125`; `xctest/sources.ts:49`; `nextjs/source.ts:96` | These messages state the rule as if it were a fact, or say \"is no\". For example: \"The migration header sits between separator lines.\", \"The second line is …\", \"This line is no header\", \"The source begins with a slash\", \"The name is fourteen digits …\", \"This line is no KEY = value setting\". Some claim what gspot cannot know: \"This migration has run\". Some give no action: \"Xcode and the checks each follow it their own way.\" | Say what is wrong and what to do. For example: \"Put the header between two separator lines.\" \"This indented line is not a header. Write it as `Name: value`.\" \"The source must start with / or https://.\" \"Name the migration `<14-digit timestamp>_<snake_case>.sql`.\" \"This migration is at or before tools.squawk.frozen_through and differs from the committed text. Restore it and write a new migration.\" \"Replace the symlink with the file it points to.\" |",
         "owner": "Messages: `postgres/migration-docs.ts:24`, `:26`, `:28`, `:37`; `postgres/history.ts:108`; `cloudflare.ts:41`, `:89`, `:105`, `:107`; `supabase/project.ts:118`; `xcode/settings.ts:30`; `xcode/project.ts:125`; `xctest/sources.ts:49`; `nextjs/source.ts:96`",
         "location": null,
-        "status": "open",
+        "status": "partial",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "partial",
+                "evidence": "Fixed in `f690c4789`: `postgres/history.ts:127`, Cloudflare messages (`packages/cli/src/parsers/cloudflare.ts:43-79`), `supabase.ts:184`, and the xctest messages",
+                "remains": "Rewrite these messages so they say what is wrong and what to do: `packages/cli/src/checks/database/postgres/migration-docs.ts:24,26,28,37` (for example \"Put the header between two separator lines.\" and \"This indented line is not a header. Write it as `Name: value`.\"), `packages/cli/src/checks/tool/xcode/settings.ts:30` (\"Write this line as `KEY = value`.\"), and `packages/cli/src/checks/tool/xcode/project.ts:134` (name the setting the user changes). The Next.js message at `packages/cli/src/checks/framework/nextjs.ts:138` is `review/verification/007`."
+            }
+        ],
         "originalLine": 56
     },
     {
         "id": "slices/checks-other/049",
         "source": "findings/slices/checks-other.md",
-        "line": 19,
+        "line": 18,
         "section": "Checks: Database, Framework, Library, Platform, Tool, and the Registry",
         "finding": "| `drift.ts:5`; `postgres/access.ts:94`; `express.ts:7`; `docker/trivy-image.ts:41`; `nginx/test.ts:14`; `xcode/pbxproj.ts:39`, `:166`, `:179`, `:190`, `:225`, `:254`; `supabase/project.ts:24`; `xctest/references.ts:11` | Comments and messages use terms that `naming.banned` lists (\"render\", \"resolve\", \"resolved\", \"resolution\", \"scoped\"). The pbxproj docs are also imperative jargon (\"Read test-target names without requiring source paths to resolve build settings\"). | Rewrite them. For example, \"Cannot find the folder of Xcode source tree X without build settings.\" and \"The names of the project's unit and UI test targets.\" |",
         "owner": "`drift.ts:5`; `postgres/access.ts:94`; `express.ts:7`; `docker/trivy-image.ts:41`; `nginx/test.ts:14`; `xcode/pbxproj.ts:39`, `:166`, `:179`, `:190`, `:225`, `:254`; `supabase/project.ts:24`; `xctest/references.ts:11`",
         "location": null,
-        "status": "open",
+        "status": "partial",
         "outcome": null,
-        "verification": [],
+        "verification": [
+            {
+                "date": "2026-10-06",
+                "status": "partial",
+                "evidence": "`postgres/access.ts`, `supabase.ts`, `express.ts` (deleted), and drift no longer use the banned terms",
+                "remains": "Rewrite the comments and messages that use `naming.banned` terms: `packages/cli/src/parsers/xcode.ts:164,175,208,237` (\"resolve\", \"synchronized\"), `packages/cli/src/checks/tool/docker.ts:16` (\"resolution\"), and `packages/cli/src/checks/tool/xctest.ts:245` (\"scoped\"). For example: \"Cannot find the folder of Xcode source tree X without build settings.\" and \"The names of the project's unit and UI test targets.\" Also rewrite \"resolved\" at `packages/cli/src/parsers/xcode.ts:24,151`: `review/policy-exceptions/030` adds that inflection to the list."
+            }
+        ],
         "originalLine": 59
     }
 ]

@@ -1,10 +1,15 @@
 # Repository Files, Line by Line
 
-2 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+0 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
 
 ## Open findings
 
-| ID                           | Where                                                                | Problem                                                                                                                                                                                                                                                                                                                                                      | Fix                                                                                                                                                                                                             |
-| ---------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `slices/repository-root/001` | `gspot.toml:1` `#:schema https://gspot.dev/schema/gspot.schema.json` | The URL returned 404 on 2026-10-03. `gspot.dev` serves a GoDaddy Website Builder page in Italian, not the manual. Editors that read the line get no completion or validation. `gspot init` writes the same line into every user's file (`packages/cli/src/config/commands/init.ts:7`). `packages/cli/package.json:15` uses the same domain as the homepage.  | Confirm that the project controls the domain. Until the site serves the schema, remove the line from init and from this file, or point it at a URL that exists.                                                 |
-| `slices/repository-root/030` | `release.yml:44-46` comment, `release.yml:47-52`                     | On 2026-10-03, the npm registry returned 404 for both `@gspothq/cli` and `@gspothq/eslint-plugin`. npm sets a trusted publisher in the settings of a package that already exists. The claim "Each package names this workflow ... as its trusted publisher" is therefore not true yet. The first run has no OIDC trust and no token, so `npm publish` fails. | Publish 0.1.0 of both packages once with a short-lived granular token. Then add the trusted publishers and use this workflow for later versions. Until then, change the comment to describe what is configured. |
+| ID  | Where | Problem | Fix |
+| --- | ----- | ------- | --- |
+
+## Status on October 6, 2026
+
+A read-only verification checked every record against the code at commit `3e1445a2d`. "Partial" means part of the fix is done. The location column gives the current file, because many files moved after the record was written.
+
+| ID  | Status | Current location and evidence | What remains |
+| --- | ------ | ----------------------------- | ------------ |

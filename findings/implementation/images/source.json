@@ -1,11 +1,1 @@
-[
-    {
-        "id": "diagram/source",
-        "source": "findings/images/source.png",
-        "owner": "source",
-        "location": null,
-        "status": "open",
-        "outcome": null,
-        "verification": []
-    }
-]
+[]

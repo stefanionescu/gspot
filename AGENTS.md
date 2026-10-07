@@ -77,3 +77,13 @@ Run `gspot check --staged` before committing. Change policy with `gspot set` or 
 Do not use subagents or parallel agents unless asked in the conversation.
 
 This repository keeps module-level types in each package's `types/` folder and static constants in its `config/` folder, grouped by behavior. This applies to CLI source, the ESLint plugin, test support, and test data. Shipped configuration assets live under `packages/cli/configurations/`; their parsers remain under source parsing owners. These folder choices are specific to this repository and are not required of consumer repositories. Inline redundant forwarding functions; retain required callbacks and shared calculations with real callers.
+
+Owner decisions are recorded in `findings/progress.json`. Read them before you change how gspot ships, installs, or is configured, and never reverse one inside unrelated work. These decisions are final:
+
+- gspot ships only as JavaScript on npm. Never add per-OS binaries, standalone archives, platform packages, or a release-archive pin.
+- Use one setting for each concern. Do not add special time limits, per-suite or per-OS budgets, environment switches, or options for one caller. Fix the cause instead.
+- The shipped banned naming terms stay complete, no group is removable, and they apply at level `all` only.
+- The agent rule `TALKING.md` ("When you talk, use ASD-STE100.") ships in every installation.
+- The documentation site is generativespotting.com, deployed to Cloudflare Workers.
+- Every change simplifies: it deletes, merges, or replaces with less code, and it keeps every CLI command.
+- Use one name for each concept, as `findings/review/glossary.md` fixes it. Never give one thing two names or one name two meanings.
