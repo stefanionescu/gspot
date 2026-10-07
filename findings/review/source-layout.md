@@ -1,6 +1,6 @@
 # Source Layout: `packages/cli/src` and `packages/eslint-plugin/src`
 
-14 unresolved review records remain.
+13 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -504,3 +504,11 @@ Original records and quotations remain above. These records are complete at `843
 | `review/source-layout/049` | complete | The quoting behavior is merged into platform/text.ts; platform/quoting.ts and its import aliases are removed. Callers retain the original behavior. Prepared focused command/claim cases, root/CLI types and staged gate pass. Validated implementation843c4d79:478focused tests0fail397assertions25files4.42s; staged147pass13skip0findings64.849s, hook106pass3skip0findings22.8s, message hook1pass0findings. Push147pass13skip0findings100.2s; no hooks bypassed. Commit `843c4d79ed2780e3978163bc38b58c5d49899c19`.                                                                                           |
 | `review/source-layout/050` | complete | The Bun runtime constant is beside MS_PER_SECOND in config/platform/runtime.ts; config/generation/bunfig.ts is deleted and its caller uses the final owner. Generated configuration acceptance, types and staged gate pass. Validated implementation843c4d79:478focused tests0fail397assertions25files4.42s; staged147pass13skip0findings64.849s, hook106pass3skip0findings22.8s, message hook1pass0findings. Push147pass13skip0findings100.2s; no hooks bypassed. Commit `843c4d79ed2780e3978163bc38b58c5d49899c19`.                                                                                              |
 | `review/source-layout/056` | complete | Plugin source and module type owners are create-rule.ts and types/create-rule.ts. Every import is updated; no compatibility exports or old filenames remain. Prepared plugin rule cases and root/CLI types pass. Validated implementation843c4d79:478focused tests0fail397assertions25files4.42s; staged147pass13skip0findings64.849s, hook106pass3skip0findings22.8s, message hook1pass0findings. Push147pass13skip0findings100.2s; no hooks bypassed. Commit `843c4d79ed2780e3978163bc38b58c5d49899c19`.                                                                                                         |
+
+## Implementation checkpoint 062c6a171 of October 7, 2026
+
+Original records and quotations remain above. These records are complete at `062c6a171176c44b31556068b78fc3fd47f3b97f`.
+
+| ID                         | Status   | Evidence                                                                                                                                                                                                                                                                                                                           |
+| -------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/source-layout/035` | complete | Merged tsconfig reader/parser/schema into parsers/tsconfig.ts with platform-only dependencies; callers use getTsconfig with no forwarding aliases. Integrated126tests838assertions29files/rootCLItypes passed; staged67pass10skip0findings and normal commit/push hooks passed. Commit `062c6a171176c44b31556068b78fc3fd47f3b97f`. |

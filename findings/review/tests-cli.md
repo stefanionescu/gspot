@@ -1,6 +1,6 @@
 # Tests in `tests/cli`
 
-125 unresolved review records remain.
+124 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -198,3 +198,11 @@ A read-only review wrote these findings on October 6, 2026, against commit `3e14
 ## Not read
 
 None. The review read every file under tests/cli, tests/config/cli and tests/types/cli in full. It read tests/tools, tests/plugin, the harness and the source only to verify overlaps and claims. It did not review them.
+
+## Implementation checkpoint 1ebc5f426 of October 7, 2026
+
+Original records and quotations remain above. These records are complete at `1ebc5f4266cf9b67a434a6aff6fa7151105d8d90`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/tests-cli/029` | complete | Deleted the CLI suite test of buildToolsPath; support code contains no test assertions. Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed. Commit `1ebc5f4266cf9b67a434a6aff6fa7151105d8d90`. |

@@ -1,6 +1,6 @@
 # Tests: Tools, Plugin, Packages, and the Harness
 
-49 unresolved review records remain.
+48 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -158,3 +158,11 @@ Original records and quotations remain above.
 | ID                       | Status   | Evidence                                                                                                                                                                                                                                            |
 | ------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/tests-tools/019` | complete | Compiler fixtures resolve TypeScript from the installed workspace modules. Compiler ownership, jsconfig, and standalone TypeScript acceptance pass without repository tool-project dependencies. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |
+
+## Implementation checkpoint 1ebc5f426 of October 7, 2026
+
+Original records and quotations remain above. These records are complete at `1ebc5f4266cf9b67a434a6aff6fa7151105d8d90`.
+
+| ID                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/tests-tools/056` | complete | Scoped ESLint coverage now uses createFileTree/createEslint/lintFiles in process at tests/cli/generation/eslint/scopes.test.ts; deleted the native installation test. Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed. Commit `1ebc5f4266cf9b67a434a6aff6fa7151105d8d90`. |

@@ -1,5 +1,5 @@
 {
-    "openRecords": 1025,
+    "openRecords": 1012,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1025,
+        "openRecords": 1012,
         "records": 1092,
         "batches": [
             {
@@ -457,8 +457,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 10,
-                "unresolvedAssignments": 281
+                "completedAssignments": 20,
+                "unresolvedAssignments": 271
             },
             {
                 "id": "python",
@@ -1317,8 +1317,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 4,
-                "unresolvedAssignments": 465
+                "completedAssignments": 6,
+                "unresolvedAssignments": 463
             },
             {
                 "id": "scripts-repository",
@@ -1798,8 +1798,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 41,
-                "unresolvedAssignments": 48
+                "completedAssignments": 42,
+                "unresolvedAssignments": 47
             },
             {
                 "id": "configurations",
@@ -3547,22 +3547,31 @@
             "verification": []
         },
         "review/code-execution/012": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owner",
+            "commit": "1ebc5f4266cf9b67a434a6aff6fa7151105d8d90",
+            "verification": [
+                "One addIdentifier implementation owns language identifier writes and empty-name handling; duplicated language add functions and orphan blank fields are deleted.",
+                "Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed."
+            ]
         },
         "review/code-execution/013": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owner",
+            "commit": "1ebc5f4266cf9b67a434a6aff6fa7151105d8d90",
+            "verification": [
+                "One generic visitParsed owner shares path-keyed parser caches and stack disposal across Python and Swift; language copies are deleted.",
+                "Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed."
+            ]
         },
         "review/code-execution/014": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owner",
+            "commit": "1ebc5f4266cf9b67a434a6aff6fa7151105d8d90",
+            "verification": [
+                "VALE_PACKAGES and PACKAGE_FOLDERS live in config/tools/vale.ts and generation, installation and readiness consume them; Vale INI parser/schema/config/types/tests are deleted.",
+                "Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed."
+            ]
         },
         "review/code-execution/015": {
             "status": "pending",
@@ -3641,12 +3650,12 @@
             "verification": []
         },
         "review/code-execution/027": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "062c6a171176c44b31556068b78fc3fd47f3b97f",
             "verification": [
-                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet.",
-                "Main memo integration: root/CLI/docs types passed;349pass1749assertions58files39.40s;38integration-focus passes100assertions5files1.84s. Required ts.sys callback binding preserved; one compiler context shares JS/TS inputs and scopes map. Full-policy affected-owner lint passed after two source corrections. CLI build and built Node24.20/Bun1.4.2 help smoke preserve all12commands. gspot apply149up-to-date. No commit/closure while mechanical staged gate awaits owner filename-policy answer."
+                "getTsconfig is memoized through platform/memo and repository/modules derives options from that sole reader; getCompilerOptions and its WeakMap are deleted.",
+                "Integrated126tests838assertions29files passed; root/CLI types and built Node24.20/Bun1.4.2 help smoke passed. Normal apply149up-to-date; staged67pass10skip0findings; mandatory commit/message/push hooks passed."
             ]
         },
         "review/code-execution/028": {
@@ -3683,14 +3692,12 @@
             ]
         },
         "review/code-execution/034": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "310a538173b7ddd6f7d26de0ca983c5a4193f5f9",
             "verification": [
-                "Exact conditional public libpg-query fix and SQL AST type owners dispatched to isolated refactor/sql-public-api worktree at bce72e26bbc55fc48e976aea29c466d0ce2e91b9. Existing built Node/Bun public API probe passed; real fully typed implementation, build and focused acceptance in progress. No closure.",
-                "Frozen public SQL API patch bae0c0b879c276f5831b4e87c19960e141a82ed4a72a89496385120073a6221f integrated into main worktree with CheckInput and native-text caller changes preserved. Normal frozen Bun workspace install linked @pgsql/types18.0.0; initial unlinked dependency type/lint failures retained.",
-                "Main root and CLI type checks pass after dependency linking. Focused33pass0fail120assertions7files1.60s. Affected SQL lint has only separate native Array.from versus prefer-spread conflict pending owner; the SQL import-order error was fixed through actual full-policy ESLint.",
-                "Final integrated CLI built once; actual Node24.20.0 and Bun1.4.2 exercise SQL and PL/pgSQL thresholds with no skips and unchanged source bytes. /tmp/gspot-sql-main-built-probe.log; evidence directory /var/folders/25/tzdsdvyj0vqc2qb90b2wn15h0000gn/T/gspot-sql-built-cli-cf3isl48. No Windows/Linux or packed-consumer credit; staged gate and commit pending."
+                "The prescribed built-CLI public parse/parsePlPgSQL probe succeeds, so the manual Emscripten wrapper/config are deleted. SQL AST contracts use @pgsql/types18.0.0.",
+                "Prepared50tests285assertions11files passed; root/CLI types and frozen install passed; built CLI SQL and PL/pgSQL threshold probes pass on Bun1.4.2 and explicit Node24.2.0/24.20.0 with unchanged source bytes. Staged81pass11skip0findings; normal commit/message/push hooks passed."
             ]
         },
         "review/code-execution/035": {
@@ -3714,34 +3721,40 @@
             ]
         },
         "review/code-execution/037": {
-            "status": "partial",
+            "status": "complete",
             "owner": "rules implementation; main integration",
-            "commit": "a526beecc22f318603e4fc937f6f87e7e82aa697",
+            "commit": "1ebc5f4266cf9b67a434a6aff6fa7151105d8d90",
             "verification": [
-                "Exact current fix dispatched together in isolated refactor/parser-library-cleanup at bce72e26; source/config and directly affected existing test owners only. Shared policy, ledger, generated files and main native-glob behavior remain reserved. No closure.",
-                "Single HTTP_URL already shared by npm and Python; moved beside URL_CREDENTIALS in validated a526beecc. Credential/lock boundary cases passed with preserved redaction and writes; checkpoint104tests, staged67pass10skip0findings, mandatory commit/message/push hooks passed."
-            ],
-            "remaining": [
-                "Reserved code-execution/014 must delete URL_PACKAGE before every obligation in /037 is complete."
+                "The earlier shared HTTP_URL remains beside URL_CREDENTIALS; deletion of the Vale INI subsystem also deletes the last URL_PACKAGE obligation.",
+                "Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed."
             ]
         },
         "review/code-execution/038": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owner",
+            "commit": "6d08311b00b6dff1eb6b1f5868fd41b00f6e850c",
+            "verification": [
+                "Renamed the parser constants to COUNTED_FUNCTION_NODES and SWIFT_BODY_NODES in their behavior config owners and updated every caller.",
+                "Mechanical16tests28assertions2files/rootCLItypes passed; normal apply149up-to-date; staged67pass10skip0findings; normal commit and push hooks passed."
+            ]
         },
         "review/code-execution/039": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owner",
+            "commit": "1ebc5f4266cf9b67a434a6aff6fa7151105d8d90",
+            "verification": [
+                "Tracked Git entries and Postgres history use their owned entry-mode constants instead of repeated literals.",
+                "Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed."
+            ]
         },
         "review/code-execution/040": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owner",
+            "commit": "1ebc5f4266cf9b67a434a6aff6fa7151105d8d90",
+            "verification": [
+                "Survey derives Lefthook candidates from the three literal arrays. A real31-file priority probe preserves every previous candidate position including YAML priority and the final pre-commit fallback.",
+                "Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed."
+            ]
         },
         "review/code-execution/041": {
             "status": "complete",
@@ -3754,10 +3767,13 @@
             ]
         },
         "review/code-execution/042": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owner",
+            "commit": "1ebc5f4266cf9b67a434a6aff6fa7151105d8d90",
+            "verification": [
+                "Deleted both orphan structure doc comments.",
+                "Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed."
+            ]
         },
         "review/code-execution/044": {
             "status": "complete",
@@ -5669,12 +5685,12 @@
             ]
         },
         "review/source-layout/035": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "062c6a171176c44b31556068b78fc3fd47f3b97f",
             "verification": [
-                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet.",
-                "Main memo integration: root/CLI/docs types passed;349pass1749assertions58files39.40s;38integration-focus passes100assertions5files1.84s. Required ts.sys callback binding preserved; one compiler context shares JS/TS inputs and scopes map. Full-policy affected-owner lint passed after two source corrections. CLI build and built Node24.20/Bun1.4.2 help smoke preserve all12commands. gspot apply149up-to-date. No commit/closure while mechanical staged gate awaits owner filename-policy answer."
+                "Merged tsconfig reader/parser/schema into parsers/tsconfig.ts with platform-only dependencies; callers use getTsconfig with no forwarding aliases.",
+                "Integrated126tests838assertions29files/rootCLItypes passed; staged67pass10skip0findings and normal commit/push hooks passed."
             ]
         },
         "review/source-layout/036": {
@@ -5999,10 +6015,13 @@
             "verification": []
         },
         "review/tests-cli/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owner",
+            "commit": "1ebc5f4266cf9b67a434a6aff6fa7151105d8d90",
+            "verification": [
+                "Deleted the CLI suite test of buildToolsPath; support code contains no test assertions.",
+                "Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed."
+            ]
         },
         "review/tests-cli/031": {
             "status": "pending",
@@ -7103,10 +7122,13 @@
             "verification": []
         },
         "review/tests-tools/056": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main integration; isolated implementation owner",
+            "commit": "1ebc5f4266cf9b67a434a6aff6fa7151105d8d90",
+            "verification": [
+                "Scoped ESLint coverage now uses createFileTree/createEslint/lintFiles in process at tests/cli/generation/eslint/scopes.test.ts; deleted the native installation test.",
+                "Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed."
+            ]
         },
         "review/tests-tools/058": {
             "status": "pending",
@@ -9393,6 +9415,61 @@
             ],
             "limitations": [
                 "Local macOS/Bun focused acceptance and Node floor native corpus; no completed Linux/Windows CI or whole release verification claimed. Code-execution/037 remains partial until reserved URL_PACKAGE deletion with /014. No publication, release tag or deployment."
+            ]
+        },
+        {
+            "commit": "062c6a171176c44b31556068b78fc3fd47f3b97f",
+            "completedRecords": ["review/code-execution/027", "review/source-layout/035"],
+            "unresolvedRecords": 1023,
+            "validation": [
+                "Integrated126tests838assertions29files passed; root/CLI types and built Node24.20/Bun1.4.2 help smoke passed. Normal apply149up-to-date; staged67pass10skip0findings; mandatory commit/message/push hooks passed.",
+                "Integrated126tests838assertions29files/rootCLItypes passed; staged67pass10skip0findings and normal commit/push hooks passed."
+            ],
+            "limitations": [
+                "Evidence is focused implementation acceptance on macOS; Linux/macOS/Windows full final CI and release preparation remain pending. main/001 remains partial; no live publication or deployment occurred."
+            ]
+        },
+        {
+            "commit": "310a538173b7ddd6f7d26de0ca983c5a4193f5f9",
+            "completedRecords": ["review/code-execution/034"],
+            "unresolvedRecords": 1022,
+            "validation": [
+                "Prepared50tests285assertions11files passed; root/CLI types and frozen install passed; built CLI SQL and PL/pgSQL threshold probes pass on Bun1.4.2 and explicit Node24.2.0/24.20.0 with unchanged source bytes. Staged81pass11skip0findings; normal commit/message/push hooks passed."
+            ],
+            "limitations": [
+                "Evidence is focused implementation acceptance on macOS; Linux/macOS/Windows full final CI and release preparation remain pending. main/001 remains partial; no live publication or deployment occurred."
+            ]
+        },
+        {
+            "commit": "6d08311b00b6dff1eb6b1f5868fd41b00f6e850c",
+            "completedRecords": ["review/code-execution/038"],
+            "unresolvedRecords": 1021,
+            "validation": [
+                "Mechanical16tests28assertions2files/rootCLItypes passed; normal apply149up-to-date; staged67pass10skip0findings; normal commit and push hooks passed."
+            ],
+            "limitations": [
+                "Evidence is focused implementation acceptance on macOS; Linux/macOS/Windows full final CI and release preparation remain pending. main/001 remains partial; no live publication or deployment occurred."
+            ]
+        },
+        {
+            "commit": "1ebc5f4266cf9b67a434a6aff6fa7151105d8d90",
+            "completedRecords": [
+                "review/code-execution/012",
+                "review/code-execution/013",
+                "review/code-execution/014",
+                "review/code-execution/037",
+                "review/code-execution/039",
+                "review/code-execution/040",
+                "review/code-execution/042",
+                "review/tests-cli/029",
+                "review/tests-tools/056"
+            ],
+            "unresolvedRecords": 1012,
+            "validation": [
+                "Integrated174tests992assertions30files, corrected99tests335assertions6files and native Vale25tests96assertions4files passed; root/CLI types passed. All551CLI TypeScript files have one module. Built and normally installed plugin bytes match; generated files use normal commands. Staged147pass13skip0findings58.899s; mandatory normal commit/message/push hooks passed."
+            ],
+            "limitations": [
+                "Evidence is focused implementation acceptance on macOS; Linux/macOS/Windows full final CI and release preparation remain pending. main/001 remains partial; no live publication or deployment occurred."
             ]
         }
     ]
