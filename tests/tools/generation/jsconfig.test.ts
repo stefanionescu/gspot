@@ -6,10 +6,10 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { cpSync, mkdirSync, symlinkSync } from 'node:fs';
-import { workspaceRoot } from '#automation/workspace.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
+import { installedModules } from '#tests/harness/environment.ts';
 import { JAVASCRIPT_PROJECT_FILES, JAVASCRIPT_COMPILER_CASES } from '#tests/config/tools/generation/jsconfig.ts';
 
 for (const entry of JAVASCRIPT_COMPILER_CASES)
@@ -22,11 +22,10 @@ for (const entry of JAVASCRIPT_COMPILER_CASES)
                 ...entry.files,
                 'gspot.toml': buildPolicy(['javascript'], { level, tables: entry.tables }),
             });
-            cpSync(
-                join(workspaceRoot, '.gspot/node_modules/typescript'),
-                join(sandbox.path, '.gspot/node_modules/typescript'),
-                { recursive: true, dereference: true },
-            );
+            cpSync(join(installedModules, 'typescript'), join(sandbox.path, '.gspot/node_modules/typescript'), {
+                recursive: true,
+                dereference: true,
+            });
             mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
             symlinkSync('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
             const session = await openSession(sandbox.path);

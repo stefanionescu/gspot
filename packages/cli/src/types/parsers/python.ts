@@ -21,7 +21,7 @@ export type PythonFunction = { path: string; name: string; node: Node; body: Nod
 /** Python observations borrowed while a parser visitor runs. */
 export type ParsedPython = { modules: PythonModule[]; functions: PythonFunction[] };
 
-/** The validated uv lock of the private Python tool project. */
+/** The validated uv lock of the Python tool project. */
 export type PythonToolLock = z.infer<typeof lockSchema>;
 
 /** A dependency requirement recorded by uv for constraints and root metadata. */

@@ -14,7 +14,7 @@ package_manager = "npm"
 [env]
 _.path = ["{{config_root}}/scripts"]
 
-# gspot-tools.toml pins the applicable repository tools. mise.test.toml pins the remaining test tools.
+# gspot-tools.toml pins the applicable repository tools. Test suites install the remaining manifest pins.
 [tools]
 bun = "1.4.2"
 [tasks."install:checks"]
@@ -25,13 +25,6 @@ run = "bun scripts/plugin.ts install --refresh-locks"
 description = "Install locked dependencies, write grammars, build the plugin, and generate Astro types."
 run = ["bun install --frozen-lockfile", "bun packages/cli/scripts/grammars.ts"]
 depends_post = ["generate:docs", "build:plugin"]
-
-[tasks."pin:test-tools"]
-description = "Write and format test-tool pins absent from gspot-tools.toml; requires the test environment."
-run = [
-    "bun scripts/test-tools.ts",
-    "mise --env test exec -- bun packages/cli/src/main.ts check --only files/taplo-format --fix --quiet mise.test.toml",
-]
 
 [tasks."pin:eslint-presets"]
 description = "Refresh shipped ESLint preset data from the installed pinned tool project."

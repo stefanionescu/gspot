@@ -7,7 +7,6 @@ import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { workspaceRoot } from '#automation/workspace.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
@@ -34,11 +33,10 @@ test.skipIf(!isPosix).each(['recommended', 'all'] as const)(
             'package.json': '{"private":true,"type":"module"}\n',
             'source.js': COMPILER_SOURCE,
         });
-        cpSync(
-            join(workspaceRoot, '.gspot/node_modules/typescript'),
-            join(sandbox.path, '.gspot/node_modules/typescript'),
-            { recursive: true, dereference: true },
-        );
+        cpSync(join(installedModules, 'typescript'), join(sandbox.path, '.gspot/node_modules/typescript'), {
+            recursive: true,
+            dereference: true,
+        });
         mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
         symlinkSync('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
         const session = await openSession(sandbox.path);
@@ -90,7 +88,7 @@ test.skipIf(!isPosix)(
         });
         const work = join(sandbox.path, 'work');
         const snapshot = join(sandbox.path, 'snapshot');
-        cpSync(join(workspaceRoot, '.gspot/node_modules/typescript'), join(work, '.gspot/node_modules/typescript'), {
+        cpSync(join(installedModules, 'typescript'), join(work, '.gspot/node_modules/typescript'), {
             recursive: true,
             dereference: true,
         });
@@ -142,7 +140,7 @@ test.each(['javascript', 'typescript'])(
             [`control.${ending}`]: COMPILER_SOURCE,
             [`string.${ending}`]: 'export const example = "// @ts-ignore";\n',
         });
-        const compiler = join(workspaceRoot, '.gspot/node_modules/typescript/bin/tsc');
+        const compiler = join(installedModules, 'typescript/bin/tsc');
         const command = [
             'node',
             compiler,
@@ -213,7 +211,7 @@ test.each(['javascript', 'typescript'])(
             );
         const reasoned = await spawnGspot(sandbox.path, ['check', '--only', 'structure/suppressions', '--json']);
         expect(reasoned.code, reasoned.stdout + reasoned.stderr).toBe(0);
-        const compiler = join(workspaceRoot, '.gspot/node_modules/typescript/bin/tsc');
+        const compiler = join(installedModules, 'typescript/bin/tsc');
         const accepted = await runTestCommand(
             ['node', compiler, '--noEmit', '--strict', '--allowJs', '--checkJs', '--skipLibCheck', ...paths],
             { cwd: sandbox.path },
@@ -231,11 +229,10 @@ test.skipIf(!isPosix)(
     'cached private compiler inspections respect installation transitions and unrelated Python work',
     async () => {
         await using sandbox = await testdir();
-        cpSync(
-            join(workspaceRoot, '.gspot/node_modules/typescript'),
-            join(sandbox.path, '.gspot/node_modules/typescript'),
-            { recursive: true, dereference: true },
-        );
+        cpSync(join(installedModules, 'typescript'), join(sandbox.path, '.gspot/node_modules/typescript'), {
+            recursive: true,
+            dereference: true,
+        });
         mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
         symlinkSync('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
         const compiler = toolPin(configurationManifests().values(), 'tsc');

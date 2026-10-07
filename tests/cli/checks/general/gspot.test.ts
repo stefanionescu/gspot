@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { CHECKS } from '#cli/checks/registry.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -8,6 +9,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { gspotDrift } from '#cli/checks/general/gspot.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { UV_LOCK_ARGUMENTS } from '#cli/config/tools/python.ts';
@@ -69,4 +71,17 @@ test('an edited generated file and one holding merge markers are drift findings,
     }
     const repaired = await executeRun(await openSession(sandbox.path), { ...GENERATED_DRIFT_OPTIONS, checks: CHECKS });
     expect(repaired.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
+});
+
+test('the drift runner rejects a manifest that does not run once', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planRun(session, GENERATED_DRIFT_OPTIONS)[0]!;
+    expect(planned.spec.runs).toBe('once');
+    expect(() => gspotDrift(session, { ...planned, spec: { ...planned.spec, runs: 'scope' } })).toThrow(
+        'The gspot/drift check needs generated file comparisons, so its manifest must say runs = "once".',
+    );
 });

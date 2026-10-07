@@ -39,7 +39,19 @@ test(
             expect(changedReport.checks.flatMap(({ findings: entries }) => entries)).toContainEqual(
                 containing({ file: 'app/guide.md', line: 5, rule: 'MD044' }),
             );
-            await Bun.write(join(sandbox.path, 'app/guide.md'), FILES['app/guide.md']);
+            const fixed = await spawnGspot(sandbox.path, [
+                'check',
+                'app/guide.md',
+                '--only',
+                'markdown/markdownlint',
+                '--fix',
+                '--json',
+            ]);
+            expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+            expect(await Bun.file(join(sandbox.path, 'app/guide.md')).text()).toBe(FILES['app/guide.md']);
+            expect(await Bun.file(join(sandbox.path, 'root.md')).text()).toBe(
+                FILES['root.md'].replace('![]', '![Request flow]'),
+            );
             await Bun.write(join(sandbox.path, 'root.md'), FILES['root.md']);
         }
     },

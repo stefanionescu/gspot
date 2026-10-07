@@ -9,6 +9,7 @@ extensions = [".plist"]
 
 [[tool]]
 name = "semgrep"
+version_command = ["--disable-version-check", "--version"]
 suppression = {marker = "\\bnosemgrep\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true}
 version = "1.178.0"
 min_version = "1.100.0"

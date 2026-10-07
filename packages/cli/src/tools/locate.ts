@@ -5,7 +5,6 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import { miseHome } from '#cli/platform/environment.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import { statSync, readFileSync, realpathSync } from 'node:fs';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
 import type { LocateOptions } from '#cli/types/tools/install.ts';
@@ -143,20 +142,4 @@ export function packageVersion(root: string, path: string, name: string | undefi
     // found by name beside that folder.
     const start = basename(folder) === '.bin' ? join(dirname(folder), name) : folder;
     return versionAbove(files, root, start, name);
-}
-
-/**
- * The version mise installed for an npm tool behind one of its shims.
- * A shim is one file for every version, so the version is read from the folder mise keeps it in.
- * @param path the executable.
- * @param tool the pin.
- * @returns the pinned version when mise holds it, or undefined.
- */
-export function miseVersion(path: string, tool: ToolPin): string | undefined {
-    const npm = tool.installers['npm'];
-    if (npm?.version === undefined || npm.version !== tool.version) return undefined;
-    const home = miseHome();
-    if (!path.startsWith(join(home, 'shims'))) return undefined;
-    const installed = join(home, 'installs', `npm-${npm.name.replaceAll('/', '-')}`, npm.version);
-    return statSync(installed, { throwIfNoEntry: false }) === undefined ? undefined : npm.version;
 }

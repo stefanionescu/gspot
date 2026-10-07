@@ -286,6 +286,6 @@ export function manifestParser(path: string): ManifestParser | undefined {
  * @returns the lockfile basename declared by its registry entry
  */
 export function packageLockFile(installer: LockName): ToolProjectLockfileName {
-    for (const entry of LOCKFILES) if ('private' in entry && entry.client === installer) return entry.file;
+    for (const entry of LOCKFILES) if ('toolProject' in entry && entry.client === installer) return entry.file;
     throw new Error(`The lockfile registry declares no tool project lock for ${installer}.`);
 }

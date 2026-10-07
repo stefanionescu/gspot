@@ -1,15 +1,13 @@
+import { join, delimiter } from 'node:path';
 import { readPolicy } from '#cli/policy/read.ts';
-import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
-import { workspaceRoot as root } from '#automation/workspace.ts';
-import { VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
+import { runTestCommand } from '#tests/harness/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { createInstallationRegistry } from '#tests/harness/registry.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { toolPin, toolProjectPackage } from '#cli/configurations/pins.ts';
 import type { SandboxInstallation } from '#tests/types/harness/install.ts';
-import { misePin, toolPin, toolProjectPackage } from '#cli/configurations/pins.ts';
-import { runTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
 import { testModules, installedModules, sourceLauncherDirectory } from '#tests/harness/environment.ts';
 
 /**
@@ -43,24 +41,17 @@ export async function removeConfigurations(
  */
 export function buildToolsPath(names: string[]): string {
     const manifests = [...configurationManifests().values()];
-    const folders = names.flatMap((name) => {
+    const bins = [testModules, installedModules].map((folder) => join(folder, '.bin'));
+    const path = [...bins, environmentVariables()['PATH'] ?? ''].join(delimiter);
+    for (const name of names) {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));
-        if (tool.system === true || toolProjectPackage(tool, 'mise') !== undefined) return [];
+        if (tool.system === true || toolProjectPackage(tool, 'mise') !== undefined) continue;
         // A pin without a build for this machine is skipped by the checks that need it, so no PATH entry is owed.
-        if (!hasToolBuild(tool.name)) return [];
-        const pin = misePin(tool)!;
-        const requirement = pin.version === undefined ? pin.name : `${pin.name}@${pin.version}`;
-        const found = runTestCommandBlocking(['mise', 'which', tool.name, '--tool', requirement], {
-            cwd: root,
-            timeoutMs: VERSION_TIMEOUT_MS,
-        });
-        if (found.code !== 0)
-            throw new Error(
-                `Required test tool ${name} is unavailable. Run mise install ${requirement}. ${found.stderr}`,
-            );
-        return [dirname(found.stdout.trim())];
-    });
-    return [...folders, join(root, 'node_modules', '.bin'), environmentVariables()['PATH'] ?? ''].join(delimiter);
+        if (!hasToolBuild(tool.name)) continue;
+        if (Bun.which(tool.name, { PATH: path }) === null)
+            throw new Error(`Required test tool ${name} is unavailable. Run mise run test:tools.`);
+    }
+    return path;
 }
 
 /**
@@ -69,9 +60,8 @@ export function buildToolsPath(names: string[]): string {
  * @returns the sandbox PATH.
  */
 export function buildSandboxPath(names: string[]): string {
-    const bins = [testModules, installedModules].map((folder) => join(folder, '.bin'));
     const tools = buildToolsPath(names);
-    return [sourceLauncherDirectory, ...bins, tools].join(delimiter);
+    return [sourceLauncherDirectory, tools].join(delimiter);
 }
 
 /**

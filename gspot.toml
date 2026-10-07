@@ -422,7 +422,6 @@ to = [
     "planning",
     "execution",
     "lifecycle",
-    "generation",
     "tools",
     "policy",
     "configurations",
@@ -873,9 +872,6 @@ rule = "js/http-to-file-access"
 paths = ["packages/cli/scripts/grammars.ts"]
 reason = "Every downloaded byte is checked against the pinned SHA-256 digest before the cache file is written."
 
-[[structure.prefix_collisions_allowed]]
-paths = ["mise.toml", "mise.test.toml"]
-reason = "Mise discovers the base file and its test environment overlay by these exact filenames."
 
 [[ignore]]
 check = "jest/coverage"

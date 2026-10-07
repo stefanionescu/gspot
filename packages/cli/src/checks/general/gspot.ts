@@ -1,23 +1,34 @@
-import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/runtime.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
+import { computeDrift } from '#cli/lifecycle/drift.ts';
+import { emptyResult } from '#cli/execution/report.ts';
+import type { CheckResult } from '#cli/types/execution/runtime.ts';
+import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { DRIFT_HELP, DRIFT_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 
 /**
- * Reports managed files that differ from gspot apply output, are missing, contain merge conflict markers, or have a gspot header without a current generator.
- * @param input the engine input
- * @returns the findings
+ * Compare generated files with the policy output and report changes, missing files, conflicts, and stray outputs.
+ * @param session the policy and repository to emit
+ * @param planned the repository-wide drift check
+ * @returns the check result with its generated-file findings
  */
-export function gspotDrift(input: EngineInput): Finding[] {
-    if (input.generatedDrift === undefined)
+export function gspotDrift(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+    if (planned.spec.runs !== 'once')
         throw new Error(
             'The gspot/drift check needs generated file comparisons, so its manifest must say runs = "once".',
         );
-    return input.generatedDrift().map((entry) => ({
-        check: input.spec.name,
+    const started = performance.now();
+    const findings = computeDrift(session.root, session.policyFiles.policy, emitAll(session)).map((entry) => ({
+        check: planned.spec.name,
         file: entry.path,
         rule: entry.kind,
         message: DRIFT_MESSAGES[entry.kind],
         help: DRIFT_HELP[entry.kind],
         fixable: true,
     }));
+    return Promise.resolve({
+        ...emptyResult(planned),
+        findings,
+        status: findings.length > 0 ? 'failed' : 'passed',
+        duration: performance.now() - started,
+    });
 }

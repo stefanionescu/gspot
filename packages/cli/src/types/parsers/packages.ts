@@ -38,7 +38,7 @@ export type PythonManifest = z.infer<typeof pythonManifestSchema>;
 
 export type PoetrySettings = z.infer<typeof poetryToolSchema> | undefined;
 
-/** Validated private npm project with the manager and lock file it declares. */
+/** Validated npm tool project with the manager and lock file it declares. */
 export type ToolProject = {
     installer: PackageInstaller;
     dependencies: z.infer<typeof toolProjectSchema>['devDependencies'];

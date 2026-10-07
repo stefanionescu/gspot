@@ -1,5 +1,5 @@
 {
-    "openRecords": 1072,
+    "openRecords": 1067,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1072,
+        "openRecords": 1067,
         "records": 1092,
         "batches": [
             {
@@ -1798,8 +1798,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 8,
-                "unresolvedAssignments": 81
+                "completedAssignments": 13,
+                "unresolvedAssignments": 76
             },
             {
                 "id": "configurations",
@@ -5329,10 +5329,14 @@
             ]
         },
         "review/source-layout/004": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0efd033dcb75419819619f6b78f4cfcc3ffea2f6",
+            "verification": [
+                "Split core Session from ToolSession, moved planning and its constants/types to planning, and moved session opening beside command callers. Old files/imports removed.",
+                "Root and CLI TypeScript checks; 102 focused tests, 502 assertions; staged check and commit hooks passed; pre-push 147 passed, 13 skipped, zero findings.",
+                "Independent committed-tree architecture audit: 629 source/build files, exactly one owner each, no gaps or overlaps."
+            ]
         },
         "review/source-layout/005": {
             "status": "pending",
@@ -5356,22 +5360,34 @@
             "verification": []
         },
         "review/source-layout/008": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0efd033dcb75419819619f6b78f4cfcc3ffea2f6",
+            "verification": [
+                "Folded tool-output into parsers, moved Finding/FindingPlace to parser types, and assigned configuration schemas exclusively to configurations. Output parsers no longer import execution.",
+                "Root and CLI TypeScript checks; 102 focused tests, 502 assertions; staged check and commit hooks passed; pre-push 147 passed, 13 skipped, zero findings.",
+                "Independent committed-tree architecture audit: 629 source/build files, exactly one owner each, no gaps or overlaps."
+            ]
         },
         "review/source-layout/009": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0efd033dcb75419819619f6b78f4cfcc3ffea2f6",
+            "verification": [
+                "Merged ESLint constants into config/generation/eslint.ts and moved formatting constants to config/generation/formatting.ts. Old owners removed.",
+                "Root and CLI TypeScript checks; 102 focused tests, 502 assertions; staged check and commit hooks passed; pre-push 147 passed, 13 skipped, zero findings.",
+                "Independent committed-tree architecture audit: 629 source/build files, exactly one owner each, no gaps or overlaps."
+            ]
         },
         "review/source-layout/010": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0efd033dcb75419819619f6b78f4cfcc3ffea2f6",
+            "verification": [
+                "Drift messages/help now belong to checks/general/gspot; lifecycle drift constants belong to lifecycle/drift. Old forwarding constant owner removed.",
+                "Root and CLI TypeScript checks; 102 focused tests, 502 assertions; staged check and commit hooks passed; pre-push 147 passed, 13 skipped, zero findings.",
+                "Independent committed-tree architecture audit: 629 source/build files, exactly one owner each, no gaps or overlaps."
+            ]
         },
         "review/source-layout/011": {
             "status": "pending",
@@ -5449,10 +5465,14 @@
             "verification": []
         },
         "review/source-layout/025": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0efd033dcb75419819619f6b78f4cfcc3ffea2f6",
+            "verification": [
+                "Merged the manifest parser into configurations/manifests.ts and deleted the old parser owner.",
+                "Root and CLI TypeScript checks; 102 focused tests, 502 assertions; staged check and commit hooks passed; pre-push 147 passed, 13 skipped, zero findings.",
+                "Independent committed-tree architecture audit: 629 source/build files, exactly one owner each, no gaps or overlaps."
+            ]
         },
         "review/source-layout/026": {
             "status": "pending",
@@ -8594,8 +8614,133 @@
             ],
             "ci": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37566858503",
-                "status": "pending",
-                "platformResults": {}
+                "status": "cancellation-requested",
+                "platformResults": {},
+                "jobs": [
+                    {
+                        "name": "docs",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "package",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "test (ubuntu-24.04)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "test (windows-2025)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (windows 2/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "test (macos-15)",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "check",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 1/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (macos 2/4)",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (windows 4/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (linux 4/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 4/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 3/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (macos 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 2/4)",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (linux 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    }
+                ],
+                "notes": [
+                    "Cancelled superseded run after recording completed jobs to unblock the next revision.",
+                    "Docs and macOS CLI passed. Linux CLI case-folding test and tools fixtures failed; package global-registry override and Semgrep version probe failed. Fixes are being validated in the next checkpoint.",
+                    "Check automatic stage: 147 passed, 13 skipped, zero findings. Manual stage: CodeQL test filesystem races, Bash documentation security example, and unpublished public site link failed."
+                ]
+            }
+        },
+        {
+            "commit": "0efd033dcb75419819619f6b78f4cfcc3ffea2f6",
+            "completedRecords": [
+                "review/source-layout/004",
+                "review/source-layout/008",
+                "review/source-layout/009",
+                "review/source-layout/010",
+                "review/source-layout/025"
+            ],
+            "unresolvedRecords": 1067,
+            "validation": [
+                "Root and CLI TypeScript checks",
+                "102 focused tests, 502 assertions",
+                "Independent exclusive architecture ownership audit: 629 files",
+                "gspot check --staged passed; commit hooks: 106 checks passed, 3 skipped, zero findings",
+                "Pre-push: 147 checks passed, 13 skipped, zero findings"
+            ],
+            "limitations": [
+                "glossary/005 has remaining tool-project terminology",
+                "source-layout/001 retains parser/configuration cycle and drift edge at this commit",
+                "No full cross-platform suite conclusion",
+                "No publication, release tag, live setup or deployment"
+            ],
+            "ci": {
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37569175192",
+                "status": "pending"
             }
         }
     ]

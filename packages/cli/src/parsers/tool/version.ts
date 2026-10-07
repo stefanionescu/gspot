@@ -24,24 +24,15 @@ function versionFailure(result: SpawnResult, tool: ToolPin, text: string): Parse
  * @param tool the pin.
  * @param result what the version command printed and how it exited.
  * @param installedPackage the version the npm tool package declares, when the tool is one.
- * @param installedMiseVersion the version mise installed, when the tool is a mise tool.
  * @returns the version, or the state and note of a tool that gave none.
  */
-export function parseVersionOutput(
-    tool: ToolPin,
-    result: SpawnResult,
-    installedPackage?: string,
-    installedMiseVersion?: string,
-): ParsedToolVersion {
+export function parseVersionOutput(tool: ToolPin, result: SpawnResult, installedPackage?: string): ParsedToolVersion {
     const npm = tool.installers['npm'];
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
     // A shim with no selected version starts nothing, regardless of other mise installations.
     const failure = versionFailure(result, tool, text);
     if (failure !== undefined) return failure;
-    const version =
-        (npm?.version === tool.version ? installedPackage : undefined) ??
-        installedMiseVersion ??
-        parsedVersion(text, tool);
+    const version = (npm?.version === tool.version ? installedPackage : undefined) ?? parsedVersion(text, tool);
     if (version === undefined || semver.coerce(version) === null)
         return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };
     return { version };

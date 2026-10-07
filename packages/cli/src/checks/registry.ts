@@ -130,7 +130,7 @@ export const CHECKS: CheckRegistry = {
     'ansible/lint': { engine: ansibleLint },
     'nginx/test': { engine: nginxTest },
     'jest/coverage': { engine: jestCoverage },
-    'gspot/drift': { engine: gspotDrift },
+    'gspot/drift': { run: gspotDrift },
     'structure/config-logic': { engine: configurationLogic },
     'structure/suppressions': { engine: suppressions },
     'structure/stale-allowlists': { engine: staleAllowlists },

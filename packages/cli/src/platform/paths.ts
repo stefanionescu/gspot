@@ -100,7 +100,7 @@ function walkPattern(
 /**
  * Name executable candidates in the platform's preferred shim order.
  * @param name the executable name without a suffix
- * @returns names used by private-package verification and tool discovery
+ * @returns names used by tool-project verification and tool discovery
  */
 export function executableNames(name: string): string[] {
     return hostLayout.executableSuffixes.map((suffix) => name + suffix);

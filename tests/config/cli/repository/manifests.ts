@@ -58,11 +58,11 @@ export const RUNTIME_EVIDENCE_CASES = [
         detected: false,
     },
     {
-        name: 'node private tool manifest',
+        name: 'node tool-project manifest',
         runtime: 'node',
         package: {},
         source: '',
-        privatePackage: {
+        toolProjectManifest: {
             engines: {
                 node: '>=1',
             },
@@ -121,11 +121,11 @@ export const RUNTIME_EVIDENCE_CASES = [
         detected: false,
     },
     {
-        name: 'bun private tool manifest',
+        name: 'bun tool-project manifest',
         runtime: 'bun',
         package: {},
         source: '',
-        privatePackage: {
+        toolProjectManifest: {
             engines: {
                 bun: '>=1',
             },
@@ -184,11 +184,11 @@ export const RUNTIME_EVIDENCE_CASES = [
         detected: false,
     },
     {
-        name: 'deno private tool manifest',
+        name: 'deno tool-project manifest',
         runtime: 'deno',
         package: {},
         source: '',
-        privatePackage: {
+        toolProjectManifest: {
             engines: {
                 deno: '>=1',
             },

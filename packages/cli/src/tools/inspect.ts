@@ -11,14 +11,8 @@ import type { ParsedToolVersion } from '#cli/types/parsers/tool-version.ts';
 import { HOST_HINTS, VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY } from '#cli/config/platform/locations.ts';
+import { packageVersion, installedPackage, locateCandidates, locateRepositoryCandidates } from '#cli/tools/locate.ts';
 
-import {
-    miseVersion,
-    packageVersion,
-    installedPackage,
-    locateCandidates,
-    locateRepositoryCandidates,
-} from '#cli/tools/locate.ts';
 import type {
     Inspected,
     ToolSearch,
@@ -59,7 +53,7 @@ function readToolVersion(root: string, cwd: string, path: string, tool: ToolPin)
         timeoutMs: VERSION_TIMEOUT_MS,
         env: { NO_COLOR: '1', ...tool.env },
     });
-    return parseVersionOutput(tool, result, installedVersion, miseVersion(path, tool));
+    return parseVersionOutput(tool, result, installedVersion);
 }
 
 // The inspection of a library whose tool-project package.json declares a version.

@@ -1,9 +1,10 @@
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
+import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { misePins } from '#cli/configurations/pins.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { gspot, spawnGspot } from '#tests/harness/gspot.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
@@ -13,10 +14,11 @@ import type { InstallJson } from '#cli/types/commands/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { sourceLauncherDirectory } from '#tests/harness/environment.ts';
 import { CLI_PINS, GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
-import { chmodSync, existsSync, readFileSync, realpathSync } from 'node:fs';
 import type { MiseProject } from '#tests/types/tools/lifecycle/mise-execution.ts';
 import { suiteTimeout, openTestBudget, runTestCommand } from '#tests/harness/command.ts';
+import { chmodSync, mkdirSync, existsSync, symlinkSync, readFileSync, realpathSync } from 'node:fs';
 
 const previousMiseVersion = `${String(Number(CLI_PINS.mise.split('.', 1)[0]) - 1)}.12.31`;
 
@@ -35,10 +37,10 @@ beforeAll(async () => {
         });
         await createFileTree(repository.path, { 'gspot.toml': policy, '.gspot/authored.txt': 'keep authored content' });
         await createFileTree(state.path, {
-            'bin/gspot': '#!/bin/sh\nexec "$GSPOT_TEST_BUN" "$GSPOT_TEST_CLI" "$@"\n',
             'old/mise': `#!/bin/sh\nif [ "$1" = --version ]; then printf "${previousMiseVersion}\\n"; exit 0; fi\nexit 42\n`,
         });
-        chmodSync(join(state.path, 'bin/gspot'), 0o755);
+        mkdirSync(join(state.path, 'bin'));
+        symlinkSync(join(sourceLauncherDirectory, 'gspot'), join(state.path, 'bin/gspot'));
         chmodSync(join(state.path, 'old/mise'), 0o755);
         {
             using log = openOwnership(repository.path);
@@ -51,8 +53,6 @@ beforeAll(async () => {
             generated: readFileSync(join(repository.path, MISE_CONFIG_PATH)),
             environment: {
                 PATH: `${join(state.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
-                GSPOT_TEST_BUN: process.execPath,
-                GSPOT_TEST_CLI: gspot,
                 MISE_CONFIG_DIR: join(state.path, 'config'),
                 MISE_DATA_DIR: join(state.path, 'data'),
                 MISE_STATE_DIR: join(state.path, 'state'),
@@ -63,6 +63,17 @@ beforeAll(async () => {
                 MISE_TRUSTED_CONFIG_PATHS: repository.path,
             },
         };
+        const session = await openSession(repository.path);
+        for (const pin of misePins(session.scopes[0]!.selected)) {
+            const requirement = `${pin.name}@${pin.version}`;
+            const installed = await runTestCommand(['mise', 'where', requirement], { cwd: sourceLauncherDirectory });
+            expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+            const linked = await runTestCommand(['mise', 'link', requirement, installed.stdout.trim()], {
+                cwd: project.root,
+                env: project.environment,
+            });
+            expect(linked.code, linked.stdout + linked.stderr).toBe(0);
+        }
         expect(
             await runTestCommand(['mise', 'link', `${GSPOT_MISE_TOOL}@${packageManifest.version}`, state.path], {
                 cwd: project.root,

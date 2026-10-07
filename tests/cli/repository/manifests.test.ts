@@ -210,7 +210,7 @@ test.each(RUNTIME_EVIDENCE_CASES)('$name determines runtime applicability within
         'package.json': JSON.stringify({ engines: { [entry.runtime]: '>=1' } }),
         'api/package.json': JSON.stringify(entry.package),
         'api/entry.js': entry.source,
-        'api/.gspot/package.json': JSON.stringify('privatePackage' in entry ? entry.privatePackage : {}),
+        'api/.gspot/package.json': JSON.stringify('toolProjectManifest' in entry ? entry.toolProjectManifest : {}),
     });
     const repository = await readRepository(sandbox.path, [], [], []);
     const projectManifests = readManifests(sandbox.path, repository.files);

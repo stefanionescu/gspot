@@ -37,9 +37,6 @@ jobs:
               run: mise run install:checks
             - name: Check the types
               run: mise run check:types
-            # The tracked pins of the configuration tools must be what the manifests write.
-            - name: Check the test tool pins
-              run: mise run pin:test-tools && git diff --exit-code mise.test.toml
             - name: Detect changed pin inputs
               id: pin-inputs
               shell: bash
@@ -48,9 +45,9 @@ jobs:
                      git diff --name-only "${PIN_BASE}" HEAD -- \
                          packages/cli/configurations bun.lock packages/cli/package.json packages/eslint-plugin/package.json \
                          scripts/pins.ts scripts/config/pins.ts scripts/types/pins.ts scripts/parsers/releases.ts \
-                         scripts/test-tools.ts scripts/config/test-tools.ts scripts/eslint-presets.ts \
+                         scripts/plugin.ts scripts/config/plugin.ts scripts/eslint-presets.ts \
                          scripts/config/eslint-presets.ts scripts/parsers/npm.ts scripts/types/npm.ts \
-                         packages/cli/src/config/eslint.ts packages/cli/src/generation/eslint/presets.ts \
+                         packages/cli/src/config/generation/eslint.ts packages/cli/src/generation/eslint/presets.ts \
                          packages/cli/src/parsers/schema/eslint.ts | rg .; then
                       echo 'changed=true' >> "$GITHUB_OUTPUT"
                   fi
@@ -69,7 +66,7 @@ jobs:
               run: mise exec -- gspot doctor
     docs:
         runs-on: ubuntu-24.04
-        timeout-minutes: 20
+        timeout-minutes: 60
         steps:
             - name: Check out the repository
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -89,8 +86,6 @@ jobs:
     package:
         runs-on: ubuntu-24.04
         timeout-minutes: 60
-        env:
-            MISE_ENV: test
         defaults:
             run:
                 shell: bash
@@ -109,9 +104,7 @@ jobs:
             matrix:
                 os: [ubuntu-24.04, macos-15, windows-2025]
         runs-on: ${{ matrix.os }}
-        timeout-minutes: 45
-        env:
-            MISE_ENV: test
+        timeout-minutes: 60
         defaults:
             run:
                 shell: bash
@@ -144,9 +137,8 @@ jobs:
                     - { os: windows-2025, platform: windows, shard: 3, shards: 4 }
                     - { os: windows-2025, platform: windows, shard: 4, shards: 4 }
         runs-on: ${{ matrix.os }}
-        timeout-minutes: 90
+        timeout-minutes: 60
         env:
-            MISE_ENV: test
             SHARD: ${{ matrix.shard }}/${{ matrix.shards }}
         defaults:
             run:

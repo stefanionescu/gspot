@@ -1,5 +1,4 @@
 import type { z } from 'zod';
-import type { Drift } from '#cli/types/lifecycle/output.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
@@ -75,7 +74,6 @@ export type EngineInput = {
     cancelSignal?: AbortSignal;
     scopeRoot: string;
     repositoryFiles?: TrackedFile[];
-    generatedDrift?: () => Drift[];
     /** Every scope's selection, for a check that runs once. */
     selections?: ScopeSelection[];
     root: string;

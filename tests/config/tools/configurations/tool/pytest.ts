@@ -4,4 +4,4 @@ export const ARITHMETIC_TESTS =
 export const MATH =
     '"""Arithmetic."""\n\n\ndef double(value: int) -> int:\n    """Double a number."""\n    return value * 2\n\n\ndef triple(value: int) -> int:\n    """Triple a number."""\n    return value * 3\n';
 
-export const PROJECT = `[project]\nname = "example"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ["pytest"]\n\n[tool.pytest.ini_options]\npythonpath = ["."]\n`;
+export const PROJECT = `[project]\nname = "example"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ["pytest==9.1.1", "pytest-cov==7.1.0"]\n\n[tool.pytest.ini_options]\npythonpath = ["."]\n`;

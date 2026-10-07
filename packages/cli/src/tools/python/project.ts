@@ -143,7 +143,7 @@ async function installInWork(
  * Resolve Python tool requirements outside the repository before writing generated files.
  * Appends the successfully prepared lock to files.
  * @param preparation the repository root and command-owned installer.
- * @param files the generated files, among them the Python project.
+ * @param files the generated files, among them the Python tool project.
  *
  * @param owner the lifecycle owner that records the lock.
  * @param options the caller's lock preparation request.
@@ -182,8 +182,8 @@ export async function preparePythonProject(
 /**
  * Read Python lock drift without resolving dependencies or creating ownership state.
  * @param root the repository root.
- * @param generated the generated files, among them the Python project.
- * @returns the lock path with what is wrong with it, or undefined when there is no Python project.
+ * @param generated the generated files, among them the Python tool project.
+ * @returns the lock path with what is wrong with it, or undefined when there is no Python tool project.
  */
 export function pythonLockDrift(root: string, generated: GeneratedFile[]): LockDrift | undefined {
     const project = generated.find((file) => file.path === TOOL_PYTHON_PROJECT);
@@ -199,11 +199,11 @@ export function pythonLockDrift(root: string, generated: GeneratedFile[]): LockD
 /**
  * Plan the uv installation, lock resolution, and locked Python environment.
  * @param root the repository root.
- * @param proposed the generated Python project, when previewing uncommitted output.
+ * @param proposed the generated Python tool project, when previewing uncommitted output.
  * @param runner the configured task runner.
  * @param options the caller's lock preparation request.
  * @param options.refreshLocks include fresh resolution even when the recorded pins match.
- * @returns commands for each phase, or empty phases without a Python project.
+ * @returns commands for each phase, or empty phases without a Python tool project.
  */
 export function pythonInstallationPlan(
     root: string,
@@ -231,7 +231,7 @@ export function pythonInstallationPlan(
  * @param root the repository root.
  * @param owner the lifecycle owner that records the writes.
  * @param executable the uv executable to run.
- * @returns the line that says what was installed, or '' without a Python project.
+ * @returns the line that says what was installed, or '' without a Python tool project.
  */
 export async function installPythonProject(root: string, owner: ToolOwner, executable: string): Promise<string> {
     const project = owner.read(TOOL_PYTHON_PROJECT);

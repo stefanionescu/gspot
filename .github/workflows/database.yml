@@ -8,9 +8,8 @@ permissions:
 jobs:
     supabase:
         runs-on: ubuntu-24.04
-        timeout-minutes: 30
+        timeout-minutes: 60
         env:
-            MISE_ENV: test
             GSPOT_SUPABASE_TEST: '1'
         defaults:
             run:
@@ -25,8 +24,8 @@ jobs:
               with:
                   version: '2026.8.8'
                   install: false
-            - name: Install the Supabase CLI
-              run: mise install bun node supabase
+            - name: Install Bun and Node
+              run: mise install bun node
             - name: Install workspace dependencies
               run: bun install --frozen-lockfile
             - name: Run the Supabase freshness test

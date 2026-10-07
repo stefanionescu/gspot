@@ -162,7 +162,7 @@ test('init proposes workspace scopes without a lockfile and preserves files afte
     ).toStrictEqual(['packages/api']);
 });
 
-test('init previews only applicable private projects and duplicate pins for the selected runner', async () => {
+test('init previews only applicable tool projects and duplicate pins for the selected runner', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'source.py': 'print("hello")\n',
@@ -173,7 +173,7 @@ test('init previews only applicable private projects and duplicate pins for the 
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.change).toContainEqual({
         path: '.gspot/pyproject.toml',
-        note: '6 pinned Python tools; matching uv.lock and private environment',
+        note: '6 pinned Python tools; matching uv.lock and tool environment',
     });
     expect(plan.change).toContainEqual({ path: '.gspot/package.json', note: '3 pinned npm tools; matching lockfile' });
     expect(plan.noLongerRuns).toStrictEqual([

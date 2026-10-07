@@ -18,7 +18,7 @@ runs:
                   ~/.bun/install/cache
                   ~/.cache/uv
                   ~/AppData/Local/uv/cache
-              key: packages-${{ runner.os }}-${{ hashFiles('mise.toml', 'mise.test.toml', 'bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
+              key: packages-${{ runner.os }}-${{ hashFiles('mise.toml', 'bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
         - name: Install Linux XML tools and zsh
           if: runner.os == 'Linux' && inputs.native-tests == 'true'
           shell: bash

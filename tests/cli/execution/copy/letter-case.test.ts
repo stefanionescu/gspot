@@ -2,18 +2,27 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
 import { gitOutput } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { rmSync, existsSync, writeFileSync } from 'node:fs';
 import type { CommandFailureJson } from '#cli/types/output.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 
-test('a staged check over two spellings of one path passes or refuses with a selection error', async () => {
+test('staged paths preserve each spelling and its bytes, or refuse a case-folding file system', async () => {
     await using sandbox = await testdir();
+    writeFileSync(join(sandbox.path, '.case-probe'), 'probe');
+    const caseFolding = existsSync(join(sandbox.path, '.CASE-PROBE'));
+    rmSync(join(sandbox.path, '.case-probe'));
     const check = {
         name: 'sandbox/report',
-        command: [process.execPath, '-e', 'process.exitCode = 0', '{files}'],
+        command: [
+            process.execPath,
+            '-e',
+            'console.log(JSON.stringify(process.argv.slice(1).map(file => ({file,message:require("node:fs").readFileSync(file,"utf8")})))); process.exitCode = 1;',
+            '{files}',
+        ],
+        output: { format: 'json', fields: { file: 'file', message: 'message' } },
         paths: ['docs/**'],
         stage: 'commit',
     };
@@ -32,10 +41,18 @@ test('a staged check over two spellings of one path passes or refuses with a sel
         const hash = gitOutput(sandbox.path, ['hash-object', '-w', '.git/staged-blob']);
         gitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `100644,${hash},${path!}`]);
     }
-    const result = await runGspot(sandbox.path, ['check', '--staged', '--json']);
-    if (result.code === 0) {
+    const result = await runGspot(sandbox.path, ['check', '--staged', '--only', check.name, '--json']);
+    if (!caseFolding) {
+        expect(result.code, result.stdout + result.stderr).toBe(1);
         const report = JSON.parse(result.stdout) as RunReport;
-        expect(report.checks.map((entry) => [entry.check, entry.status])).toStrictEqual([['sandbox/report', 'passed']]);
+        expect(report.checks.map((entry) => [entry.check, entry.status, entry.fileCount])).toStrictEqual([
+            ['sandbox/report', 'failed', 2],
+        ]);
+        expect(
+            Object.fromEntries(
+                report.checks.flatMap(({ findings }) => findings.map(({ file, message }) => [file, message])),
+            ),
+        ).toStrictEqual({ 'docs/Notes.md': '# Notes\n', 'docs/NOTES.md': '# NOTES\n' });
         return;
     }
     expect(result.code, result.stdout + result.stderr).toBe(2);

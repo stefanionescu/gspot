@@ -61,8 +61,6 @@ test(
                 '--ignore-scripts',
                 '--no-audit',
                 '--no-fund',
-                '--registry',
-                release.registry.url,
             ],
             {
                 cwd: consumer,

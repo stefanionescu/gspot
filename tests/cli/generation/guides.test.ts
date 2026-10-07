@@ -70,7 +70,7 @@ test.each(RUNTIME_EVIDENCE_CASES)('Node instructions follow $name evidence', asy
     const guides = await generatedGuides('all', {
         'package.json': JSON.stringify(entry.package),
         'entry.js': entry.source,
-        '.gspot/package.json': JSON.stringify('privatePackage' in entry ? entry.privatePackage : {}),
+        '.gspot/package.json': JSON.stringify('toolProjectManifest' in entry ? entry.toolProjectManifest : {}),
     });
     expect(guides.has('.gspot/rules/language/javascript/NODE.md')).toBe(entry.runtime === 'node' && entry.detected);
 });

@@ -4,6 +4,7 @@ import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
+import { runTestCommand } from '#tests/harness/command.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -23,8 +24,10 @@ test(
             'tests/__init__.py': '"""Arithmetic tests."""\n',
             'tests/test_math.py': ARITHMETIC_TESTS,
         });
+        const environment = { PATH: buildToolsPath(['ruff', 'typos', 'ec']) };
+        const project = await runTestCommand(['uv', 'sync'], { cwd: sandbox.path, env: environment });
+        expect(project.code, project.stdout + project.stderr).toBe(0);
         commitAll(sandbox.path);
-        const environment = { PATH: buildToolsPath(['ruff', 'pytest', 'typos', 'ec']) };
         await install(
             sandbox.path,
             ['init', '--yes', '--configurations', 'python', 'pytest', 'naming', ...QUIET_INIT],

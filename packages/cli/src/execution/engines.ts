@@ -1,14 +1,11 @@
 // Running a check: the registry names the engine or the tool runner of each built-in check; every other check runs its command.
 import { join } from 'node:path';
-import { emitAll } from '#cli/generation/outputs.ts';
-import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckSpec } from '#cli/types/configurations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
-import { GENERATED_DRIFT_CHECK } from '#cli/config/execution/runtime.ts';
 
 import type {
     Engine,
@@ -77,8 +74,6 @@ export function engineInput(
     if (planned.spec.runs === 'once') {
         input.repositoryFiles = session.repository.files;
         input.selections = session.scopes;
-        if (planned.spec.name === GENERATED_DRIFT_CHECK)
-            input.generatedDrift = () => computeDrift(session.root, session.policyFiles.policy, emitAll(session));
     }
     return input;
 }
