@@ -72,11 +72,7 @@ export async function openapiFresh(input: CheckInput): Promise<Finding[]> {
     const document = documentPath(input);
     if (document === undefined) return [];
     const before = readSource(input.root, document, input.reads);
-    using scratchFolder = await copyIntoScratch(
-        input.root,
-        [...input.files.map((file) => file.path), document],
-        input.scopeEntries.map((scope) => scope.path),
-    );
+    using scratchFolder = await copyIntoScratch(input, [document]);
     const scratch = scratchFolder.path;
     const result = await runCheckTool(input, parseCommand(command), { cwd: join(scratch, input.scope) });
     if (result.code !== 0)

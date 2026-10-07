@@ -95,11 +95,7 @@ export function cachedBuild(input: CheckInput): Promise<SiteBuild> {
         if (resources === undefined)
             throw new Error('The site/build check needs temporary directories that are disposed after the run.');
         resources.defer(() => scopeBuilds.delete(key));
-        const folder = await copyIntoScratch(
-            input.root,
-            input.files.map((file) => file.path),
-            input.scopeEntries.map((scope) => scope.path),
-        );
+        const folder = await copyIntoScratch(input);
         return runBuild(input, resources.use(folder).path);
     })();
     scopeBuilds.set(key, running);
@@ -143,11 +139,7 @@ export async function siteBuild(input: CheckInput): Promise<Finding[]> {
 export async function buildReproducible(input: CheckInput): Promise<Finding[]> {
     const first = await requireBuild(input);
     const before = outputDigests(first.output);
-    using folder = await copyIntoScratch(
-        input.root,
-        input.files.map((file) => file.path),
-        input.scopeEntries.map((scope) => scope.path),
-    );
+    using folder = await copyIntoScratch(input);
     const second = await runBuild(input, folder.path);
     if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.outputTail}`);
     const after = outputDigests(second.output);

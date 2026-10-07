@@ -12,10 +12,10 @@ import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import type { PreparedCommand } from '#cli/types/execution/command.ts';
 import { isolatedFiles } from '#cli/execution/command/placeholders.ts';
-import { copyFiles, copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/execution/runtime.ts';
+import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/files.ts';
 import { prepareCommand, commandEnvironment } from '#cli/execution/command/check.ts';
-import type { FixReport, FixResult, FixOptions } from '#cli/types/execution/check.ts';
+import type { FixRun, FixReport, FixResult, FixOptions } from '#cli/types/execution/check.ts';
 import { hasToolError, toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
@@ -53,28 +53,28 @@ function fixFailure(planned: PlannedCheck, result: SpawnResult): string | undefi
     return [`${planned.check.name} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': ');
 }
 
-async function runFix(session: ToolSession, planned: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
+async function runFix(session: ToolSession, planned: PlannedCheck, prepared: PreparedCommand): Promise<FixRun> {
     const check = planned.check.name;
     const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const before = contentsOf(prepared.root, paths);
+    let note: string | undefined;
     for (const command of prepared.commands) {
         const result = await runTool(command.argv, {
             ...prepared,
             timeoutSeconds: toolDeadline(planned.scope.view),
             cancelSignal: session.cancelSignal,
         });
-        const note = fixFailure(planned, result);
-        if (note !== undefined) {
-            return {
-                check,
-                status: 'failed',
-                changed: changedPaths(before, contentsOf(prepared.root, paths)),
-                note,
-            };
-        }
+        note = fixFailure(planned, result);
+        if (note !== undefined) break;
     }
     const changed = changedPaths(before, contentsOf(prepared.root, paths));
-    return { check, status: changed.length === 0 ? 'unchanged' : 'changed', changed };
+    return {
+        result:
+            note === undefined
+                ? { check, status: changed.length === 0 ? 'unchanged' : 'changed', changed }
+                : { check, status: 'failed', changed, note },
+        originals: new Map(changed.map((path) => [path, before.get(path)])),
+    };
 }
 
 async function isolatedFix(
@@ -84,8 +84,12 @@ async function isolatedFix(
     command: string[],
     toolPath: string,
 ): Promise<FixResult> {
-    using workspace = copyFiles(root, isolatedFiles(session, planned, command));
-    const workspaceSession = { ...session, root: workspace.root };
+    using workspace = await copyIntoScratch({
+        root: root,
+        paths: isolatedFiles(session, planned, command),
+        dependencies: [],
+    });
+    const workspaceSession = { ...session, root: workspace.path };
     const prepared = prepareCommand(
         workspaceSession,
         planned,
@@ -93,18 +97,16 @@ async function isolatedFix(
         commandEnvironment(workspaceSession, planned),
         toolPath,
     );
-    const result = await runFix(session, planned, prepared);
+    const { result, originals } = await runFix(session, planned, prepared);
     const current = contentsOf(root, result.changed);
-    const corrected = contentsOf(workspace.root, result.changed);
+    const corrected = contentsOf(workspace.path, result.changed);
     using files = openRoot(root, 'native');
     // Validate every changed source before publishing any fix bytes.
-    const destinations = [...workspace.originals]
-        .filter(([path]) => result.changed.includes(path))
-        .map(([path, original]) => {
-            if (current.get(path)?.equals(original) !== true)
-                throw new Error(`${path} changed while its fix was running; the isolated fix was not applied.`);
-            return [path, files.realPath(path)] as const;
-        });
+    const destinations = [...originals].map(([path, original]) => {
+        if (original === undefined ? current.get(path) !== undefined : current.get(path)?.equals(original) !== true)
+            throw new Error(`${path} changed while its fix was running; the isolated fix was not applied.`);
+        return [path, files.realPath(path)] as const;
+    });
     for (const [path, destination] of destinations) {
         const bytes = corrected.get(path);
         if (bytes === undefined) unlinkSync(destination);
@@ -186,7 +188,8 @@ async function runFixer(session: ToolSession, planned: PlannedCheck, workingDire
         workingDirectory === session.root ? environment : commandEnvironment(workspaceSession, selected),
         availability.path,
     );
-    return runFix(session, planned, prepared);
+    const completed = await runFix(session, planned, prepared);
+    return completed.result;
 }
 
 /**
@@ -208,9 +211,11 @@ export async function applyFixers(
     ].toSorted((a, b) => a.localeCompare(b));
     using scratch = isDryRun
         ? await copyIntoScratch(
-              session.root,
-              [...paths, ...session.repository.files.map((file) => file.path)],
-              session.repository.scopes.map((scope) => scope.path),
+              projectCopyInputs(
+                  session.root,
+                  [...paths, ...session.repository.files.map((file) => file.path)],
+                  session.repository.scopes.map((scope) => scope.path),
+              ),
           )
         : undefined;
     const root = scratch?.path ?? session.root;

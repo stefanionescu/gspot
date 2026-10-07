@@ -2,12 +2,13 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
-import { run, runBinary } from '#cli/platform/spawn.ts';
 import { waitForExit } from '#tests/harness/process.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
+import { run, runBinary, runStream } from '#cli/platform/spawn.ts';
 
 const captures = { text: run, binary: runBinary };
 
@@ -216,3 +217,97 @@ test.skipIf(process.platform === 'win32')(
         }
     },
 );
+
+test('stream consumption preserves raw bytes without captured output and retains diagnostics', async () => {
+    await using sandbox = await testdir();
+    const command = [
+        process.execPath,
+        '-e',
+        String.raw`process.stdout.write(Buffer.from([0,255,0,10])); process.stderr.write("diagnostic\n");`,
+    ];
+    const bytes: Buffer[] = [];
+    const result = await runStream(
+        command,
+        prepareTestCommand(command, { cwd: sandbox.path }, 'raw stream').options,
+        async (chunks) => {
+            for await (const chunk of chunks) bytes.push(chunk);
+        },
+    );
+    expect(Buffer.concat(bytes)).toStrictEqual(Buffer.from([0, 255, 0, 10]));
+    expect(result).toMatchObject({ code: 0, stdout: '', stderr: 'diagnostic\n', missing: false });
+});
+
+test('a rejected stream consumer terminates and drains its owned child', async () => {
+    await using sandbox = await testdir();
+    const children = spyOn(childProcess, 'spawn');
+    const failure = new Error('Consumer refused the bytes.');
+    const command = [process.execPath, '-e', 'process.stdout.write("ready"); setInterval(() => {}, 1000);'];
+    try {
+        await rejects(
+            runStream(
+                command,
+                prepareTestCommand(command, { cwd: sandbox.path }, 'rejected stream').options,
+                async (chunks) => {
+                    for await (const chunk of chunks) {
+                        expect(chunk.length).toBeGreaterThan(0);
+                        throw failure;
+                    }
+                },
+            ),
+            failure,
+        );
+        const launched = children.mock.results[0];
+        expect(launched?.type).toBe('return');
+        if (launched?.type === 'return') expect(terminated(launched.value)).toBe(true);
+    } finally {
+        children.mockRestore();
+    }
+});
+
+test('stream cancellation terminates the child and preserves the cancellation reason', async () => {
+    await using sandbox = await testdir();
+    const controller = new AbortController();
+    const reason = new Error('Canceled native output');
+    let pid = 0;
+    const command = [
+        process.execPath,
+        '-e',
+        'process.stdout.write(String(process.pid)); setInterval(() => process.stdout.write("pending"), 1000);',
+    ];
+    await rejects(
+        runStream(
+            command,
+            {
+                ...prepareTestCommand(command, { cwd: sandbox.path }, 'canceled stream').options,
+                cancelSignal: controller.signal,
+            },
+            async (chunks) => {
+                for await (const chunk of chunks) {
+                    pid = Number(chunk.toString());
+                    expect(pid).toBeGreaterThan(0);
+                    controller.abort(reason);
+                }
+            },
+        ),
+        (error) => error === reason,
+    );
+    expect(controller.signal.aborted).toBe(true);
+    await waitForExit(pid);
+});
+
+test('a completed native stream retains the consumer refusal after process cleanup', async () => {
+    await using sandbox = await testdir();
+    const refusal = new Error('Invalid native stream');
+    const command = [process.execPath, '-e', 'process.stdout.write("invalid");'];
+    await rejects(
+        runStream(
+            command,
+            prepareTestCommand(command, { cwd: sandbox.path }, 'completed invalid stream').options,
+            async (chunks) => {
+                for await (const chunk of chunks) expect(chunk.toString()).toBe('invalid');
+                throw refusal;
+            },
+        ),
+        (error) => error === refusal,
+    );
+});

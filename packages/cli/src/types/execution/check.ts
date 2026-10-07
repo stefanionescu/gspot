@@ -20,6 +20,9 @@ export type FixResult = { check: string; changed: string[] } & (
     | { status: 'failed'; note: string }
 );
 
+/** Pre-fix bytes of changed files, retained only for isolated publication checks. */
+export type FixRun = { result: FixResult; originals: Map<string, Buffer | undefined> };
+
 export type FixReport = { results: FixResult[]; changed: string[]; diffs: string[] };
 
 export type RunReportOptions = PlanOptions & {

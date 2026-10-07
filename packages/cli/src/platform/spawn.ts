@@ -15,6 +15,7 @@ import {
     TASKKILL_GONE_CODE,
 } from '#cli/config/platform/runtime.ts';
 import type {
+    StdoutRead,
     SpawnResult,
     SpawnOptions,
     SpawnCompletion,
@@ -23,7 +24,7 @@ import type {
     ProcessTermination,
 } from '#cli/types/platform/runtime.ts';
 
-function commandOptions(options: SpawnOptions, executable: string) {
+function commandOptions(options: SpawnOptions, executable: string, output: StdoutRead) {
     const env = { ...environmentVariables(), ...options.env };
     // A selected tool's launcher must find its sibling runtime and commands before unrelated PATH tools.
     if (isAbsolute(executable) && env['PATH'] !== undefined)
@@ -34,7 +35,8 @@ function commandOptions(options: SpawnOptions, executable: string) {
         extendEnv: false,
         ...(options.stdin === undefined ? {} : { input: options.stdin }),
         stdio: [options.stdin === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'] as const,
-        encoding: 'utf8' as const,
+        encoding: typeof output === 'string' ? output : 'utf8',
+        buffer: { stdout: typeof output === 'string' },
         stripFinalNewline: false,
         reject: false,
         maxBuffer: Infinity,
@@ -85,7 +87,7 @@ function completed(result: SpawnCompletion, started: number, diagnostic: string)
     return {
         // A run that errored can still report exit 0; report it as failed.
         code: isErrored && code === 0 ? FAILED_CODE : code,
-        stdout: result.stdout,
+        stdout: result.stdout ?? '',
         stderr: diagnostics.filter(Boolean).join('\n'),
         missing,
         duration: performance.now() - started,
@@ -97,7 +99,8 @@ function completed(result: SpawnCompletion, started: number, diagnostic: string)
 
 // The group has no process left to signal. macOS refuses the signal as not permitted, rather than reporting no such
 // process, when every member has exited but is not reaped yet.
-function isGroupGone(error: NodeJS.ErrnoException, child: ChildProcess): boolean {
+function isGroupGone(error: Error, child: ChildProcess): boolean {
+    if (!('code' in error)) return false;
     if (error.code === 'ESRCH') return true;
     const hasExited = child.exitCode !== null || child.signalCode !== null;
     return error.code === 'EPERM' && process.platform === 'darwin' && hasExited;
@@ -117,7 +120,7 @@ function terminate(child: ChildProcess, state: ProcessTermination): void {
                 throw new Error(`Cannot terminate the tool process tree: ${result.stderr}`);
         } else process.kill(-child.pid, 'SIGKILL');
     } catch (error) {
-        if (!isGroupGone(error as NodeJS.ErrnoException, child)) state.failure = error as Error;
+        if (!isGroupGone(error as Error, child)) state.failure = error as Error;
     }
     child.kill('SIGKILL');
     state.drainTimer = setTimeout(() => {
@@ -163,7 +166,8 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
     if (options.cancelSignal?.aborted === true) cancel();
     return {
         state,
-        async dispose(executionFailure: Error | undefined) {
+        stop: stopTree,
+        async dispose(executionFailure: unknown) {
             await exitCleanup;
             clearTimeout(timer);
             clearTimeout(termination.drainTimer);
@@ -171,7 +175,7 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
             options.cancelSignal?.removeEventListener('abort', cancel);
             child.removeListener('exit', exited);
             for (const stream of child.stdio) stream?.removeListener('error', stopTree);
-            if (termination.failure !== undefined) {
+            if (termination.failure !== undefined && !isGroupGone(termination.failure, child)) {
                 if (executionFailure !== undefined)
                     throw new AggregateError(
                         [executionFailure, termination.failure],
@@ -183,30 +187,48 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
     };
 }
 
-// Runs a command without a shell under supervision. Standard output stays in the encoding the caller reads, and the
-// diagnostics are decoded to text.
-async function supervisedRun(
+/**
+ * Run one supervised process tree with encoded capture or an uncaptured raw consumer.
+ * @param command executable and literal arguments
+ * @param options working directory, environment, and process controls
+ * @param output encoding or the consumer that drains binary output
+ * @returns output and termination classification, with empty stdout for an uncaptured consumer
+ */
+export async function runStream(
     command: string[],
     options: AsyncSpawnOptions,
-    encoding: 'utf8' | 'base64',
+    output: StdoutRead,
 ): Promise<SpawnResult> {
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
     if (missingExecutable(executable, options.cwd)) return completed(notFound(executable), started, '');
-    const base = commandOptions(options, executable);
-    const child = execa(executable, argv, { ...base, detached: process.platform !== 'win32', encoding });
+    const base = commandOptions(options, executable, output);
+    const child = execa(executable, argv, {
+        ...base,
+        detached: process.platform !== 'win32',
+    });
     const supervision = supervise(child, options);
     if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
     if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
-    let executionFailure: Error | undefined;
+    let executionFailure: unknown;
     try {
+        if (typeof output === 'function') {
+            await output({
+                async *[Symbol.asyncIterator]() {
+                    yield* child.stdout;
+                    options.cancelSignal?.throwIfAborted();
+                },
+            });
+        }
         const result = await child;
         if (result.failed) executionFailure = new Error(result.shortMessage);
-        const diagnostic = Buffer.from(result.stderr, encoding).toString('utf8');
+        const diagnostic = Buffer.from(result.stderr, base.encoding).toString('utf8');
         return { ...completed(result, started, diagnostic), ...supervision.state };
     } catch (error) {
-        executionFailure = error instanceof Error ? error : new Error(String(error));
+        executionFailure = error;
+        supervision.stop();
+        await child;
         throw error;
     } finally {
         await supervision.dispose(executionFailure);
@@ -220,7 +242,7 @@ async function supervisedRun(
  * @returns captured output and termination status
  */
 export async function run(command: string[], options: AsyncSpawnOptions): Promise<SpawnResult> {
-    return await supervisedRun(command, options, 'utf8');
+    return await runStream(command, options, 'utf8');
 }
 
 /**
@@ -235,7 +257,7 @@ export function runBlocking(command: string[], options: SpawnOptions): SpawnResu
     if (executable === undefined) throw new Error('An empty command cannot run.');
     if (missingExecutable(executable, options.cwd)) return completed(notFound(executable), started, '');
     const deadline = options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs };
-    const result = execaSync(executable, argv, { ...commandOptions(options, executable), ...deadline });
+    const result = execaSync(executable, argv, { ...commandOptions(options, executable, 'utf8'), ...deadline });
     return completed(result, started, result.stderr);
 }
 
@@ -247,6 +269,6 @@ export function runBlocking(command: string[], options: SpawnOptions): SpawnResu
  */
 export async function runBinary(command: string[], options: AsyncSpawnOptions): Promise<BinarySpawnResult> {
     // Bun requires a Node encoding name when it constructs child-process streams, so the bytes arrive as base64.
-    const result = await supervisedRun(command, options, 'base64');
+    const result = await runStream(command, options, 'base64');
     return { ...result, stdout: Buffer.from(result.stdout, 'base64') };
 }

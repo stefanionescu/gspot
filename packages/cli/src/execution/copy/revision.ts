@@ -1,39 +1,19 @@
 // Write Git revision content without replacing authored working-tree files.
+import { join, relative } from 'node:path';
 import { gitText } from '#cli/platform/git.ts';
-import { join, dirname, relative } from 'node:path';
 import { setImmediate } from 'node:timers/promises';
 import { GspotError } from '#cli/platform/errors.ts';
+import { copyInto } from '#cli/execution/copy/files.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
-import { writeLink } from '#cli/platform/root/writes.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
-import { WRITE_BATCH } from '#cli/config/execution/copy.ts';
+import { nativeSegments } from '#cli/platform/root/rules.ts';
 import { DIRECTORY_MODE } from '#cli/config/platform/modes.ts';
+import type { ScratchFile } from '#cli/types/execution/copy.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
-import { fileMode, nativeSegments } from '#cli/platform/root/rules.ts';
-import { getBlobs, getEntries } from '#cli/repository/revisions/objects.ts';
-import { chmodSync, mkdirSync, existsSync, realpathSync, writeFileSync } from 'node:fs';
-import { ENTRY_MODES, GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
-import { copyValePackages, copyInstalledDependencies } from '#cli/execution/copy/dependencies.ts';
-
-// Writes one tracked entry into the copy: a directory for a gitlink, otherwise the blob with its mode.
-function writeEntry(checkout: string, entry: GitEntry, objects: Map<string, Buffer>): void {
-    const target = join(checkout, ...nativeSegments(entry.path));
-    if (entry.mode === GITLINK_MODE) {
-        mkdirSync(target, { recursive: true, mode: DIRECTORY_MODE });
-        chmodSync(target, DIRECTORY_MODE);
-        return;
-    }
-    const bytes = objects.get(entry.hash);
-    if (bytes === undefined) throw new GspotError('selection', ['A requested Git blob was not returned.']);
-    const mode = fileMode({ mode: ENTRY_MODES[entry.mode] });
-    mkdirSync(dirname(target), { recursive: true });
-    // A tracked link keeps its target, wherever it points, as a Git checkout keeps it.
-    if (entry.mode === SYMLINK_MODE) writeLink(target, bytes, mode);
-    else {
-        writeFileSync(target, bytes, { flag: 'wx', mode });
-        chmodSync(target, mode);
-    }
-}
+import { chmodSync, mkdirSync, existsSync, realpathSync } from 'node:fs';
+import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
+import { getEntries, visitGitBlobs } from '#cli/repository/revisions/objects.ts';
+import { copyValePackages, revisionDependencies } from '#cli/execution/copy/dependencies.ts';
 
 // Two tracked paths that differ only by letter case, or undefined when every path folds to its own spelling.
 function caseCollision(entries: GitEntry[]): [string, string] | undefined {
@@ -47,29 +27,45 @@ function caseCollision(entries: GitEntry[]): [string, string] | undefined {
 }
 
 async function populateRevision(
+    root: string,
     checkout: string,
     entries: GitEntry[],
-    objects: Map<string, Buffer>,
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const collision = caseCollision(entries);
-    // On a file system that folds letter case, the upper-case spelling of the folder names the folder itself.
     const upper = checkout.toUpperCase();
     if (collision !== undefined && upper !== checkout && existsSync(upper))
         throw new GspotError('selection', [
             `Git holds ${collision[0]} and ${collision[1]}, which differ only by letter case, and this file system keeps one of them. Rename or remove one with git mv or git rm --cached, then check again.`,
         ]);
-    // Write links last so a tracked link can never redirect another tracked write.
-    const ordered = [
-        ...entries.filter((entry) => entry.mode !== SYMLINK_MODE),
-        ...entries.filter((entry) => entry.mode === SYMLINK_MODE),
-    ];
-    for (const [index, entry] of ordered.entries()) {
-        if (index % WRITE_BATCH === 0) {
-            await setImmediate();
-            cancelSignal?.throwIfAborted();
-        }
-        writeEntry(checkout, entry, objects);
+    for (const entry of entries.filter((file) => file.mode === GITLINK_MODE)) {
+        const target = join(checkout, ...nativeSegments(entry.path));
+        mkdirSync(target, { recursive: true, mode: DIRECTORY_MODE });
+        chmodSync(target, DIRECTORY_MODE);
+    }
+    // Write links last so no authored link can redirect another tracked write.
+    for (const linked of [false, true]) {
+        const selected = Map.groupBy(
+            entries.flatMap((entry) =>
+                entry.mode === GITLINK_MODE || (entry.mode === SYMLINK_MODE) !== linked
+                    ? []
+                    : [{ ...entry, mode: entry.mode }],
+            ),
+            (entry) => entry.hash,
+        );
+        await visitGitBlobs(
+            checkout,
+            [...selected.keys()],
+            async (blobs) => {
+                async function* files(): AsyncGenerator<ScratchFile> {
+                    for await (const [hash, bytes] of blobs) {
+                        for (const entry of selected.get(hash) ?? []) yield { entry, bytes };
+                    }
+                }
+                await copyInto({ root, target: checkout, files: files(), dependencies: [], cancelSignal });
+            },
+            cancelSignal,
+        );
     }
 }
 
@@ -103,18 +99,14 @@ export async function checkOutRevision<Result>(
     await gitText(checkout, ['read-tree', '--empty'], { cancelSignal });
     await gitText(checkout, ['update-index', '-z', '--index-info'], { cancelSignal, stdin: index });
     const tree = await gitText(checkout, ['write-tree'], { cancelSignal });
-    const objects = await getBlobs(
-        checkout,
-        entries.filter((entry) => entry.mode !== GITLINK_MODE).map((entry) => entry.hash),
-        cancelSignal,
-    );
-    await populateRevision(checkout, entries, objects, cancelSignal);
+    await populateRevision(toplevel, checkout, entries, cancelSignal);
     copyValePackages(
         toplevel,
         checkout,
         entries.map((entry) => entry.path),
     );
-    await copyInstalledDependencies(toplevel, checkout, entries, cancelSignal);
+    const dependencies = await revisionDependencies(toplevel, checkout, entries, cancelSignal);
+    await copyInto({ root: toplevel, target: checkout, files: [], dependencies, cancelSignal });
     await setImmediate();
     cancelSignal?.throwIfAborted();
     return await action(join(checkout, directory), tree.trim());

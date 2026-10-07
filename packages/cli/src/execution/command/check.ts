@@ -5,10 +5,10 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { emptyResult } from '#cli/execution/report.ts';
-import { copyFiles } from '#cli/execution/copy/files.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import type { OutputPaths } from '#cli/types/parsers/output.ts';
 import { checkCompanions } from '#cli/planning/requirements.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
@@ -180,9 +180,13 @@ async function runInWorkspace(run: CommandRun, workspace: string | undefined): P
     const { session, planned, tool, command, toolPath, environment, base } = run;
     using created =
         workspace === undefined && planned.check.run_in_copy === true
-            ? copyFiles(session.root, isolatedFiles(session, planned, command))
+            ? await copyIntoScratch({
+                  root: session.root,
+                  paths: isolatedFiles(session, planned, command),
+                  dependencies: [],
+              })
             : undefined;
-    const root = workspace ?? created?.root;
+    const root = workspace ?? created?.path;
     const workspaceSession = root === undefined ? session : { ...session, root };
     const prepared = prepareCommand(
         workspaceSession,

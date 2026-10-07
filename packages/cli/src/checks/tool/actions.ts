@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import type { Scalar, Document } from 'yaml';
 import { readSource } from '#cli/platform/source.ts';
-import { copyFiles } from '#cli/execution/copy/files.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { ToolSession } from '#cli/types/tools/session.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { isMap, isSeq, isAlias, isScalar, parseDocument } from 'yaml';
@@ -80,16 +80,17 @@ export async function actionlint(session: ToolSession, planned: PlannedCheck): P
         if (prepared !== source) replacements.set(file.path, prepared);
     }
     if (replacements.size === 0) return runCheckCommand(session, planned, { command: ACTIONLINT_COMMAND });
-    using workspace = copyFiles(
-        session.root,
-        session.repository.files.map((file) => file.path),
-    );
+    using workspace = await copyIntoScratch({
+        root: session.root,
+        paths: session.repository.files.map((file) => file.path),
+        dependencies: [],
+    });
     // Actionlint discovers local reusable workflows only inside a Git project.
-    mkdirSync(join(workspace.root, '.git'));
+    mkdirSync(join(workspace.path, '.git'));
     for (const [path, source] of replacements) {
-        const target = join(workspace.root, path);
+        const target = join(workspace.path, path);
         chmodSync(target, PRIVATE_FILE);
         writeFileSync(target, source);
     }
-    return await runCheckCommand(session, planned, { command: ACTIONLINT_COMMAND, workspace: workspace.root });
+    return await runCheckCommand(session, planned, { command: ACTIONLINT_COMMAND, workspace: workspace.path });
 }

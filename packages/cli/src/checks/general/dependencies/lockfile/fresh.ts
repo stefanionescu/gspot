@@ -1,9 +1,9 @@
 import { join, posix, dirname } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { copyFiles } from '#cli/execution/copy/files.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
@@ -40,15 +40,16 @@ function lockfileRefusal(command: string[], result: SpawnResult): string {
 export async function lockfileFresh(input: CheckInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     // Package managers can write installation metadata even when they refuse a frozen lockfile.
-    using workspace = copyFiles(
-        input.root,
-        input.files.map((file) => file.path),
-    );
+    using workspace = await copyIntoScratch({
+        root: input.root,
+        paths: input.files.map((file) => file.path),
+        dependencies: [],
+    });
     for (const file of input.files) {
         const command = frozenCommand(input, file.path);
         if (command === undefined) continue;
         const result = await runCheckTool(input, command, {
-            cwd: join(workspace.root, dirname(file.path)),
+            cwd: join(workspace.path, dirname(file.path)),
             ...(command[0] === 'yarn' ? { env: { YARN_ENABLE_SCRIPTS: 'false' } } : {}),
         });
         if (result.code === 0) continue;

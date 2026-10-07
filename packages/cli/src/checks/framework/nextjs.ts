@@ -148,11 +148,7 @@ export function versionPairs(input: CheckInput): Finding[] {
  * @returns one finding for each type error
  */
 export async function nextTypes(input: CheckInput): Promise<Finding[]> {
-    using scratchFolder = await copyIntoScratch(
-        input.root,
-        input.files.map((file) => file.path),
-        input.scopeEntries.map((scope) => scope.path),
-    );
+    using scratchFolder = await copyIntoScratch(input);
     const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
     await typegen(isolated);
@@ -171,11 +167,7 @@ export async function nextTypes(input: CheckInput): Promise<Finding[]> {
  * @returns one finding for a build that fails
  */
 export async function nextBuild(input: CheckInput): Promise<Finding[]> {
-    using scratchFolder = await copyIntoScratch(
-        input.root,
-        input.files.map((file) => file.path),
-        input.scopeEntries.map((scope) => scope.path),
-    );
+    using scratchFolder = await copyIntoScratch(input);
     const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
     const cwd = isolated.scopeRoot;

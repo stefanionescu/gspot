@@ -1,4 +1,5 @@
 import { test, expect } from 'bun:test';
+import { rejects } from 'node:assert/strict';
 import { parseGitBlobs, parseGitEntries, parseIndexEntries } from '#cli/parsers/git.ts';
 
 import {
@@ -35,29 +36,32 @@ for (const { name, output, message } of INVALID_ENTRIES)
         expect(() => parseGitEntries(Buffer.from(output), 'index')).toThrow(message);
     });
 
-test('batch parsing retains binary content and an empty blob in response order', () => {
+test('batch parsing retains binary content and an empty blob in response order', async () => {
     const output = Buffer.concat([
         Buffer.from(`${SHA1} blob ${String(BINARY_BLOB.length)}\n`),
         Buffer.from(BINARY_BLOB),
         Buffer.from(`\n${SHA256} blob 0\n\n`),
     ]);
-    expect(parseGitBlobs(output, [SHA1, SHA256])).toStrictEqual(
+    expect(new Map(await Array.fromAsync(parseGitBlobs([output].values(), [SHA1, SHA256])))).toStrictEqual(
         new Map([
             [SHA1, Buffer.from(BINARY_BLOB)],
             [SHA256, Buffer.alloc(0)],
         ]),
     );
-    expect(parseGitBlobs(Buffer.alloc(0), [])).toStrictEqual(new Map());
+    expect(new Map(await Array.fromAsync(parseGitBlobs([Buffer.alloc(0)].values(), [])))).toStrictEqual(new Map());
 });
 
 for (const { name, output, message } of INVALID_BLOBS)
-    test(`batch parsing rejects ${name}`, () => {
-        expect(() => parseGitBlobs(Buffer.from(output), [SHA1])).toThrow(message);
+    test(`batch parsing rejects ${name}`, async () => {
+        await rejects(Array.fromAsync(parseGitBlobs([Buffer.from(output)].values(), [SHA1])), {
+            message: new RegExp(message),
+        });
     });
 
-test('a nonempty response without requested objects is rejected', () => {
-    expect(() => parseGitBlobs(Buffer.from(`${SHA1} blob 0\n\n`), [])).toThrow(
-        'The Git object stream contains unexpected data.',
+test('a nonempty response without requested objects is rejected', async () => {
+    await rejects(
+        Array.fromAsync(parseGitBlobs([Buffer.from(`${SHA1} blob 0\n\n`)].values(), [])),
+        /The Git object stream contains unexpected data/u,
     );
 });
 
@@ -65,4 +69,21 @@ test.each([0, 1, 2, 3])('working index entries preserve stage %i and its full id
     expect(parseIndexEntries(`100755 ${SHA256} ${String(stage)}\t${ENTRY_PATH}\0`)).toStrictEqual([
         { mode: '100755', hash: SHA256, path: ENTRY_PATH, stage },
     ]);
+});
+
+test('batch framing accepts every split between the header, binary body and delimiters', async () => {
+    const output = Buffer.concat([
+        Buffer.from(`${SHA1} blob 4\n`),
+        Buffer.from([0, 255, 0, 10]),
+        Buffer.from(`\n${SHA256} blob 0\n\n`),
+    ]);
+    for (let split = 0; split <= output.length; split += 1) {
+        const chunks = [output.subarray(0, split), output.subarray(split)];
+        expect(new Map(await Array.fromAsync(parseGitBlobs(chunks.values(), [SHA1, SHA256])))).toStrictEqual(
+            new Map([
+                [SHA1, Buffer.from([0, 255, 0, 10])],
+                [SHA256, Buffer.alloc(0)],
+            ]),
+        );
+    }
 });

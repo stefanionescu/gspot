@@ -133,11 +133,7 @@ export async function codeql(input: CheckInput): Promise<Finding[]> {
     );
     using workFolder = scratchFolder('gspot-codeql-');
     const work = workFolder.path;
-    using sourceFolder = await copyIntoScratch(
-        input.root,
-        input.files.map((file) => file.path),
-        input.scopeEntries.map((scope) => scope.path),
-    );
+    using sourceFolder = await copyIntoScratch(input);
     const source = sourceFolder.path;
     const findings: Finding[] = [];
     for (const language of selected) {

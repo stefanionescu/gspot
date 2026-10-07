@@ -1,12 +1,23 @@
 import { join, dirname } from 'node:path';
 import * as promises from 'node:fs/promises';
+import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/harness/expectations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { checkOutRevision } from '#cli/execution/copy/revision.ts';
-import { lstatSync, mkdirSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
+
+import {
+    lstatSync,
+    mkdirSync,
+    existsSync,
+    unlinkSync,
+    symlinkSync,
+    readFileSync,
+    realpathSync,
+    writeFileSync,
+} from 'node:fs';
 
 test('staged snapshots copy all workspace dependency trees before validating cross-tree links', async () => {
     await using sandbox = await testdir();
@@ -56,12 +67,13 @@ test('a workspace bin into untracked build output leaves the snapshot, and a bro
         return Promise.resolve(undefined);
     });
     symlinkSync('../missing/tool.js', join(sandbox.path, 'node_modules/.bin/broken'));
-    expect(
-        await rejection(checkOutRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
-    ).toContain('cannot be resolved');
+    await rejects(
+        checkOutRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined)),
+        { code: 'ENOENT' },
+    );
 });
 
-test('revision dependencies reject external manifest and installation links before copying', async () => {
+test('revision manifests refuse external links while external dependencies are privately cloned', async () => {
     await using sandbox = await testdir();
     await using external = await testdir();
     await createFileTree(sandbox.path, {
@@ -81,9 +93,12 @@ test('revision dependencies reject external manifest and installation links befo
     unlinkSync(join(sandbox.path, 'package.json'));
     await Bun.write(join(sandbox.path, 'package.json'), '{}');
     symlinkSync(external.path, join(sandbox.path, 'node_modules/external'));
-    expect(
-        await rejection(checkOutRevision(sandbox.path, { kind: 'index' }, () => Promise.resolve(undefined))),
-    ).toContain('Installed dependency link node_modules/external leaves the repository.');
+    await checkOutRevision(sandbox.path, { kind: 'index' }, (snapshot) => {
+        expect(realpathSync(join(snapshot, 'node_modules/external'))).toBe(join(snapshot, 'node_modules/external'));
+        expect(readFileSync(join(snapshot, 'node_modules/external/private.txt'), 'utf8')).toBe('outside bytes');
+        writeFileSync(join(snapshot, 'node_modules/external/private.txt'), 'private correction');
+        return Promise.resolve(undefined);
+    });
     unlinkSync(join(sandbox.path, 'node_modules/external'));
     await checkOutRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
         expect(await Bun.file(join(snapshot, 'node_modules/example/index.js')).text()).toContain('value = 1');
@@ -194,7 +209,7 @@ test('cancellation drains dependency copies before removing the snapshot and pre
     let entered = false;
     const copy = spyOn(promises, 'cp').mockImplementation(async (...args) => {
         pending += 1;
-        if (typeof args[1] === 'string') destination = dirname(dirname(args[1]));
+        if (typeof args[1] === 'string') destination = dirname(args[1]);
         try {
             await original(...args);
             controller.abort(new Error('Canceled dependency copy'));

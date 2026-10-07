@@ -91,11 +91,7 @@ export async function migrations(input: CheckInput): Promise<Finding[]> {
         )
     )
         return [];
-    using scratchFolder = await copyIntoScratch(
-        input.root,
-        input.files.map((file) => file.path),
-        input.scopeEntries.map((scope) => scope.path),
-    );
+    using scratchFolder = await copyIntoScratch(input);
     const scratch = scratchFolder.path;
     const isolated = join(scratch, input.scope);
     const before = generatedContents(isolated);

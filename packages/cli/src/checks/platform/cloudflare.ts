@@ -103,11 +103,7 @@ export async function typesFresh(input: CheckInput): Promise<Finding[]> {
     portableSegments(file);
     const paths = scopePathsNamed(input, file);
     if (paths.length === 0) return [];
-    using scratchFolder = await copyIntoScratch(
-        input.root,
-        input.files.map((file) => file.path),
-        input.scopeEntries.map((scope) => scope.path),
-    );
+    using scratchFolder = await copyIntoScratch(input);
     const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
     const findings: Finding[] = [];

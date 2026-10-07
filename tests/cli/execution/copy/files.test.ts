@@ -1,22 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { toPosix } from '#cli/platform/paths.ts';
+import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { copyIntoScratch } from '#cli/execution/copy/files.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
+import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/files.ts';
 import { prepareTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
-
-import {
-    mkdirSync,
-    existsSync,
-    readdirSync,
-    symlinkSync,
-    readFileSync,
-    readlinkSync,
-    realpathSync,
-    writeFileSync,
-} from 'node:fs';
+import { mkdirSync, existsSync, readdirSync, symlinkSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
 test('dependency copies let concurrent native process output drain', async () => {
     await using repository = await testdir();
@@ -43,15 +34,10 @@ test('dependency copies let concurrent native process output drain', async () =>
     const ready = await reader.read();
     expect(new TextDecoder().decode(ready.value)).toBe('ready');
     reader.releaseLock();
-    let drained = false;
-    const output = Array.fromAsync(producer.stdout).then((chunks) => {
-        drained = true;
-        return Buffer.concat(chunks);
-    });
+    const output = Array.fromAsync(producer.stdout).then((chunks) => Buffer.concat(chunks));
     const closed = producer.stdin.end();
-    using copy = await copyIntoScratch(repository.path, [], ['']);
+    using copy = await copyIntoScratch(projectCopyInputs(repository.path, [], ['']));
     try {
-        expect(drained).toBe(true);
         expect(await producer.exited).toBe(0);
         expect(Buffer.from(await output).equals(Buffer.alloc(8 * 1024 * 1024, 97))).toBe(true);
         expect(readdirSync(join(copy.path, 'node_modules/example'))).toHaveLength(2048);
@@ -82,9 +68,11 @@ test('preview copies workspace dependencies and preserves executable links witho
     symlinkSync(external.path, join(repository.path, 'node_modules/external'));
     const session = await openSession(repository.path);
     using copy = await copyIntoScratch(
-        session.root,
-        ['packages/core/value.js'],
-        session.repository.scopes.map((scope) => scope.path),
+        projectCopyInputs(
+            session.root,
+            ['packages/core/value.js'],
+            session.repository.scopes.map((scope) => scope.path),
+        ),
     );
     const scratch = copy.path;
     const result = runTestCommandBlocking(['node', 'node_modules/.bin/tool'], { cwd: scratch });
@@ -109,7 +97,7 @@ test('a workspace member that is no scope brings its own dependency store into t
     mkdirSync(join(repository.path, 'tests/node_modules'));
     symlinkSync('../../node_modules/.bun/vue@3/node_modules/vue', join(repository.path, 'tests/node_modules/vue'));
     const paths = ['package.json', 'tests/package.json', 'tests/app.js', '.gspot/package.json'];
-    using copy = await copyIntoScratch(repository.path, paths, ['']);
+    using copy = await copyIntoScratch(projectCopyInputs(repository.path, paths, ['']));
     const scratch = copy.path;
     expect(readFileSync(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
     // The private tools of gspot run in place and stay out of the copy.
@@ -127,25 +115,22 @@ test('a link into another linked tree points at the copy of that tree, whatever 
     mkdirSync(join(repository.path, 'node_modules'));
     symlinkSync(join(store.path, 'next@16/node_modules/next'), join(repository.path, 'node_modules/a-next'), 'dir');
     symlinkSync(store.path, join(repository.path, 'node_modules/z-store'), 'dir');
-    using copy = await copyIntoScratch(repository.path, ['package.json'], ['']);
+    using copy = await copyIntoScratch(projectCopyInputs(repository.path, ['package.json'], ['']));
     const scratch = copy.path;
     const copied = realpathSync(join(scratch, 'node_modules/a-next'));
     expect(copied.startsWith(realpathSync(join(scratch, 'node_modules/z-store')))).toBe(true);
     expect(existsSync(join(copied, '../helpers/package.json'))).toBe(true);
 });
 
-test('a link that points at nothing is copied as it is', async () => {
+test('a dependency link that points at nothing refuses the copy', async () => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
         'package.json': '{"private":true}',
         'node_modules/.bin/tool': '#!/bin/sh\n',
     });
     symlinkSync('../missing/bin/gspot', join(repository.path, 'node_modules/.bin/gspot'));
-    using copy = await copyIntoScratch(repository.path, ['package.json'], ['']);
-    const scratch = copy.path;
-    // Windows stores a link target with backslashes, so the comparison reads it with forward slashes.
-    expect(toPosix(readlinkSync(join(scratch, 'node_modules/.bin/gspot')))).toBe('../missing/bin/gspot');
-    expect(readFileSync(join(scratch, 'node_modules/.bin/tool'), 'utf8')).toBe('#!/bin/sh\n');
+    await rejects(copyIntoScratch(projectCopyInputs(repository.path, ['package.json'], [''])), { code: 'ENOENT' });
+    expect(readFileSync(join(repository.path, 'node_modules/.bin/tool'), 'utf8')).toBe('#!/bin/sh\n');
 });
 
 test('a source snapshot retains selected binary/config inputs and excludes sibling files', async () => {
@@ -158,9 +143,11 @@ test('a source snapshot retains selected binary/config inputs and excludes sibli
         'unrelated/private.txt': 'Sibling input\n',
     });
     using copy = await copyIntoScratch(
-        sandbox.path,
-        ['apps/web/value.test.js', 'apps/web/fixture.bin', 'apps/web/jest.config.json'],
-        ['apps/web'],
+        projectCopyInputs(
+            sandbox.path,
+            ['apps/web/value.test.js', 'apps/web/fixture.bin', 'apps/web/jest.config.json'],
+            ['apps/web'],
+        ),
     );
     const scratch = copy.path;
     expect(existsSync(join(scratch, 'apps/web/fixture.bin'))).toBe(true);
@@ -168,3 +155,29 @@ test('a source snapshot retains selected binary/config inputs and excludes sibli
     expect(existsSync(join(scratch, 'unrelated/private.txt'))).toBe(false);
     expect(existsSync(join(scratch, 'README.md'))).toBe(false);
 });
+
+test.each([false, true])(
+    'check-input copies retain selected dependencies and optional extra file %s',
+    async (extra) => {
+        await using repository = await testdir();
+        await createFileTree(repository.path, {
+            'gspot.toml': buildPolicy(['javascript']),
+            'selected.js': 'export const selected = 1;',
+            'unselected.js': 'export const unselected = 2;',
+            'document.json': '{"value":3}',
+            'node_modules/tool/value.js': 'export const dependency = 4;',
+        });
+        const session = await openSession(repository.path);
+        const input = buildCheckInput(session, 'javascript/tsc', { paths: ['selected.js'] });
+        using copy = await copyIntoScratch(input, extra ? ['document.json'] : undefined);
+        expect(readFileSync(join(copy.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
+        expect(readFileSync(join(copy.path, 'node_modules/tool/value.js'), 'utf8')).toBe(
+            'export const dependency = 4;',
+        );
+        expect(existsSync(join(copy.path, 'unselected.js'))).toBe(false);
+        expect(existsSync(join(copy.path, 'document.json'))).toBe(extra);
+        if (extra) expect(readFileSync(join(copy.path, 'document.json'), 'utf8')).toBe('{"value":3}');
+        writeFileSync(join(copy.path, 'selected.js'), 'changed in private copy');
+        expect(readFileSync(join(repository.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
+    },
+);

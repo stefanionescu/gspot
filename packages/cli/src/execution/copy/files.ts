@@ -1,51 +1,78 @@
 // Temporary copies of selected files for commands that must not read the working tree.
-import type { Dirent } from 'node:fs';
-import { cp, readdir } from 'node:fs/promises';
+import { cp } from 'node:fs/promises';
 import { isInside } from '#cli/platform/paths.ts';
+import { setImmediate } from 'node:timers/promises';
+import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
+import type { Root } from '#cli/types/platform/root.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import { writeLink } from '#cli/platform/root/writes.ts';
+import { join, posix, dirname, relative } from 'node:path';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import { PERMISSION_BITS } from '#cli/config/platform/modes.ts';
-import { sep, join, posix, dirname, relative } from 'node:path';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { ScratchFolder } from '#cli/types/platform/scratch.ts';
-import type { TreeCopy, FileCopies, WorktreeCopy } from '#cli/types/execution/copy.ts';
-import { CLONE_OPTIONS, SCRATCH_EXTRAS, PROJECT_MANIFESTS, SCRATCH_DIRECTORIES } from '#cli/config/execution/copy.ts';
+import { fileMode, nativeSegments } from '#cli/platform/root/rules.ts';
+import { MODE_BITS, PERMISSION_BITS } from '#cli/config/platform/modes.ts';
+import { ENTRY_MODES, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 
 import {
+    WRITE_BATCH,
+    CLONE_OPTIONS,
+    SCRATCH_EXTRAS,
+    PROJECT_MANIFESTS,
+    SCRATCH_DIRECTORIES,
+} from '#cli/config/execution/copy.ts';
+import type {
+    TreeCopy,
+    ScratchCopy,
+    ScratchFile,
+    WorktreeCopy,
+    ScratchSource,
+    DependencyCopy,
+} from '#cli/types/execution/copy.ts';
+import {
     statSync,
+    chmodSync,
     constants,
+    lstatSync,
     mkdirSync,
     unlinkSync,
     symlinkSync,
-    readFileSync,
+    copyFileSync,
     realpathSync,
     writeFileSync,
 } from 'node:fs';
 
-// Copies each selected file that exists, resolving it through the root boundary.
-async function copySelected(context: WorktreeCopy, paths: string[], dependencies: string[]): Promise<void> {
-    const copied = new Set(
-        [...paths, ...SCRATCH_EXTRAS].filter((path) => !dependencies.some((folder) => isInScope(path, folder))),
-    );
-    for (const path of copied) {
-        if (statSync(join(context.root, path), { throwIfNoEntry: false }) === undefined) continue;
-        const resolved = context.files.realPath(path);
-        mkdirSync(dirname(join(context.scratch, path)), { recursive: true });
-        await cp(resolved, join(context.scratch, path), { dereference: true });
+// Native copying collects links without a second filesystem walk, then repairs only those links.
+async function copyTree(
+    context: WorktreeCopy,
+    source: string,
+    target: string,
+    operation: DependencyCopy['operation'],
+): Promise<void> {
+    if (operation === 'link') {
+        symlinkSync(source, target, process.platform === 'win32' ? 'junction' : 'dir');
+        return;
     }
-}
-
-// Clones each installed dependency folder that exists, and queues it for link repair.
-async function copyWorkingDependencies(context: WorktreeCopy, dependencies: string[]): Promise<void> {
-    for (const folder of dependencies) {
-        if (statSync(join(context.root, folder), { throwIfNoEntry: false }) === undefined) continue;
-        const source = realpathSync(join(context.root, folder));
-        const target = join(context.scratch, folder);
-        context.copies.set(source, target);
-        await cp(source, target, { ...CLONE_OPTIONS, mode: constants.COPYFILE_FICLONE });
-        context.pending.push({ source, target });
-    }
+    context.copies.set(source, target);
+    await cp(source, target, {
+        ...CLONE_OPTIONS,
+        mode: constants.COPYFILE_FICLONE,
+        filter: (path, destination) => {
+            context.cancelSignal?.throwIfAborted();
+            if (lstatSync(path).isSymbolicLink()) {
+                const original = realpathSync(path);
+                if (isInside(relative(original, context.root)))
+                    throw new GspotError('selection', [
+                        `Installed dependency link ${relative(context.scratch, destination)} leaves the repository. Prepare isolated dependencies for this revision.`,
+                    ]);
+                context.links.push({ source: original, target: destination });
+            }
+            return true;
+        },
+    });
+    chmodSync(target, statSync(source).mode & MODE_BITS);
 }
 
 // Where a path inside a copied tree lives in the scratch copy, or undefined when no copy holds it.
@@ -57,130 +84,135 @@ function relocated(copies: Map<string, string>, source: string): string | undefi
     return undefined;
 }
 
-// Repairs a directory link inside a copied tree: pointed at the copy of its target, or replaced by a clone of it.
-async function relinkDirectory(context: WorktreeCopy, original: string, target: string): Promise<void> {
-    const destination = relocated(context.copies, original);
+// Every dependency link uses the same containment and private-clone policy.
+async function repairLink(context: WorktreeCopy, { source, target }: TreeCopy): Promise<void> {
+    const copied = relocated(context.copies, source);
     unlinkSync(target);
-    if (destination !== undefined && statSync(destination, { throwIfNoEntry: false }) !== undefined) {
-        symlinkSync(relative(dirname(target), destination), target, 'dir');
+    const directory = statSync(source).isDirectory();
+    if (copied !== undefined) {
+        if (statSync(copied, { throwIfNoEntry: false }) !== undefined)
+            symlinkSync(relative(dirname(target), copied), target, directory ? 'dir' : 'file');
         return;
     }
-    context.copies.set(original, target);
-    await cp(original, target, { ...CLONE_OPTIONS, mode: constants.COPYFILE_FICLONE });
-    context.pending.push({ source: original, target });
+    if (directory) await copyTree(context, source, target, 'clone');
+    else copyFileSync(source, target, constants.COPYFILE_FICLONE);
 }
 
-// The entries of a folder, links ordered by how deep their targets lie, whatever order the filesystem lists them in.
-// A link into a tree that another link of the folder copies is then repaired after that copy, and points at it.
-async function outerTargetsFirst(source: string): Promise<Dirent[]> {
-    const entries = await readdir(source, { withFileTypes: true });
-    const depths = new Map(
-        entries.map((entry) => [
-            entry,
-            entry.isSymbolicLink() && statSync(join(source, entry.name), { throwIfNoEntry: false }) !== undefined
-                ? realpathSync(join(source, entry.name)).split(sep).length
-                : 0,
-        ]),
-    );
-    return entries.toSorted((left, right) => (depths.get(left) ?? 0) - (depths.get(right) ?? 0));
-}
-
-// Handles one entry of a copied tree: folders are queued, file links deferred, directory links repaired now.
-async function visitEntry(context: WorktreeCopy, directory: TreeCopy, entry: Dirent): Promise<void> {
-    const source = join(directory.source, entry.name);
-    const target = join(directory.target, entry.name);
-    if (entry.isDirectory()) {
-        context.pending.push({ source, target });
-        return;
-    }
-    if (!entry.isSymbolicLink()) return;
-    // A link that points at nothing stays as it was copied.
-    if (statSync(source, { throwIfNoEntry: false }) === undefined) return;
-    const original = realpathSync(source);
-    if (statSync(original).isFile()) context.fileLinks.push({ source: original, target });
-    else await relinkDirectory(context, original, target);
-}
-
-// Repairs every file link once every tree is copied, so its target's copy is known to exist or not.
-async function relinkFiles(context: WorktreeCopy): Promise<void> {
-    for (const { source, target } of context.fileLinks) {
-        const destination = relocated(context.copies, source);
-        unlinkSync(target);
-        if (destination !== undefined && statSync(destination, { throwIfNoEntry: false }) !== undefined)
-            symlinkSync(relative(dirname(target), destination), target, 'file');
-        else await cp(source, target);
-    }
-}
-
-/**
- * Copy the given files into a temporary folder so the tool sees only them and no config files from ancestor folders.
- * @param root the repository root
- * @param paths the files to copy
- * @returns the workspace root, the original bytes by path, and its disposal
- */
-export function copyFiles(root: string, paths: string[]): FileCopies {
-    const folder = scratchFolder('gspot-files-');
-    const originals = new Map<string, Buffer>();
-    try {
-        using files = openRoot(root, 'native');
-        for (const path of new Set(paths)) {
-            const source = files.realPath(path);
-            const bytes = readFileSync(source);
-            originals.set(path, bytes);
-            const target = join(folder.path, path);
-            mkdirSync(dirname(target), { recursive: true });
-            writeFileSync(target, bytes, { mode: statSync(source).mode & PERMISSION_BITS });
-        }
-        return { root: folder.path, originals, [Symbol.dispose]: folder[Symbol.dispose] };
-    } catch (error) {
-        folder[Symbol.dispose]();
-        throw error;
-    }
-}
-
-/**
- * Copies selected source and configuration files for commands run outside the working tree. Under pnpm and the Bun
- * isolated linker, a workspace member keeps its own dependency folder. Every project among the paths brings that
- * folder, whether or not it is a scope.
- * @param root the repository root
- * @param paths the source paths relative to the repository root
- * @param scopePaths the scopes whose installed dependencies the command needs
- * @returns the temporary folder, which the caller disposes
- */
-export async function copyIntoScratch(root: string, paths: string[], scopePaths: string[]): Promise<ScratchFolder> {
-    const folder = scratchFolder('gspot-fix-');
-    const scratch = folder.path;
-    using files = openRoot(root, 'native');
+async function copyDependencies(input: ScratchCopy): Promise<void> {
+    const root = realpathSync(input.root);
     const context: WorktreeCopy = {
         root,
-        scratch,
-        files,
-        copies: new Map([[realpathSync(root), scratch]]),
-        pending: [],
-        fileLinks: [],
+        scratch: input.target,
+        copies: new Map([[root, input.target]]),
+        links: [],
+        cancelSignal: input.cancelSignal,
     };
+    for (const dependency of input.dependencies) {
+        input.cancelSignal?.throwIfAborted();
+        const source = realpathSync(join(root, dependency.path));
+        const target = join(input.target, ...nativeSegments(dependency.path));
+        mkdirSync(dirname(target), { recursive: true });
+        await copyTree(context, source, target, dependency.operation);
+    }
+    // Parent targets are cloned before links into them, including trees found by another link.
+    while (context.links.length > 0) {
+        context.links = context.links.toSorted((left, right) => left.source.length - right.source.length);
+        const link = context.links.shift();
+        if (link !== undefined) await repairLink(context, link);
+        input.cancelSignal?.throwIfAborted();
+    }
+}
+
+// All scratch destinations share native writes; authored source reads retain the repository boundary.
+function writeScratchFile(files: Root, scratch: string, file: ScratchFile): void {
+    const target = join(scratch, ...nativeSegments(typeof file === 'string' ? file : file.entry.path));
+    mkdirSync(dirname(target), { recursive: true });
+    if (typeof file === 'string') {
+        const source = files.realPath(file);
+        copyFileSync(source, target, constants.COPYFILE_FICLONE);
+        chmodSync(target, statSync(source).mode & PERMISSION_BITS);
+        return;
+    }
+    const mode = fileMode({ mode: ENTRY_MODES[file.entry.mode] });
+    if (file.entry.mode === SYMLINK_MODE) writeLink(target, file.bytes, mode);
+    else {
+        writeFileSync(target, file.bytes, { flag: 'wx', mode });
+        chmodSync(target, mode);
+    }
+}
+
+/**
+ * Copy files, Git blobs, and installed dependencies into an owned scratch root.
+ * @param input source root, destination, and files
+ */
+export async function copyInto(input: ScratchCopy): Promise<void> {
+    using files = openRoot(input.root, 'native');
+    let written = 0;
+    for await (const file of input.files) {
+        if (written % WRITE_BATCH === 0) await setImmediate();
+        written += 1;
+        input.cancelSignal?.throwIfAborted();
+        const path = typeof file === 'string' ? file : file.entry.path;
+        if (!input.dependencies.some((dependency) => isInScope(path, dependency.path)))
+            writeScratchFile(files, input.target, file);
+    }
+    await copyDependencies(input);
+}
+
+/**
+ * Own a scratch folder containing only the supplied files and dependency trees.
+ * @param input exact source paths and dependency operations
+ * @returns the private folder and its disposal
+ */
+export function copyIntoScratch(input: ScratchSource): Promise<ScratchFolder>;
+export function copyIntoScratch(input: CheckInput, extra?: string[]): Promise<ScratchFolder>;
+export async function copyIntoScratch(input: ScratchSource | CheckInput, extra: string[] = []): Promise<ScratchFolder> {
+    const source =
+        'paths' in input
+            ? input
+            : {
+                  ...projectCopyInputs(
+                      input.root,
+                      [...input.files.map((file) => file.path), ...extra],
+                      input.scopeEntries.map((scope) => scope.path),
+                  ),
+                  cancelSignal: input.cancelSignal,
+              };
+    const folder = scratchFolder('gspot-fix-');
     try {
-        // The tool projects of gspot run in place, so their folders stay out of the copy.
-        const projects = paths.flatMap((path) =>
-            PROJECT_MANIFESTS.includes(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
-                ? [posix.dirname(path)]
-                : [],
-        );
-        const dependencies = [
-            ...new Set(
-                [...scopePaths, ...projects].flatMap((project) =>
-                    SCRATCH_DIRECTORIES.map((name) => posix.join(project, name)),
-                ),
-            ),
-        ];
-        await copySelected(context, paths, dependencies);
-        await copyWorkingDependencies(context, dependencies);
-        for (let directory = context.pending.pop(); directory !== undefined; directory = context.pending.pop())
-            for (const entry of await outerTargetsFirst(directory.source)) await visitEntry(context, directory, entry);
-        await relinkFiles(context);
+        await copyInto({ ...source, target: folder.path, files: new Set(source.paths) });
         return folder;
     } catch (error) {
         folder[Symbol.dispose]();
         throw error;
     }
+}
+
+/**
+ * Select scope dependencies and existing configuration extras for a working-tree project copy.
+ * @param root the source repository
+ * @param paths selected authored files
+ * @param scopes the scope paths owning installed dependencies
+ * @returns exact paths and cloned dependency trees
+ */
+export function projectCopyInputs(root: string, paths: string[], scopes: string[]): ScratchSource {
+    const projects = paths.flatMap((path) =>
+        PROJECT_MANIFESTS.includes(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
+            ? [posix.dirname(path)]
+            : [],
+    );
+    const dependencies = [
+        ...new Set(
+            [...scopes, ...projects].flatMap((project) => SCRATCH_DIRECTORIES.map((name) => posix.join(project, name))),
+        ),
+    ]
+        .filter((path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined)
+        .map((path): DependencyCopy => ({ path, operation: 'clone' }));
+    return {
+        root,
+        paths: [...new Set([...paths, ...SCRATCH_EXTRAS])].filter(
+            (path) => statSync(join(root, path), { throwIfNoEntry: false }) !== undefined,
+        ),
+        dependencies,
+    };
 }

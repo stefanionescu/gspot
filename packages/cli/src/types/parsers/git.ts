@@ -7,5 +7,5 @@ export type GitEntry = z.output<typeof gitEntrySchema>;
 /** An index entry at stage zero, or stages one through three during a merge conflict. */
 export type GitIndexEntry = GitEntry & { stage: number };
 
-/** Boundaries of one validated Git object stream frame. */
-export type GitFrame = { end: number; size: number };
+/** The current transport chunk and cursor in a Git batch response. */
+export type GitStream = { chunks: Iterator<Buffer> | AsyncIterator<Buffer>; chunk: Buffer; cursor: number };

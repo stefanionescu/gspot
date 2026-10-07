@@ -4,7 +4,7 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { canonicalPath } from '#cli/platform/root/reads.ts';
 import { join, dirname, resolve, basename } from 'node:path';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { run, runBinary, runBlocking } from '#cli/platform/spawn.ts';
+import { run, runBinary, runStream, runBlocking } from '#cli/platform/spawn.ts';
 import type { GitOptions, SpawnResult, SpawnOptions, BinarySpawnResult } from '#cli/types/platform/runtime.ts';
 
 import type {
@@ -203,6 +203,25 @@ export async function runGitBinary(root: string, argv: string[], options: GitOpt
     const selected = await getGitEnvironment(root, ['git', ...argv], options);
     if ('failure' in selected) return { ...selected.failure, stdout: Buffer.from(selected.failure.stdout) };
     return runBinary(['git', ...argv], { timeoutMs: GIT_TIMEOUT_MS, ...options, env: selected.env, cwd: root });
+}
+
+/**
+ * Consume raw Git output under the shared rooted environment and process supervision.
+ * @param root the working directory
+ * @param argv arguments after git
+ * @param read the consumer of uncaptured bytes
+ * @param options deadline, cancellation, and standard input
+ * @returns diagnostics and termination status
+ */
+export async function streamGit(
+    root: string,
+    argv: string[],
+    read: (chunks: AsyncIterable<Buffer>) => Promise<void>,
+    options: GitOptions = {},
+): Promise<SpawnResult> {
+    const selected = await getGitEnvironment(root, ['git', ...argv], options);
+    if ('failure' in selected) return selected.failure;
+    return runStream(['git', ...argv], { timeoutMs: GIT_TIMEOUT_MS, ...options, env: selected.env, cwd: root }, read);
 }
 
 /**

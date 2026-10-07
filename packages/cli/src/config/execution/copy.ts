@@ -1,7 +1,5 @@
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 
-export const COPY_CONCURRENCY = 8;
-
 export const WRITE_BATCH = 64;
 
 export const CLONE_OPTIONS = { recursive: true, verbatimSymlinks: true } as const;

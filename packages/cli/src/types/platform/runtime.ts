@@ -60,7 +60,10 @@ export type BinarySpawnResult = Omit<SpawnResult, 'stdout'> & { stdout: Uint8Arr
 /** What Execa reports about a finished or unstarted process, before this package classifies it. */
 export type SpawnCompletion = Pick<
     Result<{ encoding: 'utf8'; reject: false }>,
-    'code' | 'exitCode' | 'failed' | 'shortMessage' | 'stdout' | 'stderr' | 'timedOut' | 'isCanceled'
-> & { cause?: unknown };
+    'code' | 'exitCode' | 'failed' | 'shortMessage' | 'stderr' | 'timedOut' | 'isCanceled'
+> & { stdout?: string | undefined; cause?: unknown };
 
 export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };
+
+/** Encoded capture or an uncaptured raw consumer under the same process supervisor. */
+export type StdoutRead = 'utf8' | 'base64' | ((chunks: AsyncIterable<Buffer>) => Promise<void>);

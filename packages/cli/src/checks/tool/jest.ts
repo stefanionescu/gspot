@@ -122,10 +122,6 @@ async function runJest(run: JestRun, settings: JestSettings): Promise<Finding[]>
 export async function jestCoverage(input: CheckInput): Promise<Finding[]> {
     const settings = thresholdsSchema.parse(input.view.options('tools.jest'));
     using work = scratchFolder('gspot-jest-');
-    using source = await copyIntoScratch(
-        input.root,
-        input.files.map((file) => file.path),
-        input.scopeEntries.map((scope) => scope.path),
-    );
+    using source = await copyIntoScratch(input);
     return await runJest({ input, source: source.path, work: work.path }, settings);
 }

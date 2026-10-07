@@ -3,24 +3,8 @@ import { decodeUtf8 } from '#cli/platform/text.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { LINE_FEED } from '#cli/config/parsers/source.ts';
 import { gitEntrySchema } from '#cli/parsers/schema/git.ts';
-import type { GitEntry, GitFrame, GitIndexEntry } from '#cli/types/parsers/git.ts';
-import { TREE_ENTRY, BLOB_HEADER, INDEX_ENTRY, FRAME_NEWLINES, UNSUPPORTED_ENTRY } from '#cli/config/parsers/git.ts';
-
-function parseFrame(output: Buffer, cursor: number, hash: string): GitFrame {
-    const end = output.indexOf(LINE_FEED, cursor);
-    const header = output.subarray(cursor, end).toString('ascii');
-    const match = BLOB_HEADER.exec(header);
-    const size = Number(match?.[2]);
-    if (
-        end < cursor ||
-        match?.[1] !== hash ||
-        !Number.isSafeInteger(size) ||
-        end + size + 1 >= output.length ||
-        output[end + size + 1] !== LINE_FEED
-    )
-        throw new GspotError('selection', ['The Git object stream is incomplete or invalid.']);
-    return { end, size };
-}
+import type { GitEntry, GitStream, GitIndexEntry } from '#cli/types/parsers/git.ts';
+import { TREE_ENTRY, BLOB_HEADER, INDEX_ENTRY, UNSUPPORTED_ENTRY } from '#cli/config/parsers/git.ts';
 
 function entryLines(text: string): string[] {
     if (text !== '' && !text.endsWith('\0')) throw new GspotError('selection', ['The Git entry stream is incomplete.']);
@@ -31,6 +15,50 @@ function parseEntry(match: RegExpExecArray | null): GitEntry {
     const entry = gitEntrySchema.safeParse(match?.groups);
     if (!entry.success) throw new GspotError('selection', [UNSUPPORTED_ENTRY]);
     return entry.data;
+}
+
+// Empty transport chunks are harmless; a missing required byte is an incomplete Git response.
+async function nextChunk(stream: GitStream): Promise<boolean> {
+    while (stream.cursor === stream.chunk.length) {
+        const next = await stream.chunks.next();
+        if (next.done === true) return false;
+        stream.chunk = next.value;
+        stream.cursor = 0;
+    }
+    return true;
+}
+
+async function readHeader(stream: GitStream): Promise<string> {
+    const pieces: Buffer[] = [];
+    while (await nextChunk(stream)) {
+        const end = stream.chunk.indexOf(LINE_FEED, stream.cursor);
+        pieces.push(stream.chunk.subarray(stream.cursor, end === -1 ? stream.chunk.length : end));
+        stream.cursor = end === -1 ? stream.chunk.length : end + 1;
+        if (end !== -1) return Buffer.concat(pieces).toString('ascii');
+    }
+    throw new GspotError('selection', ['The Git object stream is incomplete or invalid.']);
+}
+
+async function readBytes(stream: GitStream, size: number): Promise<Buffer> {
+    const bytes = Buffer.alloc(size);
+    let filled = 0;
+    while (filled < size) {
+        if (!(await nextChunk(stream)))
+            throw new GspotError('selection', ['The Git object stream is incomplete or invalid.']);
+        const length = Math.min(size - filled, stream.chunk.length - stream.cursor);
+        stream.chunk.copy(bytes, filled, stream.cursor, stream.cursor + length);
+        stream.cursor += length;
+        filled += length;
+    }
+    return bytes;
+}
+
+function blobSize(header: string, hash: string): number {
+    const match = BLOB_HEADER.exec(header);
+    const size = Number(match?.[2]);
+    if (match?.[1] !== hash || !Number.isSafeInteger(size))
+        throw new GspotError('selection', ['The Git object stream is incomplete or invalid.']);
+    return size;
 }
 
 /**
@@ -70,20 +98,26 @@ export function parseIndexRevision(entries: GitIndexEntry[]): GitEntry[] {
 }
 
 /**
- * Validate every identity, byte count, and delimiter in a Git batch response.
- * @param output the complete binary response
+ * Validate batch identities and framing while retaining only the current blob.
+ * @param chunks raw output chunks in stream order
  * @param objects requested full object IDs in response order
- * @returns the exact bytes of each requested blob
+ * @returns each object's exact bytes before reading its successor
  */
-export function parseGitBlobs(output: Buffer, objects: readonly string[]): Map<string, Buffer> {
-    const blobs = new Map<string, Buffer>();
-    let cursor = 0;
+export async function* parseGitBlobs(
+    chunks: AsyncIterable<Buffer> | Iterable<Buffer>,
+    objects: readonly string[],
+): AsyncGenerator<readonly [string, Buffer]> {
+    const stream: GitStream = {
+        chunks: Symbol.asyncIterator in chunks ? chunks[Symbol.asyncIterator]() : chunks[Symbol.iterator](),
+        chunk: Buffer.alloc(0),
+        cursor: 0,
+    };
     for (const hash of objects) {
-        const { end, size } = parseFrame(output, cursor, hash);
-        blobs.set(hash, output.subarray(end + 1, end + size + 1));
-        cursor = end + size + FRAME_NEWLINES;
+        const bytes = await readBytes(stream, blobSize(await readHeader(stream), hash));
+        const terminator = await readBytes(stream, 1);
+        if (!terminator.includes(LINE_FEED))
+            throw new GspotError('selection', ['The Git object stream is incomplete or invalid.']);
+        yield [hash, bytes];
     }
-    if (cursor !== output.length)
-        throw new GspotError('selection', ['The Git object stream contains unexpected data.']);
-    return blobs;
+    if (await nextChunk(stream)) throw new GspotError('selection', ['The Git object stream contains unexpected data.']);
 }

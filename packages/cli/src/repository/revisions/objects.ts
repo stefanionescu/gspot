@@ -2,9 +2,9 @@
 import { GspotError } from '#cli/platform/errors.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
-import { runGit, runGitBinary } from '#cli/platform/git.ts';
 import { readIndexEntries } from '#cli/repository/tracked.ts';
 import type { Revision } from '#cli/types/repository/revisions.ts';
+import { runGit, streamGit, runGitBinary } from '#cli/platform/git.ts';
 import { parseGitBlobs, parseGitEntries, parseIndexRevision } from '#cli/parsers/git.ts';
 
 /**
@@ -25,7 +25,36 @@ export async function getEntries(root: string, source: Revision, cancelSignal?: 
 }
 
 /**
- * Read raw blob bytes once. Validate framing and every returned identity.
+ * Read raw blobs once, visiting each before the next blob is allocated.
+ * @param root repository directory
+ * @param requested full blob object IDs
+ * @param visit the consumer of one validated object
+ * @param cancelSignal command cancellation
+ */
+export async function visitGitBlobs(
+    root: string,
+    requested: string[],
+    visit: (blobs: AsyncIterable<readonly [string, Buffer]>) => Promise<void>,
+    cancelSignal?: AbortSignal,
+): Promise<void> {
+    const objects = [...new Set(requested)];
+    if (objects.length === 0) return;
+    if (objects.some((hash) => !HASH_PATTERN.test(hash)))
+        throw new GspotError('selection', ['Git blob requests require full object IDs.']);
+    const result = await streamGit(
+        root,
+        ['cat-file', '--batch'],
+        async (chunks) => {
+            await visit(parseGitBlobs(chunks, objects));
+        },
+        { stdin: objects.join('\n') + '\n', cancelSignal },
+    );
+    if (result.code !== 0)
+        throw new GspotError('selection', [`Git could not read the objects of this revision: ${result.stderr.trim()}`]);
+}
+
+/**
+ * Collect the validated blobs required by a consumer that compares multiple objects.
  * @param root repository directory
  * @param requested full blob object IDs
  * @param cancelSignal command cancellation
@@ -36,19 +65,16 @@ export async function getBlobs(
     requested: string[],
     cancelSignal?: AbortSignal,
 ): Promise<Map<string, Buffer>> {
-    const objects = [...new Set(requested)];
-    if (objects.length === 0) return new Map();
-    if (objects.some((hash) => !HASH_PATTERN.test(hash)))
-        throw new GspotError('selection', ['Git blob requests require full object IDs.']);
-    const result = await runGitBinary(root, ['cat-file', '--batch'], {
-        stdin: objects.join('\n') + '\n',
+    const blobs = new Map<string, Buffer>();
+    await visitGitBlobs(
+        root,
+        requested,
+        async (objects) => {
+            for await (const [hash, bytes] of objects) blobs.set(hash, bytes);
+        },
         cancelSignal,
-    });
-    if (result.code !== 0)
-        throw new GspotError('selection', [
-            `Git could not read the objects of this revision: ${Buffer.from(result.stderr).toString('utf8').trim()}`,
-        ]);
-    return parseGitBlobs(Buffer.from(result.stdout), objects);
+    );
+    return blobs;
 }
 
 /**

@@ -11,13 +11,13 @@ import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
 import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
+import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/files.ts';
 import { DOT_GSPOT, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 // Both source reads and emitted paths must stay inside the disposable project tree.
@@ -118,9 +118,11 @@ export async function tsc(session: ToolSession, planned: PlannedCheck): Promise<
         ? ['tsc', '-b', '--pretty', 'false']
         : ['tsc', '--noEmit', '-p', '{config:tsconfig}', '--pretty', 'false'];
     using scratchFolder = await copyIntoScratch(
-        session.root,
-        [...session.repository.files.map((file) => file.path), ...commandConfigurations(session, planned, command)],
-        session.repository.scopes.map((scope) => scope.path),
+        projectCopyInputs(
+            session.root,
+            [...session.repository.files.map((file) => file.path), ...commandConfigurations(session, planned, command)],
+            session.repository.scopes.map((scope) => scope.path),
+        ),
     );
     const scratch = scratchFolder.path;
     if (hasReferences)
@@ -149,9 +151,11 @@ export async function checkjs(session: ToolSession, planned: PlannedCheck): Prom
         throw new Error(`The javascript configuration declares no ${CONFIGURATION_DIRECTORY}/jsconfig.json target.`);
     const target = targetInScope(scope, jsconfig);
     using scratchFolder = await copyIntoScratch(
-        session.root,
-        [...session.repository.files.map((file) => file.path), target],
-        session.repository.scopes.map((entry) => entry.path),
+        projectCopyInputs(
+            session.root,
+            [...session.repository.files.map((file) => file.path), target],
+            session.repository.scopes.map((entry) => entry.path),
+        ),
     );
     const scratch = scratchFolder.path;
     const options = writeScopeProject(session, scratch, planned, target);

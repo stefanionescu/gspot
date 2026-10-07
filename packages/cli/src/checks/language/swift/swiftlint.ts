@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { compact } from '#cli/platform/objects.ts';
-import { copyFiles } from '#cli/execution/copy/files.ts';
 import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { readSwift, disposeSwift } from '#cli/parsers/swift.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
@@ -90,16 +90,20 @@ export async function swiftlint(session: ToolSession, planned: PlannedCheck): Pr
         return inline.length === 0 ? [] : [{ source, comments, inline }];
     });
     if (candidates.length === 0) return result;
-    using workspace = copyFiles(session.root, [
-        ...session.repository.files.map((file) => file.path),
-        ...commandConfigurations(session, planned, SWIFTLINT_COMMAND),
-    ]);
+    using workspace = await copyIntoScratch({
+        root: session.root,
+        paths: [
+            ...session.repository.files.map((file) => file.path),
+            ...commandConfigurations(session, planned, SWIFTLINT_COMMAND),
+        ],
+        dependencies: [],
+    });
     for (const { source, comments } of candidates) {
-        const path = join(workspace.root, source.path);
+        const path = join(workspace.path, source.path);
         chmodSync(path, PRIVATE_FILE);
         writeFileSync(path, commentSource(source.text, comments));
     }
-    const checked = await runCheckCommand({ ...session, root: workspace.root }, planned, {
+    const checked = await runCheckCommand({ ...session, root: workspace.path }, planned, {
         command: SWIFTLINT_COMMAND,
     });
     if (!['passed', 'failed'].includes(checked.status))
