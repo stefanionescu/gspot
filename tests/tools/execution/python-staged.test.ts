@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
@@ -26,7 +27,8 @@ test.skipIf(!isPosix)(
         });
         {
             using log = openOwnership(prepared.root);
-            const installed = await installTools(await openSession(prepared.root), log, { refreshLockfiles: false });
+            const session = await openSession(prepared.root);
+            const installed = await installTools(session, log, emitAll(session), { refreshLockfiles: false });
             expect(installed.exitCode, installed.note).toBe(0);
         }
         // Public apply already generated the Ruff configuration before tool installation.

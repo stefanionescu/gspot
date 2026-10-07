@@ -22,7 +22,6 @@ import {
     packageInstallerDeclarationSchema,
 } from '#cli/parsers/schema/packages.ts';
 import type {
-    ToolProject,
     DependencyMap,
     ManifestParser,
     PoetrySettings,
@@ -30,6 +29,7 @@ import type {
     PackageManifest,
     ProjectManifest,
     PackageInstaller,
+    PackageToolProject,
     PackageInstallerDeclaration,
 } from '#cli/types/parsers/packages.ts';
 
@@ -216,7 +216,7 @@ export function declaredPackageInstaller(manifest: PackageManifest): PackageInst
  * @param text the generated or recorded package.json contents
  * @returns the declared manager, dependencies, and repository-relative lockfile path
  */
-export function parseToolProject(text: string): ToolProject {
+export function parseToolProject(text: string): PackageToolProject {
     const parsed = toolProjectSchema.parse(JSON.parse(text));
     const installer = parsePackageInstaller(parsed.packageManager);
     const lockfile = packageLockfile(installer.name);

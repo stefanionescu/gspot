@@ -9,9 +9,10 @@ import { UV_MISE_PIN } from '#cli/config/tools/python.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { acquirePythonInstaller } from '#cli/tools/python/uv.ts';
+import { pythonToolProject } from '#cli/tools/python/project.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
-import { installPythonProject, preparePythonProject } from '#cli/tools/python/project.ts';
+import { installToolProject, prepareToolProjects } from '#cli/tools/project.ts';
 
 import {
     AUTHORED_UV_INDEX,
@@ -51,7 +52,7 @@ test('one command acquires its pinned uv once and creates lockfiles through that
         ];
         {
             using log = openOwnership(repository.path);
-            await preparePythonProject(session, files, log.files, { refreshLockfiles: false });
+            await prepareToolProjects(session, files, log.files, { refreshLockfiles: false });
         }
         expect(calls.slice(0, 2)).toStrictEqual([
             ['mise', 'install', UV_MISE_PIN],
@@ -85,7 +86,9 @@ test('failed mise acquisition names the pinned uv repair and preserves repositor
             stderr: 'registry unreachable',
         });
     });
-    const failure: unknown = await acquirePythonInstaller(repository.path, 'mise').catch((error: unknown) => error);
+    const failure: unknown = await acquirePythonInstaller(repository.path, 'mise', undefined).catch(
+        (error: unknown) => error,
+    );
     expect(failure).toBeInstanceOf(GspotError);
     expect(failure).toMatchObject({
         code: 'installation',
@@ -126,15 +129,15 @@ test.each(['venv', 'sync'])(
             {
                 using log = openOwnership(repository.path);
                 const staged: string[] = [];
-                diagnosticError = await installPythonProject(
-                    repository.path,
+                diagnosticError = await installToolProject(
+                    pythonToolProject,
                     {
                         read: log.files.read.bind(log.files),
                         installTree: (_kind, directory) => {
                             staged.push(directory);
                         },
                     },
-                    'unavailable-uv',
+                    { root: repository.path, executable: 'unavailable-uv' },
                 ).catch((error: unknown) => error);
                 expect(staged).toStrictEqual([]);
             }
@@ -173,15 +176,15 @@ test('a successful uv operation refuses a password in its temporary lockfile and
     {
         using log = openOwnership(repository.path);
         const staged: string[] = [];
-        diagnosticError = await installPythonProject(
-            repository.path,
+        diagnosticError = await installToolProject(
+            pythonToolProject,
             {
                 read: log.files.read.bind(log.files),
                 installTree: (_kind, directory) => {
                     staged.push(directory);
                 },
             },
-            'synthetic-uv',
+            { root: repository.path, executable: 'synthetic-uv' },
         ).catch((error: unknown) => error);
         expect(staged).toStrictEqual([]);
     }

@@ -63,19 +63,12 @@ async function writePackageProject(
     return { rootPackage, yarnConfiguration, version: version.stdout.trim() };
 }
 
-// Prepare the fixture through the public apply/install commands and refuse conflicting starting inputs.
+// Apply the fixture's generated inputs before the test's actual installation transaction.
 async function prepareToolProject(root: string): Promise<void> {
-    for (const command of ['apply', 'install']) {
-        const result = await spawnGspot(root, [command, '--json']);
-        if (result.code !== 0) throw new Error(`Package fixture ${command} failed: ${result.stdout}${result.stderr}`);
-        if (command === 'apply') {
-            const preserved = (JSON.parse(result.stdout) as ApplyReport).notes.filter((note) =>
-                note.startsWith('preserved'),
-            );
-            if (preserved.length > 0)
-                throw new Error(`Package fixture preserved conflicting inputs: ${preserved.join('\n')}`);
-        }
-    }
+    const result = await spawnGspot(root, ['apply', '--json']);
+    if (result.code !== 0) throw new Error(`Package fixture apply failed: ${result.stdout}${result.stderr}`);
+    const preserved = (JSON.parse(result.stdout) as ApplyReport).notes.filter((note) => note.startsWith('preserved'));
+    if (preserved.length > 0) throw new Error(`Package fixture preserved conflicting inputs: ${preserved.join('\n')}`);
 }
 
 /** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */

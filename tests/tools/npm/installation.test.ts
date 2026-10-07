@@ -5,10 +5,11 @@ import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { installCommand } from '#cli/commands/install.ts';
+import { installToolProject } from '#cli/tools/project.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { packageToolProject } from '#cli/tools/npm/project.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
-import { installPackageProject } from '#cli/tools/npm/project.ts';
 import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { rejection, containingAll } from '#tests/harness/expectations.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
@@ -117,6 +118,8 @@ test.each(['missing', 'stale'] as const)(
     'direct package installation refuses a %s lockfile without publishing a tree',
     async (state) => {
         await using fixture = await createPackageProject('npm', 'package.json', 'mise');
+        const installed = await installCommand({ cwd: fixture.root, isDryRun: false });
+        expect(installed.exitCode, installed.text).toBe(0);
         using log = openOwnership(fixture.root);
         const { lockfilePath, lockfile, ownershipPath, ownership } = readPackageInputs(fixture.root, 'npm');
         if (state === 'missing') unlinkSync(lockfilePath);
@@ -125,18 +128,17 @@ test.each(['missing', 'stale'] as const)(
             writeFileSync(lockfilePath, lockfile.toString('utf8').replaceAll(prettierManifest.version, '0.0.0'));
         }
         const staged: string[] = [];
-        const { tools } = fixture;
         expect(
             await rejection(
-                installPackageProject(
-                    fixture.root,
+                installToolProject(
+                    packageToolProject,
                     {
                         read: log.files.read.bind(log.files),
                         installTree: (_kind, directory) => {
                             staged.push(directory);
                         },
                     },
-                    tools,
+                    { root: fixture.root, tools: fixture.tools },
                 ),
             ),
         ).toContain('Run: gspot apply, then gspot install');

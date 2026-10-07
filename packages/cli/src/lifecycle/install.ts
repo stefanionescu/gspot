@@ -2,14 +2,17 @@ import semver from 'semver';
 import { runTool } from '#cli/tools/run.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
 import { CLI_PINS } from '#cli/config/configurations.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
+import type { ToolProject } from '#cli/types/tools/project.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
+import { packageToolProject } from '#cli/tools/npm/project.ts';
 import { preserveMode } from '#cli/lifecycle/ownership/log.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
+import type { Generated } from '#cli/types/generation/output.ts';
+import { pythonToolProject } from '#cli/tools/python/project.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { LockfilePreparation } from '#cli/types/tools/install.ts';
@@ -19,8 +22,7 @@ import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
 import { toolPin, pythonPins, collectPins } from '#cli/configurations/pins.ts';
 import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
-import { packageInstallSteps, installPackageProject, preparePackageProject } from '#cli/tools/npm/project.ts';
-import { installPythonProject, preparePythonProject, pythonInstallationPlan } from '#cli/tools/python/project.ts';
+import { installToolProject, prepareToolProjects, toolInstallationPlan } from '#cli/tools/project.ts';
 
 import type {
     InstallationPlan,
@@ -45,60 +47,55 @@ function assertInstallationInputs(context: InstallationContext): void {
             throw new GspotError('installation', `Tool inputs changed: ${path}. Retry gspot install.`);
 }
 
+// Previews share the same authored runner and generated manifest lookup.
+function projectPreview<Parsed, Preparation, Installation>(
+    session: ToolSession,
+    generated: Generated,
+    description: ToolProject<Parsed, Preparation, Installation>,
+    refreshLockfiles = false,
+) {
+    const manifest = generated.files.find((file) => file.path === description.manifestPath);
+    if (manifest === undefined) return { installer: [], lockfile: [], environment: [] };
+    return toolInstallationPlan(session.root, description, manifest.content, session.policyFiles.policy.run_with, {
+        refreshLockfiles,
+    });
+}
+
 const installations: [InstallationStep, ...InstallationStep[]] = [
     {
-        preview: (session, _manifests, generated, refreshLockfiles) => ({
-            notes: [],
-            steps: [
-                ...generated.files
-                    .filter((file) => file.path === TOOL_PYTHON_PROJECT)
-                    .flatMap(
-                        (file) =>
-                            pythonInstallationPlan(session.root, file.content, session.policyFiles.policy.run_with, {
-                                refreshLockfiles,
-                            }).installer,
-                    ),
-                ...generated.files
-                    .filter((file) => file.path === TOOL_PACKAGE_PROJECT)
-                    .flatMap((file) => packageInstallSteps(session.root, file.content, refreshLockfiles).slice(0, -1)),
-                ...generated.files
-                    .filter((file) => file.path === TOOL_PYTHON_PROJECT)
-                    .flatMap(
-                        (file) =>
-                            pythonInstallationPlan(session.root, file.content, session.policyFiles.policy.run_with, {
-                                refreshLockfiles,
-                            }).lockfile,
-                    ),
-            ],
-        }),
+        preview: (session, _manifests, generated, refreshLockfiles) => {
+            const python = projectPreview(session, generated, pythonToolProject, refreshLockfiles);
+            const packages = projectPreview(session, generated, packageToolProject, refreshLockfiles);
+            return { notes: [], steps: [...python.installer, ...packages.lockfile, ...python.lockfile] };
+        },
         run: async (session, manifests, context) => {
-            const { log, inputs, refreshLockfiles } = context;
-            if (pythonPins(manifests).length > 0) await session.pythonInstaller();
-            const generated = emitAll(session);
+            const { log, inputs, refreshLockfiles, generated } = context;
+            if (pythonPins(manifests).length > 0) await session.pythonInstaller(session.cancelSignal);
             for (const path of [POLICY_FILE, TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT, YARN_SETTINGS])
                 inputs.read(path);
-            await preparePackageProject(session.root, generated.files, inputs, { refreshLockfiles });
-            await preparePythonProject(session, generated.files, inputs, { refreshLockfiles });
+            await prepareToolProjects(session, generated.files, inputs, { refreshLockfiles });
             const files = generated.files.filter(
                 (file) =>
                     file.kind === 'lock' ||
                     [TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT, YARN_SETTINGS].includes(file.path),
             );
-            const plans = files.map((file) =>
-                proposeReplacement(log, {
+            const plans = files.map((file) => {
+                const next = preserveMode(
+                    {
+                        bytes: Buffer.from(file.content),
+                        mode: file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE,
+                    },
+                    inputs.read(file.path),
+                );
+                context.prepared.set(file.path, next);
+                return proposeReplacement(log, {
                     path: file.path,
-                    next: preserveMode(
-                        {
-                            bytes: Buffer.from(file.content),
-                            mode: file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE,
-                        },
-                        inputs.read(file.path),
-                    ),
+                    next,
                     kind: file.kind === 'lock' ? 'lock' : 'config',
                     canReplace: file.read !== undefined,
                     expected: file.read,
-                }),
-            );
+                });
+            });
             const preserved = plans.filter((plan) => plan.status === 'preserved');
             if (preserved.length > 0)
                 throw new GspotError(
@@ -107,17 +104,6 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                 );
             assertInstallationInputs(context);
             context.plans.push(...plans);
-            for (const file of files)
-                context.prepared.set(
-                    file.path,
-                    preserveMode(
-                        {
-                            bytes: Buffer.from(file.content),
-                            mode: file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE,
-                        },
-                        inputs.read(file.path),
-                    ),
-                );
             return plans.some((plan) => plan.status === 'changed') ? 'prepared required tool lockfiles' : '';
         },
     },
@@ -171,15 +157,15 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
             steps:
                 session.packageInstaller() === undefined
                     ? []
-                    : packageInstallSteps(
-                          session.root,
-                          generated.files.find((file) => file.path === TOOL_PACKAGE_PROJECT)?.content,
-                      ).slice(-1),
+                    : projectPreview(session, generated, packageToolProject).environment,
         }),
         run: async (session, manifests, context) =>
             session.packageInstaller() === undefined
                 ? ''
-                : await installPackageProject(session.root, context.inputs, collectPins(manifests)),
+                : await installToolProject(packageToolProject, context.inputs, {
+                      root: session.root,
+                      tools: collectPins(manifests),
+                  }),
     },
     {
         preview: (session, manifests) => ({
@@ -210,17 +196,16 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
             steps:
                 pythonPins(manifests).length === 0
                     ? []
-                    : pythonInstallationPlan(
-                          session.root,
-                          generated.files.find((file) => file.path === TOOL_PYTHON_PROJECT)?.content,
-                          session.policyFiles.policy.run_with,
-                          { refreshLockfiles: false },
-                      ).environment,
+                    : projectPreview(session, generated, pythonToolProject).environment,
         }),
         run: async (session, manifests, context) => {
             if (pythonPins(manifests).length === 0) return '';
-            const executable = await session.pythonInstaller();
-            return installPythonProject(session.root, context.inputs, executable);
+            const executable = await session.pythonInstaller(session.cancelSignal);
+            return installToolProject(pythonToolProject, context.inputs, {
+                root: session.root,
+                executable,
+                cancelSignal: session.cancelSignal,
+            });
         },
     },
 ];
@@ -228,7 +213,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
 async function runInstallationPhases(session: ToolSession, context: InstallationContext): Promise<string[]> {
     const manifests = applicableManifests(session);
     const failures: GspotError[] = [];
-    const { preparation, phases } = installationPlan(session, context.refreshLockfiles);
+    const { preparation, phases } = installationPlan(session, context.generated, context.refreshLockfiles);
     const notes = [await preparation.phase.run(session, manifests, context, preparation)];
     for (const installation of phases) {
         try {
@@ -249,12 +234,16 @@ function isInstallationFailure(error: unknown): error is GspotError {
 /**
  * The installation phases and commands calculated without resolving or downloading tools.
  * @param session the saved policy, scope selections, and repository inventory.
+ * @param generated the outputs calculated once for this preview or installation.
  * @param refreshLockfiles include fresh resolution of every declared tool pin.
  * @returns the applicable phases and their acquisition commands.
  */
-export function installationPlan(session: ToolSession, refreshLockfiles = false): InstallationPlan {
+export function installationPlan(
+    session: ToolSession,
+    generated: Generated,
+    refreshLockfiles = false,
+): InstallationPlan {
     const manifests = applicableManifests(session);
-    const generated = emitAll(session);
     const [first, ...remaining] = installations;
     const preparation = { phase: first, ...first.preview(session, manifests, generated, refreshLockfiles) };
     const phases = remaining
@@ -272,6 +261,7 @@ export function installationPlan(session: ToolSession, refreshLockfiles = false)
  * Install tool projects and clone-local hooks, with optional task-runner integration.
  * @param session the selected tools and repository.
  * @param log the command's locked ownership context.
+ * @param generated the outputs calculated once for this installation.
  * @param options whether to resolve declared pins again before installing.
  * @param options.refreshLockfiles resolve declared pins instead of reusing matching lockfiles.
  * @returns the installation summary and exit code, with a repair command for acquisition failures.
@@ -279,10 +269,12 @@ export function installationPlan(session: ToolSession, refreshLockfiles = false)
 export async function installTools(
     session: ToolSession,
     log: Log,
+    generated: Generated,
     { refreshLockfiles }: LockfilePreparation,
 ): Promise<InstallationResult> {
     const context: InstallationContext = {
         log,
+        generated,
         original: new Map(),
         prepared: new Map(),
         plans: [],

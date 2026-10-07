@@ -4,6 +4,7 @@ import { stringify } from 'smol-toml';
 import { writeFileSync } from 'node:fs';
 import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
+import { misePins } from '#cli/configurations/pins.ts';
 import { CLI_PINS } from '#cli/config/configurations.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
@@ -11,38 +12,32 @@ import { ARGUMENT_START } from '#automation/config/paths.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import pluginManifest from '#plugin-package' with { type: 'json' };
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { installSuitePythonTools } from '#tests/harness/python-installation.ts';
 import { TERMINATED_EXIT, INTERRUPTED_EXIT } from '#automation/config/plugin.ts';
-import { misePins, collectPins, toolProjectPackage } from '#cli/configurations/pins.ts';
+import { SUITE_PYTHON_FOLDER } from '#tests/config/harness/python-installation.ts';
 import { packRegistryPackages, createPackageRegistry } from '#tests/harness/registry.ts';
 
 /**
  * Install the manifest pins once and share their executable paths with either native suite.
  * @param work the suite's temporary directory
  * @param execute the cancellation-aware command runner
+ * @param cancelSignal the suite run cancellation
  * @returns the PATH containing every applicable native pin
  */
-async function installSuiteTools(work: string, execute: typeof run): Promise<string> {
+async function installSuiteTools(work: string, execute: typeof run, cancelSignal: AbortSignal): Promise<string> {
     const manifests = [...configurationManifests().values()];
-    const pythonTools = collectPins(manifests).flatMap((tool) => {
-        const pin = toolProjectPackage(tool);
-        return pin?.kind === 'python'
-            ? [[`pipx:${pin.name}`, { version: pin.version, depends: ['uv'], os: tool.platforms }] as const]
-            : [];
-    });
-    const tools = {
-        ...Object.fromEntries(
-            misePins(manifests).map(
-                (pin) =>
-                    [
-                        pin.name,
-                        { version: pin.version, ...(pin.os === undefined ? {} : { os: pin.os }), ...pin.options },
-                    ] as const,
-            ),
+    const tools = Object.fromEntries(
+        misePins(manifests).map(
+            (pin) =>
+                [
+                    pin.name,
+                    { version: pin.version, ...(pin.os === undefined ? {} : { os: pin.os }), ...pin.options },
+                ] as const,
         ),
-        ...Object.fromEntries(pythonTools),
-    };
+    );
     const config = join(work, 'mise.toml');
     writeFileSync(
         config,
@@ -59,7 +54,14 @@ async function installSuiteTools(work: string, execute: typeof run): Promise<str
     if (installed.code !== 0) throw new Error(`Test tools installation failed: ${installed.stderr}`);
     const bins = await execute(['mise', 'bin-paths'], { cwd: work });
     if (bins.code !== 0) throw new Error(`Test tools paths failed: ${bins.stderr}`);
-    return [...bins.stdout.trim().split(/\r?\n/u), buildToolsPath([])].join(delimiter);
+    const path = [...bins.stdout.trim().split(/\r?\n/u), buildToolsPath([])].join(delimiter);
+    const previous = environmentVariables()['PATH'];
+    setEnvironmentVariable('PATH', path);
+    try {
+        return await installSuitePythonTools(join(work, SUITE_PYTHON_FOLDER), cancelSignal);
+    } finally {
+        setEnvironmentVariable('PATH', previous);
+    }
 }
 
 const args = process.argv.slice(ARGUMENT_START);
@@ -115,7 +117,8 @@ if (suite !== undefined && options.length === 1 && options[0] === '--help') {
             execute,
         );
         setEnvironmentVariable('GSPOT_PACKAGE_ARCHIVES', archives);
-        const nativePath = suite === undefined ? undefined : await installSuiteTools(work.path, execute);
+        const nativePath =
+            suite === undefined ? undefined : await installSuiteTools(work.path, execute, controller.signal);
         await using registry =
             suite === 'tools' ? undefined : await createPackageRegistry(work.path, { declarations: [], execute });
         const npmrc = join(work.path, '.npmrc');

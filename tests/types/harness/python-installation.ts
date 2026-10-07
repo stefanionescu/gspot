@@ -1,9 +1,6 @@
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
-
-/** A Python project prepared for installation: the generated plans and the authored files before install. */
+/** A Python project prepared for installation: the authored files before install. */
 export type PythonInstallation = {
     root: string;
-    plans: GeneratedFile[];
     rootProject: NonSharedBuffer;
     rootConfiguration: NonSharedBuffer;
     [Symbol.asyncDispose](): Promise<void>;

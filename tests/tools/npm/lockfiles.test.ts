@@ -6,6 +6,7 @@ import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { packageLockfile } from '#cli/parsers/packages.ts';
+import { prepareToolProjects } from '#cli/tools/project.ts';
 import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
@@ -16,11 +17,21 @@ import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
 import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
 
+// Resolve normal immutable inputs without installing an environment before either repair journey.
+async function prepareLockfile(root: string): Promise<void> {
+    using log = openOwnership(root);
+    const session = await openSession(root);
+    const generated = emitAll(session);
+    await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
+    writeOutputs(session, log, undefined, generated);
+}
+
 test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' && runner === 'mise'))(
     '%s from %s with %s previews lockfile drift repair without writing, then installs the repaired lockfile',
     async (installer, projectPath, runner) => {
         await using fixture = await createPackageProject(installer, projectPath, runner);
         const { root, registry } = fixture;
+        await prepareLockfile(root);
         const { lockfilePath, lockfile, ownershipPath, ownership } = readPackageInputs(root, installer);
         const preview = await spawnGspot(root, ['install', '--dry-run', '--json']);
         expect(
@@ -82,6 +93,7 @@ test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' 
     async (installer, projectPath, runner) => {
         await using fixture = await createPackageProject(installer, projectPath, runner);
         const { root, rootPackage } = fixture;
+        await prepareLockfile(root);
         const { manifest, lockfilePath, lockfile, ownershipPath, ownership } = readPackageInputs(root, installer);
         const stale = lockfile.toString('utf8').replaceAll(prettierManifest.version, '0.0.0');
         chmodSync(lockfilePath, 0o644);

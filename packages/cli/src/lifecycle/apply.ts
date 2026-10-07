@@ -2,6 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import type { Session } from '#cli/types/planning.ts';
 import { assertNoProblems } from '#cli/policy/read.ts';
 import { removeValePackages } from '#cli/tools/vale.ts';
+import { toolProjectDrift } from '#cli/tools/project.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { CONFLICT_MARKERS } from '#cli/config/parsers/git.ts';
@@ -9,9 +10,7 @@ import { preserveMode } from '#cli/lifecycle/ownership/log.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { writeVersionPin } from '#cli/lifecycle/version-pin.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
-import { packageLockfileDrift } from '#cli/tools/npm/project.ts';
 import { emitAll, outputPaths } from '#cli/generation/outputs.ts';
-import { pythonLockfileDrift } from '#cli/tools/python/project.ts';
 import { proposeClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
@@ -167,10 +166,7 @@ export function writeOutputs(
                 file.kind === 'runner' ||
                 [TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT].includes(file.path)),
     );
-    const hasDrift = [
-        packageLockfileDrift(session.root, generated.files),
-        pythonLockfileDrift(session.root, generated.files),
-    ].some((lockfile) => lockfile?.kind !== undefined);
+    const hasDrift = toolProjectDrift(session.root, generated.files).some((lockfile) => lockfile.kind !== undefined);
     if (dependenciesChanged || hasDrift) report.notes.push('Tool dependencies need installation. Run: gspot install');
     if (report.preserved.length > 0)
         throw new Error(

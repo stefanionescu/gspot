@@ -4,6 +4,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { outputPaths } from '#cli/generation/outputs.ts';
+import { toolProjectDrift } from '#cli/tools/project.ts';
 import type { Drift } from '#cli/types/lifecycle/apply.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import { hasFields } from '#cli/lifecycle/merge/document.ts';
@@ -11,9 +12,7 @@ import { CONFLICT_MARKERS } from '#cli/config/parsers/git.ts';
 import { currentBlock } from '#cli/platform/managed-blocks.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
-import { packageLockfileDrift } from '#cli/tools/npm/project.ts';
 import type { Ownership } from '#cli/types/lifecycle/ownership.ts';
-import { pythonLockfileDrift } from '#cli/tools/python/project.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import { DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/drift.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
@@ -94,8 +93,7 @@ function keyDrift(root: string, generated: Generated): Drift[] {
 export function computeDrift(root: string, policy: Policy, generated: Generated): Drift[] {
     const ownership = getOwnership(root);
     const known = outputPaths(generated);
-    const lockfile = packageLockfileDrift(root, generated.files);
-    const python = pythonLockfileDrift(root, generated.files);
+    const lockfiles = toolProjectDrift(root, generated.files);
     const strays = ownership.files
         .filter(
             (entry) =>
@@ -106,8 +104,7 @@ export function computeDrift(root: string, policy: Policy, generated: Generated)
         )
         .map((entry): Drift => ({ path: entry.path, kind: 'stray' }));
     return [
-        ...(python?.kind === undefined ? [] : [{ path: python.path, kind: python.kind }]),
-        ...(lockfile?.kind === undefined ? [] : [{ path: lockfile.path, kind: lockfile.kind }]),
+        ...lockfiles.flatMap(({ path, kind }) => (kind === undefined ? [] : [{ path, kind }])),
         ...fileDrift(root, generated, ownership),
         ...blockDrift(root, generated),
         ...keyDrift(root, generated),

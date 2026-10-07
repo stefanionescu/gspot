@@ -1,8 +1,8 @@
 <%
 const secretName = String.raw`(?:[a-z_][a-z0-9_]*\.)*[a-z0-9_]*(?:token|password|secret|credential)[a-z0-9_]*`;
-const sensitiveIdentifier = {
+const sensitiveIdentifier = () => ({
     'metavariable-regex': { metavariable: '$SECRET', regex: `(?i)^${secretName}$` },
-};
+});
 const document = {
     rules: [
         {
@@ -129,7 +129,7 @@ const document = {
                                         { pattern: 'os_log($FORMAT, ..., $SECRET, ...)' },
                                     ],
                                 },
-                                sensitiveIdentifier,
+                                sensitiveIdentifier(),
                             ],
                         },
                         {
@@ -139,14 +139,14 @@ const document = {
                                         {
                                             patterns: [
                                                 { pattern: '$LOGGER.$LEVEL($SECRET)' },
-                                                sensitiveIdentifier,
+                                                sensitiveIdentifier(),
                                             ],
                                         },
                                         {
                                             patterns: [
                                                 { pattern: '$LOGGER.$LEVEL("...\\($SECRET)...")' },
                                                 { pattern: '$LOGGER.$LEVEL($MESSAGE)' },
-                                                sensitiveIdentifier,
+                                                sensitiveIdentifier(),
                                                 {
                                                     'metavariable-regex': {
                                                         metavariable: '$MESSAGE',

@@ -11,6 +11,7 @@ import type { Manifest, InstallationKind } from '#cli/types/configurations.ts';
 /** Proposed tool inputs and complete temporary installations awaiting a successful run. */
 export type InstallationContext = {
     log: Log;
+    generated: Generated;
     inputs: ToolOwner;
     original: Map<string, FileCopy | undefined>;
     prepared: Map<string, FileCopy>;

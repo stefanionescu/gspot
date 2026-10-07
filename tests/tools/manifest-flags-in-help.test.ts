@@ -10,15 +10,16 @@ import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
+import { packageToolProject } from '#cli/tools/npm/project.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { pythonToolProject } from '#cli/tools/python/project.ts';
 import { toolProjectPackage } from '#cli/configurations/pins.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { FlagCommand } from '#tests/types/tools/manifest-flags-in-help.ts';
 import { HELP_TIMEOUT_MS } from '#tests/config/tools/manifest-flags-in-help.ts';
-import { installPackageProject, preparePackageProject } from '#cli/tools/npm/project.ts';
-import { installPythonProject, preparePythonProject } from '#cli/tools/python/project.ts';
+import { installToolProject, prepareToolProjects } from '#cli/tools/project.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
 
 const manifests = [...configurationManifests().values()];
@@ -104,7 +105,7 @@ beforeAll(async () => {
     const files = [...pythonProject(selected), ...npmProject(selected, { name: 'bun', version: Bun.version }, 'mise')];
     {
         using log = openOwnership(sandbox.path);
-        await preparePythonProject(
+        await prepareToolProjects(
             { root: sandbox.path, pythonInstaller: () => Promise.resolve('uv') },
             files,
             log.files,
@@ -112,33 +113,32 @@ beforeAll(async () => {
                 refreshLockfiles: false,
             },
         );
-        await preparePackageProject(sandbox.path, files, log.files, { refreshLockfiles: false });
     }
     for (const file of files) await Bun.write(join(sandbox.path, file.path), file.content);
     {
         using log = openOwnership(sandbox.path);
-        await installPythonProject(
-            sandbox.path,
+        await installToolProject(
+            pythonToolProject,
             {
                 read: log.files.read.bind(log.files),
                 installTree: (kind, directory) => {
                     installTree(log, kind, readInstalledTree(directory, kind));
                 },
             },
-            'uv',
+            { root: sandbox.path, executable: 'uv' },
         );
     }
     {
         using log = openOwnership(sandbox.path);
-        await installPackageProject(
-            sandbox.path,
+        await installToolProject(
+            packageToolProject,
             {
                 read: log.files.read.bind(log.files),
                 installTree: (kind, directory) => {
                     installTree(log, kind, readInstalledTree(directory, kind));
                 },
             },
-            supported.map(({ tool }) => tool),
+            { root: sandbox.path, tools: supported.map(({ tool }) => tool) },
         );
     }
 }, NATIVE_TEST_TIMEOUT_MS);

@@ -1,5 +1,7 @@
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
@@ -7,15 +9,21 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { sharePythonTools } from '#tests/harness/python-installation.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { installGeneratedPythonTools } from '#tests/harness/python-installation.ts';
 
 import {
+    OWN_RULE,
     APP_SEMGREP,
+    BEARER_FILES,
     SWIFT_DEFECTS,
     FASTAPI_SOURCE,
+    SECURITY_CLEAN,
     FRAMEWORK_FILES,
+    SEMGREP_COMMAND,
     FRAMEWORK_FINDINGS,
     EXPRESS_SOURCE_CASES,
     BASH_DOWNLOAD_DEFECTS,
@@ -26,6 +34,11 @@ import {
     PLATFORM_SOURCE_CORRECTIONS,
 } from '#tests/config/tools/generation/semgrep.ts';
 
+// Keep each native finding in report order while comparing the same public location and rule fields.
+function findingRows(report: RunReport) {
+    return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
+}
+
 test.skipIf(!hasToolBuild('semgrep'))(
     'framework security packs stay within inherited scopes and preserve sibling input',
     async () => {
@@ -34,12 +47,9 @@ test.skipIf(!hasToolBuild('semgrep'))(
             'gspot.toml': buildPolicy(['javascript', 'security'], { tables: APP_SEMGREP }),
             ...FRAMEWORK_FILES,
         });
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const environment = await installGeneratedPythonTools(sandbox.path);
+        const environment = await sharePythonTools(sandbox.path);
         const appliedPolicy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-        const command = ['check', '--only', 'security/semgrep', '--json'];
-        const broken = await spawnGspot(sandbox.path, command, environment);
+        const broken = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(broken.code, broken.stdout + broken.stderr).toBe(1);
         const findingsByScope = (JSON.parse(broken.stdout) as RunReport).checks.flatMap(({ scope, findings }) =>
             findings.map(({ file, line, rule }) => ({ scope, file, line, rule })),
@@ -48,7 +58,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
         for (const path of ['app/source.js', 'app/child/source.js'])
             await Bun.write(join(sandbox.path, path), 'res.json({ message: "Accepted" });\n');
         await Bun.write(join(sandbox.path, 'sibling/ignored.js'), 'JSON.parse(input);\n');
-        const corrected = await spawnGspot(sandbox.path, command, environment);
+        const corrected = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect({
             root: await Bun.file(join(sandbox.path, 'source.js')).text(),
@@ -62,14 +72,14 @@ test.skipIf(!hasToolBuild('semgrep'))(
         expect(appliedPolicy).toContain('[scope.tools.semgrep]');
         const invalidRule = join(sandbox.path, '.gspot/config/app/semgrep/broken.yml');
         await Bun.write(invalidRule, 'rules: [');
-        const invalid = await spawnGspot(sandbox.path, command, environment);
+        const invalid = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
         expect((JSON.parse(invalid.stdout) as RunReport).checks.find((check) => check.scope === 'app')?.status).toBe(
             'error',
         );
         expect(await Bun.file(invalidRule).text()).toBe('rules: [');
         await Bun.file(invalidRule).delete();
-        const recovered = await spawnGspot(sandbox.path, command, environment);
+        const recovered = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
     },
 );
@@ -77,20 +87,16 @@ test.skipIf(!hasToolBuild('semgrep'))(
 test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configurations and the level', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
-    const script = BASH_DOWNLOAD_DEFECTS;
     await createFileTree(root, {
         'gspot.toml': buildPolicy(['bash', 'swift', 'security'], {
             tables: '[agent_rules]\nenabled = false\n',
             level: 'recommended',
         }),
-        'script.sh': script,
+        'script.sh': BASH_DOWNLOAD_DEFECTS,
         'Value.swift': SWIFT_DEFECTS,
     });
-    const applied = await spawnGspot(root, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const environment = await installGeneratedPythonTools(root);
-    const command = ['check', '--only', 'security/semgrep', '--json'];
-    const recommended = await spawnGspot(root, command, environment);
+    const environment = await sharePythonTools(root);
+    const recommended = await spawnGspot(root, SEMGREP_COMMAND, environment);
     expect(recommended.code, recommended.stdout + recommended.stderr).toBe(1);
     expect(
         (JSON.parse(recommended.stdout) as RunReport).checks
@@ -101,12 +107,10 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
         join(root, 'gspot.toml'),
         buildPolicy(['bash', 'swift', 'security'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
     );
-    const updated = await spawnGspot(root, ['apply']);
-    expect(updated.code, updated.stdout + updated.stderr).toBe(0);
-    const all = await spawnGspot(root, command, environment);
+    await sharePythonTools(root);
+    const all = await spawnGspot(root, SEMGREP_COMMAND, environment);
     expect(all.code, all.stdout + all.stderr).toBe(1);
-    const findings = (JSON.parse(all.stdout) as RunReport).checks.flatMap((check) => check.findings);
-    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+    expect(findingRows(JSON.parse(all.stdout) as RunReport)).toStrictEqual([
         { file: 'Value.swift', line: 1, rule: 'gspot.swift.keychain-accessible-always' },
         { file: 'Value.swift', line: 3, rule: 'gspot.swift.weak-hash-algorithm' },
         { file: 'script.sh', line: 2, rule: 'gspot.bash.curl-pipe-shell' },
@@ -117,7 +121,7 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
         { file: 'script.sh', line: 7, rule: 'gspot.bash.curl-pipe-shell' },
     ]);
     expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_DEFECTS);
-    expect(await Bun.file(join(root, 'script.sh')).text()).toBe(script);
+    expect(await Bun.file(join(root, 'script.sh')).text()).toBe(BASH_DOWNLOAD_DEFECTS);
     await Bun.write(join(root, 'script.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n');
     await Bun.write(
         join(root, 'Value.swift'),
@@ -126,7 +130,7 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
             'SHA256',
         ),
     );
-    const clean = await spawnGspot(root, command, environment);
+    const clean = await spawnGspot(root, SEMGREP_COMMAND, environment);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
 });
 
@@ -139,14 +143,10 @@ test.skipIf(!hasToolBuild('semgrep'))(
             'package.json': '{"private": true, "dependencies": {"express": "5.2.1"}}\n',
             ...EXPRESS_SOURCE_CASES,
         });
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const environment = await installGeneratedPythonTools(sandbox.path);
-        const failed = await spawnGspot(sandbox.path, ['check', '--only', 'security/semgrep', '--json'], environment);
+        const environment = await sharePythonTools(sandbox.path);
+        const failed = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const findings = (JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings: reports }) =>
-            reports.map(({ file, rule, line }) => ({ file, rule, line })),
-        );
+        const findings = findingRows(JSON.parse(failed.stdout) as RunReport);
         expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
             EXPRESS_SOURCE_FINDINGS,
         );
@@ -154,11 +154,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
             await Bun.write(join(sandbox.path, path), EXPRESS_SOURCE_CASES['parameterized.js']);
         for (const path of ['field.js', 'response-template.js'])
             await Bun.write(join(sandbox.path, path), EXPRESS_SOURCE_CASES['json.js']);
-        const corrected = await spawnGspot(
-            sandbox.path,
-            ['check', '--only', 'security/semgrep', '--json'],
-            environment,
-        );
+        const corrected = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
     },
@@ -189,12 +185,10 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
                 ),
             ),
         );
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const environment = await sharePythonTools(sandbox.path);
         expect(
             await Promise.all(generated.map((file) => Bun.file(join(sandbox.path, file.path)).text())),
         ).toStrictEqual(generated.map((file) => file.content));
-        const environment = await installGeneratedPythonTools(sandbox.path);
         const validated = await runTestCommand(
             ['semgrep', 'scan', '--validate', '--config', '.gspot/config/semgrep', '--metrics=off'],
             { cwd: sandbox.path, env: environment, timeoutMs: 60_000 },
@@ -214,23 +208,18 @@ test.skipIf(!hasToolBuild('semgrep'))(
             'neighbor.py':
                 'from fastapi import HTTPException\nraise HTTPException(status_code=404, detail="User not found")\n',
         });
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const environment = await installGeneratedPythonTools(sandbox.path);
+        const environment = await sharePythonTools(sandbox.path);
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-        const command = ['check', '--only', 'security/semgrep', '--json'];
-        const failed = await spawnGspot(sandbox.path, command, environment);
+        const failed = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(
-            (JSON.parse(failed.stdout) as RunReport).checks
-                .flatMap((check) => check.findings)
-                .map(({ file, line, rule }) => ({ file, line, rule })),
-        ).toStrictEqual([{ file: 'service.py', line: 7, rule: 'gspot.fastapi.exception-text-in-response' }]);
+        expect(findingRows(JSON.parse(failed.stdout) as RunReport)).toStrictEqual([
+            { file: 'service.py', line: 7, rule: 'gspot.fastapi.exception-text-in-response' },
+        ]);
         await Bun.write(
             join(sandbox.path, 'service.py'),
             FASTAPI_SOURCE.replace('detail=str(error)', 'detail="Unable to load user"'),
         );
-        const corrected = await spawnGspot(sandbox.path, command, environment);
+        const corrected = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
         expect(await Bun.file(join(sandbox.path, 'neighbor.py')).text()).toBe(
@@ -249,21 +238,20 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
             'wrangler.toml': SEMGREP_PROJECT_FILES['wrangler.toml'],
             'supabase/config.toml': SEMGREP_PROJECT_FILES['supabase/config.toml'],
             'Value.swift': SEMGREP_PROJECT_FILES['Value.swift'],
-            'gspot.toml': buildPolicy(['javascript', 'swift', 'supabase', 'cloudflare', 'security', 'xcode'], {
-                level: level,
-            }),
+            'gspot.toml': buildPolicy(
+                ['javascript', 'typescript', 'swift', 'supabase', 'cloudflare', 'security', 'xcode'],
+                {
+                    level: level,
+                },
+            ),
             ...PLATFORM_SOURCE_CASES,
         });
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const environment = await installGeneratedPythonTools(sandbox.path);
+        const environment = await sharePythonTools(sandbox.path);
         const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
         const command = ['check', '--only', 'security/semgrep', 'xcode/ats', '--json'];
         const failed = await spawnGspot(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const findings = (JSON.parse(failed.stdout) as RunReport).checks
-            .flatMap((check) => check.findings)
-            .map(({ file, rule, line }) => ({ file, rule, line }));
+        const findings = findingRows(JSON.parse(failed.stdout) as RunReport);
         expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
             PLATFORM_SOURCE_FINDINGS.map((finding) =>
                 level === 'all' && finding.rule === 'gspot.javascript.no-interpolated-exec'
@@ -282,5 +270,39 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
             preserved.map(([, source]) => source),
         );
         expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+    },
+);
+
+test.skipIf(!hasToolBuild('semgrep'))(
+    'repository security rules report defects, accept corrections and preserve Bearer files',
+    async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['typescript', 'security'], {
+                tables: '[semgrep]\nrule_files = ["security/own.yml"]\n',
+            }),
+            'src/index.ts': SECURITY_CLEAN,
+            'src/use.ts': "import { double } from './index.ts';\n\nexport const four = double(2);\n",
+            'security/own.yml': OWN_RULE,
+            ...BEARER_FILES,
+        });
+        commitAll(sandbox.path);
+        const environment = await sharePythonTools(sandbox.path);
+        const own = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
+        expect(own.code, own.stdout + own.stderr).toBe(1);
+        const report = JSON.parse(own.stdout) as RunReport;
+        expect(report.checks).toMatchObject([{ check: 'security/semgrep', status: 'failed' }]);
+        expect(report.checks[0]!.findings).toContainEqual(
+            containing<Finding>({ rule: 'test-no-double', file: 'src/use.ts', line: 3 }),
+        );
+        await Bun.write(join(sandbox.path, 'src/use.ts'), 'export const four = 4;\n');
+        const corrected = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+            { check: 'security/semgrep', status: 'passed', findings: [] },
+        ]);
+        expect(
+            Object.keys(BEARER_FILES).map((path) => [path, readFileSync(join(sandbox.path, path), 'utf8')]),
+        ).toStrictEqual(Object.entries(BEARER_FILES));
     },
 );

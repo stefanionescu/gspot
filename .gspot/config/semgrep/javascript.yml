@@ -94,9 +94,8 @@ rules:
       - pattern: jwt.verify($TOKEN, $SECRET)
       - pattern-not: |
           jwt.verify($TOKEN, $SECRET, {algorithms: ...})
-    message: >
-      Require the expected JWT signing algorithms when verifying a token. Pass
-      an algorithms option that matches the signing contract.
+    message: Require the expected JWT signing algorithms when verifying a token.
+      Pass an algorithms option that matches the signing contract.
     languages:
       - typescript
       - javascript

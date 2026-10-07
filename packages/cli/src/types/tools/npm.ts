@@ -1,8 +1,11 @@
-import type { FileCopy } from '#cli/types/platform/root.ts';
+import type { ToolPin } from '#cli/types/configurations.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 
-export type InstallFiles = { project: FileCopy; recorded: FileCopy; yarn: FileCopy | undefined };
+/** The repository and generated Yarn settings used during package lockfile resolution. */
+export type PackagePreparation = { root: string; yarn: string | undefined };
+/** The repository and declared native wrappers verified before installing the package project. */
+export type PackageInstallation = { root: string; tools: Iterable<ToolPin> };
 
 export type PackageExecution = {
     work: string;

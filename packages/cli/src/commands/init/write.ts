@@ -7,13 +7,12 @@ import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
+import { prepareToolProjects } from '#cli/tools/project.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { emitAll, outputPaths } from '#cli/generation/outputs.ts';
-import { preparePackageProject } from '#cli/tools/npm/project.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
-import { preparePythonProject } from '#cli/tools/python/project.ts';
 import type { InitOptions } from '#cli/types/lifecycle/selection.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { proposeRetirement, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
@@ -85,8 +84,7 @@ export async function writeSetup(
     });
     const generated = emitAll(session);
     if (options.install) {
-        await preparePackageProject(root, generated.files, log.files, { refreshLockfiles: false });
-        await preparePythonProject(session, generated.files, log.files, { refreshLockfiles: false });
+        await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
     }
     assertReadUnchanged(log, prepared.read);
     applyPlan(
@@ -111,7 +109,7 @@ export async function writeSetup(
         ...retired.preserved.map((path) => `kept ${path}: it is a folder, or it changed after init read it`),
     );
     const installed = options.install
-        ? await installTools(session, log, { refreshLockfiles: false })
+        ? await installTools(session, log, generated, { refreshLockfiles: false })
         : { note: 'install skipped; run: gspot install', exitCode: 0 };
     const version = colors.dim(`gspot ${session.version}`);
     return {

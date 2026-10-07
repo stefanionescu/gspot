@@ -142,3 +142,17 @@ export const PLATFORM_SOURCE_CORRECTIONS: Record<string, string> = {
     'supabase/functions/eval/index.ts': 'const parsed = Number(input);\n',
     'supabase/functions/remote/index.ts': 'const loaded = import("./local.ts");\n',
 };
+
+export const SECURITY_CLEAN = 'export function double(value: number): number {\n    return value * 2;\n}\n';
+
+export const OWN_RULE =
+    'rules:\n    - id: test-no-double\n      pattern: double(...)\n      message: The test rule of the repository fires here.\n      languages: [typescript]\n      severity: ERROR\n';
+
+/** Configuration owned by Bearer, which Semgrep must preserve at initialization. */
+export const BEARER_FILES = {
+    'bearer.yml': 'severity: [critical, high]\n',
+    'bearer.ignore': 'src/vendor.ts\n',
+};
+
+/** The native security check shared by generated-pack and output-parser cases. */
+export const SEMGREP_COMMAND = ['check', '--only', 'security/semgrep', '--json'];

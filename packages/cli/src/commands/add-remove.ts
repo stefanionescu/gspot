@@ -5,6 +5,7 @@ import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { getScopeTable } from '#cli/policy/edit.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { printResult } from '#cli/terminal/messages.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
@@ -72,7 +73,7 @@ async function applyConfigurationChange(root: string, change: ConfigurationChang
         if (result.exitCode === 0) log.save();
         return result;
     }
-    const { note, exitCode } = await installTools(session, log, { refreshLockfiles: false });
+    const { note, exitCode } = await installTools(session, log, emitAll(session), { refreshLockfiles: false });
     const installation = note === '' ? '' : `${note}\n`;
     const next = exitCode === 0 ? 'Run gspot check to check the selected configurations.\n' : '';
     return {

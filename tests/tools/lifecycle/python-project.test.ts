@@ -1,8 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
@@ -10,13 +12,29 @@ import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { pythonToolProject } from '#cli/tools/python/project.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { installPythonProject } from '#cli/tools/python/project.ts';
+import { installToolProject, prepareToolProjects } from '#cli/tools/project.ts';
 import { cpSync, chmodSync, existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { PYTHON_PROJECTS, PYTHON_INSTALL_STEPS } from '#tests/config/tools/lifecycle/python-project.ts';
 import { createPythonRegistry, preparePythonInstallation } from '#tests/harness/python-installation.ts';
+
+// Resolve the authored index's normal lockfile before testing immutable installation or a clean clone.
+async function prepareLockfile(root: string) {
+    using log = openOwnership(root);
+    const session = await openSession(root);
+    const generated = emitAll(session);
+    await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
+    writeOutputs(session, log, undefined, generated);
+    const lockfilePath = join(root, '.gspot/uv.lock');
+    return {
+        manifest: readFileSync(join(root, '.gspot/pyproject.toml')),
+        lockfilePath,
+        lockfile: readFileSync(lockfilePath),
+    };
+}
 
 test.skipIf(!isPosix).each(PYTHON_PROJECTS)(
     'private Python CLI installation preserves authored and generated inputs with %s and %s',
@@ -29,10 +47,8 @@ test.skipIf(!isPosix).each(PYTHON_PROJECTS)(
             runner,
             indexUrl: registry.url,
         });
+        const { manifest, lockfilePath, lockfile } = await prepareLockfile(repository.path);
         const { rootProject, rootConfiguration } = prepared;
-        const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
-        const lockfilePath = join(repository.path, '.gspot/uv.lock');
-        const lockfile = readFileSync(lockfilePath);
         expect(lockfile.toString('utf8')).not.toContain('synthetic-uv-password');
         if (runner === 'mise') {
             // A broken uv on PATH cannot replace the pinned mise installer.
@@ -74,10 +90,8 @@ test.skipIf(!isPosix).each([
             indexFile: configuration,
             runner,
         });
+        const { manifest, lockfile } = await prepareLockfile(repository.path);
         const { rootConfiguration } = prepared;
-        const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
-        const lockfilePath = join(repository.path, '.gspot/uv.lock');
-        const lockfile = readFileSync(lockfilePath);
         const clone = join(artifacts.path, 'clone');
         commitAll(repository.path);
         gitOutput(repository.path, ['clone', '--quiet', '--no-local', repository.path, clone]);
@@ -86,7 +100,8 @@ test.skipIf(!isPosix).each([
         for (let attempt = 0; attempt < 2; attempt++) {
             {
                 using log = openOwnership(clone);
-                const installed = await installTools(await openSession(clone), log, { refreshLockfiles: false });
+                const session = await openSession(clone);
+                const installed = await installTools(session, log, emitAll(session), { refreshLockfiles: false });
                 expect(installed.exitCode, installed.note).toBe(0);
                 expect(installed.note).toContain('installed locked Python tools');
             }
@@ -125,18 +140,17 @@ test.skipIf(!isPosix)(
     'conflicted Python lockfiles survive offline apply and are repaired by install',
     async () => {
         const configuration = 'uv.toml';
-        const runner = 'none';
         await using repository = await testdir();
         await using prepared = await preparePythonInstallation(repository.path, {
             indexFile: configuration,
-            runner,
+            runner: 'none',
         });
+        const { lockfilePath, lockfile } = await prepareLockfile(repository.path);
         const { rootConfiguration } = prepared;
-        const lockfilePath = join(repository.path, '.gspot/uv.lock');
-        const lockfile = readFileSync(lockfilePath);
         {
             using log = openOwnership(repository.path);
-            const installed = await installTools(await openSession(repository.path), log, { refreshLockfiles: false });
+            const session = await openSession(repository.path);
+            const installed = await installTools(session, log, emitAll(session), { refreshLockfiles: false });
             expect(installed.exitCode, installed.note).toBe(0);
         }
         chmodSync(lockfilePath, 0o644);
@@ -146,15 +160,15 @@ test.skipIf(!isPosix)(
             const staged: string[] = [];
             expect(
                 await rejection(
-                    installPythonProject(
-                        repository.path,
+                    installToolProject(
+                        pythonToolProject,
                         {
                             read: log.files.read.bind(log.files),
                             installTree: (_kind, directory) => {
                                 staged.push(directory);
                             },
                         },
-                        'uv',
+                        { root: repository.path, executable: 'uv' },
                     ),
                 ),
             ).toContain('Run: gspot apply, then gspot install');
@@ -164,7 +178,8 @@ test.skipIf(!isPosix)(
         expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
         {
             using log = openOwnership(repository.path);
-            const installed = await installTools(await openSession(repository.path), log, { refreshLockfiles: false });
+            const session = await openSession(repository.path);
+            const installed = await installTools(session, log, emitAll(session), { refreshLockfiles: false });
             expect(installed.exitCode, installed.note).toBe(0);
         }
         expect(readFileSync(lockfilePath)).toStrictEqual(lockfile);
@@ -185,6 +200,8 @@ test.skipIf(!isPosix)(
             indexUrl: registry.url,
         });
         const { root } = prepared;
+        const installed = await spawnGspot(root, ['install']);
+        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         const markerPath = environmentExecutable(join(root, '.gspot/.venv'), 'gspot-relocation-marker');
         const marker = readFileSync(markerPath);
         const lockfilePath = join(root, '.gspot/uv.lock');
@@ -199,15 +216,15 @@ test.skipIf(!isPosix)(
             using log = openOwnership(root);
             const staged: string[] = [];
             refused = await rejection(
-                installPythonProject(
-                    root,
+                installToolProject(
+                    pythonToolProject,
                     {
                         read: log.files.read.bind(log.files),
                         installTree: (_kind, directory) => {
                             staged.push(directory);
                         },
                     },
-                    join(artifacts.path, 'bin/uv'),
+                    { root, executable: join(artifacts.path, 'bin/uv') },
                 ),
             );
             expect(staged).toStrictEqual([]);

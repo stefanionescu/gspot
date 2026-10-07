@@ -1,18 +1,15 @@
 import type { z } from 'zod';
-import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { lockfileSchema } from '#cli/parsers/schema/python/tools.ts';
-
-/** Immutable Python project and lockfile inputs for preparing an installation. */
-export type PythonToolInputs = { project: FileCopy; lockfile: FileCopy };
 
 /** Repository identity and the command-owned Python installer used during preparation. */
 export type PythonPreparation = {
     root: string;
+    cancelSignal?: AbortSignal | undefined;
     /** One lazily acquired installer shared by this command's Python operations. */
-    pythonInstaller: () => Promise<string>;
+    pythonInstaller: (cancelSignal?: AbortSignal) => Promise<string>;
 };
-/** The Python acquisition, lockfile, and environment commands calculated without running them. */
-export type PythonInstallationPlan = { installer: string[][]; lockfile: string[][]; environment: string[][] };
+/** The repository and acquired uv executable used by the native installation. */
+export type PythonExecution = { root: string; executable: string; cancelSignal?: AbortSignal | undefined };
 
 /** The validated uv lockfile of the Python tool project. */
 export type PythonToolLockfile = z.infer<typeof lockfileSchema>;

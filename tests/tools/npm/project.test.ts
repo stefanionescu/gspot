@@ -8,6 +8,8 @@ import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
+import { prepareToolProjects } from '#cli/tools/project.ts';
+import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
@@ -15,6 +17,15 @@ import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
 import type { PackageInputs, PackageProject } from '#tests/types/harness/npm.ts';
 import { statSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+
+// Keep the locked inputs ahead of both the initial native installation and its clone journey.
+async function prepareInputs(root: string, log: Log) {
+    const session = await openSession(root);
+    const generated = emitAll(session);
+    await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
+    writeOutputs(session, log, undefined, generated);
+    return { session, inputs: readPackageInputs(root, session.packageInstaller()!.name) };
+}
 
 /** A clean clone installs its committed lockfile twice without changing tracked files. */
 async function expectCloneInstallation(
@@ -31,7 +42,8 @@ async function expectCloneInstallation(
     expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
     for (let attempt = 0; attempt < 2; attempt++) {
         using cloneLog = openOwnership(clone);
-        const cloneInstall = await installTools(await openSession(clone), cloneLog, { refreshLockfiles: false });
+        const { session } = await prepareInputs(clone, cloneLog);
+        const cloneInstall = await installTools(session, cloneLog, emitAll(session), { refreshLockfiles: false });
         expect(cloneInstall.exitCode, cloneInstall.note).toBe(0);
         expect(cloneInstall.note).toContain('.gspot/node_modules');
         const status = await runTestCommand(['git', 'status', '--porcelain'], { cwd: clone });
@@ -50,14 +62,13 @@ test.each(PACKAGE_PROJECTS)(
     '%s from %s with %s preserves authored and locked inputs and restores edited tool files',
     async (installer, projectPath, runner) => {
         await using fixture = await createPackageProject(installer, projectPath, runner);
-        const { root, artifacts, rootPackage, yarnConfiguration } = fixture;
-        const { tools } = fixture;
+        const { root, artifacts, rootPackage, yarnConfiguration, tools } = fixture;
         using log = openOwnership(root);
-        const inputs = readPackageInputs(root, installer);
+        const { session, inputs } = await prepareInputs(root, log);
         const { manifest, lockfilePath, lockfile, mode } = inputs;
         setEnvironmentVariable('YARN_CACHE_FOLDER', join(artifacts, 'installation-cache'));
         setEnvironmentVariable('YARN_GLOBAL_FOLDER', join(artifacts, 'installation-global'));
-        const installed = await installTools(await openSession(root), log, { refreshLockfiles: false });
+        const installed = await installTools(session, log, emitAll(session), { refreshLockfiles: false });
         expect(installed.exitCode, installed.note).toBe(0);
         expect(installed.note).toContain('.gspot/node_modules');
         const workspace = join(root, 'pnpm-workspace.yaml');
@@ -83,7 +94,7 @@ test.each(PACKAGE_PROJECTS)(
         const readmePath = join(root, '.gspot/node_modules/prettier/README.md');
         const readme = readFileSync(readmePath);
         writeFileSync(readmePath, 'authored later');
-        const reinstalled = await installTools(await openSession(root), log, { refreshLockfiles: false });
+        const reinstalled = await installTools(session, log, emitAll(session), { refreshLockfiles: false });
         expect(reinstalled.exitCode, reinstalled.note).toBe(0);
         expect(readFileSync(readmePath)).toStrictEqual(readme);
         const readyTools = runner === 'none' ? ['prettier', 'ec'] : ['prettier'];
@@ -101,7 +112,6 @@ test.each(PACKAGE_PROJECTS)(
                 }).some((path) => /(?:^|[/\\])editorconfig-checker(?:\.exe)?$/u.test(path)),
             ).toBe(true);
         }
-        const session = await openSession(root);
         expect(computeDrift(root, session.policyFiles.policy, emitAll(session))).toStrictEqual([]);
         const second = writeOutputs(await openSession(root), log);
         expect(second.written).toStrictEqual([]);

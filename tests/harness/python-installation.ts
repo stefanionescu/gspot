@@ -2,20 +2,137 @@
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createFileTree } from 'testdirs';
-import { join, delimiter } from 'node:path';
+import { compact } from '#cli/platform/objects.ts';
+import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { missingBuild } from '#cli/planning/skips.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { gitignoreBlock } from '#cli/generation/outputs.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
+import { openSession } from '#cli/commands/session.ts';
+import { writeOutputs } from '#cli/lifecycle/apply.ts';
+import { environmentBin } from '#cli/platform/paths.ts';
+import { pythonProject } from '#cli/generation/python.ts';
+import { READ_ONLY_FILE } from '#cli/config/platform/modes.ts';
+import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
+import { installToolProjects } from '#tests/harness/install.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { acquirePythonInstaller } from '#cli/tools/python/uv.ts';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { pythonToolProject } from '#cli/tools/python/project.ts';
+import { emitAll, gitignoreBlock } from '#cli/generation/outputs.ts';
+import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
-import { TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { RUNNER_POLICY, NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
+import { hostPlatform, environmentVariables } from '#cli/platform/environment.ts';
 import type { PythonRegistry, RegistryCommand } from '#tests/types/harness/registry.ts';
+import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
+import { installToolProject, prepareToolProject, prepareToolProjects } from '#cli/tools/project.ts';
 import { RUFF_VERSION_OUTPUT, PYTHON_REGISTRY_CREDENTIALS } from '#tests/config/harness/registry.ts';
 import type { PythonInstallation, PythonInstallationOptions } from '#tests/types/harness/python-installation.ts';
-import { REDIRECTED, AUTHORED_FILES, EXCLUDED_PYTHON_CHECKS } from '#tests/config/harness/python-installation.ts';
+import { UV_LOCKFILE, TOOL_PYTHON_PROJECT, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
+
+import {
+    REDIRECTED,
+    AUTHORED_FILES,
+    SUITE_PYTHON_FOLDER,
+    EXCLUDED_PYTHON_CHECKS,
+} from '#tests/config/harness/python-installation.ts';
+
+const pythonLockfiles = new Map<string, Promise<string>>();
+
+// Shared native checks select the complete fixture environment ahead of the suite's tool bins.
+function pythonEnvironment(root: string) {
+    return {
+        PATH: [environmentBin(join(root, PYTHON_ENVIRONMENT_DIRECTORY)), environmentVariables()['PATH'] ?? ''].join(
+            delimiter,
+        ),
+    };
+}
+
+/**
+ * Install the suite's one Python environment while its runner owns cancellation and cleanup.
+ * @param root the suite-owned managed project
+ * @param cancelSignal the suite run cancellation
+ * @returns the managed environment bin before the declared tool bins
+ */
+export async function installSuitePythonTools(root: string, cancelSignal: AbortSignal): Promise<string> {
+    mkdirSync(root, { recursive: true });
+    const generated = pythonProject(
+        [...configurationManifests().values()].map((manifest) => ({
+            ...manifest,
+            tools: manifest.tools.filter((tool) => missingBuild(tool, hostPlatform(), process.arch) === undefined),
+        })),
+    );
+    const executable = await acquirePythonInstaller(root, undefined, cancelSignal);
+    using log = openOwnership(root);
+    await prepareToolProjects(
+        { root, pythonInstaller: () => Promise.resolve(executable), cancelSignal },
+        generated,
+        log.files,
+        {
+            refreshLockfiles: false,
+        },
+    );
+    for (const file of generated)
+        applyPlan(
+            log,
+            proposeReplacement(log, {
+                path: file.path,
+                next: { bytes: Buffer.from(file.content), mode: READ_ONLY_FILE },
+                kind: file.kind === 'lock' ? 'lock' : 'config',
+            }),
+        );
+    console.log(
+        await installToolProject(
+            pythonToolProject,
+            {
+                read: log.files.read.bind(log.files),
+                installTree: (kind, directory) => {
+                    installTree(log, kind, readInstalledTree(directory, kind));
+                },
+            },
+            { root, executable, cancelSignal },
+        ),
+    );
+    return pythonEnvironment(root).PATH;
+}
+
+/**
+ * Generate the fixture's selected configuration and share the suite's managed Python installation.
+ * @param root the authored native-check repository
+ * @returns the fixture environment bin before every other tool path
+ */
+export async function sharePythonTools(root: string): Promise<Record<string, string>> {
+    const archives = environmentVariables()['GSPOT_PACKAGE_ARCHIVES'];
+    if (archives === undefined) throw new Error('Run native Python tests through mise run test:tools.');
+    const session = await openSession(root);
+    const generated = emitAll(session);
+    const project = generated.files.find((file) => file.path === TOOL_PYTHON_PROJECT);
+    if (project === undefined) throw new Error('The selected native checks need no Python tool project.');
+    using log = openOwnership(root);
+    const original = log.files.read(UV_LOCKFILE);
+    let resolved = pythonLockfiles.get(project.content);
+    if (resolved === undefined) {
+        resolved = prepareToolProject(pythonToolProject, project, log.files, { refreshLockfiles: false }, session).then(
+            (lockfile) => lockfile.content,
+        );
+        pythonLockfiles.set(project.content, resolved);
+    }
+    generated.files.push({
+        path: UV_LOCKFILE,
+        content: await resolved,
+        readOnly: true,
+        kind: 'lock',
+        ...compact({ read: original }),
+    });
+    writeOutputs(session, log, undefined, generated);
+    installTree(
+        log,
+        'python',
+        readInstalledTree(join(dirname(archives), SUITE_PYTHON_FOLDER, PYTHON_ENVIRONMENT_DIRECTORY), 'python'),
+    );
+    return pythonEnvironment(root);
+}
 
 /** Creates an authored Python project, generated lockfile, and isolated uv environment selectors. */
 export async function preparePythonInstallation(
@@ -55,18 +172,8 @@ export async function preparePythonInstallation(
         const rootConfiguration = readFileSync(join(root, indexFile));
         const applied = await spawnGspot(root, ['apply']);
         if (applied.code !== 0) throw new Error(`Python fixture apply failed: ${applied.stdout}${applied.stderr}`);
-        await installGeneratedPythonTools(root);
-        const plans: GeneratedFile[] = [
-            {
-                path: TOOL_PYTHON_PROJECT,
-                content: readFileSync(join(root, TOOL_PYTHON_PROJECT), 'utf8'),
-                readOnly: true,
-                kind: 'config',
-            },
-        ];
         return {
             root,
-            plans,
             rootProject,
             rootConfiguration,
             async [Symbol.asyncDispose]() {
@@ -85,15 +192,8 @@ export async function preparePythonInstallation(
  * @returns the private environment ahead of host executable shims
  */
 export async function installGeneratedPythonTools(root: string): Promise<Record<string, string>> {
-    const installed = await spawnGspot(root, ['install']);
-    if (installed.code !== 0)
-        throw new Error(`Python tool fixture install failed: ${installed.stdout}${installed.stderr}`);
-    return {
-        PATH: [
-            join(root, '.gspot/.venv', process.platform === 'win32' ? 'Scripts' : 'bin'),
-            environmentVariables()['PATH'] ?? '',
-        ].join(delimiter),
-    };
+    await installToolProjects(root);
+    return pythonEnvironment(root);
 }
 
 /**

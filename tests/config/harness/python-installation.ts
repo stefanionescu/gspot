@@ -1,3 +1,6 @@
+/** The managed Python project beside this suite run's packed-package metadata. */
+export const SUITE_PYTHON_FOLDER = 'python-tools';
+
 // The authored files every Python fixture starts from.
 export const AUTHORED_FILES = {
     // These fixtures invoke the source launcher, so mise must not install the unpublished CLI.

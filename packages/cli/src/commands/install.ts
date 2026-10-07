@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { printResult } from '#cli/terminal/messages.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
@@ -49,7 +50,8 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
     const root = findRoot(options.cwd);
     assertVersionPin(root);
     const session = await openSession(root);
-    const { steps, notes } = installationPlan(session, options.refreshLockfiles === true);
+    const generated = emitAll(session);
+    const { steps, notes } = installationPlan(session, generated, options.refreshLockfiles === true);
     if (options.isDryRun) {
         const lines = [...steps.map((step) => step.join(' ')), ...notes];
         const hooks = steps.find((step) => step[0] === 'git' && step[2] === 'core.hooksPath')?.[3];
@@ -60,7 +62,7 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
         };
     }
     using log = openOwnership(root);
-    const { note, exitCode } = await installTools(session, log, {
+    const { note, exitCode } = await installTools(session, log, generated, {
         refreshLockfiles: options.refreshLockfiles === true,
     });
     return {

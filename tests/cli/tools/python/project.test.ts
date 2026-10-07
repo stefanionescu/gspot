@@ -9,9 +9,10 @@ import { UV_MISE_PIN } from '#cli/config/tools/python.ts';
 import { pythonProject } from '#cli/generation/python.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { UV_LOCKFILE } from '#cli/config/platform/locations.ts';
+import { pythonToolProject } from '#cli/tools/python/project.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { pythonToolProjectSchema } from '#cli/parsers/schema/python/tools.ts';
-import { pythonLockfileDrift, pythonInstallationPlan } from '#cli/tools/python/project.ts';
+import { toolProjectDrift, toolInstallationPlan } from '#cli/tools/project.ts';
 import { PRIVATE_PYTHON_PROJECT, PRIVATE_PYTHON_LOCKFILE } from '#tests/config/samples/python/tools.ts';
 import { CONSTRAINT, PYTHON_LOCKFILE_PLANS, PYTHON_ENVIRONMENT_STEPS } from '#tests/config/cli/tools/python/project.ts';
 
@@ -50,9 +51,9 @@ test('a pypi constraint reaches the tool project, and only a lockfile resolved u
     const project = pythonToolProjectSchema.parse(parse(generated[0]!.content));
     expect(project.tool.uv['constraint-dependencies']).toStrictEqual(['pyjwt>=2.14.0']);
     await createFileTree(sandbox.path, { [UV_LOCKFILE]: lockfileFor(project.project.dependencies, []) });
-    expect(pythonLockfileDrift(sandbox.path, generated)).toStrictEqual({ path: UV_LOCKFILE, kind: 'changed' });
+    expect(toolProjectDrift(sandbox.path, generated)).toStrictEqual([{ path: UV_LOCKFILE, kind: 'changed' }]);
     await createFileTree(sandbox.path, { [UV_LOCKFILE]: lockfileFor(project.project.dependencies, [CONSTRAINT]) });
-    expect(pythonLockfileDrift(sandbox.path, generated)).toStrictEqual({ path: UV_LOCKFILE });
+    expect(toolProjectDrift(sandbox.path, generated)).toStrictEqual([{ path: UV_LOCKFILE }]);
 });
 
 test.each(PYTHON_LOCKFILE_PLANS)(
@@ -66,7 +67,9 @@ test.each(PYTHON_LOCKFILE_PLANS)(
         });
         using files = openRoot(sandbox.path);
         const recorded = files.read(UV_LOCKFILE);
-        expect(pythonInstallationPlan(sandbox.path, undefined, 'none', { refreshLockfiles })).toStrictEqual({
+        expect(
+            toolInstallationPlan(sandbox.path, pythonToolProject, undefined, 'none', { refreshLockfiles }),
+        ).toStrictEqual({
             installer: [],
             lockfile: steps,
             environment: PYTHON_ENVIRONMENT_STEPS,
@@ -82,15 +85,17 @@ test('a proposed Python project overrides invalid recorded bytes without writing
     const recorded = '<<<<<<< interrupted project\n';
     await createFileTree(sandbox.path, { '.gspot/pyproject.toml': recorded, [UV_LOCKFILE]: PRIVATE_PYTHON_LOCKFILE });
     expect(
-        pythonInstallationPlan(sandbox.path, PRIVATE_PYTHON_PROJECT, 'mise', { refreshLockfiles: false }),
+        toolInstallationPlan(sandbox.path, pythonToolProject, PRIVATE_PYTHON_PROJECT, 'mise', {
+            refreshLockfiles: false,
+        }),
     ).toStrictEqual({
         installer: [['mise', 'install', UV_MISE_PIN]],
         lockfile: [],
         environment: PYTHON_ENVIRONMENT_STEPS,
     });
-    expect(() => pythonInstallationPlan(sandbox.path, undefined, 'none', { refreshLockfiles: false })).toThrow(
-        TomlError,
-    );
+    expect(() =>
+        toolInstallationPlan(sandbox.path, pythonToolProject, undefined, 'none', { refreshLockfiles: false }),
+    ).toThrow(TomlError);
     expect(readFileSync(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(recorded);
     expect(readFileSync(join(sandbox.path, UV_LOCKFILE), 'utf8')).toBe(PRIVATE_PYTHON_LOCKFILE);
 });
@@ -98,7 +103,9 @@ test('a proposed Python project overrides invalid recorded bytes without writing
 test('a repository without a Python tool project plans no acquisition or installation', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.py': 'print("authored")\n' });
-    expect(pythonInstallationPlan(sandbox.path, undefined, 'mise', { refreshLockfiles: true })).toStrictEqual({
+    expect(
+        toolInstallationPlan(sandbox.path, pythonToolProject, undefined, 'mise', { refreshLockfiles: true }),
+    ).toStrictEqual({
         installer: [],
         lockfile: [],
         environment: [],

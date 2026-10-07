@@ -69,7 +69,10 @@ export async function openSession(root: string, policyFiles: PolicyFile = readPo
     let resolved: PackageInstaller | undefined;
     let resolvedPython: Promise<string> | undefined;
     const session: ToolSession = {
-        pythonInstaller: () => (resolvedPython ??= acquirePythonInstaller(root, policyFiles.policy.run_with)),
+        pythonInstaller: (cancelSignal) => {
+            resolvedPython ??= acquirePythonInstaller(root, policyFiles.policy.run_with, cancelSignal);
+            return resolvedPython;
+        },
         packageInstaller() {
             if (installer === undefined) return undefined;
             resolved ??= inspectPackageInstaller(root, installer);

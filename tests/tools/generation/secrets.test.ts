@@ -5,7 +5,8 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { installGeneratedPythonTools } from '#tests/harness/python-installation.ts';
+import { sharePythonTools } from '#tests/harness/python-installation.ts';
+import { SEMGREP_COMMAND } from '#tests/config/tools/generation/semgrep.ts';
 import { SENSITIVE_FILES, SENSITIVE_FINDINGS, SENSITIVE_CORRECTIONS } from '#tests/config/tools/generation/secrets.ts';
 
 test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
@@ -16,11 +17,8 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
             'gspot.toml': buildPolicy(['javascript', 'swift', 'security'], { level }),
             ...SENSITIVE_FILES,
         });
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const environment = await installGeneratedPythonTools(sandbox.path);
-        const command = ['check', '--only', 'security/semgrep', '--json'];
-        const failed = await spawnGspot(sandbox.path, command, environment);
+        const environment = await sharePythonTools(sandbox.path);
+        const failed = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const findings = (JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings: reports }) =>
             reports.map(({ file, line, rule }) => ({ file, line, rule })),
@@ -37,7 +35,7 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
         ).toStrictEqual(Object.values(SENSITIVE_FILES));
         for (const [file, source] of Object.entries(SENSITIVE_CORRECTIONS))
             await Bun.write(join(sandbox.path, file), source);
-        const corrected = await spawnGspot(sandbox.path, command, environment);
+        const corrected = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
         expect(
