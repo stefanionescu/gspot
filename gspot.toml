@@ -861,11 +861,6 @@ paths = ["packages/cli/src/checks/tool/actions.ts"]
 reason = "Only the leading self-repository marker is translated; later dollar signs are path characters and must stay."
 
 [[tools.codeql.ignore]]
-rule = "js/incomplete-sanitization"
-paths = ["packages/cli/src/repository/revisions/push.ts"]
-reason = "git check-ref-format validates every refspec first and permits at most one wildcard, so one replacement is complete."
-
-[[tools.codeql.ignore]]
 rule = "js/http-to-file-access"
 paths = ["packages/cli/scripts/grammars.ts"]
 reason = "Every downloaded byte is checked against the pinned SHA-256 digest before the cache file is written."

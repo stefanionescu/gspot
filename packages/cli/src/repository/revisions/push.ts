@@ -4,140 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
-import { runGit, gitText, gitLines, gitPaths, isShallow } from '#cli/platform/git.ts';
-import { LOG_ARGV, ABSENT_HASH, REFSPEC_FIELDS, COMMIT_DIFF_ARGV } from '#cli/config/repository/revisions.ts';
-
-import type {
-    Refspec,
-    PushLine,
-    RefRules,
-    Comparison,
-    PushSearch,
-    PushRevision,
-    PushSelection,
-} from '#cli/types/repository/revisions.ts';
-
-// The text a wildcard pattern captures from a ref, '' for an exact match, or undefined when the ref does not match.
-function captureRef(pattern: string, ref: string): string | undefined {
-    const star = pattern.indexOf('*');
-    if (star === -1) return pattern === ref ? '' : undefined;
-    const prefix = pattern.slice(0, star);
-    const suffix = pattern.slice(star + 1);
-    const isMatch = ref.startsWith(prefix) && ref.endsWith(suffix) && ref.length >= prefix.length + suffix.length;
-    return isMatch ? ref.slice(prefix.length, ref.length - suffix.length) : undefined;
-}
-
-// A fetch mapping split into its source and destination, or why it cannot be used.
-function parseRefspec(raw: string): Refspec {
-    const fields = raw.replace(/^\+/u, '').split(':');
-    const [source, destination] = fields;
-    if (destination === undefined || destination === '') return { kind: 'skip' };
-    if (fields.length !== REFSPEC_FIELDS || source === undefined) return { kind: 'unusable' };
-    if (!source.startsWith('refs/') || !destination.startsWith('refs/')) return { kind: 'unusable' };
-    return { kind: 'mapping', source, destination };
-}
-
-// Adds one negative refspec to the rules, or returns false when it names no ref namespace.
-async function addExclusion(
-    root: string,
-    remote: string,
-    raw: string,
-    rules: RefRules,
-    cancelSignal?: AbortSignal,
-): Promise<boolean> {
-    const source = raw.slice(1);
-    if (!source.startsWith('refs/')) return false;
-    const validated = await runGit(root, ['check-ref-format', '--refspec-pattern', source], { cancelSignal });
-    if (validated.code !== 0) throw new GspotError('selection', `Invalid fetch mapping for ${remote}: ${raw}`);
-    rules.excluded.push(source);
-    return true;
-}
-
-// Adds one positive refspec to the rules, or returns false when it cannot be used.
-async function addMapping(
-    root: string,
-    remote: string,
-    raw: string,
-    rules: RefRules,
-    cancelSignal?: AbortSignal,
-): Promise<boolean> {
-    const parsed = parseRefspec(raw);
-    if (parsed.kind === 'skip') return true;
-    if (parsed.kind === 'unusable') return false;
-    for (const pattern of [parsed.source, parsed.destination]) {
-        const validated = await runGit(root, ['check-ref-format', '--refspec-pattern', pattern], { cancelSignal });
-        if (validated.code !== 0) throw new GspotError('selection', `Invalid fetch mapping for ${remote}: ${raw}`);
-    }
-    if (parsed.source.includes('*') !== parsed.destination.includes('*'))
-        throw new GspotError('selection', [`Invalid fetch mapping for ${remote}: ${raw}`]);
-    rules.mappings.push({ source: parsed.source, destination: parsed.destination });
-    return true;
-}
-
-// The rules a remote's fetch configuration declares, or undefined when any entry cannot be used.
-async function getRules(
-    root: string,
-    remote: string,
-    entries: string[],
-    cancelSignal?: AbortSignal,
-): Promise<RefRules | undefined> {
-    const rules: RefRules = { mappings: [], excluded: [] };
-    for (const raw of entries) {
-        const added = raw.startsWith('^')
-            ? await addExclusion(root, remote, raw, rules, cancelSignal)
-            : await addMapping(root, remote, raw, rules, cancelSignal);
-        if (!added) return undefined;
-    }
-    return rules;
-}
-
-// Whether a local ref is one a fetch mapping writes and no exclusion takes back.
-function isFetched(rules: RefRules, ref: string): boolean {
-    return rules.mappings.some(({ source, destination }) => {
-        const capture = captureRef(destination, ref);
-        if (capture === undefined) return false;
-        const original = source.replace('*', () => capture);
-        return !rules.excluded.some((pattern) => captureRef(pattern, original) !== undefined);
-    });
-}
-
-// The remote's fetch configuration entries, or undefined when it declares none.
-async function getRefspecs(root: string, remote: string, cancelSignal?: AbortSignal): Promise<string[] | undefined> {
-    const configured = await runGit(root, ['config', '--null', '--get-all', `remote.${remote}.fetch`], {
-        cancelSignal,
-    });
-    if (configured.code === 1) return undefined;
-    if (configured.code !== 0)
-        throw new GspotError('selection', [`Cannot read fetch mappings for ${remote}: ${configured.stderr.trim()}`]);
-    return configured.stdout.split('\0').filter(Boolean);
-}
-
-/**
- * The objects the remote's fetch mappings placed in the repository, each named once.
- * @param root the repository root
- * @param remote the remote name, when Git gave one
- * @param cancelSignal cancellation for the Git commands
- * @returns the fetched objects, or none when the mappings cannot be read as a whole
- */
-async function getFetchedObjects(
-    root: string,
-    remote: string | undefined,
-    cancelSignal?: AbortSignal,
-): Promise<string[]> {
-    if (remote === undefined) return [];
-    const entries = await getRefspecs(root, remote, cancelSignal);
-    if (entries === undefined) return [];
-    const rules = await getRules(root, remote, entries, cancelSignal);
-    if (rules === undefined || rules.mappings.length === 0) return [];
-    const refs = await gitLines(root, ['for-each-ref', '--format=%(refname)%09%(objectname)'], {
-        cancelSignal,
-    });
-    const hashes = refs.flatMap((line) => {
-        const [ref, hash] = line.split('\t');
-        return ref !== undefined && hash !== undefined && isFetched(rules, ref) ? [hash] : [];
-    });
-    return [...new Set(hashes)];
-}
+import { gitText, gitLines, gitPaths, isShallow } from '#cli/platform/git.ts';
+import { LOG_ARGV, ABSENT_HASH, COMMIT_DIFF_ARGV } from '#cli/config/repository/revisions.ts';
+import type { PushLine, Comparison, PushSearch, PushRevision, PushSelection } from '#cli/types/repository/revisions.ts';
 
 // Whether a pre-push field pair holds two object ids of the same hash length.
 function isHashPair(localHash: string, remoteHash: string): boolean {
@@ -156,15 +25,36 @@ function parseLine(line: string): PushLine {
     return { localRef, localHash, remoteRef, remoteHash };
 }
 
-// The commit an object peels to, or undefined for an object that is not a commit, remembered per object.
-async function peelCommit(context: PushSearch, hash: string): Promise<string | undefined> {
-    if (context.commits.has(hash)) return context.commits.get(hash);
-    const { root, cancelSignal } = context;
-    const peeled = await gitText(root, ['rev-parse', '--verify', `${hash}^{}`], { cancelSignal });
-    const type = await gitText(root, ['cat-file', '-t', peeled.trim()], { cancelSignal });
-    const commit = type.trim() === 'commit' ? peeled.trim() : undefined;
-    context.commits.set(hash, commit);
-    return commit;
+// Peel every live local and comparison object in one Git operation, including annotated tags.
+async function peelCommits(
+    root: string,
+    lines: PushLine[],
+    cancelSignal?: AbortSignal,
+): Promise<Map<string, string | undefined>> {
+    const hashes = [
+        ...new Set(
+            lines
+                .filter((line) => !ABSENT_HASH.test(line.localHash))
+                .flatMap((line) => [line.localHash, line.remoteHash].filter((hash) => !ABSENT_HASH.test(hash))),
+        ),
+    ];
+    if (hashes.length === 0) return new Map();
+    const responses = await gitLines(root, ['cat-file', '--batch-check=%(objectname) %(objecttype)'], {
+        cancelSignal,
+        stdin: hashes.map((hash) => `${hash}^{}`).join('\n') + '\n',
+    });
+    if (responses.length !== hashes.length)
+        throw new GspotError('selection', 'Git did not resolve every pushed object.');
+    return new Map(
+        responses.flatMap((line, index): [string, string | undefined][] => {
+            const [hash, type] = line.split(' ');
+            const requested = hashes[index];
+            if (requested === undefined) throw new GspotError('selection', 'Git returned an unrequested object.');
+            if (hash === undefined || type === undefined)
+                throw new GspotError('selection', `Cannot resolve pushed object ${requested}. Fetch the remote again.`);
+            return type === 'missing' ? [] : [[requested, type === 'commit' ? hash : undefined]];
+        }),
+    );
 }
 
 // The commits a shallow clone's history stops at.
@@ -174,63 +64,27 @@ async function getShallowBoundaries(root: string, cancelSignal?: AbortSignal): P
     return new Set(text.trim().split('\n'));
 }
 
-// The commits the fetched objects name, in the order the mappings listed them.
-async function getFetchedCommits(context: PushSearch, remote: string | undefined): Promise<string[]> {
-    const hashes = await getFetchedObjects(context.root, remote, context.cancelSignal);
-    if (hashes.length === 0) return [];
-    const text = await gitText(context.root, ['cat-file', '--batch-check=%(objectname) %(objecttype)'], {
-        cancelSignal: context.cancelSignal,
-        stdin: hashes.map((hash) => `${hash}^{}`).join('\n') + '\n',
-    });
-    return text
-        .trimEnd()
-        .split('\n')
-        .flatMap((line, index) => {
-            const [hash, type] = line.split(' ');
-            if (type === 'missing' || hash === undefined)
-                throw new GspotError(
-                    'selection',
-                    `Cannot resolve fetched object ${hashes[index] ?? ''}. Fetch the remote again.`,
-                );
-            const commit = type === 'commit' ? hash : undefined;
-            const requested = hashes[index];
-            if (requested === undefined) throw new Error('Fetched object response has no matching request.');
-            context.commits.set(requested, commit);
-            return commit === undefined ? [] : [commit];
-        });
-}
-
-// What a pushed commit is compared against: the remote's commit, or every fetched commit for a new ref.
+// Compare an update with its previous commit, or a new ref with Git's remote-tracking namespace.
 async function comparison(context: PushSearch, hash: string, remoteHash: string): Promise<Comparison> {
-    const { root, cancelSignal, shallow } = context;
+    const { root, cancelSignal } = context;
     if (!ABSENT_HASH.test(remoteHash)) {
-        const previous = await peelCommit(context, remoteHash);
-        if (previous === undefined) return { changed: undefined, excluded: [] };
-        const changed = await gitPaths(root, [...COMMIT_DIFF_ARGV, previous, hash, '--'], {
-            cancelSignal,
-        });
-        return { changed, excluded: [previous] };
+        if (!context.commits.has(remoteHash))
+            throw new GspotError('selection', `Cannot resolve pushed object ${remoteHash}. Fetch the remote again.`);
+        const previous = context.commits.get(remoteHash);
+        if (previous === undefined) return { changed: undefined, range: [hash] };
+        const changed = await gitPaths(root, [...COMMIT_DIFF_ARGV, previous, hash, '--'], { cancelSignal });
+        return { changed, range: [hash, `^${previous}`] };
     }
-    if (shallow) return { changed: undefined, excluded: [] };
-    context.fetched ??= getFetchedCommits(context, context.remote);
-    const fetched = await context.fetched;
-    if (fetched.length === 0) return { changed: undefined, excluded: [] };
-    const excluded = [...new Set(fetched)];
-    const changed = await gitPaths(root, [...LOG_ARGV, '--stdin', '--'], {
-        cancelSignal,
-        stdin: [hash, ...excluded.map((commit) => `^${commit}`)].join('\n') + '\n',
-    });
-    return { changed, excluded };
+    const range = [hash, '--not', context.remote === undefined ? '--remotes' : `--remotes=${context.remote}`];
+    const changed = await gitPaths(root, [...LOG_ARGV, ...range, '--'], { cancelSignal });
+    return { changed, range };
 }
 
 // The revision a pushed commit forms: its history back to the comparison, its tree, and its changed paths.
 async function buildRevision(context: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
     const { root, cancelSignal, boundaries } = context;
-    const { changed, excluded } = await comparison(context, hash, line.remoteHash);
-    const history = await gitLines(root, ['rev-list', '--stdin', '--'], {
-        cancelSignal,
-        stdin: [hash, ...excluded.map((commit) => `^${commit}`)].join('\n') + '\n',
-    });
+    const { changed, range } = await comparison(context, hash, line.remoteHash);
+    const history = await gitLines(root, ['rev-list', ...range, '--'], { cancelSignal });
     const tree = await gitText(root, ['rev-parse', '--verify', `${hash}^{tree}`], { cancelSignal });
     const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => a.localeCompare(b));
     return {
@@ -263,7 +117,9 @@ async function selectLine(context: PushSearch, result: PushSelection, line: Push
         result.skipped.push({ ref: line.remoteRef, object: line.localHash, reason: 'deleted ref' });
         return;
     }
-    const commit = await peelCommit(context, line.localHash);
+    if (!context.commits.has(line.localHash))
+        throw new GspotError('selection', `Cannot resolve pushed object ${line.localHash}. Fetch the remote again.`);
+    const commit = context.commits.get(line.localHash);
     if (commit === undefined) {
         result.skipped.push({ ref: line.localRef, object: line.localHash, reason: 'non-commit object' });
         return;
@@ -275,7 +131,7 @@ async function selectLine(context: PushSearch, result: PushSelection, line: Push
  * Resolve the exact objects supplied by Git's pre-push protocol before running source checks.
  * @param root the repository root.
  * @param input the lines Git hands the pre-push hook on standard input.
- * @param remote the remote name, when Git gave one.
+ * @param remote the remote name or address supplied to the hook.
  * @param cancelSignal cancellation for the Git commands.
  * @returns the pushed revisions with their commits, and the updates no check applies to.
  */
@@ -285,17 +141,20 @@ export async function selectPush(
     remote?: string,
     cancelSignal?: AbortSignal,
 ): Promise<PushSelection> {
+    const lines = input
+        .split('\n')
+        .filter((row) => row.trim() !== '')
+        .map((line) => parseLine(line));
     const shallow = await isShallow(root, { cancelSignal });
+    const remotes = remote === undefined ? [] : await gitLines(root, ['remote'], { cancelSignal });
     const context: PushSearch = {
         root,
         cancelSignal,
-        commits: new Map(),
-        remote,
-        shallow,
+        commits: await peelCommits(root, lines, cancelSignal),
+        remote: remotes.find((name) => name === remote),
         boundaries: shallow ? await getShallowBoundaries(root, cancelSignal) : new Set<string>(),
     };
     const result: PushSelection = { revisions: [], skipped: [] };
-    for (const line of input.split('\n').filter((row) => row.trim() !== ''))
-        await selectLine(context, result, parseLine(line));
+    for (const line of lines) await selectLine(context, result, line);
     return result;
 }

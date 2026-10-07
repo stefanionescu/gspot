@@ -21,6 +21,7 @@ import {
     TECHNICAL_NAMES,
     LANGUAGE_CEILINGS,
     NAMING_CATEGORIES,
+    NATIVE_NAME_CATEGORIES,
 } from '#tests/config/cli/checks/naming.ts';
 
 test.each(['recommended', 'all'] as const)('each language owns its effective ceilings at %s', (level) => {
@@ -69,11 +70,12 @@ test.each([...LANGUAGE_CEILINGS])(
         const policy = parseStrictPolicy(buildPolicy(['naming']));
         const effective = effectivePolicy(settings, policy, '', selected);
         const context = { policy: effective, isTestFile: false, isReactFile: false };
+        const category = language === 'swift' ? 'functions' : 'variables';
         const declaration: Identifier = {
             file: 'source',
             language,
-            category: 'variables',
-            kind: 'variable',
+            category,
+            kind: category,
             name: 'z'.repeat(characters),
             line: 1,
             column: 1,
@@ -189,3 +191,34 @@ test('public explanations report Swift and SQL category defaults and scoped over
         });
     }
 });
+
+test.each(NATIVE_NAME_CATEGORIES)(
+    '$language $category case and length follow native ownership while word limits remain',
+    ({ language, category, native }) => {
+        const selected = selectConfigurations(['naming'], configurationManifests());
+        const settings = knownSettings(selected);
+        const policy = parseStrictPolicy(
+            buildPolicy(['naming'], {
+                level: 'all',
+                tables: '[[naming.paths]]\npaths = ["source"]\ncase = ["upper-snake"]\nreason = "The authored interface selects this case."\n',
+            }),
+        );
+        const effective = effectivePolicy(settings, policy, '', selected);
+        const context = { policy: effective, isTestFile: false, isReactFile: false };
+        const identifier: Identifier = {
+            file: 'source',
+            language,
+            category,
+            kind: category,
+            name: 'a'.repeat(41),
+            line: 1,
+            column: 1,
+        };
+        expect(nameProblems(identifier, context).map(({ rule }) => rule)).toStrictEqual(
+            native ? [] : ['case', 'length'],
+        );
+        expect(nameProblems({ ...identifier, name: NAME_WORDS.join('_') }, context).map(({ rule }) => rule)).toContain(
+            'words',
+        );
+    },
+);

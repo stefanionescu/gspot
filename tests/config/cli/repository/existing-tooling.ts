@@ -44,3 +44,6 @@ export const LEFTHOOK_FILES = [
     '.lefthook-local.jsonc',
     '.config/lefthook-local.jsonc',
 ];
+
+/** Native read errors remain actionable failures after containment is checked. */
+export const SURVEY_READ_ERRORS = ['EIO', 'EACCES'];

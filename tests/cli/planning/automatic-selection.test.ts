@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
+import { skipFor } from '#cli/planning/skips.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { AUTOMATIC_GENERAL_CONFIGURATIONS } from '#tests/config/harness/policy.ts';
@@ -75,3 +76,22 @@ test('a projected policy input respects the repository exclusion before native t
         ),
     ).toStrictEqual([[], []]);
 });
+
+test.each(['secrets/gitleaks-files', 'security/semgrep'])(
+    'the Git prerequisite message names the supplied %s check',
+    async (name) => {
+        await using sandbox = await testdir({ 'gspot.toml': buildPolicy(['secrets']) });
+        const session = await openSession(sandbox.path);
+        const [planned] = planRun(session, { stage: 'all', skips: [], only: [name] });
+        expect(planned).toBeDefined();
+        expect(
+            skipFor(
+                { ...planned!, check: { ...planned!.check, when: { git: false } } },
+                { stage: 'all', skips: [] },
+                { platform: 'macos', arch: 'arm64' },
+                true,
+                session.policyFiles.policy,
+            ),
+        ).toStrictEqual({ cause: 'condition', note: `The ${name} check scans the files of this Git repository.` });
+    },
+);

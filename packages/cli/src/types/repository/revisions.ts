@@ -19,23 +19,15 @@ export type PushLine = { localRef: string; localHash: string; remoteRef: string;
 /** Git's pre-push protocol input and the remote name supplied to the hook. */
 export type PushInput = { stdin: string; remote?: string };
 
-export type Comparison = { changed: string[] | undefined; excluded: string[] };
+export type Comparison = { changed: string[] | undefined; range: string[] };
 
 export type PushSearch = {
     root: string;
     cancelSignal: AbortSignal | undefined;
     commits: Map<string, string | undefined>;
     remote: string | undefined;
-    fetched?: Promise<string[]>;
-    shallow: boolean;
     boundaries: Set<string>;
 };
-
-export type RefMapping = { source: string; destination: string };
-
-export type RefRules = { mappings: RefMapping[]; excluded: string[] };
-
-export type Refspec = { kind: 'skip' } | { kind: 'unusable' } | ({ kind: 'mapping' } & RefMapping);
 
 export type ChangedPaths = { reference: string; paths: string[]; commits?: string[] };
 

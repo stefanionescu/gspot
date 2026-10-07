@@ -31,7 +31,7 @@ function conditionSkip(check: PlannedCheck, hasGit: boolean): Skip {
         cause: 'condition',
         note: git
             ? 'This folder is not a Git repository, so the check has no history to read.'
-            : 'The secrets/gitleaks check scans the files of this Git repository.',
+            : `The ${check.check.name} check scans the files of this Git repository.`,
     };
 }
 

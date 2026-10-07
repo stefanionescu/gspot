@@ -219,33 +219,29 @@ test(
         expect(git(source, ['commit', '-qam', 'feat: select source']).code).toBe(0);
         const selected = git(source, ['rev-parse', 'HEAD']).stdout.trim();
         expect(git(sandbox.path, ['clone', '--depth=1', pathToFileURL(source).href, 'checkout']).code).toBe(0);
-        const checkout = join(sandbox.path, 'checkout');
-        await installToolProjects(checkout);
-        const options = {
+        const { checkout, command, env, remote, input } = {
+            checkout: join(sandbox.path, 'checkout'),
             command: ['check', '--hook', 'pre-push', '--json', '--only'],
             env: { PATH: buildToolsPath(['commitlint']) },
-            stdin: `refs/heads/main ${selected} refs/heads/main ${'0'.repeat(40)}\n`,
+            remote: ['--', 'unseen', 'unused'],
+            input: { stdin: `refs/heads/main ${selected} refs/heads/main ${'0'.repeat(40)}\n` },
         };
-        const content = await spawnGspot(checkout, [...options.command, 'bash/syntax'], options.env, {
-            stdin: options.stdin,
-        });
+        expect(git(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]).code).toBe(0);
+        await installToolProjects(checkout);
+        const content = await spawnGspot(checkout, [...command, 'bash/syntax', ...remote], env, input);
         expect(content.code, content.stdout + content.stderr).toBe(0);
         expect((JSON.parse(content.stdout) as PushReport).revisions[0]).toMatchObject({
             historyComplete: false,
             report: { checks: [{ status: 'passed' }] },
         });
-        const refused = await spawnGspot(checkout, [...options.command, 'commits/commitlint-range'], options.env, {
-            stdin: options.stdin,
-        });
+        const refused = await spawnGspot(checkout, [...command, 'commits/commitlint-range', ...remote], env, input);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
             'Pushed history is incomplete for commits/commitlint-range',
         );
         expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('git fetch --unshallow');
         expect(git(checkout, ['fetch', '--unshallow']).code).toBe(0);
-        const completed = await spawnGspot(checkout, [...options.command, 'commits/commitlint-range'], options.env, {
-            stdin: options.stdin,
-        });
+        const completed = await spawnGspot(checkout, [...command, 'commits/commitlint-range', ...remote], env, input);
         expect(completed.code, completed.stdout + completed.stderr).toBe(0);
         expectCompleteHistory(completed.stdout, [base, selected]);
         expect(git(checkout, ['rev-parse', 'HEAD']).stdout.trim()).toBe(selected);

@@ -1,5 +1,6 @@
-import { test, expect } from 'bun:test';
+import * as files from 'node:fs';
 import { join, dirname } from 'node:path';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { getLintJobs } from '#cli/repository/survey.ts';
@@ -11,6 +12,7 @@ import { mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 
 import {
     LEFTHOOK_FILES,
     LINKED_HOOK_FILES,
+    SURVEY_READ_ERRORS,
     LINKED_HOOK_FOLDERS,
     LINKED_RULE_FOLDERS,
     PACKAGE_HOOK_CONFIGURATIONS,
@@ -47,7 +49,8 @@ test('tool discovery reports linked hook directories without following external 
     expect(getTooling(root, [], []).hooks).toStrictEqual([{ kind: 'husky', path: '.husky', files: [] }]);
     expect(readFileSync(join(sandbox.path, 'outside/pre-commit'), 'utf8')).toBe('#!/bin/sh\nexit 0\n');
     unlinkSync(join(root, '.husky'));
-    await createFileTree(root, { '.husky/pre-commit': '#!/bin/sh\nexit 0\n' });
+    await createFileTree(root, { 'authored-hooks/pre-commit': '#!/bin/sh\nexit 0\n' });
+    symlinkSync('authored-hooks', join(root, '.husky'));
     expect(getTooling(root, [], []).hooks).toStrictEqual([{ kind: 'husky', path: '.husky', files: ['pre-commit'] }]);
 });
 
@@ -288,4 +291,20 @@ test.each(LEFTHOOK_FILES)('hook discovery reports %s and preserves authored byte
     expect(getTooling(sandbox.path, [], []).hooks).toStrictEqual([]);
     expect(readFileSync(join(sandbox.path, 'hook-settings.yaml'), 'utf8')).toBe('unrelated hook configuration\n');
     expect(readFileSync(join(sandbox.path, 'source.ts'), 'utf8')).toBe('export {};\n');
+});
+
+test.each(SURVEY_READ_ERRORS)('tool discovery propagates a contained directory %s read failure', async (code) => {
+    await using sandbox = await testdir({ '.husky/pre-commit': '#!/bin/sh\nexit 0\n' });
+    const failure = Object.assign(new Error('Cannot read the authored hooks directory.'), { code });
+    using read = spyOn(files, 'readdirSync').mockImplementation(() => {
+        throw failure;
+    });
+    let caught: unknown;
+    try {
+        getTooling(sandbox.path, [], []);
+    } catch (error) {
+        caught = error;
+    }
+    expect(caught).toBe(failure);
+    expect(read).toHaveBeenCalledTimes(1);
 });

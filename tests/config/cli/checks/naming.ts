@@ -121,3 +121,17 @@ export const RESTORED_TERMS = [
     'transient',
     'fallback',
 ];
+
+/** Native case and length ownership leaves the other naming rules active. */
+export const NATIVE_NAME_CATEGORIES = [
+    { language: 'swift', category: 'types', native: true },
+    { language: 'swift', category: 'variables', native: true },
+    { language: 'swift', category: 'constants', native: true },
+    { language: 'swift', category: 'functions', native: false },
+    { language: 'swift', category: 'parameters', native: false },
+    { language: 'swift', category: 'properties', native: false },
+    { language: 'python', category: 'classes', native: true },
+    { language: 'python', category: 'exceptions', native: true },
+    { language: 'python', category: 'type_aliases', native: false },
+    { language: 'python', category: 'variables', native: false },
+];

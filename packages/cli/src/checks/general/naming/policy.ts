@@ -52,17 +52,14 @@ function buildLimitsFor(
             return found ?? 0;
         };
         const cases = settingValue(surface, policy, `${prefix}.${parent}.case`, scope)?.value;
+        const defaults =
+            [category, parent].map((name) => table?.categories[name]?.case).find((names) => names !== undefined) ?? [];
         return {
-            caseNames: Array.isArray(cases) ? (cases as string[]) : shippedCase(table, category, parent),
+            caseNames: Array.isArray(cases) ? (cases as string[]) : defaults,
             maxChars: ceiling('max_chars'),
             maxWords: ceiling('max_words'),
         };
     };
-}
-
-function shippedCase(table: NamingLanguage | undefined, category: string, parent: string): string[] {
-    if (table === undefined) return [];
-    return table.categories[category]?.case ?? table.categories[parent]?.case ?? [];
 }
 
 /**
@@ -158,6 +155,12 @@ export function rulesFor(policy: EffectivePolicy, identifier: Identifier): PathR
  */
 export function ruleLimits(policy: EffectivePolicy, identifier: Identifier, rules: PathRule[]): CategoryLimits {
     const base = policy.limitsFor(identifier.language, identifier.category);
+    const parent = CATEGORY_PARENTS[identifier.category] ?? identifier.category;
+    if (
+        (identifier.language === 'swift' && ['types', 'variables'].includes(parent)) ||
+        (identifier.language === 'python' && ['classes', 'exceptions'].includes(identifier.category))
+    )
+        return { ...base, caseNames: [], maxChars: 0 };
     const caseRule = rules.findLast((rule) => rule.caseNames !== undefined);
     return caseRule?.caseNames === undefined ? base : { ...base, caseNames: caseRule.caseNames };
 }

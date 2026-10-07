@@ -1,16 +1,16 @@
 // What a repository already runs, read without the configurations: hooks, CI files, agent files, rules and lint folders, the runner.
 import { parse as parseYaml } from 'yaml';
+import { isInside } from '#cli/platform/paths.ts';
 import { readText } from '#cli/platform/source.ts';
-import { join, dirname, basename } from 'node:path';
-import { openRoot } from '#cli/platform/root/open.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
+import { join, dirname, basename, relative } from 'node:path';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { runnerSchema } from '#cli/parsers/schema/settings.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
-import { statSync, lstatSync, existsSync, readdirSync } from 'node:fs';
+import { statSync, lstatSync, existsSync, readdirSync, realpathSync } from 'node:fs';
 import type { Tooling, TrackedFile, RunnerSelection } from '#cli/types/repository/inventory.ts';
 
 import {
@@ -49,15 +49,11 @@ function isLintCommand(command: string): boolean {
 
 // The files in a folder under a root, without dot files; none when the folder does not exist.
 function getFiles(root: string, rel: string): string[] {
-    if (!existsSync(join(root, rel))) return [];
-    using files = openRoot(root);
-    let target: string;
-    try {
-        target = files.realPath(rel);
-    } catch (error) {
-        if (error instanceof Error && error.message.startsWith('Source link leaves the repository:')) return [];
-        throw error;
-    }
+    const path = join(root, rel);
+    if (!existsSync(path)) return [];
+    const realRoot = realpathSync(root);
+    const target = realpathSync(path);
+    if (!isInside(relative(realRoot, target))) return [];
     if (!statSync(target).isDirectory()) return [];
     return readdirSync(target)
         .toSorted((left, right) => left.localeCompare(right))

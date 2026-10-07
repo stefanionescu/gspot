@@ -1,12 +1,14 @@
 // The pre-push hook checks exactly the pushed objects and leaves the working tree alone.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { pathToFileURL } from 'node:url';
 import { testdir, createFileTree } from 'testdirs';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { gspot, spawnGspot } from '#tests/harness/gspot.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import { selectPush } from '#cli/repository/revisions/push.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { PUSH_CHECK_ARGV } from '#tests/config/cli/commands/push.ts';
@@ -42,39 +44,38 @@ function expectWorkingTreeKept(root: string, head: string): void {
     expect(readFileSync(join(root, 'changed.sh'), 'utf8')).toBe('echo repaired only in the working tree\n');
 }
 
-test('new references compare against fetched objects using default and mapped destinations', async () => {
+test('new references compare with remote-tracking commits and scan custom destinations conservatively', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken, command, zero } = await preparePushRepository(sandbox.path);
     expect(git(sandbox.path, ['remote', 'add', 'origin', 'unused']).code).toBe(0);
     expect(git(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]).code).toBe(0);
-    const createdRef = await spawnGspot(
-        sandbox.path,
-        command,
-        {},
-        { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` },
-    );
+    const protocol = { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` };
+    const createdRef = await spawnGspot(sandbox.path, command, {}, protocol);
     expect(createdRef.code, createdRef.stdout + createdRef.stderr).toBe(0);
     expect((JSON.parse(createdRef.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
     expect(git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']).code).toBe(0);
     expect(git(sandbox.path, ['update-ref', '-d', 'refs/remotes/origin/main']).code).toBe(0);
     expect(git(sandbox.path, ['update-ref', 'refs/fetched/origin/main', base]).code).toBe(0);
-    const mapped = await spawnGspot(
-        sandbox.path,
-        command,
-        {},
-        { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` },
-    );
-    expect(mapped.code, mapped.stdout + mapped.stderr).toBe(0);
-    expect((JSON.parse(mapped.stdout) as PushReport).revisions[0]?.commits).toStrictEqual([reviewed]);
+    const mapped = await spawnGspot(sandbox.path, command, {}, protocol);
+    expect(mapped.code, mapped.stdout + mapped.stderr).toBe(1);
+    expect((JSON.parse(mapped.stdout) as PushReport).revisions[0]?.commits).toStrictEqual([reviewed, base]);
+    expect(
+        new Set(
+            (JSON.parse(mapped.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
+                (finding) => finding.file,
+            ),
+        ),
+    ).toStrictEqual(new Set(['legacy.sh']));
+    expect((JSON.parse(mapped.stdout) as PushReport).revisions[0]?.report.checks[0]?.fileCount).toBe(2);
     expectWorkingTreeKept(sandbox.path, broken);
 });
 
-test('negative fetch selectors exclude comparison objects until replaced by an exact mapping', async () => {
+test('fetch mapping selectors do not override the native remote-tracking namespace', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken, command, zero } = await preparePushRepository(sandbox.path);
     expect(git(sandbox.path, ['remote', 'add', 'origin', 'unused']).code).toBe(0);
     expect(git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/*:refs/fetched/origin/*']).code).toBe(0);
-    expect(git(sandbox.path, ['update-ref', 'refs/fetched/origin/main', base]).code).toBe(0);
+    expect(git(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]).code).toBe(0);
     expect(git(sandbox.path, ['config', '--add', 'remote.origin.fetch', '^refs/heads/main']).code).toBe(0);
     const excluded = await spawnGspot(
         sandbox.path,
@@ -82,26 +83,8 @@ test('negative fetch selectors exclude comparison objects until replaced by an e
         {},
         { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` },
     );
-    expect(excluded.code, excluded.stdout + excluded.stderr).toBe(1);
-    expect(
-        new Set(
-            (JSON.parse(excluded.stdout) as PushReport).revisions[0]?.report.checks[0]?.findings.map(
-                (finding) => finding.file,
-            ),
-        ),
-    ).toStrictEqual(new Set(['legacy.sh']));
-    expect(git(sandbox.path, ['config', '--unset-all', 'remote.origin.fetch']).code).toBe(0);
-    expect(git(sandbox.path, ['config', 'remote.origin.fetch', '+refs/heads/main:refs/fetched/origin/main']).code).toBe(
-        0,
-    );
-    const exact = await spawnGspot(
-        sandbox.path,
-        command,
-        {},
-        { stdin: `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n` },
-    );
-    expect(exact.code, exact.stdout + exact.stderr).toBe(0);
-    expect((JSON.parse(exact.stdout) as PushReport).revisions[0]?.commits).toStrictEqual([reviewed]);
+    expect(excluded.code, excluded.stdout + excluded.stderr).toBe(0);
+    expect((JSON.parse(excluded.stdout) as PushReport).revisions[0]?.commits).toStrictEqual([reviewed]);
     expectWorkingTreeKept(sandbox.path, broken);
 });
 
@@ -125,54 +108,51 @@ test('new references without fetched comparison objects check the full tree', as
     expectWorkingTreeKept(sandbox.path, broken);
 });
 
-test('annotated tags resolve to commits while deleted and non-commit references are not applicable', async () => {
+test('annotated commits resolve while blob tags, blobs, and deleted refs remain skipped', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken, command, zero } = await preparePushRepository(sandbox.path);
-    expect(git(sandbox.path, ['tag', '-a', '-m', 'reviewed tag', 'reviewed-tag', reviewed]).code).toBe(0);
-    const tag = git(sandbox.path, ['rev-parse', 'reviewed-tag']).stdout.trim();
-    const tagged = await spawnGspot(
+    gitOutput(sandbox.path, ['tag', '-a', '-m', 'reviewed tag', 'reviewed-tag', reviewed]);
+    const tag = gitOutput(sandbox.path, ['rev-parse', 'reviewed-tag']);
+    const blob = gitOutput(sandbox.path, ['hash-object', '-w', 'changed.sh']);
+    gitOutput(sandbox.path, ['tag', '-a', '-m', 'data tag', 'data', blob]);
+    const data = gitOutput(sandbox.path, ['rev-parse', 'refs/tags/data']);
+    const selected = await spawnGspot(
         sandbox.path,
         command,
         {},
-        { stdin: `refs/tags/reviewed-tag ${tag} refs/tags/reviewed-tag ${base}\n` },
+        {
+            stdin: `refs/tags/reviewed-tag ${tag} refs/tags/reviewed-tag ${base}\nrefs/tags/data ${data} refs/tags/data ${'e'.repeat(base.length)}\nrefs/tags/blob ${blob} refs/tags/blob ${zero}\n(delete) ${zero} refs/heads/removed ${'f'.repeat(base.length)}\n`,
+        },
     );
-    expect(tagged.code, tagged.stdout + tagged.stderr).toBe(0);
-    expect((JSON.parse(tagged.stdout) as PushReport).revisions[0]!.object).toBe(reviewed);
-    const deleted = await spawnGspot(
-        sandbox.path,
-        command,
-        {},
-        { stdin: `(delete) ${zero} refs/heads/main ${broken}\n` },
-    );
-    expect(deleted.code, deleted.stdout + deleted.stderr).toBe(0);
-    const skipped = JSON.parse(deleted.stdout) as PushReport;
-    expect(skipped.revisions).toStrictEqual([]);
-    expect(skipped.skipped[0]!.reason).toBe('deleted ref');
-    const blob = git(sandbox.path, ['hash-object', '-w', 'changed.sh']).stdout.trim();
-    const nonCommit = await spawnGspot(
-        sandbox.path,
-        command,
-        {},
-        { stdin: `refs/tags/data ${blob} refs/tags/data ${zero}\n` },
-    );
-    expect(nonCommit.code, nonCommit.stdout + nonCommit.stderr).toBe(0);
-    expect((JSON.parse(nonCommit.stdout) as PushReport).skipped[0]!.reason).toBe('non-commit object');
+    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+    const report = JSON.parse(selected.stdout) as PushReport;
+    expect(report.revisions.map(({ object: hash }) => hash)).toStrictEqual([reviewed]);
+    expect(report.skipped).toStrictEqual([
+        { ref: 'refs/tags/data', object: data, reason: 'non-commit object' },
+        { ref: 'refs/tags/blob', object: blob, reason: 'non-commit object' },
+        { ref: 'refs/heads/removed', object: zero, reason: 'deleted ref' },
+    ]);
     expectWorkingTreeKept(sandbox.path, broken);
 });
 
-test('missing remote comparison objects fail selection without touching the working tree', async () => {
-    await using sandbox = await testdir();
-    const { base, reviewed, broken, command } = await preparePushRepository(sandbox.path);
-    const missing = await spawnGspot(
-        sandbox.path,
-        command,
-        {},
-        { stdin: `refs/heads/reviewed ${reviewed} refs/heads/main ${'f'.repeat(base.length)}\n` },
-    );
-    expect(missing.code, missing.stdout + missing.stderr).toBe(2);
-    expect((JSON.parse(missing.stdout) as CommandFailureJson).error).toBe('selection');
-    expectWorkingTreeKept(sandbox.path, broken);
-});
+test.each(['local', 'remote'] as const)(
+    'missing %s objects fail selection without touching the working tree',
+    async (side) => {
+        await using sandbox = await testdir();
+        const { base, reviewed, broken, command } = await preparePushRepository(sandbox.path);
+        const missing = await spawnGspot(
+            sandbox.path,
+            command,
+            {},
+            {
+                stdin: `refs/heads/reviewed ${side === 'local' ? 'f'.repeat(base.length) : reviewed} refs/heads/main ${side === 'remote' ? 'f'.repeat(base.length) : base}\n`,
+            },
+        );
+        expect(missing.code, missing.stdout + missing.stderr).toBe(2);
+        expect((JSON.parse(missing.stdout) as CommandFailureJson).error).toBe('selection');
+        expectWorkingTreeKept(sandbox.path, broken);
+    },
+);
 
 test('pre-push checks exact supplied objects despite conflicting working-tree repairs', async () => {
     await using sandbox = await testdir();
@@ -242,10 +222,11 @@ test('pre-push text supplies an executable reproduction of the same committed fi
 test('pre-push reports multiple objects once per object and handles forced rewinds', async () => {
     await using sandbox = await testdir();
     const { base, reviewed, broken, command } = await preparePushRepository(sandbox.path);
+    const trace = join(sandbox.path, 'git-trace.jsonl');
     const multiple = await spawnGspot(
         sandbox.path,
         command,
-        {},
+        { GIT_TRACE2_EVENT: trace },
         {
             stdin: `refs/heads/broken ${broken} refs/heads/one ${base}\nrefs/heads/reviewed ${reviewed} refs/heads/two ${base}\n`,
         },
@@ -258,6 +239,12 @@ test('pre-push reports multiple objects once per object and handles forced rewin
         new Set(pushed.revisions[0]!.report.checks.flatMap((check) => check.findings.map((finding) => finding.file))),
     ).toStrictEqual(new Set(['changed.sh']));
     expect(pushed.revisions[1]!.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
+    const batches = readFileSync(trace, 'utf8')
+        .split('\n')
+        .filter(
+            (line) => line.includes('"event":"start"') && line.includes('"--batch-check=%(objectname) %(objecttype)"'),
+        );
+    expect(batches).toHaveLength(1);
     const duplicated = await spawnGspot(
         sandbox.path,
         command,
@@ -279,4 +266,48 @@ test('pre-push reports multiple objects once per object and handles forced rewin
     expect(forced.code, forced.stdout + forced.stderr).toBe(0);
     expect((JSON.parse(forced.stdout) as PushReport).revisions[0]!.report.checks[0]?.fileCount).toBe(1);
     expectWorkingTreeKept(sandbox.path, broken);
+});
+
+test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(
+    'the hook remote %s selects its native tracking range',
+    async (remote) => {
+        await using sandbox = await testdir();
+        const { base, reviewed, broken, zero } = await preparePushRepository(sandbox.path);
+        gitOutput(sandbox.path, ['remote', 'add', 'origin', 'unused']);
+        gitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
+        gitOutput(sandbox.path, ['update-ref', 'refs/remotes/other/main', reviewed]);
+        const protocol = `refs/heads/reviewed ${reviewed} refs/heads/new ${zero}\n`;
+        const selected = await selectPush(sandbox.path, protocol, remote);
+        expect(selected.revisions[0]?.commits).toStrictEqual(remote === 'origin' ? [reviewed] : []);
+        expect(selected.revisions[0]?.paths).toStrictEqual(remote === 'origin' ? ['changed.sh'] : []);
+        expectWorkingTreeKept(sandbox.path, broken);
+    },
+);
+
+test('native shallow ranges distinguish unobserved history from already advertised commits', async () => {
+    await using sandbox = await testdir();
+    const source = join(sandbox.path, 'source');
+    const { base, reviewed } = await preparePushRepository(source);
+    const branch = gitOutput(source, ['branch', '--show-current']);
+    gitOutput(sandbox.path, [
+        'clone',
+        '--quiet',
+        '--depth=1',
+        '--branch',
+        'reviewed',
+        pathToFileURL(source).href,
+        'checkout',
+    ]);
+    const checkout = join(sandbox.path, 'checkout');
+    gitOutput(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]);
+    const protocol = `refs/heads/reviewed ${reviewed} refs/heads/new ${'0'.repeat(reviewed.length)}\n`;
+    const unobserved = await selectPush(checkout, protocol, 'unseen');
+    expect(unobserved.revisions[0]).toMatchObject({ commits: [reviewed], historyComplete: false });
+    expect(unobserved.revisions[0]?.paths).toStrictEqual(['changed.sh', 'gspot.toml', 'legacy.sh']);
+    const advertised = await selectPush(checkout, protocol);
+    expect(advertised.revisions[0]).toMatchObject({ commits: [], paths: [], historyComplete: true });
+    gitOutput(checkout, ['fetch', '--unshallow']);
+    const complete = await selectPush(checkout, protocol, 'unseen');
+    expect(complete.revisions[0]).toMatchObject({ commits: [reviewed, base], historyComplete: true });
+    expect(gitOutput(source, ['branch', '--show-current'])).toBe(branch);
 });

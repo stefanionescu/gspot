@@ -24,5 +24,3 @@ export const ENTRY_MODES = {
     '100755': EXECUTABLE_FILE,
     [SYMLINK_MODE]: PERMISSION_BITS,
 };
-
-export const REFSPEC_FIELDS = 2;
