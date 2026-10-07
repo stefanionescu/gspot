@@ -81,17 +81,6 @@ test('a license text is vendored, and a source file named like one stays source'
     });
 });
 
-test('each repository read reads current attributes', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
-    const before = await readRepository(sandbox.path, [], [], []);
-    expect(before.files[0]!.kind).toBe('source');
-    writeFileSync(join(sandbox.path, '.gitattributes'), '*.ts linguist-generated\n');
-    const after = await readRepository(sandbox.path, [], [], []);
-    expect(after.files.find((file) => file.path === 'source.ts')!.kind).toBe('generated');
-    expect(before.files[0]!.kind).toBe('source');
-});
-
 test('an unreadable attributes file cannot become an empty rule set', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });

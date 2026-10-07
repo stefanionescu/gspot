@@ -7,7 +7,6 @@ import { statSync, writeFileSync } from 'node:fs';
 import * as childProcess from 'node:child_process';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { readPrefix } from '#cli/platform/source.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { getEntries } from '#cli/repository/revisions/objects.ts';
@@ -50,13 +49,6 @@ test('repository file discovery > classifies a dangling tracked symlink without 
     expect(repository.files).toHaveLength(1);
     expect(repository.files[0]?.tags).toContain('symlink');
     expect(repository.files[0]?.kind).toBe('source');
-});
-
-test('repository file discovery > reads only the requested prefix and reports absent required content', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'large.txt': 'prefix' + 'x'.repeat(1024 * 1024) });
-    expect(readPrefix(sandbox.path, 'large.txt', 6).toString('utf8')).toBe('prefix');
-    expect(() => readPrefix(sandbox.path, 'missing.txt', 6)).toThrow('ENOENT');
 });
 
 test('repository file discovery > finds the nearest policy in a non-Git directory', async () => {

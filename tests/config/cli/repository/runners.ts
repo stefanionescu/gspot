@@ -46,51 +46,9 @@ export const RUNNER_CASES = [
         runnerFile: 'mise.toml',
     } as const,
     {
-        name: '.mise.toml ahead of project lockfiles',
-        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', '.mise.toml'],
-        runner: 'mise',
-        runnerFile: '.mise.toml',
-    } as const,
-    {
-        name: '.mise/config.toml ahead of project lockfiles',
-        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', '.mise/config.toml'],
-        runner: 'mise',
-        runnerFile: '.mise/config.toml',
-    } as const,
-    {
-        name: '.tool-versions ahead of project lockfiles',
-        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', '.tool-versions'],
-        runner: 'mise',
-        runnerFile: '.tool-versions',
-    } as const,
-    {
-        name: 'mise.local.toml ahead of project lockfiles',
-        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', 'mise.local.toml'],
-        runner: 'mise',
-        runnerFile: 'mise.local.toml',
-    } as const,
-    {
-        name: '.config/mise.toml ahead of project lockfiles',
-        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', '.config/mise.toml'],
-        runner: 'mise',
-        runnerFile: '.config/mise.toml',
-    } as const,
-    {
         name: '.config/mise/config.toml ahead of project lockfiles',
         paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', '.config/mise/config.toml'],
         runner: 'mise',
         runnerFile: '.config/mise/config.toml',
-    } as const,
-    {
-        name: 'mise/config.toml ahead of project lockfiles',
-        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', 'mise/config.toml'],
-        runner: 'mise',
-        runnerFile: 'mise/config.toml',
-    } as const,
-    {
-        name: '.mise.local.toml ahead of project lockfiles',
-        paths: ['package.json', 'bun.lock', 'pyproject.toml', 'uv.lock', '.mise.local.toml'],
-        runner: 'mise',
-        runnerFile: '.mise.local.toml',
     } as const,
 ];

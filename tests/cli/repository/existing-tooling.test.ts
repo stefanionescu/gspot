@@ -38,22 +38,6 @@ test('hook discovery preserves path whitespace and refuses malformed Git configu
     ]);
 });
 
-test('tool discovery reports linked hook directories without following external files', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'project/README.md': 'project\n',
-        'outside/pre-commit': '#!/bin/sh\nexit 0\n',
-    });
-    const root = join(sandbox.path, 'project');
-    symlinkSync('../outside', join(root, '.husky'));
-    expect(getTooling(root, [], []).hooks).toStrictEqual([{ kind: 'husky', path: '.husky', files: [] }]);
-    expect(readFileSync(join(sandbox.path, 'outside/pre-commit'), 'utf8')).toBe('#!/bin/sh\nexit 0\n');
-    unlinkSync(join(root, '.husky'));
-    await createFileTree(root, { 'authored-hooks/pre-commit': '#!/bin/sh\nexit 0\n' });
-    symlinkSync('authored-hooks', join(root, '.husky'));
-    expect(getTooling(root, [], []).hooks).toStrictEqual([{ kind: 'husky', path: '.husky', files: ['pre-commit'] }]);
-});
-
 test('tool discovery reads an external hook directory only through the Git-resolved boundary', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -234,7 +218,8 @@ test.skipIf(!isPosix).each(LINKED_HOOK_FOLDERS)(
         symlinkSync('../outside', join(root, path), 'dir');
         expect(getTooling(root, [], []).hooks).toStrictEqual([{ kind, path, files: [] }]);
         unlinkSync(join(root, path));
-        await createFileTree(root, { [`${path}/pre-commit`]: '#!/bin/sh\nexit 0\n' });
+        await createFileTree(root, { 'authored-hooks/pre-commit': '#!/bin/sh\nexit 0\n' });
+        symlinkSync('authored-hooks', join(root, path), 'dir');
         expect(getTooling(root, [], []).hooks).toStrictEqual([{ kind, path, files: ['pre-commit'] }]);
         expect(readFileSync(join(sandbox.path, 'outside/pre-commit'), 'utf8')).toBe('#!/bin/sh\nexit 0\n');
         expect(readFileSync(join(root, 'source.ts'), 'utf8')).toBe('export {};\n');
