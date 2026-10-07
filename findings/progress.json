@@ -1,5 +1,5 @@
 {
-    "openRecords": 999,
+    "openRecords": 996,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -12,7 +12,7 @@
             "scope": "Test, script, and package organization",
             "decision": "The current user plan requires four test directories: cli, plugin, tools, and packages. Config and types mirror their behavioral owners, and the shared harness stays flat. Scripts own suite and registry orchestration. This supersedes the inherited five-family decision.",
             "evidence": [
-                "The user’s implementation plan in this conversation",
+                "The user\u2019s implementation plan in this conversation",
                 "tests/package.json",
                 "tests/bunfig.toml",
                 "mise.toml",
@@ -155,7 +155,7 @@
             "decision": "Keep Taplo defaults. The canonical emitter may correct toml-patch array spacing and trailing commas while preserving comments, native value encoding, and spaced inline tables. This supersedes the earlier proposal limited to a dependency spacing fix and resolves the policy-format/007 spacing and commented multiline-array conflicts. Do not change Taplo options or retain duplicate writers.",
             "evidence": [
                 "User answer: Keep Taplo defaults; permit a minimal dependency fix that gives arrays compact spacing while preserving spaced inline tables.",
-                "Later user answer: Keep Taplo defaults; allow the emitter to correct toml-patch’s array layout while preserving comments and native value encoding."
+                "Later user answer: Keep Taplo defaults; allow the emitter to correct toml-patch\u2019s array layout while preserving comments and native value encoding."
             ]
         },
         {
@@ -180,7 +180,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 999,
+        "openRecords": 996,
         "records": 1092,
         "batches": [
             {
@@ -486,8 +486,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 31,
-                "unresolvedAssignments": 260
+                "completedAssignments": 32,
+                "unresolvedAssignments": 259
             },
             {
                 "id": "python",
@@ -1827,8 +1827,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 42,
-                "unresolvedAssignments": 47
+                "completedAssignments": 44,
+                "unresolvedAssignments": 45
             },
             {
                 "id": "configurations",
@@ -3582,10 +3582,15 @@
             ]
         },
         "review/code-execution/011": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Draft stores one validated Git index on Repository and replaces duplicate index subprocesses and the separate Xcode index memo. Existing and migrated focused tests pass, including meaningful original regression: the former three index reads become one per run, and a later run sees corrected staged state. Native cancellation probes use a real Git index listing and confirm child termination/source preservation on Bun 1.4.2, Node 24.2.0 and Node 24.20.0. Isolated draft only; growth prevents integration."
+            ],
+            "remaining": [
+                "Complete the coherent shared-contract checkpoint with net code reduction, passing full-policy/staged checks, normal commit and push hooks, and CI inspection."
+            ]
         },
         "review/code-execution/012": {
             "status": "complete",
@@ -3673,10 +3678,15 @@
             ]
         },
         "review/code-execution/022": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Draft binds source reads to a canonical session root and shares containment calculation with Root. Existing internal/external link, hardlink, bounded-prefix, alias-root, cache snapshot and original I/O error identity tests pass. Latest 11 source/index boundary tests pass 64 assertions; four migrated asynchronous-reader files pass 25 tests and retain 84 assertion outcomes. Root/CLI types and corrected affected-test lint pass. Isolated draft only; whole change still grows and is not integrated."
+            ],
+            "remaining": [
+                "Complete the coherent shared-contract checkpoint with net code reduction, passing full-policy/staged checks, normal commit and push hooks, and CI inspection."
+            ]
         },
         "review/code-execution/023": {
             "status": "pending",
@@ -3770,13 +3780,15 @@
             ]
         },
         "review/code-execution/035": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main integration",
-            "commit": null,
+            "commit": "e58770319c843e67da1f286bfb33f9f22f339fb6",
             "verification": [
                 "Pinned Bun1.4.2 and Node24.2.0 expose RegExp.escape; measured13regex caller contexts and five Unicode code-point cases pass. All eight current invocations across six files now use native APIs and both forwarding exports are deleted; unstaged implementation only.",
                 "Main focused111pass0fail310assertions9files5.85s; root and CLI types pass after exact native RegExpConstructor declaration augmentation (TypeScript5.9 omits API), reasoned interface-merging suppression only. Native RegExp affected-owner ESLint passes. Four prescribed Array.from calls are rejected by unicorn/prefer-spread; owner precedence question pending, no policy weakened and no full acceptance/closure claimed.",
-                "Shared native-tools focused run under Bun1.4.2:15pass0fail128assertions2files142.46s; real deptry private-tool/authored exclusions and real Typos Unicode columns pass. Pins installed once through runner, no per-test full installations added. /tmp/gspot-native-text-main-tool-focus.log."
+                "Shared native-tools focused run under Bun1.4.2:15pass0fail128assertions2files142.46s; real deptry private-tool/authored exclusions and real Typos Unicode columns pass. Pins installed once through runner, no per-test full installations added. /tmp/gspot-native-text-main-tool-focus.log.",
+                "All eight invocations across six current consumer owners now use native RegExp.escape and owner-approved [...text]; deleted both text wrappers. Bun supports RegExp.escape, so its conditional fallback is unnecessary. Four narrow no-misused-spread suppressions preserve producer-defined code-point offsets instead of changing them to graphemes.",
+                "Current native API acceptance passed 90 tests and 244 assertions in nine files, 15 output tests and 18 assertions, five paired-folder tests and 25 assertions, and two real Markdown/Typos tests and 27 assertions under Bun 1.4.2. Root and CLI types and affected all-policy lint pass. Native RegExp.escape and code-point probes pass on Bun 1.4.2, Node 24.2.0 and Node 24.20.0. Staged checks passed 147 with 13 skips and zero findings in 78.3 seconds; normal commit checks passed 106 with three skips in 59.3 seconds; normal push checks passed 147 with 13 skips in 74.3 seconds. Production removes 13 lines, four bytes and 60 syntax-tree nodes."
             ]
         },
         "review/code-execution/036": {
@@ -3877,10 +3889,15 @@
             "verification": []
         },
         "review/code-execution/048": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Implemented isolated removal of rules-off and its ESLint worker/build/config/schema/types, plus in-process required-rule matrix for all nine declaring configurations at both levels. Actual test caught an App Router HTML-link applicability bug; applying review/verification/008 resolves it. Focused 29 tests and 558 assertions pass. Unintegrated draft; combined ownership, package contents, full policy/staged gates remain."
+            ],
+            "remaining": [
+                "Complete the coherent shared-contract checkpoint with net code reduction, passing full-policy/staged checks, normal commit and push hooks, and CI inspection."
+            ]
         },
         "review/commands-templates/001": {
             "status": "pending",
@@ -5649,29 +5666,25 @@
             "verification": []
         },
         "review/source-layout/020": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "e58770319c843e67da1f286bfb33f9f22f339fb6",
             "verification": [
                 "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet.",
-                "Integrated exact mechanical paths; main staged check111pass12skip1failed check with two shared-prefix findings, exit1,68.541s. Other focused/types/ownership/docs acceptance passed. No staged acceptance, commit, closure or policy weakening claimed."
-            ],
-            "remaining": [
-                "The exact mandated flattened paths trigger the existing structure/prefix-collisions gate. Owner answer requested; retain prescribed paths without weakening policy until that contract is resolved.",
-                "Final passing staged check, coherent integration commit, push and CI inspection."
+                "Integrated exact mechanical paths; main staged check111pass12skip1failed check with two shared-prefix findings, exit1,68.541s. Other focused/types/ownership/docs acceptance passed. No staged acceptance, commit, closure or policy weakening claimed.",
+                "The owner explicitly superseded the prescribed flattening paths and retained the existing two-file folders. All original source owners, imports and check IDs remain; prefix-collision enforcement is unchanged. The earlier failed flattening evidence is retained as history. Current paired-folder tests and the accepted staged checkpoint resolve the final obligations under that owner decision.",
+                "Current native API acceptance passed 90 tests and 244 assertions in nine files, 15 output tests and 18 assertions, five paired-folder tests and 25 assertions, and two real Markdown/Typos tests and 27 assertions under Bun 1.4.2. Root and CLI types and affected all-policy lint pass. Native RegExp.escape and code-point probes pass on Bun 1.4.2, Node 24.2.0 and Node 24.20.0. Staged checks passed 147 with 13 skips and zero findings in 78.3 seconds; normal commit checks passed 106 with three skips in 59.3 seconds; normal push checks passed 147 with 13 skips in 74.3 seconds. Production removes 13 lines, four bytes and 60 syntax-tree nodes."
             ]
         },
         "review/source-layout/021": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "e58770319c843e67da1f286bfb33f9f22f339fb6",
             "verification": [
                 "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet.",
-                "Integrated exact mechanical paths; main staged check111pass12skip1failed check with two shared-prefix findings, exit1,68.541s. Other focused/types/ownership/docs acceptance passed. No staged acceptance, commit, closure or policy weakening claimed."
-            ],
-            "remaining": [
-                "The exact mandated flattened paths trigger the existing structure/prefix-collisions gate. Owner answer requested; retain prescribed paths without weakening policy until that contract is resolved.",
-                "Final passing staged check, coherent integration commit, push and CI inspection."
+                "Integrated exact mechanical paths; main staged check111pass12skip1failed check with two shared-prefix findings, exit1,68.541s. Other focused/types/ownership/docs acceptance passed. No staged acceptance, commit, closure or policy weakening claimed.",
+                "The owner explicitly superseded the prescribed flattening paths and retained the existing two-file folders. All original source owners, imports and check IDs remain; prefix-collision enforcement is unchanged. The earlier failed flattening evidence is retained as history. Current paired-folder tests and the accepted staged checkpoint resolve the final obligations under that owner decision.",
+                "Current native API acceptance passed 90 tests and 244 assertions in nine files, 15 output tests and 18 assertions, five paired-folder tests and 25 assertions, and two real Markdown/Typos tests and 27 assertions under Bun 1.4.2. Root and CLI types and affected all-policy lint pass. Native RegExp.escape and code-point probes pass on Bun 1.4.2, Node 24.2.0 and Node 24.20.0. Staged checks passed 147 with 13 skips and zero findings in 78.3 seconds; normal commit checks passed 106 with three skips in 59.3 seconds; normal push checks passed 147 with 13 skips in 74.3 seconds. Production removes 13 lines, four bytes and 60 syntax-tree nodes."
             ]
         },
         "review/source-layout/023": {
@@ -7255,10 +7268,15 @@
             "verification": []
         },
         "review/verification/008": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "The isolated actual in-process ESLint matrix failed with all/App HTML-link rule enabled. The authored Next fragment now uses isAll and Pages-only presence; the corrected 29-test run passes 558 assertions, including Pages/App expectations at both levels. Unintegrated draft; current final verification remains."
+            ],
+            "remaining": [
+                "Complete the coherent shared-contract checkpoint with net code reduction, passing full-policy/staged checks, normal commit and push hooks, and CI inspection."
+            ]
         },
         "review/verification/015": {
             "status": "pending",
@@ -9616,6 +9634,25 @@
                 "status": "pending",
                 "conclusion": "",
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37603700742"
+            }
+        },
+        {
+            "commit": "e58770319c843e67da1f286bfb33f9f22f339fb6",
+            "completedRecords": ["review/code-execution/035", "review/source-layout/020", "review/source-layout/021"],
+            "unresolvedRecords": 996,
+            "validation": [
+                "Current native API acceptance passed 90 tests and 244 assertions in nine files, 15 output tests and 18 assertions, five paired-folder tests and 25 assertions, and two real Markdown/Typos tests and 27 assertions under Bun 1.4.2. Root and CLI types and affected all-policy lint pass. Native RegExp.escape and code-point probes pass on Bun 1.4.2, Node 24.2.0 and Node 24.20.0. Staged checks passed 147 with 13 skips and zero findings in 78.3 seconds; normal commit checks passed 106 with three skips in 59.3 seconds; normal push checks passed 147 with 13 skips in 74.3 seconds. Production removes 13 lines, four bytes and 60 syntax-tree nodes.",
+                "Remote main matches the implementation commit; normal hooks ran without bypass. The generated checks lock came only from the explicit install:checks command."
+            ],
+            "limitations": [
+                "Focused execution ran on macOS. The accidentally broader native invocation was stopped and supplies no completion proof. Cross-platform full verification remains open; pending or cancelled CI and skipped checks prove no platform behavior. Publication, release tags, account setup and deployment were not performed; main/001 stays partial."
+            ],
+            "ci": {
+                "conclusion": "",
+                "databaseId": 37608413434,
+                "headSha": "e58770319c843e67da1f286bfb33f9f22f339fb6",
+                "status": "pending",
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37608413434"
             }
         }
     ]
