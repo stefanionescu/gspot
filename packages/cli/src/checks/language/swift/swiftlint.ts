@@ -8,7 +8,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 import type { InlineDocumentation } from '#cli/types/checks/language/swift.ts';
 import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
 import { DOC_RULE, SWIFTLINT_COMMAND } from '#cli/config/checks/language/swift.ts';
@@ -68,10 +68,10 @@ function restoreInline(result: CheckResult, checked: CheckResult, candidates: In
  */
 export async function swiftlint(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
-    const result = await runCommandCheck(session, planned, { command: SWIFTLINT_COMMAND });
+    const result = await runCheckCommand(session, planned, { command: SWIFTLINT_COMMAND });
     if (
         !['passed', 'failed'].includes(result.status) ||
-        planned.scope.view.rulesOff(planned.spec.name).includes(DOC_RULE)
+        planned.scope.view.rulesOff(planned.check.name).includes(DOC_RULE)
     )
         return result;
     return visitSwiftSources({ ...session, files: planned.files }, async ({ sources }) => {
@@ -98,7 +98,7 @@ export async function swiftlint(session: ToolSession, planned: PlannedCheck): Pr
             chmodSync(path, PRIVATE_FILE);
             writeFileSync(path, commentSource(source.text, comments));
         }
-        const checked = await runCommandCheck({ ...session, root: workspace.root }, planned, {
+        const checked = await runCheckCommand({ ...session, root: workspace.root }, planned, {
             command: SWIFTLINT_COMMAND,
         });
         if (!['passed', 'failed'].includes(checked.status))

@@ -5,7 +5,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { svelteCheck, svelteFindings } from '#cli/checks/framework/svelte.ts';
 import { LINES, PROJECTS, SCANNERS } from '#tests/config/cli/checks/framework/svelte.ts';
 
@@ -27,7 +27,7 @@ test.each(PROJECTS)('svelte-check selects the $name TypeScript target', async ({
         [scanner.path]: scanner.body.replace('VERSION', pin.version!),
     });
     chmodSync(join(sandbox.path, scanner.path), 0o755);
-    const input = buildEngineInput(session, 'svelte/check', { scope });
+    const input = buildCheckInput(session, 'svelte/check', { scope });
     using resources = new DisposableStack();
     resources.use(
         spyOn(processes, 'run').mockImplementation((argv, options) => {

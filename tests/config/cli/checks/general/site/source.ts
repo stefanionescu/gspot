@@ -1,5 +1,5 @@
 import type { SvgSavingCase } from '#tests/types/cli/checks/general/site.ts';
-/** Malformed manifest shapes that must become parse findings instead of engine failures. */
+/** Malformed manifest shapes that must become parse findings instead of built-in check failures. */
 export const INVALID_WEB_MANIFESTS = ['null', '{"icons": "icon.png"}', '{"icons": [{"src": 42}]}'];
 
 /** A 100-byte SVG with multibyte content distinguishes byte savings from character savings. */

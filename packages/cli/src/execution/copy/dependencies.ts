@@ -54,10 +54,10 @@ function assertDependencyReady(checkout: string, folder: string, pending: string
         ]);
     if (
         !LOCKFILES.some(
-            (lock) =>
-                'snapshot' in lock &&
-                (statSync(join(checkout, folder, lock.file), { throwIfNoEntry: false }) !== undefined ||
-                    statSync(join(checkout, lock.file), { throwIfNoEntry: false }) !== undefined),
+            (lockfile) =>
+                'snapshot' in lockfile &&
+                (statSync(join(checkout, folder, lockfile.file), { throwIfNoEntry: false }) !== undefined ||
+                    statSync(join(checkout, lockfile.file), { throwIfNoEntry: false }) !== undefined),
         )
     )
         throw new GspotError('selection', [
@@ -94,7 +94,7 @@ function getDependencies(installed: Root, projects: string[]): DependencyFolder[
     });
 }
 
-// Refuses a copy whose manifests or locks differ from the working tree's, which the installation came from.
+// Refuses a copy whose manifests or lockfiles differ from the working tree's, which the installation came from.
 // Git's clean filters decide the comparison, so a manifest checked out with CRLF matches its LF blob.
 async function assertManifestsUnchanged(
     root: string,
@@ -103,7 +103,7 @@ async function assertManifestsUnchanged(
     cancelSignal?: AbortSignal,
 ): Promise<void> {
     const mismatch = new GspotError('selection', [
-        'Installed dependencies do not match the revision manifests and locks. Prepare this revision in a separate worktree and run gspot install.',
+        'Installed dependencies do not match the revision manifests and lockfiles. Prepare this revision in a separate worktree and run gspot install.',
     ]);
     if (inputs.some((entry) => statSync(join(root, entry.path), { throwIfNoEntry: false }) === undefined))
         throw mismatch;
@@ -160,7 +160,7 @@ async function copyTree(source: string, target: string, cancelSignal?: AbortSign
 }
 
 // Copies one package folder into the copy. The tool projects of gspot run in place, like its Python environment:
-// the manifest and lock guard has matched them, and no check writes into them.
+// the manifest and lockfile guard has matched them, and no check writes into them.
 async function copyDependency(
     root: string,
     checkout: string,
@@ -215,9 +215,11 @@ export async function copyInstalledDependencies(
     using installed = openRoot(root, 'native');
     const inputs = entries.filter((entry) => {
         const name = basename(entry.path);
-        const lock = lockfileEntry(name);
+        const lockfile = lockfileEntry(name);
         return (
-            PROJECT_MANIFESTS.includes(name) || name === 'Package.swift' || (lock !== undefined && 'snapshot' in lock)
+            PROJECT_MANIFESTS.includes(name) ||
+            name === 'Package.swift' ||
+            (lockfile !== undefined && 'snapshot' in lockfile)
         );
     });
     const projects = inputs.map((entry) => entry.path).filter((path) => PROJECT_MANIFESTS.includes(basename(path)));

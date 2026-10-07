@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { planRun, ownedInputs } from '#cli/planning/plan.ts';
-import { engineInput, runEngineCheck } from '#cli/execution/engines.ts';
-import { SOURCE_CORRECTIONS } from '#tests/config/cli/execution/engine-input.ts';
+import { checkInput, runBuiltInCheck } from '#cli/execution/built-in.ts';
+import { SOURCE_CORRECTIONS } from '#tests/config/cli/execution/check-input.ts';
 
 test.each(SOURCE_CORRECTIONS)(
     '$language naming and structure read corrected source in a reused session',
@@ -39,7 +39,7 @@ test.each(SOURCE_CORRECTIONS)(
     },
 );
 
-test('engine inputs expose selected files and reserve the repository inventory for once-only checks', async () => {
+test('check inputs expose selected files and reserve the repository inventory for once-only checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['jest', 'docs'], { tables: '[[scope]]\npath = "apps/web"\n' }),
@@ -56,11 +56,11 @@ test('engine inputs expose selected files and reserve the repository inventory f
         only: ['jest/coverage', 'docs/stale-paths'],
     });
     const project = planned.find(
-        (entry) => entry.spec.name === 'jest/coverage' && entry.scope.scope.path === 'apps/web',
+        (entry) => entry.check.name === 'jest/coverage' && entry.scope.scope.path === 'apps/web',
     )!;
-    const scopeInput = engineInput(session, project);
-    const rootCheck = planned.find((entry) => entry.spec.name === 'docs/stale-paths')!;
-    const repositoryInput = engineInput(session, rootCheck);
+    const scopeInput = checkInput(session, project);
+    const rootCheck = planned.find((entry) => entry.check.name === 'docs/stale-paths')!;
+    const repositoryInput = checkInput(session, rootCheck);
     expect(repositoryInput.repositoryFiles).toBe(session.repository.files);
     expect(repositoryInput.selections).toBe(session.scopes);
     expect(repositoryInput.repositoryFiles?.map((file) => file.path)).toContain('unrelated/private.txt');
@@ -74,9 +74,9 @@ test('engine inputs expose selected files and reserve the repository inventory f
         buildRunOptions({
             only: ['jest/coverage'],
             checks: {
-                ...CHECKS,
+                ...BUILT_IN_CHECKS,
                 'jest/coverage': {
-                    run: runEngineCheck(() => Promise.resolve({ findings: [], files: ['unrelated/private.txt'] })),
+                    run: runBuiltInCheck(() => Promise.resolve({ findings: [], files: ['unrelated/private.txt'] })),
                 },
             },
         }),
@@ -89,9 +89,9 @@ test('engine inputs expose selected files and reserve the repository inventory f
         buildRunOptions({
             only: ['jest/coverage'],
             checks: {
-                ...CHECKS,
+                ...BUILT_IN_CHECKS,
                 'jest/coverage': {
-                    run: runEngineCheck(() => Promise.resolve({ findings: [], files: ['apps/web/value.test.js'] })),
+                    run: runBuiltInCheck(() => Promise.resolve({ findings: [], files: ['apps/web/value.test.js'] })),
                 },
             },
         }),
@@ -101,7 +101,7 @@ test('engine inputs expose selected files and reserve the repository inventory f
 });
 
 // Windows file names cannot hold a newline.
-test.skipIf(!isPosix)('engines read edited SQL source when a session is reused', async () => {
+test.skipIf(!isPosix)('built-in checks read edited SQL source when a session is reused', async () => {
     await using sandbox = await testdir();
     const path = 'app/café\nquery.sql';
     await createFileTree(sandbox.path, {

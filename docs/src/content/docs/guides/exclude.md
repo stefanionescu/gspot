@@ -45,4 +45,4 @@ reason = "Migration filenames begin with their numeric version."
 
 ## Native ignore files
 
-A custom check can declare `ignore_file = ".exampleignore"`. The file holds ordered gitignore patterns, including `!` patterns that include an excluded path again. gspot combines that file with saved check exclusions. See [custom checks](/guides/repository-checks/).
+A command check can declare `ignore_file = ".exampleignore"`. The file holds ordered gitignore patterns, including `!` patterns that include an excluded path again. gspot combines that file with saved check exclusions. See [command checks](/guides/command-checks/).

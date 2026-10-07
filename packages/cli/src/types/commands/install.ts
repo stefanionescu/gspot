@@ -1,4 +1,4 @@
-export type InstallOptions = { cwd: string; isDryRun: boolean; refreshLocks?: boolean };
+export type InstallOptions = { cwd: string; isDryRun: boolean; refreshLockfiles?: boolean };
 
 /** The JSON the install command prints: the planned steps of a dry run, or whether the installation completed. */
 export type InstallJson = {

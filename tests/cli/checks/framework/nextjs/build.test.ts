@@ -7,9 +7,9 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { nextBuild, nextTypes } from '#cli/checks/framework/nextjs.ts';
 import type { NextjsCommands } from '#tests/types/cli/checks/framework/nextjs.ts';
 import { statSync, chmodSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -119,8 +119,8 @@ test('failed type generation cleans the isolated copy without restoring over sou
         'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
     });
     const session = await openSession(directory.path);
-    const spec = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === 'nextjs/tsc')!;
-    const input: EngineInput = buildEngineInput(session, spec.name);
+    const check = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === 'nextjs/tsc')!;
+    const input: CheckInput = buildCheckInput(session, check.name);
     let scratch = '';
     const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     const runBlocking = processes.runBlocking;
@@ -159,10 +159,10 @@ test('failed type generation cleans the isolated copy without restoring over sou
  * Prepare tracked and untracked output for disposable Next.js build checks.
  * @param root the sandbox root
  * @param scope the selected project path
- * @param check the Next.js check to plan
+ * @param checkId the Next.js check to plan
  * @returns the check input with repository reads
  */
-async function prepareNextjsBuild(root: string, scope: string, check: string): Promise<EngineInput> {
+async function prepareNextjsBuild(root: string, scope: string, checkId: string): Promise<CheckInput> {
     const scopeTable = scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`;
     await createFileTree(root, {
         'gspot.toml': buildPolicy(['nextjs'], { tables: scopeTable }),
@@ -177,8 +177,8 @@ async function prepareNextjsBuild(root: string, scope: string, check: string): P
     commitAll(root);
     writeFileSync(join(root, join(scope, '.next/local-cache.bin')), Buffer.from([0, 255, 1, 2]));
     const session = await openSession(root);
-    const spec = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === check)!;
-    const input: EngineInput = buildEngineInput(session, spec.name, { scope: scope });
+    const check = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === checkId)!;
+    const input: CheckInput = buildCheckInput(session, check.name, { scope: scope });
     chmodSync(join(root, join(scope, 'tsconfig.json')), 0o640);
     return input;
 }

@@ -128,9 +128,9 @@ test(
             note: textContaining('env.templates'),
         });
         // The throwaway registry serves HTTP archives, which the consumer lockfile must report.
-        const lockHosts = checks.find(({ check }) => check === 'dependencies/lockfile-hosts')!.findings;
-        expect(lockHosts.length).toBeGreaterThan(0);
-        for (const finding of lockHosts) {
+        const lockfileHosts = checks.find(({ check }) => check === 'dependencies/lockfile-hosts')!.findings;
+        expect(lockfileHosts.length).toBeGreaterThan(0);
+        for (const finding of lockfileHosts) {
             expect(finding).toMatchObject({ file: 'package-lock.json', rule: 'host' });
             expect(finding.message).toContain(new URL('/', release.registry.url).href);
         }

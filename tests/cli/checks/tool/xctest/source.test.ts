@@ -63,7 +63,7 @@ describe('the xctest configuration', () => {
         const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
         expect(ids).toStrictEqual(['xctest/disabled']);
         const pushed = planRun(await openSession(root), { stage: 'push', skips: [], only: selected });
-        expect(pushed.map(({ spec }) => spec.name)).toStrictEqual(['xctest/coverage']);
+        expect(pushed.map(({ check }) => check.name)).toStrictEqual(['xctest/coverage']);
     });
 });
 

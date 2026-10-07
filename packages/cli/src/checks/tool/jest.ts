@@ -8,8 +8,8 @@ import { scratchFolder } from '#cli/platform/scratch.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { reportSchema, coverageSchema, thresholdsSchema } from '#cli/parsers/schema/jest.ts';
 import type { Suite, JestRun, TestReport, JestSettings } from '#cli/types/checks/tool/jest.ts';
 
@@ -80,7 +80,7 @@ async function runJest(run: JestRun, reports: Root, settings: JestSettings): Pro
         '--coverageReporters=json-summary',
         `--coverageThreshold=${JSON.stringify({ global: thresholds })}`,
     ];
-    const result = await runEngineTool(input, command, { cwd: join(source, input.scope) });
+    const result = await runCheckTool(input, command, { cwd: join(source, input.scope) });
     if (result.code !== 0 && result.code !== 1)
         throw new Error(
             `Jest could not run (exit ${String(result.code)}): ${stripVTControlCharacters(result.stderr).trim()}`,
@@ -117,10 +117,10 @@ async function runJest(run: JestRun, reports: Root, settings: JestSettings): Pro
 
 /**
  * Run repository-owned Jest against disposable sources and retain test and coverage failures as findings.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function jestCoverage(input: EngineInput): Promise<Finding[]> {
+export async function jestCoverage(input: CheckInput): Promise<Finding[]> {
     const settings = thresholdsSchema.parse(input.view.options('tools.jest'));
     using work = scratchFolder('gspot-jest-');
     using reports = openRoot(work.path);

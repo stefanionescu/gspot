@@ -6,14 +6,14 @@ import { readText } from '#cli/platform/source.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { getIniSection } from '#cli/parsers/tool/configuration.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { importLinterSchema } from '#cli/parsers/schema/python/imports.ts';
 import { BROKEN_CONTRACT, PYTHON_MANIFEST, IMPORT_CONTRACT_FILES } from '#cli/config/checks/language/python.ts';
 
-function contractConfiguration(input: EngineInput): string | undefined {
+function contractConfiguration(input: CheckInput): string | undefined {
     for (const file of IMPORT_CONTRACT_FILES) {
         const path = posix.join(input.scope, file);
         const text = readText(input.root, path, input.reads);
@@ -31,13 +31,13 @@ function contractConfiguration(input: EngineInput): string | undefined {
 
 /**
  * Run contracts from the first native INI or TOML configuration in the scope.
- * @param input the engine input
+ * @param input the check input
  * @returns each broken contract with its native dependency chain
  */
-export async function importLinter(input: EngineInput): Promise<Finding[]> {
+export async function importLinter(input: CheckInput): Promise<Finding[]> {
     const configuration = contractConfiguration(input);
     if (configuration === undefined) throw new GspotError('skip', 'This scope has no import-linter configuration.');
-    const result = await runEngineTool(input, ['lint-imports', '--config', basename(configuration), '--no-cache'], {
+    const result = await runCheckTool(input, ['lint-imports', '--config', basename(configuration), '--no-cache'], {
         cwd: input.scopeRoot,
     });
     const lines = stripVTControlCharacters(result.stdout).split('\n');

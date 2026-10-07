@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
 import { buildFolder } from '#cli/checks/language/swift/cache.ts';
@@ -37,7 +37,7 @@ test.skipIf(!isMacos)('XCTest reports a timed-out native command as an error and
         isTimedOut: true,
     });
     try {
-        const failed = await executeRun(session, { ...XCTEST_EXECUTION_OPTIONS, checks: CHECKS });
+        const failed = await executeRun(session, { ...XCTEST_EXECUTION_OPTIONS, checks: BUILT_IN_CHECKS });
         expect(failed.report.exitCode).toBe(2);
         expect(failed.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'error' }]);
         expect(failed.report.checks[0]?.note).toContain('xcodebuild ran past');
@@ -47,7 +47,7 @@ test.skipIf(!isMacos)('XCTest reports a timed-out native command as an error and
     }
     const corrected = await executeRun(await openSession(sandbox.path), {
         ...XCTEST_EXECUTION_OPTIONS,
-        checks: CHECKS,
+        checks: BUILT_IN_CHECKS,
     });
     expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'passed', findings: [] }]);
@@ -70,7 +70,7 @@ test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
         for (const tool of ['xcodebuild', 'xcrun']) chmodSync(join(sandbox.path, 'node_modules/.bin', tool), 0o755);
         const outcome = await executeRun(await openSession(sandbox.path), {
             ...XCTEST_EXECUTION_OPTIONS,
-            checks: CHECKS,
+            checks: BUILT_IN_CHECKS,
         });
         expect(outcome.report.exitCode).toBe(code);
         expect(outcome.report.checks[0]!.status).toBe(status);
@@ -86,7 +86,7 @@ test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
         );
         const corrected = await executeRun(await openSession(sandbox.path), {
             ...XCTEST_EXECUTION_OPTIONS,
-            checks: CHECKS,
+            checks: BUILT_IN_CHECKS,
         });
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'passed', findings: [] }]);
@@ -117,7 +117,7 @@ test.skipIf(!isMacos)(
         symlinkSync(outside.path, bundle, process.platform === 'win32' ? 'junction' : 'dir');
         const refused = await executeRun(await openSession(sandbox.path), {
             ...XCTEST_EXECUTION_OPTIONS,
-            checks: CHECKS,
+            checks: BUILT_IN_CHECKS,
         });
         expect(refused.report.exitCode).toBe(2);
         expect(readFileSync(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
@@ -127,7 +127,7 @@ test.skipIf(!isMacos)(
         writeFileSync(join(bundle, 'data/previous'), 'old result', { mode: 0o444 });
         const corrected = await executeRun(await openSession(sandbox.path), {
             ...XCTEST_EXECUTION_OPTIONS,
-            checks: CHECKS,
+            checks: BUILT_IN_CHECKS,
         });
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
         expect(existsSync(bundle)).toBe(false);

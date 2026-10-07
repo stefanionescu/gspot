@@ -63,8 +63,8 @@ function assertLinkDestination(bounds: Bounds, path: string, destination: string
  */
 export function boundsOf(canonical: string, pathFormat: PathFormat): Bounds {
     const partsOf = pathFormat === 'portable' ? portableSegments : nativeSegments;
-    const locks = new Map<string, string>();
-    return { canonical, pathFormat, partsOf, locks };
+    const claims = new Map<string, string>();
+    return { canonical, pathFormat, partsOf, claims };
 }
 
 /**

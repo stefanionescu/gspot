@@ -12,9 +12,14 @@ import { acquirePythonInstaller } from '#cli/tools/python/uv.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { installPythonProject, preparePythonProject } from '#cli/tools/python/project.ts';
-import { AUTHORED_UV_INDEX, PRIVATE_PYTHON_LOCK, PRIVATE_PYTHON_PROJECT } from '#tests/config/samples/python/tools.ts';
 
-test('one command acquires its pinned uv once and resolves locks through that executable', async () => {
+import {
+    AUTHORED_UV_INDEX,
+    PRIVATE_PYTHON_PROJECT,
+    PRIVATE_PYTHON_LOCKFILE,
+} from '#tests/config/samples/python/tools.ts';
+
+test('one command acquires its pinned uv once and creates lockfiles through that executable', async () => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
         'gspot.toml': buildPolicy(['python'], { tables: 'run_with = "mise"\n[agent_rules]\nenabled = false\n' }),
@@ -27,7 +32,7 @@ test('one command acquires its pinned uv once and resolves locks through that ex
     const boundary = spyOn(processes, 'run').mockImplementation((command, options) => {
         if (command[0] !== 'mise' && command[0] !== executable) return run(command, options);
         calls.push([...command]);
-        if (command[0] === executable) writeFileSync(join(options.cwd, 'uv.lock'), PRIVATE_PYTHON_LOCK);
+        if (command[0] === executable) writeFileSync(join(options.cwd, 'uv.lock'), PRIVATE_PYTHON_LOCKFILE);
         return Promise.resolve({
             code: 0,
             missing: false,
@@ -46,7 +51,7 @@ test('one command acquires its pinned uv once and resolves locks through that ex
         ];
         {
             using log = openOwnership(repository.path);
-            await preparePythonProject(session, files, log.files, { refreshLocks: false });
+            await preparePythonProject(session, files, log.files, { refreshLockfiles: false });
         }
         expect(calls.slice(0, 2)).toStrictEqual([
             ['mise', 'install', UV_MISE_PIN],
@@ -55,7 +60,7 @@ test('one command acquires its pinned uv once and resolves locks through that ex
         expect(calls).toHaveLength(3);
         expect(calls[2]).toContain('--no-python-downloads');
         expect(calls[2]!.slice(0, 2)).toStrictEqual([executable, 'lock']);
-        expect(files[1]).toMatchObject({ path: '.gspot/uv.lock', content: PRIVATE_PYTHON_LOCK, kind: 'lock' });
+        expect(files[1]).toMatchObject({ path: '.gspot/uv.lock', content: PRIVATE_PYTHON_LOCKFILE, kind: 'lock' });
         expect(existsSync(join(repository.path, '.gspot/uv.lock'))).toBe(false);
     } finally {
         boundary.mockRestore();
@@ -100,7 +105,7 @@ test.each(['venv', 'sync'])(
         await using repository = await testdir();
         await createFileTree(repository.path, {
             '.gspot/pyproject.toml': PRIVATE_PYTHON_PROJECT,
-            '.gspot/uv.lock': PRIVATE_PYTHON_LOCK,
+            '.gspot/uv.lock': PRIVATE_PYTHON_LOCKFILE,
             'uv.toml': AUTHORED_UV_INDEX,
         });
         const run = processes.run;
@@ -142,7 +147,7 @@ test.each(['venv', 'sync'])(
             expect(diagnostic).not.toContain('test%2Bpassword');
             expect(diagnostic).not.toContain('test+password');
             expect(calls).toHaveLength(step === 'venv' ? 1 : 2);
-            expect(readFileSync(join(repository.path, '.gspot/uv.lock'), 'utf8')).toBe(PRIVATE_PYTHON_LOCK);
+            expect(readFileSync(join(repository.path, '.gspot/uv.lock'), 'utf8')).toBe(PRIVATE_PYTHON_LOCKFILE);
             expect(readFileSync(join(repository.path, 'uv.toml'), 'utf8')).toBe(AUTHORED_UV_INDEX);
             expect(existsSync(join(repository.path, '.gspot/.venv'))).toBe(false);
         } finally {
@@ -151,17 +156,17 @@ test.each(['venv', 'sync'])(
     },
 );
 
-test('a successful uv operation refuses a password in its temporary lock and preserves managed inputs', async () => {
+test('a successful uv operation refuses a password in its temporary lockfile and preserves managed inputs', async () => {
     await using repository = await testdir();
     await createFileTree(repository.path, {
         '.gspot/pyproject.toml': PRIVATE_PYTHON_PROJECT,
-        '.gspot/uv.lock': PRIVATE_PYTHON_LOCK,
+        '.gspot/uv.lock': PRIVATE_PYTHON_LOCKFILE,
         'uv.toml': AUTHORED_UV_INDEX,
     });
     const run = processes.run;
     using boundary = spyOn(processes, 'run').mockImplementation((command, options) => {
         if (command[0] !== 'synthetic-uv') return run(command, options);
-        writeFileSync(join(options.cwd, 'uv.lock'), `${PRIVATE_PYTHON_LOCK}\n# test+password\n`);
+        writeFileSync(join(options.cwd, 'uv.lock'), `${PRIVATE_PYTHON_LOCKFILE}\n# test+password\n`);
         return Promise.resolve({ code: 0, missing: false, duration: 0, stdout: '', stderr: '' });
     });
     let diagnosticError: unknown;
@@ -182,9 +187,9 @@ test('a successful uv operation refuses a password in its temporary lock and pre
     }
     expect(diagnosticError).toMatchObject({ name: 'GspotError', code: 'installation' });
     expect(diagnosticError instanceof Error ? diagnosticError.message : '').toBe(
-        'The uv lock includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install',
+        'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install',
     );
-    expect(readFileSync(join(repository.path, '.gspot/uv.lock'), 'utf8')).toBe(PRIVATE_PYTHON_LOCK);
+    expect(readFileSync(join(repository.path, '.gspot/uv.lock'), 'utf8')).toBe(PRIVATE_PYTHON_LOCKFILE);
     expect(readFileSync(join(repository.path, 'uv.toml'), 'utf8')).toBe(AUTHORED_UV_INDEX);
     expect(existsSync(join(repository.path, '.gspot/.venv'))).toBe(false);
     expect(boundary).toHaveBeenCalledTimes(1);

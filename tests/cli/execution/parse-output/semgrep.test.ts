@@ -9,11 +9,11 @@ import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR } from '#tests/config/cli/execution/
 test('Semgrep retains both rule and source parse diagnostics with positions and Unicode paths', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\neval input\n' });
     const manifest = configurationManifests().get('security')!;
-    const spec = manifest.checks.find((check) => check.name === 'security/semgrep')!;
+    const check = manifest.checks.find((check) => check.name === 'security/semgrep')!;
     const stdout = JSON.stringify({ results: [SEMGREP_MATCH], errors: [SEMGREP_PARSE_ERROR] });
     expect(
         checkedFindings(
-            { spec, manifest },
+            { check, manifest },
             { ...EMPTY_FAILURE, code: 3, stdout },
             { cwd: sandbox.path, root: sandbox.path },
         ),
@@ -25,7 +25,7 @@ test('Semgrep retains both rule and source parse diagnostics with positions and 
             column: 1,
             rule: 'gspot.bash.eval',
             message: 'eval runs a string as code.',
-            help: spec.help,
+            help: check.help,
             fixable: false,
         },
         {
@@ -35,7 +35,7 @@ test('Semgrep retains both rule and source parse diagnostics with positions and 
             column: 1,
             rule: 'parse-error',
             message: 'Syntax error in source.',
-            help: spec.help,
+            help: check.help,
             fixable: false,
         },
     ]);
@@ -44,7 +44,7 @@ test('Semgrep retains both rule and source parse diagnostics with positions and 
 test('Semgrep scanner, rule, unpositioned, and malformed reports remain execution errors', async () => {
     await using sandbox = await testdir({ 'scripts/café build.sh': 'if then\n' });
     const manifest = configurationManifests().get('security')!;
-    const spec = manifest.checks.find((check) => check.name === 'security/semgrep')!;
+    const check = manifest.checks.find((check) => check.name === 'security/semgrep')!;
     const outputs = [
         '',
         '{}',
@@ -57,14 +57,14 @@ test('Semgrep scanner, rule, unpositioned, and malformed reports remain executio
     for (const stdout of outputs)
         expect(() =>
             checkedFindings(
-                { spec, manifest },
+                { check, manifest },
                 { ...EMPTY_FAILURE, code: 3, stdout },
                 { cwd: sandbox.path, root: sandbox.path },
             ),
         ).toThrow(GspotError);
     expect(
         checkedFindings(
-            { spec, manifest },
+            { check, manifest },
             { ...EMPTY_FAILURE, code: 0, stdout: '{"results":[],"errors":[]}' },
             { cwd: sandbox.path, root: sandbox.path },
         ),

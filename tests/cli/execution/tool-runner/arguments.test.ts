@@ -11,7 +11,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
-import { prepareCommand, runCommandCheck, commandEnvironment } from '#cli/execution/command/runner.ts';
+import { prepareCommand, runCheckCommand, commandEnvironment } from '#cli/execution/command/check.ts';
 
 test('Batched tool invocations preserve spaced Unicode file arguments', async () => {
     await using sandbox = await testdir();
@@ -55,7 +55,7 @@ stage = "commit"
     const plans = planRun(session, { stage: 'all', skips: [], only: ['sandbox/arguments'] });
     const planned = plans[0]!;
     planned.tool = { name: 'echo', installers: {}, kind: 'binary', env: { TOOL_RELEASE: 'v3.4.0' } };
-    const prepared = prepareCommand(session, planned, planned.spec.command!, commandEnvironment(session, planned));
+    const prepared = prepareCommand(session, planned, planned.check.command!, commandEnvironment(session, planned));
     const result = await run(prepared.commands[0]!.argv, { cwd: prepared.cwd, env: prepared.env });
     expect(result.code, result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toStrictEqual([
@@ -128,7 +128,7 @@ test('per-file failures name the selected file when expanded arguments follow it
     const plans = planRun(session, { stage: 'all', skips: [], only: ['project/file-result'] });
     const planned = plans[0]!;
     planned.tool = { name: process.execPath, installers: {}, kind: 'binary' };
-    const failed = await runCommandCheck(session, planned);
+    const failed = await runCheckCommand(session, planned);
     expect(failed.status).toBe('failed');
     expect(failed.findings.map((finding) => finding.file)).toStrictEqual(['inputs/café source.txt']);
 });
@@ -154,7 +154,7 @@ test.skipIf(!isPosix)('a signaled per-file process is an execution error rather 
     const plans = planRun(session, { stage: 'all', skips: [], only: ['project/termination'] });
     const planned = plans[0]!;
     planned.tool = { name: process.execPath, installers: {}, kind: 'binary' };
-    const failed = await runCommandCheck(session, planned);
+    const failed = await runCheckCommand(session, planned);
     expect(failed.status).toBe('error');
     expect(failed.findings).toStrictEqual([]);
 });
@@ -187,11 +187,11 @@ test.skipIf(!isPosix)(
         for (const path of ['native/shellcheck', 'inactive/shellcheck']) chmodSync(join(sandbox.path, path), 0o755);
         const session = await openSession(sandbox.path);
         const planned = planRun(session, { stage: 'commit', skips: [], only: ['project/companion'] })[0]!;
-        planned.spec.other_tools = ['shellcheck'];
-        planned.spec.env = { PATH: join(sandbox.path, 'inactive') };
+        planned.check.other_tools = ['shellcheck'];
+        planned.check.env = { PATH: join(sandbox.path, 'inactive') };
         const which = spyOn(executables, 'sync').mockReturnValue(join(sandbox.path, 'native/shellcheck'));
         try {
-            const result = await runCommandCheck(session, planned, { workspace: join(sandbox.path, 'copy') });
+            const result = await runCheckCommand(session, planned, { workspace: join(sandbox.path, 'copy') });
             expect(result.status, result.note).toBe('passed');
             expect(result.findings).toStrictEqual([]);
         } finally {

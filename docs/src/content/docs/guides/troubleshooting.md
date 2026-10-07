@@ -1,6 +1,6 @@
 ---
 title: Troubleshooting
-description: Fix a policy that does not load, a missing tool, locks that disagree, a version mismatch, and slow checks.
+description: Fix a policy that does not load, a missing tool, lockfiles that disagree, a version mismatch, and slow checks.
 ---
 
 Start with the diagnosis:
@@ -11,7 +11,7 @@ gspot doctor
 
 `doctor` lists missing tools, hooks that do not match the policy, and generated files that
 changed. Each problem comes with the command that fixes it. When you
-[report a problem](https://github.com/stefanionescu/gspot/issues), include the output, the check name, and the command that reproduces it.
+[report a problem](https://github.com/stefanionescu/gspot/issues), include the output, the check ID, and the command that reproduces it.
 Leave out credentials.
 
 ## The policy does not load
@@ -30,9 +30,9 @@ missing fails, and `doctor` names the tool.
 `gspot install` downloads the EditorConfig checker from GitHub. When the error says
 `API rate limit exceeded`, GitHub refused the download. Set `GITHUB_TOKEN` to a token that reads public releases, then run `gspot install` again. If credentials are unavailable, wait for the limit to reset before retrying. Keep the token out of policy files and reports.
 
-## The policy and the locks disagree
+## The policy and the lockfiles disagree
 
-`gspot install` prepares missing or stale required locks in scratch copies before installing. If a package install fails, the previous locks and installed tool projects remain. Repair package-manager or registry errors and retry. To resolve the declared pins again intentionally, run `gspot install --refresh-locks`; an integrity failure alone does not change a committed lock. See [Join a repository](/guides/join/).
+`gspot install` prepares missing or outdated required lockfiles in scratch copies before installing. If a package install fails, the previous lockfiles and installed tool projects remain. Repair package-manager or registry errors and retry. To resolve the declared pins again intentionally, run `gspot install --refresh-lockfiles`; an integrity failure alone does not change a committed lockfile. See [Join a repository](/guides/join/).
 
 ## The gspot version differs from the pin
 

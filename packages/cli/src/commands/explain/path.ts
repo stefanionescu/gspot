@@ -37,8 +37,8 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
         checks: configuredChecks(session)
             .filter((check) => ownedInputs(session, check).some((entry) => entry.path === file.path))
             .map((check) => ({
-                check: check.spec.name,
-                stage: check.spec.stage,
+                check: check.check.name,
+                stage: check.check.stage,
                 ...(check.manifest === undefined ? {} : { configuration: check.manifest.configuration.name }),
             })),
         ignores: session.policyFiles.policy.ignores

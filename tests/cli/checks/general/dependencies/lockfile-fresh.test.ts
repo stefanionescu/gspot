@@ -15,7 +15,7 @@ test.each(['missing', 'deadline', 'cancellation', 'unexpected'] as const)(
         await createFileTree(directory.path, {
             'gspot.toml': buildPolicy(['dependencies']),
             'package.json': '{"name":"example","private":true}\n',
-            'bun.lock': 'original lock\n',
+            'bun.lock': 'original lockfile\n',
             'node_modules/protected.txt': 'installed dependency\n',
         });
         const session = await openSession(directory.path);
@@ -50,7 +50,7 @@ test.each(['missing', 'deadline', 'cancellation', 'unexpected'] as const)(
             const result = outcome.report.checks[0]!;
             expect(result.status).toBe(failure === 'missing' ? 'missing' : 'error');
             expect(result.findings).toStrictEqual([]);
-            expect(readFileSync(join(directory.path, 'bun.lock'), 'utf8')).toBe('original lock\n');
+            expect(readFileSync(join(directory.path, 'bun.lock'), 'utf8')).toBe('original lockfile\n');
             expect(readFileSync(join(directory.path, 'node_modules/protected.txt'), 'utf8')).toBe(
                 'installed dependency\n',
             );

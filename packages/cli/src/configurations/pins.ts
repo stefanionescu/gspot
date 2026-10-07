@@ -8,9 +8,9 @@ import type {
     MisePin,
     ToolPin,
     Manifest,
-    CheckSpec,
     InstallerPin,
     PinRequirement,
+    CheckDeclaration,
     ToolProjectPackage,
 } from '#cli/types/configurations.ts';
 
@@ -138,7 +138,7 @@ export function toolPin(manifests: Iterable<Manifest>, name: string, owner?: Man
  * @param check the consumer's prerequisites
  * @returns the pin with its effective minimum version
  */
-export function checkToolPin(tool: ToolPin, check: CheckSpec): ToolPin {
+export function checkToolPin(tool: ToolPin, check: CheckDeclaration): ToolPin {
     const floor = check.min_versions?.[tool.name];
     if (floor === undefined || (tool.min_version !== undefined && semver.gte(tool.min_version, floor))) return tool;
     return { ...tool, min_version: floor };
@@ -149,7 +149,7 @@ export function checkToolPin(tool: ToolPin, check: CheckSpec): ToolPin {
  * @param check the validated check declaration.
  * @returns the executable name, absent for an internal check without a tool.
  */
-export function toolName(check: CheckSpec): string | undefined {
+export function toolName(check: CheckDeclaration): string | undefined {
     return check.tool ?? check.command?.[0];
 }
 

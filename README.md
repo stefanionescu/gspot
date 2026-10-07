@@ -40,7 +40,7 @@ Commit the install first because initialization requires a clean working tree. F
 
 Without `package.json`, use `mise exec npm:@gspothq/cli@0.1.0 -- gspot init` and choose mise. The generated mise file pins the CLI and applicable native tools. Without mise, install `npm install --global @gspothq/cli@0.1.0` and run `gspot init`. A global installation supplies one CLI version per machine; each repository pins its version in `.gspot/version`.
 
-Read the initialization plan before accepting it. `--no-install` writes setup without resolving tool locks; run `gspot install` later. Guides use `gspot` as shorthand for the prefix in the table.
+Read the initialization plan before accepting it. `--no-install` writes setup without resolving tool lockfiles; run `gspot install` later. Guides use `gspot` as shorthand for the prefix in the table.
 
 ## What it catches
 

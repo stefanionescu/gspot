@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
@@ -30,7 +30,7 @@ function isSkipped(directory: string, scope: string, isAllowed: (path: string) =
  * @param input the check context
  * @returns the findings
  */
-export const prefixCollisions: Engine = (input) => {
+export const prefixCollisions: BuiltInCheck = (input) => {
     const files = structureSources(input);
     const threshold = input.view.limit('prefix_collisions') as number;
     const isAllowed = pathMatcher(

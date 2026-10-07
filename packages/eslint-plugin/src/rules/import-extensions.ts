@@ -1,7 +1,7 @@
 import { ASTUtils } from '@typescript-eslint/utils';
 import { INTERNAL_PREFIXES } from '#plugin/config/files.ts';
 import type { ImportSource } from '#plugin/types/imports.ts';
-import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { ImportExtensionsName, ImportExtensionsOptions } from '#plugin/types/extensions.ts';
 

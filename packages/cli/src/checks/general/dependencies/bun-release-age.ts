@@ -6,8 +6,8 @@ import { readSource } from '#cli/platform/source.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { SECONDS_PER_DAY } from '#cli/config/generation/bunfig.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
+import { SECONDS_PER_DAY } from '#cli/config/platform/runtime.ts';
 import { parseBunInstallSettings } from '#cli/parsers/packages.ts';
 import { BUNFIG } from '#cli/config/checks/general/dependencies.ts';
 
@@ -17,7 +17,7 @@ function installTable(root: string): Record<string, unknown> | undefined {
     return parseBunInstallSettings(readSource(root, BUNFIG).toString('utf8'));
 }
 
-function ageFindings(input: EngineInput, table: Record<string, unknown>, days: number): Finding[] {
+function ageFindings(input: CheckInput, table: Record<string, unknown>, days: number): Finding[] {
     const seconds = table['minimumReleaseAge'];
     const wanted = days * SECONDS_PER_DAY;
     if (typeof seconds === 'number' && seconds >= wanted) return [];
@@ -32,7 +32,7 @@ function ageFindings(input: EngineInput, table: Record<string, unknown>, days: n
     ];
 }
 
-function scannerFindings(input: EngineInput, table: Record<string, unknown>, scanner: string): Finding[] {
+function scannerFindings(input: CheckInput, table: Record<string, unknown>, scanner: string): Finding[] {
     if (scanner === '') return [];
     const security = table['security'];
     const configured = isRecord(security) ? security['scanner'] : undefined;
@@ -49,10 +49,10 @@ function scannerFindings(input: EngineInput, table: Record<string, unknown>, sca
 
 /**
  * Reports Bun release-age and scanner settings in the scope's bunfig.toml.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function bunReleaseAge(input: EngineInput): Finding[] {
+export function bunReleaseAge(input: CheckInput): Finding[] {
     const isBun = input.files.some(
         (file) =>
             !file.path.split('/').includes(DOT_GSPOT) && lockfileEntry(posix.basename(file.path))?.client === 'bun',

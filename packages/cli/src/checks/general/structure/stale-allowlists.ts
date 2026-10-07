@@ -2,10 +2,10 @@ import { basename } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { lockedPackages } from '#cli/parsers/lockfiles.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { everyTable } from '#cli/policy/settings/lookup.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import { lockfilePackages } from '#cli/parsers/lockfiles.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { directoryOf, expandPaths } from '#cli/platform/paths.ts';
 import { normalizedPythonIdentity } from '#cli/parsers/packages.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
@@ -32,7 +32,7 @@ function settingPatterns(tools: Record<string, Record<string, unknown>>, prefix:
     );
 }
 
-function policyPatterns(input: EngineInput): PathPattern[] {
+function policyPatterns(input: CheckInput): PathPattern[] {
     const { policy } = input.policyFiles;
     const { structure, naming } = policy;
     return [
@@ -59,7 +59,7 @@ function policyPatterns(input: EngineInput): PathPattern[] {
 }
 
 // The path tokens of tracked Markdown prose, which can justify an exception for an untracked output or external path.
-function referencedPaths(input: EngineInput): Set<string> {
+function referencedPaths(input: CheckInput): Set<string> {
     const referenced = new Set<string>();
     const files = input.files.filter((file) => file.kind === 'source' && file.path.endsWith('.md'));
     for (const file of files) {
@@ -69,9 +69,9 @@ function referencedPaths(input: EngineInput): Set<string> {
     return referenced;
 }
 
-function licenseFindings(input: EngineInput): Finding[] {
+function licenseFindings(input: CheckInput): Finding[] {
     const policy = input.policyFiles.policy;
-    const locks = new Map<string, Set<string>>();
+    const lockfiles = new Map<string, Set<string>>();
     return everyTable(policy).flatMap(({ scope = '', table }) => {
         const exceptions = (table.configurationSettings?.['licenses']?.['exceptions'] ?? []) as LicenseException[];
         if (exceptions.length === 0) return [];
@@ -95,10 +95,10 @@ function licenseFindings(input: EngineInput): Finding[] {
         if (paths.length === 0)
             throw new Error('License exceptions require a dependency lockfile in their project or workspace.');
         const packages = paths.map(({ path }) => {
-            let names = locks.get(path);
+            let names = lockfiles.get(path);
             if (names === undefined) {
-                names = lockedPackages(basename(path), readSource(input.root, path, input.reads).toString('utf8'));
-                locks.set(path, names);
+                names = lockfilePackages(basename(path), readSource(input.root, path, input.reads).toString('utf8'));
+                lockfiles.set(path, names);
             }
             return { names, python: ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path)) };
         });
@@ -120,10 +120,10 @@ function licenseFindings(input: EngineInput): Finding[] {
 
 /**
  * One finding per policy pattern that matches no tracked file or folder. The policy is one per repository, so the root scope reports.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function staleAllowlists(input: EngineInput): Finding[] {
+export function staleAllowlists(input: CheckInput): Finding[] {
     const candidates = [...expandPaths(input.files.map((file) => file.path))];
     const references = referencedPaths(input);
     const findings = policyPatterns(input)

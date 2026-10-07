@@ -4,7 +4,7 @@ import * as spawn from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
@@ -23,7 +23,7 @@ test('analysis refuses an incomplete compiler log after a failed build', async (
         rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
     });
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
-    const input = buildEngineInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
+    const input = buildCheckInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
     const run = spyOn(spawn, 'run')
         .mockResolvedValueOnce({ code: 7, stdout: '', stderr: '', missing: false, duration: 1 })
         .mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
@@ -44,7 +44,7 @@ test('a silent successful SwiftLint analyzer returns no findings', async () => {
         rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
     });
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
-    const input = buildEngineInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
+    const input = buildCheckInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
     resources.use(
         spyOn(spawn, 'run').mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 }),
     );
@@ -61,7 +61,7 @@ test('a silent failed SwiftLint analyzer reports its exit code', async () => {
         rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
     });
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
-    const input = buildEngineInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
+    const input = buildCheckInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
     resources.use(
         spyOn(spawn, 'run')
             .mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 })
@@ -80,7 +80,7 @@ test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async 
         rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
     });
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
-    const input = buildEngineInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
+    const input = buildCheckInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
     const run = spyOn(spawn, 'run');
     if (step === 'analyzer')
         run.mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
@@ -102,7 +102,7 @@ test('manual analysis clears its own compiler state without consuming the increm
         rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
     });
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
-    const input = buildEngineInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
+    const input = buildCheckInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
     const compile = buildPlan(input);
     const analyzer = buildPlan(input, 'analyze');
     const compilerState = join(compile.folder, 'package', 'state');

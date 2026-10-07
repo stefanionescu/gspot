@@ -146,7 +146,7 @@ test.each(['', 'nested/'])('revision prose checks reuse the installed packages u
     ).toContain('do not match the revision configuration');
 });
 
-test('a snapshot leaves the virtual environment in the working tree and still checks its lock', async () => {
+test('a snapshot leaves the virtual environment in the working tree and still checks its lockfile', async () => {
     await using repository = await testdir();
     const root = join(repository.path, "an author's project");
     await createFileTree(root, {

@@ -3,7 +3,7 @@ const AUTHORED_VERSION_INPUTS: Record<string, string> = {
 };
 
 const RECORDED_VERSION_INPUTS: Record<string, string> = {
-    'bun.lock': 'recorded root lock\n',
+    'bun.lock': 'recorded root lockfile\n',
     '.gspot/package.json': '{"packageManager":"bun@0.0.0"}\n',
 };
 
@@ -49,8 +49,8 @@ export const NON_EXACT_MANAGERS = [
 ];
 
 export const PACKAGE_VERSION_CASES = [
-    { source: 'authored', operation: 'lock', files: AUTHORED_VERSION_INPUTS } as const,
+    { source: 'authored', operation: 'lockfile', files: AUTHORED_VERSION_INPUTS } as const,
     { source: 'authored', operation: 'install', files: AUTHORED_VERSION_INPUTS } as const,
-    { source: 'recorded', operation: 'lock', files: RECORDED_VERSION_INPUTS } as const,
+    { source: 'recorded', operation: 'lockfile', files: RECORDED_VERSION_INPUTS } as const,
     { source: 'recorded', operation: 'install', files: RECORDED_VERSION_INPUTS } as const,
 ];

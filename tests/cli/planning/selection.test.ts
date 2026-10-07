@@ -79,13 +79,13 @@ test.each(MANUAL_SELECTIONS)(
             });
             const names = applicableManifests(session).flatMap((manifest) => manifest.tools.map((tool) => tool.name));
             expect(
-                checks.filter((check) => check.spec.name === 'security/semgrep').map((check) => check.skip),
+                checks.filter((check) => check.check.name === 'security/semgrep').map((check) => check.skip),
             ).toStrictEqual([undefined, undefined]);
             expect(
-                checks.filter((check) => check.spec.name === 'duplication/jscpd').map((check) => check.skip?.cause),
+                checks.filter((check) => check.check.name === 'duplication/jscpd').map((check) => check.skip?.cause),
             ).toStrictEqual(level === 'all' ? [undefined, undefined] : []);
             expect(
-                checks.filter((check) => check.spec.name === 'licenses/packages').map((check) => check.skip?.cause),
+                checks.filter((check) => check.check.name === 'licenses/packages').map((check) => check.skip?.cause),
             ).toStrictEqual(['setting', 'setting']);
             expect(names).toContain('semgrep');
             expect(names.includes('jscpd')).toBe(level === 'all');
@@ -118,7 +118,7 @@ test.each(['recommended', 'all'] as const)(
             only: ['security/semgrep-registry', 'security/codeql'],
         });
         expect(
-            checks.map((check) => ({ check: check.spec.name, cause: check.skip?.cause, note: check.skip?.note })),
+            checks.map((check) => ({ check: check.check.name, cause: check.skip?.cause, note: check.skip?.note })),
         ).toStrictEqual([
             {
                 check: 'security/semgrep-registry',
@@ -226,7 +226,7 @@ test.each(NODE_REQUIREMENTS)(
 test('commit planning leaves external document links for later stages', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildPolicy(['docs']), 'guide.md': '# Guide\n' });
     const plans = planRun(await openSession(sandbox.path), { stage: 'commit', skips: [] });
-    const checks = plans.map(({ spec }) => spec.name);
+    const checks = plans.map(({ check }) => check.name);
     expect(checks).toContain('docs/lychee');
     expect(checks).not.toContain('docs/lychee-external');
 });
@@ -240,10 +240,10 @@ test('project type checking belongs to push and preserves explicit selection', a
     });
     const session = await openSession(sandbox.path);
     const commit = planRun(session, { stage: 'commit', skips: [], only: [check] });
-    expect(commit.map((entry) => entry.spec.name)).not.toContain(check);
+    expect(commit.map((entry) => entry.check.name)).not.toContain(check);
     for (const stage of ['push', 'all'] as const) {
         const planned = planRun(session, { stage, skips: [], only: [check] });
-        expect(planned.map((entry) => entry.spec.name)).toContain(check);
+        expect(planned.map((entry) => entry.check.name)).toContain(check);
     }
 });
 

@@ -41,7 +41,7 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
     ];
     const failed = await runTestCommand(command, { cwd: sandbox.path, timeoutMs: 30_000 });
     expect(failed.code, failed.stderr).toBe(1);
-    const findings = parseOutput(planned.spec, failed.stdout, failed.stderr, {
+    const findings = parseOutput(planned.check, failed.stdout, failed.stderr, {
         root: sandbox.path,
         cwd: sandbox.path,
     });
@@ -65,7 +65,7 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
     for (const path of paths) await Bun.write(join(sandbox.path, path), '# Title\n');
     const corrected = await runTestCommand(command, { cwd: sandbox.path, timeoutMs: 30_000 });
     expect(corrected.code, corrected.stderr).toBe(0);
-    expect(parseOutput(planned.spec, corrected.stdout, '', { root: sandbox.path, cwd: sandbox.path })).toStrictEqual(
+    expect(parseOutput(planned.check, corrected.stdout, '', { root: sandbox.path, cwd: sandbox.path })).toStrictEqual(
         [],
     );
 });
@@ -83,7 +83,7 @@ test('native spelling JSON retains filename delimiters, Unicode columns, and for
         ...Object.fromEntries(paths.map((path) => [`nested/${path}`, `café ${TYPO.the}\n`])),
     });
     const configuration = join(sandbox.path, 'native.toml');
-    const spec = configurationManifests()
+    const check = configurationManifests()
         .get('spelling')!
         .checks.find((check) => check.name === 'spelling/typos')!;
     const cwd = join(sandbox.path, 'nested');
@@ -91,7 +91,7 @@ test('native spelling JSON retains filename delimiters, Unicode columns, and for
     const options = { cwd, timeoutMs: 30_000 };
     const native = await runTestCommand([...typos, ...paths], options);
     expect(native.code, native.stderr).toBe(2);
-    const findings = parseOutput(spec, native.stdout, native.stderr, {
+    const findings = parseOutput(check, native.stdout, native.stderr, {
         root: sandbox.path,
         cwd: cwd,
     });
@@ -114,7 +114,7 @@ test('native spelling JSON retains filename delimiters, Unicode columns, and for
         ]),
     );
     expect(
-        checkedFindings({ spec, manifest: configurationManifests().get('spelling')! }, native, {
+        checkedFindings({ check, manifest: configurationManifests().get('spelling')! }, native, {
             cwd,
             root: sandbox.path,
         }),
@@ -125,5 +125,5 @@ test('native spelling JSON retains filename delimiters, Unicode columns, and for
     const renamed = paths.map((path) => (path === `${TYPO.the}.txt` ? 'the.txt' : path));
     const corrected = await runTestCommand([...typos, ...renamed], options);
     expect(corrected.code, corrected.stderr).toBe(0);
-    expect(parseOutput(spec, corrected.stdout, corrected.stderr, { root: sandbox.path, cwd: cwd })).toStrictEqual([]);
+    expect(parseOutput(check, corrected.stdout, corrected.stderr, { root: sandbox.path, cwd: cwd })).toStrictEqual([]);
 });

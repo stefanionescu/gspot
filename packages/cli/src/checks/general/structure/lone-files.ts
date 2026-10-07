@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { directoryOf, directoryTree } from '#cli/platform/paths.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
@@ -12,7 +12,7 @@ import { isAllowedFolder, structureSources } from '#cli/checks/general/structure
  * @param input the check context
  * @returns the findings
  */
-export const loneFiles: Engine = (input) => {
+export const loneFiles: BuiltInCheck = (input) => {
     const files = structureSources(input);
     const extensions = sourceConfigurations(input.selection.selected).flatMap((manifest) => manifest.files.extensions);
     const allowed = input.view.settings['structure.lone_files_allowed'] as PathAllowance[];

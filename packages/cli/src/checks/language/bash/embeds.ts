@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { RUNTIME_EMBEDS } from '#cli/config/checks/language/bash.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
@@ -8,7 +8,7 @@ import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
  * @param input the check context
  * @returns the findings
  */
-export const embeds: Engine = async (input) => {
+export const embeds: BuiltInCheck = async (input) => {
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>
         file.code.flatMap((line, position) => {

@@ -17,7 +17,7 @@ import { RUFF_VERSION_OUTPUT, PYTHON_REGISTRY_CREDENTIALS } from '#tests/config/
 import type { PythonInstallation, PythonInstallationOptions } from '#tests/types/harness/python-installation.ts';
 import { REDIRECTED, AUTHORED_FILES, EXCLUDED_PYTHON_CHECKS } from '#tests/config/harness/python-installation.ts';
 
-/** Creates an authored Python project, generated lock, and isolated uv environment selectors. */
+/** Creates an authored Python project, generated lockfile, and isolated uv environment selectors. */
 export async function preparePythonInstallation(
     root: string,
     options: PythonInstallationOptions,

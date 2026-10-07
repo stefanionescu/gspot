@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
 import type { ImportSource } from '#plugin/types/imports.ts';
-import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { ImportBoundariesOptions } from '#plugin/types/boundaries.ts';
 import { lintedPath, isAnyGlobMatch, relativeImportPath } from '#plugin/files.ts';

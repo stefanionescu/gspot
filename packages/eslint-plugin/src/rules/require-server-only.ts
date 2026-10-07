@@ -1,4 +1,4 @@
-import { createRule } from '#plugin/definition.ts';
+import { createRule } from '#plugin/create-rule.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const requireServerOnly = createRule<[], 'missing'>({

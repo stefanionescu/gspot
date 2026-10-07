@@ -5,7 +5,7 @@ import type { Finding, KnipReport } from '#cli/types/parsers/output.ts';
 
 /**
  * Read Knip's JSON categories without losing grouped symbols or source positions.
- * @param check the check name
+ * @param check the check ID
  * @param text the native JSON report
  * @param help the check help text
  * @returns categorized findings, including each positioned member of a grouped issue

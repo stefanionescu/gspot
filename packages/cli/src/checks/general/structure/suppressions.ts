@@ -12,7 +12,7 @@ import type { SourceComment } from '#cli/types/parsers/comments.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { commentText, parseComments } from '#cli/parsers/comments.ts';
 import type { SuppressionForm } from '#cli/types/checks/general/structure.ts';
-import type { EngineInput, SuppressionComment } from '#cli/types/execution/check.ts';
+import type { CheckInput, SuppressionComment } from '#cli/types/execution/check.ts';
 
 // A preceding reason belongs only to the next line. Intervening source or comments break adjacency.
 function reasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
@@ -106,10 +106,10 @@ export async function suppressionComments(
 
 /**
  * Report forbidden suppressions and missing or invalid required reasons.
- * @param input the engine input with the read suppression comments
+ * @param input the check input with the read suppression comments
  * @returns the findings
  */
-export async function suppressions(input: EngineInput): Promise<Finding[]> {
+export async function suppressions(input: CheckInput): Promise<Finding[]> {
     if (input.selections === undefined)
         throw new Error('The suppressions check needs every scope selection. Its manifest must say runs = "once".');
     const comments = await suppressionComments(

@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config/checks/language/bash.ts';
 
@@ -9,7 +9,7 @@ import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config/checks/langua
  * @param input the check context
  * @returns the findings
  */
-export const safety: Engine = async (input) => {
+export const safety: BuiltInCheck = async (input) => {
     const owners = input.view.settings['bash.safety_owners'] as string[];
     const isOwner = pathMatcher(owners);
     const index = await getScriptIndex(input);

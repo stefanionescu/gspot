@@ -70,7 +70,7 @@ export function assertNotPrivate(path: string): void {
 }
 
 /**
- * Public mutation plans cannot target the owner's log, lock, or recovery files.
+ * Public mutation plans cannot target the owner's log, claim, or recovery files.
  * @param path the proposed path
  */
 export function assertMutationTarget(path: string): void {

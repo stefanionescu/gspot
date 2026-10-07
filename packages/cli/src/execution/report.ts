@@ -26,7 +26,7 @@ function isIncomplete(session: ToolSession, results: CheckResult[], fixes: FixRe
  */
 export function emptyResult(planned: PlannedCheck): CheckResult {
     return {
-        check: planned.spec.name,
+        check: planned.check.name,
         scope: planned.scope.scope.path,
         status: 'passed',
         fileCount: planned.files.length,
@@ -64,8 +64,8 @@ export function buildRunReport(input: ReportInput): RunReport {
             }))
             .toArray(),
         skips: planned.flatMap((check): RunReport['skips'] => {
-            if (check.skip !== undefined) return [{ check: check.spec.name, cause: check.skip.cause }];
-            return input.active.includes(check) ? [] : [{ check: check.spec.name, cause: 'inputs' }];
+            if (check.skip !== undefined) return [{ check: check.check.name, cause: check.skip.cause }];
+            return input.active.includes(check) ? [] : [{ check: check.check.name, cause: 'inputs' }];
         }),
         unstagedChanges: options.unstagedChanges ?? 0,
         partial: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),

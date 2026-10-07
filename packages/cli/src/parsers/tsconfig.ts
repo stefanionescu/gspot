@@ -1,7 +1,15 @@
+import { z } from 'zod';
 import ts from 'typescript';
-import { dirname } from 'node:path';
-import { typeScriptConfigSchema } from '#cli/parsers/schema/tsconfig.ts';
+import { readFileSync } from 'node:fs';
+import { dirname, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
+import { readText } from '#cli/platform/source.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
+import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import { portableSegments } from '#cli/platform/root/rules.ts';
 import { TS_NO_INPUTS_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsconfig.ts';
+
+const typeScriptConfigSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 
 /**
  * Parses compiler options and inherited configuration with the TypeScript compiler.
@@ -10,7 +18,7 @@ import { TS_NO_INPUTS_CODE, TS_EMPTY_FILES_CODE } from '#cli/config/parsers/tsco
  * @param host the caller's file discovery and configuration reader
  * @returns the parsed compiler configuration
  */
-export function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): ts.ParsedCommandLine {
+function parseTsconfig(path: string, text: string, host: ts.ParseConfigHost): ts.ParsedCommandLine {
     const source = ts.parseConfigFileTextToJson(path, text);
     if (source.error !== undefined) throw new Error(ts.flattenDiagnosticMessageText(source.error.messageText, '\n'));
     const raw: unknown = source.config;
@@ -28,4 +36,40 @@ export function parseTsconfig(path: string, text: string, host: ts.ParseConfigHo
     if (errors.length > 0)
         throw new Error(errors.map((error) => ts.flattenDiagnosticMessageText(error.messageText, '\n')).join('\n'));
     return parsed;
+}
+
+function configurationText(root: string, path: string): string | undefined {
+    const local = toPosix(relative(root, path));
+    using files = openRoot(root, 'native');
+    try {
+        const segments = local.split('/');
+        const dependency = segments.indexOf('node_modules');
+        if (dependency !== -1 && segments[0] !== DOT_GSPOT) {
+            // Package managers link dependency folders; follow those links, but refuse links above node_modules.
+            portableSegments(local);
+            if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
+            return readFileSync(path, 'utf8');
+        }
+        return readText(root, local);
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
+        throw error;
+    }
+}
+
+/**
+ * Resolves compiler options and inherited paths with the TypeScript compiler.
+ * @param root the repository boundary for authored configuration
+ * @param path the absolute configuration path
+ * @returns the parsed configuration, or undefined when the file is absent
+ */
+export function getTsconfig(root: string, path: string): ts.ParsedCommandLine | undefined {
+    try {
+        const text = configurationText(root, path);
+        if (text === undefined) return undefined;
+        return parseTsconfig(path, text, { ...ts.sys, readFile: (file) => configurationText(root, file) });
+    } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(`Cannot read TypeScript configuration ${path}: ${detail}`, { cause: error });
+    }
 }

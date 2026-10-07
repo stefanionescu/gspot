@@ -6,8 +6,8 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { engineInput } from '#cli/execution/engines.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { checkInput } from '#cli/execution/built-in.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
@@ -23,7 +23,7 @@ test('migration history reports changed committed SQL and an earlier new version
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', '.']);
     expect(
-        await migrationsFrozen(buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
+        await migrationsFrozen(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
     ).toStrictEqual([]);
     gitOutput(sandbox.path, [
         '-c',
@@ -38,7 +38,7 @@ test('migration history reports changed committed SQL and an earlier new version
     await createFileTree(sandbox.path, { 'migrations/20240101_early.sql': 'SELECT 1;\n' });
     gitOutput(sandbox.path, ['add', '.']);
     expect(
-        await migrationsFrozen(buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
+        await migrationsFrozen(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
     ).toStrictEqual([
         {
             check: 'postgres/migrations-frozen',
@@ -51,7 +51,7 @@ test('migration history reports changed committed SQL and an earlier new version
         },
     ]);
     expect(
-        await migrationOrder(buildEngineInput(await openSession(sandbox.path), 'postgres/migration-order')),
+        await migrationOrder(buildCheckInput(await openSession(sandbox.path), 'postgres/migration-order')),
     ).toStrictEqual([
         {
             check: 'postgres/migration-order',
@@ -65,12 +65,12 @@ test('migration history reports changed committed SQL and an earlier new version
     writeFileSync(join(sandbox.path, PATH), ORIGINAL);
     gitOutput(sandbox.path, ['mv', 'migrations/20240101_early.sql', 'migrations/20240301_later.sql']);
     expect(
-        await migrationsFrozen(buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
+        await migrationsFrozen(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
     ).toStrictEqual([]);
     expect(
-        await migrationOrder(buildEngineInput(await openSession(sandbox.path), 'postgres/migration-order')),
+        await migrationOrder(buildCheckInput(await openSession(sandbox.path), 'postgres/migration-order')),
     ).toStrictEqual([]);
-    const read = buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen');
+    const read = buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen');
     const branch = gitOutput(sandbox.path, ['symbolic-ref', 'HEAD']);
     writeFileSync(join(sandbox.path, '.git', branch), 'broken');
     await rejects(migrationsFrozen(read), { message: /Cannot read committed Git history/u });
@@ -87,7 +87,7 @@ test('nested scopes keep migration roots and parsed reads separate', async () =>
         'apps/two/schema/20240101_two.sql': 'SELECT 2;\n',
     });
     const session = await openSession(sandbox.path);
-    const spec = session.scopes[0]!.selected.flatMap((manifest) => manifest.checks).find(
+    const check = session.scopes[0]!.selected.flatMap((manifest) => manifest.checks).find(
         (check) => check.name === 'postgres/migration-order',
     )!;
     const expected: Record<string, string> = {
@@ -96,7 +96,7 @@ test('nested scopes keep migration roots and parsed reads separate', async () =>
         'apps/two': 'apps/two/schema/20240101_two.sql',
     };
     for (const selected of session.scopes) {
-        const scopeInput = engineInput(session, { scope: selected, spec, files: session.repository.files });
+        const scopeInput = checkInput(session, { scope: selected, check, files: session.repository.files });
         const migrations = await migrationsOf(scopeInput);
         expect(migrations.map((migration) => migration.path)).toStrictEqual([expected[selected.scope.path]!]);
         expect(await migrationOrder(scopeInput)).toStrictEqual([]);
@@ -107,12 +107,10 @@ test('migration analysis rejects unreadable SQL and accepts its correction in a 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': POSTGRES_HISTORY_POLICY, [PATH]: 'CREATE TABLE ;' });
     expect(
-        await rejection(migrationsOf(buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen'))),
+        await rejection(migrationsOf(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen'))),
     ).toContain('migrations/20240201_teams.sql:1:14:');
     writeFileSync(join(sandbox.path, PATH), ORIGINAL);
-    const restored = await migrationsOf(
-        buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen'),
-    );
+    const restored = await migrationsOf(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen'));
     expect(restored[0]?.statements[0]?.kind).toBe('CreateStmt');
 });
 
@@ -129,18 +127,18 @@ test('unpadded migration versions replay and freeze in numeric order', async () 
         'migrations/11_later.sql': 'SELECT 11;',
     });
     const session = await openSession(sandbox.path);
-    const input = buildEngineInput(session, 'postgres/migration-order');
+    const input = buildCheckInput(session, 'postgres/migration-order');
     const migrations = await migrationsOf(input);
     expect(migrations.map((migration) => migration.version)).toStrictEqual(['8', '9', '10', '11']);
     expect(buildSchema(migrations).secured.has('public.teams')).toBe(true);
     expect(await migrationOrder(input)).toMatchObject([{ file: 'migrations/8_earlier.sql', rule: 'order' }]);
     await Bun.write(join(sandbox.path, 'migrations/10_secure.sql'), 'SELECT 10;');
     expect(
-        await migrationsFrozen(buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
+        await migrationsFrozen(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
     ).toStrictEqual([]);
     await Bun.write(join(sandbox.path, 'migrations/9_create.sql'), 'CREATE TABLE teams (id bigint);');
     expect(
-        await migrationsFrozen(buildEngineInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
+        await migrationsFrozen(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
     ).toMatchObject([{ file: 'migrations/9_create.sql', rule: 'frozen' }]);
 });
 
@@ -152,7 +150,7 @@ test('dbmate and golang-migrate replays exclude rollback SQL', async () => {
         'db/migrations/2_secure.up.sql': 'ALTER TABLE teams ENABLE ROW LEVEL SECURITY;',
         'db/migrations/2_secure.down.sql': 'ALTER TABLE teams DISABLE ROW LEVEL SECURITY;',
     });
-    const input = buildEngineInput(await openSession(sandbox.path), 'postgres/migration-order');
+    const input = buildCheckInput(await openSession(sandbox.path), 'postgres/migration-order');
     const migrations = await migrationsOf(input);
     expect(migrations.map((migration) => migration.name)).toStrictEqual(['1_teams.sql', '2_secure.up.sql']);
     expect(buildSchema(migrations).secured.has('public.teams')).toBe(true);
@@ -182,13 +180,13 @@ test('history reads only selected migration blobs and shares reads without mixin
             return runBinary(argv, options);
         }),
     );
-    expect(await migrationOrder(buildEngineInput(session, 'postgres/migration-order'))).toStrictEqual([]);
-    expect(await migrationsFrozen(buildEngineInput(session, 'postgres/migrations-frozen'))).toStrictEqual([]);
+    expect(await migrationOrder(buildCheckInput(session, 'postgres/migration-order'))).toStrictEqual([]);
+    expect(await migrationsFrozen(buildCheckInput(session, 'postgres/migrations-frozen'))).toStrictEqual([]);
     expect(
-        await migrationOrder(buildEngineInput(session, 'postgres/migration-order', { scope: 'apps/api' })),
+        await migrationOrder(buildCheckInput(session, 'postgres/migration-order', { scope: 'apps/api' })),
     ).toStrictEqual([]);
     expect(
-        await migrationsFrozen(buildEngineInput(session, 'postgres/migrations-frozen', { scope: 'apps/api' })),
+        await migrationsFrozen(buildCheckInput(session, 'postgres/migrations-frozen', { scope: 'apps/api' })),
     ).toStrictEqual([]);
     expect(requests).toStrictEqual([rootHash + '\n', childHash + '\n']);
 });

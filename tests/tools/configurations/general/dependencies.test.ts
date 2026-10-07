@@ -1,4 +1,4 @@
-// A stale Bun lockfile on an installed repository: the lockfile check fails, and regenerating the lock passes.
+// A stale Bun lockfile on an installed repository: the lockfile check fails, and regenerating the lockfile passes.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
@@ -12,7 +12,7 @@ import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { CLEAN, DEPENDENCIES_INIT } from '#tests/config/tools/configurations/general/dependencies.ts';
 
 test(
-    'the dependencies configuration > a stale Bun lock fails, regenerating it passes, and advisory checks wait for their stage',
+    'the dependencies configuration > an outdated Bun lockfile fails, regenerating it passes, and advisory checks wait for their stage',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'package.json': CLEAN });
@@ -48,11 +48,14 @@ test(
                 ],
             },
         ]);
-        const locked = await runTestCommand([process.execPath, 'install', '--lockfile-only', '--ignore-scripts'], {
-            cwd: sandbox.path,
-            env: environment,
-        });
-        expect(locked.code, locked.stdout + locked.stderr).toBe(0);
+        const lockfileResult = await runTestCommand(
+            [process.execPath, 'install', '--lockfile-only', '--ignore-scripts'],
+            {
+                cwd: sandbox.path,
+                env: environment,
+            },
+        );
+        expect(lockfileResult.code, lockfileResult.stdout + lockfileResult.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'bun.lock')).exists()).toBe(true);
         const corrected = await spawnGspot(sandbox.path, args, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

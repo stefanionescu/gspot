@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { spyOn } from 'bun:test';
 import { main } from '#cli/commands/program.ts';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { SOURCE_CLI_PATH } from '#tests/config/harness/cli.ts';
 import type { RunOptions } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -113,5 +113,5 @@ export function startGspot(
  */
 
 export function buildRunOptions(overrides: Partial<RunOptions> = {}): RunOptions {
-    return { checks: CHECKS, stage: 'all', skips: [], fix: false, isDryRun: false, ...overrides };
+    return { checks: BUILT_IN_CHECKS, stage: 'all', skips: [], fix: false, isDryRun: false, ...overrides };
 }

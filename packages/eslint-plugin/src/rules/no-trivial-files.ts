@@ -1,7 +1,7 @@
 import { lintedPath, isIndexFile } from '#plugin/files.ts';
 import { TRIVIAL_STATEMENTS } from '#plugin/config/syntax.ts';
-import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { ImplementedFunction } from '#plugin/types/syntax.ts';
+import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { unwrap, totalStatements, hasConstructorState } from '#plugin/syntax.ts';
 import type { ContentCheck, TrivialFilesOptions } from '#plugin/types/file-content.ts';

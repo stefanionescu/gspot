@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
+import { stemOf } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { isOwned } from '#cli/configurations/owners.ts';
-import { CASE_NAMES } from '#cli/parsers/naming/names.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { sqlIdentifiers } from '#cli/parsers/naming/sql.ts';
 import { bashIdentifiers } from '#cli/parsers/naming/bash.ts';
@@ -11,19 +11,27 @@ import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { swiftIdentifiers } from '#cli/parsers/naming/swift.ts';
-import { REACT_FILE } from '#cli/config/checks/general/naming.ts';
+import { CASE_NAMES } from '#cli/checks/general/naming/words.ts';
 import { pythonIdentifiers } from '#cli/parsers/naming/python.ts';
+import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { nameProblems } from '#cli/checks/general/naming/problems.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/policy.ts';
-import type { Engine, EngineInput } from '#cli/types/execution/check.ts';
 import { typescriptIdentifiers } from '#cli/parsers/naming/typescript.ts';
+import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
 import { everyTable, repositoryHarnessFolders } from '#cli/policy/settings/lookup.ts';
-import { fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/paths.ts';
+import { WRAPPERS, REACT_FILE, MIGRATION_PREFIX } from '#cli/config/checks/general/naming.ts';
 import type { FileNames, NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
-function sourceFiles(input: EngineInput): NamingSource[] {
+function segmentName(segment: string): Pick<Identifier, 'name' | 'category'> {
+    const bracket = WRAPPERS.find((entry) => segment.startsWith(entry.open) && segment.endsWith(entry.close));
+    if (bracket === undefined) return { name: segment, category: 'directories' };
+    const inner = segment.slice(bracket.open.length, segment.length - bracket.close.length);
+    return { name: inner.replace(/^\.\.\./u, ''), category: bracket.category };
+}
+
+function sourceFiles(input: CheckInput): NamingSource[] {
     const languages = input.selection.selected.filter((manifest) => manifest.configuration.kind === 'language');
     return input.files
         .filter((file) => file.kind === 'source')
@@ -34,7 +42,7 @@ function sourceFiles(input: EngineInput): NamingSource[] {
         .filter((entry): entry is NamingSource => entry.language !== undefined);
 }
 
-function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: Identifier[]): Finding[] {
+function findingsFor(input: CheckInput, policy: EffectivePolicy, identifiers: Identifier[]): Finding[] {
     const isTestFile = pathMatcher(input.view.settings['tests'] as string[]);
     return identifiers.flatMap((identifier) =>
         nameProblems(identifier, {
@@ -53,7 +61,7 @@ function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: I
     );
 }
 
-async function identifierFindings(input: EngineInput, policy: EffectivePolicy): Promise<Finding[]> {
+async function identifierFindings(input: CheckInput, policy: EffectivePolicy): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const { file, language } of sourceFiles(input)) {
         const text = readSource(input.root, file.path, input.reads).toString('utf8');
@@ -63,7 +71,7 @@ async function identifierFindings(input: EngineInput, policy: EffectivePolicy): 
     return findings;
 }
 
-function pathIdentifiers(input: EngineInput): Identifier[] {
+function pathIdentifiers(input: CheckInput): Identifier[] {
     const harnesses = new Set(repositoryHarnessFolders(input.policyFiles.policy, input.scope));
     const seen = new Set<string>();
     return sourceFiles(input).flatMap(({ file, language }) => {
@@ -78,7 +86,7 @@ function pathIdentifiers(input: EngineInput): Identifier[] {
     });
 }
 
-async function declaredNames(input: EngineInput): Promise<FileNames[]> {
+async function declaredNames(input: CheckInput): Promise<FileNames[]> {
     const policy = input.policyFiles.policy;
     const selections = new Map(
         input.scopeEntries.map((scope) => [
@@ -112,7 +120,7 @@ async function declaredNames(input: EngineInput): Promise<FileNames[]> {
 }
 
 // Reports root and scope entries in gspot.toml that match no file or name.
-async function policyFindings(input: EngineInput): Promise<Finding[]> {
+async function policyFindings(input: CheckInput): Promise<Finding[]> {
     const policy = input.policyFiles.policy;
     const files = await declaredNames(input);
     const layers = everyTable(policy).flatMap(({ table, scope = '' }) =>
@@ -143,10 +151,10 @@ async function policyFindings(input: EngineInput): Promise<Finding[]> {
     });
 }
 
-// The engine of one naming analysis: the effective naming policy of the scope, then the analysis.
-function namingEngine(
-    analysis: (input: EngineInput, policy: EffectivePolicy) => Finding[] | Promise<Finding[]>,
-): Engine {
+// One naming analysis: the effective naming policy of the scope, then the analysis.
+function namingCheck(
+    analysis: (input: CheckInput, policy: EffectivePolicy) => Finding[] | Promise<Finding[]>,
+): BuiltInCheck {
     return (input) => {
         const policy = effectivePolicy(
             input.selection.surface,
@@ -156,6 +164,56 @@ function namingEngine(
         );
         return analysis(input, policy);
     };
+}
+
+/**
+ * The file's own name as an identifier: the stem for most languages, the whole base name for a SQL migration.
+ * @param path the file path
+ * @param language the language configuration the file belongs to
+ * @returns the identifier
+ */
+export function fileIdentifier(path: string, language: string): Identifier {
+    const base = posix.basename(path);
+    const name = language === 'sql' && base.endsWith('.sql') ? base : stemOf(base);
+    const named = name.startsWith('[') ? segmentName(name) : { name, category: 'files' };
+    return createIdentifier(
+        { file: path, language },
+        {
+            line: 1,
+            column: 1,
+            category: named.category,
+
+            name: named.name,
+        },
+    );
+}
+
+/**
+ * Every directory on a file's path as an identifier, from the top down. Dot folders and migration folders are skipped.
+ * @param path the file path
+ * @param language the language configuration the file belongs to
+ * @returns the identifiers
+ */
+export function directoryIdentifiers(path: string, language: string): Identifier[] {
+    const segments = path.split('/').slice(0, -1);
+    return segments.flatMap((segment, index) => {
+        const named = segment.startsWith('.') || MIGRATION_PREFIX.test(segment) ? undefined : segmentName(segment);
+        if (named === undefined || named.name === '') return [];
+        const directory = segments.slice(0, index + 1).join('/');
+        return [
+            createIdentifier(
+                { file: path, language },
+                {
+                    line: 1,
+                    column: 1,
+                    category: named.category,
+
+                    name: named.name,
+                    directory,
+                },
+            ),
+        ];
+    });
 }
 
 /**
@@ -170,7 +228,7 @@ export async function identifiersOf(
     file: string,
     text: string,
     language: string,
-    context?: Pick<EngineInput, 'reads' | 'resources'>,
+    context?: Pick<CheckInput, 'reads' | 'resources'>,
 ): Promise<Identifier[]> {
     if (language === 'sql') return sqlIdentifiers(file, text, context?.reads);
     const grammar = grammarFor(file, language);
@@ -201,8 +259,10 @@ export async function identifiersOf(
     }
 }
 
-export const namingIdentifiers: Engine = namingEngine(identifierFindings);
+export const namingIdentifiers: BuiltInCheck = namingCheck(identifierFindings);
 
-export const namingPaths: Engine = namingEngine((input, policy) => findingsFor(input, policy, pathIdentifiers(input)));
+export const namingPaths: BuiltInCheck = namingCheck((input, policy) =>
+    findingsFor(input, policy, pathIdentifiers(input)),
+);
 
-export const namingPolicy: Engine = namingEngine(policyFindings);
+export const namingPolicy: BuiltInCheck = namingCheck(policyFindings);

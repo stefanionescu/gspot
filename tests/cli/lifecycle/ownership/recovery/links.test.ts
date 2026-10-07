@@ -50,7 +50,7 @@ const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/owne
     );
 
     test.each(['before', 'after'] as const)(
-        'lifecycle ownership: an interrupted replacement %s publication settles and releases its writer lock',
+        'lifecycle ownership: an interrupted replacement %s publication settles and releases its writer claim',
         async (point) => {
             await using directory = await testdir();
             await createFileTree(directory.path, { 'config.txt': 'original\n' });

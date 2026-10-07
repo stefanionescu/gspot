@@ -1,10 +1,10 @@
 // Reproduce one check with the same stage, scope, message, or pushed revision.
-import { quoteArgument } from '#cli/platform/quoting.ts';
+import { quoteArgument } from '#cli/platform/text.ts';
 import type { ReproduceOptions } from '#cli/types/execution/reproduce.ts';
 
 /**
  * The command that runs one check alone.
- * @param checkName the check name.
+ * @param checkName the check ID.
  * @param scope the scope path, '' for the root.
  * @param options the message file or the exact push input.
  * @param options.push the pre-push input the check read.

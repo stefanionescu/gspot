@@ -3,7 +3,7 @@ import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import type { LockName, ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
+import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 
 import {
     RUNTIME_COMMAND,
@@ -212,15 +212,15 @@ export function declaredPackageInstaller(manifest: PackageManifest): PackageInst
 }
 
 /**
- * Validate an npm tool project and identify its package manager and lock file.
+ * Validate an npm tool project and identify its package manager and lockfile.
  * @param text the generated or recorded package.json contents
- * @returns the declared manager, dependencies, and repository-relative lock path
+ * @returns the declared manager, dependencies, and repository-relative lockfile path
  */
 export function parseToolProject(text: string): ToolProject {
     const parsed = toolProjectSchema.parse(JSON.parse(text));
     const installer = parsePackageInstaller(parsed.packageManager);
-    const lock = packageLockFile(installer.name);
-    return { installer, dependencies: parsed.devDependencies, lock, lockPath: `${DOT_GSPOT}/${lock}` };
+    const lockfile = packageLockfile(installer.name);
+    return { installer, dependencies: parsed.devDependencies, lockfile, lockfilePath: `${DOT_GSPOT}/${lockfile}` };
 }
 
 /**
@@ -285,7 +285,7 @@ export function manifestParser(path: string): ManifestParser | undefined {
  * @param installer the validated package manager
  * @returns the lockfile basename declared by its registry entry
  */
-export function packageLockFile(installer: LockName): ToolProjectLockfileName {
+export function packageLockfile(installer: PackageInstaller['name']): ToolProjectLockfileName {
     for (const entry of LOCKFILES) if ('toolProject' in entry && entry.client === installer) return entry.file;
-    throw new Error(`The lockfile registry declares no tool project lock for ${installer}.`);
+    throw new Error(`The lockfile registry declares no tool project lockfile for ${installer}.`);
 }

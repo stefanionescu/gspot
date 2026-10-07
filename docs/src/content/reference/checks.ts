@@ -1,8 +1,8 @@
 import { section, referencePage } from './page.ts';
 import type { ReferencePage } from '../../types/reference.ts';
-import type { Manifest, CheckSpec } from '@gspothq/cli/src/types/configurations.ts';
+import type { Manifest, CheckDeclaration } from '@gspothq/cli/src/types/configurations.ts';
 
-function checkEnvironment(check: CheckSpec): string[] {
+function checkEnvironment(check: CheckDeclaration): string[] {
     const tool = check.tool ?? check.command?.[0];
     const runs = { once: 'once for the repository', scope: 'once per scope', files: 'per file' }[check.runs];
     const attributes: [string, string | undefined][] = [
@@ -24,7 +24,7 @@ function checkEnvironment(check: CheckSpec): string[] {
  * @param manifest the manifest that declares the check
  * @returns the page
  */
-export function checkPage(check: CheckSpec, manifest: Manifest): ReferencePage {
+export function checkPage(check: CheckDeclaration, manifest: Manifest): ReferencePage {
     if (typeof check.example !== 'string' || check.example.trim() === '')
         throw new Error(`Check ${check.name} has no example.`);
     const lines = [

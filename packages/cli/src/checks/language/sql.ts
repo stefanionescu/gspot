@@ -5,7 +5,7 @@ import { trivialText } from '#cli/parsers/statements.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { parse, parsePlpgsql } from '#cli/parsers/sql/pg.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { positionAt, parseSqlFile } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
@@ -19,7 +19,7 @@ import type {
     SqlFunctionFindings,
 } from '#cli/types/checks/language/sql.ts';
 
-function sources(input: EngineInput): SqlSource[] {
+function sources(input: CheckInput): SqlSource[] {
     return input.files
         .filter((file) => file.kind === 'source')
         .map((file) => ({
@@ -135,10 +135,10 @@ async function fileFindings(analysis: SqlFileInput): Promise<Finding[]> {
 
 /**
  * One finding for each file Postgres refuses to parse. Another dialect has no parser here, so its files pass.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function syntax(input: EngineInput): Promise<Finding[]> {
+export async function syntax(input: CheckInput): Promise<Finding[]> {
     const sqlfluff = input.view.options('tools.sqlfluff');
     const dialect = sqlfluff['dialect'] as string;
     if (!PARSED_DIALECTS.has(dialect)) return [];
@@ -157,10 +157,10 @@ export async function syntax(input: EngineInput): Promise<Finding[]> {
 
 /**
  * One finding for each file with more code lines than limits.sql.file_lines.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function fileLines(input: EngineInput): Finding[] {
+export function fileLines(input: CheckInput): Finding[] {
     const ceiling = input.view.limit('file_lines', 'sql');
     if (ceiling === undefined) return [];
     return sources(input).flatMap((source): Finding[] => {
@@ -174,10 +174,10 @@ export function fileLines(input: EngineInput): Finding[] {
 
 /**
  * Report trivial PostgreSQL functions and excessive declared input parameters.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function trivialFunctions(input: EngineInput): Promise<Finding[]> {
+export async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
     const sqlfluff = input.view.options('tools.sqlfluff');
     const dialect = sqlfluff['dialect'] as string;
     if (!PARSED_DIALECTS.has(dialect)) return [];

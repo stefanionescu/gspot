@@ -1,14 +1,14 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { visitPythonModules } from '#cli/parsers/python.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 
 /**
  * Report Python files above the configured code-line ceiling.
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function fileLines(input: EngineInput): Promise<Finding[]> {
+export async function fileLines(input: CheckInput): Promise<Finding[]> {
     const ceiling = input.view.limit('file_lines', 'python');
     if (ceiling === undefined) return [];
     return visitPythonModules(input, ({ modules }) =>
@@ -33,7 +33,7 @@ export async function fileLines(input: EngineInput): Promise<Finding[]> {
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function functionLines(input: EngineInput): Promise<Finding[]> {
+export async function functionLines(input: CheckInput): Promise<Finding[]> {
     const ceiling = input.view.limit('function_lines', 'python');
     if (ceiling === undefined) return [];
     return visitPythonModules(input, ({ modules, functions }) => {

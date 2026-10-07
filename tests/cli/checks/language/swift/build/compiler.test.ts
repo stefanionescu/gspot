@@ -5,8 +5,8 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
 import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { isMacos, isPosix } from '#tests/config/harness/platforms.ts';
@@ -26,7 +26,7 @@ test('a silent successful Swift build returns no findings', async () => {
         rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
     });
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
-    const input = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+    const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const run = spyOn(spawn, 'run').mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
         expect(await swiftBuild(input)).toStrictEqual([]);
@@ -93,8 +93,8 @@ test('a later Swift session reads a failed build after an earlier successful bui
         rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
     });
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
-    const first = buildEngineInput(await openSession(sandbox.path), 'swift/build');
-    const second = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+    const first = buildCheckInput(await openSession(sandbox.path), 'swift/build');
+    const second = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const run = spyOn(spawn, 'run')
         .mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 })
         .mockResolvedValue({
@@ -133,7 +133,7 @@ test('canceled Swift compilation refuses to launch the compiler', async () => {
         rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
     });
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
-    const input = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+    const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     input.cancelSignal = AbortSignal.abort();
     expect(await rejection(swiftBuild(input))).toBe('The command was canceled.');
     const analyzer = buildPlan(input, 'analyze');
@@ -157,9 +157,9 @@ test('Swift response files stay inside the compiler cache before log publication
         'gspot.toml': buildPolicy(['swift']),
         'external-response': 'external bytes must not enter a compiler log',
     });
-    const input = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+    const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const plan = buildPlan(input);
-    const corrected = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+    const corrected = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const run = spyOn(spawn, 'run').mockResolvedValue({
         code: 0,
         stdout: `swiftc @${join(sandbox.path, 'external-response')}`,
@@ -183,7 +183,7 @@ test('Swift response files stay inside the compiler cache before log publication
     }
 });
 
-test('a failed Swift source preparation releases its build lock before a later writer', async () => {
+test('a failed Swift source preparation releases its build claim before a later writer', async () => {
     await using sandbox = await testdir();
     using resources = new DisposableStack();
     resources.defer(() => {
@@ -194,7 +194,7 @@ test('a failed Swift source preparation releases its build lock before a later w
         'Main.swift': 'let value = 1\n',
     });
     const session = await openSession(sandbox.path);
-    const input = buildEngineInput(session, 'swift/build');
+    const input = buildCheckInput(session, 'swift/build');
     const plan = buildPlan(input);
     rmSync(join(sandbox.path, 'Main.swift'));
     using run = spyOn(spawn, 'run');
@@ -219,7 +219,7 @@ test.skipIf(!isPosix)(
             'Main.swift': 'let value = 1\n',
         });
         const session = await openSession(sandbox.path);
-        const input = buildEngineInput(session, 'swift/build');
+        const input = buildCheckInput(session, 'swift/build');
         resources.use(mockPinnedExecutables([...session.manifests.values()].flatMap((manifest) => manifest.tools)));
         resources.use(
             spyOn(spawn, 'run').mockImplementation(() => {
@@ -249,7 +249,7 @@ test.each(['default', 'platform=macOS', ''])(
                 tables: `[tools.xcode]\nproject = "App.xcodeproj"\nscheme = "App"\n${declared}`,
             }),
         });
-        const input = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+        const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         const expected =
             destination === 'default'
                 ? (configurationManifests()

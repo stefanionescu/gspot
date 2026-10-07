@@ -4,7 +4,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -43,7 +43,7 @@ test(
             metadata,
             `Metadata-Version: 2.1\nName: licensed-example\nVersion: 1.0.0\nLicense: GPL-3.0-only\n`,
         );
-        expect(await licensesPackages(buildEngineInput(await openSession(root), 'licenses/packages'))).toStrictEqual([
+        expect(await licensesPackages(buildCheckInput(await openSession(root), 'licenses/packages'))).toStrictEqual([
             containing({
                 file: 'pyproject.toml',
                 rule: 'disallowed-license',
@@ -59,9 +59,7 @@ test(
         );
         const corrected = await runGspot(root, ['apply', '--json']);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(await licensesPackages(buildEngineInput(await openSession(root), 'licenses/packages'))).toStrictEqual(
-            [],
-        );
+        expect(await licensesPackages(buildCheckInput(await openSession(root), 'licenses/packages'))).toStrictEqual([]);
     },
     NATIVE_TEST_TIMEOUT_MS,
 );

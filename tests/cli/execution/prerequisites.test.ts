@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { SITE_CONSUMERS } from '#tests/config/cli/execution/prerequisites.ts';
@@ -89,7 +89,7 @@ test('a check runner that throws errors that check alone, and the other checks k
         'gspot.toml': buildPolicy([], { tables: entries.join('') }),
         'source.txt': 'input\n',
     });
-    const checks = { ...CHECKS, 'sandbox/broken': { run: brokenRunner } };
+    const checks = { ...BUILT_IN_CHECKS, 'sandbox/broken': { run: brokenRunner } };
     const outcome = await executeRun(
         await openSession(sandbox.path),
         buildRunOptions({ checks, only: ['sandbox/broken', 'sandbox/kept'] }),

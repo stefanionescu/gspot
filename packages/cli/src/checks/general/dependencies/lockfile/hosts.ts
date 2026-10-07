@@ -3,7 +3,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { LOCKFILE_URL, NPM_DOWNLOAD, JAVASCRIPT_CLIENTS } from '#cli/config/checks/general/dependencies.ts';
 
 function urlProblem(url: URL, hosts: Set<string>): string | undefined {
@@ -11,7 +11,7 @@ function urlProblem(url: URL, hosts: Set<string>): string | undefined {
     return hosts.has(url.host) ? undefined : `${url.host} is not an allowed registry host.`;
 }
 
-function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Finding[] {
+function fileFindings(input: CheckInput, path: string, hosts: Set<string>): Finding[] {
     const lines = readSource(input.root, path, input.reads).toString('utf8').split('\n');
     // An npm lockfile also holds funding pages and deprecation notes; only its resolved field names a download.
     const isNpm = lockfileEntry(posix.basename(path))?.client === 'npm';
@@ -31,10 +31,10 @@ function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Fin
 
 /**
  * The findings of the lockfile host check over tracked npm, pnpm, Yarn, and text Bun lockfiles.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function lockfileHosts(input: EngineInput): Finding[] {
+export function lockfileHosts(input: CheckInput): Finding[] {
     const hosts = new Set(input.view.options('dependencies')['registry_hosts'] as string[] | undefined);
     const paths = input.files
         .map((file) => file.path)

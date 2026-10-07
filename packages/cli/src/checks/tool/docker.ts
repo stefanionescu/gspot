@@ -6,8 +6,8 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { ComposeProject } from '#cli/types/parsers/docker.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
@@ -15,7 +15,7 @@ import { composeSchema, imageReportSchema } from '#cli/parsers/schema/docker.ts'
 import { TRIVY_EXIT, COMPOSE_FILES, SHOWN_FINDINGS, DOCKERIGNORE_ENTRIES } from '#cli/config/checks/tool/docker.ts';
 
 // Interpolated image names require Compose environment resolution and are not literal scan targets.
-function composeImages(input: EngineInput, path: string): Set<string> {
+function composeImages(input: CheckInput, path: string): Set<string> {
     let document: ComposeProject;
     try {
         document = composeSchema.parse(
@@ -32,8 +32,8 @@ function composeImages(input: EngineInput, path: string): Set<string> {
 }
 
 // Native exit status and parsed findings must agree before a scan can count as clean.
-async function scanImage(input: EngineInput, image: string): Promise<string[]> {
-    const result = await runEngineTool(
+async function scanImage(input: CheckInput, image: string): Promise<string[]> {
+    const result = await runCheckTool(
         input,
         [
             'trivy',
@@ -69,10 +69,10 @@ async function scanImage(input: EngineInput, image: string): Promise<string[]> {
 
 /**
  * One finding for each Dockerfile folder with no ignore file, or with one that lets a required entry through.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function dockerignore(input: EngineInput): Finding[] {
+export function dockerignore(input: CheckInput): Finding[] {
     const dockerfiles = input.files.filter((file) => {
         const name = posix.basename(file.path);
         return name === 'Dockerfile' || name.startsWith('Dockerfile.') || name.endsWith('.dockerfile');
@@ -109,10 +109,10 @@ export function dockerignore(input: EngineInput): Finding[] {
 
 /**
  * Scan each literal service image once per Compose file.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function trivyImage(input: EngineInput): Promise<Finding[]> {
+export async function trivyImage(input: CheckInput): Promise<Finding[]> {
     const isCompose = pathMatcher(COMPOSE_FILES);
     const findings: Finding[] = [];
     for (const file of input.files) {

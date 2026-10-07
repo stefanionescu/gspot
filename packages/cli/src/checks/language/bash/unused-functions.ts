@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 /**
@@ -7,7 +7,7 @@ import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/script
  * @param input the check context
  * @returns the findings
  */
-export const unusedFunctions: Engine = async (input) => {
+export const unusedFunctions: BuiltInCheck = async (input) => {
     const entries = entryFunctions(input);
     const index = await getScriptIndex(input);
     const referenced = new Set(index.files.flatMap((file) => file.references.keys().toArray()));

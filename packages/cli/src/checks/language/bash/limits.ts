@@ -5,29 +5,29 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { assetPath } from '#cli/platform/assets.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { astGrepReportSchema } from '#cli/parsers/schema/ast-grep.ts';
-import type { Engine, EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
 import { COUNT_RULES, OUTER_LEVELS } from '#cli/config/checks/language/bash.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import type { ScriptIndex, AstGrepMatch, BashCountRule } from '#cli/types/checks/language/bash.ts';
 
 /**
  * Runs one ast-grep rule over the files.
- * @param input the engine input
+ * @param input the check input
  * @param asset the rule's asset path, such as `configurations/language/bash/ast-grep/branches.yml`
  * @param files the files, relative to the root
  * @returns every match, with zero-based lines and a root-relative path
  */
-async function runAstGrep(input: EngineInput, asset: string, files: string[]): Promise<AstGrepMatch[]> {
+async function runAstGrep(input: CheckInput, asset: string, files: string[]): Promise<AstGrepMatch[]> {
     if (files.length === 0) return [];
     const root = input.root;
     const rule = assetPath(asset);
     const command = ['ast-grep', 'scan', '--json=compact', '-r', rule];
     const parsed: AstGrepMatch[] = [];
     for (const batch of fileBatches(files, command, process.platform)) {
-        const result = await runEngineTool(input, [...command, ...batch], { cwd: root });
+        const result = await runCheckTool(input, [...command, ...batch], { cwd: root });
         if (result.code !== 0 && result.code !== 1) throw new Error(`The ast-grep run failed: ${result.stderr.trim()}`);
         const matches = astGrepReportSchema.parse(JSON.parse(result.stdout));
         parsed.push(...matches);
@@ -61,7 +61,7 @@ function nestingDepth(matches: AstGrepMatch[]): number {
  * @param index the shell index
  * @returns the findings; a missing ast-grep raises MissingToolError
  */
-async function countFindings(rule: BashCountRule, input: EngineInput, index: ScriptIndex): Promise<Finding[]> {
+async function countFindings(rule: BashCountRule, input: CheckInput, index: ScriptIndex): Promise<Finding[]> {
     const ceiling = input.view.limit(rule.limit, 'bash');
     if (ceiling === undefined) return [];
     const matches = await runAstGrep(
@@ -95,7 +95,7 @@ async function countFindings(rule: BashCountRule, input: EngineInput, index: Scr
  * @param index the parsed shell files and functions
  * @returns the findings
  */
-function fileLines(input: EngineInput, index: ScriptIndex): Finding[] {
+function fileLines(input: CheckInput, index: ScriptIndex): Finding[] {
     const ceiling = input.view.limit('file_lines', 'bash');
     if (ceiling === undefined) return [];
     return index.files.flatMap((file) => {
@@ -118,7 +118,7 @@ function fileLines(input: EngineInput, index: ScriptIndex): Finding[] {
  * @param index the parsed shell files and functions
  * @returns the findings
  */
-function functionLines(input: EngineInput, index: ScriptIndex): Finding[] {
+function functionLines(input: CheckInput, index: ScriptIndex): Finding[] {
     const ceiling = input.view.limit('function_lines', 'bash');
     if (ceiling === undefined) return [];
     return index.files.flatMap((file) =>
@@ -142,7 +142,7 @@ function functionLines(input: EngineInput, index: ScriptIndex): Finding[] {
  * @param input the structure input of the scope
  * @returns the findings over a ceiling
  */
-export const bashLimits: Engine = async (input) => {
+export const bashLimits: BuiltInCheck = async (input) => {
     const index = await getScriptIndex(input);
     const counted = await Promise.all(COUNT_RULES.map((rule) => countFindings(rule, input, index)));
     return [...fileLines(input, index), ...functionLines(input, index), ...counted.flat()];

@@ -7,9 +7,9 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { engineInput } from '#cli/execution/engines.ts';
+import { checkInput } from '#cli/execution/built-in.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
 import { configurationLogic } from '#cli/checks/general/structure/config-logic.ts';
@@ -39,7 +39,7 @@ test('documentation path exceptions must match tracked paths or actual documenta
             ],
         }),
     );
-    const selected = buildEngineInput(await openSession(sandbox.path), 'structure/stale-allowlists', {
+    const selected = buildCheckInput(await openSession(sandbox.path), 'structure/stale-allowlists', {
         paths: ['docs/guide.md'],
     });
     expect(staleAllowlists(selected).map(({ message: description }) => description)).toStrictEqual([
@@ -56,10 +56,10 @@ test('suppression validation ignores source values and valid reasons but refuses
     });
     const session = await openSession(sandbox.path);
     const scope = session.scopes[0]!;
-    const spec = scope.selected
+    const check = scope.selected
         .flatMap((manifest) => manifest.checks)
         .find((check) => check.name === 'structure/suppressions')!;
-    const read = engineInput(session, { scope, spec, files: session.repository.files });
+    const read = checkInput(session, { scope, check, files: session.repository.files });
     const found = await suppressions(read);
     expect(found.map((finding) => `${finding.file}:${String(finding.line)} ${finding.rule ?? ''}`)).toStrictEqual([
         'a.ts:2 eslint-no-reason',
@@ -77,7 +77,7 @@ test('a file over the limit that is neither declared nor under LFS is reported',
     const paths = ['big.bin', 'data/big.bin', 'small.txt'];
     await Bun.write(join(sandbox.path, 'gspot.toml'), stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY }));
     const found = largeFiles(
-        buildEngineInput(await openSession(sandbox.path), 'structure/large-files', { paths: paths }),
+        buildCheckInput(await openSession(sandbox.path), 'structure/large-files', { paths: paths }),
     );
     expect(found.map((finding) => finding.file)).toStrictEqual(['big.bin']);
 });
@@ -93,7 +93,7 @@ test('a configuration module with a function or a call is reported; literals pas
     const paths = ['config/pure.ts', 'config/logic.ts'];
     await Bun.write(join(sandbox.path, 'gspot.toml'), stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY }));
     const found = await configurationLogic(
-        buildEngineInput(await openSession(sandbox.path), 'structure/config-logic', { paths: paths }),
+        buildCheckInput(await openSession(sandbox.path), 'structure/config-logic', { paths: paths }),
     );
     expect(found.map((finding) => `${finding.file}:${String(finding.line)}`)).toStrictEqual([
         'config/logic.ts:1',
@@ -116,7 +116,7 @@ test('configuration imports follow project aliases and reject runtime owners', a
     const paths = ['config/data.ts', 'config/linked.ts', 'config/outside.ts', 'feature/data.ts'];
     await Bun.write(join(sandbox.path, 'gspot.toml'), stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY }));
     const findings = await configurationLogic(
-        buildEngineInput(await openSession(sandbox.path), 'structure/config-logic', { paths: paths }),
+        buildCheckInput(await openSession(sandbox.path), 'structure/config-logic', { paths: paths }),
     );
     expect(findings.map((finding) => [finding.file, finding.line, finding.rule])).toStrictEqual([
         ['config/outside.ts', 1, 'config-logic'],

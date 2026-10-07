@@ -2,8 +2,8 @@
 // and the selector groups of framework fragments.
 import { isDeepStrictEqual } from 'node:util';
 import { isRecord } from '#cli/platform/objects.ts';
+import { activeIgnores } from '#cli/policy/settings/view.ts';
 import { LINT_CHECK } from '#cli/config/generation/eslint.ts';
-import { activeIgnores } from '#cli/policy/settings/ignores.ts';
 import { eslintNodePatterns } from '#cli/generation/eslint/serialize.ts';
 import { everyTable, policyValue } from '#cli/policy/settings/lookup.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';

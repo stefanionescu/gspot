@@ -5,8 +5,8 @@ import { findingAt } from '#cli/checks/finding.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { prepareBuild } from '#cli/checks/language/swift/cache.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
@@ -16,7 +16,7 @@ import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, MACOS_PRIVATE_PATH } from '#cli
 
 const BUILD_MEMO = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
 
-function diagnostics(input: EngineInput, output: string, levels: Set<string>, defaultRule: string): Finding[] {
+function diagnostics(input: CheckInput, output: string, levels: Set<string>, defaultRule: string): Finding[] {
     const root = withoutPrivatePrefix(input.root);
     return [...new Set(output.split('\n'))]
         .flatMap((line) => {
@@ -54,14 +54,14 @@ function expandResponseFiles(line: string, folder: string, files: Root): string 
     });
 }
 
-async function runBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
+async function runBuild(input: CheckInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const prepared = prepareBuild(input, plan.folder);
     using files = prepared.files;
     const { source } = prepared;
     if (plan.scratch !== undefined) files.removeTree(toPosix(relative(plan.folder, plan.scratch)));
     const cwd = join(source, input.scope);
-    const result = await runEngineTool(input, plan.argv, { cwd });
+    const result = await runCheckTool(input, plan.argv, { cwd });
     // Match SwiftLint paths and expose response-file sources in the compiler log.
     const output = `${result.stdout}\n${result.stderr}`
         .split('\n')
@@ -73,7 +73,7 @@ async function runBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<Swift
 }
 
 // Share the compiler log within a command; a later command must read the current source.
-function buildOutput(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
+function buildOutput(input: CheckInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
     const scopes = memo(input.reads, BUILD_MEMO);
     const running = scopes.get(plan.folder) ?? runBuild(input, plan);
     scopes.set(plan.folder, running);
@@ -87,10 +87,10 @@ function withoutPrivatePrefix(path: string): string {
 
 /**
  * Builds the scope and reports the compiler errors.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
+export async function swiftBuild(input: CheckInput): Promise<Finding[]> {
     const plan = buildPlan(input);
     const { output, code, source } = await buildOutput(input, plan);
     const originalPaths = output.replaceAll(withoutPrivatePrefix(source), input.root);
@@ -103,17 +103,17 @@ export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
 
 /**
  * Runs the SwiftLint analyzer rules over the compiler log of the build.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function swiftlintAnalyze(input: EngineInput): Promise<Finding[]> {
+export async function swiftlintAnalyze(input: CheckInput): Promise<Finding[]> {
     const plan = buildPlan(input, 'analyze');
     const build = await buildOutput(input, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
     const config = join(input.root, CONFIGURATION_DIRECTORY, input.scope, 'swiftlint.yml');
     const argv = ['swiftlint', 'analyze', '--strict', '--quiet', '--config', config, '--compiler-log-path', plan.log];
     const { source } = build;
-    const result = await runEngineTool(input, argv, { cwd: join(source, input.scope) });
+    const result = await runCheckTool(input, argv, { cwd: join(source, input.scope) });
     const output = `${result.stdout}\n${result.stderr}`.replaceAll(source, input.root);
     const found = diagnostics(input, output, new Set(['error', 'warning']), 'analyzer');
     if (found.length === 0 && result.code !== 0)
@@ -123,10 +123,10 @@ export async function swiftlintAnalyze(input: EngineInput): Promise<Finding[]> {
 
 /**
  * Runs Periphery over the project and reports every declaration nothing uses.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
+export async function swiftPeriphery(input: CheckInput): Promise<Finding[]> {
     const folder = scopeBuildFolder(input, 'periphery');
     const config = join(input.root, CONFIGURATION_DIRECTORY, input.scope, 'periphery.yml');
     const argv = [
@@ -142,7 +142,7 @@ export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
     ];
     const prepared = prepareBuild(input, folder);
     try {
-        const result = await runEngineTool(input, argv, { cwd: join(prepared.source, input.scope) });
+        const result = await runCheckTool(input, argv, { cwd: join(prepared.source, input.scope) });
         const output = `${result.stdout}\n${result.stderr}`.replaceAll(prepared.source, input.root);
         const found = diagnostics(input, output, new Set(['error', 'warning']), 'unused');
         if (found.length === 0 && result.code !== 0) throw new Error(toolOutputDetail(result, 'Periphery failed'));

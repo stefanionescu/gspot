@@ -19,7 +19,7 @@ export type Substitutions = {
 export type CommandInvocation = { argv: string[]; file?: string };
 
 /** A nested tool resolved to its selected executable and environment. */
-export type EngineTool = { path: string; env: Record<string, string> };
+export type CheckTool = { path: string; env: Record<string, string> };
 
 /** Scoped paths and environment values for inspecting and execute a command. */
 export type CommandEnvironment = {
@@ -59,4 +59,4 @@ export type InvocationOutput = { invocation: CommandInvocation; result: SpawnRes
 export type ParsedFindings = { findings: Finding[]; note?: undefined } | { findings?: undefined; note: string };
 
 /** Check metadata for parsing output and distinguish a process crash from findings. */
-export type OutputCheck = Pick<PlannedCheck, 'spec' | 'tool' | 'manifest'>;
+export type OutputCheck = Pick<PlannedCheck, 'check' | 'tool' | 'manifest'>;

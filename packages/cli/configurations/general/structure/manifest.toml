@@ -96,7 +96,7 @@ example = "An `[[ignore]]` entry for `bash/shellcheck` with `paths = [\"nowhere/
 level = "recommended"
 stage = "commit"
 runs = "once"
-summary = "Checks policy path patterns and exact-version license exceptions against tracked files and dependency locks."
+summary = "Checks policy path patterns and exact-version license exceptions against tracked files and dependency lockfiles."
 why = "An ignore, declaration, or package allowance that matches nothing misleads the next reader."
 help = "Remove the entry, correct its path or exact package version, or restore the project lockfile."
 

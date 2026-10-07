@@ -6,7 +6,7 @@ import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { nginxTest, testArguments } from '#cli/checks/tool/nginx.ts';
@@ -76,7 +76,7 @@ test.each(['stdout', 'stderr'])(
             'nginx.conf': NGINX_CONFIGURATION,
         });
         const session = await openSession(sandbox.path);
-        const input = buildEngineInput(session, 'nginx/test');
+        const input = buildCheckInput(session, 'nginx/test');
         using resources = new DisposableStack();
         resources.use(
             mockPinnedExecutables([

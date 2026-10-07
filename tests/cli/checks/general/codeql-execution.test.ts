@@ -4,9 +4,9 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { engineInput } from '#cli/execution/engines.ts';
+import { checkInput } from '#cli/execution/built-in.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
@@ -41,8 +41,8 @@ async function refusesOutsideLanguage(language: string): Promise<string[]> {
         'source.py': 'value = 1\n',
     });
     const session = await openSession(directory.path);
-    const spec = session.manifests.get('security')!.checks.find((entry) => entry.name === 'security/codeql')!;
-    const input = buildEngineInput(session, spec.name);
+    const check = session.manifests.get('security')!.checks.find((entry) => entry.name === 'security/codeql')!;
+    const input = buildCheckInput(session, check.name);
     const copies: string[] = [];
     // What the database creation saw in its copy of the repository.
     const sources: string[] = [];
@@ -76,9 +76,9 @@ async function refusesOutsideLanguage(language: string): Promise<string[]> {
         const corrected = await openSession(directory.path);
         expect(
             await codeql(
-                engineInput(corrected, {
+                checkInput(corrected, {
                     scope: corrected.scopes[0]!,
-                    spec: input.spec,
+                    check: input.check,
                     files: corrected.repository.files,
                 }),
             ),
@@ -101,7 +101,7 @@ async function mapsIsolatedLocations(): Promise<Finding[]> {
     });
     const session = await openSession(directory.path);
     const manifest = session.manifests.get('security')!;
-    const spec = manifest.checks.find((entry) => entry.name === 'security/codeql')!;
+    const check = manifest.checks.find((entry) => entry.name === 'security/codeql')!;
     const packVersion = manifest.tools.find((tool) => tool.name === 'codeql')!.query_packs!['javascript'];
     // Every database creation and analysis the check ran, with the copy it ran in.
     const invoked: CapturedInvocation[] = [];
@@ -133,7 +133,7 @@ async function mapsIsolatedLocations(): Promise<Finding[]> {
         return Promise.resolve({ ...base, stdout: '' });
     });
     try {
-        const findings = await codeql(buildEngineInput(session, spec.name));
+        const findings = await codeql(buildCheckInput(session, check.name));
         expect(invoked.map(({ cwd }) => cwd)).not.toContain(directory.path);
         expectNativeCodeqlOptions(
             invoked.map(({ argv }) => argv),

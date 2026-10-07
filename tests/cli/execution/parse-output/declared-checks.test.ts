@@ -141,7 +141,7 @@ test('source text naming module errors stays an ESLint finding', async () => {
     ).toThrow('ERR_MODULE_NOT_FOUND: plugin');
 });
 
-test('a [[check]] entry > reruns a repository check when an input outside its selected paths changes', async () => {
+test('a [[check]] entry > reruns a command check when an input outside its selected paths changes', async () => {
     const command = [process.execPath, '-e', "process.exit((await Bun.file('state.txt').text()) === 'valid' ? 0 : 1)"];
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

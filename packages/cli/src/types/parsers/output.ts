@@ -11,7 +11,7 @@ import type {
     markdownlintReportSchema,
 } from '#cli/parsers/schema/report.ts';
 
-/** The output table accepted by configuration and repository checks. */
+/** The output table accepted by configuration and command checks. */
 export type OutputSpec = z.infer<typeof outputSchema>;
 
 /** Native ESLint source diagnostic derived from the report schema. */
@@ -26,7 +26,7 @@ export type RegexParser = { output: OutputSpec; fixable: RegExp | undefined; hel
 export type OutputPaths = { cwd: string; root: string };
 /** Check identity, output declaration, and fixer command consumed by output parsing. */
 export type ParsingCheck = { name: string; help: string; output?: OutputSpec; fix?: string[] };
-export type Parsing = OutputPaths & { spec: ParsingCheck; stdout: string; text: string };
+export type Parsing = OutputPaths & { check: ParsingCheck; stdout: string; text: string };
 
 /** Manifest field mappings and public metadata for one JSON finding. */
 export type JsonFindingSpec = { check: string; help: string; output: OutputSpec };

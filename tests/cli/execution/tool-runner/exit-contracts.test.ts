@@ -2,17 +2,17 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { checkRun } from '#cli/execution/built-in.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { TYPO } from '#tests/config/harness/spelling.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { getCheckRunner } from '#cli/execution/engines.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { statSync, chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { TYPO_REPORT, MARKDOWN_REPORT } from '#tests/config/cli/execution/parse-output/formats.ts';
 
@@ -43,19 +43,19 @@ test.each(['{file}', '{files}'])(
         const plans = planRun(session, { stage: 'all', skips: [], only: ['project/exit-contract'] });
         const planned = plans[0]!;
         planned.tool = { name: process.execPath, installers: {}, kind: 'binary' };
-        const finding = await runCommandCheck(session, planned);
+        const finding = await runCheckCommand(session, planned);
         expect(finding.status).toBe('failed');
         expect(finding.findings).toStrictEqual([
             containing({ file: source, line: 1, message: 'Located defect before exit' }),
         ]);
         writeFileSync(join(sandbox.path, source), '7');
-        const fatal = await runCommandCheck(session, planned);
+        const fatal = await runCheckCommand(session, planned);
         expect(fatal.status).toBe('error');
         expect(fatal.findings).toStrictEqual([]);
         expect(fatal.note).toContain('exit 7');
         expect(await Bun.file(join(sandbox.path, source)).text()).toBe('7');
         writeFileSync(join(sandbox.path, source), '0');
-        const corrected = await runCommandCheck(session, planned);
+        const corrected = await runCheckCommand(session, planned);
         expect(corrected.status).toBe('passed');
         expect(corrected.findings).toStrictEqual([]);
     },
@@ -79,7 +79,7 @@ test.each([0, 1, 3] as const)(
         const plans = planRun(session, { stage: 'commit', skips: [], only: ['actions/actionlint'] });
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
-        const result = await getCheckRunner(planned.spec, CHECKS)(session, planned);
+        const result = await checkRun(planned.check, BUILT_IN_CHECKS)(session, planned);
         expect(result.status, JSON.stringify(result)).toBe(({ 0: 'passed', 1: 'failed', 3: 'error' } as const)[code]);
         const workspace = await Bun.file(record).text();
         expect(workspace).not.toBe(sandbox.path);

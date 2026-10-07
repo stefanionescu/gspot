@@ -5,31 +5,31 @@ import { isRecord } from '#cli/platform/objects.ts';
 import { mergeValue } from '#cli/policy/settings/lookup.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { Level, Manifest, SettingSpec } from '#cli/types/configurations.ts';
 import { TOOL_DEADLINE, OVERRIDING_KINDS } from '#cli/config/policy/settings.ts';
+import type { Level, Manifest, SettingDeclaration } from '#cli/types/configurations.ts';
 import type { TomlTable, KnownSettings, SettingDefault } from '#cli/types/policy/settings.ts';
 import { policySchema, rootSettingSchemas, tableSettingSchemas } from '#cli/policy/schema/policy.ts';
 
 // Whether another configuration's scalar default disagrees with this one, and this one may not override it.
-function isScalarConflict(previous: SettingDefault, manifest: Manifest, spec: SettingSpec): boolean {
+function isScalarConflict(previous: SettingDefault, manifest: Manifest, declaration: SettingDeclaration): boolean {
     if (previous.configuration === manifest.configuration.name) return false;
-    if (isDeepStrictEqual(previous.value, spec.default)) return false;
+    if (isDeepStrictEqual(previous.value, declaration.default)) return false;
     return !OVERRIDING_KINDS.has(manifest.configuration.kind);
 }
 
-function addDefault(surface: KnownSettings, manifest: Manifest, spec: SettingSpec): void {
-    if (spec.default === undefined) return;
-    const previous = surface.defaults.get(spec.name);
-    const isList = surface.specs.get(spec.name)?.type === 'list';
-    if (!isList && previous !== undefined && isScalarConflict(previous, manifest, spec)) {
+function addDefault(surface: KnownSettings, manifest: Manifest, declaration: SettingDeclaration): void {
+    if (declaration.default === undefined) return;
+    const previous = surface.defaults.get(declaration.name);
+    const isList = surface.declarations.get(declaration.name)?.type === 'list';
+    if (!isList && previous !== undefined && isScalarConflict(previous, manifest, declaration)) {
         surface.problems.push({
-            key: spec.name,
-            message: `The configurations \`${previous.configuration}\` and \`${manifest.configuration.name}\` set \`${spec.name}\` to different values. Set it yourself in gspot.toml to decide.`,
+            key: declaration.name,
+            message: `The configurations \`${previous.configuration}\` and \`${manifest.configuration.name}\` set \`${declaration.name}\` to different values. Set it yourself in gspot.toml to decide.`,
         });
         return;
     }
-    surface.defaults.set(spec.name, {
-        value: isList ? mergeValue(spec, previous?.value, spec.default) : spec.default,
+    surface.defaults.set(declaration.name, {
+        value: isList ? mergeValue(declaration, previous?.value, declaration.default) : declaration.default,
         configuration: manifest.configuration.name,
     });
 }
@@ -39,10 +39,10 @@ function addDefault(surface: KnownSettings, manifest: Manifest, spec: SettingSpe
 function addManifest(surface: KnownSettings, manifest: Manifest, level: Level): void {
     const isAll = level === 'all';
     for (const declared of manifest.settings) {
-        const spec =
+        const declaration =
             isAll && declared.default_all !== undefined ? { ...declared, default: declared.default_all } : declared;
-        if (!surface.specs.has(spec.name)) surface.specs.set(spec.name, spec);
-        addDefault(surface, manifest, spec);
+        if (!surface.declarations.has(declaration.name)) surface.declarations.set(declaration.name, declaration);
+        addDefault(surface, manifest, declaration);
     }
     const overrides = Object.entries({ ...manifest.set, ...(isAll ? manifest.set_all : {}) });
     for (const [name, value] of overrides) addOverride(surface, manifest, name, value);
@@ -50,21 +50,21 @@ function addManifest(surface: KnownSettings, manifest: Manifest, level: Level): 
 
 // One [defaults] entry, applied when a selected configuration declares the setting it names.
 function addOverride(surface: KnownSettings, manifest: Manifest, name: string, value: unknown): void {
-    const spec = surface.specs.get(name);
-    if (spec === undefined) return;
-    addDefault(surface, manifest, { ...spec, default: value });
+    const declaration = surface.declarations.get(name);
+    if (declaration === undefined) return;
+    addDefault(surface, manifest, { ...declaration, default: value });
 }
 
 // The kind of a setting from the shape of its default.
-function typeOf(value: unknown): SettingSpec['type'] {
+function typeOf(value: unknown): SettingDeclaration['type'] {
     if (Array.isArray(value)) return 'list';
     if (typeof value === 'number') return 'number';
     return typeof value === 'boolean' ? 'boolean' : 'string';
 }
 
-const rootSpecs: SettingSpec[] = [
+const rootDeclarations: SettingDeclaration[] = [
     TOOL_DEADLINE,
-    ...Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).map<SettingSpec>(([name, schema]) => {
+    ...Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).map<SettingDeclaration>(([name, schema]) => {
         const value = schema.parse(undefined);
         return {
             name,
@@ -81,13 +81,13 @@ const rootSpecs: SettingSpec[] = [
  * Builds the surface in selection order; framework, platform, library, and database configurations override scalar defaults.
  * @param selected the manifests of the selection, in order.
  * @param level the enforcement level whose defaults apply.
- * @returns the specs, their defaults and the conflicts found on the way
+ * @returns the declarations, their defaults and the conflicts found on the way
  */
 export function knownSettings(selected: Manifest[], level: Level = 'recommended'): KnownSettings {
-    const surface: KnownSettings = { specs: new Map(), defaults: new Map(), problems: [] };
-    for (const spec of rootSpecs) {
-        surface.specs.set(spec.name, spec);
-        surface.defaults.set(spec.name, { value: spec.default, configuration: 'gspot' });
+    const surface: KnownSettings = { declarations: new Map(), defaults: new Map(), problems: [] };
+    for (const declaration of rootDeclarations) {
+        surface.declarations.set(declaration.name, declaration);
+        surface.defaults.set(declaration.name, { value: declaration.default, configuration: 'gspot' });
     }
     for (const manifest of selected) addManifest(surface, manifest, level);
     return surface;

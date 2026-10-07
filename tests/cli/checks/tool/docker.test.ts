@@ -5,7 +5,7 @@ import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { trivyImage } from '#cli/checks/tool/docker.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 
@@ -40,7 +40,7 @@ test.each(COMPOSE_SOURCES)('Trivy scans only service images in $name', async ({ 
             });
         }),
     );
-    expect(await trivyImage(buildEngineInput(session, 'docker/trivy-image'))).toStrictEqual([
+    expect(await trivyImage(buildCheckInput(session, 'docker/trivy-image'))).toStrictEqual([
         {
             check: 'docker/trivy-image',
             file: 'compose.yaml',
@@ -63,7 +63,7 @@ test.each(REPORT_FAILURES)('Trivy refuses $name with its diagnostic', async ({ c
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'trivy')]));
     resources.use(spyOn(processes, 'run').mockResolvedValue({ code, stdout, stderr, missing: false, duration: 1 }));
-    expect(await rejection(trivyImage(buildEngineInput(session, 'docker/trivy-image')))).toContain(diagnostic);
+    expect(await rejection(trivyImage(buildCheckInput(session, 'docker/trivy-image')))).toContain(diagnostic);
 });
 
 test('Trivy accepts a clean native report without finding an image defect', async () => {
@@ -84,7 +84,7 @@ test('Trivy accepts a clean native report without finding an image defect', asyn
             duration: 1,
         }),
     );
-    expect(await trivyImage(buildEngineInput(session, 'docker/trivy-image'))).toStrictEqual([]);
+    expect(await trivyImage(buildCheckInput(session, 'docker/trivy-image'))).toStrictEqual([]);
 });
 
 test.each(INVALID_COMPOSE)('Trivy refuses $name before scanning an image', async ({ source }) => {
@@ -95,7 +95,7 @@ test.each(INVALID_COMPOSE)('Trivy refuses $name before scanning an image', async
     });
     const session = await openSession(directory.path);
     using scan = spyOn(processes, 'run');
-    expect(await rejection(trivyImage(buildEngineInput(session, 'docker/trivy-image')))).toContain(
+    expect(await rejection(trivyImage(buildCheckInput(session, 'docker/trivy-image')))).toContain(
         'Cannot read Compose service images in compose.yaml.',
     );
     expect(scan).not.toHaveBeenCalled();
@@ -109,6 +109,6 @@ test('Trivy leaves build-only services unscanned', async () => {
     });
     const session = await openSession(directory.path);
     using scan = spyOn(processes, 'run');
-    expect(await trivyImage(buildEngineInput(session, 'docker/trivy-image'))).toStrictEqual([]);
+    expect(await trivyImage(buildCheckInput(session, 'docker/trivy-image'))).toStrictEqual([]);
     expect(scan).not.toHaveBeenCalled();
 });

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { checkRun } from '#cli/execution/built-in.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { getCheckRunner } from '#cli/execution/engines.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 // GitHub self-repository references use $/. The pinned Actionlint needs their local spelling.
@@ -22,7 +22,7 @@ test('Actionlint validates required reusable inputs in self-repository workflows
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'commit', skips: [], only: ['actions/actionlint'] });
     const planned = plans[0]!;
-    const failed = await getCheckRunner(planned.spec, CHECKS)(session, planned);
+    const failed = await checkRun(planned.check, BUILT_IN_CHECKS)(session, planned);
     expect(failed.status, JSON.stringify(failed)).toBe('failed');
     expect(failed.findings).toContainEqual(
         containing({
@@ -41,7 +41,7 @@ test('Actionlint validates required reusable inputs in self-repository workflows
     const corrected = await openSession(sandbox.path);
     const correctedPlans = planRun(corrected, { stage: 'commit', skips: [], only: ['actions/actionlint'] });
     const valid = correctedPlans[0]!;
-    const result = await getCheckRunner(valid.spec, CHECKS)(corrected, valid);
+    const result = await checkRun(valid.check, BUILT_IN_CHECKS)(corrected, valid);
     expect(result.status).toBe('passed');
     expect(await Bun.file(join(sandbox.path, '.github/workflows/called.yml')).text()).toBe(called);
 });
@@ -57,7 +57,7 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'commit', skips: [], only: ['actions/actionlint'] });
     const planned = plans[0]!;
-    const failed = await getCheckRunner(planned.spec, CHECKS)(session, planned);
+    const failed = await checkRun(planned.check, BUILT_IN_CHECKS)(session, planned);
     expect(failed.status, JSON.stringify(failed)).toBe('failed');
     expect(failed.findings).toContainEqual(
         containing({
@@ -75,7 +75,7 @@ test('Actionlint resolves a self-repository alias and reports a missing workflow
     const corrected = await openSession(sandbox.path);
     const correctedPlans = planRun(corrected, { stage: 'commit', skips: [], only: ['actions/actionlint'] });
     const valid = correctedPlans[0]!;
-    const result = await getCheckRunner(valid.spec, CHECKS)(corrected, valid);
+    const result = await checkRun(valid.check, BUILT_IN_CHECKS)(corrected, valid);
     expect(result.status).toBe('passed');
     expect(await Bun.file(join(sandbox.path, '.github/workflows/caller.yml')).text()).toBe(workflow);
 });

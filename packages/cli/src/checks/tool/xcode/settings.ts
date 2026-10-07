@@ -1,16 +1,16 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/source.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
 import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/config/checks/tool/xcode.ts';
 
 /**
  * One finding for each xcconfig line that is no setting, no include, and no comment.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function xcconfig(input: EngineInput): Finding[] {
+export function xcconfig(input: CheckInput): Finding[] {
     return trackedByExtension(input, ['.xcconfig']).flatMap((path) =>
         readSource(input.root, path, input.reads)
             .toString('utf8')
@@ -37,10 +37,10 @@ export function xcconfig(input: EngineInput): Finding[] {
 
 /**
  * One finding for each entitlement outside tools.xcode.entitlements_allowed. The planner requires a configured list.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function entitlements(input: EngineInput): Finding[] {
+export function entitlements(input: CheckInput): Finding[] {
     const allowed = new Set(input.view.options('tools.xcode')['entitlements_allowed'] as string[] | undefined);
     return trackedByExtension(input, ['.entitlements']).flatMap((path) => {
         const text = readSource(input.root, path, input.reads).toString('utf8');
@@ -62,10 +62,10 @@ export function entitlements(input: EngineInput): Finding[] {
 
 /**
  * One finding for each plist that turns App Transport Security off for every host.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function ats(input: EngineInput): Finding[] {
+export function ats(input: CheckInput): Finding[] {
     return trackedByExtension(input, ['.plist']).flatMap((path): Finding[] => {
         const text = readSource(input.root, path, input.reads).toString('utf8');
         const found = ARBITRARY_LOADS.exec(text);

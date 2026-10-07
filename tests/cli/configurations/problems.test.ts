@@ -75,7 +75,7 @@ describe('assertManifests borrowed checks', () => {
             tables: `[[check]]\nname = "shared"\nruns = "once"\n${CHECK_FIELDS}`,
         });
         const consumer = parseConfigurationManifest('consumer');
-        const spec = owner.checks[0]!;
+        const check = owner.checks[0]!;
         consumer.configuration.borrowed_checks = ['owner/shared'];
         const manifests = new Map([
             ['owner', owner],
@@ -89,11 +89,11 @@ describe('assertManifests borrowed checks', () => {
             assertManifests(manifests);
         }).toThrow('Referenced check missing/shared');
         consumer.configuration.borrowed_checks = ['owner/shared'];
-        owner.checks[0] = { ...spec, runs: 'scope' };
+        owner.checks[0] = { ...check, runs: 'scope' };
         expect(() => {
             assertManifests(manifests);
         }).toThrow('standalone built-in');
-        owner.checks[0] = { ...spec, tool: 'scanner' };
+        owner.checks[0] = { ...check, tool: 'scanner' };
         expect(() => {
             assertManifests(manifests);
         }).toThrow('standalone built-in');

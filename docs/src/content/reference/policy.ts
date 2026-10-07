@@ -59,7 +59,7 @@ export function policyReference(): string {
 export function settingsPage(manifests: Manifest[]): ReferencePage {
     const seen = new Map<string, SettingVariant[]>();
     const definitions = [
-        ...[...knownSettings([]).specs.values()].map((setting) => ({ setting, owner: 'Repository policy' })),
+        ...[...knownSettings([]).declarations.values()].map((setting) => ({ setting, owner: 'Repository policy' })),
         ...manifests.flatMap((manifest) =>
             manifest.settings.map((setting) => ({
                 setting,

@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { visitSwiftSources } from '#cli/parsers/swift.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { COMMENTS, DIRECTIVE } from '#cli/config/checks/language/swift.ts';
 
 /**
@@ -9,7 +9,7 @@ import { COMMENTS, DIRECTIVE } from '#cli/config/checks/language/swift.ts';
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function importComments(input: EngineInput): Promise<Finding[]> {
+export async function importComments(input: CheckInput): Promise<Finding[]> {
     return visitSwiftSources(input, ({ sources }) =>
         sources.flatMap((source) => {
             const nodes = source.tree.rootNode.namedChildren;

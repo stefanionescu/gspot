@@ -1,4 +1,4 @@
-// Resolve and install npm tool projects without writing credentials to locks.
+// Resolve and install npm tool projects without writing credentials to lockfiles.
 import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/platform/errors.ts';
@@ -13,7 +13,7 @@ import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseVersionOutput } from '#cli/parsers/tool/version.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
-import { isYarnBerry, packageLockFile } from '#cli/parsers/packages.ts';
+import { isYarnBerry, packageLockfile } from '#cli/parsers/packages.ts';
 import type { PackageRun, PackageExecution } from '#cli/types/tools/npm.ts';
 import { stripBunRegistryUrls, stripYarnRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
 
@@ -21,22 +21,22 @@ import {
     registryPasswords,
     addEnvironmentReference,
     installationDiagnostics,
-    assertCredentialFreeLock,
+    assertCredentialFreeLockfile,
 } from '#cli/tools/credentials.ts';
 import {
     CREDENTIAL_KEY,
     GITHUB_REFUSAL,
-    LOCK_ARGUMENTS,
     YARN_ARGUMENTS,
     INSTALL_ARGUMENTS,
     CONNECTION_URL_KEY,
+    LOCKFILE_ARGUMENTS,
     NPM_SETTING_PREFIX,
     GITHUB_DOWNLOAD_URL,
     ENCODED_CREDENTIAL_KEY,
     PACKAGE_SETTING_VARIABLE_PREFIX,
 } from '#cli/config/tools/npm.ts';
 
-// Retain raw, decoded, and URL-encoded secrets for lock validation and diagnostic redaction.
+// Retain raw, decoded, and URL-encoded secrets for lockfile validation and diagnostic redaction.
 function credentialsOf(env: Record<string, string>): string[] {
     const credentials = Object.entries(env)
         .filter(([key]) => CREDENTIAL_KEY.test(key))
@@ -104,29 +104,29 @@ function packageFailure(result: PackageRun['result'], credentials: string[]): st
     return `(exit ${String(result.code)}). ${SETUP}.${causeNote}\n${installationDiagnostics(result, credentials)}`;
 }
 
-// Validate native lock output before it enters managed ownership.
-function credentialFreeLock(execution: PackageExecution, credentials: string[]): string {
-    const lock = readFileSync(join(execution.work, packageLockFile(execution.installer.name)), 'utf8');
-    assertCredentialFreeLock(
-        lock,
+// Validate native lockfile output before it enters managed ownership.
+function credentialFreeLockfile(execution: PackageExecution, credentials: string[]): string {
+    const lockfile = readFileSync(join(execution.work, packageLockfile(execution.installer.name)), 'utf8');
+    assertCredentialFreeLockfile(
+        lockfile,
         credentials,
         new GspotError(
             'installation',
-            'The package manager included registry credentials in its lock. Existing files were preserved.',
+            'The package manager included registry credentials in its lockfile. Existing files were preserved.',
         ),
     );
-    return lock;
+    return lockfile;
 }
 
-// Private registry routing stays in the installation environment, out of portable locks.
-function stripRegistryUrls(execution: PackageExecution, lock: string): void {
+// Private registry routing stays in the installation environment, out of portable lockfiles.
+function stripRegistryUrls(execution: PackageExecution, lockfile: string): void {
     const { installer, work, env } = execution;
-    const lockPath = join(work, packageLockFile(installer.name));
-    if (installer.name === 'bun') writeFileSync(lockPath, stripBunRegistryUrls(lock, env));
+    const lockfilePath = join(work, packageLockfile(installer.name));
+    if (installer.name === 'bun') writeFileSync(lockfilePath, stripBunRegistryUrls(lockfile, env));
     if (installer.name !== 'yarn' || isYarnBerry(installer)) return;
     const registry = env['npm_config_registry'];
     if (registry === undefined) throw new Error('A Yarn 1 lockfile needs npm_config_registry to relocate its URLs.');
-    writeFileSync(lockPath, stripYarnRegistryUrls(lock, registry));
+    writeFileSync(lockfilePath, stripYarnRegistryUrls(lockfile, registry));
 }
 
 // An npm wrapper can declare a package version different from its native executable version.
@@ -153,36 +153,41 @@ async function assertNativeVersion(work: string, executable: string, tool: ToolP
 }
 
 /**
- * Resolve the tool project's lock in an isolated directory before writing generated files.
+ * Resolve the tool project's lockfile in an isolated directory before writing generated files.
  * @param root the repository whose connection settings apply
  * @param work the isolated tool project
  * @param installer the package manager and exact version declared by the project
  */
-export async function preparePackageLock(root: string, work: string, installer: PackageInstaller): Promise<void> {
-    const { execution, credentials, result } = await runPackageInstaller(root, work, installer, lockArgv(installer));
+export async function preparePackageLockfile(root: string, work: string, installer: PackageInstaller): Promise<void> {
+    const { execution, credentials, result } = await runPackageInstaller(
+        root,
+        work,
+        installer,
+        lockfileArgv(installer),
+    );
     if (result.code !== 0)
         throw new GspotError(
             'installation',
-            `${installer.name} lock resolution failed ${packageFailure(result, credentials)}`,
+            `${installer.name} lockfile resolution failed ${packageFailure(result, credentials)}`,
         );
-    const lock = credentialFreeLock(execution, credentials);
-    stripRegistryUrls(execution, lock);
+    const lockfile = credentialFreeLockfile(execution, credentials);
+    stripRegistryUrls(execution, lockfile);
 }
 
 /**
- * Install the recorded tool lock immutably in an isolated directory.
+ * Install the recorded tool lockfile immutably in an isolated directory.
  * @param root the repository whose connection settings apply
- * @param work the isolated tool project and recorded lock
+ * @param work the isolated tool project and recorded lockfile
  * @param installer the package manager and exact version declared by the project
  */
-export async function installPackageLock(root: string, work: string, installer: PackageInstaller): Promise<void> {
+export async function installPackageLockfile(root: string, work: string, installer: PackageInstaller): Promise<void> {
     const { execution, credentials, result } = await runPackageInstaller(root, work, installer, installArgv(installer));
     if (result.code !== 0)
         throw new GspotError(
             'installation',
             `${installer.name} immutable installation failed ${packageFailure(result, credentials)}`,
         );
-    credentialFreeLock(execution, credentials);
+    credentialFreeLockfile(execution, credentials);
 }
 
 /**
@@ -208,14 +213,14 @@ export async function assertPackageVersions(
 }
 
 /**
- * Build the manager's native lock-resolution command.
+ * Build the manager's native lockfile creation command.
  * @param installer the declared package manager
- * @returns literal arguments for its Classic, Berry, or other native lock operation
+ * @returns literal arguments for its Classic, Berry, or other native lockfile operation
  */
-export function lockArgv(installer: PackageInstaller): string[] {
-    if (installer.name !== 'yarn') return [...LOCK_ARGUMENTS[installer.name]];
+export function lockfileArgv(installer: PackageInstaller): string[] {
+    if (installer.name !== 'yarn') return [...LOCKFILE_ARGUMENTS[installer.name]];
     const argv = isYarnBerry(installer) ? YARN_ARGUMENTS.berry : YARN_ARGUMENTS.classic;
-    return [...argv.lock];
+    return [...argv.lockfile];
 }
 
 /**

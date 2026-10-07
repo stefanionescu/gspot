@@ -1,4 +1,4 @@
-// Selects positional repository paths and refuses unknown check names.
+// Selects positional repository paths and refuses unknown check IDs.
 import { resolve, relative } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { Session } from '#cli/types/planning.ts';

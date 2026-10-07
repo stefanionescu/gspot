@@ -23,7 +23,7 @@ function indexLocation(root: string, value: string): string {
  * Read repository index settings and resolve their local paths for a temporary uv project.
  * @param root the repository root for resolving local index paths
  * @param sources the authored uv.toml and pyproject.toml contents
- * @returns selected settings and passwords excluded from generated locks and diagnostics
+ * @returns selected settings and passwords excluded from generated lockfiles and diagnostics
  */
 export function parsePythonSettings(root: string, sources: PythonSettingsSources): PythonIndexSettings {
     const parsed = parse(sources.uv ?? sources.project ?? '');

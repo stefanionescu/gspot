@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { visitPythonModules } from '#cli/parsers/python.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { DEFINITIONS } from '#cli/config/checks/language/python.ts';
 
 /**
@@ -9,7 +9,7 @@ import { DEFINITIONS } from '#cli/config/checks/language/python.ts';
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function lazyExports(input: EngineInput): Promise<Finding[]> {
+export async function lazyExports(input: CheckInput): Promise<Finding[]> {
     return visitPythonModules(input, ({ modules }) =>
         modules.flatMap((module) =>
             module.statements

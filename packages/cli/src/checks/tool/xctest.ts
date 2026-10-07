@@ -8,8 +8,8 @@ import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { xccovSchema } from '#cli/parsers/schema/xctest.ts';
 import { buildPlan } from '#cli/checks/language/swift/plan.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
 import { FULL_PERCENTAGE } from '#cli/config/platform/runtime.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
@@ -91,8 +91,8 @@ function removePreviousBundle(files: Root): void {
 }
 
 // Runs the tests with coverage on, then prints the coverage report of the result bundle.
-async function measureCoverage(input: EngineInput, buildArgv: string[], bundle: string, cwd: string): Promise<string> {
-    const tested = await runEngineTool(
+async function measureCoverage(input: CheckInput, buildArgv: string[], bundle: string, cwd: string): Promise<string> {
+    const tested = await runCheckTool(
         input,
         [...buildArgv, '-enableCodeCoverage', 'YES', '-resultBundlePath', bundle],
         {
@@ -103,7 +103,7 @@ async function measureCoverage(input: EngineInput, buildArgv: string[], bundle: 
         throw new Error(
             `Cannot measure coverage because the test run exited ${String(tested.code)}: ${toolOutputDetail(tested, 'The test runner printed no diagnostic.')}`,
         );
-    const viewed = await runEngineTool(input, ['xcrun', 'xccov', 'view', '--report', '--json', bundle], { cwd });
+    const viewed = await runCheckTool(input, ['xcrun', 'xccov', 'view', '--report', '--json', bundle], { cwd });
     if (viewed.code !== 0)
         throw new Error(
             `The test run wrote no coverage report: ${toolOutputDetail(viewed, 'The coverage viewer printed no diagnostic.')}`,
@@ -113,10 +113,10 @@ async function measureCoverage(input: EngineInput, buildArgv: string[], bundle: 
 
 /**
  * One finding for each skipped test without a reason argument or unavailable declaration without an explanation.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function disabled(input: EngineInput): Promise<Finding[]> {
+export async function disabled(input: CheckInput): Promise<Finding[]> {
     const files = input.files
         .filter((file) => file.kind === 'source' && file.tags.includes('swift-test'))
         .map((file) => ({ path: file.path, grammar: 'swift' as const }));
@@ -137,10 +137,10 @@ export async function disabled(input: EngineInput): Promise<Finding[]> {
 
 /**
  * One finding for each sleep in a test file outside tools.xctest.sleep_allowed.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function sleeps(input: EngineInput): Promise<Finding[]> {
+export async function sleeps(input: CheckInput): Promise<Finding[]> {
     const allowed = (input.view.options('tools.xctest')['sleep_allowed'] as PathAllowance[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const files = input.files
@@ -167,10 +167,10 @@ export async function sleeps(input: EngineInput): Promise<Finding[]> {
 
 /**
  * One finding for each copy test left in a recording mode.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function recording(input: EngineInput): Promise<Finding[]> {
+export async function recording(input: CheckInput): Promise<Finding[]> {
     const files = input.files
         .filter((file) => file.kind === 'source' && file.tags.includes('swift-test'))
         .map((file) => ({ path: file.path, grammar: 'swift' as const }));
@@ -218,10 +218,10 @@ export function coverageShortfalls(report: CoverageReport, floors: CoverageFloor
 
 /**
  * Runs the tests with coverage and compares each named target with its floor. The planner requires configured floors.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function xctestCoverage(input: EngineInput): Promise<Finding[]> {
+export async function xctestCoverage(input: CheckInput): Promise<Finding[]> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const project = input.view.options('tools.xcode')['project'];
     if (typeof project !== 'string' || project === '')
@@ -246,7 +246,7 @@ export async function xctestCoverage(input: EngineInput): Promise<Finding[]> {
  * @param input the scoped files and copy layout
  * @returns the orphan reference findings
  */
-export function xctestReferences(input: EngineInput): Finding[] {
+export function xctestReferences(input: CheckInput): Finding[] {
     const layout = input.view.options('tools.xctest')['reference_layout'] as string;
     const pattern = layout
         .split(/(\{file\}|\{test\}|\*|\?)/u)

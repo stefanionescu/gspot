@@ -7,7 +7,7 @@ import { applyFixers } from '#cli/execution/fixers.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { planFixer, buildFixerPolicy } from '#tests/harness/fixer.ts';
 
@@ -16,8 +16,8 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
     await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, `console.error('Fatal: cannot write'); process.exitCode = ${String(code)}`);
-    planned.spec.exit_codes = [3];
-    planned.spec.crash_pattern = '^Fatal:';
+    planned.check.exit_codes = [3];
+    planned.check.crash_pattern = '^Fatal:';
     const failed = await applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
     expect(failed).toMatchObject({
         status: 'failed',
@@ -25,7 +25,7 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
         note: textContaining('Fatal: cannot write'),
     });
     const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
-    corrected.spec.crash_pattern = planned.spec.crash_pattern;
+    corrected.check.crash_pattern = planned.check.crash_pattern;
     expect(
         await applyFixers(session, [corrected], { isDryRun: false }).then(({ results }) => results[0]!),
     ).toMatchObject({
@@ -46,7 +46,7 @@ test.each([
         session,
         `await Bun.write('source.txt', ${JSON.stringify(content)}); process.exitCode = ${String(code)}`,
     );
-    planned.spec.exit_codes = [3];
+    planned.check.exit_codes = [3];
     const result = await applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
     expect(result.status).toBe(status);
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(content);
@@ -107,7 +107,7 @@ test('distinguishes a skipped correction from an unavailable tool', async () => 
     }).then(({ results }) => results[0]!);
     const failed = await applyFixers(
         session,
-        [{ ...planned, spec: { ...planned.spec, fix: [join(sandbox.path, 'absent-tool')] } }],
+        [{ ...planned, check: { ...planned.check, fix: [join(sandbox.path, 'absent-tool')] } }],
         { isDryRun: false },
     ).then(({ results }) => results[0]!);
     expect(skipped.status).toBe('skipped');
@@ -167,10 +167,10 @@ test('a failed version inspection blocks a check and its correction without chan
         kind: 'binary',
         version_command: ['-e', 'console.log("3.8.1"); process.exitCode = 7;'],
     };
-    planned.spec.fix![0] = 'version-teller';
+    planned.check.fix![0] = 'version-teller';
     const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     try {
-        const checked = await runCommandCheck(session, planned);
+        const checked = await runCheckCommand(session, planned);
         expect(checked.status).toBe('error');
         expect(checked.note).toContain('exited 7');
         const fixed = await applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);

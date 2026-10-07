@@ -1,7 +1,7 @@
 import { stemOf } from '#cli/platform/paths.ts';
 import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 import {
@@ -17,7 +17,7 @@ import {
  * @param input the check context
  * @returns the findings
  */
-export const wrappers: Engine = async (input) => {
+export const wrappers: BuiltInCheck = async (input) => {
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) => {
         const findings = [];

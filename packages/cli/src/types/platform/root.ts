@@ -9,7 +9,7 @@ export type Bounds = {
     canonical: string;
     pathFormat: PathFormat;
     partsOf: (path: string) => string[];
-    locks: Map<string, string>;
+    claims: Map<string, string>;
 };
 
 export type Root = {
@@ -41,11 +41,11 @@ export type Root = {
     renameDirectory(from: string, to: string): void;
     /** Remove a directory tree without following links inside it. */
     removeTree(path: string): void;
-    /** Acquire a writer lock, replacing a lock whose process has exited. */
-    lock(path: string): void;
-    /** Release the writer locks still owned by this root. */
+    /** Acquire a writer claim, replacing a claim whose process has exited. */
+    claim(path: string): void;
+    /** Release the writer claims still owned by this root. */
     close(): void;
-    /** Release the writer locks still owned by this root. */
+    /** Release the writer claims still owned by this root. */
     [Symbol.dispose](): void;
 };
 

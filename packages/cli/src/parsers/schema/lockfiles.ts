@@ -6,18 +6,20 @@ const devDependenciesSchema = z.object({ devDependencies: z.record(z.string(), z
 const packageIdentitySchema = z.object({ name: z.string().min(1), version: z.string().min(1) });
 const packageVersionSchema = z.object({ version: z.string().optional(), name: z.string().optional() });
 
-export const npmLockSchema = z.object({ packages: z.record(z.string(), devDependenciesSchema) });
-export const bunLockSchema = z.object({ workspaces: z.record(z.string(), devDependenciesSchema) });
-export const pnpmLockSchema = z.object({ importers: z.record(z.string(), z.object({ devDependencies: z.unknown() })) });
+export const npmLockfileSchema = z.object({ packages: z.record(z.string(), devDependenciesSchema) });
+export const bunLockfileSchema = z.object({ workspaces: z.record(z.string(), devDependenciesSchema) });
+export const pnpmLockfileSchema = z.object({
+    importers: z.record(z.string(), z.object({ devDependencies: z.unknown() })),
+});
 export const pnpmSpecifiersSchema = z.record(z.string(), z.object({ specifier: z.string() }));
-export const yarnLockSchema = z.record(
+export const yarnLockfileSchema = z.record(
     z.string(),
     z.looseObject({ version: z.string().optional(), resolved: z.string().optional() }),
 );
 export const bunPackagesSchema = z.looseObject({ packages: z.record(z.string(), z.array(z.unknown())) });
 export const bunPackageSchema = z.tuple([z.string(), z.string(), z.record(z.string(), z.unknown()), z.string()]);
 
-export const pythonLockSchema = z.object({ package: z.array(packageIdentitySchema) });
+export const pythonLockfileSchema = z.object({ package: z.array(packageIdentitySchema) });
 export const npmDependenciesSchema = z.object({ dependencies: z.record(z.string(), z.unknown()) });
 export const npmDependencySchema = z.object({
     version: z.string(),

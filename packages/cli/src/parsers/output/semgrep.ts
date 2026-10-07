@@ -6,7 +6,7 @@ import { semgrepReportSchema } from '#cli/parsers/schema/semgrep.ts';
 
 /**
  * Read Semgrep rule findings and source parsing errors without accepting scanner or rule failures.
- * @param check the check name
+ * @param check the check ID
  * @param text the native JSON report
  * @param help the check's correction guidance
  * @returns positioned diagnostics from a validated native report

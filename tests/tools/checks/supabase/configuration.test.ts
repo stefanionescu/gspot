@@ -5,7 +5,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { engineInput } from '#cli/execution/engines.ts';
+import { checkInput } from '#cli/execution/built-in.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { denoLint } from '#cli/checks/platform/supabase.ts';
 
@@ -22,9 +22,9 @@ test('pinned Deno reports a lint defect and accepts its correction in a scoped e
         name === 'deno' ? native : which(name, { nothrow: true })) as typeof executables.sync);
     try {
         const session = await openSession(sandbox.path);
-        const selected = engineInput(session, {
+        const selected = checkInput(session, {
             scope: session.scopes.find((entry) => entry.scope.path === 'apps/api')!,
-            spec: session.manifests.get('supabase')!.checks.find((check) => check.name === 'supabase/deno-lint')!,
+            check: session.manifests.get('supabase')!.checks.find((check) => check.name === 'supabase/deno-lint')!,
             files: session.repository.files,
         });
         expect(await denoLint(selected)).toMatchObject([

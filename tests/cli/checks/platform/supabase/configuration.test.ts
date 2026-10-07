@@ -6,11 +6,11 @@ import { renameSync, writeFileSync } from 'node:fs';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 
 import {
     denoLint,
@@ -20,9 +20,9 @@ import {
     supabaseConfiguration,
 } from '#cli/checks/platform/supabase.ts';
 
-function input(session: ToolSession, scope: string, name: string): EngineInput {
-    const spec = session.manifests.get('supabase')!.checks.find((check) => check.name === name)!;
-    return buildEngineInput(session, spec.name, { scope: scope });
+function input(session: ToolSession, scope: string, name: string): CheckInput {
+    const check = session.manifests.get('supabase')!.checks.find((check) => check.name === name)!;
+    return buildCheckInput(session, check.name, { scope: scope });
 }
 
 test('Supabase configurations and function discovery stay within nested project scopes', async () => {

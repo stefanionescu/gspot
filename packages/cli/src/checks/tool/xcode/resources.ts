@@ -4,7 +4,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parseJsonDocument } from '#cli/parsers/json.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
 import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/tool/xcode.ts';
 import { stringsFileSchema, assetContentsSchema } from '#cli/parsers/schema/xcode.ts';
@@ -22,7 +22,7 @@ function symbolOf(name: string): string {
     return joined.charAt(0).toLowerCase() + joined.slice(1);
 }
 
-function imageFindings(input: EngineInput, path: string): Finding[] {
+function imageFindings(input: CheckInput, path: string): Finding[] {
     const read = parseJsonDocument(readSource(input.root, path, input.reads).toString('utf8'), assetContentsSchema);
     const at = { file: path, line: 1 };
     if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
@@ -36,7 +36,7 @@ function imageFindings(input: EngineInput, path: string): Finding[] {
         .map((name) => findingAt(input, at, 'missing-image', `The image ${name} is not in the set.`));
 }
 
-function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
+function orphanFindings(input: CheckInput, sets: string[]): Finding[] {
     if (input.policyFiles.policy.level !== 'all') return [];
     const swift = trackedByExtension(input, ['.swift', '.storyboard', '.xib', '.plist']).map((path) =>
         readSource(input.root, path, input.reads).toString('utf8'),
@@ -54,10 +54,10 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
 
 /**
  * The findings of every string catalog: it parses, and every string has every locale the catalog uses.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function xcstrings(input: EngineInput): Finding[] {
+export function xcstrings(input: CheckInput): Finding[] {
     return trackedByExtension(input, ['.xcstrings']).flatMap((path) => {
         const read = parseJsonDocument(readSource(input.root, path, input.reads).toString('utf8'), stringsFileSchema);
         const at = { file: path, line: 1 };
@@ -82,10 +82,10 @@ export function xcstrings(input: EngineInput): Finding[] {
 
 /**
  * The findings of every asset catalog: each Contents.json parses, each image set holds its images, and code names each asset.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function xcodeAssets(input: EngineInput): Finding[] {
+export function xcodeAssets(input: CheckInput): Finding[] {
     const contents = trackedByExtension(input, ['Contents.json']).filter((path) => path.includes('.xcassets/'));
     return [...contents.flatMap((path) => imageFindings(input, path)), ...orphanFindings(input, contents)];
 }

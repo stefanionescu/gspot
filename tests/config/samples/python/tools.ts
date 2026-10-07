@@ -9,7 +9,7 @@ package = false
 constraint-dependencies = ["transitive.package>=2.0.0"]
 `;
 
-export const PRIVATE_PYTHON_LOCK = `version = 1
+export const PRIVATE_PYTHON_LOCKFILE = `version = 1
 requires-python = ">=3.11"
 
 [manifest]
@@ -40,7 +40,7 @@ name = "local"
 url = "packages"
 `;
 
-export const UV_LOCK_MISMATCHES = [
+export const UV_LOCKFILE_MISMATCHES = [
     ['Python floor', '>=3.11', '>=3.12'],
     ['constraint', '>=2.0.0', '>=3.0.0'],
     ['pin', '==4.0.0', '==5.0.0'],

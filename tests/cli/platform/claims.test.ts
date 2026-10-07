@@ -1,14 +1,16 @@
-// On Bun, exercise lock handoffs through real filesystem and process boundaries.
+// On Bun, exercise claim handoffs through real filesystem and process boundaries.
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { isPosix } from '#tests/config/harness/platforms.ts';
 import { READY_POLL_MS } from '#tests/config/harness/process.ts';
+import { STATE_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { waitForFile, captureChild } from '#tests/harness/process.ts';
 import { prepareTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
 
-test('a lock released after exclusive creation fails can be acquired', async () => {
+test('a claim released after exclusive creation fails can be acquired', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { '.gspot/mutation.lock': `${String(process.pid)}:first`, source: 'kept' });
     const target = join(sandbox.path, '.gspot/mutation.lock');
@@ -25,7 +27,7 @@ test('a lock released after exclusive creation fails can be acquired', async () 
             }
         }),
     );
-    files.lock('.gspot/mutation.lock');
+    files.claim('.gspot/mutation.lock');
     expect(fs.readFileSync(target, 'utf8')).toStartWith(`${String(process.pid)}:`);
     files.close();
     expect(fs.existsSync(target)).toBe(false);
@@ -54,7 +56,7 @@ test('a live replacement survives a stale holder check', async () => {
         }),
     );
     expect(() => {
-        files.lock('.gspot/mutation.lock');
+        files.claim('.gspot/mutation.lock');
     }).toThrow('Another lifecycle writer');
     expect(fs.readFileSync(target, 'utf8')).toBe(live);
     expect(fs.existsSync(`${target}.reclaim`)).toBe(false);
@@ -63,7 +65,7 @@ test('a live replacement survives a stale holder check', async () => {
     expect(fs.readFileSync(join(sandbox.path, 'source'), 'utf8')).toBe('kept');
 });
 
-test('an empty lock can finish initialization while another writer waits', async () => {
+test('an empty claim can finish initialization while another writer waits', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { '.gspot/kept': 'kept', source: 'authored' });
     const target = join(sandbox.path, '.gspot/mutation.lock');
@@ -79,7 +81,7 @@ writeFileSync(target, String(process.pid) + ':initialized');
 console.log('initialized');
 await Bun.stdin.text();`;
     const command = [process.execPath, '-e', program];
-    const prepared = prepareTestCommand(command, { cwd: sandbox.path }, 'lock initialization');
+    const prepared = prepareTestCommand(command, { cwd: sandbox.path }, 'claim initialization');
     const child = Bun.spawn(command, {
         cwd: sandbox.path,
         stdin: 'pipe',
@@ -106,7 +108,7 @@ await Bun.stdin.text();`;
     );
     using files = openRoot(sandbox.path);
     expect(() => {
-        files.lock('.gspot/mutation.lock');
+        files.claim('.gspot/mutation.lock');
     }).toThrow('Another lifecycle writer');
     expect(fs.readFileSync(target, 'utf8')).toBe(`${String(child.pid)}:initialized`);
     files.close();
@@ -124,12 +126,12 @@ test('a recovery lease refuses a competing reclaimer until recovery finishes', a
     fs.mkdirSync(`${target}.reclaim`);
     using files = openRoot(sandbox.path);
     expect(() => {
-        files.lock('.gspot/mutation.lock');
+        files.claim('.gspot/mutation.lock');
     }).toThrow('Another process is recovering');
     expect(fs.readFileSync(target, 'utf8')).toBe(stale);
     expect(fs.statSync(`${target}.reclaim`).isDirectory()).toBe(true);
     fs.rmdirSync(`${target}.reclaim`);
-    files.lock('.gspot/mutation.lock');
+    files.claim('.gspot/mutation.lock');
     expect(fs.readFileSync(target, 'utf8')).toStartWith(`${String(process.pid)}:`);
     expect(fs.existsSync(`${target}.reclaim`)).toBe(false);
     files.close();
@@ -137,21 +139,53 @@ test('a recovery lease refuses a competing reclaimer until recovery finishes', a
     expect(fs.readFileSync(join(sandbox.path, 'source'), 'utf8')).toBe('kept');
 });
 
-test('an abandoned empty lock stays intact until its owner is checked and removed', async () => {
+test('an abandoned empty claim stays intact until its owner is checked and removed', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { '.gspot/mutation.lock': '', source: 'kept' });
     const target = join(sandbox.path, '.gspot/mutation.lock');
     using files = openRoot(sandbox.path);
     expect(() => {
-        files.lock('.gspot/mutation.lock');
-    }).toThrow('Lifecycle lock is being initialized');
+        files.claim('.gspot/mutation.lock');
+    }).toThrow('Lifecycle claim is being initialized');
     expect(fs.readFileSync(target, 'utf8')).toBe('');
     files.close();
     expect(fs.existsSync(target)).toBe(true);
     fs.unlinkSync(target);
-    files.lock('.gspot/mutation.lock');
+    files.claim('.gspot/mutation.lock');
     expect(fs.readFileSync(target, 'utf8')).toStartWith(`${String(process.pid)}:`);
     files.close();
     expect(fs.existsSync(target)).toBe(false);
     expect(fs.readFileSync(join(sandbox.path, 'source'), 'utf8')).toBe('kept');
 });
+
+test.skipIf(!isPosix)(
+    'root lifecycle mutations: a second writer is refused until the first releases its claim',
+    async () => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, { source: 'kept' });
+        const path = `${STATE_DIRECTORY}/writer.lock`;
+        const first = openRoot(directory.path);
+        const second = openRoot(directory.path);
+        try {
+            first.claim(path);
+            const firstToken = first.read(path)?.bytes.toString('utf8');
+            expect(firstToken).toStartWith(`${String(process.pid)}:`);
+            expect(() => {
+                second.claim(path);
+            }).toThrow('Another lifecycle writer');
+            expect(second.read(path)?.bytes.toString('utf8')).toBe(firstToken);
+            first.close();
+            expect(second.read(path)).toBeUndefined();
+            expect(() => {
+                second.claim(path);
+            }).not.toThrow();
+            expect(second.read(path)?.bytes.toString('utf8')).toStartWith(`${String(process.pid)}:`);
+            second.close();
+            expect(second.read(path)).toBeUndefined();
+            expect(fs.readFileSync(join(directory.path, 'source'), 'utf8')).toBe('kept');
+        } finally {
+            first.close();
+            second.close();
+        }
+    },
+);

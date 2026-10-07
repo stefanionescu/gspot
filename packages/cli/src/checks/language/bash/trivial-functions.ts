@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { trivialText } from '#cli/parsers/statements.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 /**
@@ -8,7 +8,7 @@ import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
  * @param input the check context
  * @returns the findings
  */
-export const trivialFunctions: Engine = async (input) => {
+export const trivialFunctions: BuiltInCheck = async (input) => {
     const threshold = input.view.limit('min_function_statements', 'bash');
     if (threshold === undefined) return [];
     const index = await getScriptIndex(input);

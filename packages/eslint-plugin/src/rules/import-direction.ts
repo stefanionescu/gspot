@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 import { isRequireCall } from '#plugin/imports.ts';
 import { CODE_EXTENSION } from '#plugin/config/files.ts';
-import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import type { ImportNode, ImportSource } from '#plugin/types/imports.ts';
 import { lintedPath, normalizePath, isAnyGlobMatch } from '#plugin/files.ts';
 import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

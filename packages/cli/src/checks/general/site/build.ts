@@ -9,22 +9,22 @@ import { contentDigest } from '#cli/platform/text.ts';
 import { parseCommand } from '#cli/parsers/command.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { SiteBuild } from '#cli/types/checks/general/site.ts';
 import { portableSegments, assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { OUTPUT_TAIL_LINES, SHOWN_DIFFERENCES } from '#cli/config/checks/general/site.ts';
 
 const BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
 
-async function runBuild(input: EngineInput, scratch: string): Promise<SiteBuild> {
+async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> {
     const site = input.view.options('site');
     const outputPath = site['output'] as string;
     assertMutationTarget(outputPath);
     const cwd = join(scratch, input.scope);
     const command = site['build'] as string;
-    const result = await runEngineTool(input, parseCommand(command), { cwd });
+    const result = await runCheckTool(input, parseCommand(command), { cwd });
     const output = join(cwd, outputPath);
     using files = openRoot(scratch);
     const isBuilt: boolean =
@@ -67,7 +67,7 @@ export function filesUnder(folder: string): string[] {
  * @returns a confined repository-relative path.
  */
 export function repositoryPath(
-    input: Pick<EngineInput, 'scope'>,
+    input: Pick<CheckInput, 'scope'>,
     build: Pick<SiteBuild, 'cwd'>,
     absolute: string,
 ): string {
@@ -78,10 +78,10 @@ export function repositoryPath(
 
 /**
  * The build of the scope, run the first time a check asks and shared after that.
- * @param input the engine input.
+ * @param input the check input.
  * @returns the build.
  */
-export function cachedBuild(input: EngineInput): Promise<SiteBuild> {
+export function cachedBuild(input: CheckInput): Promise<SiteBuild> {
     const key = input.scopeRoot;
     const scopeBuilds = memo(input.reads, BUILD_MEMO);
     const held = scopeBuilds.get(key);
@@ -104,10 +104,10 @@ export function cachedBuild(input: EngineInput): Promise<SiteBuild> {
 
 /**
  * Requires built output before a dependent check reads it.
- * @param input the engine input.
+ * @param input the check input.
  * @returns the successful build, or a skipped-check error.
  */
-export async function requireBuild(input: EngineInput): Promise<SiteBuild> {
+export async function requireBuild(input: CheckInput): Promise<SiteBuild> {
     const build = await cachedBuild(input);
     if (!build.isBuilt) throw new GspotError('skip', 'The site did not build.');
     return build;
@@ -115,10 +115,10 @@ export async function requireBuild(input: EngineInput): Promise<SiteBuild> {
 
 /**
  * One finding when the build command fails or writes no output folder.
- * @param input the engine input.
+ * @param input the check input.
  * @returns the findings.
  */
-export async function siteBuild(input: EngineInput): Promise<Finding[]> {
+export async function siteBuild(input: CheckInput): Promise<Finding[]> {
     const build = await cachedBuild(input);
     if (build.isBuilt) return [];
     return [
@@ -133,10 +133,10 @@ export async function siteBuild(input: EngineInput): Promise<Finding[]> {
 
 /**
  * Builds a second time and compares the two outputs file by file.
- * @param input the engine input.
+ * @param input the check input.
  * @returns one finding for each file that differs, appears, or disappears.
  */
-export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
+export async function buildReproducible(input: CheckInput): Promise<Finding[]> {
     const first = await requireBuild(input);
     const before = outputDigests(first.output);
     using folder = await copyIntoScratch(

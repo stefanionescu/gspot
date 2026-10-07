@@ -8,8 +8,8 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { normalizedPythonIdentity } from '#cli/parsers/packages.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
@@ -41,7 +41,7 @@ function licenseProblem(name: string, license: string, exception: LicenseExcepti
 }
 
 // Read through the files filesystem and verify the generated configuration against the selected policy.
-function readAllowlist(input: EngineInput): LicenseAllowlist {
+function readAllowlist(input: CheckInput): LicenseAllowlist {
     const target = input.manifests.get('licenses')?.configs.find((config) => !config.fragment);
     if (target === undefined) throw new Error('The license configuration has no configuration target.');
     using files = openRoot(input.root);
@@ -62,15 +62,15 @@ function readAllowlist(input: EngineInput): LicenseAllowlist {
     return configuration;
 }
 
-function assertInstalled(input: EngineInput, name: string): void {
+function assertInstalled(input: CheckInput, name: string): void {
     if (statSync(join(input.scopeRoot, name), { throwIfNoEntry: false })?.isDirectory() !== true)
         throw new Error(
             `Install the project dependencies first: ${name} is missing in ${input.scope === '' ? 'the root' : input.scope}.`,
         );
 }
 
-async function licenseReport(input: EngineInput, command: string[], cwd: string): Promise<unknown> {
-    const result = await runEngineTool(input, command, { cwd });
+async function licenseReport(input: CheckInput, command: string[], cwd: string): Promise<unknown> {
+    const result = await runCheckTool(input, command, { cwd });
     if (result.code !== 0)
         throw new Error(
             `${command.join(' ')} did not run: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
@@ -78,7 +78,7 @@ async function licenseReport(input: EngineInput, command: string[], cwd: string)
     return JSON.parse(result.stdout);
 }
 
-async function javascriptLicenses(input: EngineInput, start: string): Promise<LicensedPackage[]> {
+async function javascriptLicenses(input: CheckInput, start: string): Promise<LicensedPackage[]> {
     assertInstalled(input, 'node_modules');
     const report = await licenseReport(
         input,
@@ -92,7 +92,7 @@ async function javascriptLicenses(input: EngineInput, start: string): Promise<Li
 }
 
 // Run outside the project so project-owned scanner settings cannot hide installed dependencies.
-async function pythonLicenses(input: EngineInput, start: string): Promise<LicensedPackage[]> {
+async function pythonLicenses(input: CheckInput, start: string): Promise<LicensedPackage[]> {
     assertInstalled(input, '.venv');
     const installed = join(start, '.venv');
     using isolatedFolder = scratchFolder('gspot-licenses-');
@@ -121,10 +121,10 @@ const SCANNERS = new Map<string, LicenseScanner>([
 
 /**
  * One finding for each installed package whose license is neither allowed nor covered by an exception that still holds.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function licensesPackages(input: EngineInput): Promise<Finding[]> {
+export async function licensesPackages(input: CheckInput): Promise<Finding[]> {
     if ((input.view.settings['licenses.allowed'] as string[]).length === 0) return [];
     const configuration = readAllowlist(input);
     const start = input.scopeRoot;

@@ -1,7 +1,7 @@
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 
 // One output setting per format. Each carries the patterns or fields its format needs.
-export const OUTPUTS: NonNullable<CheckSpec['output']>[] = [
+export const OUTPUTS: NonNullable<CheckDeclaration['output']>[] = [
     { format: 'regex', pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$` },
     {
         format: 'grouped',

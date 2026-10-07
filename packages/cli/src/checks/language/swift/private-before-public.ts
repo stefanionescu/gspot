@@ -2,7 +2,7 @@ import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
 import { visitSwiftSources } from '#cli/parsers/swift.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { FILE_LOCAL, DECLARATIONS } from '#cli/config/checks/language/swift.ts';
 
 /**
@@ -25,7 +25,7 @@ function visibilityOf(node: Node): string {
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function privateBeforePublic(input: EngineInput): Promise<Finding[]> {
+export async function privateBeforePublic(input: CheckInput): Promise<Finding[]> {
     return visitSwiftSources(input, ({ sources }) =>
         sources.flatMap((source) => {
             const declarations = source.tree.rootNode.namedChildren.filter((child) => DECLARATIONS.has(child.type));

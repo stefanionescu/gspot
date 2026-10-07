@@ -68,9 +68,9 @@ A global install supplies one version per machine. Repositories pin their own ve
 
 ## Accept and verify the setup
 
-Read the plan, including files to replace, configuration choices, tool requirements, hooks, and CI. After acceptance, initialization resolves required locks before writing the configuration. It then installs the applicable tools. With `--no-install`, it writes the setup without resolving locks; run `gspot install` later.
+Read the plan, including files to replace, configuration choices, tool requirements, hooks, and CI. After acceptance, initialization resolves required lockfiles before writing the configuration. It then installs the applicable tools. With `--no-install`, it writes the setup without resolving lockfiles; run `gspot install` later.
 
-`gspot install` prepares new locks and tool environments before replacing the installed tool files. If it fails, repair the reported error and run `gspot install` again. Use `--refresh-locks` when you intend to resolve declared tool pins again.
+`gspot install` prepares new lockfiles and tool environments before replacing the installed tool files. If it fails, repair the reported error and run `gspot install` again. Use `--refresh-lockfiles` when you intend to resolve declared tool pins again.
 
 Then run:
 

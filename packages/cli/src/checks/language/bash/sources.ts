@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import type { ScriptFile } from '#cli/types/checks/language/bash.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { SOURCE_STATEMENT, SHELLCHECK_DIRECTIVE } from '#cli/config/checks/language/bash.ts';
@@ -21,7 +21,7 @@ function sourceRuns(file: ScriptFile): number[][] {
  * @param input the check context
  * @returns the findings
  */
-export const sourceComments: Engine = async (input) => {
+export const sourceComments: BuiltInCheck = async (input) => {
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>
         sourceRuns(file).flatMap((run) => {
@@ -49,7 +49,7 @@ export const sourceComments: Engine = async (input) => {
  * @param input the check context
  * @returns the findings
  */
-export const sourceOrder: Engine = async (input) => {
+export const sourceOrder: BuiltInCheck = async (input) => {
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>
         sourceRuns(file).flatMap((run) => {

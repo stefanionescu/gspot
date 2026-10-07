@@ -11,9 +11,9 @@ A template is an exported setup another repository can reuse. It carries configu
 gspot export team.gspot.template.toml
 ```
 
-The export reports every omitted item. It omits scopes, custom executable checks, installed dependencies, and the `generated`, `vendored`, and `exclude` lists. Entries that name repository paths also stay behind. Explicitly authored empty tables remain, because an empty integration table can enable that integration.
+The export reports every omitted item. It omits scopes, command checks, installed dependencies, and the `generated`, `vendored`, and `exclude` lists. Entries that name repository paths also stay behind. Explicitly authored empty tables remain, because an empty integration table can enable that integration.
 
-A template carries hooks, CI, agent-rule, and runner settings, but no generated hook scripts, locks, or installed tools. A template without `[hooks]` sets up no hooks.
+A template carries hooks, CI, agent-rule, and runner settings, but no generated hook scripts, lockfiles, or installed tools. A template without `[hooks]` sets up no hooks.
 
 Export writes these template fields:
 

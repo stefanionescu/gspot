@@ -5,16 +5,16 @@ import { directoryOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { WebManifest } from '#cli/types/parsers/site.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { webManifestSchema } from '#cli/parsers/schema/site.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { FULL_PERCENTAGE } from '#cli/config/platform/runtime.ts';
 import { TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS } from '#cli/config/checks/general/site.ts';
 
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
-async function svgFinding(input: EngineInput, path: string): Promise<Finding[]> {
+async function svgFinding(input: CheckInput, path: string): Promise<Finding[]> {
     const original = readSource(input.root, path, input.reads).toString('utf8');
-    const result = await runEngineTool(input, ['svgo', '--input', '-', '--output', '-'], {
+    const result = await runCheckTool(input, ['svgo', '--input', '-', '--output', '-'], {
         cwd: input.root,
         stdin: original,
     });
@@ -54,10 +54,10 @@ function sharedHeaders(text: string): Map<string, string> {
 }
 /**
  * Every tracked file under an assets folder that no text file of the site names.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function deadAssets(input: EngineInput): Finding[] {
+export function deadAssets(input: CheckInput): Finding[] {
     const files = input.files;
     const texts = files
         .filter((file) => TEXT_SUFFIX.test(file.path))
@@ -80,10 +80,10 @@ export function deadAssets(input: EngineInput): Finding[] {
 
 /**
  * SVG reductions above the configured saving percentage, measured in UTF-8 bytes.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function svgo(input: EngineInput): Promise<Finding[]> {
+export async function svgo(input: CheckInput): Promise<Finding[]> {
     const paths = input.files
         .filter((file) => file.kind === 'source' && file.path.endsWith('.svg'))
         .map((file) => file.path);
@@ -94,10 +94,10 @@ export async function svgo(input: EngineInput): Promise<Finding[]> {
 
 /**
  * The web manifest parses, names the app, and every icon it lists exists.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function webManifest(input: EngineInput): Finding[] {
+export function webManifest(input: CheckInput): Finding[] {
     const manifests = input.files.filter(
         (file) => file.path.endsWith('.webmanifest') || file.path.endsWith('/manifest.json'),
     );
@@ -136,10 +136,10 @@ export function webManifest(input: EngineInput): Finding[] {
 
 /**
  * The headers file sets the security headers for every path.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function securityHeaders(input: EngineInput): Finding[] {
+export function securityHeaders(input: CheckInput): Finding[] {
     const files = input.files.filter((file) => file.path === '_headers' || file.path.endsWith('/_headers'));
     return files.flatMap((file) => {
         const held = sharedHeaders(readSource(input.root, file.path, input.reads).toString('utf8'));

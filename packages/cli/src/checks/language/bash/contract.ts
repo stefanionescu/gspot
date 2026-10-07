@@ -4,7 +4,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import type { CodeLine } from '#cli/types/parsers/bash.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { codeLines, withoutDeclaration } from '#cli/parsers/bash.ts';
-import type { Engine, EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import type { ScriptFile, ScriptReport } from '#cli/types/checks/language/bash.ts';
 
@@ -118,7 +118,7 @@ function libraryProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: bool
 }
 
 function fileProblems(
-    input: EngineInput,
+    input: CheckInput,
     file: ScriptFile,
     platforms: string | undefined,
     isConfigOwner: boolean,
@@ -146,7 +146,7 @@ function fileProblems(
  * @param input the check context
  * @returns the findings
  */
-export const contract: Engine = async (input) => {
+export const contract: BuiltInCheck = async (input) => {
     const runtime = input.view.settings['bash.platforms'];
     const platforms = typeof runtime === 'string' ? runtime : undefined;
     const owners = new Set(input.view.settings['bash.config_owners'] as string[]);

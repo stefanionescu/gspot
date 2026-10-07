@@ -6,7 +6,7 @@ import type { ToolSession } from '#cli/types/tools/session.ts';
 import { readText, readSource } from '#cli/platform/source.ts';
 import { RAN_STATUSES } from '#cli/config/execution/runtime.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { docstringOf, parsePythonModule } from '#cli/parsers/python.ts';
 import type { PythonDocstringStyle } from '#cli/types/parsers/python.ts';
@@ -84,7 +84,7 @@ export async function pydoclint(session: ToolSession, planned: PlannedCheck): Pr
     const groups = await docstringGroups(session, planned.files, configured.style);
     const report = emptyResult(planned);
     for (const [style, files] of groups) {
-        const result = await runCommandCheck(
+        const result = await runCheckCommand(
             session,
             { ...planned, files },
             {

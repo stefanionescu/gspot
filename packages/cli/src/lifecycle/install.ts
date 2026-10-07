@@ -11,8 +11,8 @@ import type { ToolSession } from '#cli/types/tools/session.ts';
 import { preserveMode } from '#cli/lifecycle/ownership/log.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
-import type { LockPreparation } from '#cli/types/tools/install.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
+import type { LockfilePreparation } from '#cli/types/tools/install.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { getHookPlan, installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
@@ -47,7 +47,7 @@ function assertInstallationInputs(context: InstallationContext): void {
 
 const installations: [InstallationStep, ...InstallationStep[]] = [
     {
-        preview: (session, _manifests, generated, refreshLocks) => ({
+        preview: (session, _manifests, generated, refreshLockfiles) => ({
             notes: [],
             steps: [
                 ...generated.files
@@ -55,30 +55,30 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                     .flatMap(
                         (file) =>
                             pythonInstallationPlan(session.root, file.content, session.policyFiles.policy.run_with, {
-                                refreshLocks,
+                                refreshLockfiles,
                             }).installer,
                     ),
                 ...generated.files
                     .filter((file) => file.path === TOOL_PACKAGE_PROJECT)
-                    .flatMap((file) => packageInstallSteps(session.root, file.content, refreshLocks).slice(0, -1)),
+                    .flatMap((file) => packageInstallSteps(session.root, file.content, refreshLockfiles).slice(0, -1)),
                 ...generated.files
                     .filter((file) => file.path === TOOL_PYTHON_PROJECT)
                     .flatMap(
                         (file) =>
                             pythonInstallationPlan(session.root, file.content, session.policyFiles.policy.run_with, {
-                                refreshLocks,
-                            }).lock,
+                                refreshLockfiles,
+                            }).lockfile,
                     ),
             ],
         }),
         run: async (session, manifests, context) => {
-            const { log, inputs, refreshLocks } = context;
+            const { log, inputs, refreshLockfiles } = context;
             if (pythonPins(manifests).length > 0) await session.pythonInstaller();
             const generated = emitAll(session);
             for (const path of [POLICY_FILE, TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT, YARN_SETTINGS])
                 inputs.read(path);
-            await preparePackageProject(session.root, generated.files, inputs, { refreshLocks });
-            await preparePythonProject(session, generated.files, inputs, { refreshLocks });
+            await preparePackageProject(session.root, generated.files, inputs, { refreshLockfiles });
+            await preparePythonProject(session, generated.files, inputs, { refreshLockfiles });
             const files = generated.files.filter(
                 (file) =>
                     file.kind === 'lock' ||
@@ -118,7 +118,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                         inputs.read(file.path),
                     ),
                 );
-            return plans.some((plan) => plan.status === 'changed') ? 'prepared required tool locks' : '';
+            return plans.some((plan) => plan.status === 'changed') ? 'prepared required tool lockfiles' : '';
         },
     },
     {
@@ -215,7 +215,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                           session.root,
                           generated.files.find((file) => file.path === TOOL_PYTHON_PROJECT)?.content,
                           session.policyFiles.policy.run_with,
-                          { refreshLocks: false },
+                          { refreshLockfiles: false },
                       ).environment,
         }),
         run: async (session, manifests, context) => {
@@ -229,7 +229,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
 async function runInstallationPhases(session: ToolSession, context: InstallationContext): Promise<string[]> {
     const manifests = applicableManifests(session);
     const failures: GspotError[] = [];
-    const { preparation, phases } = installationPlan(session, context.refreshLocks);
+    const { preparation, phases } = installationPlan(session, context.refreshLockfiles);
     const notes = [await preparation.phase.run(session, manifests, context, preparation)];
     for (const installation of phases) {
         try {
@@ -250,16 +250,16 @@ function isInstallationFailure(error: unknown): error is GspotError {
 /**
  * The installation phases and commands calculated without resolving or downloading tools.
  * @param session the saved policy, scope selections, and repository inventory.
- * @param refreshLocks include fresh resolution of every declared tool pin.
+ * @param refreshLockfiles include fresh resolution of every declared tool pin.
  * @returns the applicable phases and their acquisition commands.
  */
-export function installationPlan(session: ToolSession, refreshLocks = false): InstallationPlan {
+export function installationPlan(session: ToolSession, refreshLockfiles = false): InstallationPlan {
     const manifests = applicableManifests(session);
     const generated = emitAll(session);
     const [first, ...remaining] = installations;
-    const preparation = { phase: first, ...first.preview(session, manifests, generated, refreshLocks) };
+    const preparation = { phase: first, ...first.preview(session, manifests, generated, refreshLockfiles) };
     const phases = remaining
-        .map((phase) => ({ phase, ...phase.preview(session, manifests, generated, refreshLocks) }))
+        .map((phase) => ({ phase, ...phase.preview(session, manifests, generated, refreshLockfiles) }))
         .filter(({ steps, notes }) => steps.length > 0 || notes.length > 0);
     return {
         preparation,
@@ -274,13 +274,13 @@ export function installationPlan(session: ToolSession, refreshLocks = false): In
  * @param session the selected tools and repository.
  * @param log the command's locked ownership context.
  * @param options whether to resolve declared pins again before installing.
- * @param options.refreshLocks resolve declared pins instead of reusing matching locks.
+ * @param options.refreshLockfiles resolve declared pins instead of reusing matching lockfiles.
  * @returns the installation summary and exit code, with a repair command for acquisition failures.
  */
 export async function installTools(
     session: ToolSession,
     log: Log,
-    { refreshLocks }: LockPreparation,
+    { refreshLockfiles }: LockfilePreparation,
 ): Promise<InstallationResult> {
     const context: InstallationContext = {
         log,
@@ -288,7 +288,7 @@ export async function installTools(
         prepared: new Map(),
         plans: [],
         trees: new Map(),
-        refreshLocks,
+        refreshLockfiles,
         inputs: {
             read: (path) => {
                 const prepared = context.prepared.get(path);

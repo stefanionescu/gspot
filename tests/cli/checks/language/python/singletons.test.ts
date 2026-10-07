@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -17,7 +17,7 @@ test('a module-level instance is a singleton unless its name is allowed', async 
         'gspot.toml': buildPolicy(['python'], { level: 'all' }),
         'example/shared.py': `${PYTHON_MODULE_HEADER}class Store:\n    """Holds things."""\n\n\nstore = Store()\n`,
     });
-    const unallowed = await singletons(buildEngineInput(await openSession(sandbox.path), 'python/singletons'));
+    const unallowed = await singletons(buildCheckInput(await openSession(sandbox.path), 'python/singletons'));
     expect(unallowed.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'example/shared.py', line: 8, rule: 'singleton' },
     ]);
@@ -28,7 +28,7 @@ test('a module-level instance is a singleton unless its name is allowed', async 
             tables: '[structure.python]\nsingletons_allowed = [{ names = ["store"], reason = "The framework requires one application object." }]\n',
         }),
     );
-    expect(await singletons(buildEngineInput(await openSession(sandbox.path), 'python/singletons'))).toStrictEqual([]);
+    expect(await singletons(buildCheckInput(await openSession(sandbox.path), 'python/singletons'))).toStrictEqual([]);
 });
 
 test('FastAPI owns its application and router allowances without exempting general Python names', async () => {
@@ -43,10 +43,10 @@ test('FastAPI owns its application and router allowances without exempting gener
         { names: ['app', 'router'] },
     ]);
     expect(python.defaults.get('structure.python.singletons_allowed')!.value).toStrictEqual([]);
-    const pythonFindings = await singletons(buildEngineInput(await openSession(sandbox.path), 'python/singletons'));
+    const pythonFindings = await singletons(buildCheckInput(await openSession(sandbox.path), 'python/singletons'));
     expect(pythonFindings.map(({ line }) => line)).toStrictEqual([1, 2, 3]);
     await Bun.write(`${sandbox.path}/gspot.toml`, buildPolicy(['fastapi'], { level: 'all' }));
-    const frameworkFindings = await singletons(buildEngineInput(await openSession(sandbox.path), 'python/singletons'));
+    const frameworkFindings = await singletons(buildCheckInput(await openSession(sandbox.path), 'python/singletons'));
     expect(frameworkFindings.map(({ line }) => line)).toStrictEqual([3]);
 });
 
@@ -65,12 +65,12 @@ test('singleton allowances match both names and repository paths, including excl
     const session = await openSession(sandbox.path);
     const findings = [
         ...(await singletons(
-            buildEngineInput(session, 'python/singletons', {
+            buildCheckInput(session, 'python/singletons', {
                 paths: ['example/allowed.py', 'example/restricted.py', 'outside.py'],
             }),
         )),
         ...(await singletons(
-            buildEngineInput(session, 'python/singletons', {
+            buildCheckInput(session, 'python/singletons', {
                 scope: 'app',
                 paths: ['app/allowed.py', 'app/restricted.py'],
             }),

@@ -15,7 +15,7 @@ export const EXCEPTION_REASON = 'The project contract requires this reviewed exc
 export const ROOT_PROJECT =
     'require_reasons = true\n[agent_rules]\nenabled = false\n[[scope]]\npath = "app"\n[[scope]]\npath = "sibling"\n';
 
-export const HOST_LOCK = {
+export const HOST_LOCKFILE = {
     packages: {
         'node_modules/first': { resolved: 'https://github.com/example/first/archive/abcdef.tar.gz' },
         'node_modules/second': { resolved: 'https://codeload.github.com/example/second/tar.gz/abcdef' },

@@ -19,14 +19,14 @@ export function registerInstall(program: Program): void {
         .command('install')
         .summary('Install the locked tools')
         .description(
-            'Install the tools gspot.toml selects, at the versions in the committed locks, and the selected Git hooks. install prepares missing or stale tool locks before installing. Run it after you clone a configured repository. If a package install fails, the previous locks and installation stay. --refresh-locks resolves the declared pins again before installation. --dry-run prints the commands and writes nothing.',
+            'Install the tools gspot.toml selects, at the versions in the committed lockfiles, and the selected Git hooks. install prepares missing or outdated tool lockfiles before installing. Run it after you clone a configured repository. If a package install fails, the previous lockfiles and installation stay. --refresh-lockfiles resolves the declared pins again before installation. --dry-run prints the commands and writes nothing.',
         )
         .addHelpText(
             'after',
             '\nExit codes:\n- 0: the tools were installed, or the preview finished.\n- 2: the input was invalid, or install could not finish.\n\nExample:\ngspot install --dry-run',
         )
         .option('--dry-run', 'Print the install commands and write nothing')
-        .option('--refresh-locks', 'Resolve the declared tool pins again and install the prepared locks')
+        .option('--refresh-lockfiles', 'Resolve the declared tool pins again and install the prepared lockfiles')
         .action(async (flags, command) => {
             const global = command.optsWithGlobals();
             const cwd = resolve(global.C ?? process.cwd());
@@ -34,7 +34,7 @@ export function registerInstall(program: Program): void {
                 await installCommand({
                     cwd,
                     isDryRun: flags.dryRun === true,
-                    refreshLocks: flags.refreshLocks === true,
+                    refreshLockfiles: flags.refreshLockfiles === true,
                 }),
             );
         });
@@ -49,7 +49,7 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
     const root = findRoot(options.cwd);
     assertVersionPin(root);
     const session = await openSession(root);
-    const { steps, notes } = installationPlan(session, options.refreshLocks === true);
+    const { steps, notes } = installationPlan(session, options.refreshLockfiles === true);
     if (options.isDryRun) {
         const lines = [...steps.map((step) => step.join(' ')), ...notes];
         const hooks = steps.find((step) => step[0] === 'git' && step[2] === 'core.hooksPath')?.[3];
@@ -60,7 +60,9 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
         };
     }
     using log = openOwnership(root);
-    const { note, exitCode } = await installTools(session, log, { refreshLocks: options.refreshLocks === true });
+    const { note, exitCode } = await installTools(session, log, {
+        refreshLockfiles: options.refreshLockfiles === true,
+    });
     return {
         text: `${note === '' ? 'No managed tools to install.' : note}\n`,
         json:

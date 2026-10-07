@@ -3,9 +3,9 @@ import ignore from 'ignore';
 import { readText } from '#cli/platform/source.ts';
 import { toolName } from '#cli/configurations/pins.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { coversScope, pathMatcher } from '#cli/repository/selectors.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
 import type {
@@ -20,7 +20,7 @@ import type {
 
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
 function conditionSkip(check: PlannedCheck, hasGit: boolean): Skip {
-    const { configuration, git } = { ...check.manifest?.configuration.when, ...check.spec.when };
+    const { configuration, git } = { ...check.manifest?.configuration.when, ...check.check.when };
     if (configuration !== undefined && !check.scope.view.configurations.includes(configuration))
         return {
             cause: 'condition',
@@ -36,9 +36,9 @@ function conditionSkip(check: PlannedCheck, hasGit: boolean): Skip {
 }
 
 // The skip an ignore entry without a rule or paths imposes, which disables the whole check.
-function ignoreSkip(scope: ScopeSelection, spec: CheckSpec): SelectionStatus | undefined {
+function ignoreSkip(scope: ScopeSelection, check: CheckDeclaration): SelectionStatus | undefined {
     const ignored = scope.view
-        .ignoresFor(spec.name)
+        .ignoresFor(check.name)
         .find(
             (entry) =>
                 entry.rule === undefined &&
@@ -49,8 +49,8 @@ function ignoreSkip(scope: ScopeSelection, spec: CheckSpec): SelectionStatus | u
     return { cause: 'ignore', note: `disabled by gspot.toml${reason}` };
 }
 
-function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string | undefined {
-    const setting = spec.when?.setting;
+function waitingSetting(scope: ScopeSelection, check: CheckDeclaration): string | undefined {
+    const setting = check.when?.setting;
     if (setting === undefined) return undefined;
     const value = scope.view.settings[setting];
     const isEmpty =
@@ -58,10 +58,10 @@ function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string | undefi
     return isEmpty ? setting : undefined;
 }
 
-// The skip the platform imposes: the check names other platforms, or its tool has no build for this host.
-function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, host: Host): Skip {
-    if (spec.platforms && !(spec.platforms as readonly string[]).includes(host.platform))
-        return { cause: 'platform', note: `runs on ${spec.platforms.join(', ')} only; this is ${host.platform}` };
+// The skip the platform imposes: the check IDs other platforms, or its tool has no build for this host.
+function platformSkip(check: CheckDeclaration, tool: ToolPin | undefined, host: Host): Skip {
+    if (check.platforms && !(check.platforms as readonly string[]).includes(host.platform))
+        return { cause: 'platform', note: `runs on ${check.platforms.join(', ')} only; this is ${host.platform}` };
     if (tool === undefined) return undefined;
     const missing = missingBuild(tool, host.platform, host.arch);
     if (missing !== undefined) return { cause: 'platform', note: `${tool.name} has no ${missing} build` };
@@ -70,10 +70,10 @@ function platformSkip(spec: CheckSpec, tool: ToolPin | undefined, host: Host): S
 
 // Native ignore syntax combines authored file content with the tool's saved ordered exclusions.
 function nativeIgnore(session: Session, check: PlannedCheck): NativeIgnore | undefined {
-    const file = check.spec.ignore_file;
+    const file = check.check.ignore_file;
     if (file === undefined) return undefined;
     const text = readText(session.root, file, session.reads);
-    const tool = toolName(check.spec);
+    const tool = toolName(check.check);
     const setting = tool === undefined ? undefined : check.scope.view.settings[`tools.${tool}.exclude`];
     const lines = (Array.isArray(setting) ? setting : []).filter((line: unknown) => typeof line === 'string');
     // Saved exclusions remain effective when their generated ignore file has no active tool consumer.
@@ -88,14 +88,18 @@ function nativeIgnore(session: Session, check: PlannedCheck): NativeIgnore | und
  * @returns the reason the check is inactive, or undefined when selected
  * @param policy the repository level
  * @param scope the effective policy for the project
- * @param spec the declared check and project prerequisites
+ * @param check the declared check and project prerequisites
  */
-export function selectionStatus(policy: Policy, scope: ScopeSelection, spec: CheckSpec): SelectionStatus | undefined {
-    if (policy.level !== 'all' && spec.level !== 'recommended')
+export function selectionStatus(
+    policy: Policy,
+    scope: ScopeSelection,
+    check: CheckDeclaration,
+): SelectionStatus | undefined {
+    if (policy.level !== 'all' && check.level !== 'recommended')
         return { cause: 'level', note: 'disabled at level recommended' };
-    const ignored = ignoreSkip(scope, spec);
+    const ignored = ignoreSkip(scope, check);
     if (ignored !== undefined) return ignored;
-    const setting = waitingSetting(scope, spec);
+    const setting = waitingSetting(scope, check);
     return setting === undefined
         ? undefined
         : { cause: 'setting', note: `requires project setting ${setting}`, setting };
@@ -111,13 +115,13 @@ export function selectionStatus(policy: Policy, scope: ScopeSelection, spec: Che
  * @returns the skip
  */
 export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, hasGit: boolean, policy: Policy): Skip {
-    const selected = selectionStatus(policy, check.scope, check.spec);
+    const selected = selectionStatus(policy, check.scope, check.check);
     if (selected !== undefined) return selected;
     const condition = conditionSkip(check, hasGit);
     if (condition !== undefined) return condition;
-    const byPlatform = options.includeUnsupported === true ? undefined : platformSkip(check.spec, check.tool, host);
+    const byPlatform = options.includeUnsupported === true ? undefined : platformSkip(check.check, check.tool, host);
     if (byPlatform !== undefined) return byPlatform;
-    return options.skips.includes(check.spec.name) ? { cause: 'flag', note: 'skipped by --skip' } : undefined;
+    return options.skips.includes(check.check.name) ? { cause: 'flag', note: 'skipped by --skip' } : undefined;
 }
 
 /**
@@ -127,9 +131,9 @@ export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, h
  * @returns the check with its files restricted
  */
 export function restrictIgnoredPaths(session: Session, check: PlannedCheck): PlannedCheck {
-    if (check.skip !== undefined || check.spec.runs !== 'files' || check.files.length === 0) return check;
+    if (check.skip !== undefined || check.check.runs !== 'files' || check.files.length === 0) return check;
     const ignored = check.scope.view
-        .ignoresFor(check.spec.name)
+        .ignoresFor(check.check.name)
         .flatMap((entry) =>
             entry.rule === undefined && entry.paths !== undefined && entry.paths.length > 0
                 ? [pathMatcher(entry.paths)]

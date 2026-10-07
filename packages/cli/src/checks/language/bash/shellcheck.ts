@@ -3,7 +3,7 @@ import { emptyResult } from '#cli/execution/report.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 
 /**
  * Preserve each script's shebang and supply a dialect only for scripts without one.
@@ -12,15 +12,15 @@ import { runCommandCheck } from '#cli/execution/command/runner.ts';
  * @returns findings from every dialect group, with shared native failure handling
  */
 export async function shellcheck(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
-    const command = planned.spec.command;
-    if (command === undefined) return runCommandCheck(session, planned);
+    const command = planned.check.command;
+    if (command === undefined) return runCheckCommand(session, planned);
     const groups = Map.groupBy(planned.files, (file) => {
         if (readSource(session.root, file.path, session.reads).toString('utf8').startsWith('#!')) return undefined;
         return file.tags.includes('bats') ? 'bats' : 'bash';
     });
     const result = emptyResult(planned);
     for (const [dialect, files] of groups) {
-        const checked = await runCommandCheck(
+        const checked = await runCheckCommand(
             session,
             { ...planned, files },
             {

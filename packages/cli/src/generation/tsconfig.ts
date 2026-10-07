@@ -1,11 +1,18 @@
 import ts from 'typescript';
 import { join, dirname, relative } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import { getTsconfig } from '#cli/parsers/tsconfig.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import type { TsconfigInput } from '#cli/types/generation/tsconfig.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
-import { TYPESCRIPT_DEFAULTS } from '#cli/config/generation/typescript.ts';
+
+import {
+    COMPILER_OPTIONS,
+    DECORATOR_OPTIONS,
+    RECOMMENDED_OPTIONS,
+    TYPESCRIPT_DEFAULTS,
+} from '#cli/config/generation/typescript.ts';
 
 /**
  * Preserve authored projects and supply a standalone source project when the scope has none.
@@ -32,4 +39,15 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
         },
         files: sources.map((file) => toPosix(relative(dirname(target), file.path))),
     };
+}
+
+/**
+ * Required compiler diagnostics and framework settings for generation and authored option auditing.
+ * @param level the selected check level
+ * @param configurations the applicable configurations
+ * @returns the required compiler options
+ */
+export function requiredTsconfigOptions(level: Level, configurations: string[]): Record<string, boolean> {
+    const options = level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS;
+    return configurations.includes('nestjs') ? { ...options, ...DECORATOR_OPTIONS } : options;
 }

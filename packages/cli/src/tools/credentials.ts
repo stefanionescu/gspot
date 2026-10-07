@@ -10,14 +10,14 @@ import {
 } from '#cli/config/tools/install.ts';
 
 /**
- * Reject a generated lock containing a configured credential in either URL representation.
- * @param lock the native manager's lock output
+ * Reject a generated lockfile containing a configured credential in either URL representation.
+ * @param lockfile the native manager's lockfile output
  * @param credentials the raw and decoded registry credentials
  * @param failure the installation owner's error, without credential values
  */
-export function assertCredentialFreeLock(lock: string, credentials: string[], failure: Error): void {
+export function assertCredentialFreeLockfile(lockfile: string, credentials: string[], failure: Error): void {
     for (const credential of credentials) {
-        if (lock.includes(credential) || lock.includes(encodeURIComponent(credential))) throw failure;
+        if (lockfile.includes(credential) || lockfile.includes(encodeURIComponent(credential))) throw failure;
     }
 }
 /**
@@ -38,7 +38,7 @@ export function addEnvironmentReference(env: Record<string, string>, prefix: str
 /**
  * Read both encoded and decoded passwords from a registry or proxy URL.
  * @param source the authored URL
- * @returns password representations excluded from generated locks and diagnostics
+ * @returns password representations excluded from generated lockfiles and diagnostics
  */
 export function registryPasswords(source: string): string[] {
     const password = new URL(source).password;

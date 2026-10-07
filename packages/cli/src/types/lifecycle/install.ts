@@ -16,7 +16,7 @@ export type InstallationContext = {
     prepared: Map<string, FileCopy>;
     plans: Planned[];
     trees: Map<InstallationKind, InstalledOutput[]>;
-    refreshLocks: boolean;
+    refreshLockfiles: boolean;
 };
 
 /** One installation phase and the commands shown by its preview. */
@@ -25,7 +25,7 @@ export type InstallationStep = {
         session: ToolSession,
         manifests: Manifest[],
         generated: Generated,
-        refreshLocks: boolean,
+        refreshLockfiles: boolean,
     ) => InstallationPreview;
     run: (
         session: ToolSession,

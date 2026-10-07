@@ -45,8 +45,8 @@ test('TypeScript-only input activates Knip and does not generate an unused JavaS
     expect(paths).toContain('.gspot/config/tsconfig.json');
     expect(paths).toContain('.gspot/config/knip.json');
     expect(paths).not.toContain('.gspot/config/jsconfig.json');
-    expect(configuredChecks(session).map((check) => check.spec.name)).toContain('javascript/knip');
-    expect(configuredChecks(session).map((check) => check.spec.name)).toContain('javascript/rules-off');
+    expect(configuredChecks(session).map((check) => check.check.name)).toContain('javascript/knip');
+    expect(configuredChecks(session).map((check) => check.check.name)).toContain('javascript/rules-off');
 });
 
 test('ignoring SwiftLint and Periphery retains SwiftFormat without their config files', async () => {
@@ -83,7 +83,7 @@ test.each(STYLELINT_CONSUMERS)('$name installs the HTML parser only for consumed
     const session = await openSession(sandbox.path);
     const packages = npmPins(applicableManifests(session), undefined);
     expect(packages['postcss-html']).toBe(entry.needsHtmlParser ? '2.0.0' : undefined);
-    const stylelint = configuredChecks(session).find((check) => check.spec.name === 'css/stylelint');
+    const stylelint = configuredChecks(session).find((check) => check.check.name === 'css/stylelint');
     expect(stylelint !== undefined).toBe(entry.configurations.includes('css'));
 });
 
@@ -165,6 +165,6 @@ test.each(['recommended', 'all'] as const)(
             'editorconfig-checker',
             'v8r',
         ]);
-        expect(configuredChecks(session).map((check) => check.spec.name)).not.toContain('format/prettier');
+        expect(configuredChecks(session).map((check) => check.check.name)).not.toContain('format/prettier');
     },
 );

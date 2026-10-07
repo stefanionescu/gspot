@@ -1,6 +1,6 @@
 import { unwrap } from '#plugin/syntax.ts';
 import { lintedPath, isAnyGlobMatch } from '#plugin/files.ts';
-import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import { VALUE_CONSTRUCTORS } from '#plugin/config/instances-in-registry.ts';
 import type { InstancesInRegistryOptions } from '#plugin/types/instances-in-registry.ts';
 import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

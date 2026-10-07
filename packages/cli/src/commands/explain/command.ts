@@ -5,17 +5,16 @@ import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { printResult } from '#cli/terminal/messages.ts';
-import { quoteArgument } from '#cli/platform/quoting.ts';
-import { similar, codeList } from '#cli/platform/text.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { SettingSpec } from '#cli/types/configurations.ts';
 import { DIRECTION_TEXTS } from '#cli/config/commands/explain.ts';
 import { checkStageSchema } from '#cli/parsers/schema/command.ts';
-import { specFor, settingValue } from '#cli/policy/settings/lookup.ts';
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { readEslintRuleNames } from '#cli/generation/eslint/presets.ts';
 import { configurationFiles } from '#cli/configurations/declarations.ts';
+import { similar, codeList, quoteArgument } from '#cli/platform/text.ts';
+import { settingValue, declarationFor } from '#cli/policy/settings/lookup.ts';
 import { explainCheck, explainToolRule } from '#cli/commands/explain/check.ts';
 import { knownChecks, configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Explanation, SettingScope, ConfigurationExplanation } from '#cli/types/commands/explain.ts';
@@ -69,11 +68,11 @@ function explainConfiguration(configurationName: string): Explanation | undefine
 }
 
 // The lines about one scope: its default, its current value and source, and how to change it.
-function scopeLines(key: string, spec: SettingSpec, entry: SettingScope): string[] {
+function scopeLines(key: string, declaration: SettingDeclaration, entry: SettingScope): string[] {
     const { scope, shipped, effective } = entry;
     const { value, source = 'unset', reason } = effective === undefined ? {} : effective;
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
-    const isReasoned = ['ceiling', 'floor', 'loosening'].includes(spec.direction);
+    const isReasoned = ['ceiling', 'floor', 'loosening'].includes(declaration.direction);
     return [
         '',
         `Scope: ${scope === '' ? 'root' : scope}`,
@@ -88,14 +87,14 @@ function scopeLines(key: string, spec: SettingSpec, entry: SettingScope): string
 function explainSetting(session: ToolSession | undefined, key: string): Explanation | undefined {
     if (session === undefined) return undefined;
     const scopes = session.scopes.flatMap((selection) => {
-        const match = specFor(selection.surface, key);
+        const match = declarationFor(selection.surface, key);
         if (match === undefined) return [];
         return [
             {
                 scope: selection.scope.path,
-                spec: match.spec,
+                declaration: match.declaration,
                 effective: settingValue(selection.surface, session.policyFiles.policy, key, selection.scope.path),
-                shipped: selection.surface.defaults.get(match.spec.name)?.value,
+                shipped: selection.surface.defaults.get(match.declaration.name)?.value,
             },
         ];
     });
@@ -104,10 +103,10 @@ function explainSetting(session: ToolSession | undefined, key: string): Explanat
     const lines = [
         key,
         '',
-        first.spec.summary,
+        first.declaration.summary,
         '',
-        `Direction: ${DIRECTION_TEXTS[first.spec.direction]}`,
-        ...scopes.flatMap((entry) => scopeLines(key, first.spec, entry)),
+        `Direction: ${DIRECTION_TEXTS[first.declaration.direction]}`,
+        ...scopes.flatMap((entry) => scopeLines(key, first.declaration, entry)),
     ];
     return {
         kind: 'setting',
@@ -115,7 +114,7 @@ function explainSetting(session: ToolSession | undefined, key: string): Explanat
         text: `${lines.join('\n')}\n`,
         data: {
             key,
-            ...first.spec,
+            ...first.declaration,
             scopes: scopes.map(({ scope, shipped, effective }) => ({
                 scope,
                 default: shipped,
@@ -139,7 +138,7 @@ function buildUnknownSubjectDiagnostic(session: ToolSession | undefined, subject
         return `There is no check called \`${subject}\`.${buildSubjectSuggestion(subject, checks)}`;
     }
     if (subject.includes('.')) {
-        const known = [...new Set(session?.scopes.flatMap((scope) => [...scope.surface.specs.keys()]))];
+        const known = [...new Set(session?.scopes.flatMap((scope) => [...scope.surface.declarations.keys()]))];
         const matches = similar(subject, known);
         return `No selected configuration has the setting \`${subject}\`. ${
             matches.length === 0
@@ -173,7 +172,7 @@ function explainNamed(session: ToolSession | undefined, subject: string): Explan
 /**
  * Explains whatever the argument names, or returns the near matches.
  * @param session the session, or undefined outside a repository.
- * @param subject a check name, a tool/rule pair, a configuration name, a setting key, or a file path.
+ * @param subject a check ID, a tool/rule pair, a configuration name, a setting key, or a file path.
  * @returns the requested explanation
  * @throws GspotError when no subject or file matches, with the closest known names
  */
@@ -196,7 +195,7 @@ export function explain(session: ToolSession | undefined, subject: string): Expl
 export function registerExplain(program: Program): void {
     program
         .command('explain')
-        .argument('<subject>', 'Check, tool rule, configuration, dotted setting, or repository file path')
+        .argument('<subject>', 'Check ID, rule, configuration, setting, or file path')
         .summary('Explain a check, rule, configuration, setting, or file')
         .description(
             'Explain a check, a tool rule, a configuration, a setting, or a file path: what it is and what to do about it. A rule also gets the gspot ignore and gspot set lines that change it. A setting gets its value, its default, and where the value comes from. A file gets the checks that read it. explain changes nothing.',

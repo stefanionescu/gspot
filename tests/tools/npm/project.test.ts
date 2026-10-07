@@ -16,14 +16,14 @@ import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
 import type { PackageInputs, PackageProject } from '#tests/types/harness/npm.ts';
 import { statSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-/** A clean clone installs its committed lock twice without changing tracked files. */
+/** A clean clone installs its committed lockfile twice without changing tracked files. */
 async function expectCloneInstallation(
     project: PackageProject,
     inputs: PackageInputs,
     tools: ToolPin[],
 ): Promise<void> {
     const { root, artifacts } = project;
-    const { manifest, lock } = inputs;
+    const { manifest, lockfile } = inputs;
     const clone = join(artifacts, 'clone');
     commitAll(root);
     gitOutput(root, ['clone', '--quiet', '--no-local', root, clone]);
@@ -31,15 +31,15 @@ async function expectCloneInstallation(
     expect(existsSync(join(clone, '.gspot/state/ownership.json'))).toBe(false);
     for (let attempt = 0; attempt < 2; attempt++) {
         using cloneLog = openOwnership(clone);
-        const cloneInstall = await installTools(await openSession(clone), cloneLog, { refreshLocks: false });
+        const cloneInstall = await installTools(await openSession(clone), cloneLog, { refreshLockfiles: false });
         expect(cloneInstall.exitCode, cloneInstall.note).toBe(0);
         expect(cloneInstall.note).toContain('.gspot/node_modules');
         const status = await runTestCommand(['git', 'status', '--porcelain'], { cwd: clone });
         expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
-        // Git for Windows may change checkout line endings while preserving the committed lock.
-        expect(readFileSync(join(clone, '.gspot', basename(inputs.lockPath)), 'utf8').replaceAll('\r\n', '\n')).toBe(
-            lock.toString('utf8').replaceAll('\r\n', '\n'),
-        );
+        // Git for Windows may change checkout line endings while preserving the committed lockfile.
+        expect(
+            readFileSync(join(clone, '.gspot', basename(inputs.lockfilePath)), 'utf8').replaceAll('\r\n', '\n'),
+        ).toBe(lockfile.toString('utf8').replaceAll('\r\n', '\n'));
         expect(readFileSync(join(clone, '.gspot/package.json'))).toStrictEqual(manifest);
     }
     const prettier = tools.find((tool) => tool.name === 'prettier')!;
@@ -54,10 +54,10 @@ test.each(PACKAGE_PROJECTS)(
         const { tools } = fixture;
         using log = openOwnership(root);
         const inputs = readPackageInputs(root, installer);
-        const { manifest, lockPath, lock, mode } = inputs;
+        const { manifest, lockfilePath, lockfile, mode } = inputs;
         setEnvironmentVariable('YARN_CACHE_FOLDER', join(artifacts, 'installation-cache'));
         setEnvironmentVariable('YARN_GLOBAL_FOLDER', join(artifacts, 'installation-global'));
-        const installed = await installTools(await openSession(root), log, { refreshLocks: false });
+        const installed = await installTools(await openSession(root), log, { refreshLockfiles: false });
         expect(installed.exitCode, installed.note).toBe(0);
         expect(installed.note).toContain('.gspot/node_modules');
         const workspace = join(root, 'pnpm-workspace.yaml');
@@ -67,15 +67,15 @@ test.each(PACKAGE_PROJECTS)(
             workspace: existsSync(workspace) ? readFileSync(workspace, 'utf8') : undefined,
             yarnrc: existsSync(yarnrc) ? readFileSync(yarnrc, 'utf8') : undefined,
             dependencies: readFileSync(join(root, 'node_modules/authored.txt'), 'utf8'),
-            lock: readFileSync(lockPath),
-            mode: statSync(lockPath).mode,
+            lockfile: readFileSync(lockfilePath),
+            mode: statSync(lockfilePath).mode,
             manifest: readFileSync(join(root, '.gspot/package.json')),
         }).toStrictEqual({
             authored: rootPackage,
             workspace: projectPath === 'package.json' ? 'packages:\n  - "**"\n' : undefined,
             yarnrc: yarnConfiguration,
             dependencies: 'keep project dependencies',
-            lock,
+            lockfile,
             mode,
             manifest,
         });
@@ -83,7 +83,7 @@ test.each(PACKAGE_PROJECTS)(
         const readmePath = join(root, '.gspot/node_modules/prettier/README.md');
         const readme = readFileSync(readmePath);
         writeFileSync(readmePath, 'authored later');
-        const reinstalled = await installTools(await openSession(root), log, { refreshLocks: false });
+        const reinstalled = await installTools(await openSession(root), log, { refreshLockfiles: false });
         expect(reinstalled.exitCode, reinstalled.note).toBe(0);
         expect(readFileSync(readmePath)).toStrictEqual(readme);
         const readyTools = runner === 'none' ? ['prettier', 'ec'] : ['prettier'];
@@ -105,7 +105,7 @@ test.each(PACKAGE_PROJECTS)(
         expect(computeDrift(root, session.policyFiles.policy, emitAll(session))).toStrictEqual([]);
         const second = writeOutputs(await openSession(root), log);
         expect(second.written).toStrictEqual([]);
-        expect(readFileSync(lockPath)).toStrictEqual(lock);
+        expect(readFileSync(lockfilePath)).toStrictEqual(lockfile);
         if (projectPath === 'package.json' && runner === 'mise') await expectCloneInstallation(fixture, inputs, tools);
     },
 );

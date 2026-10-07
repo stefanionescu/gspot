@@ -7,7 +7,7 @@ export const LOCKFILE_URL = /\b(?:https?|git\+https?|git\+ssh|git):\/\/[^\s"',)\
 
 export const NPM_DOWNLOAD = /"resolved"\s*:\s*"([^"]+)"/gu;
 
-export const STALE_LOCK_DIAGNOSTICS: Record<string, RegExp> = {
+export const STALE_LOCKFILE_DIAGNOSTICS: Record<string, RegExp> = {
     bun: /lockfile had changes, but lockfile is frozen/u,
     npm: /can only install packages when your package\.json and package-lock\.json or npm-shrinkwrap\.json are in sync/u,
     pnpm: /ERR_PNPM_(?:OUTDATED_LOCKFILE|FROZEN_LOCKFILE_WITH_OUTDATED_LOCKFILE)/u,

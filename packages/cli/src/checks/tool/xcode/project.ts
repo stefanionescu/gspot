@@ -5,7 +5,7 @@ import { readSource } from '#cli/platform/source.ts';
 import { parseJsonDocument } from '#cli/parsers/json.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { testPlanSchema } from '#cli/parsers/schema/xcode.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { readPbxproj, testTargets } from '#cli/parsers/xcode.ts';
 import { SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
@@ -20,10 +20,10 @@ function folderOf(projectFile: string): string {
 
 /**
  * Report Swift sources outside targets and project references missing from the tree.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function orphanSources(input: EngineInput): Finding[] {
+export function orphanSources(input: CheckInput): Finding[] {
     const projects = trackedByExtension(input, [XCODE_PROJECT_FILE]).map((path) => ({
         path,
         ...readPbxproj(
@@ -71,10 +71,10 @@ export function orphanSources(input: EngineInput): Finding[] {
 
 /**
  * Every shared scheme that runs tests names a test plan, and every test target is in some plan.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function testPlans(input: EngineInput): Finding[] {
+export function testPlans(input: CheckInput): Finding[] {
     const plans = trackedByExtension(input, ['.xctestplan']).map((path) => ({
         path,
         read: parseJsonDocument(readSource(input.root, path, input.reads).toString('utf8'), testPlanSchema),
@@ -107,10 +107,10 @@ export function testPlans(input: EngineInput): Finding[] {
 
 /**
  * One finding for each tracked symlink beside or under a project, with where it points.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function symlinks(input: EngineInput): Promise<Finding[]> {
+export async function symlinks(input: CheckInput): Promise<Finding[]> {
     const folders = trackedByExtension(input, [XCODE_PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
     if (folders.length === 0 || !input.hasGit) return [];
     const entries = await getCachedEntries(input.root, { kind: 'index' }, input.reads, input.cancelSignal);
@@ -139,11 +139,11 @@ export async function symlinks(input: EngineInput): Promise<Finding[]> {
 
 /**
  * The tracked source files whose path ends one of the given ways.
- * @param input the engine input
+ * @param input the check input
  * @param endings the path endings
  * @returns the paths
  */
-export function trackedByExtension(input: EngineInput, endings: string[]): string[] {
+export function trackedByExtension(input: CheckInput, endings: string[]): string[] {
     return input.files
         .filter(
             (file) =>

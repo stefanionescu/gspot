@@ -3,9 +3,9 @@ import { join, dirname, relative } from 'node:path';
 import { ownedInputs } from '#cli/planning/plan.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { getTsconfig } from '#cli/parsers/tsconfig.ts';
 import { parseJsonRecord } from '#cli/parsers/json.ts';
 import type { Root } from '#cli/types/platform/root.ts';
-import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
@@ -13,7 +13,7 @@ import type { ToolSession } from '#cli/types/tools/session.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
 import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
@@ -120,7 +120,7 @@ export async function tsc(session: ToolSession, planned: PlannedCheck): Promise<
     const scratch = scratchFolder.path;
     if (hasReferences) assertBuildInside(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
     else appendBuildMetadata(command, config?.options, scratch, 'tsconfig.tsbuildinfo');
-    const result = await runCommandCheck(session, planned, { command: command, workspace: scratch });
+    const result = await runCheckCommand(session, planned, { command: command, workspace: scratch });
     return restoreCommandPaths(result, scratch, session.root);
 }
 
@@ -147,9 +147,9 @@ export async function checkjs(session: ToolSession, planned: PlannedCheck): Prom
     const options = writeScopeProject(session, scratch, planned, target);
     // A push that changes no JavaScript file leaves the project empty, and the compiler refuses an empty project.
     if (options === undefined)
-        return { check: planned.spec.name, scope, status: 'passed', fileCount: 0, findings: [], duration: 0 };
+        return { check: planned.check.name, scope, status: 'passed', fileCount: 0, findings: [], duration: 0 };
     const command = ['tsc', '-p', '{config:jsconfig}', '--pretty', 'false'];
     appendBuildMetadata(command, options, scratch, 'jsconfig.check.tsbuildinfo');
-    const result = await runCommandCheck(session, planned, { command: command, workspace: scratch });
+    const result = await runCheckCommand(session, planned, { command: command, workspace: scratch });
     return restoreCommandPaths(result, scratch, session.root);
 }

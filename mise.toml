@@ -19,7 +19,7 @@ _.path = ["{{config_root}}/scripts"]
 bun = "1.4.2"
 [tasks."install:checks"]
 description = "Install locked repository checks with the current workspace plugin."
-run = "bun scripts/plugin.ts install --refresh-locks"
+run = "bun scripts/plugin.ts install --refresh-lockfiles"
 
 [tasks.setup]
 description = "Install locked dependencies, write grammars, build the plugin, and generate Astro types."

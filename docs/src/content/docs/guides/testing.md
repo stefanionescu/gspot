@@ -7,7 +7,7 @@ gspot runs your test suite as a check at the push stage and fails it when covera
 the floor you set. Keep the test runner and its dependencies in your own project.
 
 The default floors for Jest, Vitest, and pytest are 0% at `recommended` and 80% at `all`. Swift coverage stays off until you name a target in `tools.xctest.coverage`. A floor you set applies at both
-levels. For a test runner without a configuration, write a [custom check](/guides/repository-checks/).
+levels. For a test runner without a configuration, write a [command check](/guides/command-checks/).
 
 ## Jest
 

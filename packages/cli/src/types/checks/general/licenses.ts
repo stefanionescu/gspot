@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { allowlistSchema } from '#cli/parsers/schema/licenses.ts';
 
 export type LicensedPackage = { name: string; license: string };
@@ -14,6 +14,6 @@ export type ProjectLicenses = { manifest: string; packages: LicensedPackage[]; p
 
 /** The installed scanner and package identity convention of one project format. */
 export type LicenseScanner = {
-    scan: (input: EngineInput, start: string) => Promise<LicensedPackage[]>;
+    scan: (input: CheckInput, start: string) => Promise<LicensedPackage[]>;
     packageKey: (name: string) => string;
 };

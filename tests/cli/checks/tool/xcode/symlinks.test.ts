@@ -5,7 +5,7 @@ import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { symlinks } from '#cli/checks/tool/xcode/project.ts';
@@ -29,10 +29,10 @@ test.skipIf(!isPosix)(
         symlinkSync('working-tree.swift', join(sandbox.path, path));
         const session = await openSession(sandbox.path);
         const selected = session.scopes[0]!;
-        const spec = selected.selected
+        const check = selected.selected
             .flatMap((manifest) => manifest.checks)
             .find((check) => check.name === 'xcode/symlinks')!;
-        const input = buildEngineInput(session, spec.name);
+        const input = buildCheckInput(session, check.name);
         expect(await symlinks(input)).toStrictEqual([
             containing({ check: 'xcode/symlinks', file: path, line: 1, rule: 'symlink', fixable: false }),
         ]);

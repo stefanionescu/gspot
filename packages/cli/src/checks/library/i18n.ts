@@ -3,7 +3,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { LocaleSettings } from '#cli/types/checks/library/i18n.ts';
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
@@ -34,10 +34,10 @@ function translationProblem(text: string): string | undefined {
 
 /**
  * The findings of the message files under the folder the policy names. With no folder named the check passes.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function locales(input: EngineInput): Finding[] {
+export function locales(input: CheckInput): Finding[] {
     const setting = input.view.options('i18n')['locales'] as LocaleSettings | undefined;
     if (setting?.directory === undefined) return [];
     const directory = posix.join(input.scope, setting.directory);

@@ -18,7 +18,7 @@ import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { prettierConfiguration } from '#cli/generation/formatting.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { prepareCommand, commandEnvironment } from '#cli/execution/command/runner.ts';
+import { prepareCommand, commandEnvironment } from '#cli/execution/command/check.ts';
 import { FORMAT_CASES, FORMAT_OVERRIDES_POLICY } from '#tests/config/samples/formatting.ts';
 import { IGNORE_CASES, IGNORE_POLICY, SVELTE_PLUGIN } from '#tests/config/cli/generation/formatting.ts';
 import type { YamllintConfiguration, MarkdownlintConfiguration } from '#tests/types/generation/configuration-files.ts';
@@ -66,7 +66,7 @@ test('the format width reaches editors and generated tool configurations', async
     const command = prepareCommand(
         session,
         bashCheck!,
-        bashCheck!.spec.command!,
+        bashCheck!.check.command!,
         commandEnvironment(session, bashCheck!),
     );
     expect(command.argv[command.argv.indexOf('-i') + 1]).toBe(String(width));

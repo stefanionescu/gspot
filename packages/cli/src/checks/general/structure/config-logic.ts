@@ -4,7 +4,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { rolePaths } from '#cli/policy/settings/lookup.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { modulePath, getCompilerOptions } from '#cli/repository/modules.ts';
 import type { ParsedFile, ParsedSource } from '#cli/types/parsers/source.ts';
 import { grammarFor, visitParsedSources } from '#cli/parsers/tree-sitter.ts';
@@ -12,7 +12,7 @@ import { CONFIG_STATEMENTS, CONFIG_LOGIC_NODES, CONFIG_CALL_ALLOWED } from '#cli
 
 function isOutsideImport(
     node: Node,
-    input: EngineInput,
+    input: CheckInput,
     path: string,
     isConfig: (path: string) => boolean,
     options: ts.CompilerOptions,
@@ -44,7 +44,7 @@ function logicIn(node: Node, out: Node[]): void {
 }
 
 function configurationFindings(
-    input: EngineInput,
+    input: CheckInput,
     source: ParsedSource,
     isConfig: (path: string) => boolean,
 ): Finding[] {
@@ -86,10 +86,10 @@ function configurationFindings(
 
 /**
  * One finding per statement, call, function or control-flow construct in a file under the config role.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function configurationLogic(input: EngineInput): Promise<Finding[]> {
+export async function configurationLogic(input: CheckInput): Promise<Finding[]> {
     const paths = rolePaths(input.policyFiles.policy.architecture.roles, 'config').map((path) =>
         path.includes('*') ? path : `${path.replace(/\/$/u, '')}/**`,
     );

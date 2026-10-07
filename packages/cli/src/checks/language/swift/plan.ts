@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { buildFolder } from '#cli/checks/language/swift/cache.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { WORKSPACE_SUFFIX } from '#cli/config/checks/language/swift.ts';
@@ -11,7 +11,7 @@ import type { SwiftBuildPlan, SwiftBuildPurpose } from '#cli/types/checks/langua
  * @param purpose the native consumer whose outputs stay separate
  * @returns the build folder
  */
-export function scopeBuildFolder(input: Pick<EngineInput, 'root' | 'scope'>, purpose: SwiftBuildPurpose): string {
+export function scopeBuildFolder(input: Pick<CheckInput, 'root' | 'scope'>, purpose: SwiftBuildPurpose): string {
     return join(
         buildFolder(input.root),
         'swift',
@@ -22,11 +22,11 @@ export function scopeBuildFolder(input: Pick<EngineInput, 'root' | 'scope'>, pur
 
 /**
  * The build of one scope: the command, the folder it runs in, and where its log goes.
- * @param input the engine input
+ * @param input the check input
  * @param purpose the build consumer, whose command owns a separate cache
  * @returns the plan
  */
-export function buildPlan(input: EngineInput, purpose: SwiftBuildPurpose = 'compile'): SwiftBuildPlan {
+export function buildPlan(input: CheckInput, purpose: SwiftBuildPurpose = 'compile'): SwiftBuildPlan {
     const folder = scopeBuildFolder(input, purpose);
     const log = join(folder, 'build.log');
     const project = (input.view.settings['tools.xcode.project'] as string | undefined) ?? '';

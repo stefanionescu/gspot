@@ -14,5 +14,5 @@ export type ConfigurationChange = {
     overrides: { path: string; added: string[]; removed: string[] };
 };
 
-/** The repository and explicit command intent recorded under the lifecycle lock. */
+/** The repository and explicit command intent recorded under the lifecycle claim. */
 export type ConfigurationOverrideUpdate = { root: string; overrides: ConfigurationChange['overrides'] };

@@ -5,7 +5,7 @@ export const REGISTRY_PASSWORDS = [
     ['https://alex:password@example.com/simple', ['password', 'password']],
 ] as const;
 
-export const LEAKED_LOCKS = [
+export const LEAKED_LOCKFILES = [
     'password = "synthetic/password+with spaces"',
     'url = "https://alex:synthetic%2Fpassword%2Bwith%20spaces@example.com/simple"',
 ] as const;

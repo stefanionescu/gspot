@@ -6,8 +6,8 @@ import { readSource } from '#cli/platform/source.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { typescriptNodes } from '#cli/parsers/typescript.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 
 function generatedContents(cwd: string): Map<string, Buffer> {
@@ -17,10 +17,10 @@ function generatedContents(cwd: string): Map<string, Buffer> {
 
 /**
  * One finding for each table that references another and has no relations entry anywhere in the scope.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function relations(input: EngineInput): Finding[] {
+export function relations(input: CheckInput): Finding[] {
     const files = input.files
         .filter((file) => file.kind === 'source' && /\.tsx?$/u.test(file.path))
         .map((file) => ({
@@ -81,10 +81,10 @@ export function relations(input: EngineInput): Finding[] {
 
 /**
  * Generates migrations in an isolated copy and reports changed output.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function migrations(input: EngineInput): Promise<Finding[]> {
+export async function migrations(input: CheckInput): Promise<Finding[]> {
     if (
         !input.files.some(
             (file) => dirname(file.path) === (input.scope || '.') && basename(file.path).startsWith('drizzle.config.'),
@@ -99,7 +99,7 @@ export async function migrations(input: EngineInput): Promise<Finding[]> {
     const scratch = scratchFolder.path;
     const isolated = join(scratch, input.scope);
     const before = generatedContents(isolated);
-    const result = await runEngineTool(input, ['drizzle-kit', 'generate'], { cwd: isolated });
+    const result = await runCheckTool(input, ['drizzle-kit', 'generate'], { cwd: isolated });
     if (result.code !== 0)
         throw new Error(
             `The drizzle-kit generate command failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,

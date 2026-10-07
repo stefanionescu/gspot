@@ -1,4 +1,4 @@
-import { createRule } from '#plugin/definition.ts';
+import { createRule } from '#plugin/create-rule.ts';
 import type { LayoutMessages } from '#plugin/types/layout.ts';
 import { runsOf, reportRun, reportNames } from '#plugin/layout.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

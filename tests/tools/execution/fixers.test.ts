@@ -16,13 +16,13 @@ import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts'
 import { toolPin, toolName, toolProjectPackage } from '#cli/configurations/pins.ts';
 
 // Generate the selected configuration and copy only its suite-installed Python entry point when it is private.
-async function prepareFixer(root: string, check: string): Promise<void> {
+async function prepareFixer(root: string, checkId: string): Promise<void> {
     const session = await openSession(root);
     using log = openOwnership(root);
     writeOutputs(session, log);
     const manifests = session.scopes[0]!.selected;
-    const spec = manifests.flatMap((manifest) => manifest.checks).find((entry) => entry.name === check)!;
-    const tool = toolPin(manifests, toolName(spec)!);
+    const check = manifests.flatMap((manifest) => manifest.checks).find((entry) => entry.name === checkId)!;
+    const tool = toolPin(manifests, toolName(check)!);
     const executable = Bun.which(tool.name, { PATH: buildToolsPath([tool.name]) });
     if (executable === null) throw new Error(`The native fixer test requires ${tool.name}.`);
     if (toolProjectPackage(tool, session.policyFiles.policy.run_with)?.kind === 'python') {

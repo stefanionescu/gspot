@@ -5,8 +5,8 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { contentDigest } from '#cli/platform/text.ts';
 import { cacheDirectory } from '#cli/platform/environment.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { Root, FileCopy } from '#cli/types/platform/root.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform/modes.ts';
@@ -73,7 +73,7 @@ export function buildFolder(root: string): string {
 }
 
 /**
- * Prepare and lock one build folder without following existing output links.
+ * Prepare and claim one build folder without following existing output links.
  * @param folder the build folder
  * @returns the locked root, which the caller closes
  */
@@ -84,7 +84,7 @@ export function openBuildCache(folder: string): Root {
     boundary.mkdir(toPosix(relative(home, folder)), PRIVATE_DIRECTORY);
     const files = openRoot(folder, 'native');
     try {
-        files.lock('build.lock');
+        files.claim('build.lock');
         assertBuildLinksInside(folder, files);
         return files;
     } catch (error) {
@@ -113,12 +113,12 @@ export function prepareBuildSources(root: string, paths: string[], folder: strin
 }
 
 /**
- * Lock a native build folder and prepare the exact source files its consumer needs.
+ * Claim a native build folder and prepare the exact source files its consumer needs.
  * @param input the repository and selected source files
  * @param folder the native consumer's build folder
  * @returns the source path and locked root. The caller disposes a successful result; failures close it
  */
-export function prepareBuild(input: Pick<EngineInput, 'root' | 'files'>, folder: string): PreparedSwiftBuild {
+export function prepareBuild(input: Pick<CheckInput, 'root' | 'files'>, folder: string): PreparedSwiftBuild {
     const files = openBuildCache(folder);
     try {
         const source = prepareBuildSources(

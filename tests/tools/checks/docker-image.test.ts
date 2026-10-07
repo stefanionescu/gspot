@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { engineInput } from '#cli/execution/engines.ts';
+import { checkInput } from '#cli/execution/built-in.ts';
 import { trivyImage } from '#cli/checks/tool/docker.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { randomUUID, generateKeyPairSync } from 'node:crypto';
@@ -39,8 +39,8 @@ test.skipIf(!hasLinuxDocker())(
             '.gspot/config/trivy.yml': 'severity: [HIGH, CRITICAL]\n',
         });
         const session = await openSession(sandbox.path);
-        const spec = session.manifests.get('docker')!.checks.find((entry) => entry.name === 'docker/trivy-image')!;
-        const input = engineInput(session, { scope: session.scopes[0]!, spec, files: session.repository.files });
+        const check = session.manifests.get('docker')!.checks.find((entry) => entry.name === 'docker/trivy-image')!;
+        const input = checkInput(session, { scope: session.scopes[0]!, check, files: session.repository.files });
         try {
             importImage(sandbox.path, tags[0], privateKey);
             importImage(sandbox.path, tags[1], 'No credentials in this image.\n');
@@ -56,7 +56,7 @@ test.skipIf(!hasLinuxDocker())(
             const corrected = await openSession(sandbox.path);
             const files = corrected.repository.files;
             expect(
-                await trivyImage(engineInput(corrected, { scope: corrected.scopes[0]!, spec, files })),
+                await trivyImage(checkInput(corrected, { scope: corrected.scopes[0]!, check, files })),
             ).toStrictEqual([]);
         } finally {
             runTestCommandBlocking(['docker', 'image', 'rm', '--force', ...tags], { cwd: sandbox.path });

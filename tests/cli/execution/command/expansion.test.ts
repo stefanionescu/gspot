@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { substitute, commandConfigurations } from '#cli/execution/command/placeholders.ts';
 
 test('nested configuration inputs stop at the declared scope and reject ancestors linked outside the repository', async () => {
@@ -80,17 +80,17 @@ test('command execution reads linked authored configs and preserves strict manag
     symlinkSync('settings/swiftlint.yml', join(sandbox.path, '.swiftlint.yml'));
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'commit', skips: [], only: ['swift/swiftlint'] })[0]!;
-    planned.spec = {
-        ...planned.spec,
+    planned.check = {
+        ...planned.check,
         command: [process.execPath, '-e', 'process.exitCode = 0'],
         output: { format: 'lines' },
     };
     planned.tool = { name: process.execPath, installers: {}, kind: 'binary' };
-    const result = await runCommandCheck(session, planned);
+    const result = await runCheckCommand(session, planned);
     expect(result.status, result.note).toBe('passed');
     expect(result.findings).toStrictEqual([]);
     unlinkSync(join(sandbox.path, '.gspot/config/swiftlint.yml'));
     symlinkSync('../../settings/swiftlint.yml', join(sandbox.path, '.gspot/config/swiftlint.yml'));
-    expect(await rejection(runCommandCheck(session, planned))).toContain('private regular file');
+    expect(await rejection(runCheckCommand(session, planned))).toContain('private regular file');
     expect(await Bun.file(join(sandbox.path, 'settings/swiftlint.yml')).text()).toBe('disabled_rules: []\n');
 });

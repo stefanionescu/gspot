@@ -8,7 +8,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { spectral, openapiFresh } from '#cli/checks/tool/openapi.ts';
@@ -42,9 +42,9 @@ async function applyChanges(schema: string, scope: string): Promise<OpenapiProje
     chmodSync(document, 0o640);
     writeFileSync(join(directory.path, scope, '0009_manual.sql'), '-- Untracked manual migration\n');
     const session = await openSession(directory.path);
-    const spec = session.manifests.get('openapi')!.checks.find((entry) => entry.name === 'openapi/fresh')!;
-    const input = buildEngineInput(session, spec.name, { scope });
-    return { directory, document, edited, mode: statSync(document).mode, spec, input };
+    const check = session.manifests.get('openapi')!.checks.find((entry) => entry.name === 'openapi/fresh')!;
+    const input = buildCheckInput(session, check.name, { scope });
+    return { directory, document, edited, mode: statSync(document).mode, check, input };
 }
 
 // The dirty document, the untracked file, and the absence of generator side effects, whatever the generator did.
@@ -74,7 +74,7 @@ test.each(['', 'apps/api'])(
         await using directory = testRepository.directory;
         expect(await openapiFresh(testRepository.input)).toStrictEqual([
             {
-                check: testRepository.spec.name,
+                check: testRepository.check.name,
                 file: posix.join(scope, 'openapi.json'),
                 line: 1,
                 rule: 'stale',
@@ -103,7 +103,7 @@ for (const check of [spectral, openapiFresh]) {
                 }),
                 [posix.join(scope, 'generate.ts')]: 'export {};',
             });
-            const input = buildEngineInput(
+            const input = buildCheckInput(
                 await openSession(sandbox.path),
                 check === spectral ? 'openapi/spectral' : 'openapi/fresh',
                 { scope },
@@ -159,7 +159,7 @@ test.each(['', 'apps/api'])('Spectral in %s uses the project document and its ge
             });
         }),
     );
-    expect(await spectral(buildEngineInput(session, 'openapi/spectral', { scope }))).toMatchObject([
+    expect(await spectral(buildCheckInput(session, 'openapi/spectral', { scope }))).toMatchObject([
         { file: posix.join(scope, 'openapi.json'), line: 1, rule: 'missing-schema' },
     ]);
     expect(directories).toStrictEqual([join(sandbox.path, scope)]);

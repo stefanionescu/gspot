@@ -72,7 +72,7 @@ async function applyConfigurationChange(root: string, change: ConfigurationChang
         if (result.exitCode === 0) log.save();
         return result;
     }
-    const { note, exitCode } = await installTools(session, log, { refreshLocks: false });
+    const { note, exitCode } = await installTools(session, log, { refreshLockfiles: false });
     const installation = note === '' ? '' : `${note}\n`;
     const next = exitCode === 0 ? 'Run gspot check to check the selected configurations.\n' : '';
     return {

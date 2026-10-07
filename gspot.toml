@@ -473,7 +473,7 @@ to = [
     "platform",
 ]
 
-reason = "Tool installation prepares generated lock files and consumes the generated-file contract owned by generation."
+reason = "Tool installation prepares generated lockfiles and consumes the generated-file contract owned by generation."
 
 [[architecture.imports_allowed]]
 from = "policy"
@@ -940,7 +940,6 @@ paths = [
     "tests/cli/checks/general/security",
     "tests/cli/docs",
     "tests/cli/parsers/naming",
-    "tests/cli/policy/settings",
     "tests/config/cli/checks/general/security",
     "tests/config/cli/checks/language/bash",
     "tests/config/cli/checks/tool/xcode",

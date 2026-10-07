@@ -4,7 +4,7 @@ import * as spawn from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { buildFolder } from '#cli/checks/language/swift/cache.ts';
@@ -26,8 +26,8 @@ test('Swift build side effects stay in the source copy and do not become later i
         'Sources/Value.swift': 'let value = 1\n',
     });
     const original = join(sandbox.path, 'Sources/Value.swift');
-    const initial = buildEngineInput(await openSession(sandbox.path), 'swift/build');
-    const next = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+    const initial = buildCheckInput(await openSession(sandbox.path), 'swift/build');
+    const next = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const mode = statSync(original).mode;
     let scratch = '';
     const run = spyOn(spawn, 'run').mockImplementation((_argv, options) => {
@@ -70,7 +70,7 @@ test('Periphery build side effects stay in its source copy and findings name ori
         'gspot.toml': buildPolicy(['swift']),
         'Main.swift': 'let unused = 1\n',
     });
-    const input = buildEngineInput(await openSession(sandbox.path), 'swift/periphery');
+    const input = buildCheckInput(await openSession(sandbox.path), 'swift/periphery');
     const run = spyOn(spawn, 'run').mockImplementation((_argv, options) => {
         const { cwd } = options;
         expect(cwd).not.toBe(sandbox.path);
@@ -103,8 +103,8 @@ test('concurrent Swift compilation and Periphery retain separate source and arti
         rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
     });
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
-    const compile = buildEngineInput(await openSession(sandbox.path), 'swift/build');
-    const periphery = buildEngineInput(await openSession(sandbox.path), 'swift/periphery');
+    const compile = buildCheckInput(await openSession(sandbox.path), 'swift/build');
+    const periphery = buildCheckInput(await openSession(sandbox.path), 'swift/periphery');
     const started = Promise.withResolvers<undefined>();
     const directories: string[] = [];
     const run = spyOn(spawn, 'run').mockImplementation(async (_argv, options) => {
@@ -139,14 +139,14 @@ test.each(['../External.xcodeproj', 'C:External.xcodeproj'])(
                 tables: `[tools.xcode]\nproject = ${JSON.stringify(project)}\nscheme = "Example"\n`,
             }),
         });
-        const input = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+        const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         writeFileSync(
             join(sandbox.path, 'gspot.toml'),
             buildPolicy(['swift', 'xcode'], {
                 tables: '[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\n',
             }),
         );
-        const corrected = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+        const corrected = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         const run = spyOn(spawn, 'run').mockResolvedValue({
             code: 0,
             stdout: '',

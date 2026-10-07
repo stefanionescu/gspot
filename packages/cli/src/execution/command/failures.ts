@@ -3,10 +3,10 @@ import { TAIL_LINES } from '#cli/config/execution/command.ts';
 import type { ScopeView } from '#cli/types/policy/settings.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import type { ExecutionFailure } from '#cli/types/tools/install.ts';
-import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
+import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
 
 /**
- * Classify process failures consistently for direct checks and engines.
+ * Classify process failures consistently for command checks and built-in checks.
  * @param result the completed process
  * @param name the tool name
  * @param view the effective check settings
@@ -31,14 +31,14 @@ export function executionFailure(
 
 /**
  * Reject exits outside a declared contract and match fatal diagnostics during checks and corrections.
- * @param spec the findings exits and the check pattern that takes precedence over the tool pattern.
+ * @param check the findings exits and the check pattern that takes precedence over the tool pattern.
  * @param tool the tool the check runs, with the pattern every check of it shares.
  * @param result the completed process.
  * @returns true when an exit violates the declared contract or output reports a crash.
  */
-export function hasToolError(spec: CheckSpec, tool: ToolPin | undefined, result: SpawnResult): boolean {
-    if (result.code !== 0 && spec.exit_codes !== undefined && !spec.exit_codes.includes(result.code)) return true;
-    const pattern = spec.crash_pattern ?? tool?.crash_pattern;
+export function hasToolError(check: CheckDeclaration, tool: ToolPin | undefined, result: SpawnResult): boolean {
+    if (result.code !== 0 && check.exit_codes !== undefined && !check.exit_codes.includes(result.code)) return true;
+    const pattern = check.crash_pattern ?? tool?.crash_pattern;
     return pattern !== undefined && new RegExp(pattern, 'mu').test(`${result.stdout}\n${result.stderr}`);
 }
 

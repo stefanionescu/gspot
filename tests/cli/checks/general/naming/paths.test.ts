@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/paths.ts';
+import { fileIdentifier, directoryIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 
 describe('path identifiers', () => {
     test('the stem drops one extension, or the whole declaration suffix', () => {

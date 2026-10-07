@@ -123,10 +123,10 @@ stage = "commit"
     expect(existsSync(join(directory.path, 'created.txt'))).toBe(false);
 });
 
-test('index checks copy matching locked dependencies and refuse a different working lock', async () => {
+test('index checks copy matching locked dependencies and refuse a different working lockfile', async () => {
     await using directory = await testdir();
     const manifest = { name: 'snapshot-project', private: true, type: 'module', dependencies: { dependency: '1.0.0' } };
-    const lock = JSON.stringify({
+    const lockfile = JSON.stringify({
         name: manifest.name,
         lockfileVersion: 3,
         packages: { '': manifest, 'node_modules/dependency': { version: '1.0.0' } },
@@ -143,7 +143,7 @@ test('index checks copy matching locked dependencies and refuse a different work
     await createFileTree(directory.path, {
         '.gitignore': '.gspot/\nnode_modules/\n',
         'package.json': JSON.stringify(manifest),
-        'package-lock.json': lock,
+        'package-lock.json': lockfile,
         'node_modules/dependency/package.json':
             '{"name":"dependency","version":"1.0.0","type":"module","exports":"./index.js"}',
         'node_modules/dependency/index.js': 'export const verdict = true;\n',
@@ -165,13 +165,13 @@ stage = "commit"
     expect(readFileSync(join(directory.path, 'node_modules/dependency/stamp.txt'), 'utf8')).toBe(
         'authored dependency data',
     );
-    writeFileSync(join(directory.path, 'package-lock.json'), lock + '\n');
+    writeFileSync(join(directory.path, 'package-lock.json'), lockfile + '\n');
     const refused = await runGspot(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
-        'do not match the revision manifests and locks',
+        'do not match the revision manifests and lockfiles',
     );
-    writeFileSync(join(directory.path, 'package-lock.json'), lock);
+    writeFileSync(join(directory.path, 'package-lock.json'), lockfile);
     const corrected = await runGspot(directory.path, args);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(readFileSync(join(directory.path, 'node_modules/dependency/stamp.txt'), 'utf8')).toBe(

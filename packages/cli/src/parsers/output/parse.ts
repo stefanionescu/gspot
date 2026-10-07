@@ -121,7 +121,7 @@ function parseGrouped(check: string, output: OutputSpec, text: string, help: str
 // Findings from a JSON report, or an error for an unreadable report.
 function jsonFindings(parsing: Parsing, output: OutputSpec): Finding[] {
     try {
-        return parseJson(parsing.spec.name, output, parsing.stdout, parsing.spec.help);
+        return parseJson(parsing.check.name, output, parsing.stdout, parsing.check.help);
     } catch (error) {
         throw new GspotError('output', 'The tool returned an invalid JSON report.', { cause: error });
     }
@@ -131,20 +131,20 @@ function jsonFindings(parsing: Parsing, output: OutputSpec): Finding[] {
 const FORMAT_READERS: Record<OutputSpec['format'], (parsing: Parsing, output: OutputSpec) => Finding[]> = {
     none: () => [],
     json: jsonFindings,
-    'trufflehog-json': ({ spec, stdout }) => trufflehogFindings(spec.name, stdout, spec.help),
-    typos: ({ spec, stdout, root, cwd }) => typosFindings(spec.name, stdout, spec.help, root, cwd),
-    markdownlint: ({ spec, stdout, root, cwd }) => markdownlintFindings(spec.name, stdout, spec.help, root, cwd),
-    knip: ({ spec, stdout }) => knipFindings(spec.name, stdout, spec.help),
-    eslint: ({ spec, stdout }) => eslintFindings(spec.name, stdout, spec.help),
-    semgrep: ({ spec, stdout }) => semgrepFindings(spec.name, stdout, spec.help),
-    lines: ({ spec, text }) =>
+    'trufflehog-json': ({ check, stdout }) => trufflehogFindings(check.name, stdout, check.help),
+    typos: ({ check, stdout, root, cwd }) => typosFindings(check.name, stdout, check.help, root, cwd),
+    markdownlint: ({ check, stdout, root, cwd }) => markdownlintFindings(check.name, stdout, check.help, root, cwd),
+    knip: ({ check, stdout }) => knipFindings(check.name, stdout, check.help),
+    eslint: ({ check, stdout }) => eslintFindings(check.name, stdout, check.help),
+    semgrep: ({ check, stdout }) => semgrepFindings(check.name, stdout, check.help),
+    lines: ({ check, text }) =>
         text
             .split('\n')
             .map((line) => line.trim())
             .filter((line) => line !== '')
-            .map((line) => ({ check: spec.name, file: '', message: line, help: spec.help, fixable: false })),
-    regex: ({ spec, text }, output) => parseRegex(spec.name, output, text, spec.help),
-    grouped: ({ spec, text }, output) => parseGrouped(spec.name, output, text, spec.help),
+            .map((line) => ({ check: check.name, file: '', message: line, help: check.help, fixable: false })),
+    regex: ({ check, text }, output) => parseRegex(check.name, output, text, check.help),
+    grouped: ({ check, text }, output) => parseGrouped(check.name, output, text, check.help),
 };
 
 function relativeTo(root: string, file: string): string {
@@ -164,21 +164,21 @@ function relativeTo(root: string, file: string): string {
 
 /**
  * The findings a tool's output holds, with every path relative to the root.
- * @param spec the check.
+ * @param check the check.
  * @param stdout the tool's standard output.
  * @param stderr the tool's standard error.
  * @param paths the repository root and tool working directory, for resolving reported source paths.
  * @returns the findings.
  */
-export function parseOutput(spec: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
+export function parseOutput(check: ParsingCheck, stdout: string, stderr: string, paths: OutputPaths): Finding[] {
     const { root, cwd } = paths;
     const nativeRoot = isAbsolute(root) ? toPosix(root) : toolPath(root);
-    const output = spec.output ?? DEFAULT_OUTPUT_FORMAT;
+    const output = check.output ?? DEFAULT_OUTPUT_FORMAT;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
-    return FORMAT_READERS[output.format]({ spec, stdout, text, root, cwd }, output).map((finding) => ({
+    return FORMAT_READERS[output.format]({ check, stdout, text, root, cwd }, output).map((finding) => ({
         ...finding,
-        fixable: spec.fix !== undefined && finding.fixable,
+        fixable: check.fix !== undefined && finding.fixable,
         file: relativeTo(nativeRoot, toPosix(finding.file)),
     }));
 }

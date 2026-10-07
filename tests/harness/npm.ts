@@ -5,13 +5,13 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { collectPins } from '#cli/configurations/pins.ts';
-import { packageLockFile } from '#cli/parsers/packages.ts';
+import { packageLockfile } from '#cli/parsers/packages.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import type { LockName } from '#cli/types/parsers/lockfiles.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
@@ -78,15 +78,15 @@ async function prepareToolProject(root: string): Promise<void> {
     }
 }
 
-/** Captures the generated manifest, lock, and ownership bytes before an installation journey. */
-export function readPackageInputs(root: string, installer: LockName): PackageInputs {
-    const lockPath = join(root, '.gspot', packageLockFile(installer));
+/** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */
+export function readPackageInputs(root: string, installer: PackageInstaller['name']): PackageInputs {
+    const lockfilePath = join(root, '.gspot', packageLockfile(installer));
     const ownershipPath = join(root, '.gspot/state/ownership.json');
     return {
         manifest: readFileSync(join(root, '.gspot/package.json')),
-        lockPath,
-        lock: readFileSync(lockPath),
-        mode: statSync(lockPath).mode,
+        lockfilePath,
+        lockfile: readFileSync(lockfilePath),
+        mode: statSync(lockfilePath).mode,
         ownershipPath,
         ownership: readFileSync(ownershipPath),
     };
@@ -94,7 +94,7 @@ export function readPackageInputs(root: string, installer: LockName): PackageInp
 
 /** Creates an authenticated registry and an authored project for a native package manager. */
 export async function createPackageProject(
-    installer: LockName,
+    installer: PackageInstaller['name'],
     projectPath: string,
     runner: 'mise' | 'none',
 ): Promise<PackageProject> {

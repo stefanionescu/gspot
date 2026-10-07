@@ -74,7 +74,7 @@ test.each(POLICY_PREVIEW_UNCHANGED)('$name previews and repeats without applying
     expect(readTree(sandbox.path)).toStrictEqual(before);
 });
 
-test('a policy preview leaves an active writer lock and existing files untouched', async () => {
+test('a policy preview leaves an active writer claim and existing files untouched', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': PREVIEW_POLICY, 'api/source.sh': 'echo api\n' });
     using log = openOwnership(sandbox.path);

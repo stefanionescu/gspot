@@ -4,10 +4,10 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
-import * as toolRunner from '#cli/execution/command/runner.ts';
+import * as toolRunner from '#cli/execution/command/check.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import type { SiteReportCase } from '#tests/types/cli/checks/general/site.ts';
 import { SITE_POLICY, SITE_BUILD_SCRIPT } from '#tests/config/samples/site.ts';
@@ -96,7 +96,7 @@ describe('site build reproducibility', () => {
             'dist/index.html': 'edited output',
         });
         chmodSync(join(sandbox.path, 'dist/index.html'), 0o640);
-        const request = buildEngineInput(await openSession(sandbox.path), 'site/build-reproducible', {
+        const request = buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
             paths: ['build.js'],
             resources: resources,
         });
@@ -124,7 +124,7 @@ describe('site build reproducibility', () => {
 readFileSync('local-input.txt');
 ${SITE_BUILD_SCRIPT}`,
         });
-        const request = buildEngineInput(await openSession(sandbox.path), 'site/build-reproducible', {
+        const request = buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
             paths: ['build.js'],
             resources: resources,
         });
@@ -132,7 +132,7 @@ ${SITE_BUILD_SCRIPT}`,
         expect(first.isBuilt).toBe(false);
         expect(first.outputTail).toContain('local-input.txt');
         const corrected = await cachedBuild(
-            buildEngineInput(await openSession(sandbox.path), 'site/build-reproducible', {
+            buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
                 paths: ['build.js', 'local-input.txt'],
                 resources: resources,
             }),
@@ -147,7 +147,7 @@ test('a failed reproducibility build retains the first isolated output', async (
     await using sandbox = await testdir();
     using resources = new DisposableStack();
     await createFileTree(sandbox.path, { 'gspot.toml': SITE_POLICY, 'build.js': SITE_BUILD_SCRIPT });
-    const request = buildEngineInput(await openSession(sandbox.path), 'site/build-reproducible', {
+    const request = buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
         paths: ['build.js'],
         resources: resources,
     });
@@ -213,7 +213,7 @@ test.each(SITE_REPORTS)(
         await using sandbox = await testdir();
         using resources = new DisposableStack();
         await createFileTree(sandbox.path, { 'gspot.toml': SITE_POLICY, 'build.js': SITE_BUILD_SCRIPT });
-        const request = buildEngineInput(await openSession(sandbox.path), check, {
+        const request = buildCheckInput(await openSession(sandbox.path), check, {
             paths: ['build.js'],
             resources: resources,
         });
@@ -221,7 +221,7 @@ test.each(SITE_REPORTS)(
         writeFileSync(join(build.output, 'style.css'), 'body { color: red; }');
         let code = 2;
         let stdout = '';
-        const command = spyOn(toolRunner, 'runEngineTool').mockImplementation(() =>
+        const command = spyOn(toolRunner, 'runCheckTool').mockImplementation(() =>
             Promise.resolve({
                 code,
                 stdout,
@@ -239,7 +239,7 @@ test.each(SITE_REPORTS)(
             }
             stdout = JSON.stringify(defect(build.output));
             code = status;
-            expect(await analyze(request)).toMatchObject([{ check: request.spec.name, file, line: 1, rule }]);
+            expect(await analyze(request)).toMatchObject([{ check: request.check.name, file, line: 1, rule }]);
             code = 0;
             stdout = JSON.stringify(corrected);
             expect(await analyze(request)).toStrictEqual([]);

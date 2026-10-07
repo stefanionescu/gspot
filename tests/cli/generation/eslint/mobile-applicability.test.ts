@@ -44,7 +44,7 @@ test('Expo rules and Doctor apply to the Expo scope and leave its bare native si
     const session = await openSession(sandbox.path);
     expect(
         configuredChecks(session)
-            .filter((check) => check.spec.name === 'expo/doctor')
+            .filter((check) => check.check.name === 'expo/doctor')
             .map((check) => check.scope.scope.path),
     ).toStrictEqual(['expo-app']);
     const eslint = await createEslint(sandbox.path);

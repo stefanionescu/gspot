@@ -51,7 +51,7 @@ test('template export preserves advisory reasons and expiry while reporting path
                     check: 'dependencies/osv',
                     rule: 'GHSA-local',
                     paths: ['package-lock.json'],
-                    reason: 'The local lock needs review.',
+                    reason: 'The local lockfile needs review.',
                 },
             ],
         }),

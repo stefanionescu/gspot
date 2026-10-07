@@ -6,9 +6,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/harness/expectations.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
-import { installPackageLock, preparePackageLock } from '#cli/tools/npm/install.ts';
 import { chmodSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 import { prepareTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
+import { installPackageLockfile, preparePackageLockfile } from '#cli/tools/npm/install.ts';
 import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/client.ts';
 import { NON_EXACT_MANAGERS, PACKAGE_SELECTIONS, PACKAGE_VERSION_CASES } from '#tests/config/cli/tools/npm/client.ts';
 
@@ -67,7 +67,7 @@ test.each(PACKAGE_VERSION_CASES)(
         await using isolated = await testdir();
         await createFileTree(repository.path, { ...files, source: 'kept\n' });
         const project = '{"private":true,"packageManager":"bun@0.0.0","dependencies":{"prettier":"3.8.1"}}\n';
-        await createFileTree(isolated.path, { 'package.json': project, 'bun.lock': 'original tool lock\n' });
+        await createFileTree(isolated.path, { 'package.json': project, 'bun.lock': 'original tool lockfile\n' });
         const observed = runTestCommandBlocking(['bun', '--version'], { cwd: repository.path });
         expect(observed.code, observed.stderr).toBe(0);
         expect(observed.stdout.trim()).not.toBe('0.0.0');
@@ -84,7 +84,7 @@ test.each(PACKAGE_VERSION_CASES)(
                 return run(argv, prepared.options);
             }),
         );
-        const action = operation === 'lock' ? preparePackageLock : installPackageLock;
+        const action = operation === 'lockfile' ? preparePackageLockfile : installPackageLockfile;
         const failure = await action(repository.path, isolated.path, installer).catch((error: unknown) => error);
         expect(failure).toMatchObject({
             name: 'GspotError',
@@ -95,7 +95,7 @@ test.each(PACKAGE_VERSION_CASES)(
             expect(readFileSync(join(repository.path, path), 'utf8')).toBe(content);
         expect(readFileSync(join(repository.path, 'source'), 'utf8')).toBe('kept\n');
         expect(readFileSync(join(isolated.path, 'package.json'), 'utf8')).toBe(project);
-        expect(readFileSync(join(isolated.path, 'bun.lock'), 'utf8')).toBe('original tool lock\n');
+        expect(readFileSync(join(isolated.path, 'bun.lock'), 'utf8')).toBe('original tool lockfile\n');
         expect(existsSync(join(isolated.path, 'node_modules'))).toBe(false);
     },
 );

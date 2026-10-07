@@ -2,7 +2,7 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { trivialFunctions as pythonTrivial } from '#cli/checks/language/python/functions.ts';
 
 test('Python counts nested control flow and reports decorated methods and leaves lambda expressions in place', async () => {
@@ -13,7 +13,7 @@ test('Python counts nested control flow and reports decorated methods and leaves
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['python'], { level: 'all', tables: '[limits.python]\nmin_function_statements = 2\n' }),
     );
-    const initial = await pythonTrivial(buildEngineInput(await openSession(sandbox.path), 'python/trivial-functions'));
+    const initial = await pythonTrivial(buildCheckInput(await openSession(sandbox.path), 'python/trivial-functions'));
     expect(initial.filter((entry) => entry.rule === 'trivial-function').map((entry) => entry.line)).toStrictEqual([
         3, 5,
     ]);
@@ -21,9 +21,7 @@ test('Python counts nested control flow and reports decorated methods and leaves
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['python'], { level: 'all', tables: '[limits.python]\nmin_function_statements = 3\n' }),
     );
-    const increased = await pythonTrivial(
-        buildEngineInput(await openSession(sandbox.path), 'python/trivial-functions'),
-    );
+    const increased = await pythonTrivial(buildCheckInput(await openSession(sandbox.path), 'python/trivial-functions'));
     expect(increased.filter((entry) => entry.rule === 'trivial-function').map((entry) => entry.line)).toStrictEqual([
         3, 5, 6, 11,
     ]);

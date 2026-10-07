@@ -5,7 +5,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { README, LICENSE } from '#tests/config/samples/docs.ts';
 import { NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
@@ -19,7 +19,7 @@ describe('readme shape', () => {
         await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
         expect(
             readmeShape(
-                buildEngineInput(await openSession(sandbox.path), 'docs/readme-shape', { paths: ['README.md'] }),
+                buildCheckInput(await openSession(sandbox.path), 'docs/readme-shape', { paths: ['README.md'] }),
             ),
         ).toStrictEqual([]);
     });
@@ -29,11 +29,11 @@ describe('readme shape', () => {
         await createFileTree(sandbox.path, { 'README.md': '# A\n# B\n## Table of contents\n\nx\n' });
         await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
         const found = readmeShape(
-            buildEngineInput(await openSession(sandbox.path), 'docs/readme-shape', { paths: ['README.md'] }),
+            buildCheckInput(await openSession(sandbox.path), 'docs/readme-shape', { paths: ['README.md'] }),
         );
         expect(found.map((finding) => finding.rule)).toStrictEqual(['opening-paragraph', 'start-section']);
         const lines = headings(
-            buildEngineInput(await openSession(sandbox.path), 'docs/headings', { paths: ['README.md'] }),
+            buildCheckInput(await openSession(sandbox.path), 'docs/headings', { paths: ['README.md'] }),
         ).map((finding) => finding.line);
         expect(lines).toStrictEqual([3]);
     });
@@ -47,14 +47,14 @@ describe('readme shape', () => {
         await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
         expect(
             readmeShape(
-                buildEngineInput(await openSession(sandbox.path), 'docs/readme-shape', { paths: ['README.md'] }),
+                buildCheckInput(await openSession(sandbox.path), 'docs/readme-shape', { paths: ['README.md'] }),
             ),
         ).toStrictEqual([]);
         expect(
-            headings(buildEngineInput(await openSession(sandbox.path), 'docs/headings', { paths: ['README.md'] })),
+            headings(buildCheckInput(await openSession(sandbox.path), 'docs/headings', { paths: ['README.md'] })),
         ).toStrictEqual([]);
         const found = headings(
-            buildEngineInput(await openSession(sandbox.path), 'docs/headings', { paths: ['guide.md'] }),
+            buildCheckInput(await openSession(sandbox.path), 'docs/headings', { paths: ['guide.md'] }),
         );
         expect(found.map((finding) => [finding.line, finding.rule])).toStrictEqual([[5, 'banned-heading']]);
     });
@@ -64,7 +64,7 @@ describe('readme shape', () => {
         await createFileTree(sandbox.path, { 'README.md': '# Thing\n\n- An item.\n\n## Setup\n' });
         await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
         const found = readmeShape(
-            buildEngineInput(await openSession(sandbox.path), 'docs/readme-shape', { paths: ['README.md'] }),
+            buildCheckInput(await openSession(sandbox.path), 'docs/readme-shape', { paths: ['README.md'] }),
         );
         expect(found.map((finding) => finding.rule)).toStrictEqual(['opening-paragraph']);
     });
@@ -95,7 +95,7 @@ test.each(['COPYING', 'LICENCE', 'LICENSE-MIT', 'LICENSE-APACHE', 'LICENSE.rst']
             'README.md': README,
             [name]: LICENSE,
         });
-        expect(readmePresent(buildEngineInput(await openSession(sandbox.path), 'docs/readme-present'))).toStrictEqual(
+        expect(readmePresent(buildCheckInput(await openSession(sandbox.path), 'docs/readme-present'))).toStrictEqual(
             [],
         );
     },
@@ -107,7 +107,7 @@ test('a NOTICE file does not supply the repository license', async () => {
         'README.md': README,
         NOTICE: 'Copyright Example',
     });
-    expect(readmePresent(buildEngineInput(await openSession(sandbox.path), 'docs/readme-present'))).toMatchObject([
+    expect(readmePresent(buildCheckInput(await openSession(sandbox.path), 'docs/readme-present'))).toMatchObject([
         { file: 'LICENSE', rule: 'missing-license' },
     ]);
 });

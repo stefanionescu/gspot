@@ -120,16 +120,16 @@ test('malformed authored blocks refuse apply before generated files change', asy
     expect(existsSync(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(true);
 });
 
-// A lock that a crash left behind, and one a live process holds: apply stops and names the lock to delete.
+// A claim that a crash left behind, and one a live process holds: apply stops and names the claim to delete.
 test.each([
     ['empty', () => ''],
     ['held by a live process', (pid: number) => `${String(pid)}:held`],
     ...(process.platform === 'win32' ? [] : [['held by process 1', () => '1:held'] as const]),
-] as const)('apply refuses a writer lock %s and names it', async (_, holder) => {
+] as const)('apply refuses a writer claim %s and names it', async (_, holder) => {
     await using directory = await testdir();
     // A process that outlives the run stands for the holder; disposing it kills it.
     const command = [process.execPath, '-e', 'await Bun.sleep(60_000)'];
-    const prepared = prepareTestCommand(command, { cwd: directory.path }, 'live writer lock holder');
+    const prepared = prepareTestCommand(command, { cwd: directory.path }, 'live writer claim holder');
     await using sleeper = Bun.spawn(command, { cwd: directory.path, timeout: prepared.options.timeoutMs });
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),

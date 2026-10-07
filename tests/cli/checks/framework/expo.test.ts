@@ -3,7 +3,7 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { expoDoctor } from '#cli/checks/framework/expo.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { DOCTOR_RESULTS, DOCTOR_VERSION } from '#tests/config/cli/checks/expo.ts';
@@ -25,7 +25,7 @@ test.each(DOCTOR_RESULTS)('Expo Doctor preserves scoped orchestration for $name'
     });
     const inputs = await Promise.all(
         ['apps/first', 'apps/second'].map(async (scope) =>
-            buildEngineInput(await openSession(sandbox.path), 'expo/doctor', { scope }),
+            buildCheckInput(await openSession(sandbox.path), 'expo/doctor', { scope }),
         ),
     );
     const directories: string[] = [];
@@ -68,7 +68,7 @@ test('Expo Doctor reports an uninstalled Expo project instead of accepting its e
         'gspot.toml': 'configurations = ["expo"]\n[agent_rules]\nenabled = false\n',
         'package.json': '{"private":true,"dependencies":{"expo":"54.0.0"}}\n',
     });
-    const input = buildEngineInput(await openSession(sandbox.path), 'expo/doctor');
+    const input = buildCheckInput(await openSession(sandbox.path), 'expo/doctor');
     expect(await rejection(expoDoctor(input))).toBe(
         'Expo is not installed in this scope; Expo Doctor reads an installed Expo project.',
     );

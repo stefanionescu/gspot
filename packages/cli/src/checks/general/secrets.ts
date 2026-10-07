@@ -17,12 +17,12 @@ import { fileBatches } from '#cli/execution/command/batches.ts';
 import { getBlobs } from '#cli/repository/revisions/objects.ts';
 import { decodeUtf8, escapeRegExp } from '#cli/platform/text.ts';
 import { parseGitleaksBaseline } from '#cli/parsers/gitleaks.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { statSync, writeFileSync, appendFileSync } from 'node:fs';
 import { getPushBase } from '#cli/repository/revisions/changes.ts';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { GITLEAKS_BASELINE } from '#cli/config/platform/locations.ts';
 import type { EnvironmentSettings } from '#cli/types/policy/settings.ts';
-import type { CheckResult, EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 import type { SecretScan, BaselineReason } from '#cli/types/checks/general/secrets.ts';
 
 import {
@@ -105,7 +105,7 @@ async function scanCommits(session: ToolSession, planned: PlannedCheck, commits:
         await appendBlobs(scan, commit);
         await appendMetadata(scan, commit);
     }
-    return await runCommandCheck(session, planned, {
+    return await runCheckCommand(session, planned, {
         command: [
             'trufflehog',
             'json-enumerator',
@@ -121,10 +121,10 @@ async function scanCommits(session: ToolSession, planned: PlannedCheck, commits:
 
 /**
  * One finding for each baseline entry with no reason, and one for each whose file is gone.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function gitleaksBaseline(input: EngineInput): Finding[] {
+export function gitleaksBaseline(input: CheckInput): Finding[] {
     using files = openRoot(input.root);
     const bytes: Buffer | undefined = files.read(GITLEAKS_BASELINE)?.bytes;
     if (bytes === undefined) return [];
@@ -168,7 +168,7 @@ export function gitleaksBaseline(input: EngineInput): Finding[] {
 export async function gitleaksHistory(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result: CheckResult = {
-        check: planned.spec.name,
+        check: planned.check.name,
         scope: planned.scope.scope.path,
         status: 'passed',
         fileCount: 0,
@@ -202,7 +202,7 @@ export async function gitleaksHistory(session: ToolSession, planned: PlannedChec
             process.platform,
         ).map((commits) => `${GITLEAKS_LOG_OPTIONS} ${commits.join(' ')} --`);
     for (const selection of selections) {
-        const current = await runCommandCheck(session, planned, { command: [...command, '--log-opts', selection] });
+        const current = await runCheckCommand(session, planned, { command: [...command, '--log-opts', selection] });
         result.findings.push(...current.findings);
         if (current.status === 'missing' || current.status === 'error')
             return { ...current, findings: result.findings, duration: performance.now() - started };
@@ -213,10 +213,10 @@ export async function gitleaksHistory(session: ToolSession, planned: PlannedChec
 
 /**
  * One finding for each tracked environment file that is not a template.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function envFiles(input: EngineInput): Finding[] {
+export function envFiles(input: CheckInput): Finding[] {
     const tracked = indexedPaths(input.root);
     return tracked
         .filter(isEnvironmentFile)
@@ -239,7 +239,7 @@ export function envFiles(input: EngineInput): Finding[] {
 export async function trufflehog(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const base: CheckResult = {
-        check: planned.spec.name,
+        check: planned.check.name,
         scope: planned.scope.scope.path,
         status: 'passed',
         fileCount: 0,
@@ -258,10 +258,10 @@ export async function trufflehog(session: ToolSession, planned: PlannedCheck): P
 
 /**
  * Reports supported environment reads missing from project templates, or the absent template prerequisite.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function envTemplate(input: EngineInput): Finding[] {
+export function envTemplate(input: CheckInput): Finding[] {
     const { templates: names, reader_functions: readers } = input.view.options('env') as EnvironmentSettings;
     // The owned files are configuration; the reads are in code, so the whole scope is inspected.
     const inScope = input.files.filter((file) => isInScope(file.path, input.scope));

@@ -67,7 +67,7 @@ test.each(['bun.lock', 'bun.lockb'])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['dependencies'], { level: 'all' }),
-            [lockfile]: 'fixture lock bytes',
+            [lockfile]: 'fixture lockfile bytes',
         });
         const failed = await runGspot(sandbox.path, ['check', '--only', 'dependencies/bun-release-age', '--json']);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
@@ -90,7 +90,7 @@ test('Bun release-age policy reads each project scope and keeps findings inside 
         }),
         'apps/first/bun.lock': '{}\n',
         'apps/first/bunfig.toml': '[install]\nminimumReleaseAge = 604800\n',
-        'apps/second/bun.lockb': 'fixture lock bytes',
+        'apps/second/bun.lockb': 'fixture lockfile bytes',
         'apps/second/bunfig.toml': '[install]\nminimumReleaseAge = 604800\n',
     });
     const failed = await runGspot(sandbox.path, ['check', '--only', 'dependencies/bun-release-age', '--json']);
@@ -109,7 +109,7 @@ test('Bun release-age policy reads each project scope and keeps findings inside 
     expect((JSON.parse(corrected.stdout) as RunReport).checks.every((check) => check.status === 'passed')).toBe(true);
 });
 
-test('private Bun tool locks do not activate the repository release-age or advisory checks', async () => {
+test('private Bun tool lockfiles do not activate the repository release-age or advisory checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['dependencies'], { level: 'all' }),

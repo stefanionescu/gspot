@@ -5,9 +5,9 @@ import { rejects } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 
 test('TSX and JSONC fences use their declared syntax while JSON rejects comments', async () => {
     await using sandbox = await testdir();
@@ -17,7 +17,7 @@ test('TSX and JSONC fences use their declared syntax while JSON rejects comments
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['markdown'], { level: 'all' }));
     const found = await fences(
-        buildEngineInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['examples.md'] }),
+        buildCheckInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['examples.md'] }),
     );
     expect(found).toMatchObject([{ file: 'examples.md', line: 12, rule: 'syntax' }]);
     expect(found).toHaveLength(1);
@@ -30,7 +30,7 @@ test('a fenced block that does not parse in its language is a finding', async ()
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['markdown'], { level: 'all' }));
     const found = await fences(
-        buildEngineInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] }),
+        buildCheckInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] }),
     );
     expect(found.map((finding) => [finding.line, finding.rule])).toStrictEqual([
         [6, 'syntax'],
@@ -45,7 +45,7 @@ test('tilde fences and unclosed examples still report invalid code', async () =>
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['markdown'], { level: 'all' }));
     const found = await fences(
-        buildEngineInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] }),
+        buildCheckInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] }),
     );
     expect(found.map((finding) => [finding.line, finding.rule])).toStrictEqual([
         [2, 'syntax'],
@@ -59,14 +59,14 @@ test('Bash examples report syntax errors, accept corrections, and stop on cancel
         'gspot.toml': buildPolicy(['markdown'], { level: 'all' }),
         'a.md': '```bash\nif then\n```\n',
     });
-    let selected: EngineInput = buildEngineInput(await openSession(sandbox.path), 'markdown/fences', {
+    let selected: CheckInput = buildCheckInput(await openSession(sandbox.path), 'markdown/fences', {
         paths: ['a.md'],
     });
     const found = await fences(selected);
     expect(found).toMatchObject([{ check: 'markdown/fences', file: 'a.md', line: 2, rule: 'syntax', fixable: false }]);
     expect(found[0]!.message).toContain('syntax error');
     writeFileSync(join(sandbox.path, 'a.md'), '```bash\nprintf "%s\\n" "Hello"\n```\n');
-    selected = buildEngineInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] });
+    selected = buildCheckInput(await openSession(sandbox.path), 'markdown/fences', { paths: ['a.md'] });
     expect(await fences(selected)).toStrictEqual([]);
     selected.cancelSignal = AbortSignal.abort();
     await rejects(fences(selected), { message: 'The command was canceled.' });
@@ -77,9 +77,9 @@ test.each(['tsx', 'jsx'])('a %s fence rejects unclosed JSX and accepts its corre
         'gspot.toml': buildPolicy(['markdown'], { level: 'all' }),
         'example.md': '```' + language + '\nexport const panel = <div>Hello;\n```',
     });
-    expect(await fences(buildEngineInput(await openSession(sandbox.path), 'markdown/fences'))).toMatchObject([
+    expect(await fences(buildCheckInput(await openSession(sandbox.path), 'markdown/fences'))).toMatchObject([
         { file: 'example.md', line: 2, rule: 'syntax' },
     ]);
     writeFileSync(join(sandbox.path, 'example.md'), '```' + language + '\nexport const panel = <div>Hello</div>;\n```');
-    expect(await fences(buildEngineInput(await openSession(sandbox.path), 'markdown/fences'))).toStrictEqual([]);
+    expect(await fences(buildCheckInput(await openSession(sandbox.path), 'markdown/fences'))).toStrictEqual([]);
 });

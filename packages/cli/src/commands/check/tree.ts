@@ -1,5 +1,4 @@
 // Checking one tree: the working tree, or a copy of the index or of a pushed commit.
-import { CHECKS } from '#cli/checks/registry.ts';
 import { codeList } from '#cli/platform/text.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { executeRun } from '#cli/execution/run.ts';
@@ -7,6 +6,7 @@ import { runText } from '#cli/terminal/reporter.ts';
 import { note, warn } from '#cli/terminal/messages.ts';
 import { openSession } from '#cli/commands/session.ts';
 import type { StageFilter } from '#cli/types/planning.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
@@ -112,7 +112,7 @@ async function runSelected(
     if (revision !== undefined) comparison = { content: revision.content, reference: revision.reference };
     else if (changed !== undefined) comparison = { content: 'working-tree', reference: changed.reference };
     const outcome = await executeRun(session, {
-        checks: CHECKS,
+        checks: BUILT_IN_CHECKS,
         ...compact({
             stage,
             skips: options.skips,

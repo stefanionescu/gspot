@@ -4,10 +4,10 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { LINT_CHECK } from '#cli/config/generation/eslint.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { ESLINT_FILE } from '#cli/config/platform/locations.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
 import { readEslintCoverage } from '#cli/tools/eslint/client.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { EslintCoverageResponse } from '#cli/types/parsers/eslint.ts';
 import { eslintAllRulesSchema, eslintCoverageResponseSchema } from '#cli/parsers/schema/eslint.ts';
@@ -16,7 +16,7 @@ import { RULE_OFF_PATHS, REQUIRED_ESLINT_LANGUAGE_CONTRACTS } from '#cli/config/
 import ESLINT_ALL_RULES from '../../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
 
 // Expand language contracts through inventory metadata; framework requirements retain their exact endings.
-function getRequiredRules(input: EngineInput): RequiredEslintRules {
+function getRequiredRules(input: CheckInput): RequiredEslintRules {
     const allRules = eslintAllRulesSchema.parse(ESLINT_ALL_RULES);
     const selected = input.selection.selected;
     const required: RequiredEslintRules = new Map();
@@ -76,10 +76,10 @@ function getMissingRules(
 
 /**
  * One finding per required rule left disabled, with its affected file count, sample paths, and configuration owners.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function rulesOff(input: EngineInput): Promise<Finding[]> {
+export async function rulesOff(input: CheckInput): Promise<Finding[]> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const required = getRequiredRules(input);
     const files = input.files.filter(
@@ -91,7 +91,7 @@ export async function rulesOff(input: EngineInput): Promise<Finding[]> {
     if (files.length === 0) return [];
     const resolved = eslintCoverageResponseSchema.parse(
         await readEslintCoverage({ root: input.root, paths: files.map((file) => file.path) }, (command) =>
-            runEngineTool(input, command, { cwd: input.root }),
+            runCheckTool(input, command, { cwd: input.root }),
         ),
     );
     const decided = new Set(input.view.rulesOff(LINT_CHECK));

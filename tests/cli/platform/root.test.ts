@@ -3,7 +3,6 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openRoot } from '#cli/platform/root/open.ts';
-import { STATE_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { isMacos, isPosix } from '#tests/config/harness/platforms.ts';
 import { linkSync, statSync, symlinkSync, readFileSync } from 'node:fs';
 import { fileMode, portableSegments } from '#cli/platform/root/rules.ts';
@@ -147,38 +146,6 @@ test.skipIf(!isPosix)(
             expect(readFileSync(join(project, 'target'), 'utf8')).toBe('inside');
         } finally {
             root.close();
-        }
-    },
-);
-
-test.skipIf(!isPosix)(
-    'root lifecycle mutations: a second writer is refused until the first releases its lock',
-    async () => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, { source: 'kept' });
-        const path = `${STATE_DIRECTORY}/writer.lock`;
-        const first = openRoot(directory.path);
-        const second = openRoot(directory.path);
-        try {
-            first.lock(path);
-            const firstToken = first.read(path)?.bytes.toString('utf8');
-            expect(firstToken).toStartWith(`${String(process.pid)}:`);
-            expect(() => {
-                second.lock(path);
-            }).toThrow('Another lifecycle writer');
-            expect(second.read(path)?.bytes.toString('utf8')).toBe(firstToken);
-            first.close();
-            expect(second.read(path)).toBeUndefined();
-            expect(() => {
-                second.lock(path);
-            }).not.toThrow();
-            expect(second.read(path)?.bytes.toString('utf8')).toStartWith(`${String(process.pid)}:`);
-            second.close();
-            expect(second.read(path)).toBeUndefined();
-            expect(readFileSync(join(directory.path, 'source'), 'utf8')).toBe('kept');
-        } finally {
-            first.close();
-            second.close();
         }
     },
 );

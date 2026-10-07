@@ -8,7 +8,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { typesFresh } from '#cli/checks/platform/cloudflare.ts';
@@ -39,8 +39,8 @@ async function applyChanges(scope: string, bindings: string): Promise<WorkerType
     writeFileSync(target, edited);
     chmodSync(target, 0o640);
     const session = await openSession(directory.path);
-    const spec = session.manifests.get('cloudflare')!.checks.find((entry) => entry.name === 'cloudflare/types-fresh')!;
-    const input = buildEngineInput(session, spec.name, { scope: scope });
+    const check = session.manifests.get('cloudflare')!.checks.find((entry) => entry.name === 'cloudflare/types-fresh')!;
+    const input = buildCheckInput(session, check.name, { scope: scope });
     const locate = spyOn(tools, 'inspectTool').mockReturnValue({
         name: 'wrangler',
         state: 'host',
@@ -52,7 +52,7 @@ async function applyChanges(scope: string, bindings: string): Promise<WorkerType
         target,
         edited,
         mode: statSync(target).mode,
-        spec,
+        check,
         input,
         locate,
     };
@@ -88,7 +88,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         try {
             expect(await typesFresh(testRepository.input)).toStrictEqual([
                 {
-                    check: testRepository.spec.name,
+                    check: testRepository.check.name,
                     file: toPosix(testRepository.path('worker-configuration.d.ts')),
                     line: 1,
                     rule: 'stale',
@@ -127,7 +127,7 @@ test('custom Worker type files retain the configured interface and child scope',
         }),
     );
     expect(
-        await typesFresh(buildEngineInput(session, 'cloudflare/types-fresh', { scope: 'workers/api' })),
+        await typesFresh(buildCheckInput(session, 'cloudflare/types-fresh', { scope: 'workers/api' })),
     ).toStrictEqual([]);
     expect(directories).toHaveLength(1);
     expect(directories[0]).not.toBe(join(sandbox.path, 'workers/api'));

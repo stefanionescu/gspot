@@ -2,7 +2,7 @@ import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import type { PolicyFile, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { ToolPin, Manifest, RawCheck, CheckSpec } from '#cli/types/configurations.ts';
+import type { ToolPin, Manifest, ParsedCheck, CheckDeclaration } from '#cli/types/configurations.ts';
 
 /** Policy, repository inventory, and selected configurations shared by planning and generation. */
 export type Session = {
@@ -37,8 +37,8 @@ export type PlanOptions = {
     messageFile?: string;
 };
 
-/** One check to plan: its spec and the manifest it came from, none for a [[check]] entry. */
-export type PlanEntry = { spec: CheckSpec; manifest?: Manifest };
+/** One check to plan: its check declaration and the manifest it came from, none for a [[check]] entry. */
+export type PlanEntry = { check: CheckDeclaration; manifest?: Manifest };
 
 /** What planning one scope needs. */
 export type PlanInputs = {
@@ -50,7 +50,7 @@ export type PlanInputs = {
     children: string[];
 };
 
-export type Stage = RawCheck['stage'];
+export type Stage = ParsedCheck['stage'];
 
 /** Saved selection state, with an enabling setting only when it is required. */
 export type SelectionStatus =
@@ -62,7 +62,7 @@ export type NativeIgnore = { file: string; matches: (path: string) => boolean };
 export type PlannedCheck = {
     commits?: string[];
     scope: ScopeSelection;
-    spec: CheckSpec;
+    check: CheckDeclaration;
     manifest?: Manifest;
     files: TrackedFile[];
     tool?: ToolPin;

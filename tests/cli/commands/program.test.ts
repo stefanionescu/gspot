@@ -54,6 +54,10 @@ test('help remains readable and exits 0 after a structured argument failure', as
     expect(help.stderr).toBe('');
     expect(help.stdout).toContain('Usage: gspot');
     expect(help.stdout).toContain('Commands:');
+    const installHelp = await runGspot(directory.path, ['install', '--refresh-lockfiles', '--help']);
+    expect(installHelp.code, installHelp.stdout + installHelp.stderr).toBe(0);
+    expect(installHelp.stdout).toContain('--refresh-lockfiles');
+    expect(installHelp.stdout.replaceAll(/\s+/gu, ' ')).toContain('missing or outdated tool lockfiles');
 });
 
 test.each(['-h', '--help'])('ignore %s describes root-wide ignores and removal of multiple entries', async (flag) => {

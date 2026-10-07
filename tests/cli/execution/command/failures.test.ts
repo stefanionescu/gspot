@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { BASE_CHECK } from '#tests/config/cli/execution/command/findings.ts';
 import { hasToolError, toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { ESLINT_TOOL, ESLINT_CRASH } from '#tests/config/cli/execution/command/failures.ts';
@@ -30,8 +30,8 @@ describe('hasToolError', () => {
     });
 
     test("a check's own pattern comes before the tool's", () => {
-        const spec = { ...BASE_CHECK, crash_pattern: '^Fatal:' } satisfies CheckSpec;
-        expect(hasToolError(spec, ESLINT_TOOL, ESLINT_CRASH)).toBe(false);
-        expect(hasToolError(spec, ESLINT_TOOL, { ...ESLINT_CRASH, stderr: 'Fatal: cannot write\n' })).toBe(true);
+        const check = { ...BASE_CHECK, crash_pattern: '^Fatal:' } satisfies CheckDeclaration;
+        expect(hasToolError(check, ESLINT_TOOL, ESLINT_CRASH)).toBe(false);
+        expect(hasToolError(check, ESLINT_TOOL, { ...ESLINT_CRASH, stderr: 'Fatal: cannot write\n' })).toBe(true);
     });
 });

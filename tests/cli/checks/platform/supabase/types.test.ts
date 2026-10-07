@@ -7,7 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { engineInput } from '#cli/execution/engines.ts';
+import { checkInput } from '#cli/execution/built-in.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { statSync, chmodSync, readFileSync } from 'node:fs';
@@ -130,7 +130,7 @@ test.each(['', 'apps/api'])(
         const session = await openSession(sandbox.path);
         const plans = planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] });
         const planned = plans.find((check) => check.scope.scope.path === scope)!;
-        const input = engineInput(session, planned);
+        const input = checkInput(session, planned);
         input.cancelSignal = AbortSignal.abort();
         expect(await rejection(typesFresh(input))).toContain('The command was canceled.');
         expect(readFileSync(join(sandbox.path, prefix, 'database.ts'), 'utf8')).toBe(GENERATED_TYPES);

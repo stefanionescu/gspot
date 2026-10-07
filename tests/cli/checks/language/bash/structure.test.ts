@@ -5,8 +5,8 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
@@ -129,7 +129,7 @@ test.skipIf(!isPosix)('shell reads distinguish filename lists containing newline
         ),
     });
     const session = await openSession(sandbox.path);
-    const request = buildEngineInput(session, 'bash/syntax');
+    const request = buildCheckInput(session, 'bash/syntax');
     const files = names.map((path) => session.repository.files.find((file) => file.path === path)!);
     const first = await getScriptIndex({ ...request, files: files.slice(0, 2) });
     const second = await getScriptIndex({ ...request, files: files.slice(2) });

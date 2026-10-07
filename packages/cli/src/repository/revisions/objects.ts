@@ -1,4 +1,4 @@
-// Read immutable Git entries and objects for revision copies and repository checks.
+// Read immutable Git entries and objects for revision copies and checks.
 import { memo } from '#cli/platform/memo.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';

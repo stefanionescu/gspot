@@ -117,7 +117,7 @@ function eslintFinding(check: string, file: string, entry: EslintDiagnostic, hel
 
 /**
  * Findings from a validated ESLint JSON report.
- * @param check the check name
+ * @param check the check ID
  * @param text the structured report
  * @param help the check help text
  * @returns findings with ESLint positions and fix availability
@@ -137,7 +137,7 @@ export function eslintFindings(check: string, text: string, help: string): Findi
 
 /**
  * Findings from markdownlint's JSON report, each checked against the source it points at.
- * @param check the check name
+ * @param check the check ID
  * @param stdout the report
  * @param help the check's help text
  * @param root the repository root
@@ -167,7 +167,7 @@ export function markdownlintFindings(
 /**
  * Findings from the JSON lines typos prints. JSON preserves filename delimiters; native offsets count UTF-8 bytes,
  * while report columns count characters.
- * @param check the check name
+ * @param check the check ID
  * @param stdout the report
  * @param help the check's help text
  * @param root the repository root
@@ -193,7 +193,7 @@ export function typosFindings(check: string, stdout: string, help: string, root:
 
 /**
  * Findings from TruffleHog's verified results, one per credential, without the secret itself.
- * @param check the check name
+ * @param check the check ID
  * @param stdout the JSON lines TruffleHog printed
  * @param help the check's help text
  * @returns the findings

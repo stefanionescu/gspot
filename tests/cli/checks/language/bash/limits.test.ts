@@ -4,7 +4,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import * as inspections from '#cli/tools/inspect.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
 import { bashLimits } from '#cli/checks/language/bash/limits.ts';
@@ -24,7 +24,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
         ...Object.fromEntries(files.map((file) => [file, 'main() { echo example; }\n'])),
     });
     const session = await openSession(sandbox.path);
-    const input = buildEngineInput(session, 'bash/limits');
+    const input = buildCheckInput(session, 'bash/limits');
     const selectedFiles = input.files.filter((file) => file.tags.includes(SCRIPT_TAG)).map((file) => file.path);
     const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
         name: 'ast-grep',
@@ -78,7 +78,7 @@ test.each(['fatal exit', 'malformed JSON', 'invalid match', 'unselected file'] a
             'source.sh': 'echo example\n',
         });
         const session = await openSession(sandbox.path);
-        const input = buildEngineInput(session, 'bash/limits');
+        const input = buildCheckInput(session, 'bash/limits');
         const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
             name: 'ast-grep',
             state: 'ok',

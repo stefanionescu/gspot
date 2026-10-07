@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { stemOf, directoryOf, directoryTree } from '#cli/platform/paths.ts';
 import { structureSources } from '#cli/checks/general/structure/source-files.ts';
 
@@ -8,7 +8,7 @@ import { structureSources } from '#cli/checks/general/structure/source-files.ts'
  * @param input the check context
  * @returns the findings
  */
-export const stemCollisions: Engine = (input) => {
+export const stemCollisions: BuiltInCheck = (input) => {
     const files = structureSources(input);
     const tree = directoryTree(input.files);
     return files.flatMap((file) => {

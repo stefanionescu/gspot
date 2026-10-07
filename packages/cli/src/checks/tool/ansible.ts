@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { LINT_LINE, ANSIBLE_PROJECT_FILE } from '#cli/config/checks/tool/ansible.ts';
 
-async function lintProject(input: EngineInput, folder: string, skipped: string[]): Promise<Finding[]> {
+async function lintProject(input: CheckInput, folder: string, skipped: string[]): Promise<Finding[]> {
     const skips = skipped.length === 0 ? [] : ['--skip-list', skipped.join(',')];
-    const result = await runEngineTool(input, ['ansible-lint', '--offline', '--nocolor', '-f', 'pep8', ...skips], {
+    const result = await runCheckTool(input, ['ansible-lint', '--offline', '--nocolor', '-f', 'pep8', ...skips], {
         cwd: join(input.root, folder),
     });
     const found = result.stdout.split('\n').flatMap((line): Finding[] => {
@@ -33,16 +33,16 @@ async function lintProject(input: EngineInput, folder: string, skipped: string[]
 
 /**
  * The ansible-lint findings of every playbook project in the repository.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function ansibleLint(input: EngineInput): Promise<Finding[]> {
+export async function ansibleLint(input: CheckInput): Promise<Finding[]> {
     const folders = input.files
         .map((file) => file.path)
         .filter((path) => path === ANSIBLE_PROJECT_FILE || path.endsWith(`/${ANSIBLE_PROJECT_FILE}`))
         .map((path) => (path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''));
     const skipped = [
-        ...input.view.rulesOff(input.spec.name),
+        ...input.view.rulesOff(input.check.name),
         'experimental',
         ...(input.policyFiles.policy.level === 'all'
             ? []

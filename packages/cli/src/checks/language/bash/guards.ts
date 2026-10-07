@@ -1,7 +1,7 @@
 import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/language/bash.ts';
 
@@ -10,7 +10,7 @@ import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/language/bas
  * @param input the check context
  * @returns the findings
  */
-export const guardDefaults: Engine = async (input) => {
+export const guardDefaults: BuiltInCheck = async (input) => {
     const owners = new Set(input.view.settings['bash.config_owners'] as string[]);
     const fragments = input.view.settings['bash.defaults_allowed'] as string[];
     const index = await getScriptIndex(input);
@@ -38,7 +38,7 @@ export const guardDefaults: Engine = async (input) => {
  * @param input the check context
  * @returns the findings
  */
-export const guards: Engine = async (input) => {
+export const guards: BuiltInCheck = async (input) => {
     const owners = new Set(input.view.settings['bash.config_owners'] as string[]);
     const index = await getScriptIndex(input);
     const seen = new Map<string, string>();

@@ -4,7 +4,7 @@ import type { Stats } from 'node:fs';
 import { isInside } from '#cli/platform/paths.ts';
 import { join, posix, relative } from 'node:path';
 import { sameEntry } from '#cli/platform/root/rules.ts';
-import { writeLink, acquireLock, replaceEntry } from '#cli/platform/root/writes.ts';
+import { claimPath, writeLink, replaceEntry } from '#cli/platform/root/writes.ts';
 import type { Root, Bounds, FileCopy, PathFormat } from '#cli/types/platform/root.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, renameSync, unlinkSync, readdirSync } from 'node:fs';
 
@@ -83,10 +83,10 @@ function makeDirectory(bounds: Bounds, path: string, mode: number): void {
     chmodSync(target, mode);
 }
 
-// Releases every lock this root still holds, leaving a lock another writer took over. The folders only a lock kept
+// Releases every claim this root still holds, leaving a claim another writer took over. The folders only a claim kept
 // go too, so a writer that wrote nothing leaves nothing.
-function releaseLocks(bounds: Bounds): void {
-    for (const [path, holder] of bounds.locks) {
+function releaseClaims(bounds: Bounds): void {
+    for (const [path, holder] of bounds.claims) {
         if (readEntry(bounds, path, false)?.bytes.toString('utf8') !== holder) continue;
         unlinkSync(checkedPath(bounds, path));
         for (let folder = posix.dirname(path); folder !== '.'; folder = posix.dirname(folder)) {
@@ -94,7 +94,7 @@ function releaseLocks(bounds: Bounds): void {
             rmdirSync(checkedPath(bounds, folder));
         }
     }
-    bounds.locks.clear();
+    bounds.claims.clear();
 }
 
 /**
@@ -138,14 +138,14 @@ export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Roo
         mkdir: (path, mode) => {
             makeDirectory(bounds, path, mode);
         },
-        lock: (path) => {
-            acquireLock(bounds, path);
+        claim: (path) => {
+            claimPath(bounds, path);
         },
         close: () => {
-            releaseLocks(bounds);
+            releaseClaims(bounds);
         },
         [Symbol.dispose]: () => {
-            releaseLocks(bounds);
+            releaseClaims(bounds);
         },
     };
 }

@@ -4,21 +4,21 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
 import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
 import { MANIFEST } from '#tests/config/cli/checks/general/dependencies/manifest-policy.ts';
 
 const DEPENDENCIES_POLICY = buildPolicy(['dependencies']);
 
-async function input(root: string): Promise<EngineInput> {
+async function input(root: string): Promise<CheckInput> {
     const session = await openSession(root);
     const selected = session.scopes[0]!;
-    const spec = selected.selected
+    const check = selected.selected
         .flatMap((manifest) => manifest.checks)
         .find((check) => check.name === 'dependencies/manifests')!;
-    return buildEngineInput(session, spec.name, { scope: selected.scope.path });
+    return buildCheckInput(session, check.name, { scope: selected.scope.path });
 }
 
 describe('manifest policy reads', () => {

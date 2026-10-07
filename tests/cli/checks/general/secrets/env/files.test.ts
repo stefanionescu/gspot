@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { envFiles } from '#cli/checks/general/secrets.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { STAGED_CASES } from '#tests/config/cli/checks/general/secrets/env/files.ts';
 
@@ -21,7 +21,7 @@ test('tracked-file checks distinguish environment files from templates in nested
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-f', '.']).code).toBe(0);
     await Bun.write(join(directory.path, 'gspot.toml'), buildPolicy(['secrets'], { level: 'all' }));
-    const input = buildEngineInput(await openSession(directory.path), 'secrets/env-files', { paths: [] });
+    const input = buildCheckInput(await openSession(directory.path), 'secrets/env-files', { paths: [] });
     expect(envFiles(input).map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
         privateFiles.map((file) => ({ file, rule: 'tracked-env' })),
     );

@@ -135,7 +135,7 @@ files also show a file diff, so you can see the authored change alongside the pr
 
 ## Reconcile project changes
 
-After adding or removing a stack, run `gspot apply --dry-run`, then `gspot apply` and `gspot install`. `apply` adds applicable configurations and deactivates language and framework configurations whose evidence disappeared, while retaining manual language and framework overrides. It preserves settings, custom checks, ignores, reasons, and authored scope policy for returning projects.
+After adding or removing a stack, run `gspot apply --dry-run`, then `gspot apply` and `gspot install`. `apply` adds applicable configurations and deactivates language and framework configurations whose evidence disappeared, while retaining manual language and framework overrides. It preserves settings, command checks, ignores, reasons, and authored scope policy for returning projects.
 
 Shared-file configurations stay applicable while their inputs exist. An edited managed output is reported instead of overwritten. `check` and `doctor` report stale setup and do not reconcile it.
 

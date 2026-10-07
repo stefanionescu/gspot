@@ -2,14 +2,14 @@
 import { compact } from '#cli/platform/objects.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { quoteArgument } from '#cli/platform/text.ts';
 import { toolName } from '#cli/configurations/pins.ts';
-import { quoteArgument } from '#cli/platform/quoting.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { parseRuffRuleSummary } from '#cli/parsers/tool/rule.ts';
-import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import type { RepositoryDefinition } from '#cli/types/policy/settings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
 import { allChecks, configurationFiles } from '#cli/configurations/declarations.ts';
 import type { Found, CheckFacts, Explanation, RuleSummarizer } from '#cli/types/commands/explain.ts';
 import { ESLINT_RULE_PACKAGES, SWIFTLINT_LINE_LIMIT, RULE_LOOKUP_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
@@ -35,7 +35,7 @@ const RULE_SUMMARIZERS: Record<string, RuleSummarizer> = {
     },
 };
 
-function getToolPin(name: string | undefined, check?: CheckSpec): ToolPin | undefined {
+function getToolPin(name: string | undefined, check?: CheckDeclaration): ToolPin | undefined {
     if (name === undefined) return undefined;
     const owner = check?.name.split('/', 1)[0];
     const declared =
@@ -59,7 +59,7 @@ function getRulePlugin(prefix: string, tool: string): ToolPin | undefined {
 }
 
 // The page a manifest declares for a rule: the tool's own page, or the page of the plugin whose prefix the rule carries.
-function getRulePage(check: CheckSpec, tool: string, rule: string): string | undefined {
+function getRulePage(check: CheckDeclaration, tool: string, rule: string): string | undefined {
     const slash = rule.lastIndexOf('/');
     if (slash === -1) {
         const pin = getToolPin(tool, check) ?? getToolPin(toolName(check), check);
@@ -70,7 +70,7 @@ function getRulePage(check: CheckSpec, tool: string, rule: string): string | und
 }
 
 // The settings that change the check, and the rules and crash pattern its configuration carries.
-function getFacts(check: CheckSpec, configuration: Found['configuration']): CheckFacts {
+function getFacts(check: CheckDeclaration, configuration: Found['configuration']): CheckFacts {
     const tool = toolName(check);
     const settings = (configuration?.settings ?? [])
         .filter(
@@ -204,24 +204,26 @@ export function explainCheck(session: ToolSession | undefined, checkName: string
  */
 export function explainToolRule(session: ToolSession | undefined, tool: string, rule: string): Explanation | undefined {
     const plugin = getRulePlugin(tool, 'eslint');
-    const engine = plugin === undefined ? tool : 'eslint';
+    const ruleTool = plugin === undefined ? tool : 'eslint';
     const identifier = plugin === undefined ? rule : `${tool}/${rule}`;
     const found = allChecks(configurationManifests().values())
         .values()
-        .find(({ check: spec }) => toolName(spec) === engine || spec.name.endsWith(`/${engine}`));
+        .find(
+            ({ check: declaration }) => toolName(declaration) === ruleTool || declaration.name.endsWith(`/${ruleTool}`),
+        );
     if (!found) return undefined;
     const { check, configuration } = found;
-    const summary = getRuleSummary(session, engine, identifier);
-    const page = getRulePage(check, engine, identifier);
-    const key = quoteArgument(`tools.${engine}.rules.${identifier}`);
+    const summary = getRuleSummary(session, ruleTool, identifier);
+    const page = getRulePage(check, ruleTool, identifier);
+    const key = quoteArgument(`tools.${ruleTool}.rules.${identifier}`);
     const optionLines = configuration.settings
-        .filter((setting) => setting.name === `tools.${engine}.rules`)
+        .filter((setting) => setting.name === `tools.${ruleTool}.rules`)
         .map(() => `Change its options: gspot set ${key} <options> --reason "..."`);
-    let description = `Read the ${engine} documentation for ${identifier}.`;
+    let description = `Read the ${ruleTool} documentation for ${identifier}.`;
     if (page !== undefined) description = `The tool's page: ${page}`;
     if (summary !== undefined) description = `The tool says: ${summary}`;
     const lines = [
-        `${engine}/${identifier}  (run by ${check.name})`,
+        `${ruleTool}/${identifier}  (run by ${check.name})`,
         '',
         description,
         '',
@@ -231,8 +233,8 @@ export function explainToolRule(session: ToolSession | undefined, tool: string, 
     ];
     return {
         kind: 'tool-rule',
-        subject: `${engine}/${identifier}`,
+        subject: `${ruleTool}/${identifier}`,
         text: `${lines.join('\n')}\n`,
-        data: { tool: engine, rule: identifier, check: check.name, summary: summary ?? null, page: page ?? null },
+        data: { tool: ruleTool, rule: identifier, check: check.name, summary: summary ?? null, page: page ?? null },
     };
 }

@@ -32,7 +32,7 @@ export type SelectionWalk = {
     visiting: string[];
 };
 
-export type CheckRule = { applies: (check: RawCheck) => boolean; problem: (check: RawCheck) => string };
+export type CheckRule = { applies: (check: ParsedCheck) => boolean; problem: (check: ParsedCheck) => string };
 
 export type InstallerPin = z.output<typeof installerPinSchema>;
 
@@ -40,36 +40,36 @@ export type InstallerPin = z.output<typeof installerPinSchema>;
 export type ToolPin = z.output<typeof toolSchema>;
 
 /** manifest.toml as the schema accepts it. */
-export type RawManifest = z.infer<typeof manifestSchema>;
+export type ParsedManifest = z.infer<typeof manifestSchema>;
 
 export type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
 
-export type ConfigurationFile = RawManifest['configs'][number];
+export type ConfigurationFile = ParsedManifest['configs'][number];
 
 /** A complete generated file, with its render template resolved by the manifest schema. */
 export type GeneratedConfigurationFile = Extract<ConfigurationFile, { fragment: false }>;
 
 /** Validated execution variants. Repository-defined commands do not require reference examples. */
-export type CheckSpec = ExecutionFields<Defined<RawCheck>> & { example?: string };
+export type CheckDeclaration = ExecutionFields<Defined<ParsedCheck>> & { example?: string };
 
 /** One [[check]] entry as written. */
-export type RawCheck = RawManifest['checks'][number];
+export type ParsedCheck = ParsedManifest['checks'][number];
 
-export type SettingSpec = Defined<RawManifest['settings'][number]>;
+export type SettingDeclaration = Defined<ParsedManifest['settings'][number]>;
 
-export type FileMatch = RawManifest['files'];
+export type FileMatch = ParsedManifest['files'];
 
-export type Manifest = Omit<RawManifest, 'checks' | 'settings'> & {
-    checks: CheckSpec[];
-    settings: SettingSpec[];
+export type Manifest = Omit<ParsedManifest, 'checks' | 'settings'> & {
+    checks: CheckDeclaration[];
+    settings: SettingDeclaration[];
     dir: string;
 };
 
 /** The process-owned cache of shipped configuration declarations. */
-export type ManifestRegistryState = { cache: Map<string, Manifest> | undefined };
+export type ManifestCache = { cache: Map<string, Manifest> | undefined };
 
 /** Public check identity and the configuration that ships its behavior. */
-export type OwnedCheck = { check: CheckSpec; configuration: Manifest };
+export type OwnedCheck = { check: CheckDeclaration; configuration: Manifest };
 /** The declaration meaning compared across configuration owners. */
 export type SettingMeaning = { configuration: string; meaning: Record<string, unknown> };
 

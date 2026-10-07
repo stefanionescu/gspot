@@ -3,8 +3,8 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { headers } from '#cli/checks/platform/cloudflare.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
@@ -61,8 +61,8 @@ test('Cloudflare header checks report only files in their owning scope', async (
         'workers/api/_headers': '/*\n  X-Frame-Options: DENY\n',
     });
     const session = await openSession(directory.path);
-    const spec = session.manifests.get('cloudflare')!.checks.find((entry) => entry.name === 'cloudflare/headers')!;
-    const input = buildEngineInput(session, spec.name);
+    const check = session.manifests.get('cloudflare')!.checks.find((entry) => entry.name === 'cloudflare/headers')!;
+    const input = buildCheckInput(session, check.name);
     expect(headers(input).map(({ file }) => file)).toStrictEqual(['_headers']);
     expect(headers({ ...input, scope: 'workers/api' })).toStrictEqual([]);
 });

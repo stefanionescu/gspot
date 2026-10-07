@@ -1,9 +1,9 @@
 ---
-title: Custom checks
+title: Command checks
 description: Run your own command as a gspot check, with its findings in the same report.
 ---
 
-A custom check runs a command of yours on the files you select. gspot reads its output as
+A command check runs a command of yours on the files you select. gspot reads its output as
 findings, so they appear in the same report as every other check.
 
 ## Example: find unfinished notes

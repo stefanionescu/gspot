@@ -4,24 +4,24 @@ import { everyManifest } from '#cli/configurations/select.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 import { declaredArchitectures } from '#cli/policy/settings/lookup.ts';
-import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
+import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 import { toolPin, checkToolPin, toolProjectPackage } from '#cli/configurations/pins.ts';
 
 /**
  * Companion tools consumed by a check's command and its selected native configuration.
  * @param scope the effective configuration selection
- * @param spec the declared check
+ * @param check the declared check
  * @returns each explicit and configuration-owned companion once
  */
-export function checkCompanions(scope: ScopeSelection, spec: CheckSpec): string[] {
-    const tools = new Set([spec.tool, spec.command?.[0], spec.fix?.[0], ...(spec.other_tools ?? [])]);
+export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration): string[] {
+    const tools = new Set([check.tool, check.command?.[0], check.fix?.[0], ...(check.other_tools ?? [])]);
     const companions = scope.selected
         .flatMap((manifest) => manifest.configs)
         .filter((config) => config.tool.length === 0 || config.tool.some((name) => tools.has(name)))
-        .filter((config) => config.check.length === 0 || config.check.includes(spec.name))
+        .filter((config) => config.check.length === 0 || config.check.includes(check.name))
         .filter((config) => config.when === undefined || scope.view.configurations.includes(config.when.configuration))
         .flatMap((config) => config.required_tools);
-    return [...new Set([...(spec.other_tools ?? []), ...companions])];
+    return [...new Set([...(check.other_tools ?? []), ...companions])];
 }
 
 /**
@@ -32,7 +32,7 @@ export function checkCompanions(scope: ScopeSelection, spec: CheckSpec): string[
  */
 export function requiredToolNames(check: PlannedCheck, runner: string | undefined): string[] {
     const names = new Set(
-        [check.tool?.name, ...checkCompanions(check.scope, check.spec), check.spec.fix?.[0]].flatMap((name) => {
+        [check.tool?.name, ...checkCompanions(check.scope, check.check), check.check.fix?.[0]].flatMap((name) => {
             if (name === undefined) return [];
             // v8r loads Ajv through an optional peer in tool project installations.
             if (name === 'v8r' && toolProjectPackage(toolPin(check.scope.selected, name), runner)?.kind === 'npm')
@@ -40,7 +40,7 @@ export function requiredToolNames(check: PlannedCheck, runner: string | undefine
             return [name];
         }),
     );
-    if (check.spec.name === 'licenses/packages') {
+    if (check.check.name === 'licenses/packages') {
         if (check.files.some((file) => file.path.endsWith('package.json'))) names.add('license-checker-rseidelsohn');
         if (check.files.some((file) => file.path.endsWith('pyproject.toml'))) names.add('pip-licenses');
     }
@@ -89,7 +89,7 @@ export function applicableManifests(session: Session): Manifest[] {
                 )
                 .map((tool) => {
                     let pin = tool;
-                    for (const check of checks) pin = checkToolPin(pin, check.spec);
+                    for (const check of checks) pin = checkToolPin(pin, check.check);
                     return pin;
                 }),
         };

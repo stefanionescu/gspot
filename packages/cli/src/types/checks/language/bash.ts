@@ -6,7 +6,7 @@ import type { ScriptSyntax, ScriptFunction } from '#cli/types/parsers/bash.ts';
 /** How an analysis reports one problem in one file. */
 export type ScriptReport = (line: number, rule: string, text: string) => void;
 
-/** One parsed shell source owned by an engine. */
+/** One parsed shell source owned by a built-in check. */
 export type ScriptFile = ScriptSyntax & {
     path: string;
     text: string;

@@ -1,7 +1,7 @@
 import { memo } from '#cli/platform/memo.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parseBashScript } from '#cli/parsers/bash.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
 import { isToolProjectPath } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -10,7 +10,7 @@ import { SCRIPT_TAG, ENTRY_FUNCTIONS } from '#cli/config/checks/language/bash.ts
 
 const SCRIPT_MEMO = { create: () => new Map<string, Promise<ScriptIndex>>() };
 
-async function readScript(input: EngineInput, file: TrackedFile): Promise<ScriptFile> {
+async function readScript(input: CheckInput, file: TrackedFile): Promise<ScriptFile> {
     const text = readSource(input.root, file.path, input.reads).toString('utf8');
     const syntax = await parseBashScript(text, {
         minimumStatements: input.view.limit('min_function_statements', 'bash'),
@@ -25,7 +25,7 @@ async function readScript(input: EngineInput, file: TrackedFile): Promise<Script
     return { ...syntax, path: file.path, text, lines: text.split('\n'), isExecutable: file.executable, references };
 }
 
-async function readScriptIndex(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
+async function readScriptIndex(input: CheckInput, files: TrackedFile[]): Promise<ScriptIndex> {
     const read: ScriptFile[] = [];
     for (const file of files) read.push(await readScript(input, file));
     const owners = new Map<string, string>();
@@ -36,10 +36,10 @@ async function readScriptIndex(input: EngineInput, files: TrackedFile[]): Promis
 
 /**
  * Read the scope's shell index once, sharing syntax data across its checks.
- * @param input the engine's scope-owned files and parser resources
+ * @param input the check's scope-owned files and parser resources
  * @returns the index
  */
-export function getScriptIndex(input: EngineInput): Promise<ScriptIndex> {
+export function getScriptIndex(input: CheckInput): Promise<ScriptIndex> {
     const files = input.files.filter(
         (file) => file.kind === 'source' && file.tags.includes(SCRIPT_TAG) && !isToolProjectPath(file.path),
     );
@@ -58,7 +58,7 @@ export function getScriptIndex(input: EngineInput): Promise<ScriptIndex> {
  * @param input the validated scope settings
  * @returns functions exempt from file-local conventions
  */
-export function entryFunctions(input: EngineInput): Set<string> {
+export function entryFunctions(input: CheckInput): Set<string> {
     return new Set([...ENTRY_FUNCTIONS, ...(input.view.settings['bash.entry_functions'] as string[])]);
 }
 

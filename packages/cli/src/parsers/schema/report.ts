@@ -21,7 +21,7 @@ export const resultSchema = z.strictObject({
     files: z
         .array(z.string())
         .optional()
-        .meta({ description: 'Repository-relative files whose analysis was confirmed by the engine.' }),
+        .meta({ description: 'Repository-relative files whose analysis was confirmed by the built-in check.' }),
     duration: z.number(),
     findings: z.array(findingSchema),
     note: z.string().optional(),

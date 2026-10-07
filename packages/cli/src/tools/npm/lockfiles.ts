@@ -1,19 +1,19 @@
-// Matching and registry portability for npm tool-project locks.
+// Matching and registry portability for npm tool-project lockfiles.
 import semver from 'semver';
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { modify, applyEdits } from 'jsonc-parser';
 import { INTEGRITY } from '#cli/config/tools/npm.ts';
 import { HTTP_URL } from '#cli/config/tools/install.ts';
-import type { DependencyMap } from '#cli/types/parsers/packages.ts';
+import type { BunPackage } from '#cli/types/parsers/lockfiles.ts';
 import { CONFLICT_MARKER_PREFIX } from '#cli/config/parsers/git.ts';
-import type { LockName, BunPackage } from '#cli/types/parsers/lockfiles.ts';
-import { parseLockfile, rootLockDependencies } from '#cli/parsers/lockfiles.ts';
-import { yarnLockSchema, bunPackageSchema, bunPackagesSchema } from '#cli/parsers/schema/lockfiles.ts';
+import { parseLockfile, rootLockfileDependencies } from '#cli/parsers/lockfiles.ts';
+import type { DependencyMap, PackageInstaller } from '#cli/types/parsers/packages.ts';
+import { bunPackageSchema, bunPackagesSchema, yarnLockfileSchema } from '#cli/parsers/schema/lockfiles.ts';
 
-// Whether a Yarn lock resolves every dependency to its pinned version, under either descriptor form.
+// Whether a Yarn lockfile resolves every dependency to its pinned version, under either descriptor form.
 function yarnMatches(content: string, dependencies: DependencyMap): boolean {
-    const entries = Object.entries(yarnLockSchema.parse(parseLockfile('yarn.lock', content)));
+    const entries = Object.entries(yarnLockfileSchema.parse(parseLockfile('yarn.lock', content)));
     return Object.entries(dependencies).every(([dependency, version]) =>
         entries.some(([descriptors, entry]) => {
             const requested = new Set(descriptors.split(/,\s*/u));
@@ -30,7 +30,7 @@ function registryFor(name: string, env: Record<string, string>): string | undefi
     return scopeRegistry ?? env['npm_config_registry'];
 }
 
-// Whether a Bun lock entry resolved the standard tarball of a valid npm version through the configured registry.
+// Whether a Bun lockfile entry resolved the standard tarball of a valid npm version through the configured registry.
 function isStandardTarball(entry: BunPackage, env: Record<string, string>): boolean {
     const [identity, resolved, , integrity] = entry;
     const separator = identity.lastIndexOf('@');
@@ -53,18 +53,18 @@ function relativeReference(resolved: string, base: URL): string | undefined {
 }
 
 /**
- * Whether a lock pins every generated dependency and carries no merge conflict.
+ * Whether a lockfile pins every generated dependency and carries no merge conflict.
  * npm, Bun, and pnpm must have no additional root dependencies; Yarn may retain extra entries.
- * @param name the package manager that wrote the lock
- * @param content the lock text
+ * @param name the package manager that wrote the lockfile
+ * @param content the lockfile text
  * @param dependencies the dependencies the tool project declares
- * @returns true when the lock matches
+ * @returns true when the lockfile matches
  */
-export function lockMatches(name: LockName, content: string, dependencies: DependencyMap): boolean {
+export function lockfileMatches(name: PackageInstaller['name'], content: string, dependencies: DependencyMap): boolean {
     if (CONFLICT_MARKER_PREFIX.test(content)) return false;
     try {
         if (name === 'yarn') return yarnMatches(content, dependencies);
-        return isDeepStrictEqual(rootLockDependencies(name, content), dependencies);
+        return isDeepStrictEqual(rootLockfileDependencies(name, content), dependencies);
     } catch {
         return false;
     }
@@ -73,12 +73,12 @@ export function lockMatches(name: LockName, content: string, dependencies: Depen
 /**
  * Rewrite resolved URLs under the registry as relative paths, retaining Yarn's formatting.
  * Throw if any other entry changes.
- * @param content the lock text Yarn wrote
+ * @param content the lockfile text Yarn wrote
  * @param registry the registry URL its resolved references start with
- * @returns the lock text with registry-relative references
+ * @returns the lockfile text with registry-relative references
  */
 export function stripYarnRegistryUrls(content: string, registry: string): string {
-    const entries = yarnLockSchema.parse(parseLockfile('yarn.lock', content));
+    const entries = yarnLockfileSchema.parse(parseLockfile('yarn.lock', content));
     const expected = structuredClone(entries);
     const base = new URL(registry.endsWith('/') ? registry : `${registry}/`);
     let edited = content;
@@ -88,19 +88,19 @@ export function stripYarnRegistryUrls(content: string, registry: string): string
         edited = edited.replaceAll(JSON.stringify(entry.resolved), JSON.stringify(relative));
         entry.resolved = relative;
     }
-    if (!isDeepStrictEqual(yarnLockSchema.parse(parseLockfile('yarn.lock', edited)), expected))
+    if (!isDeepStrictEqual(yarnLockfileSchema.parse(parseLockfile('yarn.lock', edited)), expected))
         throw new Error(
-            'Cannot preserve Yarn lock entries while removing local registry routing. Existing files were preserved.',
+            'Cannot preserve Yarn lockfile entries while removing local registry routing. Existing files were preserved.',
         );
     return edited;
 }
 
 /**
- * Blank each standard registry tarball URL in the Bun lock.
+ * Blank each standard registry tarball URL in the Bun lockfile.
  * Throw if any other entry changes.
- * @param content the lock text Bun wrote
+ * @param content the lockfile text Bun wrote
  * @param env the registry settings the resolution ran with
- * @returns the lock text without the registry's tarball URLs
+ * @returns the lockfile text without the registry's tarball URLs
  */
 export function stripBunRegistryUrls(content: string, env: Record<string, string>): string {
     const parsed = bunPackagesSchema.parse(parseLockfile('bun.lock', content));
@@ -115,7 +115,7 @@ export function stripBunRegistryUrls(content: string, env: Record<string, string
     }
     if (!isDeepStrictEqual(bunPackagesSchema.parse(parseLockfile('bun.lock', edited)), expected))
         throw new Error(
-            'Cannot preserve Bun lock entries while removing registry routing. Existing files were preserved.',
+            'Cannot preserve Bun lockfile entries while removing registry routing. Existing files were preserved.',
         );
     return edited;
 }

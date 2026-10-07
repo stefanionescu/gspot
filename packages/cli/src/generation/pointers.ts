@@ -34,7 +34,7 @@ export function relativeTarget(pointerPath: string, targetPath: string): string 
 
 /**
  * Renders a body pointer: the body with the target placeholder replaced, under the header.
- * @param pointer the pointer spec
+ * @param pointer the pointer declaration
  * @param pointerPath the pointer's path
  * @param targetPath the generated file's path
  * @param version the gspot version

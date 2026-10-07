@@ -7,7 +7,7 @@ import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { isMap, isSeq, isAlias, isScalar, parseDocument } from 'yaml';
 import { ACTIONLINT_COMMAND } from '#cli/config/checks/tool/actions.ts';
 
@@ -79,7 +79,7 @@ export async function actionlint(session: ToolSession, planned: PlannedCheck): P
         const prepared = actionlintSource(source);
         if (prepared !== source) replacements.set(file.path, prepared);
     }
-    if (replacements.size === 0) return runCommandCheck(session, planned, { command: ACTIONLINT_COMMAND });
+    if (replacements.size === 0) return runCheckCommand(session, planned, { command: ACTIONLINT_COMMAND });
     using workspace = copyFiles(
         session.root,
         session.repository.files.map((file) => file.path),
@@ -91,5 +91,5 @@ export async function actionlint(session: ToolSession, planned: PlannedCheck): P
         chmodSync(target, PRIVATE_FILE);
         writeFileSync(target, source);
     }
-    return await runCommandCheck(session, planned, { command: ACTIONLINT_COMMAND, workspace: workspace.root });
+    return await runCheckCommand(session, planned, { command: ACTIONLINT_COMMAND, workspace: workspace.root });
 }

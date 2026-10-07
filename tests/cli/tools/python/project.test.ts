@@ -1,4 +1,4 @@
-// Python constraints reach the private project; previews plan lock repair without changing recorded inputs.
+// Python constraints reach the private project; previews plan lockfile repair without changing recorded inputs.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
@@ -7,13 +7,13 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { parse, TomlError, stringify } from 'smol-toml';
 import { UV_MISE_PIN } from '#cli/config/tools/python.ts';
 import { pythonProject } from '#cli/generation/python.ts';
-import { UV_LOCK } from '#cli/config/platform/locations.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { UV_LOCKFILE } from '#cli/config/platform/locations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { pythonToolProjectSchema } from '#cli/parsers/schema/python/tools.ts';
-import { pythonLockDrift, pythonInstallationPlan } from '#cli/tools/python/project.ts';
-import { PRIVATE_PYTHON_LOCK, PRIVATE_PYTHON_PROJECT } from '#tests/config/samples/python/tools.ts';
-import { CONSTRAINT, PYTHON_LOCK_PLANS, PYTHON_ENVIRONMENT_STEPS } from '#tests/config/cli/tools/python/project.ts';
+import { pythonLockfileDrift, pythonInstallationPlan } from '#cli/tools/python/project.ts';
+import { PRIVATE_PYTHON_PROJECT, PRIVATE_PYTHON_LOCKFILE } from '#tests/config/samples/python/tools.ts';
+import { CONSTRAINT, PYTHON_LOCKFILE_PLANS, PYTHON_ENVIRONMENT_STEPS } from '#tests/config/cli/tools/python/project.ts';
 
 // The security configuration with a floor on the pyjwt Semgrep pulls in.
 function constrainedManifest(): Manifest {
@@ -23,8 +23,8 @@ function constrainedManifest(): Manifest {
     return manifest;
 }
 
-// A uv lock for the project's pins, with the constraints it was resolved under.
-function lockFor(dependencies: string[], constraints: (typeof CONSTRAINT)[]): string {
+// A uv lockfile for the project's pins, with the constraints it was resolved under.
+function lockfileFor(dependencies: string[], constraints: (typeof CONSTRAINT)[]): string {
     const requires = dependencies.map((dependency) => {
         const [name = '', version = ''] = dependency.split('==');
         return { name, specifier: `==${version}` };
@@ -44,34 +44,34 @@ function lockFor(dependencies: string[], constraints: (typeof CONSTRAINT)[]): st
     });
 }
 
-test('a pypi constraint reaches the tool project, and only a lock resolved under it is current', async () => {
+test('a pypi constraint reaches the tool project, and only a lockfile resolved under it is current', async () => {
     await using sandbox = await testdir();
     const generated = pythonProject([constrainedManifest()]);
     const project = pythonToolProjectSchema.parse(parse(generated[0]!.content));
     expect(project.tool.uv['constraint-dependencies']).toStrictEqual(['pyjwt>=2.14.0']);
-    await createFileTree(sandbox.path, { [UV_LOCK]: lockFor(project.project.dependencies, []) });
-    expect(pythonLockDrift(sandbox.path, generated)).toStrictEqual({ path: UV_LOCK, kind: 'changed' });
-    await createFileTree(sandbox.path, { [UV_LOCK]: lockFor(project.project.dependencies, [CONSTRAINT]) });
-    expect(pythonLockDrift(sandbox.path, generated)).toStrictEqual({ path: UV_LOCK });
+    await createFileTree(sandbox.path, { [UV_LOCKFILE]: lockfileFor(project.project.dependencies, []) });
+    expect(pythonLockfileDrift(sandbox.path, generated)).toStrictEqual({ path: UV_LOCKFILE, kind: 'changed' });
+    await createFileTree(sandbox.path, { [UV_LOCKFILE]: lockfileFor(project.project.dependencies, [CONSTRAINT]) });
+    expect(pythonLockfileDrift(sandbox.path, generated)).toStrictEqual({ path: UV_LOCKFILE });
 });
 
-test.each(PYTHON_LOCK_PLANS)(
-    'a $state Python lock plans resolution when needed and preserves recorded inputs',
-    async ({ lock, floor, refreshLocks, steps }) => {
+test.each(PYTHON_LOCKFILE_PLANS)(
+    'a $state Python lockfile plans resolution when needed and preserves recorded inputs',
+    async ({ lockfile, floor, refreshLockfiles, steps }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             '.gspot/pyproject.toml': PRIVATE_PYTHON_PROJECT,
             'source.py': 'print("authored")\n',
-            ...(lock === undefined ? {} : { [UV_LOCK]: lock.replace('>=3.11', floor) }),
+            ...(lockfile === undefined ? {} : { [UV_LOCKFILE]: lockfile.replace('>=3.11', floor) }),
         });
         using files = openRoot(sandbox.path);
-        const recorded = files.read(UV_LOCK);
-        expect(pythonInstallationPlan(sandbox.path, undefined, 'none', { refreshLocks })).toStrictEqual({
+        const recorded = files.read(UV_LOCKFILE);
+        expect(pythonInstallationPlan(sandbox.path, undefined, 'none', { refreshLockfiles })).toStrictEqual({
             installer: [],
-            lock: steps,
+            lockfile: steps,
             environment: PYTHON_ENVIRONMENT_STEPS,
         });
-        expect(files.read(UV_LOCK)).toStrictEqual(recorded);
+        expect(files.read(UV_LOCKFILE)).toStrictEqual(recorded);
         expect(readFileSync(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(PRIVATE_PYTHON_PROJECT);
         expect(readFileSync(join(sandbox.path, 'source.py'), 'utf8')).toBe('print("authored")\n');
     },
@@ -80,25 +80,27 @@ test.each(PYTHON_LOCK_PLANS)(
 test('a proposed Python project overrides invalid recorded bytes without writing them', async () => {
     await using sandbox = await testdir();
     const recorded = '<<<<<<< interrupted project\n';
-    await createFileTree(sandbox.path, { '.gspot/pyproject.toml': recorded, [UV_LOCK]: PRIVATE_PYTHON_LOCK });
-    expect(pythonInstallationPlan(sandbox.path, PRIVATE_PYTHON_PROJECT, 'mise', { refreshLocks: false })).toStrictEqual(
-        {
-            installer: [['mise', 'install', UV_MISE_PIN]],
-            lock: [],
-            environment: PYTHON_ENVIRONMENT_STEPS,
-        },
+    await createFileTree(sandbox.path, { '.gspot/pyproject.toml': recorded, [UV_LOCKFILE]: PRIVATE_PYTHON_LOCKFILE });
+    expect(
+        pythonInstallationPlan(sandbox.path, PRIVATE_PYTHON_PROJECT, 'mise', { refreshLockfiles: false }),
+    ).toStrictEqual({
+        installer: [['mise', 'install', UV_MISE_PIN]],
+        lockfile: [],
+        environment: PYTHON_ENVIRONMENT_STEPS,
+    });
+    expect(() => pythonInstallationPlan(sandbox.path, undefined, 'none', { refreshLockfiles: false })).toThrow(
+        TomlError,
     );
-    expect(() => pythonInstallationPlan(sandbox.path, undefined, 'none', { refreshLocks: false })).toThrow(TomlError);
     expect(readFileSync(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(recorded);
-    expect(readFileSync(join(sandbox.path, UV_LOCK), 'utf8')).toBe(PRIVATE_PYTHON_LOCK);
+    expect(readFileSync(join(sandbox.path, UV_LOCKFILE), 'utf8')).toBe(PRIVATE_PYTHON_LOCKFILE);
 });
 
 test('a repository without a Python tool project plans no acquisition or installation', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.py': 'print("authored")\n' });
-    expect(pythonInstallationPlan(sandbox.path, undefined, 'mise', { refreshLocks: true })).toStrictEqual({
+    expect(pythonInstallationPlan(sandbox.path, undefined, 'mise', { refreshLockfiles: true })).toStrictEqual({
         installer: [],
-        lock: [],
+        lockfile: [],
         environment: [],
     });
     expect(readFileSync(join(sandbox.path, 'source.py'), 'utf8')).toBe('print("authored")\n');

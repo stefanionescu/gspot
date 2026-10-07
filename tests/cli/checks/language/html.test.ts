@@ -4,7 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { scripts } from '#cli/checks/language/html.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { ACTIVE_URLS, INERT_MARKUP } from '#tests/config/cli/checks/language/html.ts';
 
 describe('HTML script findings', () => {
@@ -14,7 +14,7 @@ describe('HTML script findings', () => {
             await using directory = await testdir();
             await createFileTree(directory.path, { 'gspot.toml': buildPolicy(['html']), 'page.html': markup });
             const session = await openSession(directory.path);
-            const findings = await scripts(buildEngineInput(session, 'html/scripts', { paths: ['page.html'] }));
+            const findings = await scripts(buildCheckInput(session, 'html/scripts', { paths: ['page.html'] }));
             expect(
                 findings.map(({ file, line, rule, column: foundColumn }) => ({
                     file,
@@ -29,6 +29,6 @@ describe('HTML script findings', () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { 'gspot.toml': buildPolicy(['html']), 'page.html': markup });
         const session = await openSession(directory.path);
-        expect(await scripts(buildEngineInput(session, 'html/scripts', { paths: ['page.html'] }))).toStrictEqual([]);
+        expect(await scripts(buildCheckInput(session, 'html/scripts', { paths: ['page.html'] }))).toStrictEqual([]);
     });
 });

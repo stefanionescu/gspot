@@ -1,20 +1,20 @@
 import { isReasoned } from '#cli/policy/schema/fields.ts';
-import type { SettingSpec } from '#cli/types/configurations.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { compact, valueAt, isRecord } from '#cli/platform/objects.ts';
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
 import { CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/policy/settings.ts';
 
 import type {
     Policy,
     Reasoned,
-    SpecMatch,
     PolicyTable,
     SettingState,
     KnownSettings,
     PolicyLocation,
     ScopeSelection,
     ResolvedSetting,
+    DeclarationMatch,
     NamingLanguageTable,
     ArchitectureDeclaration,
 } from '#cli/types/policy/settings.ts';
@@ -28,39 +28,44 @@ function plainIfPresent(value: unknown): Reasoned<unknown> | undefined {
     return value === undefined ? undefined : plain(value);
 }
 
-function languageSpec(
+function languageDeclaration(
     surface: KnownSettings,
     key: string,
     table: string,
     language: string,
     name: string,
-): SpecMatch | undefined {
-    const base = surface.specs.get(`${table}.${name}`);
+): DeclarationMatch | undefined {
+    const base = surface.declarations.get(`${table}.${name}`);
     const languages = base?.languages ?? [];
-    if (base && (languages.includes(language) || languages.includes('*'))) return { spec: base, language };
-    const grouped = surface.specs.get(key);
-    return grouped ? { spec: grouped } : undefined;
+    if (base && (languages.includes(language) || languages.includes('*'))) return { declaration: base, language };
+    const grouped = surface.declarations.get(key);
+    return grouped ? { declaration: grouped } : undefined;
 }
 
-function groupedSpec(
+function groupedDeclaration(
     surface: KnownSettings,
     key: string,
     table: string,
     language: string,
     rest: string[],
-): SpecMatch | undefined {
+): DeclarationMatch | undefined {
     const [first, second] = rest;
     if (first === undefined) return undefined;
-    if (second === undefined) return languageSpec(surface, key, table, language, first);
+    if (second === undefined) return languageDeclaration(surface, key, table, language, first);
     if (table !== 'naming' || rest.length !== CATEGORY_KEY_PARTS) return undefined;
-    return categorySpec(surface, language, first, second);
+    return categoryDeclaration(surface, language, first, second);
 }
 
-function categorySpec(surface: KnownSettings, language: string, category: string, name: string): SpecMatch | undefined {
-    const base = surface.specs.get(`naming.${language}.${name}`) ?? surface.specs.get(`naming.${name}`);
+function categoryDeclaration(
+    surface: KnownSettings,
+    language: string,
+    category: string,
+    name: string,
+): DeclarationMatch | undefined {
+    const base = surface.declarations.get(`naming.${language}.${name}`) ?? surface.declarations.get(`naming.${name}`);
     if (!base) return undefined;
     const isCovered = (base.languages ?? []).includes(language) && (base.categories ?? []).includes(category);
-    return isCovered ? { spec: base, language, category } : undefined;
+    return isCovered ? { declaration: base, language, category } : undefined;
 }
 
 function limitValue(policy: Partial<Policy>, rest: string[]): Reasoned<unknown> | undefined {
@@ -89,7 +94,7 @@ function namingValue(policy: Partial<Policy>, rest: string[]): Reasoned<unknown>
 }
 
 function applyLayer(
-    spec: SettingSpec,
+    declaration: SettingDeclaration,
     key: string,
     current: SettingState,
     layer: PolicyTable,
@@ -100,7 +105,7 @@ function applyLayer(
         const found = policyValue(layer.table, candidate);
         if (!found) continue;
         result = {
-            value: mergeValue(spec, result.value, found.value),
+            value: mergeValue(declaration, result.value, found.value),
             source: candidate === key ? layer.name : `${layer.name} (${candidate})`,
             reason: found.reason,
         };
@@ -121,15 +126,15 @@ const ROOT_SETTING_READERS: Record<string, (policy: Partial<Policy>) => unknown>
 
 /**
  * A list appends, dropping repeated scalar items; a per-rule table merges by rule; any other value takes the later one.
- * @param spec the setting
+ * @param declaration the setting
  * @param current the value so far
  * @param found the value the next layer writes
  * @returns the merged value
  */
-export function mergeValue(spec: SettingSpec, current: unknown, found: unknown): unknown {
-    if (spec.type === 'list' && Array.isArray(current) && Array.isArray(found))
+export function mergeValue(declaration: SettingDeclaration, current: unknown, found: unknown): unknown {
+    if (declaration.type === 'list' && Array.isArray(current) && Array.isArray(found))
         return [...new Set([...(current as unknown[]), ...(found as unknown[])])];
-    if (spec.type === 'table' && spec.direction === 'rule-options')
+    if (declaration.type === 'table' && declaration.direction === 'rule-options')
         return { ...(isRecord(current) ? current : {}), ...(isRecord(found) ? found : {}) };
     return found;
 }
@@ -181,18 +186,18 @@ export function declaredArchitectures(policy: Policy, scopes: ScopeSelection[]):
 }
 
 /**
- * Matches a written key to the spec it belongs to: per-language and per-category variants map back to their base spec.
+ * Matches a written key to the declaration it belongs to: per-language and per-category variants map back to their base declaration.
  *
  * @param surface the surface of the selection
  * @param key the dotted key as written
- * @returns the spec with the language and category the key names, or undefined when nothing exposes it
+ * @returns the declaration with the language and category the key names, or undefined when nothing exposes it
  */
-export function specFor(surface: KnownSettings, key: string): SpecMatch | undefined {
-    const direct = surface.specs.get(key);
-    if (direct) return { spec: direct };
+export function declarationFor(surface: KnownSettings, key: string): DeclarationMatch | undefined {
+    const direct = surface.declarations.get(key);
+    if (direct) return { declaration: direct };
     const [table, language, ...rest] = key.split('.');
     if (table === undefined || language === undefined || !LANGUAGE_GROUP_TABLES.has(table)) return undefined;
-    return groupedSpec(surface, key, table, language, rest);
+    return groupedDeclaration(surface, key, table, language, rest);
 }
 
 /**
@@ -227,10 +232,10 @@ export function settingValue(
     key: string,
     scope?: string,
 ): ResolvedSetting | undefined {
-    const match = specFor(surface, key);
+    const match = declarationFor(surface, key);
     if (!match) return undefined;
-    const { spec } = match;
-    const shipped = surface.defaults.get(spec.name);
+    const { declaration } = match;
+    const shipped = surface.defaults.get(declaration.name);
     const layers = tablesFor(policy, scope);
     const start: SettingState = {
         value: shipped?.value,
@@ -241,18 +246,18 @@ export function settingValue(
         match.language === undefined
             ? [key]
             : [
-                  spec.name,
+                  declaration.name,
                   ...(match.category === undefined
                       ? []
                       : [`naming.${match.language}.${key.slice(key.lastIndexOf('.') + 1)}`]),
                   key,
               ];
     let current = start;
-    for (const layer of layers) current = applyLayer(spec, key, current, layer, candidates);
+    for (const layer of layers) current = applyLayer(declaration, key, current, layer, candidates);
     const { value, source, reason } = current;
     return {
         key,
-        spec,
+        declaration,
         value,
         source,
         ...compact({ reason, scope }),
@@ -268,7 +273,7 @@ export function settingValue(
  * @returns the resolved settings in key order
  */
 export function listSettings(surface: KnownSettings, policy: Policy, scope?: string): ResolvedSetting[] {
-    const keys = surface.specs
+    const keys = surface.declarations
         .keys()
         .toArray()
         .toSorted((a, b) => a.localeCompare(b));

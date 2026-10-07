@@ -6,17 +6,17 @@ import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { sarifLogSchema } from '#cli/parsers/schema/sarif.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { CODEQL } from '#cli/config/checks/general/security.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { placeOf } from '#cli/checks/general/security/locations.ts';
 import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { AcceptedResult, CodeqlAnalysis, CodeqlLanguage } from '#cli/types/checks/general/security.ts';
 
-async function runCodeql(input: EngineInput, argv: string[], cwd: string): Promise<string> {
-    const result = await runEngineTool(input, [CODEQL, ...argv], { cwd });
+async function runCodeql(input: CheckInput, argv: string[], cwd: string): Promise<string> {
+    const result = await runCheckTool(input, [CODEQL, ...argv], { cwd });
     if (result.code !== 0)
         throw new Error(
             `${CODEQL} ${argv[0] ?? ''} ${argv[1] ?? ''} failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
@@ -25,7 +25,7 @@ async function runCodeql(input: EngineInput, argv: string[], cwd: string): Promi
 }
 
 async function analyzeLanguage(
-    input: EngineInput,
+    input: CheckInput,
     { language, version }: CodeqlLanguage,
     { suite, work, accepted, source }: CodeqlAnalysis,
 ): Promise<Finding[]> {
@@ -44,7 +44,7 @@ async function analyzeLanguage(
     );
     return sarifFindings(
         JSON.parse(readSource(work, `${language}.sarif`).toString('utf8')),
-        input.spec.name,
+        input.check.name,
         accepted,
         source,
     );
@@ -53,7 +53,7 @@ async function analyzeLanguage(
 /**
  * Validate a CodeQL report and apply accepted results to repository-relative source locations.
  * @param log the parsed SARIF log.
- * @param check the check name the findings carry.
+ * @param check the check ID the findings carry.
  * @param accepted the results the policy accepts.
  * @param source the copy of the repository the analysis ran in.
  * @returns the findings the policy does not accept.
@@ -99,10 +99,10 @@ export function sarifFindings(log: unknown, check: string, accepted: AcceptedRes
 
 /**
  * Runs CodeQL for every language in tools.codeql.languages and returns the results the policy does not accept.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function codeql(input: EngineInput): Promise<Finding[]> {
+export async function codeql(input: CheckInput): Promise<Finding[]> {
     const tool = input.view.options(`tools.${CODEQL}`);
     const languages = (tool['languages'] as string[] | undefined) ?? [];
     const suite = tool['suite'] as string;

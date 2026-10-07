@@ -4,12 +4,12 @@ import { extensionOf } from '#cli/platform/paths.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { MODULE_SUFFIX } from '#cli/config/checks/language/css.ts';
 import type { CssClass, Importer } from '#cli/types/parsers/css.ts';
 import { definedClasses, moduleImporters } from '#cli/parsers/css.ts';
 
-function sheetFindings(input: EngineInput, sheet: string, defined: CssClass[], importers: Importer[]): Finding[] {
+function sheetFindings(input: CheckInput, sheet: string, defined: CssClass[], importers: Importer[]): Finding[] {
     const name = posix.basename(sheet);
     if (importers.length === 0) return [];
     const known = new Set(
@@ -56,10 +56,10 @@ function sheetFindings(input: EngineInput, sheet: string, defined: CssClass[], i
 
 /**
  * The findings of every CSS module of the scope.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function moduleClasses(input: EngineInput): Finding[] {
+export function moduleClasses(input: CheckInput): Finding[] {
     const paths = input.files.filter((file) => file.kind === 'source').map((file) => file.path);
     const extensions = new Set(extensionsTagged('javascript', 'typescript'));
     const code = paths

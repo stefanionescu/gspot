@@ -5,9 +5,9 @@ import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { Option } from '@commander-js/extra-typings';
 import type { Session } from '#cli/types/planning.ts';
+import { quoteArgument } from '#cli/platform/text.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { printResult } from '#cli/terminal/messages.ts';
-import { quoteArgument } from '#cli/platform/quoting.ts';
 import { isReasoned } from '#cli/policy/schema/fields.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { isLoosening } from '#cli/policy/errors/reasons.ts';
@@ -15,11 +15,11 @@ import type { SetOptions } from '#cli/types/commands/set.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import { compact, isRecord } from '#cli/platform/objects.ts';
 import type { Program } from '#cli/types/commands/program.ts';
-import type { SettingSpec } from '#cli/types/configurations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
 import { unknownSettingDiagnostic } from '#cli/policy/errors/keys.ts';
-import { specFor, settingValue } from '#cli/policy/settings/lookup.ts';
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
+import { settingValue, declarationFor } from '#cli/policy/settings/lookup.ts';
 import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/options.ts';
 import { commitPolicy, previewPolicy, requireReason } from '#cli/commands/policy-edit.ts';
 import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/edit.ts';
@@ -51,7 +51,7 @@ function parseItem(text: string): unknown {
 
 function buildSettingError(session: Session, selection: ScopeSelection, key: string): GspotError {
     // A setting of a configuration that lives in a scope is set in that scope; say which one.
-    const holder = session.scopes.find((entry) => specFor(entry.surface, key) !== undefined);
+    const holder = session.scopes.find((entry) => declarationFor(entry.surface, key) !== undefined);
     if (holder !== undefined)
         return new GspotError('policy', [
             `A configuration has the setting \`${key}\` in ${holder.scope.path === '' ? 'the root; leave --scope out' : 'the scope `' + holder.scope.path + '`; add --scope ' + quoteArgument(holder.scope.path)}.`,
@@ -75,22 +75,22 @@ function isPathList(key: string, value: unknown): value is string[] {
 }
 
 // Structured entries keep their own reasons; primitive lists save one reason with the whole value.
-function settingReasonValue(value: unknown, spec: SettingSpec, reason: string | undefined): unknown {
+function settingReasonValue(value: unknown, declaration: SettingDeclaration, reason: string | undefined): unknown {
     if (reason === undefined) return value;
-    if (spec.type !== 'list') return { value, reason };
+    if (declaration.type !== 'list') return { value, reason };
     const entries = value as unknown[];
     if (entries.some((item) => isRecord(item)))
         return entries.map((item) => (isRecord(item) && !('reason' in item) ? { ...item, reason } : item));
-    return spec.direction === 'loosening' ? { value, reason } : value;
+    return declaration.direction === 'loosening' ? { value, reason } : value;
 }
 
-function isReasonOwed(spec: SettingSpec, options: SetOptions, value: unknown, shipped: unknown): boolean {
-    if (spec.type !== 'list') return isLoosening(spec, value, shipped);
-    if (options.remove) return spec.direction !== 'loosening' && spec.direction !== 'neutral';
+function isReasonOwed(declaration: SettingDeclaration, options: SetOptions, value: unknown, shipped: unknown): boolean {
+    if (declaration.type !== 'list') return isLoosening(declaration, value, shipped);
+    if (options.remove) return declaration.direction !== 'loosening' && declaration.direction !== 'neutral';
     // A nonempty list of explained tables already carries the reasons for its entries.
     const items = value as unknown[];
     if (items.length > 0 && items.every((item) => isRecord(item) && typeof item['reason'] === 'string')) return false;
-    return (options.replace && spec.direction === 'tightening') || isLoosening(spec, value, shipped);
+    return (options.replace && declaration.direction === 'tightening') || isLoosening(declaration, value, shipped);
 }
 
 // What set did: the new value, or the items it added to or removed from a list.
@@ -137,13 +137,13 @@ function assertReason(
     session: Session,
     selection: ScopeSelection,
     options: SetOptions,
-    spec: SettingSpec,
+    declaration: SettingDeclaration,
     value: unknown,
 ): void {
     if (!session.policyFiles.policy.require_reasons) return;
-    const shipped = selection.surface.defaults.get(spec.name)?.value;
+    const shipped = selection.surface.defaults.get(declaration.name)?.value;
     const where = `gspot set ${options.key}`;
-    if (isReasonOwed(spec, options, value, shipped) || options.reason !== undefined)
+    if (isReasonOwed(declaration, options, value, shipped) || options.reason !== undefined)
         requireReason(options.reason, where, buildReasonHint(options));
 }
 
@@ -151,23 +151,23 @@ async function changeSetting(
     session: Session,
     selection: ScopeSelection,
     options: SetOptions,
-    spec: SettingSpec,
+    declaration: SettingDeclaration,
     shown: string,
 ): Promise<CommandResult> {
     if (options.items.length === 0)
         throw new GspotError('policy', [
             `The setting ${options.key} needs a value; pass one, or --default to remove yours.`,
         ]);
-    const isList = spec.type === 'list';
+    const isList = declaration.type === 'list';
     const parsed = unwrap(
         options.items.map((item) => parseItem(item)),
         isList,
     );
     const entries = isPathList(options.key, parsed) && !options.remove ? [{ paths: parsed }] : parsed;
-    const written = settingReasonValue(entries, spec, options.reason);
+    const written = settingReasonValue(entries, declaration, options.reason);
     const change = isReasoned(written) ? written : { value: written };
     const value = change.value;
-    assertReason(session, selection, options, spec, value);
+    assertReason(session, selection, options, declaration, value);
     const mutation: Mutation = (raw) => {
         const holder = getScopeTable(raw, options.scope);
         if (options.remove && isPathList(options.key, value)) {
@@ -195,10 +195,10 @@ async function setCommand(options: SetOptions): Promise<CommandResult> {
     assertVersionPin(root);
     const session = await openSession(root);
     const selection = getSelection(session, options.scope);
-    const match = specFor(selection.surface, options.key);
+    const match = declarationFor(selection.surface, options.key);
     if (!match) throw buildSettingError(session, selection, options.key);
     const shown = options.scope === undefined ? options.key : `scope.${options.scope}.${options.key}`;
-    if (!options.toDefault) return await changeSetting(session, selection, options, match.spec, shown);
+    if (!options.toDefault) return await changeSetting(session, selection, options, match.declaration, shown);
     const mutation: Mutation = (raw) => {
         deleteKey(getScopeTable(raw, options.scope), options.key);
     };

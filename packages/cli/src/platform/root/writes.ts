@@ -1,11 +1,11 @@
-// Replacing files atomically inside one root, and the lock that keeps one lifecycle writer at a time.
+// Replacing files atomically inside one root, and the claim that keeps one lifecycle writer at a time.
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { sameEntry } from '#cli/platform/root/rules.ts';
 import type { Bounds, Staging, FileCopy } from '#cli/types/platform/root.ts';
 import { PRIVATE_FILE, OWNER_WRITE_BIT } from '#cli/config/platform/modes.ts';
 import { readEntry, preparedPath, validateRead } from '#cli/platform/root/reads.ts';
-import { LOCK_POLL_MS, LOCK_WAIT_BYTES, LOCK_INITIALIZATION_MS } from '#cli/config/platform/root.ts';
+import { CLAIM_POLL_MS, CLAIM_WAIT_BYTES, CLAIM_INITIALIZATION_MS } from '#cli/config/platform/root.ts';
 
 import {
     openSync,
@@ -78,8 +78,8 @@ function stage(staging: Staging, value: FileCopy, link: string | undefined): voi
     else writeLink(staging.temporary, link, value.mode);
 }
 
-// Creates the lock file with the token, or returns false when another holder's file is already there.
-function claimLock(target: string, token: string): boolean {
+// Creates the claim file with the token, or returns false when another holder's file is already there.
+function tryClaim(target: string, token: string): boolean {
     try {
         writeFileSync(target, token, { flag: 'wx', mode: PRIVATE_FILE });
         return true;
@@ -89,11 +89,11 @@ function claimLock(target: string, token: string): boolean {
     }
 }
 
-// The process id a lock file records, refusing a lock that records none.
-function lockHolder(current: FileCopy | undefined, path: string): number {
+// The process id a claim file records, refusing a claim that records none.
+function claimHolder(current: FileCopy | undefined, path: string): number {
     const pid = Number(current?.bytes.toString('utf8').split(':', 1)[0]);
     if (!Number.isSafeInteger(pid) || pid <= 0)
-        throw new Error(`Incomplete lifecycle lock: ${path}. Remove it after checking that no writer is running.`);
+        throw new Error(`Incomplete lifecycle claim: ${path}. Remove it after checking that no writer is running.`);
     return pid;
 }
 
@@ -111,14 +111,14 @@ function isAlive(pid: number): boolean {
 }
 
 // An empty exclusive file can be a writer between creation and its first write; wait only within its initialization budget.
-function waitForLockInitialization(path: string, deadline: number, pause: Int32Array): void {
+function pauseUntilClaimed(path: string, deadline: number, pause: Int32Array): void {
     if (Date.now() >= deadline)
-        throw new Error(`Lifecycle lock is being initialized: ${path}. Retry after the writer finishes.`);
-    Atomics.wait(pause, 0, 0, LOCK_POLL_MS);
+        throw new Error(`Lifecycle claim is being initialized: ${path}. Retry after the writer finishes.`);
+    Atomics.wait(pause, 0, 0, CLAIM_POLL_MS);
 }
 
-// A separate lease prevents concurrent reclaimers from deleting a replacement writer's lock.
-function retireStaleLock(bounds: Bounds, path: string, target: string): void {
+// A separate lease prevents concurrent reclaimers from deleting a replacement writer's claim.
+function retireStaleClaim(bounds: Bounds, path: string, target: string): void {
     const reclaim = `${target}.reclaim`;
     try {
         mkdirSync(reclaim, { mode: 0o700 });
@@ -131,7 +131,7 @@ function retireStaleLock(bounds: Bounds, path: string, target: string): void {
     }
     try {
         const stale = readEntry(bounds, path, false);
-        if (stale !== undefined && stale.bytes.length > 0 && !isAlive(lockHolder(stale, path))) unlinkSync(target);
+        if (stale !== undefined && stale.bytes.length > 0 && !isAlive(claimHolder(stale, path))) unlinkSync(target);
     } finally {
         rmdirSync(reclaim);
     }
@@ -184,28 +184,28 @@ export function replaceEntry(bounds: Bounds, path: string, value: FileCopy, expe
 }
 
 /**
- * Takes the writer lock at a path, clearing one whose holder has exited and refusing one whose holder runs.
- * @param bounds the root, which records the lock it now holds
- * @param path the root-relative path of the lock file
+ * Takes the writer claim at a path, clearing one whose holder has exited and refusing one whose holder runs.
+ * @param bounds the root, which records the claim it now holds
+ * @param path the root-relative path of the claim file
  */
-export function acquireLock(bounds: Bounds, path: string): void {
+export function claimPath(bounds: Bounds, path: string): void {
     const target = preparedPath(bounds, path);
     const token = `${String(process.pid)}:${randomUUID()}`;
-    const deadline = Date.now() + LOCK_INITIALIZATION_MS;
-    const pause = new Int32Array(new SharedArrayBuffer(LOCK_WAIT_BYTES));
-    while (!claimLock(target, token)) {
+    const deadline = Date.now() + CLAIM_INITIALIZATION_MS;
+    const pause = new Int32Array(new SharedArrayBuffer(CLAIM_WAIT_BYTES));
+    while (!tryClaim(target, token)) {
         const current = readEntry(bounds, path, false);
         if (current === undefined) continue;
         if (current.bytes.length === 0) {
-            waitForLockInitialization(path, deadline, pause);
+            pauseUntilClaimed(path, deadline, pause);
             continue;
         }
-        const pid = lockHolder(current, path);
+        const pid = claimHolder(current, path);
         if (isAlive(pid))
             throw new Error(
                 `Another lifecycle writer, process ${String(pid)}, holds ${path}. Retry after it finishes, or delete ${path} when no gspot command is running.`,
             );
-        retireStaleLock(bounds, path, target);
+        retireStaleClaim(bounds, path, target);
     }
-    bounds.locks.set(path, token);
+    bounds.claims.set(path, token);
 }

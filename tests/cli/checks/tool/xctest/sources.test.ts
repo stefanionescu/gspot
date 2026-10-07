@@ -5,7 +5,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { sleeps, disabled, recording } from '#cli/checks/tool/xctest.ts';
@@ -57,7 +57,7 @@ test.each([
         'Examples/Checks.swift': `import Testing\nfunc checks() throws {\n    ${body}\n}\n`,
     });
     const session = await openSession(sandbox.path);
-    const findings = await disabled(buildEngineInput(session, 'xctest/disabled'));
+    const findings = await disabled(buildCheckInput(session, 'xctest/disabled'));
     expect(findings.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual(
         missing ? [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }] : [],
     );
@@ -100,8 +100,8 @@ test.each([
         'Examples/Checks.swift': `import Testing\n@Test func checks() {\n    ${body}\n}\n`,
     });
     const session = await openSession(sandbox.path);
-    const engine = check === 'xctest/sleep' ? sleeps : recording;
-    const findings = await engine(buildEngineInput(session, check));
+    const builtIn = check === 'xctest/sleep' ? sleeps : recording;
+    const findings = await builtIn(buildCheckInput(session, check));
     expect(findings).toHaveLength(count);
     if (count > 0) expect(findings[0]).toMatchObject({ file: 'Examples/Checks.swift', line: 3 });
 });
@@ -179,7 +179,7 @@ test('a scoped sleep allowance excludes an unreadable file before source parsing
         'integration/Blocked.swift': 'import Testing\n@Test func checks() { sleep(1) }\n',
     });
     const session = await openSession(sandbox.path);
-    const input = buildEngineInput(session, 'xctest/sleep', { scope: 'integration' });
+    const input = buildCheckInput(session, 'xctest/sleep', { scope: 'integration' });
     expect(input.files.map(({ path }) => path)).toContain('integration/Allowed.swift');
     rmSync(join(sandbox.path, 'integration/Allowed.swift'));
     const findings = await sleeps(input);

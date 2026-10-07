@@ -26,7 +26,7 @@ test.skipIf(!isPosix)(
         });
         {
             using log = openOwnership(prepared.root);
-            const installed = await installTools(await openSession(prepared.root), log, { refreshLocks: false });
+            const installed = await installTools(await openSession(prepared.root), log, { refreshLockfiles: false });
             expect(installed.exitCode, installed.note).toBe(0);
         }
         // Public apply already generated the Ruff configuration before tool installation.

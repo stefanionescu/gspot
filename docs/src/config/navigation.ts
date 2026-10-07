@@ -35,7 +35,7 @@ export const SIDEBAR: Sidebar = [
             { label: 'Monorepos', slug: 'guides/monorepos' },
             { label: 'Runners', slug: 'guides/runners' },
             { label: 'Generated files', slug: 'guides/generated-files' },
-            { label: 'Repository checks', slug: 'guides/repository-checks' },
+            { label: 'Command checks', slug: 'guides/command-checks' },
             { label: 'Reuse templates', slug: 'guides/templates' },
             { label: 'Upgrade gspot', slug: 'guides/upgrade' },
             { label: 'Remove gspot', slug: 'guides/remove' },

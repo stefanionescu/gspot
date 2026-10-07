@@ -3,12 +3,12 @@ import { isDeepStrictEqual } from 'node:util';
 import { pathKey } from '#cli/platform/paths.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
-import { quoteArgument } from '#cli/platform/quoting.ts';
+import { quoteArgument } from '#cli/platform/text.ts';
 import { everyTable } from '#cli/policy/settings/lookup.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
-import type { SettingSpec } from '#cli/types/configurations.ts';
 import { allChecks } from '#cli/configurations/declarations.ts';
 import { REASON_WORDS_MIN } from '#cli/config/policy/settings.ts';
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Policy, ToolTable, PolicyProblem } from '#cli/types/policy/settings.ts';
 
@@ -63,7 +63,7 @@ function disabledRuleProblems(tool: string, table: ToolTable, path: KeyPath): Po
     const manifests = configurationManifests();
     const disabledOptions = [...manifests.values()]
         .flatMap((manifest) => manifest.settings)
-        .find((spec) => spec.name === `tools.${tool}.rules`)?.off_values;
+        .find((declaration) => declaration.name === `tools.${tool}.rules`)?.off_values;
     if (disabledOptions === undefined) return [];
     const disabled = Object.entries(rules).filter(([, option]) => {
         const severity: unknown = Array.isArray(option) ? option[0] : option;
@@ -73,7 +73,7 @@ function disabledRuleProblems(tool: string, table: ToolTable, path: KeyPath): Po
         );
     });
     if (disabled.length === 0) return [];
-    // Tool settings use the public check name, which can differ from its executable.
+    // Tool settings use the check ID, which can differ from its executable.
     const check = [...allChecks(manifests.values()).values()].find(({ check }) =>
         check.name.endsWith(`/${tool}`),
     )?.check;
@@ -200,18 +200,18 @@ export function isReasonAccepted(reason: string | undefined): boolean {
 }
 
 /**
- * True when setting `value` for `spec` is a loosening against `shipped` and so carries a reason.
- * @param spec the setting
+ * True when setting `value` for `declaration` is a loosening against `shipped` and so carries a reason.
+ * @param declaration the setting
  * @param value the value written
  * @param shipped the shipped default
  * @returns whether a reason is needed
  */
-export function isLoosening(spec: SettingSpec, value: unknown, shipped: unknown): boolean {
-    if (spec.direction === 'loosening')
+export function isLoosening(declaration: SettingDeclaration, value: unknown, shipped: unknown): boolean {
+    if (declaration.direction === 'loosening')
         return Array.isArray(value)
             ? value.some((item) => !Array.isArray(shipped) || !shipped.some((entry) => isDeepStrictEqual(item, entry)))
             : true;
-    if (spec.direction === 'ceiling' || spec.direction === 'floor')
-        return isThresholdLoosening(spec.direction, value, shipped);
+    if (declaration.direction === 'ceiling' || declaration.direction === 'floor')
+        return isThresholdLoosening(declaration.direction, value, shipped);
     return false;
 }

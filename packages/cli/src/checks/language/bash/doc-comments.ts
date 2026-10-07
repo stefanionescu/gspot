@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { WORD, VAGUE_WORDS, BASH_DOC_SECTIONS, SHELLCHECK_DIRECTIVE } from '#cli/config/checks/language/bash.ts';
 
@@ -60,7 +60,7 @@ function docProblem(
  * @param input the check context
  * @returns the findings
  */
-export const docComments: Engine = async (input) => {
+export const docComments: BuiltInCheck = async (input) => {
     const style = input.view.settings['bash.doc_style'];
     const separator = style === 'dash' ? ' - ' : ': ';
     const entries = entryFunctions(input);

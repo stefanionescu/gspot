@@ -1,12 +1,12 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 /**
  * One finding per function that is called with more arguments than the positions it reads.
  * @param input the check context
  * @returns the findings
  */
-export const unreadArguments: Engine = async (input) => {
+export const unreadArguments: BuiltInCheck = async (input) => {
     const index = await getScriptIndex(input);
     const names = new Set(index.files.flatMap((file) => file.functions.map((entry) => entry.name)));
     const widest = new Map<string, number>();

@@ -1,16 +1,16 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import { getTsconfig } from '#cli/parsers/tsconfig.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { requiredTsconfigOptions } from '#cli/policy/settings/typescript.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
+import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 
 /**
  * One finding per required option a scope's tsconfig leaves off.
- * @param input the engine input for the scope
+ * @param input the check input for the scope
  * @returns the findings
  */
-export function tsconfig(input: EngineInput): Finding[] {
+export function tsconfig(input: CheckInput): Finding[] {
     const scopeTsconfig = input.scope === '' ? 'tsconfig.json' : `${input.scope}/tsconfig.json`;
     const candidates = new Set([
         scopeTsconfig,

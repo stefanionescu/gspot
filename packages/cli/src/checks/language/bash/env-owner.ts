@@ -2,7 +2,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { withoutDeclaration } from '#cli/parsers/bash.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { rolePaths } from '#cli/policy/settings/lookup.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { TOP_LEVEL_ASSIGNMENT } from '#cli/config/checks/language/bash.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
@@ -11,7 +11,7 @@ import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts
  * @param input the check context
  * @returns the findings
  */
-export const envOwner: Engine = async (input) => {
+export const envOwner: BuiltInCheck = async (input) => {
     const isOwner = pathMatcher(rolePaths(input.policyFiles.policy.architecture.roles, 'env'));
     const index = await getScriptIndex(input);
     const owned = new Set(

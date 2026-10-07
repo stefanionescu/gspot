@@ -12,13 +12,13 @@ import { DRIFT_HELP, DRIFT_MESSAGES } from '#cli/config/checks/general/gspot.ts'
  * @returns the check result with its generated-file findings
  */
 export function gspotDrift(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    if (planned.spec.runs !== 'once')
+    if (planned.check.runs !== 'once')
         throw new Error(
             'The gspot/drift check needs generated file comparisons, so its manifest must say runs = "once".',
         );
     const started = performance.now();
     const findings = computeDrift(session.root, session.policyFiles.policy, emitAll(session)).map((entry) => ({
-        check: planned.spec.name,
+        check: planned.check.name,
         file: entry.path,
         rule: entry.kind,
         message: DRIFT_MESSAGES[entry.kind],

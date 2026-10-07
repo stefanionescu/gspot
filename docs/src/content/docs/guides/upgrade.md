@@ -3,7 +3,7 @@ title: Upgrade gspot
 description: Install a new CLI version and regenerate the repository pin and configuration.
 ---
 
-Start with a clean working tree and read the release notes. Keep the previous commit so you can restore its policy and locks if verification fails.
+Start with a clean working tree and read the release notes. Keep the previous commit so you can restore its policy and lockfiles if verification fails.
 
 ## Install the new version
 
@@ -36,6 +36,6 @@ gspot doctor
 gspot check
 ```
 
-Review the policy, generated config files, tool requirements, and lock changes. An edited managed output is reported instead of overwritten. Move its desired settings into `gspot.toml` and move the edited output aside before regenerating it.
+Review the policy, generated config files, tool requirements, and lockfile changes. An edited managed output is reported instead of overwritten. Move its desired settings into `gspot.toml` and move the edited output aside before regenerating it.
 
-Commit the updated CLI dependency, policy, generated files, and locks together. Teammates then follow [Join a repository](/guides/join/).
+Commit the updated CLI dependency, policy, generated files, and lockfiles together. Teammates then follow [Join a repository](/guides/join/).

@@ -1,9 +1,14 @@
 import type { Identifier } from '#cli/types/parsers/naming.ts';
-import { NUMBER_PART, NUMERIC_WORDS } from '#cli/config/parsers/naming.ts';
 import { rulesFor, ruleLimits } from '#cli/checks/general/naming/policy.ts';
-import { hasCase, splitParts, repeatedPart } from '#cli/parsers/naming/names.ts';
-import { DIGIT, CALLBACK_VERB, VERB_CATEGORIES } from '#cli/config/checks/general/naming.ts';
+import { hasCase, splitParts, repeatedPart } from '#cli/checks/general/naming/words.ts';
 
+import {
+    DIGIT,
+    NUMBER_PART,
+    CALLBACK_VERB,
+    NUMERIC_WORDS,
+    VERB_CATEGORIES,
+} from '#cli/config/checks/general/naming.ts';
 import type {
     Term,
     PathRule,

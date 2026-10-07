@@ -1,5 +1,5 @@
 import { extensionsTagged } from '#cli/repository/tags.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { isToolProjectPath } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
@@ -9,7 +9,7 @@ import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
  * @param input the check's scope-owned inventory
  * @returns authored code files
  */
-export function structureSources(input: EngineInput): TrackedFile[] {
+export function structureSources(input: CheckInput): TrackedFile[] {
     const documents = extensionsTagged('markdown');
     return input.files.filter(
         (file) =>

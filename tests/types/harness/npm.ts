@@ -1,5 +1,5 @@
 import type { ToolPin } from '#cli/types/configurations.ts';
-import type { LockName } from '#cli/types/parsers/lockfiles.ts';
+import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import type { PackageRegistry } from '#tests/types/harness/registry.ts';
 
 /** A package project in a sandbox: the project, its local registry, and the files the install reads. */
@@ -19,7 +19,7 @@ export type PackageProjectOptions = {
     root: string;
     artifacts: string;
     registry: PackageRegistry;
-    installer: LockName;
+    installer: PackageInstaller['name'];
     projectPath: string;
     runner: 'mise' | 'none';
 };
@@ -27,8 +27,8 @@ export type PackageProjectOptions = {
 /** Managed bytes and file mode captured before package installation. */
 export type PackageInputs = {
     manifest: NonSharedBuffer;
-    lockPath: string;
-    lock: NonSharedBuffer;
+    lockfilePath: string;
+    lockfile: NonSharedBuffer;
     mode: number;
     ownershipPath: string;
     ownership: NonSharedBuffer;

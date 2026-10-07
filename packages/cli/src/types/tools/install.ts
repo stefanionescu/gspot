@@ -43,10 +43,10 @@ export type AvailableToolInspection = ToolInspection & { path: string };
 /** A usable executable or the diagnostic that prevents it from running. */
 export type ToolAvailability = { path: string } | ExecutionFailure;
 
-/** A generated tool project whose recorded lock is absent or stale. */
-export type LockDrift = { path: string; kind?: 'missing' | 'changed' };
-/** Whether the caller requests resolution from declared pins instead of reusing a matching lock. */
-export type LockPreparation = { refreshLocks: boolean };
+/** A generated tool project whose recorded lockfile is absent or stale. */
+export type LockfileDrift = { path: string; kind?: 'missing' | 'changed' };
+/** Whether the caller requests resolution from declared pins instead of reusing a matching lockfile. */
+export type LockfilePreparation = { refreshLockfiles: boolean };
 /** A tool version also declared in repository-owned setup. */
 export type DuplicateMisePin = { tool: string; version: string; gspotFile: string };
 /** Folders and tool-project ownership restricting executable discovery. */

@@ -12,7 +12,7 @@ import { readTree } from '#tests/harness/preservation.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
-import type { NpmLock } from '#tests/types/cli/commands/mobile-reconciliation.ts';
+import type { NpmLockfile } from '#tests/types/cli/commands/mobile-reconciliation.ts';
 import { EXPO_DEPENDENCIES, NATIVE_DEPENDENCIES } from '#tests/config/samples/react.ts';
 
 import {
@@ -22,7 +22,7 @@ import {
 } from '#tests/config/cli/commands/mobile-reconciliation.ts';
 
 test('Expo appears and disappears with its dependency while native tool options survive and previews match writes', async () => {
-    using registry = mockNpmLock();
+    using registry = mockNpmLockfile();
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'package.json');
     await createFileTree(sandbox.path, {
@@ -58,7 +58,7 @@ test('Expo appears and disappears with its dependency while native tool options 
 });
 
 test('React DOM tools follow the web dependency and leave React available after its removal', async () => {
-    using registry = mockNpmLock();
+    using registry = mockNpmLockfile();
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': 'configurations = ["react"]\n[agent_rules]\nenabled = false\n',
@@ -81,11 +81,11 @@ test('React DOM tools follow the web dependency and leave React available after 
 });
 
 /**
- * Supply npm version and lock-resolution responses at the subprocess boundary.
+ * Supply npm version and lockfile creation responses at the subprocess boundary.
  * Git reads remain real; unexpected external commands fail the test.
  * @returns a disposer that restores both subprocess boundaries
  */
-function mockNpmLock(): NpmLock {
+function mockNpmLockfile(): NpmLockfile {
     const directories: string[] = [];
     const blocking = processes.runBlocking;
     const version = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
@@ -94,7 +94,7 @@ function mockNpmLock(): NpmLock {
             throw new Error(`Unexpected command: ${command.join(' ')}`);
         return { ...NPM_SUCCESS, stdout: NPM_VERSION };
     });
-    const lock = spyOn(processes, 'run').mockImplementation((command, options) => {
+    const lockfile = spyOn(processes, 'run').mockImplementation((command, options) => {
         if (command[0] !== 'npm') throw new Error(`Unexpected command: ${command.join(' ')}`);
         if (command[1] === '--version') return Promise.resolve({ ...NPM_SUCCESS, stdout: NPM_VERSION });
         if (command[1] !== 'install' || !command.includes('--package-lock-only'))
@@ -113,7 +113,7 @@ function mockNpmLock(): NpmLock {
     return {
         directories,
         [Symbol.dispose]() {
-            lock.mockRestore();
+            lockfile.mockRestore();
             version.mockRestore();
         },
     };

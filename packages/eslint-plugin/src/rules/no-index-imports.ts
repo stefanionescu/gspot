@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
-import { createRule } from '#plugin/definition.ts';
 import { ASTUtils } from '@typescript-eslint/utils';
+import { createRule } from '#plugin/create-rule.ts';
 import type { ImportSource } from '#plugin/types/imports.ts';
 import { MODULE_MOCK_METHODS } from '#plugin/config/index-imports.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';

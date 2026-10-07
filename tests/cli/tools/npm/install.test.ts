@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { npmProject } from '#cli/generation/npm.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
-import { lockArgv, installArgv, githubRefusalNote } from '#cli/tools/npm/install.ts';
+import { installArgv, lockfileArgv, githubRefusalNote } from '#cli/tools/npm/install.ts';
 import { YARN_MANAGERS, OTHER_DOWNLOAD_OUTPUT, GITHUB_DOWNLOAD_FAILURES } from '#tests/config/cli/tools/npm/install.ts';
 
 test.each(GITHUB_DOWNLOAD_FAILURES)('a refused GitHub download names the token to set: %s', (line) => {
@@ -13,9 +13,9 @@ test.each(OTHER_DOWNLOAD_OUTPUT)('output without a refused GitHub download adds 
 });
 
 test.each(YARN_MANAGERS)(
-    'Yarn $installer.version selects compatible generated settings and native lock operations',
-    ({ installer, lock, install, settings }) => {
-        expect(lockArgv(installer)).toStrictEqual(lock);
+    'Yarn $installer.version selects compatible generated settings and native lockfile creation',
+    ({ installer, lockfile, install, settings }) => {
+        expect(lockfileArgv(installer)).toStrictEqual(lockfile);
         expect(installArgv(installer)).toStrictEqual(install);
         const files = npmProject([], installer, 'mise');
         expect(files.map((file) => file.path)).toStrictEqual(

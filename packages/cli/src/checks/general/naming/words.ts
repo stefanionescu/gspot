@@ -9,7 +9,7 @@ import {
     PASCAL_WORD,
     NUMERIC_WORDS,
     MIGRATION_DIGITS,
-} from '#cli/config/parsers/naming.ts';
+} from '#cli/config/checks/general/naming.ts';
 
 function isSnakeMigration(name: string): boolean {
     const stamp = name.slice(0, MIGRATION_DIGITS);

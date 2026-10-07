@@ -1,5 +1,5 @@
 import { isImportLike } from '#plugin/imports.ts';
-import { createRule } from '#plugin/definition.ts';
+import { createRule } from '#plugin/create-rule.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { LayoutMessages } from '#plugin/types/layout.ts';
 import { runsOf, reportRun, reportNames } from '#plugin/layout.ts';

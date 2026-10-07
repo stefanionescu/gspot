@@ -45,7 +45,7 @@ From a clean working tree, initialize and choose mise as the runner:
 mise exec npm:@gspothq/cli@0.1.0 -- gspot init --configurations swift
 ```
 
-Read the plan and accept it. Initialization prepares locks and installs applicable tools. Trust the generated mise file, then prepare and diagnose the setup:
+Read the plan and accept it. Initialization prepares lockfiles and installs applicable tools. Trust the generated mise file, then prepare and diagnose the setup:
 
 ```shell
 mise trust .mise/conf.d/gspot-tools.toml

@@ -1,6 +1,6 @@
-import type { SettingSpec } from '#cli/types/configurations.ts';
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
 
-export const DIRECTION_TEXTS: Record<SettingSpec['direction'], string> = {
+export const DIRECTION_TEXTS: Record<SettingDeclaration['direction'], string> = {
     ceiling: 'a ceiling: raising it needs a reason',
     floor: 'a floor: lowering it needs a reason',
     loosening: 'a loosening: setting it needs a reason',

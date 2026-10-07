@@ -109,10 +109,10 @@ beforeAll(async () => {
             files,
             log.files,
             {
-                refreshLocks: false,
+                refreshLockfiles: false,
             },
         );
-        await preparePackageProject(sandbox.path, files, log.files, { refreshLocks: false });
+        await preparePackageProject(sandbox.path, files, log.files, { refreshLockfiles: false });
     }
     for (const file of files) await Bun.write(join(sandbox.path, file.path), file.content);
     {

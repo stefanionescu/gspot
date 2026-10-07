@@ -6,7 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { stalePaths } from '#cli/checks/general/docs.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { DOC_TASK_FILES, DOC_TASK_SCOPES, DOC_TASK_FINDINGS } from '#tests/config/cli/checks/general/docs.ts';
 
@@ -18,9 +18,7 @@ test('wildcard examples stay intact while emphasized literal paths remain checke
         'reports/README.md': '',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = stalePaths(
-        buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
-    );
+    const found = stalePaths(buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }));
     expect(found.map(({ line, message: description }) => [line, description])).toStrictEqual([
         [2, 'src/missing.ts names no tracked file or folder.'],
         [2, 'src/absent.ts names no tracked file or folder.'],
@@ -36,16 +34,14 @@ test('literal gitignore paths resolve while missing paths remain findings', asyn
         'app/.gitignore': 'cache/\n*.ts\n!private.ts\n',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = stalePaths(
-        buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
-    );
+    const found = stalePaths(buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }));
     expect(found.map(({ line, message: description }) => [line, description])).toStrictEqual([
         [2, 'app/absent.ts names no tracked file or folder.'],
         [2, 'app/private.ts names no tracked file or folder.'],
     ]);
 });
 
-test('custom check identifiers resolve while undefined checks remain findings', async () => {
+test('command check IDs resolve while undefined checks remain findings', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'a.md': 'Run `tests/coverage` and `tests/missing`.\n',
@@ -59,7 +55,7 @@ test('custom check identifiers resolve while undefined checks remain findings', 
             check: [{ name: 'tests/coverage', command: ['true'], paths: ['tests/**'], stage: 'manual' }],
         }),
     );
-    const input = buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] });
+    const input = buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] });
     expect(stalePaths(input).map(({ message: description }) => description)).toStrictEqual([
         'tests/missing names no tracked file or folder.',
     ]);
@@ -73,9 +69,7 @@ test('mise task aliases resolve while undefined aliases remain findings', async 
             '[tasks.build]\nalias = "compile"\nrun = "true"\n[tasks.test]\nalias = ["verify", "validate"]\nrun = "true"\n',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = stalePaths(
-        buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
-    );
+    const found = stalePaths(buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }));
     expect(found.map(({ message: description }) => description)).toStrictEqual([
         'mise run absent names no task or script.',
     ]);
@@ -91,9 +85,7 @@ test('tasks in shared mise configuration paths resolve without reading legacy to
         '.tool-versions': 'node 22\n',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = stalePaths(
-        buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
-    );
+    const found = stalePaths(buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }));
     expect(found.map(({ message: description }) => description)).toStrictEqual([
         'mise run absent names no task or script.',
     ]);
@@ -109,7 +101,7 @@ test('document-relative references resolve without accepting nearby missing path
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
     const found = stalePaths(
-        buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['docs/guide.md'] }),
+        buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['docs/guide.md'] }),
     );
     expect(found.map(({ line, message: description }) => [line, description])).toStrictEqual([
         [2, './examples/gone.ts names no tracked file or folder.'],
@@ -125,9 +117,7 @@ test('nested tilde text is excluded while shell paths remain checked', async () 
         'a.md': '> ~~~text\n> src/example.ts\n> ~~~~\n\n~~~sh\ncat src/missing.ts\n~~~\n',
     });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
-    const found = stalePaths(
-        buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
-    );
+    const found = stalePaths(buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }));
     expect(found.map((finding) => [finding.line, finding.message])).toStrictEqual([
         [6, 'src/missing.ts names no tracked file or folder.'],
     ]);
@@ -145,7 +135,7 @@ test.each([
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
     const session = await openSession(sandbox.path);
     await Bun.write(join(sandbox.path, path), text);
-    const selected = buildEngineInput(session, 'docs/stale-paths', { paths: ['a.md'] });
+    const selected = buildCheckInput(session, 'docs/stale-paths', { paths: ['a.md'] });
     expect(() => stalePaths(selected)).toThrow(`Cannot read task definitions from ${path}.`);
 });
 
@@ -156,7 +146,7 @@ test('a directory at a task configuration path is an error, not absent configura
     const session = await openSession(sandbox.path);
     rmSync(join(sandbox.path, 'package.json'));
     mkdirSync(join(sandbox.path, 'package.json'));
-    const selected = buildEngineInput(session, 'docs/stale-paths', { paths: ['a.md'] });
+    const selected = buildCheckInput(session, 'docs/stale-paths', { paths: ['a.md'] });
     expect(() => stalePaths(selected)).toThrow('Cannot read task definitions from package.json.');
 });
 
@@ -168,7 +158,7 @@ test.each(['recommended', 'all'] as const)(
             'gspot.toml': buildPolicy([], { level, tables: DOC_TASK_SCOPES }),
             ...DOC_TASK_FILES,
         });
-        const found = stalePaths(buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths'));
+        const found = stalePaths(buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths'));
         expect(found).toHaveLength(DOC_TASK_FINDINGS.length);
         for (const { command, ...place } of DOC_TASK_FINDINGS)
             expect(found).toContainEqual(
@@ -185,7 +175,7 @@ test('a selected child document does not read unrelated or shadowed package scri
     });
     const session = await openSession(sandbox.path);
     await createFileTree(sandbox.path, { 'package.json': '{broken', 'sibling/package.json': '{broken' });
-    const input = buildEngineInput(session, 'docs/stale-paths', { paths: ['app/nested/guide.md'] });
+    const input = buildCheckInput(session, 'docs/stale-paths', { paths: ['app/nested/guide.md'] });
     expect(stalePaths(input)).toStrictEqual([]);
 });
 
@@ -200,6 +190,6 @@ test.each([
     });
     const session = await openSession(sandbox.path);
     await Bun.write(join(sandbox.path, path), text);
-    const input = buildEngineInput(session, 'docs/stale-paths', { paths: ['app/nested/guide.md'] });
+    const input = buildCheckInput(session, 'docs/stale-paths', { paths: ['app/nested/guide.md'] });
     expect(() => stalePaths(input)).toThrow(`Cannot read task definitions from ${path}.`);
 });

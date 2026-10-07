@@ -5,7 +5,7 @@ import { readSource } from '#cli/platform/source.ts';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import { extensionsTagged } from '#cli/repository/tags.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { modulePath, getCompilerOptions } from '#cli/repository/modules.ts';
 import type { Edge, Importer, ImportIndex } from '#cli/types/checks/language/javascript.ts';
 
@@ -79,7 +79,7 @@ function getNodeEdges(importer: Importer, node: Node): Edge[] {
     ];
 }
 
-async function readImportEdges(input: EngineInput, path: string, owned: Set<string>): Promise<Edge[]> {
+async function readImportEdges(input: CheckInput, path: string, owned: Set<string>): Promise<Edge[]> {
     const text = readSource(input.root, path, input.reads).toString('utf8');
     const tree = await parseSource(path.endsWith('x') ? 'tsx' : 'typescript', text, input);
     try {
@@ -93,7 +93,7 @@ async function readImportEdges(input: EngineInput, path: string, owned: Set<stri
     }
 }
 
-async function readImports(input: EngineInput, paths: string[]): Promise<ImportIndex> {
+async function readImports(input: CheckInput, paths: string[]): Promise<ImportIndex> {
     const importers = new Map<string, Set<string>>();
     const owned = new Set(paths);
     const edges: ImportIndex['edges'] = [];
@@ -114,7 +114,7 @@ async function readImports(input: EngineInput, paths: string[]): Promise<ImportI
  * @param input the check and its repository session
  * @returns source paths, their importing files, and each resolved value-import edge with its source location
  */
-export async function getScopeImports(input: EngineInput): Promise<ImportIndex> {
+export async function getScopeImports(input: CheckInput): Promise<ImportIndex> {
     const scopes = memo(input.reads, IMPORT_MEMO);
     const children = input.scopeEntries
         .map((entry) => entry.path)

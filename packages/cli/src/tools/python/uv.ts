@@ -7,7 +7,7 @@ import { installationDiagnostics } from '#cli/tools/credentials.ts';
  * Resolve uv through the selected runner before a temporary project uses it.
  * @param root the repository root for runner configuration
  * @param runner the explicitly selected task runner, if any
- * @returns the uv executable used for both lock resolution and installation
+ * @returns the uv executable used for both lockfile creation and installation
  */
 export async function acquirePythonInstaller(root: string, runner: string | undefined): Promise<string> {
     if (runner !== 'mise') return 'uv';

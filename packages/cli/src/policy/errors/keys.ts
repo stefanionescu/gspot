@@ -1,20 +1,19 @@
 import { isRecord } from '#cli/platform/objects.ts';
-import { quoteArgument } from '#cli/platform/quoting.ts';
-import { similar, codeList } from '#cli/platform/text.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import { TOOL_KEY_DEPTH } from '#cli/config/policy/settings.ts';
 import { namingCategorySchema } from '#cli/policy/schema/fields.ts';
 import { settingValueSchema } from '#cli/parsers/schema/settings.ts';
-import { specFor, tablesFor, everyTable, policyValue } from '#cli/policy/settings/lookup.ts';
+import { similar, codeList, quoteArgument } from '#cli/platform/text.ts';
 import { isLoosening, isReasonAccepted, reasonDiagnostic } from '#cli/policy/errors/reasons.ts';
+import { tablesFor, everyTable, policyValue, declarationFor } from '#cli/policy/settings/lookup.ts';
 
 import type {
     Policy,
     Reasoned,
-    SpecMatch,
     NamingTable,
     KnownSettings,
     PolicyProblem,
+    DeclarationMatch,
 } from '#cli/types/policy/settings.ts';
 
 // A table typed inside quotes is one string to TOML, and nothing reads a string where a table belongs.
@@ -42,7 +41,7 @@ function looseningDiagnostic(
 function listProblems(
     key: string,
     written: Reasoned<unknown>,
-    match: SpecMatch,
+    match: DeclarationMatch,
     requireReasons: boolean,
     shipped: unknown,
 ): PolicyProblem[] {
@@ -55,12 +54,12 @@ function listProblems(
     if (!requireReasons) return quoted;
     const reasons = items
         .flatMap((item, index) => (isRecord(item) ? [{ item, index }] : []))
-        .filter(({ item }) => item['reason'] !== undefined || match.spec.direction === 'loosening')
+        .filter(({ item }) => item['reason'] !== undefined || match.declaration.direction === 'loosening')
         .filter(
             ({ item }) =>
-                match.spec.reason_identity === undefined ||
+                match.declaration.reason_identity === undefined ||
                 item['reason'] === undefined ||
-                item['reason'] !== item[match.spec.reason_identity],
+                item['reason'] !== item[match.declaration.reason_identity],
         )
         .flatMap(({ item, index }): PolicyProblem[] => {
             const path = [...key.split('.'), index, 'reason'];
@@ -74,7 +73,9 @@ function listProblems(
         });
     const primitive = items.some((item) => !isRecord(item));
     const needsReason =
-        primitive && match.spec.reason_identity === undefined && isLoosening(match.spec, written.value, shipped);
+        primitive &&
+        match.declaration.reason_identity === undefined &&
+        isLoosening(match.declaration, written.value, shipped);
     const diagnostic = written.reason !== undefined || needsReason ? reasonDiagnostic(key, written.reason) : undefined;
     const listReason = diagnostic === undefined ? [] : [{ path: [...key.split('.'), 'reason'], message: diagnostic }];
     return [...quoted, ...reasons, ...listReason];
@@ -85,15 +86,15 @@ function scalarProblems(
     surface: KnownSettings,
     key: string,
     written: Reasoned<unknown>,
-    match: SpecMatch,
+    match: DeclarationMatch,
     scope: string | undefined,
 ): PolicyProblem[] {
     if (written.reason !== undefined) {
         const diagnostic = reasonDiagnostic(key, written.reason);
         if (diagnostic !== undefined) return [{ path: [...key.split('.'), 'reason'], message: diagnostic }];
     }
-    const shipped = surface.defaults.get(match.spec.name)?.value;
-    if (!isLoosening(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
+    const shipped = surface.defaults.get(match.declaration.name)?.value;
+    if (!isLoosening(match.declaration, written.value, shipped) || isReasonAccepted(written.reason)) return [];
     const problem = looseningDiagnostic(key, written, shipped, scope);
     return [{ path: key.split('.'), message: problem }];
 }
@@ -105,11 +106,11 @@ function keyProblems(
     key: string,
     requireReasons: boolean,
 ): PolicyProblem[] {
-    const match = specFor(surface, key);
+    const match = declarationFor(surface, key);
     if (!match) return [{ path: key.split('.'), message: unknownSettingDiagnostic(surface, key) }];
     const written = policyValue(table, key);
     if (!written) return [];
-    const validated = settingValueSchema(match.spec).safeParse(written.value);
+    const validated = settingValueSchema(match.declaration).safeParse(written.value);
     if (!validated.success)
         return [
             {
@@ -117,8 +118,8 @@ function keyProblems(
                 message: `The setting ${key}: ${validated.error.issues.map((issue) => issue.message).join('; ')}`,
             },
         ];
-    if (match.spec.type === 'list')
-        return listProblems(key, written, match, requireReasons, surface.defaults.get(match.spec.name)?.value);
+    if (match.declaration.type === 'list')
+        return listProblems(key, written, match, requireReasons, surface.defaults.get(match.declaration.name)?.value);
     return requireReasons ? scalarProblems(surface, key, written, match, scope) : [];
 }
 
@@ -128,7 +129,7 @@ function extraDuplicateProblems(surface: KnownSettings, table: Partial<Policy>):
     for (const [tool, toolTable] of Object.entries(tools)) {
         const { verbatim = {} } = toolTable;
         for (const key of Object.keys(verbatim)) {
-            if (key !== 'reason' && surface.specs.has(`tools.${tool}.${key}`))
+            if (key !== 'reason' && surface.declarations.has(`tools.${tool}.${key}`))
                 problems.push({
                     path: ['tools', tool, 'verbatim', key],
                     message: `\`${key}\` under [tools.${tool}.verbatim] already has a declared setting. Move it up to \`tools.${tool}.${key}\` and remove it from verbatim.`,
@@ -189,8 +190,8 @@ function namingKeys(policy: Partial<Policy>): string[] {
 
 // Whether a written tool table is a group of exposed keys rather than one exposed key.
 function isKeyGroup(surface: KnownSettings, key: string, value: unknown): value is Record<string, unknown> {
-    if (surface.specs.has(key) || !isRecord(value)) return false;
-    return [...surface.specs.keys()].some((name) => name.startsWith(`${key}.`));
+    if (surface.declarations.has(key) || !isRecord(value)) return false;
+    return [...surface.declarations.keys()].some((name) => name.startsWith(`${key}.`));
 }
 
 /**
@@ -217,7 +218,7 @@ function writtenKeys(policy: Partial<Policy>, surface: KnownSettings): string[] 
         else keys.push(key);
     }
     const format = (policy.format === undefined ? [] : Object.keys(policy.format)).map((key) => `format.${key}`);
-    const known = [...surface.specs.keys()].filter((key) => policyValue(policy, key) !== undefined);
+    const known = [...surface.declarations.keys()].filter((key) => policyValue(policy, key) !== undefined);
     return [...new Set([...known, ...limitKeys(policy), ...namingKeys(policy), ...keys, ...format])];
 }
 
@@ -228,7 +229,7 @@ function writtenKeys(policy: Partial<Policy>, surface: KnownSettings): string[] 
  * @returns the problem and a command for discovering settings.
  */
 export function unknownSettingDiagnostic(surface: KnownSettings, key: string): string {
-    const all = surface.specs.keys().toArray();
+    const all = surface.declarations.keys().toArray();
     if (key.startsWith('limits.')) {
         const limits = all.filter((candidate) => candidate.startsWith('limits.'));
         return `\`${key}\` is not a limit any check reads. The limits that exist are ${codeList(limits.map((candidate) => candidate.slice('limits.'.length)))}.`;
@@ -266,14 +267,14 @@ export function validateAgainstSurface(
     // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
     const later = [surface, ...scopeSurfaces.values(), ...(retained === undefined ? [] : [retained])].toReversed();
     const everywhere: KnownSettings = {
-        specs: new Map(later.flatMap((entry) => entry.specs.entries().toArray())),
+        declarations: new Map(later.flatMap((entry) => entry.declarations.entries().toArray())),
         defaults: new Map(later.flatMap((entry) => entry.defaults.entries().toArray())),
         problems: surface.problems,
     };
     for (const { table, scope, path } of everyTable(policy)) {
         const active = scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface);
         const settings: KnownSettings = {
-            specs: new Map([...everywhere.specs, ...active.specs]),
+            declarations: new Map([...everywhere.declarations, ...active.declarations]),
             defaults: new Map([...everywhere.defaults, ...active.defaults]),
             problems: active.problems,
         };

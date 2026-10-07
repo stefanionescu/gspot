@@ -11,6 +11,9 @@ export const MAX_EXIT_CODE = 255;
 /** Milliseconds in a second, for durations shown in seconds. */
 export const MS_PER_SECOND = 1000;
 
+/** The seconds in one day, for the age Bun reads. */
+export const SECONDS_PER_DAY = 86_400;
+
 /** Bytes in a kilobyte, for sizes shown in kilobytes. */
 export const BYTES_PER_KB = 1024;
 

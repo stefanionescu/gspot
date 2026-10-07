@@ -4,7 +4,7 @@ title: Python Packaging
 
 # Python Packaging
 
-Deployment installs, lock files, and hash checking.
+Deployment installs, lockfiles, and hash checking.
 
 ## Package installation security
 
@@ -14,7 +14,7 @@ Install from the uv lockfile:
 uv sync --frozen
 ```
 
-At level `all`, use pip only in paths listed in `tools.pip.installs_allowed`. Update locks only
+At level `all`, use pip only in paths listed in `tools.pip.installs_allowed`. Update lockfiles only
 when the task includes dependency maintenance.
 
 ## Import correctness

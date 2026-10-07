@@ -4,14 +4,14 @@ import { assertNoProblems } from '#cli/policy/read.ts';
 import { removeValePackages } from '#cli/tools/vale.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
-import { packageLockDrift } from '#cli/tools/npm/project.ts';
 import { CONFLICT_MARKERS } from '#cli/config/parsers/git.ts';
 import { preserveMode } from '#cli/lifecycle/ownership/log.ts';
-import { pythonLockDrift } from '#cli/tools/python/project.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { writeVersionPin } from '#cli/lifecycle/version-pin.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
+import { packageLockfileDrift } from '#cli/tools/npm/project.ts';
 import { emitAll, outputPaths } from '#cli/generation/outputs.ts';
+import { pythonLockfileDrift } from '#cli/tools/python/project.ts';
 import { proposeClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
@@ -122,7 +122,7 @@ function conflictedOutputs(log: Log, generated: Generated): Map<string, FileCopy
  * @param session the configuration and repository reads.
  * @param log the command's locked ownership context.
  * @param reviewedOriginals reviewed originals authorized for replacement.
- * @param prepared the generated outputs whose locks were resolved before committing policy.
+ * @param prepared the generated outputs whose lockfiles were resolved before committing policy.
  * @returns generated changes and preserved files.
  */
 export function writeOutputs(
@@ -167,11 +167,11 @@ export function writeOutputs(
                 file.kind === 'runner' ||
                 [TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT].includes(file.path)),
     );
-    const staleLocks = [
-        packageLockDrift(session.root, generated.files),
-        pythonLockDrift(session.root, generated.files),
-    ].some((lock) => lock?.kind !== undefined);
-    if (dependenciesChanged || staleLocks) report.notes.push('Tool dependencies need installation. Run: gspot install');
+    const hasDrift = [
+        packageLockfileDrift(session.root, generated.files),
+        pythonLockfileDrift(session.root, generated.files),
+    ].some((lockfile) => lockfile?.kind !== undefined);
+    if (dependenciesChanged || hasDrift) report.notes.push('Tool dependencies need installation. Run: gspot install');
     if (report.preserved.length > 0)
         throw new Error(
             `These edited files were not overwritten by gspot: ${report.preserved.join(', ')}. Move them aside and run gspot apply again. The version pin is unchanged.`,

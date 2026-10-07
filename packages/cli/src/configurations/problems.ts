@@ -16,13 +16,13 @@ import {
 import type {
     ToolPin,
     Manifest,
-    RawCheck,
     CheckRule,
-    CheckSpec,
     OwnedCheck,
-    RawManifest,
-    SettingSpec,
+    ParsedCheck,
+    ParsedManifest,
     SettingMeaning,
+    CheckDeclaration,
+    SettingDeclaration,
     UnknownConfiguration,
     ConfigurationDeclaration,
 } from '#cli/types/configurations.ts';
@@ -55,16 +55,13 @@ const CHECK_RULES: CheckRule[] = [
             `check ${check.name} needs ${check.needs?.join(', ') ?? ''} and cannot run at the commit stage.`,
     },
     {
-        applies: (check) =>
-            check.stage === 'manual' &&
-            check.needs === undefined &&
-            check.runs === 'files' &&
-            check.command === undefined,
+        applies: ({ stage, needs, runs, command }) =>
+            stage === 'manual' && needs === undefined && runs === 'files' && command === undefined,
         problem: (check) => `check ${check.name} is manual with nothing that makes it slow.`,
     },
 ];
 
-function configurationReaders(checks: RawCheck[]): Set<string> {
+function configurationReaders(checks: ParsedCheck[]): Set<string> {
     const readers = new Set<string>();
     for (const check of checks)
         for (const argument of [
@@ -83,12 +80,6 @@ function assertRequirementsExist(manifest: Manifest, manifests: Map<string, Mani
             throw manifestError(manifest.configuration.name, [`it requires \`${required}\`, which does not exist.`]);
 }
 
-// Whether a check is built in, runs once per repository, and names no command or tool.
-function isStandalone(check: CheckSpec | undefined): boolean {
-    if (check === undefined) return false;
-    return check.command === undefined && check.tool === undefined && check.runs === 'once';
-}
-
 // Refuses a check reference that does not name another configuration's standalone built-in check.
 function assertReferences(manifest: Manifest, checks: Map<string, OwnedCheck>): void {
     for (const reference of manifest.configuration.borrowed_checks) {
@@ -96,7 +87,9 @@ function assertReferences(manifest: Manifest, checks: Map<string, OwnedCheck>): 
         if (
             owner === undefined ||
             owner.configuration.configuration.name === manifest.configuration.name ||
-            !isStandalone(owner.check)
+            owner.check.command !== undefined ||
+            owner.check.tool !== undefined ||
+            owner.check.runs !== 'once'
         )
             throw manifestError(manifest.configuration.name, [
                 `Referenced check ${reference} must name another configuration's standalone built-in check that runs once.`,
@@ -105,17 +98,13 @@ function assertReferences(manifest: Manifest, checks: Map<string, OwnedCheck>): 
 }
 
 // Refuses a default for a setting no configuration declares, or one the configuration declares itself.
-function assertDefaultsDeclared(manifest: Manifest, settings: Map<string, SettingSpec>): void {
-    const own = new Set(manifest.settings.map((spec) => spec.name));
+function assertDefaultsDeclared(manifest: Manifest, settings: Map<string, SettingDeclaration>): void {
+    const own = new Set(manifest.settings.map((declaration) => declaration.name));
     for (const name of [...Object.keys(manifest.set), ...Object.keys(manifest.set_all)]) {
-        if (!settings.has(name))
-            throw manifestError(manifest.configuration.name, [
-                `[defaults] names ${name}, a setting no configuration declares.`,
-            ]);
-        if (own.has(name))
-            throw manifestError(manifest.configuration.name, [
-                `[defaults] names ${name}, which this configuration declares itself.`,
-            ]);
+        const declared = settings.has(name);
+        if (declared && !own.has(name)) continue;
+        const detail = declared ? 'which this configuration declares itself.' : 'a setting no configuration declares.';
+        throw manifestError(manifest.configuration.name, [`[defaults] names ${name}, ${detail}`]);
     }
 }
 
@@ -123,21 +112,26 @@ function assertDefaultsDeclared(manifest: Manifest, settings: Map<string, Settin
 function assertSettingsAgree(manifests: Map<string, Manifest>): void {
     const first = new Map<string, SettingMeaning>();
     for (const manifest of manifests.values())
-        for (const spec of manifest.settings) {
+        for (const declaration of manifest.settings) {
             const meaning = Object.fromEntries(
-                Object.entries(spec).filter(([key]) => !SETTING_DEFAULT_FIELDS.has(key)),
+                Object.entries(declaration).filter(([key]) => !SETTING_DEFAULT_FIELDS.has(key)),
             );
-            const seen = first.get(spec.name);
-            if (seen === undefined) first.set(spec.name, { configuration: manifest.configuration.name, meaning });
+            const seen = first.get(declaration.name);
+            if (seen === undefined)
+                first.set(declaration.name, { configuration: manifest.configuration.name, meaning });
             else if (!isDeepStrictEqual(seen.meaning, meaning))
                 throw manifestError(manifest.configuration.name, [
-                    `setting ${spec.name} differs from its declaration in ${seen.configuration}.`,
+                    `setting ${declaration.name} differs from its declaration in ${seen.configuration}.`,
                 ]);
         }
 }
 
 // Refuses a chain of replacements that returns to a check it already passed.
-function assertNoReplacementCycle(manifest: Manifest, check: CheckSpec, checks: Map<string, CheckSpec>): void {
+function assertNoReplacementCycle(
+    manifest: Manifest,
+    check: CheckDeclaration,
+    checks: Map<string, CheckDeclaration>,
+): void {
     const chain = [check.name];
     for (let next = check.replaces; next !== undefined; next = checks.get(next)?.replaces) {
         if (chain.includes(next))
@@ -149,7 +143,7 @@ function assertNoReplacementCycle(manifest: Manifest, check: CheckSpec, checks: 
 }
 
 // Refuses a replacement target that is not a different check, or that forms a cycle.
-function assertReplacement(manifest: Manifest, check: CheckSpec, checks: Map<string, CheckSpec>): void {
+function assertReplacement(manifest: Manifest, check: CheckDeclaration, checks: Map<string, CheckDeclaration>): void {
     const target = check.replaces;
     if (target !== undefined && (!checks.has(target) || target === check.name))
         throw manifestError(manifest.configuration.name, [
@@ -177,7 +171,7 @@ function assertToolPin(manifest: Manifest, tool: ToolPin): void {
 }
 
 // The settings a check's commands read through `{setting:...}` placeholders.
-function settingsRead(check: CheckSpec): string[] {
+function settingsRead(check: CheckDeclaration): string[] {
     const parts = [...(check.command ?? []), ...(check.fix ?? [])];
     const names = parts.flatMap((part) =>
         [...part.matchAll(SETTING_PLACEHOLDER)].map((match) => match.groups?.['name'] ?? ''),
@@ -186,7 +180,11 @@ function settingsRead(check: CheckSpec): string[] {
 }
 
 // Refuses a check that reads a setting with an empty default without waiting for it, or waits for a setting nobody declares.
-function assertSettingWait(manifest: Manifest, check: CheckSpec, settings: Map<string, SettingSpec>): void {
+function assertSettingWait(
+    manifest: Manifest,
+    check: CheckDeclaration,
+    settings: Map<string, SettingDeclaration>,
+): void {
     const awaited = check.when?.setting;
     if (awaited !== undefined && !settings.has(awaited))
         throw manifestError(manifest.configuration.name, [
@@ -194,9 +192,9 @@ function assertSettingWait(manifest: Manifest, check: CheckSpec, settings: Map<s
         ]);
     const missing = settingsRead(check).filter((name) => {
         if (name === awaited) return false;
-        const spec = settings.get(name);
-        if (spec === undefined) return false;
-        const value = spec.default;
+        const declaration = settings.get(name);
+        if (declaration === undefined) return false;
+        const value = declaration.default;
         return value === undefined || value === '' || value === false || (Array.isArray(value) && value.length === 0);
     });
     if (missing.length > 0)
@@ -210,7 +208,7 @@ function assertSettingWait(manifest: Manifest, check: CheckSpec, settings: Map<s
 function assertConfigurationConsumers(
     manifest: Manifest,
     tools: Map<string, ToolPin>,
-    checks: Map<string, CheckSpec>,
+    checks: Map<string, CheckDeclaration>,
 ): void {
     const unknownTools = manifest.configs.flatMap((config) =>
         [...config.tool, ...config.required_tools]
@@ -269,7 +267,7 @@ export function manifestError(configuration: string, problems: string[]): GspotE
  * @param raw the parsed manifest
  * @returns contradictory declarations and config files without a declared reader
  */
-export function manifestProblems(raw: RawManifest): string[] {
+export function manifestProblems(raw: ParsedManifest): string[] {
     const checks = raw.checks.flatMap((check) =>
         CHECK_RULES.filter((rule) => rule.applies(check)).map((rule) => rule.problem(check)),
     );
@@ -281,14 +279,12 @@ export function manifestProblems(raw: RawManifest): string[] {
             ? [`config ${config.target} declares code files or selectors, which only a fragment adds.`]
             : []),
     ]);
-    const references = raw.checks.some((check) => raw.configuration.borrowed_checks.includes(check.name))
-        ? ['A configuration cannot both declare and reference the same check.']
-        : [];
-    const declarations = [...checks, ...fragments, ...references];
+    const declarations = [...checks, ...fragments];
+    if (raw.checks.some((check) => raw.configuration.borrowed_checks.includes(check.name)))
+        declarations.push('A configuration cannot both declare and reference the same check.');
     const readers = configurationReaders(raw.checks);
-    const hasBuiltInCheck = raw.checks.some((check) => check.command === undefined);
     // Built-in checks read assets in source; command placeholders cannot prove which configs they use.
-    if (hasBuiltInCheck) return declarations;
+    if (raw.checks.some((check) => check.command === undefined)) return declarations;
     // A config that needs another configuration is read by that configuration's check, as Semgrep reads every pack in its folder.
     const configurations = raw.configs
         .filter((config) => !config.fragment && config.stub_file === undefined && config.when === undefined)
@@ -312,16 +308,15 @@ export function manifestProblems(raw: RawManifest): string[] {
  * @param manifests every manifest by name
  */
 export function assertManifests(manifests: Map<string, Manifest>): void {
-    const tools = new Map(
-        [...manifests.values()].flatMap((manifest) => manifest.tools.map((tool) => [tool.name, tool] as const)),
-    );
-    const ownedChecks = allChecks(manifests.values());
-    const checks: Map<string, CheckSpec> = new Map([...ownedChecks].map(([name, { check }]) => [name, check]));
-    const settings: Map<string, SettingSpec> = new Map(
-        [...manifests.values()].flatMap((manifest) => manifest.settings.map((spec) => [spec.name, spec] as const)),
+    const entries = [...manifests.values()];
+    const tools = new Map(entries.flatMap((manifest) => manifest.tools.map((tool) => [tool.name, tool] as const)));
+    const ownedChecks = allChecks(entries);
+    const checks: Map<string, CheckDeclaration> = new Map([...ownedChecks].map(([name, { check }]) => [name, check]));
+    const settings: Map<string, SettingDeclaration> = new Map(
+        entries.flatMap((manifest) => manifest.settings.map((declaration) => [declaration.name, declaration] as const)),
     );
     assertSettingsAgree(manifests);
-    for (const manifest of manifests.values()) {
+    for (const manifest of entries) {
         assertRuleFiles(manifest);
         assertRequirementsExist(manifest, manifests);
         assertConfigurationConsumers(manifest, tools, checks);
@@ -329,7 +324,7 @@ export function assertManifests(manifests: Map<string, Manifest>): void {
         for (const check of manifest.checks) assertSettingWait(manifest, check, settings);
         assertDefaultsDeclared(manifest, settings);
     }
-    for (const manifest of manifests.values()) {
+    for (const manifest of entries) {
         assertReferences(manifest, ownedChecks);
         for (const check of manifest.checks) assertReplacement(manifest, check, checks);
     }

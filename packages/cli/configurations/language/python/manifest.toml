@@ -181,7 +181,7 @@ help = "Bring the docstring in line with the signature."
 [[check]]
 name = "deptry"
 title = "Match imports to declared dependencies"
-example = "A module importing a third-party package absent from the project dependencies reports an undeclared dependency. Declare and lock that dependency with the project package manager, or remove the unused import."
+example = "A module importing a third-party package absent from the project dependencies reports an undeclared dependency. Declare that dependency and update its lockfile with the project package manager, or remove the unused import."
 level = "recommended"
 stage = "push"
 runs = "scope"

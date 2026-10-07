@@ -108,9 +108,9 @@ test(
         const firstInstall = await runTestCommand([...command, 'install', '--json'], toolOptions);
         expect(firstInstall.code, firstInstall.stdout + firstInstall.stderr).toBe(2);
         const toolManifest = readFileSync(join(toolConsumer, '.gspot/package.json'));
-        const toolLock = readFileSync(join(toolConsumer, '.gspot/bun.lock'));
-        expect(toolLock.toString('utf8')).not.toContain(release.registry.url);
-        expect(toolLock.toString('utf8')).not.toContain(release.registry.work);
+        const toolLockfile = readFileSync(join(toolConsumer, '.gspot/bun.lock'));
+        expect(toolLockfile.toString('utf8')).not.toContain(release.registry.url);
+        expect(toolLockfile.toString('utf8')).not.toContain(release.registry.work);
         const preview = await runTestCommand([...command, 'install', '--dry-run', '--json'], toolOptions);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         expect((JSON.parse(preview.stdout) as InstallJson).dryRun).toBe(true);
@@ -118,7 +118,7 @@ test(
         const installed = await runTestCommand([...command, 'install', '--json'], toolOptions);
         expect(installed.code, installed.stdout + installed.stderr).toBe(2);
         expect(readFileSync(join(toolConsumer, '.gspot/package.json'))).toStrictEqual(toolManifest);
-        expect(readFileSync(join(toolConsumer, '.gspot/bun.lock'))).toStrictEqual(toolLock);
+        expect(readFileSync(join(toolConsumer, '.gspot/bun.lock'))).toStrictEqual(toolLockfile);
         const formatter = [...command, 'check', 'source.js', '--only', 'format/prettier', '--json'];
         const invalid = await runTestCommand(formatter, toolOptions);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);

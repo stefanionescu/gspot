@@ -18,7 +18,7 @@ import {
  * @param root the repository root
  * @param work the directory the isolated project runs in
  * @param env the environment the install runs with, which receives the settings
- * @returns the credential values the lock must not contain
+ * @returns the credential values the lockfile must not contain
  */
 export async function yarnSettings(root: string, work: string, env: Record<string, string>): Promise<string[]> {
     const settings = yarnConnectionSettingsSchema.parse(parse(readFileSync(join(work, '.yarnrc.yml'), 'utf8')));

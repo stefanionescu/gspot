@@ -1,8 +1,8 @@
 import type { z } from 'zod';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { reportSchema, thresholdsSchema } from '#cli/parsers/schema/jest.ts';
 
-export type JestRun = { input: EngineInput; source: string; work: string };
+export type JestRun = { input: CheckInput; source: string; work: string };
 
 export type TestReport = z.infer<typeof reportSchema>;
 

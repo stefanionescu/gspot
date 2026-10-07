@@ -29,8 +29,8 @@ import { everyManifest, isConfigurationSelected } from '#cli/configurations/sele
 import { requiredToolNames, applicableManifests } from '#cli/planning/requirements.ts';
 
 import {
-    UV_LOCK,
     DOT_GSPOT,
+    UV_LOCKFILE,
     STATE_DIRECTORY,
     TOOL_PYTHON_PROJECT,
     TOOL_PACKAGE_PROJECT,
@@ -158,7 +158,7 @@ export function emitAll(session: Session): Generated {
     const manifests = applicableManifests(session);
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const checks = configuredChecks(session, true);
-    const repositoryConsumers = { tools, checks: new Set(checks.map((check) => check.spec.name)) };
+    const repositoryConsumers = { tools, checks: new Set(checks.map((check) => check.check.name)) };
     const generated: Generated = { notes: [], files: [], blocks: [], configurations: [] };
     const seen = new Set<string>();
     for (const selection of scopes) {
@@ -166,7 +166,7 @@ export function emitAll(session: Session): Generated {
         const scopeChecks = checks.filter((check) => check.scope.scope.path === selection.scope.path);
         const scopeConsumers = {
             tools: new Set(scopeChecks.flatMap((check) => requiredToolNames(check, policy.run_with))),
-            checks: new Set(scopeChecks.map((check) => check.spec.name)),
+            checks: new Set(scopeChecks.map((check) => check.check.name)),
         };
         emitConfigurations({ root, files, scopes, inputs, selection }, generated, seen, {
             repository: repositoryConsumers,
@@ -204,7 +204,7 @@ export function emitAll(session: Session): Generated {
 }
 
 /**
- * Every managed destination, including locks owned by applicable tool projects.
+ * Every managed destination, including lockfiles owned by applicable tool projects.
  * @param generated the completed generated outputs
  * @returns the destination paths
  */
@@ -213,8 +213,8 @@ export function outputPaths(generated: Generated): Set<string> {
         [...generated.files, ...generated.blocks, ...generated.configurations].map((output) => output.path),
     );
     for (const file of generated.files) {
-        if (file.path === TOOL_PACKAGE_PROJECT) paths.add(parseToolProject(file.content).lockPath);
-        if (file.path === TOOL_PYTHON_PROJECT) paths.add(UV_LOCK);
+        if (file.path === TOOL_PACKAGE_PROJECT) paths.add(parseToolProject(file.content).lockfilePath);
+        if (file.path === TOOL_PYTHON_PROJECT) paths.add(UV_LOCKFILE);
     }
     return paths;
 }

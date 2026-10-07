@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { PLACEHOLDERS } from '#cli/config/checks/language/python.ts';
 import { docstringOf, visitPythonModules } from '#cli/parsers/python.ts';
 import { trivialText, isTrivialFile, executableStatements } from '#cli/parsers/statements.ts';
@@ -10,7 +10,7 @@ import { trivialText, isTrivialFile, executableStatements } from '#cli/parsers/s
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function trivialFunctions(input: EngineInput): Promise<Finding[]> {
+export async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
     const threshold = input.view.limit('min_function_statements', 'python');
     if (threshold === undefined) return [];
     return visitPythonModules(input, ({ modules, functions }) => [
@@ -51,7 +51,7 @@ export async function trivialFunctions(input: EngineInput): Promise<Finding[]> {
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function placeholderDocstrings(input: EngineInput): Promise<Finding[]> {
+export async function placeholderDocstrings(input: CheckInput): Promise<Finding[]> {
     return visitPythonModules(input, ({ functions }) =>
         functions.flatMap((definition) => {
             const text = docstringOf(definition.node);

@@ -3,7 +3,7 @@ import { nodesOf } from '#cli/parsers/sql/pg.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import type { SqlNode, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
@@ -26,7 +26,7 @@ function isLooseDefiner(statement: SqlStatementView): boolean {
 }
 
 async function statementFindings(
-    input: EngineInput,
+    input: CheckInput,
     rule: string,
     diagnostic: string,
     isWrong: (statement: SqlStatementView) => boolean,
@@ -48,10 +48,10 @@ async function statementFindings(
 
 /**
  * One finding for each table in a client schema with no row security, or with row security and no policy.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function rls(input: EngineInput): Promise<Finding[]> {
+export async function rls(input: CheckInput): Promise<Finding[]> {
     const schema = buildSchema(await migrationsOf(input));
     const schemas = new Set(input.view.options('postgres')['client_schemas'] as string[]);
     return schema.tables
@@ -69,10 +69,10 @@ export async function rls(input: EngineInput): Promise<Finding[]> {
 
 /**
  * One finding for each grant of every privilege.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function grants(input: EngineInput): Promise<Finding[]> {
+export function grants(input: CheckInput): Promise<Finding[]> {
     return statementFindings(
         input,
         'grant-all',
@@ -89,10 +89,10 @@ export function grants(input: EngineInput): Promise<Finding[]> {
 
 /**
  * One finding for each SECURITY DEFINER function that sets no search_path.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function definerSearchPath(input: EngineInput): Promise<Finding[]> {
+export function definerSearchPath(input: CheckInput): Promise<Finding[]> {
     const diagnostic =
         'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.';
     return statementFindings(input, 'definer-search-path', diagnostic, isLooseDefiner);

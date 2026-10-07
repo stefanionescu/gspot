@@ -3601,10 +3601,16 @@
             "verification": []
         },
         "review/code-execution/021": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact native-glob fix and four caller contracts dispatched to isolated refactor/native-globs at bce72e26bbc55fc48e976aea29c466d0ce2e91b9. Bun1.4.2 exposes fs.globSync, so tinyglobby fallback not selected. Node24.2 hidden/globstar and link behavior matrices preserved; smaller native adaptation and real acceptance in progress. No closure.",
+                "Frozen native fs.globSync patch4d86b286a4bcac1bcab577d295ae0098e1770166a9bb917ea35f8402a787d85f integrated into main worktree, adapting only renamed testRepository.check. Recursive readdir walker, GlobWalk and unused refuseBrokenLinks removed; assertInsideFolder retained. No fallback because Bun1.4.2 exposes globSync.",
+                "Main focused50pass0fail148assertions5files; full-policy affected6file ESLint passes. Main native corpus Bun1.4.2 exact16/16; explicit Node24.2 exact15/16 and canonical16/16. Broad dot+follow scan may choose another alias spelling; explicit authored alias patterns remain exact. /tmp/gspot-native-main-corpus-bun.json and node-floor.json. Final root/CLI types running; no Linux/Windows or staged acceptance yet.",
+                "Honest source/types metrics:311to310physical lines,13077to13255bytes,1758to1837ASTnodes. Five private functions replace eight; additional native floor hidden/alias classification explains growth. External tool-link guarded branch CLI failure retained; main real installed gate pending. No closure.",
+                "After main integration, root and CLI types both pass; gspot apply reports149files up to date. /tmp/gspot-native-globs-main-root-types.log and cli-types.log. Separate prepared index checkpoint defers this behavior until its own staged gate."
+            ]
         },
         "review/code-execution/022": {
             "status": "pending",
@@ -3637,10 +3643,13 @@
             "verification": []
         },
         "review/code-execution/027": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet.",
+                "Main memo integration: root/CLI/docs types passed;349pass1749assertions58files39.40s;38integration-focus passes100assertions5files1.84s. Required ts.sys callback binding preserved; one compiler context shares JS/TS inputs and scopes map. Full-policy affected-owner lint passed after two source corrections. CLI build and built Node24.20/Bun1.4.2 help smoke preserve all12commands. gspot apply149up-to-date. No commit/closure while mechanical staged gate awaits owner filename-policy answer."
+            ]
         },
         "review/code-execution/028": {
             "status": "pending",
@@ -3667,34 +3676,50 @@
             "verification": []
         },
         "review/code-execution/033": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Removed duplicate sql/syntax source, built-in registry and manifest entry. Remaining sql/trivial-functions retains the single dialect/exclusion matcher. Scope, changed-path, reused-source, fixer and package-consumer contracts updated to retained checks; package consumer acceptance still pending.",
+                "Integrated focused58pass0fail318assertions12files7.43s includes SQL public parsing, PostgreSQL checks and updated command/fixer callers. Root/CLI types and full-policy lint of10affected files pass. Initial55pass3fail retained; corrected dialect expectations prove a native trivial function reports only in PostgreSQL. /tmp/gspot-sql-syntax-main-focused-final.log. Old sql/syntax references absent in packages/tests; generated files, staged gate and commit pending."
+            ]
         },
         "review/code-execution/034": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact conditional public libpg-query fix and SQL AST type owners dispatched to isolated refactor/sql-public-api worktree at bce72e26bbc55fc48e976aea29c466d0ce2e91b9. Existing built Node/Bun public API probe passed; real fully typed implementation, build and focused acceptance in progress. No closure.",
+                "Frozen public SQL API patch bae0c0b879c276f5831b4e87c19960e141a82ed4a72a89496385120073a6221f integrated into main worktree with CheckInput and native-text caller changes preserved. Normal frozen Bun workspace install linked @pgsql/types18.0.0; initial unlinked dependency type/lint failures retained.",
+                "Main root and CLI type checks pass after dependency linking. Focused33pass0fail120assertions7files1.60s. Affected SQL lint has only separate native Array.from versus prefer-spread conflict pending owner; the SQL import-order error was fixed through actual full-policy ESLint.",
+                "Final integrated CLI built once; actual Node24.20.0 and Bun1.4.2 exercise SQL and PL/pgSQL thresholds with no skips and unchanged source bytes. /tmp/gspot-sql-main-built-probe.log; evidence directory /var/folders/25/tzdsdvyj0vqc2qb90b2wn15h0000gn/T/gspot-sql-built-cli-cf3isl48. No Windows/Linux or packed-consumer credit; staged gate and commit pending."
+            ]
         },
         "review/code-execution/035": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Pinned Bun1.4.2 and Node24.2.0 expose RegExp.escape; measured13regex caller contexts and five Unicode code-point cases pass. All eight current invocations across six files now use native APIs and both forwarding exports are deleted; unstaged implementation only.",
+                "Main focused111pass0fail310assertions9files5.85s; root and CLI types pass after exact native RegExpConstructor declaration augmentation (TypeScript5.9 omits API), reasoned interface-merging suppression only. Native RegExp affected-owner ESLint passes. Four prescribed Array.from calls are rejected by unicorn/prefer-spread; owner precedence question pending, no policy weakened and no full acceptance/closure claimed.",
+                "Shared native-tools focused run under Bun1.4.2:15pass0fail128assertions2files142.46s; real deptry private-tool/authored exclusions and real Typos Unicode columns pass. Pins installed once through runner, no per-test full installations added. /tmp/gspot-native-text-main-tool-focus.log."
+            ]
         },
         "review/code-execution/036": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact current fix dispatched together in isolated refactor/parser-library-cleanup at bce72e26; source/config and directly affected existing test owners only. Shared policy, ledger, generated files and main native-glob behavior remain reserved. No closure."
+            ]
         },
         "review/code-execution/037": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact current fix dispatched together in isolated refactor/parser-library-cleanup at bce72e26; source/config and directly affected existing test owners only. Shared policy, ledger, generated files and main native-glob behavior remain reserved. No closure."
+            ]
         },
         "review/code-execution/038": {
             "status": "pending",
@@ -3715,10 +3740,12 @@
             "verification": []
         },
         "review/code-execution/041": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact current fix dispatched together in isolated refactor/parser-library-cleanup at bce72e26; source/config and directly affected existing test owners only. Shared policy, ledger, generated files and main native-glob behavior remain reserved. No closure."
+            ]
         },
         "review/code-execution/042": {
             "status": "pending",
@@ -3727,16 +3754,20 @@
             "verification": []
         },
         "review/code-execution/044": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact current fix dispatched together in isolated refactor/parser-library-cleanup at bce72e26; source/config and directly affected existing test owners only. Shared policy, ledger, generated files and main native-glob behavior remain reserved. No closure."
+            ]
         },
         "review/code-execution/045": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact current fix dispatched together in isolated refactor/parser-library-cleanup at bce72e26; source/config and directly affected existing test owners only. Shared policy, ledger, generated files and main native-glob behavior remain reserved. No closure."
+            ]
         },
         "review/code-execution/046": {
             "status": "pending",
@@ -3967,10 +3998,15 @@
             "verification": []
         },
         "review/configurations-plugin/009": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fixes/owners/tests dispatched from bce72e26bbc55fc48e976aea29c466d0ce2e91b9 into isolated refactor/plugin-create-rule worktree through /tmp/gspot-plugin-wave2-packet.md. Mechanical constructor rename remains separate from transparent-callback behavior; main reserves exact CLI parser suppression removal. No integration/closure acceptance yet.",
+                "Frozen native-predicate implementation integrated in main worktree, including exact CLI and plugin suppression deletions; main plugin433pass0fail27assertions19files422ms and root/plugin types pass. Main names avoid banned wrapper vocabulary.",
+                "Actual repository install initially reused stale Bun1.4.2 same-version package bytes despite refreshed integrity. Isolated reproduction proved native extracted-cache reuse, not portable URL stripping; force/no-cache did not fix it. Shared automation now owns one temporary BUN_INSTALL_CACHE_DIR alongside run-owned registry and archives; normal install:checks succeeds and actual installed bundle contains new predicate. Full-policy affected callback/source/runner lint passes with both suppressions removed; cancellation2pass0fail8assertions919ms. Generated Bun lock was updated only through install command.",
+                "Packed Node consumer1pass0fail7assertions3.59s: ESM/CommonJS and strict NodeNext declarations. Separate actual packed Bun1.4.2 consumer with Node absent from PATH passed ESM/CommonJS, bothlevels/options/boundaries, required conditional/logical callback and IIFE diagnostics, strict NodeNext declarations; copied installed bundle SHA256 matches main dist. macOS only. /tmp/gspot-bun-mutable-package-audit.md. No staged gate/commit/closure yet."
+            ]
         },
         "review/configurations-plugin/011": {
             "status": "pending",
@@ -4549,17 +4585,25 @@
             ]
         },
         "review/glossary/006": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "registry implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact independent claim/lockfile contract dispatched in isolated refactor/claim-contract worktree at bce72e26bbc55fc48e976aea29c466d0ce2e91b9 through /tmp/gspot-claim-mechanism-assignment.md; source033 final lockfiles and source007 live callback prerequisites complete. Mechanical names/test moves separate from narrow race behavior; no acceptance yet. code-commands006 safety deletions deferred as a whole, not claimed.",
+                "Isolated mechanical/race changes frozen separately: focused135 pass, 835 assertions, 12 files, 8.37s; shared native runner27 pass, 323 assertions, five files, 206.53s; root/CLI types and affected-owner full-policy lint pass. No integration commit/closure yet. Simplification includes obsolete child protocol, redundant claim diagnostics/type, direct resource cleanup; aggregate active-code metrics under review and no net-shrink assertion claimed."
+            ]
         },
         "review/glossary/007": {
             "status": "in-progress",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "bce72e26bbc55fc48e976aea29c466d0ce2e91b9",
             "verification": [
-                "Isolated worktree refactor/built-in-contract starts at 1285f9d5eead1c60f4f7b892c92d744bab52792f. Callback contract preparation is separate from mechanical vocabulary; no closure before full record acceptance."
+                "Isolated worktree refactor/built-in-contract starts at 1285f9d5eead1c60f4f7b892c92d744bab52792f. Callback contract preparation is separate from mechanical vocabulary; no closure before full record acceptance.",
+                "Preparatory callback contract complete at bce72e26bbc55fc48e976aea29c466d0ce2e91b9: one run-only registry, 139 input callbacks adapted once and 12 session callbacks retained; root/CLI types and full-policy ESLint passed. Main focused 219 pass, 919 assertions, 39 files, 20.30s; isolated focused220 pass, 921 assertions, 40 files, 23.39s; native Vale19 pass, 44 assertions, 1.358s. Staged89 pass, 11 skip, zero findings, 46.353s; commit hook64 pass, three skip, zero findings, 9.7s; message hook passed. Authored TypeScript reduced by three lines.",
+                "Mechanical integration in main: root/CLI/docs TypeScript passed; focused151pass1059assertions27files8.20s; CLI ownership557files2797imports/no violations; gspot apply149files up-to-date; docs314pages/local links pass. Final terminology tail and full-policy lint/staged gate still pending; no closure yet."
+            ],
+            "remaining": [
+                "Complete required final names, owners, typed declaration fields and public terminology; integrate and verify the mechanical checkpoint."
             ]
         },
         "review/glossary/008": {
@@ -4646,9 +4690,14 @@
         "review/glossary/022": {
             "status": "in-progress",
             "owner": "packaging implementation; main integration",
-            "commit": null,
+            "commit": "bce72e26bbc55fc48e976aea29c466d0ce2e91b9",
             "verification": [
-                "Isolated worktree refactor/built-in-contract starts at 1285f9d5eead1c60f4f7b892c92d744bab52792f. Callback contract preparation is separate from mechanical vocabulary; no closure before full record acceptance."
+                "Isolated worktree refactor/built-in-contract starts at 1285f9d5eead1c60f4f7b892c92d744bab52792f. Callback contract preparation is separate from mechanical vocabulary; no closure before full record acceptance.",
+                "Preparatory callback contract complete at bce72e26bbc55fc48e976aea29c466d0ce2e91b9: one run-only registry, 139 input callbacks adapted once and 12 session callbacks retained; root/CLI types and full-policy ESLint passed. Main focused 219 pass, 919 assertions, 39 files, 20.30s; isolated focused220 pass, 921 assertions, 40 files, 23.39s; native Vale19 pass, 44 assertions, 1.358s. Staged89 pass, 11 skip, zero findings, 46.353s; commit hook64 pass, three skip, zero findings, 9.7s; message hook passed. Authored TypeScript reduced by three lines.",
+                "Mechanical integration in main: root/CLI/docs TypeScript passed; focused151pass1059assertions27files8.20s; CLI ownership557files2797imports/no violations; gspot apply149files up-to-date; docs314pages/local links pass. Final terminology tail and full-policy lint/staged gate still pending; no closure yet."
+            ],
+            "remaining": [
+                "Complete required final names, owners, typed declaration fields and public terminology; integrate and verify the mechanical checkpoint."
             ]
         },
         "review/glossary/023": {
@@ -5498,16 +5547,30 @@
             "verification": []
         },
         "review/source-layout/020": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet.",
+                "Integrated exact mechanical paths; main staged check111pass12skip1failed check with two shared-prefix findings, exit1,68.541s. Other focused/types/ownership/docs acceptance passed. No staged acceptance, commit, closure or policy weakening claimed."
+            ],
+            "remaining": [
+                "The exact mandated flattened paths trigger the existing structure/prefix-collisions gate. Owner answer requested; retain prescribed paths without weakening policy until that contract is resolved.",
+                "Final passing staged check, coherent integration commit, push and CI inspection."
+            ]
         },
         "review/source-layout/021": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet.",
+                "Integrated exact mechanical paths; main staged check111pass12skip1failed check with two shared-prefix findings, exit1,68.541s. Other focused/types/ownership/docs acceptance passed. No staged acceptance, commit, closure or policy weakening claimed."
+            ],
+            "remaining": [
+                "The exact mandated flattened paths trigger the existing structure/prefix-collisions gate. Owner answer requested; retain prescribed paths without weakening policy until that contract is resolved.",
+                "Final passing staged check, coherent integration commit, push and CI inspection."
+            ]
         },
         "review/source-layout/023": {
             "status": "pending",
@@ -5526,16 +5589,20 @@
             ]
         },
         "review/source-layout/026": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet."
+            ]
         },
         "review/source-layout/027": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet."
+            ]
         },
         "review/source-layout/028": {
             "status": "complete",
@@ -5592,22 +5659,30 @@
             ]
         },
         "review/source-layout/035": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet.",
+                "Main memo integration: root/CLI/docs types passed;349pass1749assertions58files39.40s;38integration-focus passes100assertions5files1.84s. Required ts.sys callback binding preserved; one compiler context shares JS/TS inputs and scopes map. Full-policy affected-owner lint passed after two source corrections. CLI build and built Node24.20/Bun1.4.2 help smoke preserve all12commands. gspot apply149up-to-date. No commit/closure while mechanical staged gate awaits owner filename-policy answer."
+            ]
         },
         "review/source-layout/036": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet."
+            ]
         },
         "review/source-layout/037": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact prescribed merge implemented in main: activeIgnores now lives in policy/settings/view.ts for scopeView and ESLint blocks; old ignores source and duplicate test file deleted. Existing UTC expiry/current/future/permanent/saved-policy assertions moved intact into scope-views owner.",
+                "Main root/CLI TypeScript and full-policy affected-owner ESLint pass. Focused policy settings/scope views/ESLint generation: 109 pass, zero fail, 808 assertions, 26 files, 20.79s. Existing unresolved source020/021 prefix gate prevents checkpoint commit/closure; no completed status claimed."
+            ]
         },
         "review/source-layout/038": {
             "status": "pending",
@@ -5694,16 +5769,20 @@
             ]
         },
         "review/source-layout/049": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet."
+            ]
         },
         "review/source-layout/050": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "packaging implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fix and allowed owners dispatched through /tmp/gspot-wave2-next-owner-packet.md in isolated refactor/built-in-contract worktree; final vocabulary is prerequisite inside this coherent checkpoint. Mechanical merges remain separate from run-owned TypeScript memo behavior. No completion acceptance yet."
+            ]
         },
         "review/source-layout/051": {
             "status": "complete",
@@ -5736,10 +5815,13 @@
             "verification": []
         },
         "review/source-layout/056": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "rules implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact fixes/owners/tests dispatched from bce72e26bbc55fc48e976aea29c466d0ce2e91b9 into isolated refactor/plugin-create-rule worktree through /tmp/gspot-plugin-wave2-packet.md. Mechanical constructor rename remains separate from transparent-callback behavior; main reserves exact CLI parser suppression removal. No integration/closure acceptance yet.",
+                "Frozen mechanical helper/type rename integrated into index; all17ruleimports and plugin type import follow create-rule owner, no aliases. Main plugin433passing and root/plugin types pass; actual packed Node and Bun-only consumers validate compiler declarations. Final combined staged gate remains pending."
+            ]
         },
         "review/tests-cli/001": {
             "status": "pending",
@@ -6198,10 +6280,13 @@
             "verification": []
         },
         "review/tests-cli/083": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "registry implementation; main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact independent claim/lockfile contract dispatched in isolated refactor/claim-contract worktree at bce72e26bbc55fc48e976aea29c466d0ce2e91b9 through /tmp/gspot-claim-mechanism-assignment.md; source033 final lockfiles and source007 live callback prerequisites complete. Mechanical names/test moves separate from narrow race behavior; no acceptance yet. code-commands006 safety deletions deferred as a whole, not claimed.",
+                "Isolated mechanical/race changes frozen separately: focused135 pass, 835 assertions, 12 files, 8.37s; shared native runner27 pass, 323 assertions, five files, 206.53s; root/CLI types and affected-owner full-policy lint pass. No integration commit/closure yet. Simplification includes obsolete child protocol, redundant claim diagnostics/type, direct resource cleanup; aggregate active-code metrics under review and no net-shrink assertion claimed."
+            ]
         },
         "review/tests-cli/084": {
             "status": "pending",
@@ -7977,10 +8062,12 @@
             "verification": []
         },
         "slices/tests-integration-commands/044": {
-            "status": "pending",
-            "owner": null,
+            "status": "in-progress",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Applied current final-table override: init scope db, select all level, run sql/trivial-functions --json, assert passed scope db and fileCount1. Included in main58pass focused packet; commit/staged gate pending."
+            ]
         },
         "slices/tests-integration-commands/045": {
             "status": "pending",
@@ -9009,10 +9096,45 @@
             ],
             "ci": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37573321908",
-                "status": "in_progress",
+                "status": "completed",
                 "verification": [
                     "Docs passed; native/tool/package suite steps active at inspection. Successful database/Spectral acquisition is recorded separately; platform suite success is unverified."
-                ]
+                ],
+                "windowsCli": {
+                    "passed": 2929,
+                    "skipped": 64,
+                    "failed": 44,
+                    "errors": 6,
+                    "assertions": 11094,
+                    "testCount": 3037,
+                    "fileCount": 363,
+                    "durationSeconds": 1852.15,
+                    "conclusion": "failure",
+                    "jobUrl": "https://github.com/stefanionescu/gspot/actions/runs/37573321908/job/112641708229",
+                    "evidence": "/tmp/gspot-ci-b0a6-cli-windows-final.log",
+                    "limitations": [
+                        "Four Windows tool shards remain running.",
+                        "No new failure titles versus prior Windows run is comparison evidence, not full-platform acceptance."
+                    ]
+                },
+                "conclusion": "failure",
+                "jobAccounting": {
+                    "success": 6,
+                    "failure": 8,
+                    "cancelled": 4
+                },
+                "windowsTools": {
+                    "conclusion": "cancelled",
+                    "cause": "All four job annotations: The job has exceeded the maximum execution time of 1h0m0s",
+                    "partialPass": 109,
+                    "partialFail": 5,
+                    "partialSkip": 14,
+                    "limitations": [
+                        "No final Bun suite summaries; no suite or platform acceptance.",
+                        "Partial durations cannot set the measured shared TEST_TIMEOUT_MS."
+                    ],
+                    "evidence": "/tmp/gspot-ci-b0a6-windows-cancellation-audit.json"
+                }
             },
             "database": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37573388124",
@@ -9079,13 +9201,14 @@
             ],
             "limitations": [
                 "Platform skips do not prove platform behavior. Broader baseline CLI/tool fixture failures remain tracked; this checkpoint does not claim full-suite or cross-platform acceptance.",
-                "Release publication, tagging, live account setup and deployment remain unperformed."
+                "Release publication, tagging, live account setup and deployment remain unperformed.",
+                "Queued CI37577232561 was superseded by the callback preparation push and cancelled by workflow concurrency before jobs started; no platform results."
             ],
             "ci": {
                 "run": 37577232561,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37577232561",
-                "status": "pending",
-                "conclusion": null,
+                "status": "completed",
+                "conclusion": "cancelled",
                 "head": "1285f9d5eead1c60f4f7b892c92d744bab52792f",
                 "limitations": "Queued behind prior CI; no platform results observed."
             }
@@ -9100,15 +9223,118 @@
             ],
             "limitations": [
                 "No cross-platform suite acceptance inferred from local tests or platform skips. Existing broader test and CI failures remain tracked.",
-                "No release publication, tag, deployment or live account setup."
+                "No release publication, tag, deployment or live account setup.",
+                "Queued CI37577232561 was superseded by the callback preparation push and cancelled by workflow concurrency before jobs started; no platform results."
             ],
             "ci": {
                 "run": 37577232561,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37577232561",
-                "status": "pending",
-                "conclusion": null,
+                "status": "completed",
+                "conclusion": "cancelled",
                 "head": "1285f9d5eead1c60f4f7b892c92d744bab52792f",
                 "limitations": "Queued behind prior CI; no platform results observed."
+            }
+        },
+        {
+            "commit": "bce72e26bbc55fc48e976aea29c466d0ce2e91b9",
+            "completedRecords": [],
+            "unresolvedRecords": 1035,
+            "validation": [
+                "Preparatory callback contract complete at bce72e26bbc55fc48e976aea29c466d0ce2e91b9: one run-only registry, 139 input callbacks adapted once and 12 session callbacks retained; root/CLI types and full-policy ESLint passed. Main focused 219 pass, 919 assertions, 39 files, 20.30s; isolated focused220 pass, 921 assertions, 40 files, 23.39s; native Vale19 pass, 44 assertions, 1.358s. Staged89 pass, 11 skip, zero findings, 46.353s; commit hook64 pass, three skip, zero findings, 9.7s; message hook passed. Authored TypeScript reduced by three lines.",
+                "Pushed main1285f9d5e..bce72e26b without force; pre-push89 pass, 11 skip, zero findings, 50.7s. Remote main verified at bce72e26bbc55fc48e976aea29c466d0ce2e91b9."
+            ],
+            "limitations": [
+                "Mechanical vocabulary and public terminology are not closed by callback preparation. Queued CI supplies no platform results."
+            ],
+            "ci": {
+                "run": 37578213962,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37578213962",
+                "status": "completed",
+                "conclusion": "failure",
+                "head": "bce72e26bbc55fc48e976aea29c466d0ce2e91b9",
+                "observedCompletedJobs": [
+                    {
+                        "name": "package",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (linux 3/4)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "check",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "docs",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (macos 2/4)",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (windows 2/4)",
+                        "conclusion": "cancelled"
+                    },
+                    {
+                        "name": "tools (linux 2/4)",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (windows 3/4)",
+                        "conclusion": "cancelled"
+                    },
+                    {
+                        "name": "tools (windows 1/4)",
+                        "conclusion": "cancelled"
+                    },
+                    {
+                        "name": "tools (macos 3/4)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 1/4)",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (macos 4/4)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 1/4)",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "test (windows-2025)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "test (ubuntu-24.04)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "test (macos-15)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 4/4)",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 4/4)",
+                        "conclusion": "cancelled"
+                    }
+                ],
+                "limitations": "Final pushed CI:6successful,8failed,4cancelledWindows tool jobs. Pushed CI does not validate later uncommitted work; skips and cancelled shards prove no platform acceptance.",
+                "completedJobEvidence": {
+                    "ubuntu": "3038 pass,12skip,4fail,11613assertions,3054tests363files528.40s; exact four cases and causes match b0a6: two undetermined pnpm-version fixtures and two sandbox tool-PATH discovery fixtures.",
+                    "check": "All four workspace typechecks pass; routine147pass13skip0findings340.9s. Manual7pass3fail7findings183.4s: five CodeQL test resource races, one Bash OPERATIONS example Semgrep finding, plugin README URL404. Exact findings equal b0a6. Doctor exits1 for missing Wrangler, hooks installed; same prior readiness result.",
+                    "runtime": "Actual runner Bun1.4.2; doctor Node24.20.0. Nested child Node/npm actual versions not printed and not inferred.",
+                    "audit": "/tmp/gspot-ci-bce-completed-audit.json",
+                    "windows": "2928pass64skip45fail11101assertions3037tests363files1842.95s. Raw completed job log /tmp/gspot-ci-bce-windows-cli.log; not accepted and not a full platform timing measurement.",
+                    "windowsTools": "All four Windows tool shards reached the60minute outer job bound. Each independent GitHub annotation confirms maximum execution time1h0m0s exceeded; /tmp/gspot-ci-bce-win1-annotations.json through win4-annotations.json. Shard4 raw log retained. Cancelled shards are incomplete and supply no complete platform suite or slowest-test measurement."
+                }
             }
         }
     ]

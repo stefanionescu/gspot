@@ -1,14 +1,14 @@
 import { memo } from '#cli/platform/memo.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import { getBlobs, getHeadEntries } from '#cli/repository/revisions/objects.ts';
 import { FROZEN_ALL, FROZEN_NONE, MIGRATION_DOWN } from '#cli/config/checks/database/postgres.ts';
 
 const COMMITTED_MIGRATIONS_MEMO = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
-async function readCommittedMigrations(input: EngineInput, paths: string[]): Promise<Map<string, string>> {
+async function readCommittedMigrations(input: CheckInput, paths: string[]): Promise<Map<string, string>> {
     if (!input.hasGit) return new Map();
     const committed = await getHeadEntries(input.root, input.cancelSignal);
     const selected = new Set(paths);
@@ -29,7 +29,7 @@ async function readCommittedMigrations(input: EngineInput, paths: string[]): Pro
     );
 }
 
-function committedMigrationTexts(input: EngineInput, paths: string[]): Promise<Map<string, string>> {
+function committedMigrationTexts(input: CheckInput, paths: string[]): Promise<Map<string, string>> {
     const committedMigrations = memo(input.reads, COMMITTED_MIGRATIONS_MEMO);
     const key = JSON.stringify(paths);
     let read = committedMigrations.get(key);
@@ -42,10 +42,10 @@ function committedMigrationTexts(input: EngineInput, paths: string[]): Promise<M
 
 /**
  * One finding for a version two files share, a file with no version, and a new file that sorts before a committed one.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function migrationOrder(input: EngineInput): Promise<Finding[]> {
+export async function migrationOrder(input: CheckInput): Promise<Finding[]> {
     const migrations = await migrationsOf(input);
     const findings: Finding[] = [];
     const seen = new Map<string, string>();
@@ -100,10 +100,10 @@ export async function migrationOrder(input: EngineInput): Promise<Finding[]> {
 
 /**
  * One finding for each migration at or before postgres.frozen_through whose text differs from the committed one.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function migrationsFrozen(input: EngineInput): Promise<Finding[]> {
+export async function migrationsFrozen(input: CheckInput): Promise<Finding[]> {
     const through = input.view.options('postgres')['frozen_through'] as string;
     if (through === FROZEN_NONE) return [];
     const migrations = await migrationsOf(input);

@@ -8,7 +8,7 @@ import type { RunReport } from '#cli/types/execution/check.ts';
 import { existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { TWO_RULES, QUALITY_FIX, IGNORE_CASES, QUALITY_COMMAND } from '#tests/config/cli/commands/ignores.ts';
 
-test('a global ignore stops a repository check and its correction command until removed', async () => {
+test('a global ignore stops a command check and its correction command until removed', async () => {
     await using directory = await testdir();
     const command = ['bash', '-c', 'printf executed > read.txt; exit 1'];
     const fix = ['bash', '-c', 'printf corrected > corrected.txt'];

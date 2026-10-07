@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
 import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { swiftBuild } from '#cli/checks/language/swift/build.ts';
@@ -25,22 +25,22 @@ test.skipIf(!isMacos)(
                 '// swift-tools-version: 6.0\nimport PackageDescription\nlet package = Package(name: "Example", targets: [.target(name: "Example")])\n',
             'Sources/Example/Value.swift': 'public let value: Int = 1\n',
         });
-        const first = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+        const first = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         expect(await swiftBuild(first)).toStrictEqual([]);
         const plan = buildPlan(first);
         const files = [...new Bun.Glob('**/Value.swift.o').scanSync({ cwd: plan.folder })];
         expect(files).toHaveLength(1);
         const compiledFile = join(plan.folder, files[0]!);
         const modified = statSync(compiledFile).mtimeMs;
-        const again = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+        const again = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         expect(await swiftBuild(again)).toStrictEqual([]);
         expect(statSync(compiledFile).mtimeMs).toBe(modified);
         writeFileSync(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
-        expect(await swiftBuild(buildEngineInput(await openSession(sandbox.path), 'swift/build'))).toMatchObject([
+        expect(await swiftBuild(buildCheckInput(await openSession(sandbox.path), 'swift/build'))).toMatchObject([
             { file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' },
         ]);
         writeFileSync(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
-        expect(await swiftBuild(buildEngineInput(await openSession(sandbox.path), 'swift/build'))).toStrictEqual([]);
+        expect(await swiftBuild(buildCheckInput(await openSession(sandbox.path), 'swift/build'))).toStrictEqual([]);
     },
 );
 test.skipIf(!isMacos)(
@@ -83,23 +83,23 @@ test.skipIf(!isMacos)(
             'main.swift': source,
             'untracked.txt': 'authored content\n',
         });
-        const first = buildEngineInput(await openSession(sandbox.path), 'swift/build');
+        const first = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         expect(await swiftBuild(first)).toStrictEqual([]);
         const plan = buildPlan(first);
         const objects = [...new Bun.Glob('derived/**/main.o').scanSync({ cwd: plan.folder })];
         expect(objects.length).toBeGreaterThan(0);
         const times = objects.map((file) => statSync(join(plan.folder, file)).mtimeMs);
-        expect(await swiftBuild(buildEngineInput(await openSession(sandbox.path), 'swift/build'))).toStrictEqual([]);
+        expect(await swiftBuild(buildCheckInput(await openSession(sandbox.path), 'swift/build'))).toStrictEqual([]);
         expect(objects.map((file) => statSync(join(plan.folder, file)).mtimeMs)).toStrictEqual(times);
         expect(readFileSync(join(sandbox.path, 'main.swift'), 'utf8')).toBe(source);
         expect(readFileSync(join(sandbox.path, 'Example.xcodeproj/project.pbxproj'), 'utf8')).toBe(project);
         expect(readFileSync(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('authored content\n');
         expect(existsSync(join(sandbox.path, 'build'))).toBe(false);
         writeFileSync(join(sandbox.path, 'main.swift'), 'let value: Int = "wrong"\nprint(value)\n');
-        expect(await swiftBuild(buildEngineInput(await openSession(sandbox.path), 'swift/build'))).toMatchObject([
+        expect(await swiftBuild(buildCheckInput(await openSession(sandbox.path), 'swift/build'))).toMatchObject([
             { file: 'main.swift', line: 1, column: 18, rule: 'compiler' },
         ]);
         writeFileSync(join(sandbox.path, 'main.swift'), source);
-        expect(await swiftBuild(buildEngineInput(await openSession(sandbox.path), 'swift/build'))).toStrictEqual([]);
+        expect(await swiftBuild(buildCheckInput(await openSession(sandbox.path), 'swift/build'))).toStrictEqual([]);
     },
 );

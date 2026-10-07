@@ -13,10 +13,10 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { readText, readSource } from '#cli/platform/source.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { deptrySchema } from '#cli/parsers/schema/python/dependencies.ts';
-import type { CheckResult, EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 
 import {
     PIP_INSTALL,
@@ -35,7 +35,7 @@ export async function deptry(session: ToolSession, planned: PlannedCheck): Promi
     const text = readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST));
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;
-    return await runCommandCheck(session, planned, {
+    return await runCheckCommand(session, planned, {
         command: [
             'deptry',
             '.',
@@ -50,10 +50,10 @@ export async function deptry(session: ToolSession, planned: PlannedCheck): Promi
 
 /**
  * pyproject.toml owns every dependency: no hand-kept requirements file, and no pip install outside the allowed paths.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function pipInstalls(input: EngineInput): Finding[] {
+export function pipInstalls(input: CheckInput): Finding[] {
     if (
         !['uv.lock', 'poetry.lock', 'pdm.lock'].some(
             (name) => statSync(join(input.root, input.scope, name), { throwIfNoEntry: false }) !== undefined,

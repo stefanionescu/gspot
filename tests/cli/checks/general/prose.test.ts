@@ -7,8 +7,8 @@ import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
@@ -110,7 +110,7 @@ test('each stdin route scans the bytes held by the run and maps its own alerts',
     const paths = ['first.mts', 'second.cts'];
     const original = paths.map((path) => readSource(session.root, path, session.reads).toString('utf8'));
     for (const path of paths) await Bun.write(join(session.root, path), '// Changed after the run read it.\n');
-    const input = buildEngineInput(session, 'prose/vale', { paths });
+    const input = buildCheckInput(session, 'prose/vale', { paths });
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'vale')]));
     const scanned: string[] = [];

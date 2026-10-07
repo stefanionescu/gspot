@@ -1,4 +1,4 @@
-import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
+import type { Manifest, SettingDeclaration } from '#cli/types/configurations.ts';
 
 export const ISO_DATE_LENGTH = 10;
 
@@ -31,7 +31,7 @@ export const TOOL_DEADLINE = {
     direction: 'ceiling',
     default: 600,
     summary: 'The longest one tool run can take, in seconds. gspot stops a longer run and reports an error.',
-} as const satisfies SettingSpec;
+} as const satisfies SettingDeclaration;
 
 /** A tool setting key is tools.<tool>.<slot>: two segments before the slot. */
 export const TOOL_KEY_DEPTH = 2;

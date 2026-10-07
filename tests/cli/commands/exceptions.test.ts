@@ -12,8 +12,8 @@ import type { SettingsListJson } from '#cli/types/commands/list.ts';
 import type { PolicyPreviewJson } from '#cli/types/commands/policy-edit.ts';
 
 import {
-    HOST_LOCK,
     ROOT_PROJECT,
+    HOST_LOCKFILE,
     EXCEPTION_REASON,
     PRIMITIVE_EXCEPTIONS,
 } from '#tests/config/cli/commands/setting-reasons.ts';
@@ -171,13 +171,13 @@ test('license presence needs a reason only when its declared requirement is weak
 
 test('Git download hosts require a reviewed allowance while HTTPS remains mandatory', async () => {
     await using sandbox = await testdir();
-    const insecureDownload = new URL(HOST_LOCK.packages['node_modules/third'].resolved);
+    const insecureDownload = new URL(HOST_LOCKFILE.packages['node_modules/third'].resolved);
     insecureDownload.protocol = 'http:';
-    const locked = structuredClone(HOST_LOCK);
-    locked.packages['node_modules/third'].resolved = insecureDownload.href;
+    const lockfile = structuredClone(HOST_LOCKFILE);
+    lockfile.packages['node_modules/third'].resolved = insecureDownload.href;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], { tables: 'require_reasons = true\n[agent_rules]\nenabled = false\n' }),
-        'package-lock.json': JSON.stringify(locked, null, 2),
+        'package-lock.json': JSON.stringify(lockfile, null, 2),
     });
     const command = ['check', '--only', 'dependencies/lockfile-hosts', '--json'];
     const failed = await runGspot(sandbox.path, command);
@@ -201,7 +201,7 @@ test('Git download hosts require a reviewed allowance while HTTPS remains mandat
             message: `${insecureDownload.href} is not HTTPS.`,
         },
     ]);
-    await Bun.write(join(sandbox.path, 'package-lock.json'), JSON.stringify(HOST_LOCK));
+    await Bun.write(join(sandbox.path, 'package-lock.json'), JSON.stringify(HOST_LOCKFILE));
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
@@ -209,12 +209,12 @@ test('Git download hosts require a reviewed allowance while HTTPS remains mandat
 
 test('registry allowances stay inside their project scope and reset to inherited defaults', async () => {
     await using sandbox = await testdir();
-    const lock = JSON.stringify(HOST_LOCK, null, 2);
+    const lockfile = JSON.stringify(HOST_LOCKFILE, null, 2);
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], { tables: ROOT_PROJECT }),
-        'package-lock.json': lock,
-        'app/package-lock.json': lock,
-        'sibling/package-lock.json': lock,
+        'package-lock.json': lockfile,
+        'app/package-lock.json': lockfile,
+        'sibling/package-lock.json': lockfile,
     });
     const allowed = await runGspot(sandbox.path, [
         'set',

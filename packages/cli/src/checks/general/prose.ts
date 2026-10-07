@@ -6,12 +6,12 @@ import { join, relative, isAbsolute } from 'node:path';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ValeAlert } from '#cli/types/parsers/vale.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { VALE_CONFIG } from '#cli/config/platform/locations.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
 import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { VALE_STDIN, SCRIPT_GRAMMAR } from '#cli/config/checks/general/prose.ts';
@@ -25,11 +25,11 @@ function assertValeRan(result: SpawnResult): void {
     throw new Error(`Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);
 }
 
-function valeCommand(input: EngineInput): string[] {
+function valeCommand(input: CheckInput): string[] {
     return ['vale', '--config', join(input.root, VALE_CONFIG), '--output', 'JSON', '--no-exit'];
 }
 
-async function pathAlerts(input: EngineInput, routes: ProseRoute[]): Promise<ValeAlert[]> {
+async function pathAlerts(input: CheckInput, routes: ProseRoute[]): Promise<ValeAlert[]> {
     const base = valeCommand(input);
     const alerts: ValeAlert[] = [];
     for (const batch of fileBatches(
@@ -37,7 +37,7 @@ async function pathAlerts(input: EngineInput, routes: ProseRoute[]): Promise<Val
         base,
         process.platform,
     )) {
-        const result = await runEngineTool(input, [...base, ...batch], { cwd: input.root });
+        const result = await runCheckTool(input, [...base, ...batch], { cwd: input.root });
         assertValeRan(result);
         alerts.push(...parseAlerts(result.stdout));
     }
@@ -47,9 +47,9 @@ async function pathAlerts(input: EngineInput, routes: ProseRoute[]): Promise<Val
     }));
 }
 
-async function stdinAlerts(input: EngineInput, route: ProseRoute): Promise<ValeAlert[]> {
+async function stdinAlerts(input: CheckInput, route: ProseRoute): Promise<ValeAlert[]> {
     const text = readSource(input.root, route.path, input.reads).toString('utf8');
-    const result = await runEngineTool(input, [...valeCommand(input), `--ext=${route.extension}`], {
+    const result = await runCheckTool(input, [...valeCommand(input), `--ext=${route.extension}`], {
         cwd: input.root,
         stdin: text,
     });
@@ -62,10 +62,10 @@ async function stdinAlerts(input: EngineInput, route: ProseRoute): Promise<ValeA
 
 /**
  * Runs Vale over the scope's files, by path where Vale has a grammar and through stdin elsewhere. Every alert is a finding.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function vale(input: EngineInput): Promise<Finding[]> {
+export async function vale(input: CheckInput): Promise<Finding[]> {
     if (!hasValePackages(input.root)) throw new Error('The Vale packages are not installed. Run: gspot install');
     const groups = routeGroups(input.files.filter((file) => file.kind === 'source'));
     const findings: Finding[] = [];

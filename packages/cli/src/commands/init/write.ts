@@ -85,8 +85,8 @@ export async function writeSetup(
     });
     const generated = emitAll(session);
     if (options.install) {
-        await preparePackageProject(root, generated.files, log.files, { refreshLocks: false });
-        await preparePythonProject(session, generated.files, log.files, { refreshLocks: false });
+        await preparePackageProject(root, generated.files, log.files, { refreshLockfiles: false });
+        await preparePythonProject(session, generated.files, log.files, { refreshLockfiles: false });
     }
     assertReadUnchanged(log, prepared.read);
     applyPlan(
@@ -111,7 +111,7 @@ export async function writeSetup(
         ...retired.preserved.map((path) => `kept ${path}: it is a folder, or it changed after init read it`),
     );
     const installed = options.install
-        ? await installTools(session, log, { refreshLocks: false })
+        ? await installTools(session, log, { refreshLockfiles: false })
         : { note: 'install skipped; run: gspot install', exitCode: 0 };
     const version = colors.dim(`gspot ${session.version}`);
     return {

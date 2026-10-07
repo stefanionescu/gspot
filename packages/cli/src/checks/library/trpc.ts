@@ -1,16 +1,16 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { ArchitectureElement } from '#cli/types/policy/settings.ts';
 import { getScopeImports } from '#cli/checks/language/javascript/imports.ts';
 
 /**
  * One finding for each value import that reaches into the server paths from outside them.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function trpcBoundaries(input: EngineInput): Promise<Finding[]> {
+export async function trpcBoundaries(input: CheckInput): Promise<Finding[]> {
     const elements = (input.view.settings['architecture.modules'] ?? []) as ArchitectureElement[];
     const server = elements.find((element) => element.name === 'server');
     const isServer = pathMatcher(server?.paths ?? (input.view.options('trpc')['server_files'] as string[]));

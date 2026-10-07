@@ -6,7 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { svgo, webManifest } from '#cli/checks/general/site/source.ts';
 import { ORIGINAL_SVG, SVG_SAVING_CASES, INVALID_WEB_MANIFESTS } from '#tests/config/cli/checks/general/site/source.ts';
@@ -16,7 +16,7 @@ test.each(INVALID_WEB_MANIFESTS)('malformed web manifest %s produces a parse fin
         'gspot.toml': buildPolicy(['site']),
         'site.webmanifest': source,
     });
-    const findings = webManifest(buildEngineInput(await openSession(sandbox.path), 'site/webmanifest'));
+    const findings = webManifest(buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'));
     expect(findings).toMatchObject([{ check: 'site/webmanifest', file: 'site.webmanifest', line: 1, rule: 'parse' }]);
 });
 
@@ -25,7 +25,7 @@ test('a valid web manifest reports missing names and icons and accepts their cor
         'gspot.toml': buildPolicy(['site']),
         'site.webmanifest': '{"icons": [{"src": "icon.png"}]}',
     });
-    const rejected = webManifest(buildEngineInput(await openSession(sandbox.path), 'site/webmanifest'));
+    const rejected = webManifest(buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'));
     expect(rejected).toMatchObject([
         { file: 'site.webmanifest', line: 1, rule: 'missing-name' },
         { file: 'site.webmanifest', line: 1, rule: 'icon' },
@@ -34,7 +34,7 @@ test('a valid web manifest reports missing names and icons and accepts their cor
         'site.webmanifest': '{"name": "Example", "icons": [{"src": "icon.png"}]}',
         'icon.png': 'icon',
     });
-    expect(webManifest(buildEngineInput(await openSession(sandbox.path), 'site/webmanifest'))).toStrictEqual([]);
+    expect(webManifest(buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'))).toStrictEqual([]);
 });
 
 test.each(SVG_SAVING_CASES)('SVG optimization $name', async ({ level, percent, saved, finding }) => {
@@ -70,7 +70,7 @@ test.each(SVG_SAVING_CASES)('SVG optimization $name', async ({ level, percent, s
             });
         }),
     );
-    const findings = await svgo(buildEngineInput(session, 'site/svgo'));
+    const findings = await svgo(buildCheckInput(session, 'site/svgo'));
     if (finding) {
         expect(findings).toMatchObject([{ file: 'icon.svg', rule: 'unoptimized' }]);
         expect(findings).toHaveLength(1);

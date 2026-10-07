@@ -1,7 +1,7 @@
 import { runsOf } from '#plugin/layout.ts';
 import { BLANK } from '#plugin/config/layout.ts';
 import { isImportLike } from '#plugin/imports.ts';
-import { createRule } from '#plugin/definition.ts';
+import { createRule } from '#plugin/create-rule.ts';
 import { isOwnLine, isDirective } from '#plugin/comments.ts';
 import type { StatementStart } from '#plugin/types/layout.ts';
 import { BLANK_LINE_DISTANCE } from '#plugin/config/comments.ts';

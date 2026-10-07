@@ -1,4 +1,4 @@
-// Output parsing metadata shared by configuration and repository checks.
+// Output parsing metadata shared by configuration and command checks.
 import { z } from 'zod';
 
 export const outputSchema = z.strictObject({

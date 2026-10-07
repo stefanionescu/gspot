@@ -20,7 +20,7 @@ test('fixer environment paths expand against the scratch execution root during p
         session,
         `await Bun.write('café settings.txt', 'scratch corrected'); await Bun.write('source.txt', await Bun.file(process.env['SANDBOX_SETTINGS']).text()); await Bun.write(${JSON.stringify(trace)}, process.cwd())`,
     );
-    planned.spec.env = { SANDBOX_SETTINGS: '{root}/café settings.txt' };
+    planned.check.env = { SANDBOX_SETTINGS: '{root}/café settings.txt' };
     const result = await applyFixers(session, [planned], { isDryRun: true });
     expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
     expect(result.diffs).toStrictEqual([textContaining('+scratch corrected')]);

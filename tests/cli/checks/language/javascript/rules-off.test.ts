@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { rulesOff } from '#cli/checks/language/javascript/rules-off.ts';
@@ -22,10 +22,10 @@ test('required ESLint rules inspect later file overrides and accept their correc
     linkInstalledModules(join(sandbox.path, 'node_modules'));
     const session = await openSession(sandbox.path);
     const selected = session.scopes[0]!;
-    const spec = selected.selected
+    const check = selected.selected
         .flatMap((manifest) => manifest.checks)
         .find((check) => check.name === 'javascript/rules-off')!;
-    const input: EngineInput = buildEngineInput(session, spec.name);
+    const input: CheckInput = buildCheckInput(session, check.name);
     const generated = emitAll(session).files.find((file) => file.path === '.gspot/config/eslint.config.mjs')!;
     mkdirSync(join(sandbox.path, '.gspot/config'), { recursive: true });
     const config = join(sandbox.path, generated.path);
@@ -77,7 +77,7 @@ test('required ESLint rules aggregate all affected files once and name their con
         join(sandbox.path, generated.path),
         "import base from './base.mjs';\nexport default [...base, { files: ['**/*.js'], rules: { eqeqeq: 'off' } }];\n",
     );
-    const findings = await rulesOff(buildEngineInput(session, 'javascript/rules-off'));
+    const findings = await rulesOff(buildCheckInput(session, 'javascript/rules-off'));
     expect(findings).toHaveLength(1);
     expect(findings[0]).toMatchObject({
         check: 'javascript/rules-off',

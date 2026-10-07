@@ -5,7 +5,7 @@ import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { ToolSearch } from '#cli/types/tools/install.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { resultSchema } from '#cli/parsers/schema/report.ts';
-import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
+import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 import type { PlanOptions, StageFilter, PlannedCheck } from '#cli/types/planning.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { ScopeView, PolicyFile, IgnoreEntry, ScopeSelection } from '#cli/types/policy/settings.ts';
@@ -13,7 +13,7 @@ import type { ScopeView, PolicyFile, IgnoreEntry, ScopeSelection } from '#cli/ty
 export type SuppressionComment = { file: string; line: number; form: string; reason?: string; forbidden: boolean };
 
 /** Checks by ID, each running through the same session and planned-check callback. */
-export type CheckRegistry = Record<string, { run: Executable['run'] }>;
+export type BuiltInChecks = Record<string, { run: Executable['run'] }>;
 
 export type FixResult = { check: string; changed: string[] } & (
     | { status: 'changed' | 'unchanged' | 'skipped' }
@@ -47,7 +47,7 @@ export type Pass = {
 };
 
 export type RunOptions = RunReportOptions & {
-    checks: CheckRegistry;
+    checks: BuiltInChecks;
     fix: boolean;
     cancelSignal?: AbortSignal;
 };
@@ -56,11 +56,11 @@ export type RunOutcome = { report: RunReport; planned: PlannedCheck[]; fixes?: F
 
 export type IgnoreUse = { entry: IgnoreEntry; matched: number };
 
-export type EngineOutcome = { findings: Finding[]; files: string[] };
+export type CheckOutcome = { findings: Finding[]; files: string[] };
 
-export type Engine = (input: EngineInput) => Finding[] | EngineOutcome | Promise<Finding[] | EngineOutcome>;
+export type BuiltInCheck = (input: CheckInput) => Finding[] | CheckOutcome | Promise<Finding[] | CheckOutcome>;
 
-export type EngineInput = {
+export type CheckInput = {
     installedRoot?: string;
     policyFiles: PolicyFile;
     selection: ScopeSelection;
@@ -79,7 +79,7 @@ export type EngineInput = {
     root: string;
     scope: string;
     view: ScopeView;
-    spec: CheckSpec;
+    check: CheckDeclaration;
     files: TrackedFile[];
     staged?: Set<string>;
 };

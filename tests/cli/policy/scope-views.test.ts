@@ -1,10 +1,13 @@
 // What each scope's view reads from nested tables: the rules an ignore turns off, and the value of each setting.
-import { test, expect } from 'bun:test';
+import { stringify } from 'smol-toml';
 import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
-import { rootView } from '#cli/policy/settings/view.ts';
+import { test, expect, setSystemTime } from 'bun:test';
+import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { knownSettings } from '#cli/policy/settings/known.ts';
 import { POLICY } from '#tests/config/cli/policy/scope-views.ts';
+import { rootView, scopeView } from '#cli/policy/settings/view.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 
 // The validated selections of a repository with inherited and overridden scope policy.
@@ -83,7 +86,7 @@ reason = "The API check is provided by its own native build pipeline."
         const planned = planRun(session, { stage: 'all', skips: [], only: ['nextjs/tsc', 'typescript/tsc'] });
         const scopes = planned.filter((check) => ['api', 'web'].includes(check.scope.scope.path));
         const outcomes = new Map(
-            scopes.map((check) => [`${check.scope.scope.path}:${check.spec.name}`, check.skip?.cause]),
+            scopes.map((check) => [`${check.scope.scope.path}:${check.check.name}`, check.skip?.cause]),
         );
         expect(outcomes).toStrictEqual(
             new Map([
@@ -103,4 +106,27 @@ test('the root view follows its path despite scope order and refuses a selection
     expect(() => rootView(scopes.filter((selection) => selection.scope.path !== ''))).toThrow(
         'The session has no root scope.',
     );
+});
+
+test('ignore expiry uses the UTC date and keeps expired authored policy saved', () => {
+    setSystemTime(new Date('2030-05-20T23:59:59.000Z'));
+    try {
+        const entries = [
+            { check: 'dependencies/osv', rule: 'permanent', reason: 'Reviewed upstream.' },
+            { check: 'dependencies/osv', rule: 'past', until: '2030-05-19' },
+            { check: 'dependencies/osv', rule: 'today', until: '2030-05-20' },
+            { check: 'dependencies/osv', rule: 'future', until: '2030-05-21' },
+        ] as const;
+        const policy = parseStrictPolicy(stringify({ configurations: [], ignore: entries }));
+        const view = scopeView(knownSettings([]), policy, [], '');
+        expect(view.ignoresFor('dependencies/osv')).toStrictEqual([entries[0], entries[3]]);
+        expect(view.rulesOff('dependencies/osv')).toStrictEqual(['permanent', 'future']);
+        expect(policy.ignores).toStrictEqual([...entries]);
+        setSystemTime(new Date('2030-05-21T00:00:00.000Z'));
+        const next = scopeView(knownSettings([]), policy, [], '');
+        expect(next.rulesOff('dependencies/osv')).toStrictEqual(['permanent']);
+        expect(view.rulesOff('dependencies/osv')).toStrictEqual(['permanent', 'future']);
+    } finally {
+        setSystemTime();
+    }
 });

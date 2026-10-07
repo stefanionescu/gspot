@@ -31,15 +31,15 @@ test.each(['recommended', 'all'] as const)(
             skips: [],
             only: ['security/semgrep', 'prose/vale', 'duplication/jscpd', 'licenses/packages'],
         });
-        const security = checks.find((check) => check.spec.name === 'security/semgrep');
+        const security = checks.find((check) => check.check.name === 'security/semgrep');
         expect(security).toBeDefined();
         expect(security?.files).toStrictEqual([]);
         expect(security?.skip).toBeUndefined();
-        expect(checks.find((check) => check.spec.name === 'prose/vale')?.files.map((file) => file.path)).toContain(
+        expect(checks.find((check) => check.check.name === 'prose/vale')?.files.map((file) => file.path)).toContain(
             'guide.md',
         );
-        expect(checks.some((check) => check.spec.name === 'duplication/jscpd')).toBe(level === 'all');
-        expect(checks.find((check) => check.spec.name === 'licenses/packages')?.skip).toMatchObject({
+        expect(checks.some((check) => check.check.name === 'duplication/jscpd')).toBe(level === 'all');
+        expect(checks.find((check) => check.check.name === 'licenses/packages')?.skip).toMatchObject({
             cause: 'setting',
             note: 'requires project setting licenses.allowed',
         });

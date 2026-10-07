@@ -6,7 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import { PACKAGE_FAILURES } from '#tests/config/cli/tools/npm/install.ts';
-import { installPackageLock, preparePackageLock } from '#cli/tools/npm/install.ts';
+import { installPackageLockfile, preparePackageLockfile } from '#cli/tools/npm/install.ts';
 
 test.each([
     { source: 'registry=not-a-valid-url\n', message: 'Invalid registry URL in package manager configuration.' },
@@ -31,7 +31,10 @@ test.each(PACKAGE_FAILURES)(
         const registry = `https://alex:${encodeURIComponent(password)}@registry.example.com/`;
         const source = `registry=${registry}\n//registry.example.com/:_authToken=${token}\n`;
         await createFileTree(repository.path, { '.npmrc': source, 'package.json': '{"private":true}\n' });
-        await createFileTree(isolated.path, { 'package.json': '{"private":true}\n', 'bun.lock': 'original lock\n' });
+        await createFileTree(isolated.path, {
+            'package.json': '{"private":true}\n',
+            'bun.lock': 'original lockfile\n',
+        });
         const run = processes.run;
         const installer = spyOn(processes, 'run').mockImplementation((command, options) => {
             if (command[0] !== 'bun') return run(command, options);
@@ -47,7 +50,7 @@ test.each(PACKAGE_FAILURES)(
             });
         });
         try {
-            const failure = (frozen ? installPackageLock : preparePackageLock)(repository.path, isolated.path, {
+            const failure = (frozen ? installPackageLockfile : preparePackageLockfile)(repository.path, isolated.path, {
                 name: 'bun',
                 version: '1.4.2',
             });
@@ -55,7 +58,7 @@ test.each(PACKAGE_FAILURES)(
             expect(diagnosticError).toMatchObject({ name: 'GspotError', code: 'installation' });
             const diagnostic = diagnosticError instanceof Error ? diagnosticError.message : String(diagnosticError);
             expect(diagnostic).toContain(
-                `bun ${frozen ? 'immutable installation' : 'lock resolution'} failed (exit 1)`,
+                `bun ${frozen ? 'immutable installation' : 'lockfile resolution'} failed (exit 1)`,
             );
             expect(diagnostic).toContain(refusal);
             expect(diagnostic).not.toContain('GITHUB_TOKEN');
@@ -63,7 +66,7 @@ test.each(PACKAGE_FAILURES)(
             for (const credential of [token, password, encodeURIComponent(password)])
                 expect(diagnostic).not.toContain(credential);
             expect(readFileSync(join(repository.path, '.npmrc'), 'utf8')).toBe(source);
-            expect(readFileSync(join(isolated.path, 'bun.lock'), 'utf8')).toBe('original lock\n');
+            expect(readFileSync(join(isolated.path, 'bun.lock'), 'utf8')).toBe('original lockfile\n');
         } finally {
             installer.mockRestore();
         }
@@ -71,11 +74,11 @@ test.each(PACKAGE_FAILURES)(
 );
 
 test.each([false, true])(
-    'a successful native %s operation refuses credentials in its prepared lock',
+    'a successful native %s operation refuses credentials in its prepared lockfile',
     async (frozen) => {
         await using repository = await testdir();
         await using isolated = await testdir();
-        const token = 'synthetic-generated-lock-token';
+        const token = 'synthetic-generated-lockfile-token';
         const source = `registry=https://registry.example.com/\n//registry.example.com/:_authToken=${token}\n`;
         await createFileTree(repository.path, { '.npmrc': source, 'package.json': '{"private":true}\n' });
         await createFileTree(isolated.path, { 'package.json': '{"private":true}\n', 'bun.lock': token });
@@ -91,13 +94,13 @@ test.each([false, true])(
             });
         });
         const diagnostic = await rejection(
-            (frozen ? installPackageLock : preparePackageLock)(repository.path, isolated.path, {
+            (frozen ? installPackageLockfile : preparePackageLockfile)(repository.path, isolated.path, {
                 name: 'bun',
                 version: '1.4.2',
             }),
         );
         expect(diagnostic).toBe(
-            'The package manager included registry credentials in its lock. Existing files were preserved.',
+            'The package manager included registry credentials in its lockfile. Existing files were preserved.',
         );
         expect(diagnostic).not.toContain(token);
         expect(readFileSync(join(repository.path, '.npmrc'), 'utf8')).toBe(source);

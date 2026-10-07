@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { diagnosticSchema, svelteFailureSchema } from '#cli/parsers/schema/svelte.ts';
 import { FAILURE_LINE, DIAGNOSTIC_LINE } from '#cli/config/checks/framework/svelte.ts';
 import { targetInScope, configurationName } from '#cli/configurations/declarations.ts';
 
 /**
  * Reads the machine-verbose report of svelte-check.
- * @param check the check name
+ * @param check the check ID
  * @param scope the scope path, empty for the root
  * @param stdout what svelte-check printed
  * @returns one finding for each error and warning
@@ -42,10 +42,10 @@ export function svelteFindings(check: string, scope: string, stdout: string): Fi
 
 /**
  * Runs svelte-check over the scope: the compiler warnings, the accessibility warnings, and the types.
- * @param input the engine input
+ * @param input the check input
  * @returns one finding for each error and warning
  */
-export async function svelteCheck(input: EngineInput): Promise<Finding[]> {
+export async function svelteCheck(input: CheckInput): Promise<Finding[]> {
     // A scope with a generated TypeScript configuration is checked with its strict compiler options.
     const tsconfig = input.selection.selected
         .flatMap((manifest) => manifest.configs)
@@ -59,8 +59,8 @@ export async function svelteCheck(input: EngineInput): Promise<Finding[]> {
         '--fail-on-warnings',
         ...(tsconfig === undefined ? [] : ['--tsconfig', join(input.root, targetInScope(input.scope, tsconfig))]),
     ];
-    const result = await runEngineTool(input, command, { cwd: input.scopeRoot });
-    const findings = svelteFindings(input.spec.name, input.scope, result.stdout);
+    const result = await runCheckTool(input, command, { cwd: input.scopeRoot });
+    const findings = svelteFindings(input.check.name, input.scope, result.stdout);
     const output = `${result.stdout}\n${result.stderr}`.trim();
     if (result.code !== 0 && findings.length === 0)
         throw new Error(`The svelte-check run exited ${String(result.code)}: ${output}`);

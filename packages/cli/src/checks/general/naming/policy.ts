@@ -1,8 +1,8 @@
 import { compact } from '#cli/platform/objects.ts';
-import { splitParts } from '#cli/parsers/naming/names.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { namingTerms } from '#cli/configurations/manifests.ts';
+import { splitParts } from '#cli/checks/general/naming/words.ts';
 import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
 import { tablesFor, settingValue } from '#cli/policy/settings/lookup.ts';
 import type { Policy, KnownSettings, NamingSettings } from '#cli/types/policy/settings.ts';

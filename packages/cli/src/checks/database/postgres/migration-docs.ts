@@ -2,7 +2,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import type { Migration, DocProblem } from '#cli/types/checks/database/postgres.ts';
 
@@ -106,10 +106,10 @@ export function docProblems(migration: Migration, sections: string[]): DocProble
 
 /**
  * The layout findings of every migration, when postgres.docs asks for the layout.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function migrationDocs(input: EngineInput): Promise<Finding[]> {
+export async function migrationDocs(input: CheckInput): Promise<Finding[]> {
     const tool = input.view.options('postgres');
     const sections = tool['doc_sections'] as string[];
     const migrations = await migrationsOf(input);

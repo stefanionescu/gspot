@@ -5,9 +5,9 @@ import { readSource } from '#cli/platform/source.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { NameAllowance } from '#cli/types/policy/settings.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { SITEMAP_LOCATION } from '#cli/config/checks/general/site.ts';
@@ -24,11 +24,11 @@ function pageOf(url: string): [string, ...string[]] {
 /**
  * The broken links of the built site: between its pages, stylesheets, and fragments, or every link with the external
  * ones included.
- * @param input the engine input
+ * @param input the check input
  * @param isExternal whether the links that leave the site count
  * @returns one finding for each broken link
  */
-export async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Finding[]> {
+export async function brokenLinks(input: CheckInput, isExternal: boolean): Promise<Finding[]> {
     const build = await requireBuild(input);
     const skipped = (
         (input.view.options('tools.linkinator')['exclude_urls'] as LinkExclusion[] | undefined) ?? []
@@ -41,7 +41,7 @@ export async function brokenLinks(input: EngineInput, isExternal: boolean): Prom
         '^sms:',
         ...skipped,
     ].flatMap((pattern) => ['--skip', pattern]);
-    const result = await runEngineTool(
+    const result = await runCheckTool(
         input,
         ['linkinator', '.', '--recurse', '--server-root', '.', '--format', 'json', ...skips],
         { cwd: build.output },
@@ -69,10 +69,10 @@ export async function brokenLinks(input: EngineInput, isExternal: boolean): Prom
 
 /**
  * html-validate over every built page, with the configuration for built output.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function htmlValidate(input: EngineInput): Promise<Finding[]> {
+export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const pages = filesUnder(build.output)
         .filter((path) => path.endsWith('.html'))
@@ -81,10 +81,10 @@ export async function htmlValidate(input: EngineInput): Promise<Finding[]> {
     const configuration = input.manifests
         .values()
         .flatMap((manifest) => manifest.configs)
-        .find((target) => target.check.includes(input.spec.name));
-    if (configuration === undefined) throw new Error(`Check ${input.spec.name} has no declared HTML configuration.`);
+        .find((target) => target.check.includes(input.check.name));
+    if (configuration === undefined) throw new Error(`Check ${input.check.name} has no declared HTML configuration.`);
     const config = join(input.root, targetInScope(input.scope, configuration));
-    const result = await runEngineTool(input, ['html-validate', '--config', config, '--formatter', 'json', ...pages], {
+    const result = await runCheckTool(input, ['html-validate', '--config', config, '--formatter', 'json', ...pages], {
         cwd: build.cwd,
     });
     if (result.code !== 0 && result.code !== 1) throw new Error(`HTML validation failed: ${result.stderr}`);
@@ -105,10 +105,10 @@ export async function htmlValidate(input: EngineInput): Promise<Finding[]> {
 
 /**
  * The selectors of the built stylesheets that no built page or script uses.
- * @param input the engine input
+ * @param input the check input
  * @returns one finding for each unused selector
  */
-export async function purgecss(input: EngineInput): Promise<Finding[]> {
+export async function purgecss(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const sheets = filesUnder(build.output).filter((path) => path.endsWith('.css'));
     if (sheets.length === 0) return [];
@@ -125,7 +125,7 @@ export async function purgecss(input: EngineInput): Promise<Finding[]> {
         '--rejected',
         ...(safelist.length === 0 ? [] : ['--safelist', ...safelist]),
     ];
-    const result = await runEngineTool(input, argv, { cwd: build.output });
+    const result = await runCheckTool(input, argv, { cwd: build.output });
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
     const report = purgecssReportSchema.parse(JSON.parse(result.stdout));
     if (report.length !== sheets.length) throw new Error('Unused CSS analysis returned an incomplete report.');
@@ -150,10 +150,10 @@ export async function purgecss(input: EngineInput): Promise<Finding[]> {
 
 /**
  * The compressed weight of the output paths each ceiling names.
- * @param input the engine input
+ * @param input the check input
  * @returns one finding for each ceiling passed
  */
-export async function siteSize(input: EngineInput): Promise<Finding[]> {
+export async function siteSize(input: CheckInput): Promise<Finding[]> {
     const limits = input.view.options('limits.site')['kilobytes'] as SizeLimit[];
     const build = await requireBuild(input);
     const files = filesUnder(build.output);
@@ -178,10 +178,10 @@ export async function siteSize(input: EngineInput): Promise<Finding[]> {
 
 /**
  * The sitemap against the output: every route it lists is a built page, and every built page is listed unless the policy leaves it out.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function sitemap(input: EngineInput): Promise<Finding[]> {
+export async function sitemap(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const files = new Set(filesUnder(build.output));
     if (!files.has('sitemap.xml')) return [];

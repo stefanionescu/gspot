@@ -10,7 +10,7 @@ import { readTree } from '#tests/harness/preservation.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { rmSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
-test('apply removes and restores an automatically detected stack while retaining settings and custom checks', async () => {
+test('apply removes and restores an automatically detected stack while retaining settings and command checks', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     await createFileTree(sandbox.path, {

@@ -31,9 +31,9 @@ test.skipIf(!isPosix).each(PYTHON_PROJECTS)(
         });
         const { rootProject, rootConfiguration } = prepared;
         const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
-        const lockPath = join(repository.path, '.gspot/uv.lock');
-        const lock = readFileSync(lockPath);
-        expect(lock.toString('utf8')).not.toContain('synthetic-uv-password');
+        const lockfilePath = join(repository.path, '.gspot/uv.lock');
+        const lockfile = readFileSync(lockfilePath);
+        expect(lockfile.toString('utf8')).not.toContain('synthetic-uv-password');
         if (runner === 'mise') {
             // A broken uv on PATH cannot replace the pinned mise installer.
             await createFileTree(artifacts.path, { 'bin/uv': '#!/bin/sh\nexit 87\n' });
@@ -56,7 +56,7 @@ test.skipIf(!isPosix).each(PYTHON_PROJECTS)(
         expect(readFileSync(join(repository.path, 'pyproject.toml'))).toStrictEqual(rootProject);
         expect(readFileSync(join(repository.path, '.venv/authored.txt'), 'utf8')).toBe('keep the project environment');
         expect(readFileSync(join(repository.path, '.gspot/pyproject.toml'))).toStrictEqual(manifest);
-        expect(readFileSync(lockPath)).toStrictEqual(lock);
+        expect(readFileSync(lockfilePath)).toStrictEqual(lockfile);
         expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
     },
     NATIVE_TEST_TIMEOUT_MS,
@@ -76,8 +76,8 @@ test.skipIf(!isPosix).each([
         });
         const { rootConfiguration } = prepared;
         const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
-        const lockPath = join(repository.path, '.gspot/uv.lock');
-        const lock = readFileSync(lockPath);
+        const lockfilePath = join(repository.path, '.gspot/uv.lock');
+        const lockfile = readFileSync(lockfilePath);
         const clone = join(artifacts.path, 'clone');
         commitAll(repository.path);
         gitOutput(repository.path, ['clone', '--quiet', '--no-local', repository.path, clone]);
@@ -86,7 +86,7 @@ test.skipIf(!isPosix).each([
         for (let attempt = 0; attempt < 2; attempt++) {
             {
                 using log = openOwnership(clone);
-                const installed = await installTools(await openSession(clone), log, { refreshLocks: false });
+                const installed = await installTools(await openSession(clone), log, { refreshLockfiles: false });
                 expect(installed.exitCode, installed.note).toBe(0);
                 expect(installed.note).toContain('installed locked Python tools');
             }
@@ -94,9 +94,9 @@ test.skipIf(!isPosix).each([
             expect(status, status.stderr).toMatchObject({ code: 0, stdout: '' });
             expect({
                 manifest: readFileSync(join(clone, '.gspot/pyproject.toml')),
-                lock: readFileSync(join(clone, '.gspot/uv.lock')),
+                lockfile: readFileSync(join(clone, '.gspot/uv.lock')),
                 configuration: readFileSync(join(clone, configuration)),
-            }).toStrictEqual({ manifest, lock, configuration: rootConfiguration });
+            }).toStrictEqual({ manifest, lockfile, configuration: rootConfiguration });
         }
         const prefix = await runTestCommand(
             [environmentExecutable(join(clone, '.gspot/.venv'), 'python'), '-c', 'import sys; print(sys.prefix)'],
@@ -122,7 +122,7 @@ test.skipIf(!isPosix).each([
 );
 
 test.skipIf(!isPosix)(
-    'conflicted Python locks survive offline apply and are repaired by install',
+    'conflicted Python lockfiles survive offline apply and are repaired by install',
     async () => {
         const configuration = 'uv.toml';
         const runner = 'none';
@@ -132,15 +132,15 @@ test.skipIf(!isPosix)(
             runner,
         });
         const { rootConfiguration } = prepared;
-        const lockPath = join(repository.path, '.gspot/uv.lock');
-        const lock = readFileSync(lockPath);
+        const lockfilePath = join(repository.path, '.gspot/uv.lock');
+        const lockfile = readFileSync(lockfilePath);
         {
             using log = openOwnership(repository.path);
-            const installed = await installTools(await openSession(repository.path), log, { refreshLocks: false });
+            const installed = await installTools(await openSession(repository.path), log, { refreshLockfiles: false });
             expect(installed.exitCode, installed.note).toBe(0);
         }
-        chmodSync(lockPath, 0o644);
-        writeFileSync(lockPath, '<<<<<<< interrupted lock\n');
+        chmodSync(lockfilePath, 0o644);
+        writeFileSync(lockfilePath, '<<<<<<< interrupted lockfile\n');
         {
             using log = openOwnership(repository.path);
             const staged: string[] = [];
@@ -164,17 +164,17 @@ test.skipIf(!isPosix)(
         expect(repaired.code, repaired.stdout + repaired.stderr).toBe(0);
         {
             using log = openOwnership(repository.path);
-            const installed = await installTools(await openSession(repository.path), log, { refreshLocks: false });
+            const installed = await installTools(await openSession(repository.path), log, { refreshLockfiles: false });
             expect(installed.exitCode, installed.note).toBe(0);
         }
-        expect(readFileSync(lockPath)).toStrictEqual(lock);
+        expect(readFileSync(lockfilePath)).toStrictEqual(lockfile);
         expect(readFileSync(join(repository.path, configuration))).toStrictEqual(rootConfiguration);
     },
     NATIVE_TEST_TIMEOUT_MS,
 );
 
 test.skipIf(!isPosix)(
-    'an installer that copies index credentials into a lock preserves the working environment',
+    'an installer that copies index credentials into a lockfile preserves the working environment',
     async () => {
         await using repository = await testdir();
         await using artifacts = await testdir();
@@ -187,9 +187,9 @@ test.skipIf(!isPosix)(
         const { root } = prepared;
         const markerPath = environmentExecutable(join(root, '.gspot/.venv'), 'gspot-relocation-marker');
         const marker = readFileSync(markerPath);
-        const lockPath = join(root, '.gspot/uv.lock');
-        const lock = readFileSync(lockPath);
-        // The stand-in for uv copies the index password into the lock it leaves behind.
+        const lockfilePath = join(root, '.gspot/uv.lock');
+        const lockfile = readFileSync(lockfilePath);
+        // The stand-in for uv copies the index password into the lockfile it leaves behind.
         await createFileTree(artifacts.path, {
             'bin/uv': "#!/bin/sh\nprintf '# synthetic-uv-password\\n' >> uv.lock\n",
         });
@@ -217,6 +217,6 @@ test.skipIf(!isPosix)(
         const prefix = await runTestCommand([markerPath], { cwd: root });
         expect(prefix.code, prefix.stderr).toBe(0);
         expect(realpathSync(prefix.stdout.trim())).toBe(realpathSync(join(root, '.gspot/.venv')));
-        expect(readFileSync(lockPath)).toStrictEqual(lock);
+        expect(readFileSync(lockfilePath)).toStrictEqual(lockfile);
     },
 );

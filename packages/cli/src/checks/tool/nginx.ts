@@ -6,14 +6,14 @@ import { readSource } from '#cli/platform/source.ts';
 import { parseDirectives } from '#cli/parsers/nginx.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Mount, NginxMounts } from '#cli/types/checks/tool/nginx.ts';
-import type { EngineInput, EngineOutcome } from '#cli/types/execution/check.ts';
+import type { CheckInput, CheckOutcome } from '#cli/types/execution/check.ts';
 import { NGINX_MAIN, LOCAL_NAMES, HOST_PATTERNS, CERTIFICATE_ARGUMENTS } from '#cli/config/checks/tool/nginx.ts';
 
 // Include paths use the main configuration directory, matching nginx prefix semantics.
-function includedFiles(input: EngineInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
+function includedFiles(input: CheckInput, text: string, base: string): Pick<Mount, 'path' | 'target'>[] {
     const included: Pick<Mount, 'path' | 'target'>[] = [];
     for (const [name, value] of parseDirectives(text)) {
         if (name !== 'include' || value === undefined || value.includes('$')) continue;
@@ -25,7 +25,7 @@ function includedFiles(input: EngineInput, text: string, base: string): Pick<Mou
     return included;
 }
 
-function copyConfigurations(input: EngineInput, path: string, work: string): Map<string, Mount> {
+function copyConfigurations(input: CheckInput, path: string, work: string): Map<string, Mount> {
     const directory = mkdtempSync(join(work, 'configuration-'));
     const configurations = new Map<string, Mount>();
     const pending = [{ path, target: '/etc/nginx/nginx.conf' }];
@@ -47,7 +47,7 @@ function syntaxOutcome(
     path: string,
     configurations: Map<string, Mount>,
     diagnostic: string,
-): EngineOutcome {
+): CheckOutcome {
     const location = / in (?<file>\/[^\n]+):(?<line>\d+)\s*$/u.exec(diagnostic)?.groups;
     const { file: target = '', line = '1' } = location === undefined ? {} : location;
     const file = configurations.get(target)?.path ?? path;
@@ -57,12 +57,7 @@ function syntaxOutcome(
     };
 }
 
-async function testConfiguration(
-    input: EngineInput,
-    path: string,
-    work: string,
-    image: string,
-): Promise<EngineOutcome> {
+async function testConfiguration(input: CheckInput, path: string, work: string, image: string): Promise<CheckOutcome> {
     const configurations = copyConfigurations(input, path, work);
     const mounts = {
         configs: [...configurations.values()],
@@ -70,7 +65,7 @@ async function testConfiguration(
         key: join(work, 'key.pem'),
     };
     const argv = testArguments([...configurations.values()].map((entry) => entry.text).join('\n'), mounts, image);
-    const result = await runEngineTool(input, ['docker', ...argv], { cwd: input.root });
+    const result = await runCheckTool(input, ['docker', ...argv], { cwd: input.root });
     if (result.code === 0) {
         const parsed = [...result.stdout.matchAll(/^# configuration file (?<path>[^\n]+):\r?$/gmu)]
             .map((match) => match.groups?.['path'])
@@ -88,15 +83,15 @@ async function testConfiguration(
     const diagnostic = result.stderr.split('\n').find((line) => line.includes('[emerg]'));
     if (result.code !== 1 || diagnostic === undefined)
         throw new Error(`The nginx run failed (exit ${String(result.code)}): ${result.stderr.trim()}`);
-    return syntaxOutcome(input.spec.name, path, configurations, diagnostic);
+    return syntaxOutcome(input.check.name, path, configurations, diagnostic);
 }
 
 /**
  * Tests every tracked nginx.conf with the server's own parser.
- * @param input the engine input
+ * @param input the check input
  * @returns one finding for each file nginx refuses
  */
-export async function nginxTest(input: EngineInput): Promise<EngineOutcome> {
+export async function nginxTest(input: CheckInput): Promise<CheckOutcome> {
     const image = input.view.options('tools.nginx')['image'] as string;
     const scopes = input.scopeEntries;
     const paths = input.files
@@ -108,7 +103,7 @@ export async function nginxTest(input: EngineInput): Promise<EngineOutcome> {
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = scratchFolder('gspot-nginx-');
     const work = workFolder.path;
-    const certificate = await runEngineTool(
+    const certificate = await runCheckTool(
         input,
         ['openssl', ...CERTIFICATE_ARGUMENTS, '-keyout', join(work, 'key.pem'), '-out', join(work, 'certificate.pem')],
         { cwd: work },

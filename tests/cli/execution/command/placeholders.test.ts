@@ -25,7 +25,7 @@ test('an isolated Markdown command retains the companion configuration owned by 
     });
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'commit', only: ['markdown/markdownlint'], skips: [] })[0]!;
-    const paths = isolatedFiles(session, planned, planned.spec.command!);
+    const paths = isolatedFiles(session, planned, planned.check.command!);
     expect(paths).toContain('.gspot/config/markdownlint-cli2.mjs');
     expect(paths).toContain('.gspot/config/markdownlint.jsonc');
     expect(paths).toContain('README.md');

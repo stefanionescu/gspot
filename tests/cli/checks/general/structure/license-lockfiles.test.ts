@@ -4,26 +4,26 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
-import { LOCKS } from '#tests/config/cli/checks/general/structure/license-locks.ts';
 import { staleAllowlists } from '#cli/checks/general/structure/stale-allowlists.ts';
 import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
+import { LOCKFILES } from '#tests/config/cli/checks/general/structure/license-lockfiles.ts';
 
 const POLICY = buildPolicy(['structure', 'licenses'], {
     tables: '[[licenses.exceptions]]\npackage = "example@2.0.0"\nlicense = "BSD"\nreason = "Reviewed the installed license."\n',
 });
 
-test.each(LOCKS)('license exceptions must match a resolved version in %s', async (filename, lock) => {
+test.each(LOCKFILES)('license exceptions must match a resolved version in %s', async (filename, lockfile) => {
     await using repository = await testdir();
-    await createFileTree(repository.path, { 'gspot.toml': POLICY, [filename]: lock });
+    await createFileTree(repository.path, { 'gspot.toml': POLICY, [filename]: lockfile });
     const check = async () => {
         const session = await openSession(repository.path);
         const scope = session.scopes[0]!;
-        const spec = scope.selected
+        const check = scope.selected
             .flatMap((configuration) => configuration.checks)
             .find((check) => check.name === 'structure/stale-allowlists')!;
-        return staleAllowlists(buildEngineInput(session, spec.name));
+        return staleAllowlists(buildCheckInput(session, check.name));
     };
     expect(await check()).toStrictEqual([
         containing({
@@ -38,28 +38,28 @@ test.each(LOCKS)('license exceptions must match a resolved version in %s', async
     expect(await check()).toStrictEqual([]);
 });
 
-test('scoped license exceptions use ancestor workspace locks but not sibling or private tool locks', async () => {
+test('scoped license exceptions use ancestor workspace lockfiles but not sibling or private tool lockfiles', async () => {
     await using repository = await testdir();
     const root = repository.path;
-    const lock = 'version = 1\n[[package]]\nname = "Example_Package"\nversion = "1.2.3"\n';
+    const lockfile = 'version = 1\n[[package]]\nname = "Example_Package"\nversion = "1.2.3"\n';
     await createFileTree(root, {
         'gspot.toml': buildPolicy(['structure', 'licenses'], {
             tables: '[[scope]]\npath = "app"\n[[scope.licenses.exceptions]]\npackage = "example-package@1.2.3"\nlicense = "BSD"\nreason = "Reviewed dependency metadata."\n',
         }),
         'app/source.py': 'selected = True\n',
-        'sibling/uv.lock': lock,
-        '.gspot/uv.lock': lock,
+        'sibling/uv.lock': lockfile,
+        '.gspot/uv.lock': lockfile,
     });
     const check = async () => {
         const session = await openSession(root);
         const scope = session.scopes[0]!;
-        const spec = scope.selected
+        const check = scope.selected
             .flatMap((configuration) => configuration.checks)
             .find((check) => check.name === 'structure/stale-allowlists')!;
-        return staleAllowlists(buildEngineInput(session, spec.name));
+        return staleAllowlists(buildCheckInput(session, check.name));
     };
     expect(await rejection(check())).toContain('require a dependency lockfile');
-    await Bun.write(`${root}/uv.lock`, lock);
+    await Bun.write(`${root}/uv.lock`, lockfile);
     expect(await check()).toStrictEqual([]);
 });
 

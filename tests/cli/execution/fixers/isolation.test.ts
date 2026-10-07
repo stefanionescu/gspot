@@ -21,7 +21,7 @@ test.each([
         await createFileTree(external.path, { 'source.txt': 'external original' });
         const session = await openSession(sandbox.path);
         const planned = planFixer(session, "await Bun.write('source.txt', 'changed')");
-        planned.spec.run_in_copy = isolated;
+        planned.check.run_in_copy = isolated;
         rmSync(join(sandbox.path, 'source.txt'));
         symlinkSync(join(external.path, 'source.txt'), join(sandbox.path, 'source.txt'));
         expect(await rejection(applyFixers(session, [planned], { isDryRun: preview }))).toContain(
@@ -55,8 +55,8 @@ test.each([false, true])(
             process.exitCode = 3;
         `,
         );
-        planned.spec.run_in_copy = true;
-        planned.spec.exit_codes = [3];
+        planned.check.run_in_copy = true;
+        planned.check.exit_codes = [3];
         const result = await applyFixers(session, [planned], { isDryRun: preview });
         expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
         expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
@@ -86,7 +86,7 @@ test('isolated correction refuses to overwrite source changed during execution a
             await Bun.write('z-last.txt', 'last correction');
         `,
     );
-    planned.spec.run_in_copy = true;
+    planned.check.run_in_copy = true;
     expect(
         await rejection(applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!)),
     ).toContain('z-last.txt changed while its fix was running');
@@ -94,7 +94,7 @@ test('isolated correction refuses to overwrite source changed during execution a
     expect(readFileSync(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
     expect(existsSync(readFileSync(trace, 'utf8'))).toBe(false);
     const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
-    corrected.spec.run_in_copy = true;
+    corrected.check.run_in_copy = true;
     expect(
         await applyFixers(session, [corrected], { isDryRun: false }).then(({ results }) => results[0]!),
     ).toMatchObject({
@@ -169,7 +169,7 @@ test.each([false, true])(
             session,
             `await Bun.write('source.txt', 'partial'); await Bun.write(${JSON.stringify(ready + '.prepared')}, String(process.pid)); (await import('node:fs')).renameSync(${JSON.stringify(ready + '.prepared')}, ${JSON.stringify(ready)}); await Bun.sleep(10000);`,
         );
-        planned.spec.run_in_copy = isolated;
+        planned.check.run_in_copy = isolated;
         const execution = applyFixers({ ...session, cancelSignal: controller.signal }, [planned], {
             isDryRun: false,
         }).then(({ results }) => results[0]!);

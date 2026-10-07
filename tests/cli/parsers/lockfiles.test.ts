@@ -1,17 +1,17 @@
 // The package identities each supported lockfile format resolves, and the formats and files it refuses.
 import { test, expect } from 'bun:test';
-import { lockedPackages } from '#cli/parsers/lockfiles.ts';
-import { LOCK_CASES } from '#tests/config/cli/parsers/lockfiles.ts';
+import { lockfilePackages } from '#cli/parsers/lockfiles.ts';
+import { LOCKFILE_CASES } from '#tests/config/cli/parsers/lockfiles.ts';
 
-test.each(LOCK_CASES)('%s resolves the package to its locked version', (filename, lock) => {
-    expect(lockedPackages(filename, lock)).toStrictEqual(new Set(['example@1.2.3']));
+test.each(LOCKFILE_CASES)('%s resolves the package to its locked version', (filename, lockfile) => {
+    expect(lockfilePackages(filename, lockfile)).toStrictEqual(new Set(['example@1.2.3']));
 });
 
 test.each([
     ['package-lock.json', 'JSON Parse error'],
     ['uv.lock', 'Invalid TOML document'],
 ])('malformed %s cannot prove exception membership', (filename, diagnostic) => {
-    expect(() => lockedPackages(filename, '{ broken lockfile')).toThrow(diagnostic);
+    expect(() => lockfilePackages(filename, '{ broken lockfile')).toThrow(diagnostic);
 });
 
 test('npm lockfiles retain resolved alias names, scoped names, and nested versions', () => {
@@ -32,8 +32,8 @@ test('npm lockfiles retain resolved alias names, scoped names, and nested versio
             'node_modules/example': { version: '1.0.0' },
         },
     });
-    const identities = lockedPackages('package-lock.json', nested);
-    expect(identities).toStrictEqual(lockedPackages('package-lock.json', flat));
+    const identities = lockfilePackages('package-lock.json', nested);
+    expect(identities).toStrictEqual(lockfilePackages('package-lock.json', flat));
     expect(identities.has('is-number@7.0.0')).toBe(true);
     expect(identities.has('named-alias@7.0.0')).toBe(false);
     expect(identities.has('example@1.0.0')).toBe(true);
@@ -41,7 +41,7 @@ test('npm lockfiles retain resolved alias names, scoped names, and nested versio
 });
 
 test('Yarn nested aliases retain resolved names instead of installation names', () => {
-    const lock = `# yarn lockfile v1
+    const lockfile = `# yarn lockfile v1
 "named-alias@npm:is-number@7.0.0":
   version "7.0.0"
 "types-alias@npm:@types/is-number@7.0.5":
@@ -49,11 +49,13 @@ test('Yarn nested aliases retain resolved names instead of installation names', 
 "@types/is-number@7.0.5":
   version "7.0.5"
 `;
-    expect(lockedPackages('yarn.lock', lock)).toStrictEqual(new Set(['is-number@7.0.0', '@types/is-number@7.0.5']));
+    expect(lockfilePackages('yarn.lock', lockfile)).toStrictEqual(
+        new Set(['is-number@7.0.0', '@types/is-number@7.0.5']),
+    );
 });
 
-test.each(['unknown.lock', '__proto__'])('unsupported lock format %s retains the format error', (filename) => {
-    expect(() => lockedPackages(filename, '{}')).toThrow(
+test.each(['unknown.lock', '__proto__'])('unsupported lockfile format %s retains the format error', (filename) => {
+    expect(() => lockfilePackages(filename, '{}')).toThrow(
         `Cannot read packages from ${filename}. gspot reads uv.lock, poetry.lock, pdm.lock, package-lock.json, bun.lock, pnpm-lock.yaml, and yarn.lock.`,
     );
 });

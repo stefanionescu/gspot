@@ -17,20 +17,20 @@ import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
 import { cpSync, chmodSync, mkdirSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test.each(['missing', 'stale'] as const)(
-    'a failed immutable npm install preserves a %s lock and the previous tool tree',
+    'a failed immutable npm install preserves a %s lockfile and the previous tool tree',
     async (state) => {
         await using fixture = await createPackageProject('npm', 'package.json', 'mise');
         const installed = await installCommand({ cwd: fixture.root, isDryRun: false });
         expect(installed.exitCode, installed.text).toBe(0);
-        const { lockPath, lock, ownershipPath } = readPackageInputs(fixture.root, 'npm');
+        const { lockfilePath, lockfile, ownershipPath } = readPackageInputs(fixture.root, 'npm');
         const readmePath = join(fixture.root, '.gspot/node_modules/prettier/README.md');
         const readme = readFileSync(readmePath);
-        if (state === 'missing') unlinkSync(lockPath);
+        if (state === 'missing') unlinkSync(lockfilePath);
         else {
-            chmodSync(lockPath, 0o644);
-            writeFileSync(lockPath, lock.toString('utf8').replaceAll(prettierManifest.version, '0.0.0'));
+            chmodSync(lockfilePath, 0o644);
+            writeFileSync(lockfilePath, lockfile.toString('utf8').replaceAll(prettierManifest.version, '0.0.0'));
         }
-        const before = state === 'missing' ? undefined : readFileSync(lockPath);
+        const before = state === 'missing' ? undefined : readFileSync(lockfilePath);
         const ownership = readFileSync(ownershipPath);
         const run = processes.run;
         const installer = spyOn(processes, 'run').mockImplementation((argv, options) => {
@@ -48,7 +48,7 @@ test.each(['missing', 'stale'] as const)(
             const failed = await installCommand({ cwd: fixture.root, isDryRun: false });
             expect(failed.exitCode, failed.text).toBe(2);
             expect(failed.text).toContain('Fixture immutable install failure');
-            expect(existsSync(lockPath) ? readFileSync(lockPath) : undefined).toStrictEqual(before);
+            expect(existsSync(lockfilePath) ? readFileSync(lockfilePath) : undefined).toStrictEqual(before);
             expect(readFileSync(readmePath)).toStrictEqual(readme);
             expect(readFileSync(ownershipPath)).toStrictEqual(ownership);
         } finally {
@@ -56,16 +56,16 @@ test.each(['missing', 'stale'] as const)(
         }
         const repaired = await installCommand({ cwd: fixture.root, isDryRun: false });
         expect(repaired.exitCode, repaired.text).toBe(0);
-        expect(readFileSync(lockPath)).toStrictEqual(lock);
+        expect(readFileSync(lockfilePath)).toStrictEqual(lockfile);
         expect(readFileSync(readmePath)).toStrictEqual(readme);
     },
 );
 
-test('explicit lock refresh installs changed package bytes at the same version and its preview writes nothing', async () => {
+test('explicit lockfile refresh installs changed package bytes at the same version and its preview writes nothing', async () => {
     await using fixture = await createPackageProject('npm', 'package.json', 'mise');
     const installed = await installCommand({ cwd: fixture.root, isDryRun: false });
     expect(installed.exitCode, installed.text).toBe(0);
-    const { lockPath, lock, ownershipPath, ownership } = readPackageInputs(fixture.root, 'npm');
+    const { lockfilePath, lockfile, ownershipPath, ownership } = readPackageInputs(fixture.root, 'npm');
     const readmePath = join(fixture.root, '.gspot/node_modules/prettier/README.md');
     const original = readFileSync(readmePath, 'utf8');
     const changedSource = join(fixture.artifacts, 'updated-package');
@@ -88,25 +88,25 @@ test('explicit lock refresh installs changed package bytes at the same version a
     await createFileTree(fixture.root, {
         '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${PACKAGE_REGISTRY_TOKEN}\n`,
     });
-    const preview = await runGspot(fixture.root, ['install', '--refresh-locks', '--dry-run', '--json']);
+    const preview = await runGspot(fixture.root, ['install', '--refresh-lockfiles', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(JSON.parse(preview.stdout) as InstallJson).toMatchObject({
         dryRun: true,
         steps: containingAll<string[]>([containingAll<string>(['--package-lock-only'])]),
     });
     expect({
-        lock: readFileSync(lockPath),
+        lockfile: readFileSync(lockfilePath),
         readme: readFileSync(readmePath, 'utf8'),
         ownership: readFileSync(ownershipPath),
-    }).toStrictEqual({ lock, readme: original, ownership });
+    }).toStrictEqual({ lockfile, readme: original, ownership });
     const immutable = await runGspot(fixture.root, ['install', '--json']);
     expect(immutable.code, immutable.stdout + immutable.stderr).toBe(2);
     expect(immutable.stdout + immutable.stderr).toContain('Integrity checksum failed');
-    expect(readFileSync(lockPath)).toStrictEqual(lock);
+    expect(readFileSync(lockfilePath)).toStrictEqual(lockfile);
     expect(readFileSync(readmePath, 'utf8')).toBe(original);
-    const refreshed = await runGspot(fixture.root, ['install', '--refresh-locks', '--json']);
+    const refreshed = await runGspot(fixture.root, ['install', '--refresh-lockfiles', '--json']);
     expect(refreshed.code, refreshed.stdout + refreshed.stderr).toBe(0);
-    expect(readFileSync(lockPath)).not.toStrictEqual(lock);
+    expect(readFileSync(lockfilePath)).not.toStrictEqual(lockfile);
     expect(readFileSync(readmePath, 'utf8')).toBe(changed);
     expect(
         JSON.parse(readFileSync(join(fixture.root, '.gspot/node_modules/prettier/package.json'), 'utf8')),
@@ -114,15 +114,15 @@ test('explicit lock refresh installs changed package bytes at the same version a
 });
 
 test.each(['missing', 'stale'] as const)(
-    'direct package installation refuses a %s lock without publishing a tree',
+    'direct package installation refuses a %s lockfile without publishing a tree',
     async (state) => {
         await using fixture = await createPackageProject('npm', 'package.json', 'mise');
         using log = openOwnership(fixture.root);
-        const { lockPath, lock, ownershipPath, ownership } = readPackageInputs(fixture.root, 'npm');
-        if (state === 'missing') unlinkSync(lockPath);
+        const { lockfilePath, lockfile, ownershipPath, ownership } = readPackageInputs(fixture.root, 'npm');
+        if (state === 'missing') unlinkSync(lockfilePath);
         else {
-            chmodSync(lockPath, 0o644);
-            writeFileSync(lockPath, lock.toString('utf8').replaceAll(prettierManifest.version, '0.0.0'));
+            chmodSync(lockfilePath, 0o644);
+            writeFileSync(lockfilePath, lockfile.toString('utf8').replaceAll(prettierManifest.version, '0.0.0'));
         }
         const staged: string[] = [];
         const { tools } = fixture;

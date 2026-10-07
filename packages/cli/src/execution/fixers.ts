@@ -14,8 +14,8 @@ import type { PreparedCommand } from '#cli/types/execution/command.ts';
 import { isolatedFiles } from '#cli/execution/command/placeholders.ts';
 import { copyFiles, copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/execution/runtime.ts';
+import { prepareCommand, commandEnvironment } from '#cli/execution/command/check.ts';
 import type { FixReport, FixResult, FixOptions } from '#cli/types/execution/check.ts';
-import { prepareCommand, commandEnvironment } from '#cli/execution/command/runner.ts';
 import { hasToolError, toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
@@ -43,18 +43,18 @@ function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string
 }
 
 function fixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
-    const failure = executionFailure(result, planned.spec.name, planned.scope.view);
+    const failure = executionFailure(result, planned.check.name, planned.scope.view);
     if (failure !== undefined) return failure.note;
     // A code the check declares for findings means findings remain after the fix.
-    const { spec } = planned;
-    if (!hasToolError(spec, planned.tool, result) && (result.code === 0 || spec.exit_codes !== undefined))
+    const { check } = planned;
+    if (!hasToolError(check, planned.tool, result) && (result.code === 0 || check.exit_codes !== undefined))
         return undefined;
     const detail = [result.stderr.trim(), result.stdout.trim()].filter((text) => text !== '').join('\n');
-    return [`${planned.spec.name} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': ');
+    return [`${planned.check.name} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': ');
 }
 
 async function runFix(session: ToolSession, planned: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
-    const check = planned.spec.name;
+    const check = planned.check.name;
     const paths = [...new Set([...planned.files.map((file) => file.path), ...planned.triggerPaths])];
     const before = contentsOf(prepared.root, paths);
     for (const command of prepared.commands) {
@@ -155,13 +155,13 @@ async function fixerPasses(
  * @returns the fix outcome, including changes made before a failure
  */
 async function runFixer(session: ToolSession, planned: PlannedCheck, workingDirectory: string): Promise<FixResult> {
-    const check = planned.spec.name;
+    const check = planned.check.name;
     if (session.cancelSignal?.aborted === true)
         return { check, status: 'failed', changed: [], note: 'The fix was canceled.' };
     if (planned.skip !== undefined || planned.files.length + planned.triggerPaths.length === 0)
         return { check, status: 'skipped', changed: [] };
     // applyFixers selects only checks with a validated, nonempty fixer command.
-    const command = planned.spec.fix as string[];
+    const command = planned.check.fix as string[];
     const name = command[0] as string;
     const tool = toolPin(session.manifests.values(), name, planned.manifest, planned.tool);
     const selected = { ...planned, tool };
@@ -176,7 +176,7 @@ async function runFixer(session: ToolSession, planned: PlannedCheck, workingDire
             changed: [],
             note: availability.note,
         };
-    if (planned.spec.run_in_copy === true)
+    if (planned.check.run_in_copy === true)
         return isolatedFix(session, selected, workingDirectory, command, availability.path);
     const workspaceSession = { ...session, root: workingDirectory };
     const prepared = prepareCommand(
@@ -202,7 +202,7 @@ export async function applyFixers(
     options: FixOptions,
 ): Promise<FixReport> {
     const { isDryRun } = options;
-    const checks = planned.filter((check) => check.spec.fix !== undefined);
+    const checks = planned.filter((check) => check.check.fix !== undefined);
     const paths = [
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
     ].toSorted((a, b) => a.localeCompare(b));

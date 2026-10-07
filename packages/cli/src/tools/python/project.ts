@@ -10,31 +10,31 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
-import { pythonLockMatches } from '#cli/tools/python/lockfiles.ts';
 import { parsePythonSettings } from '#cli/tools/python/registry.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { PYTHON_MIN_VERSION } from '#cli/config/parsers/packages.ts';
+import { pythonLockfileMatches } from '#cli/tools/python/lockfiles.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { pythonToolProjectSchema } from '#cli/parsers/schema/python/tools.ts';
-import type { LockDrift, ToolOwner, LockPreparation } from '#cli/types/tools/install.ts';
-import { UV_LOCK, DOT_GSPOT, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
-import { installationDiagnostics, assertCredentialFreeLock } from '#cli/tools/credentials.ts';
+import { DOT_GSPOT, UV_LOCKFILE, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
+import type { ToolOwner, LockfileDrift, LockfilePreparation } from '#cli/types/tools/install.ts';
+import { installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
 import type { PythonToolInputs, PythonPreparation, PythonInstallationPlan } from '#cli/types/tools/python.ts';
 import { chmodSync, lstatSync, unlinkSync, copyFileSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 
 import {
     UV_MISE_PIN,
     UV_ACQUISITION,
-    UV_LOCK_ARGUMENTS,
     UV_VENV_ARGUMENTS,
     UV_INSTALL_ARGUMENTS,
+    UV_LOCKFILE_ARGUMENTS,
 } from '#cli/config/tools/python.ts';
 
 /**
  * Copy repository uv index settings into the scratch folder, make relative paths absolute, and collect registry credentials.
  * @param root the repository root.
  * @param work the directory the resolution runs in.
- * @returns index credentials that must remain absent from generated lock files.
+ * @returns index credentials that must remain absent from generated lockfiles.
  */
 function writePythonSettings(root: string, work: string): string[] {
     const { settings, credentials } = parsePythonSettings(root, {
@@ -46,24 +46,24 @@ function writePythonSettings(root: string, work: string): string[] {
     return credentials;
 }
 
-// A temporary lock must not publish credentials supplied through repository index settings.
-function readPythonLock(work: string, credentials: string[]): string {
-    const lock = readFileSync(join(work, 'uv.lock'), 'utf8');
-    assertCredentialFreeLock(
-        lock,
+// A temporary lockfile must not publish credentials supplied through repository index settings.
+function readPythonLockfile(work: string, credentials: string[]): string {
+    const lockfile = readFileSync(join(work, 'uv.lock'), 'utf8');
+    assertCredentialFreeLockfile(
+        lockfile,
         credentials,
         new GspotError(
             'installation',
-            'The uv lock includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install',
+            'The uv lockfile includes repository index credentials. Existing files were preserved. Remove credentials from the index URL and run: gspot install',
         ),
     );
     const project = readFileSync(join(work, 'pyproject.toml'), 'utf8');
-    if (!pythonLockMatches(project, lock))
+    if (!pythonLockfileMatches(project, lockfile))
         throw new GspotError(
             'installation',
-            'The uv lock does not match the tool project. Existing files were preserved.',
+            'The uv lockfile does not match the tool project. Existing files were preserved.',
         );
-    return lock;
+    return lockfile;
 }
 
 // uv always runs inside its temporary project and cannot download an interpreter.
@@ -80,7 +80,7 @@ async function runUv(
             env: { UV_PROJECT_ENVIRONMENT: join(work, '.venv'), UV_VENV_RELOCATABLE: 'true', UV_LINK_MODE: 'copy' },
         },
     );
-    if (result.code === 0) readPythonLock(work, credentials);
+    if (result.code === 0) readPythonLockfile(work, credentials);
     return result;
 }
 
@@ -105,7 +105,7 @@ async function relocateInterpreter(work: string): Promise<void> {
         );
 }
 
-// Lock, sync, and relocate the environment in a scratch folder, then install it once its inputs are unchanged.
+// Run uv lock and uv sync in a scratch folder. Relocate and install the environment once its inputs are unchanged.
 async function installInWork(
     root: string,
     owner: ToolOwner,
@@ -113,9 +113,9 @@ async function installInWork(
     inputs: PythonToolInputs,
     executable: string,
 ): Promise<void> {
-    const { project, lock } = inputs;
+    const { project, lockfile } = inputs;
     writeFileSync(join(work, 'pyproject.toml'), project.bytes);
-    writeFileSync(join(work, 'uv.lock'), lock.bytes);
+    writeFileSync(join(work, 'uv.lock'), lockfile.bytes);
     const credentials = writePythonSettings(root, work);
     for (const args of [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS]) {
         const result = await runUv(work, args, executable, credentials);
@@ -129,43 +129,46 @@ async function installInWork(
     }
     if (
         !readFileSync(join(work, 'pyproject.toml')).equals(project.bytes) ||
-        !readFileSync(join(work, 'uv.lock')).equals(lock.bytes)
+        !readFileSync(join(work, 'uv.lock')).equals(lockfile.bytes)
     )
         throw new GspotError('installation', `The uv run changed locked inputs. ${SETUP}`);
     await relocateInterpreter(work);
-    if (!isDeepStrictEqual(owner.read(TOOL_PYTHON_PROJECT), project) || !isDeepStrictEqual(owner.read(UV_LOCK), lock))
+    if (
+        !isDeepStrictEqual(owner.read(TOOL_PYTHON_PROJECT), project) ||
+        !isDeepStrictEqual(owner.read(UV_LOCKFILE), lockfile)
+    )
         throw new GspotError('installation', 'Python tool inputs changed during installation. Retry the command.');
     owner.installTree('python', join(work, '.venv'));
 }
 
 /**
  * Resolve Python tool requirements outside the repository before writing generated files.
- * Appends the successfully prepared lock to files.
+ * Appends the successfully prepared lockfile to files.
  * @param preparation the repository root and command-owned installer.
  * @param files the generated files, among them the Python tool project.
  *
- * @param owner the lifecycle owner that records the lock.
- * @param options the caller's lock preparation request.
- * @param options.refreshLocks resolve from declared pins without reusing the recorded lock.
+ * @param owner the lifecycle owner that records the lockfile.
+ * @param options the caller's lockfile preparation request.
+ * @param options.refreshLockfiles resolve from declared pins without reusing the recorded lockfile.
  */
 export async function preparePythonProject(
     preparation: PythonPreparation,
     files: GeneratedFile[],
     owner: Pick<ToolOwner, 'read'>,
-    { refreshLocks }: LockPreparation,
+    { refreshLockfiles }: LockfilePreparation,
 ): Promise<void> {
     const { root } = preparation;
     const project = files.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return;
     pythonToolProjectSchema.parse(parse(project.content));
-    const original = owner.read(UV_LOCK);
-    let content = refreshLocks ? undefined : original?.bytes.toString('utf8');
-    if (!pythonLockMatches(project.content, content)) {
-        using workFolder = scratchFolder('gspot-python-lock-');
+    const original = owner.read(UV_LOCKFILE);
+    let content = refreshLockfiles ? undefined : original?.bytes.toString('utf8');
+    if (!pythonLockfileMatches(project.content, content)) {
+        using workFolder = scratchFolder('gspot-python-lockfile-');
         const work = workFolder.path;
         writeFileSync(join(work, 'pyproject.toml'), project.content);
         const credentials = writePythonSettings(root, work);
-        const result = await runUv(work, UV_LOCK_ARGUMENTS, await preparation.pythonInstaller(), credentials);
+        const result = await runUv(work, UV_LOCKFILE_ARGUMENTS, await preparation.pythonInstaller(), credentials);
         if (result.missing)
             throw new GspotError('tool', `uv is unavailable. Run: ${UV_ACQUISITION}, then rerun the command.`);
         if (result.code !== 0)
@@ -176,7 +179,7 @@ export async function preparePythonProject(
         content = readFileSync(join(work, 'uv.lock'), 'utf8');
     }
     files.push({
-        path: UV_LOCK,
+        path: UV_LOCKFILE,
         content,
         readOnly: true,
         kind: 'lock',
@@ -185,47 +188,47 @@ export async function preparePythonProject(
 }
 
 /**
- * Read Python lock drift without resolving dependencies or creating ownership state.
+ * Read Python lockfile drift without resolving dependencies or creating ownership state.
  * @param root the repository root.
  * @param generated the generated files, among them the Python tool project.
- * @returns the lock path with what is wrong with it, or undefined when there is no Python tool project.
+ * @returns the lockfile path with what is wrong with it, or undefined when there is no Python tool project.
  */
-export function pythonLockDrift(root: string, generated: GeneratedFile[]): LockDrift | undefined {
+export function pythonLockfileDrift(root: string, generated: GeneratedFile[]): LockfileDrift | undefined {
     const project = generated.find((file) => file.path === TOOL_PYTHON_PROJECT);
     if (project === undefined) return undefined;
     using files = openRoot(root);
-    const lock = files.read(UV_LOCK);
-    if (lock === undefined) return { path: UV_LOCK, kind: 'missing' };
-    return pythonLockMatches(project.content, lock.bytes.toString('utf8'))
-        ? { path: UV_LOCK }
-        : { path: UV_LOCK, kind: 'changed' };
+    const lockfile = files.read(UV_LOCKFILE);
+    if (lockfile === undefined) return { path: UV_LOCKFILE, kind: 'missing' };
+    return pythonLockfileMatches(project.content, lockfile.bytes.toString('utf8'))
+        ? { path: UV_LOCKFILE }
+        : { path: UV_LOCKFILE, kind: 'changed' };
 }
 
 /**
- * Plan the uv installation, lock resolution, and locked Python environment.
+ * Plan the uv installation, lockfile resolution, and locked Python environment.
  * @param root the repository root.
  * @param proposed the generated Python tool project, when previewing uncommitted output.
  * @param runner the configured task runner.
- * @param options the caller's lock preparation request.
- * @param options.refreshLocks include fresh resolution even when the recorded pins match.
+ * @param options the caller's lockfile preparation request.
+ * @param options.refreshLockfiles include fresh resolution even when the recorded pins match.
  * @returns commands for each phase, or empty phases without a Python tool project.
  */
 export function pythonInstallationPlan(
     root: string,
     proposed: string | undefined,
     runner: string | undefined,
-    { refreshLocks }: LockPreparation,
+    { refreshLockfiles }: LockfilePreparation,
 ): PythonInstallationPlan {
     using files = openRoot(root);
     const project = proposed ?? files.read(TOOL_PYTHON_PROJECT)?.bytes.toString('utf8');
-    if (project === undefined) return { installer: [], lock: [], environment: [] };
+    if (project === undefined) return { installer: [], lockfile: [], environment: [] };
     pythonToolProjectSchema.parse(parse(project));
-    const recorded = files.read(UV_LOCK);
+    const recorded = files.read(UV_LOCKFILE);
     return {
         installer: runner === 'mise' ? [['mise', 'install', UV_MISE_PIN]] : [],
-        lock:
-            refreshLocks || !pythonLockMatches(project, recorded?.bytes.toString('utf8'))
-                ? [['uv', ...UV_LOCK_ARGUMENTS, '--project', DOT_GSPOT]]
+        lockfile:
+            refreshLockfiles || !pythonLockfileMatches(project, recorded?.bytes.toString('utf8'))
+                ? [['uv', ...UV_LOCKFILE_ARGUMENTS, '--project', DOT_GSPOT]]
                 : [],
         environment: [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS].map((args) => ['uv', ...args, '--project', DOT_GSPOT]),
     };
@@ -242,11 +245,14 @@ export async function installPythonProject(root: string, owner: ToolOwner, execu
     const project = owner.read(TOOL_PYTHON_PROJECT);
     if (project === undefined) return '';
     pythonToolProjectSchema.parse(parse(project.bytes.toString('utf8')));
-    const lock = owner.read(UV_LOCK);
-    if (lock === undefined || !pythonLockMatches(project.bytes.toString('utf8'), lock.bytes.toString('utf8')))
+    const lockfile = owner.read(UV_LOCKFILE);
+    if (
+        lockfile === undefined ||
+        !pythonLockfileMatches(project.bytes.toString('utf8'), lockfile.bytes.toString('utf8'))
+    )
         throw new GspotError('installation', SETUP);
     using workFolder = scratchFolder('gspot-python-install-');
     const work = workFolder.path;
-    await installInWork(root, owner, work, { project, lock }, executable);
+    await installInWork(root, owner, work, { project, lockfile }, executable);
     return 'installed locked Python tools under .gspot/.venv';
 }

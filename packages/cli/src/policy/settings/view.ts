@@ -1,6 +1,6 @@
 import { coversScope } from '#cli/repository/selectors.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { activeIgnores } from '#cli/policy/settings/ignores.ts';
+import { ISO_DATE_LENGTH } from '#cli/config/policy/settings.ts';
 import { tablesFor, listSettings, settingValue } from '#cli/policy/settings/lookup.ts';
 
 import type {
@@ -41,6 +41,16 @@ function optionSlots(
         for (const [slot, value] of Object.entries(table))
             if (slot !== 'verbatim' && merged[slot] === undefined) merged[slot] = value;
     return merged;
+}
+
+/**
+ * Select saved ignores whose expiry date has not arrived.
+ * @param policy the repository policy, including inactive ignores
+ * @returns the ignores that apply today in UTC
+ */
+export function activeIgnores(policy: Policy): IgnoreEntry[] {
+    const today = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
+    return policy.ignores.filter((entry) => entry.until === undefined || today < entry.until);
 }
 
 /**

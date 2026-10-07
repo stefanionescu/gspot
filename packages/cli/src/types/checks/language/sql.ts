@@ -1,6 +1,6 @@
 import type { SqlFile } from '#cli/types/parsers/sql.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 
 export type SqlSource = { path: string; text: string };
 
@@ -9,7 +9,7 @@ export type FunctionOption = {
 };
 
 export type SqlFileInput = {
-    input: EngineInput;
+    input: CheckInput;
     source: SqlSource;
     parsed: SqlFile;
     threshold: number | undefined;

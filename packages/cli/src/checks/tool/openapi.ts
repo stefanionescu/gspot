@@ -7,14 +7,14 @@ import { parseCommand } from '#cli/parsers/command.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { nativeSegments } from '#cli/platform/root/rules.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { SPECTRAL_LINE } from '#cli/config/checks/tool/openapi.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import type { ConfigurationFile } from '#cli/types/configurations.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 
-function documentPath(input: EngineInput): string | undefined {
+function documentPath(input: CheckInput): string | undefined {
     const document = input.view.options('tools.openapi')['document'] as string;
     if (document === '') return undefined;
     nativeSegments(document);
@@ -28,10 +28,10 @@ function documentPath(input: EngineInput): string | undefined {
 
 /**
  * Spectral over tools.openapi.document. With no document named the check passes.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function spectral(input: EngineInput): Promise<Finding[]> {
+export async function spectral(input: CheckInput): Promise<Finding[]> {
     const document = documentPath(input);
     if (document === undefined) return [];
     const configuration = input.selection.selected
@@ -41,7 +41,7 @@ export async function spectral(input: EngineInput): Promise<Finding[]> {
     using files = openRoot(input.root);
     if (files.read(target) === undefined) throw new Error('The Spectral configuration is missing. Run: gspot apply');
     const ruleset = join(input.root, target);
-    const result = await runEngineTool(
+    const result = await runCheckTool(
         input,
         ['spectral', 'lint', '--ruleset', ruleset, '--format', 'text', posix.relative(input.scope || '.', document)],
         {
@@ -63,10 +63,10 @@ export async function spectral(input: EngineInput): Promise<Finding[]> {
 
 /**
  * Runs tools.openapi.generate and reports the document when the run changed it.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
+export async function openapiFresh(input: CheckInput): Promise<Finding[]> {
     const command = input.view.options('tools.openapi')['generate'] as string;
     if (command === '') return [];
     const document = documentPath(input);
@@ -78,7 +78,7 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
         input.scopeEntries.map((scope) => scope.path),
     );
     const scratch = scratchFolder.path;
-    const result = await runEngineTool(input, parseCommand(command), { cwd: join(scratch, input.scope) });
+    const result = await runCheckTool(input, parseCommand(command), { cwd: join(scratch, input.scope) });
     if (result.code !== 0)
         throw new Error(
             `The command that writes the OpenAPI document failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,

@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { visitSwiftSources } from '#cli/parsers/swift.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { SwiftFunction } from '#cli/types/parsers/swift.ts';
 import { trivialText, isTrivialFile, executableStatements } from '#cli/parsers/statements.ts';
 
@@ -10,7 +10,7 @@ import { trivialText, isTrivialFile, executableStatements } from '#cli/parsers/s
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function trivialFunctions(input: EngineInput): Promise<Finding[]> {
+export async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
     const threshold = input.view.limit('min_function_statements', 'swift');
     if (threshold === undefined) return [];
     return visitSwiftSources(input, ({ sources, functions }) => [
@@ -51,7 +51,7 @@ export async function trivialFunctions(input: EngineInput): Promise<Finding[]> {
  * @param input the selected scope, files, and policy settings
  * @returns one finding for each group
  */
-export async function duplicateFunctions(input: EngineInput): Promise<Finding[]> {
+export async function duplicateFunctions(input: CheckInput): Promise<Finding[]> {
     const minimum = input.view.limit('identical_function_lines', 'swift');
     if (minimum === undefined) return [];
     return visitSwiftSources(input, ({ functions }) => {

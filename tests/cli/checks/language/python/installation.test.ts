@@ -8,7 +8,7 @@ import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { environmentBin } from '#cli/platform/paths.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
@@ -98,7 +98,7 @@ test.each(['stdout', 'stderr'])(
                 duration: 1,
             }),
         );
-        expect(await rejection(importLinter(buildEngineInput(session, 'python/import-linter')))).toBe(
+        expect(await rejection(importLinter(buildCheckInput(session, 'python/import-linter')))).toBe(
             `The lint-imports command failed: ${diagnostic}`,
         );
         expect(await Bun.file(join(sandbox.path, 'pyproject.toml')).text()).toBe(manifest);
@@ -128,7 +128,7 @@ test('import-linter follows INI precedence and retains separate chains for decor
             duration: 1,
         }),
     );
-    const findings = await importLinter(buildEngineInput(session, 'python/import-linter'));
+    const findings = await importLinter(buildCheckInput(session, 'python/import-linter'));
     expect(findings.map((finding) => [finding.file, finding.rule])).toStrictEqual([
         ['setup.cfg', 'contract'],
         ['setup.cfg', 'contract'],

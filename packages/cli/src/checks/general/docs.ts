@@ -10,9 +10,9 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ProseLine } from '#cli/types/parsers/source.ts';
 import { runnerSchema } from '#cli/parsers/schema/settings.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { globPaths, expandPaths } from '#cli/platform/paths.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { isGlob, pathMatcher } from '#cli/repository/selectors.ts';
 import { scopeOf, scopeAncestors } from '#cli/repository/scopes.ts';
@@ -28,7 +28,7 @@ import {
     BANNED_HEADINGS,
 } from '#cli/config/checks/general/docs.ts';
 
-function knownPaths(input: EngineInput): Set<string> {
+function knownPaths(input: CheckInput): Set<string> {
     if (input.repositoryFiles === undefined)
         throw new Error(
             'The docs/stale-paths check needs the full list of tracked files. Its manifest must say runs = "once".',
@@ -51,7 +51,7 @@ function knownPaths(input: EngineInput): Set<string> {
     return known;
 }
 
-function miseTasks(input: EngineInput, file: string): string[] {
+function miseTasks(input: CheckInput, file: string): string[] {
     try {
         return parseMiseTasks(readSource(input.root, file, input.reads).toString('utf8'));
     } catch (error) {
@@ -60,7 +60,7 @@ function miseTasks(input: EngineInput, file: string): string[] {
     }
 }
 
-function packageScripts(input: EngineInput, file: string): string[] | undefined {
+function packageScripts(input: CheckInput, file: string): string[] | undefined {
     try {
         const manifest = parsePackageManifest(readSource(input.root, file, input.reads).toString('utf8'));
         return manifest.scripts === undefined ? [] : Object.keys(manifest.scripts);
@@ -79,7 +79,7 @@ function isMissing(token: string, file: string, index: PathIndex): boolean {
     return (index.known.has(first) || FILE_EXTENSION.test(clean)) && !index.known.has(clean);
 }
 
-function lineFindings(input: EngineInput, file: string, prose: ProseLine, index: PathIndex): Finding[] {
+function lineFindings(input: CheckInput, file: string, prose: ProseLine, index: PathIndex): Finding[] {
     const { number, line } = prose;
     const paths = pathTokens(line)
         .filter((token) => isMissing(token, file, index))
@@ -101,7 +101,7 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
     return [...paths, ...runs];
 }
 
-function openingFindings(input: EngineInput, file: string, nodes: RootContent[]): Finding[] {
+function openingFindings(input: CheckInput, file: string, nodes: RootContent[]): Finding[] {
     const title = nodes.findIndex((node) => node.type === 'heading' && node.depth === 1);
     const start = title === -1 ? 0 : title;
     const section = nodes.findIndex(
@@ -120,7 +120,7 @@ function openingFindings(input: EngineInput, file: string, nodes: RootContent[])
           ];
 }
 
-function sectionFindings(input: EngineInput, file: string, nodes: RootContent[], threshold: number): Finding[] {
+function sectionFindings(input: CheckInput, file: string, nodes: RootContent[], threshold: number): Finding[] {
     const sections = nodes
         .filter((node) => node.type === 'heading' && node.depth === SECTION_DEPTH)
         .map((node) => toString(node).trim().toLowerCase());
@@ -135,7 +135,7 @@ function sectionFindings(input: EngineInput, file: string, nodes: RootContent[],
     ];
 }
 
-function taskSources(input: EngineInput, scope: string): TaskSources {
+function taskSources(input: CheckInput, scope: string): TaskSources {
     const ancestors = scopeAncestors(input.scopeEntries, scope).toReversed();
     const files = [
         ...new Set(
@@ -160,10 +160,10 @@ function taskSources(input: EngineInput, scope: string): TaskSources {
 
 /**
  * One finding per path token that names nothing tracked and per run invocation that names no task.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function stalePaths(input: EngineInput): Finding[] {
+export function stalePaths(input: CheckInput): Finding[] {
     const exceptions = (input.view.options('docs')['exclude'] as PathAllowance[] | undefined) ?? [];
     const isException = pathMatcher(exceptions.flatMap((entry) => entry.paths));
     const files = input.files.filter(
@@ -183,10 +183,10 @@ export function stalePaths(input: EngineInput): Finding[] {
 
 /**
  * One finding per scope without a README.md, and one when the root has no license file.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function readmePresent(input: EngineInput): Finding[] {
+export function readmePresent(input: CheckInput): Finding[] {
     const isLicenseRequired = input.view.options('docs')['license'] !== false;
     const findings: Finding[] = [];
     const readme = input.scope === '' ? 'README.md' : `${input.scope}/README.md`;
@@ -210,10 +210,10 @@ export function readmePresent(input: EngineInput): Finding[] {
 
 /**
  * The shape findings for every README in the check's files.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function readmeShape(input: EngineInput): Finding[] {
+export function readmeShape(input: CheckInput): Finding[] {
     const threshold = input.view.settings['limits.docs.headings_before_contents'] as number;
     const roots = new Set(['README.md', ...input.scopeEntries.map((scope) => `${scope.path}/README.md`)]);
     return input.files
@@ -246,10 +246,10 @@ export function readmeShape(input: EngineInput): Finding[] {
 
 /**
  * One finding per heading that matches the banned list or [docs] banned_headings.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function headings(input: EngineInput): Finding[] {
+export function headings(input: CheckInput): Finding[] {
     const verbatim = (input.view.options('docs')['banned_headings'] as string[] | undefined) ?? [];
     const banned = new Set([...BANNED_HEADINGS, ...verbatim.map((heading) => heading.toLowerCase())]);
     const findings: Finding[] = [];

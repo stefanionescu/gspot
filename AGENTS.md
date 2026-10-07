@@ -88,7 +88,7 @@ A check that runs a tool uses the tool name, so readers know which rules and sup
 
 Test `config/` and `types/` folders mirror the tests that use them. Flatten a one-file folder into its parent. Keep text shared by two or more test files in `config/samples/`.
 
-Schemas live in `parsers/schema/` for file formats and small shared contracts, `policy/schema/` for `gspot.toml` tables including `[agent_rules]`, and `packages/cli/src/lifecycle/ownership/schema.ts` for the ownership log.
+File-format schemas belong to their parsers; shared parser contracts live in `parsers/schema/`. Policy tables, including `[agent_rules]`, belong to `policy/schema/`. The ownership log schema lives in `packages/cli/src/lifecycle/ownership/schema.ts`.
 
 Owner decisions are recorded in `findings/progress.json`. Read them before you change how gspot ships, installs, or is configured, and never reverse one inside unrelated work. These decisions are final:
 

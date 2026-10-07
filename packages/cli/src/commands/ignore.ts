@@ -4,8 +4,6 @@ import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { printResult } from '#cli/terminal/messages.ts';
-import { quoteArgument } from '#cli/platform/quoting.ts';
-import { similar, codeList } from '#cli/platform/text.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { knownChecks } from '#cli/configurations/manifests.ts';
@@ -14,6 +12,7 @@ import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { readPolicy, parseTomlText } from '#cli/policy/read.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
+import { similar, codeList, quoteArgument } from '#cli/platform/text.ts';
 import type { Policy, Mutation, TomlTable } from '#cli/types/policy/settings.ts';
 import { commitPolicy, previewPolicy, requireReason } from '#cli/commands/policy-edit.ts';
 
@@ -151,7 +150,7 @@ async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
 export function registerIgnore(program: Program): void {
     program
         .command('ignore')
-        .argument('<check>', 'Check identifier to ignore or restore')
+        .argument('<check>', 'Check ID to ignore or restore')
         .summary('Ignore a check or a rule')
         .description(
             'Turn off a check, or one of its rules, for some paths or everywhere. The ignore goes into gspot.toml, and the configuration is applied. Every report lists the ignores, and --verbose prints each reason. --dry-run prints the change and writes nothing.',

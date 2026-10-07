@@ -43,7 +43,7 @@ before it writes anything. Fix the file and run `gspot init` again.
 - **Your Git hooks.** If Husky, Lefthook, or an authored hook folder owns them, gspot installs none of its own and prints three integration lines. Add the lines, or checks will not run on commit or push. See [Git hooks](/guides/hooks/).
 - **Your scripts and dependencies.** The `no longer runs` plan section names lint folders and manifests that hold only lint tools. Review your scripts and dependencies before removing them.
 
-A tool without a configuration can run as a [custom check](/guides/repository-checks/).
+A tool without a configuration can run as a [command check](/guides/command-checks/).
 
 ## Run the checks
 

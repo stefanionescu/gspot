@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { rulesOff } from '#cli/checks/language/javascript/rules-off.ts';
@@ -28,7 +28,7 @@ test.each(['recommended', 'all'] as const)(
         });
         await createEslint(sandbox.path);
         const session = await openSession(sandbox.path);
-        const input = buildEngineInput(session, 'javascript/rules-off');
+        const input = buildCheckInput(session, 'javascript/rules-off');
         const config = join(sandbox.path, '.gspot/config/eslint.config.mjs');
         const generated = readFileSync(config, 'utf8');
         chmodSync(config, 0o644);
@@ -55,7 +55,7 @@ test.each(['recommended', 'all'] as const)(
                     !fixable,
             ),
         ).toBe(true);
-        const child = await rulesOff(buildEngineInput(session, 'javascript/rules-off', { scope: 'child' }));
+        const child = await rulesOff(buildCheckInput(session, 'javascript/rules-off', { scope: 'child' }));
         expect(child.map(({ message }) => message).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
             [
                 'Enable eqeqeq for 1 file (child/source.js). The javascript configuration requires this rule.',
@@ -68,7 +68,7 @@ test.each(['recommended', 'all'] as const)(
         );
         writeFileSync(config, generated);
         expect(await rulesOff(input)).toStrictEqual([]);
-        expect(await rulesOff(buildEngineInput(session, 'javascript/rules-off', { scope: 'child' }))).toStrictEqual([]);
+        expect(await rulesOff(buildCheckInput(session, 'javascript/rules-off', { scope: 'child' }))).toStrictEqual([]);
     },
 );
 
@@ -82,7 +82,7 @@ test('native coverage retains framework requirements alongside shared language r
         'source.tsx': 'export const value = 1;\n',
     });
     await createEslint(sandbox.path);
-    const input = buildEngineInput(await openSession(sandbox.path), 'javascript/rules-off');
+    const input = buildCheckInput(await openSession(sandbox.path), 'javascript/rules-off');
     const config = join(sandbox.path, '.gspot/config/eslint.config.mjs');
     const generated = readFileSync(config, 'utf8');
     chmodSync(config, 0o644);
@@ -107,7 +107,7 @@ test('native coverage respects a reasoned rule exception without suppressing oth
         }),
     });
     await createEslint(sandbox.path);
-    const input = buildEngineInput(await openSession(sandbox.path), 'javascript/rules-off');
+    const input = buildCheckInput(await openSession(sandbox.path), 'javascript/rules-off');
     const config = join(sandbox.path, '.gspot/config/eslint.config.mjs');
     const generated = readFileSync(config, 'utf8');
     chmodSync(config, 0o644);

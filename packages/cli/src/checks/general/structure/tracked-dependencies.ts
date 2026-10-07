@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { indexedPaths } from '#cli/repository/tracked.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
 
 function dependencyFolder(path: string): string | undefined {
@@ -12,10 +12,10 @@ function dependencyFolder(path: string): string | undefined {
 
 /**
  * One finding for each dependency folder that holds tracked files, with how many it holds.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function trackedDependencies(input: EngineInput): Finding[] {
+export function trackedDependencies(input: CheckInput): Finding[] {
     const tracked = indexedPaths(input.root);
     const counts = new Map<string, number>();
     for (const path of tracked) {

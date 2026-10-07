@@ -7,7 +7,7 @@ export const POLICY_FILE = 'gspot.toml';
 
 export const TOOL_PYTHON_PROJECT = '.gspot/pyproject.toml';
 
-export const UV_LOCK = '.gspot/uv.lock';
+export const UV_LOCKFILE = '.gspot/uv.lock';
 
 export const VALE_CONFIG = '.gspot/config/vale.ini';
 
@@ -29,7 +29,7 @@ export const DOT_GSPOT = '.gspot';
 
 export const VERSION_FILE = '.gspot/version';
 
-/** The lifecycle state: the ownership log and the locks, never committed. */
+/** The lifecycle state: the ownership log and the claims, never committed. */
 export const STATE_DIRECTORY = '.gspot/state';
 
 /** The folder of the hook scripts gspot writes, which core.hooksPath names. */

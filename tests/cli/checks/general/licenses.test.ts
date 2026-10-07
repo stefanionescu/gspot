@@ -6,7 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { chmodSync, existsSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
@@ -55,7 +55,7 @@ test.each(['', 'apps/example'])(
             });
             const applied = await runGspot(sandbox.path, ['apply', '--json']);
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-            const input = buildEngineInput(await openSession(sandbox.path), 'licenses/packages', { scope });
+            const input = buildCheckInput(await openSession(sandbox.path), 'licenses/packages', { scope });
             using spawn = spyOn(processes, 'run');
             expect(await rejection(licensesPackages(input))).toBe(
                 `Install the project dependencies first: ${installed} is missing in ${scope === '' ? 'the root' : scope}.`,
@@ -71,7 +71,7 @@ test.each(SCANNER_FAILURES)(
     async ({ stdout, code, diagnostic }) => {
         await using sandbox = await testdir();
         await preparePythonProject(sandbox.path);
-        const selected = buildEngineInput(await openSession(sandbox.path), 'licenses/packages');
+        const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
         const directories: string[] = [];
         using resources = new DisposableStack();
         resources.use(
@@ -94,7 +94,7 @@ test.each(CONFIGURATION_FAILURES)(
     async ({ content, diagnostic }) => {
         await using sandbox = await testdir();
         await preparePythonProject(sandbox.path);
-        const selected = buildEngineInput(await openSession(sandbox.path), 'licenses/packages');
+        const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
         const path = join(sandbox.path, '.gspot/config/licenses.json');
         if (content === undefined) unlinkSync(path);
         else {
@@ -113,7 +113,7 @@ test('a license configuration linked outside the repository is refused without c
     await using sandbox = await testdir();
     await using outside = await testdir();
     await preparePythonProject(sandbox.path);
-    const selected = buildEngineInput(await openSession(sandbox.path), 'licenses/packages');
+    const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
     const path = join(sandbox.path, '.gspot/config/licenses.json');
     const original = readFileSync(path);
     const destination = join(outside.path, 'configuration.json');
@@ -141,7 +141,7 @@ test('combined license scans preserve manifest order, license alternatives, unkn
         }),
     });
     chmodSync(join(sandbox.path, scanner.path), 0o755);
-    const selected = buildEngineInput(await openSession(sandbox.path), 'licenses/packages');
+    const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
     const directories: string[] = [];
     using resources = new DisposableStack();
     resources.use(
@@ -190,7 +190,7 @@ test.each(LICENSE_EXCEPTIONS)(
             sandbox.path,
             `${LICENSE_SETTINGS}[[licenses.exceptions]]\npackage = "${name}"\nlicense = "${exception}"\nreason = "Used at build time only, never shipped."\n`,
         );
-        const selected = buildEngineInput(await openSession(sandbox.path), 'licenses/packages');
+        const selected = buildCheckInput(await openSession(sandbox.path), 'licenses/packages');
         using resources = new DisposableStack();
         resources.use(
             spyOn(processes, 'run').mockResolvedValue({

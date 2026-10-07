@@ -3,8 +3,8 @@ import { readdirSync } from 'node:fs';
 import { CODE_EXTENSION } from '#plugin/config/files.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { lintedPath, isAnyGlobMatch } from '#plugin/files.ts';
-import { createRule, optionsSchema } from '#plugin/definition.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import type { HelpersBesideTestsOptions } from '#plugin/types/test-placement.ts';
 import { TEST_PATTERN, TEST_DIRECTORIES, ASSERTION_MODULES } from '#plugin/config/test-placement.ts';
 

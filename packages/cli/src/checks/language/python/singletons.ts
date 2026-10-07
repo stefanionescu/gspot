@@ -2,7 +2,7 @@ import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { CLASS_CALL } from '#cli/config/checks/language/python.ts';
 import { assignmentOf, visitPythonModules } from '#cli/parsers/python.ts';
 import type { SingletonAllowance } from '#cli/types/checks/language/python.ts';
@@ -22,7 +22,7 @@ function builtAtImport(statement: Node): string | undefined {
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function singletons(input: EngineInput): Promise<Finding[]> {
+export async function singletons(input: CheckInput): Promise<Finding[]> {
     const entries =
         (input.view.settings['structure.python.singletons_allowed'] as SingletonAllowance[] | undefined) ?? [];
     return visitPythonModules(input, ({ modules }) =>

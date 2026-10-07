@@ -1,4 +1,4 @@
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 
 export const BASE_CHECK = {
     name: 'sandbox/diagnostic',
@@ -9,13 +9,13 @@ export const BASE_CHECK = {
     summary: '',
     why: '',
     help: '',
-} satisfies CheckSpec;
+} satisfies CheckDeclaration;
 export const EMPTY_FAILURE = { code: 1, stdout: '', stderr: '', missing: false, duration: 1 };
 
 export const LOCATED_CHECK = {
     ...BASE_CHECK,
     output: { format: 'regex', pattern: '^(?<file>[^:]+): (?<message>.*)$' },
-} satisfies CheckSpec;
+} satisfies CheckDeclaration;
 
 export const FILELESS_CHECKS = [
     {
@@ -29,7 +29,7 @@ export const FILELESS_CHECKS = [
         output: { format: 'regex', file_type: 'link', pattern: '(?<file>.+)' },
     },
     { ...BASE_CHECK, name: 'sandbox/lines', output: { format: 'lines' } },
-] satisfies CheckSpec[];
+] satisfies CheckDeclaration[];
 
 export const FALSE_PATH = '2026-09-19T02: FATAL\n';
 

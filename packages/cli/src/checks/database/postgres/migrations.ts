@@ -3,13 +3,13 @@ import { memo } from '#cli/platform/memo.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parseSqlFile } from '#cli/parsers/sql/statements.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { Migration } from '#cli/types/checks/database/postgres.ts';
 import { MIGRATION_DOWN, MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/config/checks/database/postgres.ts';
 
 const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() };
 
-function folderOf(input: EngineInput, paths: string[]): string | undefined {
+function folderOf(input: CheckInput, paths: string[]): string | undefined {
     const setting = input.view.options('postgres')['migrations_folder'] as string;
     const prefix = input.scope === '' ? '' : `${input.scope}/`;
     if (setting !== '') return `${prefix}${setting.replace(/\/$/u, '')}`;
@@ -18,7 +18,7 @@ function folderOf(input: EngineInput, paths: string[]): string | undefined {
     );
 }
 
-async function readMigrations(input: EngineInput, paths: string[]): Promise<Migration[]> {
+async function readMigrations(input: CheckInput, paths: string[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
     for (const path of paths) {
         const original = readSource(input.root, path, input.reads).toString('utf8');
@@ -45,7 +45,7 @@ async function readMigrations(input: EngineInput, paths: string[]): Promise<Migr
  * @param input the selected scope and repository inventory
  * @returns the repository-relative migration paths
  */
-export function migrationPaths(input: EngineInput): string[] {
+export function migrationPaths(input: CheckInput): string[] {
     const paths = input.files
         .filter((file) => scopeOf(file.path, input.scopeEntries).path === input.scope)
         .map((file) => file.path);
@@ -57,10 +57,10 @@ export function migrationPaths(input: EngineInput): string[] {
 
 /**
  * Reads and parses every tracked migration in version order.
- * @param input the engine input
+ * @param input the check input
  * @returns the migrations, empty when the repository has no migrations folder
  */
-export async function migrationsOf(input: EngineInput): Promise<Migration[]> {
+export async function migrationsOf(input: CheckInput): Promise<Migration[]> {
     const paths = migrationPaths(input);
     if (paths.length === 0) return [];
     const folders = memo(input.reads, MIGRATION_MEMO);

@@ -4,11 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { runEngineCheck } from '#cli/execution/engines.ts';
+import { runBuiltInCheck } from '#cli/execution/built-in.ts';
 import { NON_ERROR_FAILURES } from '#tests/config/cli/execution/errors.ts';
 
 test.each(NON_ERROR_FAILURES)(
-    'a third-party engine throwing $thrown produces an actionable error',
+    'a built-in check throwing $thrown produces an actionable error',
     async ({ thrown, note }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -23,8 +23,8 @@ test.each(NON_ERROR_FAILURES)(
                 only: ['project/source'],
                 checks: {
                     'project/source': {
-                        run: runEngineCheck(() => {
-                            // eslint-disable-next-line @typescript-eslint/only-throw-error -- reason: The test exercises third-party engines that throw non-Error values.
+                        run: runBuiltInCheck(() => {
+                            // eslint-disable-next-line @typescript-eslint/only-throw-error -- reason: The test exercises built-in checks that throw non-Error values.
                             throw thrown;
                         }),
                     },

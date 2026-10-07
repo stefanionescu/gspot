@@ -40,7 +40,7 @@ export const CONFIGURATION_GROUPS: [string, string][] = [
     ['library', 'Libraries'],
     ['platform', 'Platforms'],
     ['database', 'Databases'],
-    ['general', 'Repository checks'],
+    ['general', 'General'],
 ];
 
 /** Labels for the conditions that select configurations and agent rules. */

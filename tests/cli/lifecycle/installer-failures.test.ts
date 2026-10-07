@@ -71,7 +71,7 @@ test.each([...INSTALLATION_FAILURES])(
     },
 );
 
-test('init does not report success when required Python lock resolution cannot run', async () => {
+test('init does not report success when required Python lockfile creation cannot run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'main.py': 'print("authored")\n',

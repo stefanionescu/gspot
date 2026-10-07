@@ -52,11 +52,11 @@ test.each([PACKAGE_PROJECTS[0]])(
         chmodSync(manifestPath, 0o444);
     },
 );
-test('native wrapper download failure preserves the lock and publishes no partial installation', async () => {
+test('native wrapper download failure preserves the lockfile and publishes no partial installation', async () => {
     await using fixture = await createPackageProject('npm', 'package.json', 'none');
     const { root } = fixture;
     const { tools } = fixture;
-    const { lockPath, lock } = readPackageInputs(root, 'npm');
+    const { lockfilePath, lockfile } = readPackageInputs(root, 'npm');
     const original = spawn.run;
     const initialize = spyOn(spawn, 'run').mockImplementation(async (argv, options) => {
         if (/(?:editorconfig-checker|[\\/]ec(?:\.cmd)?$)/u.test(argv[0] ?? ''))
@@ -92,7 +92,7 @@ test('native wrapper download failure preserves the lock and publishes no partia
         expect(readFileSync(join(root, '.gspot/node_modules/prettier/package.json'), 'utf8')).toContain(
             prettierManifest.version,
         );
-        expect(readFileSync(lockPath)).toStrictEqual(lock);
+        expect(readFileSync(lockfilePath)).toStrictEqual(lockfile);
     } finally {
         initialize.mockRestore();
     }
@@ -103,19 +103,19 @@ test('a reinstall the registry answers with 404 keeps the working tools and leav
     const { root, registry } = fixture;
     const { tools } = fixture;
     const prettier = join(root, '.gspot/node_modules/prettier/bin/prettier.cjs');
-    const { lockPath, lock } = readPackageInputs(root, 'npm');
+    const { lockfilePath, lockfile } = readPackageInputs(root, 'npm');
     // The changed pin names a tarball the registry does not have, under an integrity no cache holds.
     const missing = createHash('sha512').update('missing tarball').digest('base64');
-    const changed = lock
+    const changed = lockfile
         .toString('utf8')
         .replace(
             `${registry.url}/prettier/-/prettier-${prettierManifest.version}.tgz`,
             `${registry.url}/prettier/-/prettier-missing.tgz`,
         )
         .replace(/"integrity": "sha512-[^"]+"/u, `"integrity": "sha512-${missing}"`);
-    chmodSync(lockPath, 0o644);
-    writeFileSync(lockPath, changed);
-    chmodSync(lockPath, 0o444);
+    chmodSync(lockfilePath, 0o644);
+    writeFileSync(lockfilePath, changed);
+    chmodSync(lockfilePath, 0o444);
     const before = readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-install-'));
     {
         using log = openOwnership(root);

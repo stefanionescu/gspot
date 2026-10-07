@@ -1,7 +1,7 @@
 import { valueAt } from '#cli/platform/objects.ts';
 import { join, dirname, relative } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import { getTsconfig } from '#cli/parsers/tsconfig.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';

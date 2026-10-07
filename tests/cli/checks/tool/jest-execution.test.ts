@@ -6,7 +6,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { VALID } from '#tests/config/cli/checks/tool/jest-execution.ts';
 import type { JestScenario } from '#tests/types/cli/checks/tool/jest.ts';
@@ -61,8 +61,8 @@ test.each([
             'node_modules/.bin/jest': '#!/usr/bin/env node\n',
         });
         const session = await openSession(sandbox.path);
-        const spec = session.manifests.get('jest')!.checks[0]!;
-        const input = buildEngineInput(session, spec.name);
+        const check = session.manifests.get('jest')!.checks[0]!;
+        const input = buildCheckInput(session, check.name);
         let isBroken = true;
         const artifacts: string[] = [];
         const process = spyOn(processes, 'run').mockImplementation(async (argv, options) => {

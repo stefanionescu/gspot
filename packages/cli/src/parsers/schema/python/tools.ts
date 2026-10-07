@@ -14,7 +14,7 @@ export const pythonToolProjectSchema = z.strictObject({
     }),
 });
 
-export const lockSchema = z.object({
+export const lockfileSchema = z.object({
     version: z.literal(1),
     'requires-python': z.string(),
     manifest: z.object({ constraints: z.array(requirementSchema).default([]) }).default({ constraints: [] }),

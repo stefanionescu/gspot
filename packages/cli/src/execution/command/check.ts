@@ -17,11 +17,11 @@ import type { ExecutionFailure } from '#cli/types/tools/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { toolPin, checkToolPin } from '#cli/configurations/pins.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
-import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
+import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform/runtime.ts';
 import { toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
 import { checkedFindings, recordInvocation } from '#cli/execution/command/findings.ts';
-import type { CheckResult, EngineInput, CheckRunOptions } from '#cli/types/execution/check.ts';
+import type { CheckInput, CheckResult, CheckRunOptions } from '#cli/types/execution/check.ts';
 
 import {
     substitute,
@@ -31,8 +31,8 @@ import {
     commandConfigurations,
 } from '#cli/execution/command/placeholders.ts';
 import type {
+    CheckTool,
     CommandRun,
-    EngineTool,
     Substitutions,
     ParsedFindings,
     CommandRunState,
@@ -63,13 +63,13 @@ function batchedCommands(
 
 function finishResult(
     base: CheckResult,
-    spec: CheckSpec,
+    check: CheckDeclaration,
     state: CommandRunState,
     argv: string[],
     started: number,
 ): CheckResult {
     const isEveryFindingKept =
-        state.isFailed || spec.finding_count_pattern !== undefined || spec.output?.format === 'trufflehog-json';
+        state.isFailed || check.finding_count_pattern !== undefined || check.output?.format === 'trufflehog-json';
     // Successful tools can print fileless progress; failed runs and counting checks must retain that output.
     const findings = isEveryFindingKept
         ? state.findings
@@ -95,7 +95,7 @@ async function runCommands(
     prepared: PreparedCommand,
     base: CheckResult,
 ): Promise<CheckResult> {
-    const { spec } = planned;
+    const { check } = planned;
     const { cwd, argv } = prepared;
     const state: CommandRunState = { root: prepared.root, cwd, findings: [], isFailed: false };
     const started = performance.now();
@@ -119,16 +119,16 @@ async function runCommands(
             };
         recordInvocation(planned, { invocation, result, findings: parsed.findings }, state);
     }
-    return finishResult(base, spec, state, argv, started);
+    return finishResult(base, check, state, argv, started);
 }
 
-function engineTool(
-    input: EngineInput,
+function checkTool(
+    input: CheckInput,
     name: string,
     options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>>,
-): EngineTool {
-    const tool = checkToolPin(toolPin(input.manifests.values(), name), input.spec);
-    const env = { ...tool.env, ...input.spec.env, ...options.env };
+): CheckTool {
+    const tool = checkToolPin(toolPin(input.manifests.values(), name), input.check);
+    const env = { ...tool.env, ...input.check.env, ...options.env };
     const inspection = inspectTool({ ...input, cwd: options.cwd }, { ...tool, env });
     const availability = toolAvailability(tool, inspection);
     if ('status' in availability) {
@@ -140,7 +140,7 @@ function engineTool(
 
 // A nested tool runs from its selected installation even inside an isolated source copy.
 function companionEnvironment(
-    input: ToolSession | EngineInput,
+    input: ToolSession | CheckInput,
     names: string[] | undefined,
     env: Record<string, string>,
 ): Record<string, string> {
@@ -159,7 +159,7 @@ function missingConfiguration(
     command: string[],
     base: CheckResult,
 ): CheckResult | undefined {
-    if (planned.spec.nested_config_file === undefined) return undefined;
+    if (planned.check.nested_config_file === undefined) return undefined;
     using files = openRoot(session.root);
     const missing = commandConfigurations(session, planned, command).find((path) =>
         path.startsWith(`${DOT_GSPOT}/`)
@@ -179,7 +179,7 @@ function missingConfiguration(
 async function runInWorkspace(run: CommandRun, workspace: string | undefined): Promise<CheckResult> {
     const { session, planned, tool, command, toolPath, environment, base } = run;
     using created =
-        workspace === undefined && planned.spec.run_in_copy === true
+        workspace === undefined && planned.check.run_in_copy === true
             ? copyFiles(session.root, isolatedFiles(session, planned, command))
             : undefined;
     const root = workspace ?? created?.root;
@@ -191,7 +191,7 @@ async function runInWorkspace(run: CommandRun, workspace: string | undefined): P
         root === undefined ? environment : commandEnvironment(workspaceSession, planned),
         toolPath,
     );
-    prepared.env = companionEnvironment(session, checkCompanions(planned.scope, planned.spec), prepared.env);
+    prepared.env = companionEnvironment(session, checkCompanions(planned.scope, planned.check), prepared.env);
     const result = await runCommands(workspaceSession, planned, tool, prepared, base);
     if (root === undefined) return result;
     const reported = substitute(session, planned, command, environment.substitutions);
@@ -201,8 +201,8 @@ async function runInWorkspace(run: CommandRun, workspace: string | undefined): P
 
 // A declared companion tool must be usable before this command runs.
 function unavailableCompanion(session: ToolSession, planned: PlannedCheck): ExecutionFailure | undefined {
-    for (const name of checkCompanions(planned.scope, planned.spec)) {
-        const required = checkToolPin(toolPin(session.manifests.values(), name), planned.spec);
+    for (const name of checkCompanions(planned.scope, planned.check)) {
+        const required = checkToolPin(toolPin(session.manifests.values(), name), planned.check);
         const availability = toolAvailability(required, inspectTool(session, required));
         if ('status' in availability) return availability;
     }
@@ -216,21 +216,21 @@ function unavailableCompanion(session: ToolSession, planned: PlannedCheck): Exec
  * @returns paths and environment shared by tool inspection and execution
  */
 export function commandEnvironment(session: ToolSession, planned: PlannedCheck): CommandEnvironment {
-    const { spec, scope } = planned;
-    const runsInScope = spec.cwd === 'scope' || (spec.runs === 'scope' && spec.cwd !== 'root');
+    const { check, scope } = planned;
+    const runsInScope = check.cwd === 'scope' || (check.runs === 'scope' && check.cwd !== 'root');
     const cwd = runsInScope ? join(session.root, scope.scope.path) : session.root;
     const files = planned.files.map((file) =>
         scope.scope.path === '' || cwd === session.root ? file.path : file.path.slice(scope.scope.path.length + 1),
     );
     const substitutions: Substitutions = {
-        files: files.map((path) => `${planned.spec.path_prefix ?? ''}${path}`),
+        files: files.map((path) => `${planned.check.path_prefix ?? ''}${path}`),
         scope: scope.scope.path,
         root: session.root,
         indent: scope.view.format.indent_style === 'space' ? scope.view.format.indent_width : 0,
     };
     if (planned.messageFile !== undefined) substitutions.messageFile = planned.messageFile;
     const env = Object.fromEntries(
-        Object.entries({ ...planned.tool?.env, ...planned.spec.env }).map(([name, value]) => [
+        Object.entries({ ...planned.tool?.env, ...planned.check.env }).map(([name, value]) => [
             name,
             substituteValue(session, planned, value, substitutions),
         ]),
@@ -270,12 +270,12 @@ export function prepareCommand(
  * @param options optional command and source workspace supplied by the check
  * @returns the check result with attributed findings
  */
-export async function runCommandCheck(
+export async function runCheckCommand(
     session: ToolSession,
     planned: PlannedCheck,
     options: CheckRunOptions = {},
 ): Promise<CheckResult> {
-    const command = options.command ?? planned.spec.command;
+    const command = options.command ?? planned.check.command;
     const { tool } = planned;
     const base = emptyResult(planned);
     if (tool === undefined || command === undefined)
@@ -296,25 +296,25 @@ export async function runCommandCheck(
 }
 
 /**
- * Run an engine's tool through the shared execution boundaries.
+ * Run a check's tool through the shared execution boundaries.
  * @param input the check and its command session
  * @param command the executable name and arguments
  * @param options the working directory, environment, and standard input
  * @returns captured output after checking process failures
  */
-export async function runEngineTool(
-    input: EngineInput,
+export async function runCheckTool(
+    input: CheckInput,
     command: string[],
     options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>> & Pick<SpawnOptions, 'stdin'>,
 ): Promise<SpawnResult> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const name = command[0];
     if (name === undefined) throw new Error('An empty command cannot run.');
-    const { path, env } = engineTool(input, name, options);
+    const { path, env } = checkTool(input, name, options);
     const seconds = toolDeadline(input.view);
     const result = await runTool([path, ...command.slice(1)], {
         ...options,
-        env: companionEnvironment(input, checkCompanions(input.selection, input.spec), env),
+        env: companionEnvironment(input, checkCompanions(input.selection, input.check), env),
         timeoutSeconds: seconds,
         cancelSignal: input.cancelSignal,
     });

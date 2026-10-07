@@ -10,7 +10,7 @@ import { NAMING_TERMS_FILE } from '#cli/config/configurations.ts';
 import { shippedNamingSchema } from '#cli/parsers/schema/naming.ts';
 import { manifestSchema } from '#cli/parsers/schema/configurations/manifest.ts';
 import { manifestError, manifestProblems } from '#cli/configurations/problems.ts';
-import type { Manifest, CheckSpec, ManifestRegistryState } from '#cli/types/configurations.ts';
+import type { Manifest, ManifestCache, CheckDeclaration } from '#cli/types/configurations.ts';
 
 function issueLines(issue: z.core.$ZodIssue): string[] {
     const line = `${issue.path.map(String).join('.')}: ${issue.message}`;
@@ -29,7 +29,7 @@ function locatedConfiguration(configuration: unknown, dir: string): Record<strin
     return { ...declared, name: posix.basename(dir), kind: posix.basename(posix.dirname(dir)) };
 }
 
-const state: ManifestRegistryState = { cache: undefined };
+const state: ManifestCache = { cache: undefined };
 let shipped: NamingTerms | undefined;
 
 // Appends each referenced check, declared by another configuration, to the manifest that references it.
@@ -101,11 +101,11 @@ export function configurationManifests(): Map<string, Manifest> {
 }
 
 /**
- * Lists bundled check IDs alongside the repository's custom executable check IDs.
- * @param checks the custom checks declared by this repository
- * @returns the available check names
+ * Lists built-in check IDs alongside the repository's command check IDs.
+ * @param checks the command checks declared by this repository
+ * @returns the available check IDs
  */
-export function knownChecks(checks: readonly Pick<CheckSpec, 'name'>[]): string[] {
+export function knownChecks(checks: readonly Pick<CheckDeclaration, 'name'>[]): string[] {
     const bundled = [...allChecks(configurationManifests().values()).keys()];
     const authored = checks.map((check) => check.name);
     return [...new Set([...bundled, ...authored])];

@@ -1,13 +1,20 @@
 import { test, expect } from 'bun:test';
-import { pythonLockMatches } from '#cli/tools/python/lockfiles.ts';
-import { UV_LOCK_MISMATCHES, PRIVATE_PYTHON_LOCK, PRIVATE_PYTHON_PROJECT } from '#tests/config/samples/python/tools.ts';
+import { pythonLockfileMatches } from '#cli/tools/python/lockfiles.ts';
 
-test('private Python lock comparison normalizes distribution names and ignores requirement order', () => {
-    expect(pythonLockMatches(PRIVATE_PYTHON_PROJECT, PRIVATE_PYTHON_LOCK)).toBe(true);
-    expect(pythonLockMatches(PRIVATE_PYTHON_PROJECT, 'not valid =')).toBe(false);
-    expect(pythonLockMatches(PRIVATE_PYTHON_PROJECT.replace('==1.2.3', '>=1.2.3'), PRIVATE_PYTHON_LOCK)).toBe(false);
+import {
+    PRIVATE_PYTHON_PROJECT,
+    UV_LOCKFILE_MISMATCHES,
+    PRIVATE_PYTHON_LOCKFILE,
+} from '#tests/config/samples/python/tools.ts';
+
+test('private Python lockfile comparison normalizes distribution names and ignores requirement order', () => {
+    expect(pythonLockfileMatches(PRIVATE_PYTHON_PROJECT, PRIVATE_PYTHON_LOCKFILE)).toBe(true);
+    expect(pythonLockfileMatches(PRIVATE_PYTHON_PROJECT, 'not valid =')).toBe(false);
+    expect(pythonLockfileMatches(PRIVATE_PYTHON_PROJECT.replace('==1.2.3', '>=1.2.3'), PRIVATE_PYTHON_LOCKFILE)).toBe(
+        false,
+    );
 });
 
-test.each(UV_LOCK_MISMATCHES)('a changed %s makes a private Python lock stale', (_name, before, after) => {
-    expect(pythonLockMatches(PRIVATE_PYTHON_PROJECT, PRIVATE_PYTHON_LOCK.replace(before, after))).toBe(false);
+test.each(UV_LOCKFILE_MISMATCHES)('a changed %s makes a private Python lockfile drift', (_name, before, after) => {
+    expect(pythonLockfileMatches(PRIVATE_PYTHON_PROJECT, PRIVATE_PYTHON_LOCKFILE.replace(before, after))).toBe(false);
 });

@@ -69,7 +69,7 @@ and codemods. Then it runs the checks again. The changes stay in your working tr
 so review them before you commit. If a fixer is missing or fails, the command fails, and the
 message names the fixer.
 
-To add a fixer for your own command, see [custom checks](/guides/repository-checks/#add-a-correction-command).
+To add a fixer for your own command, see [command checks](/guides/command-checks/#add-a-correction-command).
 
 ## When a rule does not fit
 

@@ -60,22 +60,22 @@ export const YARN_ENVIRONMENT_SETTINGS = [
     },
 ];
 
-/** Native lock resolution runs without committing a tool project installation. */
-export const LOCK_ARGUMENTS: Record<Exclude<PackageInstaller['name'], 'yarn'>, readonly string[]> = {
+/** Native lockfile resolution runs without committing a tool project installation. */
+export const LOCKFILE_ARGUMENTS: Record<Exclude<PackageInstaller['name'], 'yarn'>, readonly string[]> = {
     npm: ['npm', 'install', '--package-lock-only', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
     bun: ['bun', 'install', '--lockfile-only', '--linker', 'hoisted'],
     pnpm: ['pnpm', 'install', '--lockfile-only', '--ignore-workspace', '--node-linker=hoisted'],
 };
 
-/** Native installation refuses any change to the recorded lock. */
+/** Native installation refuses any change to the recorded lockfile. */
 export const INSTALL_ARGUMENTS: Record<Exclude<PackageInstaller['name'], 'yarn'>, readonly string[]> = {
     npm: ['npm', 'ci', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
     bun: ['bun', 'install', '--frozen-lockfile', '--linker', 'hoisted'],
     pnpm: ['pnpm', 'install', '--frozen-lockfile', '--ignore-workspace', '--node-linker=hoisted'],
 };
 
-/** Yarn Classic and Berry declare different native lock operations. */
+/** Yarn Classic and Berry declare different native lockfile operations. */
 export const YARN_ARGUMENTS = {
-    classic: { lock: ['yarn', 'install'], install: ['yarn', 'install', '--frozen-lockfile'] },
-    berry: { lock: ['yarn', 'install', '--mode=update-lockfile'], install: ['yarn', 'install', '--immutable'] },
+    classic: { lockfile: ['yarn', 'install'], install: ['yarn', 'install', '--frozen-lockfile'] },
+    berry: { lockfile: ['yarn', 'install', '--mode=update-lockfile'], install: ['yarn', 'install', '--immutable'] },
 } as const;

@@ -58,10 +58,10 @@ function buildConfigurationsResult(session: Session): CommandResult {
         name: manifest.configuration.name,
         checks: session.scopes.flatMap((scope) =>
             scope.selected.includes(manifest)
-                ? manifest.checks.map((spec) => ({
-                      name: spec.name,
+                ? manifest.checks.map((check) => ({
+                      name: check.name,
                       scope: scope.scope.path,
-                      state: statusLabel(selectionStatus(session.policyFiles.policy, scope, spec)),
+                      state: statusLabel(selectionStatus(session.policyFiles.policy, scope, check)),
                   }))
                 : [],
         ),
@@ -119,7 +119,7 @@ function buildSettingRows(policy: Policy, scopes: ScopeSelection[]): SettingsLis
                 key: entry.key,
                 value: entry.value,
                 source: entry.source,
-                direction: entry.spec.direction,
+                direction: entry.declaration.direction,
                 scope,
             }));
     });

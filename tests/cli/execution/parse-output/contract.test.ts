@@ -4,12 +4,12 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { GspotError } from '#cli/platform/errors.ts';
 import { parseOutput } from '#cli/parsers/output/parse.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { FOREIGN, OUTPUTS, JSON_FORMATS } from '#tests/config/cli/execution/parse-output/contract.ts';
 
 // What the parser did with the output for a check of that format: the findings, or the error it threw.
-function parsed(output: NonNullable<CheckSpec['output']>, stdout: string, root: string): unknown {
-    const spec: CheckSpec = {
+function parsed(output: NonNullable<CheckDeclaration['output']>, stdout: string, root: string): unknown {
+    const check: CheckDeclaration = {
         name: 'sandbox/output',
         level: 'recommended',
         stage: 'commit',
@@ -21,7 +21,7 @@ function parsed(output: NonNullable<CheckSpec['output']>, stdout: string, root: 
         output,
     };
     try {
-        return parseOutput(spec, stdout, '', { root: root, cwd: root });
+        return parseOutput(check, stdout, '', { root: root, cwd: root });
     } catch (error) {
         return error;
     }

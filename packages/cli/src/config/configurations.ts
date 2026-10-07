@@ -40,7 +40,7 @@ export const INSTALLATION_KINDS = ['npm', 'python'] as const;
 /** The npm backend that installs the published CLI. */
 export const GSPOT_MISE_TOOL = 'npm:@gspothq/cli';
 
-/** Release pins shared by CLI generation, installation, and repository checks. */
+/** Release pins shared by CLI generation, installation, and pin validation. */
 export const CLI_PINS = { mise: '2026.8.8' };
 
 export const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;

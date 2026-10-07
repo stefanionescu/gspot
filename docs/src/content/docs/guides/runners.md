@@ -23,9 +23,9 @@ Hooks use the selected manager to launch the locally installed CLI. Guides use `
 
 Applicable npm tools live in `.gspot/package.json`, separate from application dependencies. They use the package manager declared by your repository. If no JavaScript manager is declared, gspot uses npm even when Bun is on `PATH`.
 
-Yarn Classic installs committed locks with `--frozen-lockfile`. Yarn Berry uses `--immutable`. gspot selects the matching command from the declared Yarn version. Use the same distinction when installing your application dependencies after cloning; see [Join a repository](/guides/join/).
+Yarn Classic installs committed lockfiles with `--frozen-lockfile`. Yarn Berry uses `--immutable`. gspot selects the matching command from the declared Yarn version. Use the same distinction when installing your application dependencies after cloning; see [Join a repository](/guides/join/).
 
-Applicable Python tools live in `.gspot/pyproject.toml`; uv installs them into `.gspot/.venv`. `apply` generates the required manifests. `init` and `install` prepare missing or stale locks without downloading tool packages during configuration generation.
+Applicable Python tools live in `.gspot/pyproject.toml`; uv installs them into `.gspot/.venv`. `apply` generates the required manifests. `init` and `install` prepare missing or outdated lockfiles without downloading tool packages during configuration generation.
 
 ## No runner
 
@@ -37,4 +37,4 @@ A missing `[hooks]` or `[ci]` table disables that integration. `--no-hooks` and 
 
 gspot uses repository and environment registry settings for its npm, pnpm, Yarn, and Bun installs. uv reads Python indexes from `uv.toml` or `[tool.uv]` in `pyproject.toml`.
 
-Keep credentials in environment variables or user configuration. Do not commit credentials in `gspot.toml` or locks. Each teammate supplies their own credentials when running `install`.
+Keep credentials in environment variables or user configuration. Do not commit credentials in `gspot.toml` or lockfiles. Each teammate supplies their own credentials when running `install`.

@@ -2,34 +2,37 @@ import { test, expect } from 'bun:test';
 import { INSTALL_OUTPUT_LIMIT } from '#cli/config/tools/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
-import { registryPasswords, installationDiagnostics, assertCredentialFreeLock } from '#cli/tools/credentials.ts';
-import { LEAKED_LOCKS, REGISTRY_PASSWORDS, CREDENTIAL_DIAGNOSTICS } from '#tests/config/cli/tools/credentials.ts';
+import { registryPasswords, installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
+import { LEAKED_LOCKFILES, REGISTRY_PASSWORDS, CREDENTIAL_DIAGNOSTICS } from '#tests/config/cli/tools/credentials.ts';
 
 test.each(REGISTRY_PASSWORDS)('registry password parsing preserves both representations of %s', (url, expected) => {
     expect(registryPasswords(url)).toStrictEqual([...expected]);
 });
 
-test.each([...LEAKED_LOCKS])('a generated lock containing %s fails with the installation owner error', (lock) => {
-    const failure = new Error('Existing files were preserved.');
-    let thrown: unknown;
-    try {
-        assertCredentialFreeLock(lock, ['synthetic/password+with spaces'], failure);
-    } catch (error) {
-        thrown = error;
-    }
-    expect(thrown).toBe(failure);
-});
+test.each([...LEAKED_LOCKFILES])(
+    'a generated lockfile containing %s fails with the installation owner error',
+    (lockfile) => {
+        const failure = new Error('Existing files were preserved.');
+        let thrown: unknown;
+        try {
+            assertCredentialFreeLockfile(lockfile, ['synthetic/password+with spaces'], failure);
+        } catch (error) {
+            thrown = error;
+        }
+        expect(thrown).toBe(failure);
+    },
+);
 
-test('a credential-free lock is accepted with configured passwords or no registry authentication', () => {
+test('a credential-free lockfile is accepted with configured passwords or no registry authentication', () => {
     expect(() => {
-        assertCredentialFreeLock(
+        assertCredentialFreeLockfile(
             'url = "https://example.com/simple"',
             ['synthetic/password'],
             new Error('Credential leak'),
         );
     }).not.toThrow();
     expect(() => {
-        assertCredentialFreeLock('version = 1', [], new Error('Credential leak'));
+        assertCredentialFreeLockfile('version = 1', [], new Error('Credential leak'));
     }).not.toThrow();
 });
 

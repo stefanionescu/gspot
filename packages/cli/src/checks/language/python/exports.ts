@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { exportedNames, visitPythonModules } from '#cli/parsers/python.ts';
 import { DEFINITIONS, PACKAGE_FILE } from '#cli/config/checks/language/python.ts';
 
@@ -9,7 +9,7 @@ import { DEFINITIONS, PACKAGE_FILE } from '#cli/config/checks/language/python.ts
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function privatePrefix(input: EngineInput): Promise<Finding[]> {
+export async function privatePrefix(input: CheckInput): Promise<Finding[]> {
     return visitPythonModules(input, ({ modules }) =>
         modules.flatMap((module) => {
             const exported = exportedNames(module);
@@ -47,7 +47,7 @@ export async function privatePrefix(input: EngineInput): Promise<Finding[]> {
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function privateBeforePublic(input: EngineInput): Promise<Finding[]> {
+export async function privateBeforePublic(input: CheckInput): Promise<Finding[]> {
     return visitPythonModules(input, ({ modules }) =>
         modules.flatMap((module) => {
             const names = module.statements.flatMap((statement) => {
@@ -77,7 +77,7 @@ export async function privateBeforePublic(input: EngineInput): Promise<Finding[]
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function exportsAtBottom(input: EngineInput): Promise<Finding[]> {
+export async function exportsAtBottom(input: CheckInput): Promise<Finding[]> {
     return visitPythonModules(input, ({ modules }) =>
         modules.flatMap((module) => {
             const exported = exportedNames(module);
@@ -105,7 +105,7 @@ export async function exportsAtBottom(input: EngineInput): Promise<Finding[]> {
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function packageExports(input: EngineInput): Promise<Finding[]> {
+export async function packageExports(input: CheckInput): Promise<Finding[]> {
     const ceiling = input.view.limit('package_exports', 'python');
     if (ceiling === undefined) return [];
     return visitPythonModules(input, ({ modules }) =>
@@ -129,7 +129,7 @@ export async function packageExports(input: EngineInput): Promise<Finding[]> {
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check
  */
-export async function exportOrder(input: EngineInput): Promise<Finding[]> {
+export async function exportOrder(input: CheckInput): Promise<Finding[]> {
     return visitPythonModules(input, ({ modules }) =>
         modules.flatMap((module) => {
             const exported = exportedNames(module);

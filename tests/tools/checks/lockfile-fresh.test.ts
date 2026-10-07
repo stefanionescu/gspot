@@ -4,7 +4,7 @@ import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { engineInput } from '#cli/execution/engines.ts';
+import { checkInput } from '#cli/execution/built-in.ts';
 import { rmSync, existsSync, readFileSync } from 'node:fs';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
@@ -14,7 +14,7 @@ test.each([
     [process.execPath, 'bun.lock'],
     ['npm', 'package-lock.json'],
     ['yarn', 'yarn.lock'],
-] as const)('native %s validates %s without changing repository inputs', async (client, lockName) => {
+] as const)('native %s validates %s without changing repository inputs', async (client, lockfileName) => {
     await using directory = await testdir();
     const version = await runTestCommand([client, '--version'], { cwd: directory.path });
     expect(version.code, version.stdout + version.stderr).toBe(0);
@@ -28,12 +28,12 @@ test.each([
         ...(yarnBerry ? { '.yarnrc.yml': 'nodeLinker: node-modules\n' } : {}),
     });
     const yarnFlags = yarnBerry ? [] : ['--non-interactive'];
-    const lockFlag = client === 'npm' ? '--package-lock-only' : '--lockfile-only';
+    const lockfileFlag = client === 'npm' ? '--package-lock-only' : '--lockfile-only';
     const installed = await runTestCommand(
         [
             client,
             'install',
-            ...(client === 'yarn' ? yarnFlags : [lockFlag]),
+            ...(client === 'yarn' ? yarnFlags : [lockfileFlag]),
             ...(yarnBerry ? [] : ['--ignore-scripts']),
         ],
         {
@@ -43,7 +43,7 @@ test.each([
     );
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     rmSync(join(directory.path, 'node_modules'), { recursive: true, force: true });
-    const lock = readFileSync(join(directory.path, lockName));
+    const lockfile = readFileSync(join(directory.path, lockfileName));
     const changed = JSON.stringify({ private: true, dependencies: { other: 'file:./other' } });
     await Bun.write(join(directory.path, 'package.json'), changed);
     const session = await openSession(directory.path);
@@ -52,12 +52,12 @@ test.each([
         skips: [],
         only: ['dependencies/lockfile-fresh'],
     });
-    const input = engineInput(session, planned!);
+    const input = checkInput(session, planned!);
     expect(await lockfileFresh(input)).toContainEqual(containing({ rule: 'stale' }));
-    expect(readFileSync(join(directory.path, lockName))).toStrictEqual(lock);
+    expect(readFileSync(join(directory.path, lockfileName))).toStrictEqual(lockfile);
     expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(changed);
     await Bun.write(join(directory.path, 'package.json'), manifest);
     expect(await lockfileFresh(input)).toStrictEqual([]);
-    expect(readFileSync(join(directory.path, lockName))).toStrictEqual(lock);
+    expect(readFileSync(join(directory.path, lockfileName))).toStrictEqual(lockfile);
     expect(existsSync(join(directory.path, 'node_modules'))).toBe(false);
 });

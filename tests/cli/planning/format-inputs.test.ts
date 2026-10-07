@@ -44,7 +44,7 @@ test('saved native exclusions remove unused Prettier output and remain stable af
     const excluded = await openSession(sandbox.path);
     const plans = planRun(excluded, { stage: 'commit', skips: [], only: ['format/prettier'] });
     expect(plans[0]?.skip?.cause).toBe('ignore');
-    expect(configuredChecks(excluded).map((check) => check.spec.name)).not.toContain('format/prettier');
+    expect(configuredChecks(excluded).map((check) => check.check.name)).not.toContain('format/prettier');
     expect(applicableManifests(excluded).flatMap((manifest) => manifest.tools.map((tool) => tool.name))).not.toContain(
         'prettier',
     );
@@ -54,7 +54,7 @@ test('saved native exclusions remove unused Prettier output and remain stable af
     expect(removed.removed).toContain('.prettierignore');
     expect(existsSync(join(sandbox.path, '.prettierignore'))).toBe(false);
     const settled = await openSession(sandbox.path);
-    expect(configuredChecks(settled).map((check) => check.spec.name)).not.toContain('format/prettier');
+    expect(configuredChecks(settled).map((check) => check.check.name)).not.toContain('format/prettier');
     const repeated = writeOutputs(settled, log, undefined, emitAll(settled));
     expect(repeated.written).toStrictEqual([]);
     expect(repeated.removed).toStrictEqual([]);
@@ -62,7 +62,7 @@ test('saved native exclusions remove unused Prettier output and remain stable af
     expect(readFileSync(join(sandbox.path, 'sample.json'), 'utf8')).toBe('{"value":1}\n');
 });
 
-test('a custom check declares its native ignore file without borrowing a built-in check name', async () => {
+test('a command check declares its native ignore file without borrowing a built-in check name', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': AUTHORED_IGNORE_CHECK,

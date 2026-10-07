@@ -2,8 +2,8 @@ import { z } from 'zod';
 import type { SchemaNode } from '../../types/reference.ts';
 import { policySchema } from '@gspothq/cli/src/policy/schema/policy.ts';
 import { JSON_SCHEMA_URL } from '@gspothq/cli/src/config/commands/init.ts';
-import type { SettingSpec } from '@gspothq/cli/src/types/configurations.ts';
 import { settingValueSchema } from '@gspothq/cli/src/parsers/schema/settings.ts';
+import type { SettingDeclaration } from '@gspothq/cli/src/types/configurations.ts';
 import { STRUCTURED_POLICY_TABLES } from '@gspothq/cli/src/config/policy/settings.ts';
 import { configurationManifests } from '@gspothq/cli/src/configurations/manifests.ts';
 
@@ -17,12 +17,12 @@ function addSetting(root: SchemaNode, segments: string[], leaf: SchemaNode): voi
     }
 }
 
-function closeConfigurationTables(schema: SchemaNode, settings: SettingSpec[]): void {
-    const configurations = settings.flatMap((spec) => {
-        const [root, ...segments] = spec.name.split('.');
+function closeConfigurationTables(schema: SchemaNode, settings: SettingDeclaration[]): void {
+    const configurations = settings.flatMap((declaration) => {
+        const [root, ...segments] = declaration.name.split('.');
         const table = root === undefined ? undefined : schema.properties?.[root];
         if (root === 'tools' || STRUCTURED_POLICY_TABLES.has(root ?? '') || table === undefined) return [];
-        const value = settingValueSchema(spec);
+        const value = settingValueSchema(declaration);
         const leaf = z.toJSONSchema(z.union([value, z.strictObject({ value, reason: z.string().optional() })]));
         return [{ table, segments, leaf }];
     });
@@ -41,10 +41,10 @@ function closeToolTables(schema: SchemaNode): void {
     if (typeof toolSchema !== 'object') throw new Error('The policy tools schema requires a tool table.');
     tools.properties ??= {};
     const settings = [...configurationManifests().values()].flatMap((manifest) => manifest.settings);
-    const declared = settings.flatMap((spec) => {
-        const [root, tool, ...segments] = spec.name.split('.');
+    const declared = settings.flatMap((declaration) => {
+        const [root, tool, ...segments] = declaration.name.split('.');
         if (root !== 'tools' || tool === undefined) return [];
-        const value = settingValueSchema(spec);
+        const value = settingValueSchema(declaration);
         const leaf = z.toJSONSchema(z.union([value, z.strictObject({ value, reason: z.string().optional() })]));
         return [{ tool, segments, leaf }];
     });

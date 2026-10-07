@@ -3,7 +3,7 @@ import { decodeHTMLAttribute } from 'entities';
 import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { ParsedSource } from '#cli/types/parsers/source.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
@@ -74,7 +74,7 @@ function scriptScheme(attribute: MarkupAttribute, scriptType: string): string | 
     }
 }
 
-function literalFindings(input: EngineInput, source: ParsedSource): Finding[] {
+function literalFindings(input: CheckInput, source: ParsedSource): Finding[] {
     const texts = source.rootNode
         .descendantsOfType('text')
         .filter((node) => LETTERS.test(withoutPlaceholders(node.text)))
@@ -108,7 +108,7 @@ function literalFindings(input: EngineInput, source: ParsedSource): Finding[] {
     return [...texts, ...attributes];
 }
 
-function inlineFindings(input: EngineInput, source: ParsedSource): Finding[] {
+function inlineFindings(input: CheckInput, source: ParsedSource): Finding[] {
     return source.rootNode
         .descendantsOfType('script_element')
         .filter((element) =>
@@ -133,7 +133,7 @@ function inlineFindings(input: EngineInput, source: ParsedSource): Finding[] {
         });
 }
 
-function attributeFindings(input: EngineInput, source: ParsedSource): Finding[] {
+function attributeFindings(input: CheckInput, source: ParsedSource): Finding[] {
     return source.rootNode.descendantsOfType(['element', 'script_element']).flatMap((element) => {
         const attributes = getAttributes(element);
         const scriptType = attributes.find((entry) => entry.name === 'type')?.value.toLowerCase() ?? '';
@@ -169,10 +169,10 @@ function attributeFindings(input: EngineInput, source: ParsedSource): Finding[] 
 
 /**
  * Inline script, handler attributes and script links in every owned HTML file.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function scripts(input: EngineInput): Promise<Finding[]> {
+export async function scripts(input: CheckInput): Promise<Finding[]> {
     const files = input.files
         .filter((file) => file.kind === 'source')
         .map((file) => ({ path: file.path, grammar: 'html' as const }));
@@ -185,10 +185,10 @@ export async function scripts(input: EngineInput): Promise<Finding[]> {
 
 /**
  * Literal copy in the template files the policy names. With no template files the check passes.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function literals(input: EngineInput): Promise<Finding[]> {
+export async function literals(input: CheckInput): Promise<Finding[]> {
     const tool = input.view.options('html');
     const templates = (tool['templates'] as string[] | undefined) ?? [];
     if (templates.length === 0) return [];

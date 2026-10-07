@@ -1,5 +1,5 @@
 import { toPosix } from '#cli/platform/paths.ts';
-import { getTsconfig } from '#cli/repository/tsconfig.ts';
+import { getTsconfig } from '#cli/parsers/tsconfig.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import { TRAILING_STAR } from '#cli/config/repository/aliases.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';

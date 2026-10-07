@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
-import { CHECKS } from '#cli/checks/registry.ts';
 import { gitOutput } from '#tests/harness/git.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -9,14 +8,15 @@ import type { Session } from '#cli/types/planning.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { CheckSpec } from '#cli/types/configurations.ts';
 import { mkdirSync, existsSync, readFileSync } from 'node:fs';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
 import { NESTED_POLICY, PROJECT_OPTIONS } from '#tests/config/cli/execution/impact.ts';
 
-test('repository checks retain nested inputs and report their defects once at the root', async () => {
+test('command checks retain nested inputs and report their defects once at the root', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': `${NESTED_POLICY}\n[[check]]\nname = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\npaths = ["**/*.sh"]\nstage = "push"\n`,
@@ -44,7 +44,7 @@ test('repository checks retain nested inputs and report their defects once at th
 
 function projectChecks(session: Session): void {
     const manifest = session.manifests.get('typescript')!;
-    const spec: CheckSpec = {
+    const check: CheckDeclaration = {
         name: 'sandbox/project',
         level: 'recommended',
         stage: 'commit',
@@ -58,9 +58,9 @@ function projectChecks(session: Session): void {
         files: manifest.files,
         fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
-    const fileCheck = { ...spec, name: 'sandbox/files', runs: 'files' as const };
+    const fileCheck = { ...check, name: 'sandbox/files', runs: 'files' as const };
     for (const scope of session.scopes) {
-        if (scope.scope.path !== '') scope.selected = [{ ...manifest, tools: [], checks: [spec, fileCheck] }];
+        if (scope.scope.path !== '') scope.selected = [{ ...manifest, tools: [], checks: [check, fileCheck] }];
     }
 }
 
@@ -134,7 +134,7 @@ test('a positional file trigger preserves project-wide input and findings', asyn
     expect(affected.map((check) => check.scope.scope.path)).toStrictEqual(['api']);
     expect(affected[0]?.files.map((file) => file.path)).toStrictEqual(['api/caller.ts', 'api/source.ts']);
     const outcome = await executeRun(session, {
-        checks: CHECKS,
+        checks: BUILT_IN_CHECKS,
         ...PROJECT_OPTIONS,
         paths: ['api/source.ts'],
         fix: false,
@@ -161,11 +161,11 @@ test('a check with no command and no built-in check refuses the complete plan be
         why: 'The input must be valid.',
         help: 'Correct the source file.',
     } as const;
-    const first: CheckSpec = {
+    const first: CheckDeclaration = {
         ...definition,
         command: [process.execPath, '-e', 'await Bun.write("started.txt", "started")'],
     };
-    const invalid: CheckSpec = {
+    const invalid: CheckDeclaration = {
         ...definition,
         name: 'sandbox/unknown',
     };

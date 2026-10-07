@@ -4,12 +4,12 @@ import { cpus } from 'node:os';
 import { problemText } from '#cli/policy/read.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { checkRun } from '#cli/execution/built-in.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { planRun, isActive } from '#cli/planning/plan.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { getCheckRunner } from '#cli/execution/engines.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
@@ -47,7 +47,7 @@ function policyProblemsResult(session: ToolSession): CheckResult | undefined {
 // The plan and, for each planned check, the function that runs it.
 function planExecutables(session: ToolSession, options: RunOptions): Executable[] {
     const planned = planRun(session, options);
-    return planned.map((check) => ({ check, run: getCheckRunner(check.spec, options.checks) }));
+    return planned.map((check) => ({ check, run: checkRun(check.check, options.checks) }));
 }
 
 // Rereads the repository after fixers changed it, so the run that follows sees the corrected files.
@@ -64,7 +64,7 @@ function unrunnable(session: ToolSession, planned: PlannedCheck, base: CheckResu
     if (session.cancelSignal?.aborted === true) return { ...base, status: 'error', note: 'The check was canceled.' };
     if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
     if (
-        planned.spec.needs?.includes('docker') === true &&
+        planned.check.needs?.includes('docker') === true &&
         inspectTool(session, toolPin(session.manifests.values(), 'docker')).state === 'missing'
     )
         return { ...base, status: 'missing', note: 'Docker is not installed. Install Docker to run this check.' };
@@ -93,7 +93,7 @@ async function runOne(pass: Pass, executable: Executable): Promise<CheckResult> 
     try {
         return await run(session, planned, staged === undefined ? undefined : { staged });
     } catch (error) {
-        return { ...base, duration: performance.now() - started, ...checkFailure(planned.spec.name, error) };
+        return { ...base, duration: performance.now() - started, ...checkFailure(planned.check.name, error) };
     }
 }
 
@@ -112,10 +112,10 @@ function dropIgnoredFindings(
     ignores: IgnoreEntry[],
     uses: Map<IgnoreEntry, IgnoreUse>,
 ): void {
-    const countedFailure = check.spec.finding_count_pattern !== undefined && result.status === 'failed';
+    const countedFailure = check.check.finding_count_pattern !== undefined && result.status === 'failed';
     const ignored = applyIgnores(
         result.findings,
-        ignores.filter((entry) => entry.check === check.spec.name),
+        ignores.filter((entry) => entry.check === check.check.name),
     );
     mergeUses(uses, ignored.uses);
     result.findings = ignored.kept;

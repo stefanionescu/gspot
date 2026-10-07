@@ -67,10 +67,10 @@ function hookDirectory(root: string, dir: string, hooksPath: string): Tooling['h
 function detectRunner(paths: Set<string>): RunnerSelection {
     const mise = MISE_FILES.find((name) => paths.has(name));
     if (mise !== undefined) return { runner: 'mise', runnerFile: mise };
-    const lock = LOCKFILES.filter((entry) => 'runner' in entry).find(({ file }) => paths.has(file));
-    if (lock === undefined)
+    const lockfile = LOCKFILES.filter((entry) => 'runner' in entry).find(({ file }) => paths.has(file));
+    if (lockfile === undefined)
         return paths.has('package.json') ? { runner: 'npm', runnerFile: 'package.json' } : { runner: 'none' };
-    return { runner: lock.client, runnerFile: 'package.json' };
+    return { runner: lockfile.client, runnerFile: 'package.json' };
 }
 
 function jobCommands(job: object): string[] {

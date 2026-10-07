@@ -5,13 +5,13 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { buildEngineInput } from '#tests/harness/input.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { testModules } from '#tests/harness/environment.ts';
+import * as toolRunner from '#cli/execution/command/check.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
-import * as toolRunner from '#cli/execution/command/runner.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { cachedBuild } from '#cli/checks/general/site/build.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { OUTPUT_CASES } from '#tests/config/cli/checks/general/site/output.ts';
 import { purgecss, brokenLinks, htmlValidate } from '#cli/checks/general/site/output.ts';
@@ -20,7 +20,7 @@ import { SITE_POLICY, SITE_BUILD_SCRIPT, STATIC_SITE_FILES } from '#tests/config
 test.each([
     {
         name: 'links',
-        analyze: (input: EngineInput) => brokenLinks(input, false),
+        analyze: (input: CheckInput) => brokenLinks(input, false),
         check: 'site/linkinator',
         body: '<a href="/missing.html">Missing</a>',
         finding: {
@@ -54,13 +54,13 @@ test.each([
     await using sandbox = await testdir();
     using resources = new DisposableStack();
     await createFileTree(sandbox.path, { 'gspot.toml': SITE_POLICY, 'build.js': SITE_BUILD_SCRIPT });
-    const request = buildEngineInput(await openSession(sandbox.path), 'site/build-reproducible', {
+    const request = buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
         paths: ['build.js'],
         resources: resources,
     });
-    request.spec = [...request.manifests.values()]
+    request.check = [...request.manifests.values()]
         .flatMap((manifest) => manifest.checks)
-        .find((spec) => spec.name === check)!;
+        .find((declaration) => declaration.name === check)!;
     const build = await cachedBuild(request);
     await createFileTree(sandbox.path, {
         'gspot.toml': SITE_POLICY,
@@ -71,7 +71,7 @@ test.each([
         `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${body}</body></html>`,
     );
     writeFileSync(join(build.output, 'style.css'), '.unused { color: red; }');
-    const command = spyOn(toolRunner, 'runEngineTool').mockImplementation(async (_input, argv, options) =>
+    const command = spyOn(toolRunner, 'runCheckTool').mockImplementation(async (_input, argv, options) =>
         processes.run([join(testModules, '.bin', argv[0]!), ...argv.slice(1)], {
             ...options,
             timeoutMs: 10_000,

@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { SSH_HEREDOC, SSH_BLOCK_LINES } from '#cli/config/checks/language/bash.ts';
 
@@ -9,7 +9,7 @@ import { SSH_HEREDOC, SSH_BLOCK_LINES } from '#cli/config/checks/language/bash.t
  * @param input the check context
  * @returns the findings
  */
-export const sshBlocks: Engine = async (input) => {
+export const sshBlocks: BuiltInCheck = async (input) => {
     const remoteFunctions = new Set(input.view.settings['bash.remote_functions'] as string[]);
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) => {

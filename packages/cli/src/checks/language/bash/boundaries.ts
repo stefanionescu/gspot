@@ -3,7 +3,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
-import type { Engine, EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
 import type { ScriptFile, ScriptIndex, SourceAnnotations } from '#cli/types/checks/language/bash.ts';
 
 import {
@@ -20,7 +20,7 @@ function sourcedPath(owner: string, annotation: string): string {
     return posix.normalize(posix.join(directory, annotation));
 }
 
-function annotatedSources(file: ScriptFile, input: EngineInput): SourceAnnotations {
+function annotatedSources(file: ScriptFile, input: CheckInput): SourceAnnotations {
     const sources = new Set<string>();
     const findings = file.lines.flatMap((line, position) => {
         if (!SOURCE_STATEMENT.test(line.trim())) return [];
@@ -40,7 +40,7 @@ function annotatedSources(file: ScriptFile, input: EngineInput): SourceAnnotatio
     return { sources, findings };
 }
 
-function dependencyFindings(file: ScriptFile, sources: Set<string>, index: ScriptIndex, input: EngineInput): Finding[] {
+function dependencyFindings(file: ScriptFile, sources: Set<string>, index: ScriptIndex, input: CheckInput): Finding[] {
     return file.references
         .entries()
         .flatMap(([name, lines]) => {
@@ -63,7 +63,7 @@ function dependencyFindings(file: ScriptFile, sources: Set<string>, index: Scrip
  * @param input the check context
  * @returns the findings
  */
-export const bashBoundaries: Engine = async (input) => {
+export const bashBoundaries: BuiltInCheck = async (input) => {
     const roots = input.view.settings['bash.boundary_roots'] as string[];
     if (roots.length === 0) return [];
     const isGoverned = pathMatcher(roots.map((root) => (root.includes('*') ? root : `${root.replace(/\/$/u, '')}/**`)));

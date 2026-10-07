@@ -18,7 +18,7 @@ test('located output rejects false paths and empty failures while retaining mixe
         'source.txt': 'source',
     });
     const planned = {
-        spec: LOCATED_CHECK,
+        check: LOCATED_CHECK,
         manifest: configurationManifests().get('files')!,
         tool: { name: 'tool', installers: {}, kind: 'binary' as const },
     };
@@ -35,9 +35,9 @@ test('located output rejects false paths and empty failures while retaining mixe
     expect(await Bun.file(join(sandbox.path, 'source.txt')).text()).toBe('source');
 });
 
-for (const spec of FILELESS_CHECKS)
-    test(`${spec.name} accepts a fileless result without classifying it as a crash`, async () => {
+for (const check of FILELESS_CHECKS)
+    test(`${check.name} accepts a fileless result without classifying it as a crash`, async () => {
         await using sandbox = await testdir();
-        const planned = { spec, manifest: configurationManifests().get('files')! };
+        const planned = { check, manifest: configurationManifests().get('files')! };
         expect(checkedFindings(planned, EMPTY_FAILURE, { cwd: sandbox.path, root: sandbox.path })).toStrictEqual([]);
     });

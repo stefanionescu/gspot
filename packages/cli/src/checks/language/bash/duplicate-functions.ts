@@ -1,7 +1,7 @@
 import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import type { FunctionLocation } from '#cli/types/checks/language/bash.ts';
 
@@ -10,7 +10,7 @@ import type { FunctionLocation } from '#cli/types/checks/language/bash.ts';
  * @param input the check context
  * @returns the findings
  */
-export const duplicateFunctions: Engine = async (input) => {
+export const duplicateFunctions: BuiltInCheck = async (input) => {
     const minimum = input.view.limit('identical_function_lines', 'bash');
     if (minimum === undefined) return [];
     const index = await getScriptIndex(input);

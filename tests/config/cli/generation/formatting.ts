@@ -9,7 +9,7 @@ export const IGNORE_POLICY = {
     tools: { prettier: { exclude: ['authored/*', '!authored/kept.ts'] } },
 };
 
-/** Real authored files stay eligible while declarations, ordinary excludes, and consumable locks stay ignored. */
+/** Real authored files stay eligible while declarations, ordinary excludes, and consumable lockfiles stay ignored. */
 export const IGNORE_CASES = [
     { file: 'tests/build/Scenario.ts', ignored: false },
     { file: 'src/dist/source.ts', ignored: false },

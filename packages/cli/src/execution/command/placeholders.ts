@@ -61,7 +61,7 @@ function configurationPath(session: ToolSession, planned: PlannedCheck, name: st
     const target = allConfigurations(session, planned).find(
         (config) => !config.fragment && configurationName(config.target) === name,
     );
-    if (!target) throw new Error(`Check ${planned.spec.name} names {config:${name}} and no configuration renders it.`);
+    if (!target) throw new Error(`Check ${planned.check.name} names {config:${name}} and no configuration renders it.`);
     return targetInScope(planned.scope.scope.path, target);
 }
 
@@ -86,7 +86,7 @@ function plainPart(
 
 // The nested config files a check reads: its scope's own, its pointers, and those between an input and its scope.
 function nestedConfigurations(session: ToolSession, planned: PlannedCheck): string[] {
-    const nested = planned.spec.nested_config_file;
+    const nested = planned.check.nested_config_file;
     if (nested === undefined) return [];
     const scope = planned.scope.scope.path;
     const paths = [
@@ -121,9 +121,9 @@ function nestedConfigurations(session: ToolSession, planned: PlannedCheck): stri
 export function commandConfigurations(
     session: ToolSession,
     planned: PlannedCheck,
-    command = planned.spec.command ?? [],
+    command = planned.check.command ?? [],
 ): string[] {
-    const parts = [...command, ...(planned.spec.env === undefined ? [] : Object.values(planned.spec.env))];
+    const parts = [...command, ...(planned.check.env === undefined ? [] : Object.values(planned.check.env))];
     const scope = planned.scope.scope.path;
     return [
         ...new Set([

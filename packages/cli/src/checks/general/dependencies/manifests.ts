@@ -3,7 +3,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
@@ -16,7 +16,7 @@ import {
     NON_REGISTRY_VERSION,
 } from '#cli/config/checks/general/dependencies.ts';
 
-function rootFindings(input: EngineInput, root: PackageManifest | undefined): Finding[] {
+function rootFindings(input: CheckInput, root: PackageManifest | undefined): Finding[] {
     if (root === undefined) return [];
     const findings: Finding[] = [];
     if (root.packageManager === undefined)
@@ -40,7 +40,7 @@ function rootFindings(input: EngineInput, root: PackageManifest | undefined): Fi
     return findings;
 }
 
-function packageClientFindings(input: EngineInput, manifests: Map<string, PackageManifest>): Finding[] {
+function packageClientFindings(input: CheckInput, manifests: Map<string, PackageManifest>): Finding[] {
     const root = manifests.get(NPM_MANIFEST);
     const wanted = root?.packageManager;
     if (wanted === undefined) return [];
@@ -58,7 +58,7 @@ function packageClientFindings(input: EngineInput, manifests: Map<string, Packag
     });
 }
 
-function lockfileFindings(input: EngineInput): Finding[] {
+function lockfileFindings(input: CheckInput): Finding[] {
     const kinds = new Map<string, string>();
     for (const file of input.files) {
         const kind = lockfileEntry(posix.basename(file.path))?.client;
@@ -82,10 +82,10 @@ function lockfileFindings(input: EngineInput): Finding[] {
 
 /**
  * The findings of the manifest policy over every tracked package.json.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export function manifests(input: EngineInput): Finding[] {
+export function manifests(input: CheckInput): Finding[] {
     const allowed = (input.view.options('dependencies')['ranges_allowed'] as PathAllowance[] | undefined) ?? [];
     const isRangeAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const manifests = new Map<string, PackageManifest>();

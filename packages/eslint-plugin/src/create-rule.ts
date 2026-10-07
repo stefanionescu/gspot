@@ -1,5 +1,5 @@
 import { ESLintUtils } from '@typescript-eslint/utils';
-import type { RuleDocs } from '#plugin/types/definition.ts';
+import type { RuleDocs } from '#plugin/types/create-rule.ts';
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
 /** Create rule modules with their public documentation URL. */

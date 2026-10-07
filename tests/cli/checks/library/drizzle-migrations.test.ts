@@ -7,7 +7,7 @@ import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { engineInput } from '#cli/execution/engines.ts';
+import { checkInput } from '#cli/execution/built-in.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { migrations } from '#cli/checks/library/drizzle.ts';
 import type { MigrationProject } from '#tests/types/cli/checks/library/drizzle.ts';
@@ -42,16 +42,16 @@ async function applyChanges(scope: string, schema: 'changed' | 'failure'): Promi
     mkdirSync(bin, { recursive: true });
     symlinkSync(process.execPath, join(bin, process.platform === 'win32' ? 'drizzle-kit.exe' : 'drizzle-kit'), 'file');
     const session = await openSession(directory.path);
-    const spec = session.manifests.get('drizzle')!.checks.find((entry) => entry.name === 'drizzle/migrations-fresh')!;
-    const planned = planRun(session, { stage: 'push', skips: [], only: [spec.name] });
-    const input = engineInput(session, planned.find((entry) => entry.scope.scope.path === scope)!);
+    const check = session.manifests.get('drizzle')!.checks.find((entry) => entry.name === 'drizzle/migrations-fresh')!;
+    const planned = planRun(session, { stage: 'push', skips: [], only: [check.name] });
+    const input = checkInput(session, planned.find((entry) => entry.scope.scope.path === scope)!);
     return {
         directory,
         path: (file: string) => join(scope, file),
         manual,
         mode: statSync(manual).mode,
         initial,
-        spec,
+        check,
         input,
     };
 }
@@ -92,12 +92,12 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
             const found = await migrations(testRepository.input);
             expect(found.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
                 {
-                    check: testRepository.spec.name,
+                    check: testRepository.check.name,
                     file: toPosix(testRepository.path('migrations/0001_change.sql')),
                     rule: 'stale',
                 },
                 {
-                    check: testRepository.spec.name,
+                    check: testRepository.check.name,
                     file: toPosix(testRepository.path('migrations/meta/log.json')),
                     rule: 'stale',
                 },

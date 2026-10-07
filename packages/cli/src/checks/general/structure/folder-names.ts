@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { directoryOf } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
-import type { Engine } from '#cli/types/execution/check.ts';
+import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { BANNED_FOLDERS } from '#cli/config/checks/general/structure.ts';
 import { repositoryHarnessFolders } from '#cli/policy/settings/lookup.ts';
 import { isAllowedFolder, structureSources } from '#cli/checks/general/structure/source-files.ts';
@@ -11,7 +11,7 @@ import { isAllowedFolder, structureSources } from '#cli/checks/general/structure
  * @param input the check context
  * @returns the findings
  */
-export const folderNames: Engine = (input) => {
+export const folderNames: BuiltInCheck = (input) => {
     const files = structureSources(input);
     const allowed = pathMatcher(
         input.policyFiles.policy.structure.folder_names_allowed.flatMap((entry) => entry.paths),

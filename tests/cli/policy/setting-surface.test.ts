@@ -5,8 +5,8 @@ import { textContaining } from '#tests/harness/expectations.ts';
 import { validateAgainstSurface } from '#cli/policy/errors/keys.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
-import { specFor, settingValue } from '#cli/policy/settings/lookup.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { settingValue, declarationFor } from '#cli/policy/settings/lookup.ts';
 
 const selected = selectConfigurations(['bash', 'naming', 'format', 'spelling'], configurationManifests());
 const surface = knownSettings(selected);
@@ -48,8 +48,8 @@ describe('conflicting configuration defaults', () => {
         {
             ...sql,
             configuration: { ...sql.configuration, name: 'alternate-sql' },
-            settings: sql.settings.map((spec) =>
-                spec.name === 'tools.sqlfluff.dialect' ? { ...spec, default: 'postgres' } : spec,
+            settings: sql.settings.map((declaration) =>
+                declaration.name === 'tools.sqlfluff.dialect' ? { ...declaration, default: 'postgres' } : declaration,
             ),
         },
     ]);
@@ -124,18 +124,22 @@ describe('setting defaults and declarations', () => {
         });
     });
 
-    test('maps a per-language key back to its base spec', () => {
-        expect(specFor(surface, 'limits.bash.function_lines')?.spec.name).toBe('limits.bash.function_lines');
-        expect(specFor(surface, 'limits.python.file_lines')?.language).toBe('python');
-        expect(specFor(surface, 'naming.python.parameters.max_words')?.category).toBe('parameters');
-        expect(specFor(surface, 'limits.nope')).toBeUndefined();
+    test('maps a per-language key back to its base declaration', () => {
+        expect(declarationFor(surface, 'limits.bash.function_lines')?.declaration.name).toBe(
+            'limits.bash.function_lines',
+        );
+        expect(declarationFor(surface, 'limits.python.file_lines')?.language).toBe('python');
+        expect(declarationFor(surface, 'naming.python.parameters.max_words')?.category).toBe('parameters');
+        expect(declarationFor(surface, 'limits.nope')).toBeUndefined();
     });
 
     test('refuses SQL function line and Bash cyclomatic limits without native consumers', () => {
         const settings = knownSettings(selectConfigurations(['sql', 'bash'], configurationManifests()));
-        expect(specFor(settings, 'limits.sql.function_lines')).toBeUndefined();
-        expect(specFor(settings, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
-        expect(specFor(settings, 'limits.sql.function_parameters')?.spec.name).toBe('limits.function_parameters');
+        expect(declarationFor(settings, 'limits.sql.function_lines')).toBeUndefined();
+        expect(declarationFor(settings, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
+        expect(declarationFor(settings, 'limits.sql.function_parameters')?.declaration.name).toBe(
+            'limits.function_parameters',
+        );
         const problems = policyProblems(
             buildPolicy(['sql', 'bash'], {
                 tables: '[limits.sql]\nfunction_lines = 60\n[limits.bash]\ncyclomatic_complexity = 8\n',
@@ -181,8 +185,8 @@ describe('merged settings', () => {
             manifests.push({
                 ...naming,
                 configuration: { ...naming.configuration, name: `naming-${String(index)}` },
-                settings: naming.settings.map((spec) =>
-                    spec.name === 'naming.banned' ? { ...spec, default: terms } : spec,
+                settings: naming.settings.map((declaration) =>
+                    declaration.name === 'naming.banned' ? { ...declaration, default: terms } : declaration,
                 ),
             });
         }

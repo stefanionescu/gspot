@@ -38,7 +38,7 @@ test.each([
     },
 ])('$configuration correction status agrees with native residual diagnostics', async (entry) => {
     await using sandbox = await testdir();
-    const spec = configurationManifests()
+    const check = configurationManifests()
         .get(entry.configuration)!
         .checks.find((check) => check.name === `${entry.configuration}/${entry.tool}`)!;
     const executable = join(
@@ -55,8 +55,8 @@ test.each([
                     name: 'project/native',
                     command: [...command, ...entry.formatter, '{files}'],
                     fix: [...command, '--fix', '{files}'],
-                    exit_codes: spec.exit_codes!,
-                    output: spec.output!,
+                    exit_codes: check.exit_codes!,
+                    output: check.output!,
                     paths: [entry.path],
                     stage: 'commit',
                 },

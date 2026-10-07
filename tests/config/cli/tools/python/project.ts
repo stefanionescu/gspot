@@ -1,21 +1,33 @@
-import { PRIVATE_PYTHON_LOCK } from '#tests/config/samples/python/tools.ts';
+import { PRIVATE_PYTHON_LOCKFILE } from '#tests/config/samples/python/tools.ts';
 
-const LOCK_STEPS = [['uv', 'lock', '--project', '.gspot']];
+const LOCKFILE_STEPS = [['uv', 'lock', '--project', '.gspot']];
 
 export const CONSTRAINT = { name: 'pyjwt', specifier: '>=2.14.0' };
 
-export const PYTHON_LOCK_PLANS = [
-    { state: 'missing', lock: undefined, floor: '>=3.11', refreshLocks: false, steps: LOCK_STEPS },
-    { state: 'invalid', lock: '<<<<<<< interrupted lock\n', floor: '>=3.11', refreshLocks: false, steps: LOCK_STEPS },
+export const PYTHON_LOCKFILE_PLANS = [
+    { state: 'missing', lockfile: undefined, floor: '>=3.11', refreshLockfiles: false, steps: LOCKFILE_STEPS },
+    {
+        state: 'invalid',
+        lockfile: '<<<<<<< interrupted lockfile\n',
+        floor: '>=3.11',
+        refreshLockfiles: false,
+        steps: LOCKFILE_STEPS,
+    },
     {
         state: 'stale',
-        lock: PRIVATE_PYTHON_LOCK,
+        lockfile: PRIVATE_PYTHON_LOCKFILE,
         floor: '>=3.12',
-        refreshLocks: false,
-        steps: LOCK_STEPS,
+        refreshLockfiles: false,
+        steps: LOCKFILE_STEPS,
     },
-    { state: 'current', lock: PRIVATE_PYTHON_LOCK, floor: '>=3.11', refreshLocks: false, steps: [] },
-    { state: 'refreshed', lock: PRIVATE_PYTHON_LOCK, floor: '>=3.11', refreshLocks: true, steps: LOCK_STEPS },
+    { state: 'current', lockfile: PRIVATE_PYTHON_LOCKFILE, floor: '>=3.11', refreshLockfiles: false, steps: [] },
+    {
+        state: 'refreshed',
+        lockfile: PRIVATE_PYTHON_LOCKFILE,
+        floor: '>=3.11',
+        refreshLockfiles: true,
+        steps: LOCKFILE_STEPS,
+    },
 ];
 
 export const PYTHON_ENVIRONMENT_STEPS = [

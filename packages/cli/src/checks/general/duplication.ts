@@ -6,8 +6,8 @@ import { parseJsonRecord } from '#cli/parsers/json.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { EngineInput } from '#cli/types/execution/check.ts';
-import { runEngineTool } from '#cli/execution/command/runner.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
 import { JSCPD } from '#cli/config/checks/general/duplication.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
@@ -52,10 +52,10 @@ export function cloneFindings(report: CloneReport, context: CloneScope): Finding
 
 /**
  * Runs jscpd over the scope and reports the clones.
- * @param input the engine input
+ * @param input the check input
  * @returns the findings
  */
-export async function jscpd(input: EngineInput): Promise<Finding[]> {
+export async function jscpd(input: CheckInput): Promise<Finding[]> {
     using workFolder = scratchFolder('gspot-jscpd-');
     const work = workFolder.path;
     const owned = [
@@ -75,7 +75,7 @@ export async function jscpd(input: EngineInput): Promise<Finding[]> {
     const config = join(work, 'jscpd.json');
     writeFileSync(config, JSON.stringify({ ...shipped, path: owned.map((path) => join(input.root, path)) }));
     const argv = [JSCPD, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
-    const result = await runEngineTool(input, argv, { cwd: input.root });
+    const result = await runCheckTool(input, argv, { cwd: input.root });
     if (result.code !== 0)
         throw new Error(`The jscpd command failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`);
     const path = join(work, 'jscpd-report.json');
@@ -85,7 +85,7 @@ export async function jscpd(input: EngineInput): Promise<Finding[]> {
         );
     const ceiling = input.view.settings['limits.duplication.percent'] as number;
     return cloneFindings(cloneReportSchema.parse(JSON.parse(readSource(work, 'jscpd-report.json').toString('utf8'))), {
-        check: input.spec.name,
+        check: input.check.name,
         root: input.root,
         ceiling,
         owned: new Set(owned),

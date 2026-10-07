@@ -12,8 +12,8 @@ run `gspot apply` to write them again.
 | ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | `.gspot/config/`                                        | The configuration of every tool. A scope gets its own folder under it.                     |
 | `.gspot/rules/`                                         | The rules for coding agents.                                                               |
-| `.gspot/package.json` and lock                          | The npm tools gspot installs, at pinned versions.                                          |
-| `.gspot/pyproject.toml` and lock                        | The Python tools gspot installs, at pinned versions.                                       |
+| `.gspot/package.json` and lockfile                      | The npm tools gspot installs, at pinned versions.                                          |
+| `.gspot/pyproject.toml` and lockfile                    | The Python tools gspot installs, at pinned versions.                                       |
 | `.gspot/version`                                        | The gspot version of the repository.                                                       |
 | Files at the repository root                            | Pointers for editors and tools that look for their configuration at the root.              |
 | Managed blocks                                          | Blocks in `.gitignore`, `.gitattributes`, and `AGENTS.md`. The rest of each file is yours. |
@@ -36,7 +36,7 @@ policy.
 ## What to commit
 
 Commit `gspot.toml`, everything gspot writes under `.gspot/config/` and `.gspot/rules/`, the
-applicable `.gspot/package.json` and its manager lock, `.gspot/pyproject.toml`, `.gspot/uv.lock`, `.gspot/version`, and `.gspot/hooks/`, the root files, and the managed blocks.
+applicable `.gspot/package.json` and its manager lockfile, `.gspot/pyproject.toml`, `.gspot/uv.lock`, `.gspot/version`, and `.gspot/hooks/`, the root files, and the managed blocks.
 After a teammate clones the repository, `gspot install` installs the locked tools and the hooks.
 
 The managed block in `.gitignore` keeps these out of Git: the installed tools (`.gspot/node_modules/` and `.gspot/.venv/`), Vale style packages when prose checks need them, and `.gspot/state/`.

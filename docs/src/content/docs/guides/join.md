@@ -42,4 +42,4 @@ gspot check
 
 In PowerShell, read the same pin with `Get-Content .gspot/version` and supply it to `npm install --global`.
 
-`install` prepares required missing or stale locks in tool projects, then installs the tools and sets up hooks in this clone. If installation fails, repair the registry, credentials, or package manager and run `install` again. Commit any updated locks with the policy. When another hook manager owns the hooks, add the three integration lines printed by `install`; otherwise gspot checks will not run on commit or push.
+`install` prepares required missing or outdated lockfiles in tool projects, then installs the tools and sets up hooks in this clone. If installation fails, repair the registry, credentials, or package manager and run `install` again. Commit any updated lockfiles with the policy. When another hook manager owns the hooks, add the three integration lines printed by `install`; otherwise gspot checks will not run on commit or push.

@@ -1,4 +1,4 @@
-// Lock parsers reject any merge-marker prefix; generated output requires the token separator.
+// Lockfile parsers reject any merge-marker prefix; generated output requires the token separator.
 const CONFLICT_MARKER_SOURCE = '^(?:<{7}|={7}|>{7})';
 
 /** Git separates a batch object's header and body with one newline each. */

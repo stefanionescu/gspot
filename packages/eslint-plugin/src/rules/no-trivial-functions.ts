@@ -1,5 +1,5 @@
 import { TRIVIAL_STATEMENTS } from '#plugin/config/syntax.ts';
-import { createRule, optionsSchema } from '#plugin/definition.ts';
+import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
 import type { TrivialFunctionsOptions } from '#plugin/types/function-content.ts';
 import type { FunctionBinding, ImplementedFunction } from '#plugin/types/syntax.ts';

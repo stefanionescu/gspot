@@ -6,8 +6,8 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
+import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { getPushBase } from '#cli/repository/revisions/changes.ts';
-import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import type { CommitSelection } from '#cli/types/repository/revisions.ts';
 
 async function pushedCommits(session: ToolSession, planned: PlannedCheck): Promise<CommitSelection> {
@@ -29,7 +29,7 @@ async function pushedCommits(session: ToolSession, planned: PlannedCheck): Promi
 export async function commitlintRange(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
     const result: CheckResult = {
-        check: planned.spec.name,
+        check: planned.check.name,
         scope: planned.scope.scope.path,
         status: 'passed',
         fileCount: 0,
@@ -58,7 +58,7 @@ export async function commitlintRange(session: ToolSession, planned: PlannedChec
                 note: `Cannot read commit ${commit}: ${read.stderr.trim()}`,
             };
         writeFileSync(commitFile, read.stdout, { mode: PRIVATE_FILE });
-        const current = await runCommandCheck(
+        const current = await runCheckCommand(
             session,
             { ...planned, messageFile: commitFile },
             { command: ['commitlint', '--config', '{config:commitlint}', '--edit', '{message_file}'] },

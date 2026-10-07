@@ -5,9 +5,9 @@ import type { namingLists } from '#cli/parsers/schema/naming.ts';
 import type { namingCategorySchema } from '#cli/policy/schema/fields.ts';
 import type { agentRulesSchema } from '#cli/policy/schema/agent-rules.ts';
 import type { scopeSchema, policySchema } from '#cli/policy/schema/policy.ts';
-import type { Manifest, CheckSpec, SettingSpec } from '#cli/types/configurations.ts';
 import type { ScopeEntry, FileDeclaration } from '#cli/types/repository/inventory.ts';
 import type { environmentSettingsSchema } from '#cli/policy/schema/configurations.ts';
+import type { Manifest, CheckDeclaration, SettingDeclaration } from '#cli/types/configurations.ts';
 
 export type RawArchitecture = NonNullable<RawPolicy['architecture']>;
 
@@ -58,7 +58,7 @@ export type ScopeView = {
 
 export type ResolvedSetting = {
     key: string;
-    spec: SettingSpec;
+    declaration: SettingDeclaration;
     value: unknown;
     reason?: string;
     source: string;
@@ -72,15 +72,15 @@ export type PolicyTable = { table: Partial<Policy>; name: string; path: string }
 export type SettingState = { value: unknown; source: string; reason: string | undefined };
 
 export type KnownSettings = {
-    specs: Map<string, SettingSpec>;
+    declarations: Map<string, SettingDeclaration>;
     defaults: Map<string, SettingDefault>;
     problems: { key: string; message: string }[];
 };
 
 export type TomlTable = Record<string, unknown>;
 
-/** A written key matched to its specification and its declared language and category. */
-export type SpecMatch = { spec: SettingSpec; language?: string; category?: string };
+/** A written key matched to its declaration and its declared language and category. */
+export type DeclarationMatch = { declaration: SettingDeclaration; language?: string; category?: string };
 
 export type ToolTable = Record<string, unknown> & {
     verbatim?: Record<string, unknown> & { reason?: string };
@@ -146,7 +146,10 @@ export type NamingSettings = Defined<z.infer<typeof namingLists>> & {
     languages: Record<string, NamingLanguageTable>;
 };
 
-export type RepositoryDefinition = CheckSpec & { command: string[]; files: NonNullable<CheckSpec['files']> };
+export type RepositoryDefinition = CheckDeclaration & {
+    command: string[];
+    files: NonNullable<CheckDeclaration['files']>;
+};
 
 /** The [limits] table as written. */
 export type RawLimits = NonNullable<RawPolicy['limits']>;

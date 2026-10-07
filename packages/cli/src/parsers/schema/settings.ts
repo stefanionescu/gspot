@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { SettingSpec } from '#cli/types/configurations.ts';
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
 /** The public policy and check levels. Preview rules have no supported level. */
@@ -44,14 +44,14 @@ export const settingValueSchemas = {
 
 /**
  * Builds value validation from the constraints a configuration declares.
- * @param spec the setting's type and validated constraints
+ * @param declaration the setting's type and validated constraints
  * @returns the schema for a bare effective setting value
  */
-export function settingValueSchema(spec: Pick<SettingSpec, 'type' | 'validation'>): z.ZodType {
-    const validation = spec.validation;
+export function settingValueSchema(declaration: Pick<SettingDeclaration, 'type' | 'validation'>): z.ZodType {
+    const validation = declaration.validation;
     const diagnostic = validation.message;
     if (validation.enum !== undefined) return z.literal(validation.enum, { error: diagnostic });
-    switch (spec.type) {
+    switch (declaration.type) {
         case 'string': {
             return validation.pattern === undefined
                 ? z.string()
@@ -61,7 +61,7 @@ export function settingValueSchema(spec: Pick<SettingSpec, 'type' | 'validation'
             return numberSettingSchema(validation);
         }
         default: {
-            return settingValueSchemas[spec.type];
+            return settingValueSchemas[declaration.type];
         }
     }
 }
@@ -71,7 +71,7 @@ export function settingValueSchema(spec: Pick<SettingSpec, 'type' | 'validation'
  * @param validation the bounds, integer requirement, and optional diagnostic
  * @returns the validated number schema
  */
-export function numberSettingSchema(validation: SettingSpec['validation']): z.ZodNumber {
+export function numberSettingSchema(validation: SettingDeclaration['validation']): z.ZodNumber {
     let schema = z.number();
     if (validation.integer === true) schema = schema.int(validation.message);
     if (validation.minimum !== undefined) schema = schema.min(validation.minimum, validation.message);

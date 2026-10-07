@@ -147,7 +147,7 @@ export function isRecorded(file: FileCopy | undefined, recorded: Identity | unde
 export function openOwnership(root: string): Log {
     const files = openRoot(root);
     try {
-        files.lock(`${STATE_DIRECTORY}/writer.lock`);
+        files.claim(`${STATE_DIRECTORY}/writer.lock`);
         const log = openLog(files);
         recoverInstallations(log);
         return log;
@@ -158,7 +158,7 @@ export function openOwnership(root: string): Log {
 }
 
 /**
- * Reads ownership without creating a lock or writing files.
+ * Reads ownership without creating a claim or writing files.
  * @param root the repository root
  * @returns the saved state, or empty ownership for a new repository
  */
