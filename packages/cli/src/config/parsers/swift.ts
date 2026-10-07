@@ -1,5 +1,5 @@
 /** Grammar nodes with executable Swift bodies for functions, accessors, and observers. */
-export const FUNCTION_NODES = [
+export const SWIFT_BODY_NODES = [
     'function_declaration',
     'init_declaration',
     'deinit_declaration',

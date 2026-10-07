@@ -1,6 +1,6 @@
 // Counting executable statements in Python, Swift, and Bash syntax trees, and telling a trivial file from a real one.
 
-export const FUNCTION_NODES = new Set([
+export const COUNTED_FUNCTION_NODES = new Set([
     'function_definition',
     'function_declaration',
     'init_declaration',

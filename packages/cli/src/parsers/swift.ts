@@ -4,7 +4,7 @@ import { readSource } from '#cli/platform/source.ts';
 import { parseSource } from '#cli/parsers/tree-sitter.ts';
 import type { SourceInput } from '#cli/types/parsers/source.ts';
 import type { ParsedSwift, SwiftSource, SwiftFunction } from '#cli/types/parsers/swift.ts';
-import { ACCESSOR_NODES, FUNCTION_NAMES, FUNCTION_NODES } from '#cli/config/parsers/swift.ts';
+import { ACCESSOR_NODES, FUNCTION_NAMES, SWIFT_BODY_NODES } from '#cli/config/parsers/swift.ts';
 
 const SOURCE_MEMO = { create: () => new WeakMap<DisposableStack, Map<string, Promise<ParsedSwift>>>() };
 
@@ -40,7 +40,7 @@ async function readSources(input: SourceInput): Promise<ParsedSwift> {
  */
 export function getSwiftFunctions(source: SwiftSource): SwiftFunction[] {
     return source.tree.rootNode
-        .descendantsOfType(FUNCTION_NODES)
+        .descendantsOfType(SWIFT_BODY_NODES)
         .filter((node) => {
             if (node.type === 'computed_property' && !node.namedChildren.some((child) => child.type === 'statements'))
                 return false;

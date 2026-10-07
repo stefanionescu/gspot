@@ -10,7 +10,7 @@ import type { RunReport } from '#cli/types/execution/check.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { install, buildSandboxPath } from '#tests/harness/install.ts';
-import { SCOPES_SOURCE } from '#tests/config/tools/commands/scopes.ts';
+import { SCOPES_SOURCE } from '#tests/config/cli/generation/eslint/scopes.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/samples/typescript.ts';
 
 test(

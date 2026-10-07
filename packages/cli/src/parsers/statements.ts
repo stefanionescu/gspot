@@ -4,10 +4,10 @@ import type { IsSubstantial, CountedLanguage } from '#cli/types/parsers/statemen
 import {
     NAMES,
     TYPE_ALIASES,
-    FUNCTION_NODES,
     CONTAINER_NODES,
     CONTAINER_NOISE,
     TYPE_REFERENCES,
+    COUNTED_FUNCTION_NODES,
 } from '#cli/config/parsers/statements.ts';
 
 // Whether a Bash node is one executable command or statement.
@@ -87,7 +87,7 @@ function isInert(node: Node): boolean {
 // Identify substantive nodes beyond imports, names, forwarding declarations, and trivial functions.
 function isSubstantial(node: Node, language: CountedLanguage, threshold: number): boolean {
     if (isInert(node)) return false;
-    if (FUNCTION_NODES.has(node.type)) return isSubstantialFunction(node, language, threshold);
+    if (COUNTED_FUNCTION_NODES.has(node.type)) return isSubstantialFunction(node, language, threshold);
     if (CONTAINER_NODES.has(node.type)) {
         const body = node.childForFieldName('body');
         return (body?.namedChildren ?? node.namedChildren)
@@ -108,7 +108,7 @@ export function executableStatements(nodes: Node[], language: CountedLanguage): 
     let count = 0;
     for (const node of nodes) {
         if (node.type.includes('comment') || TYPE_ALIASES.has(node.type)) continue;
-        if (FUNCTION_NODES.has(node.type)) {
+        if (COUNTED_FUNCTION_NODES.has(node.type)) {
             if (!node.type.startsWith('lambda')) count += 1;
             continue;
         }
