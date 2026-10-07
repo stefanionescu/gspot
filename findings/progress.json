@@ -1,5 +1,5 @@
 {
-    "openRecords": 964,
+    "openRecords": 957,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -207,7 +207,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 964,
+        "openRecords": 957,
         "records": 1092,
         "batches": [
             {
@@ -1373,8 +1373,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 25,
-                "unresolvedAssignments": 444
+                "completedAssignments": 32,
+                "unresolvedAssignments": 437
             },
             {
                 "id": "scripts-repository",
@@ -3604,10 +3604,16 @@
             ]
         },
         "review/code-execution/007": {
-            "status": "in-progress",
-            "owner": "rules",
+            "status": "partial",
+            "owner": "main integration",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Frozen ordinary-only patch4f4cab95125ed44de9b60bf8487aa46ae118cf06cc3d207ea33b9b868036472a integrated after5553bac3e. Only tsc.ts changes: ordinary --noEmit runs from canonical source root, temporary incremental metadata stays in owned scratch; reference/fullrepository/checkjs/Next paths and original parser remain unchanged. Actual source4fewerlines45fewerbytes1moreASTnode. Agent27focused/99assertions and original4native/32assertions55.51s pass; native defect/correction/cwd/noEmit/source+config+metadata+binary bytes/modes/preabort/liveabort/cleanup probe30assertions each Bun1.4.2/Node24.2darwin passes. Main combined gates pending; no closure."
+            ],
+            "remaining": [
+                "Scope-only reference/checkjs dependency closure and shared Next compiler behavior remain unimplemented. Full growing candidate and imported-only ambient declaration omission preserved separately.",
+                "Main integration focused/native/staged/commit/push and platform acceptance pending."
+            ]
         },
         "review/code-execution/008": {
             "status": "complete",
@@ -6041,21 +6047,23 @@
             "verification": []
         },
         "review/tests-cli/007": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "LEFTHOOK_FILES retains root lefthook.yml, nested .config/lefthook.yml and lefthook-local.yml; original real hook detection/preservation runner stays.",
-                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence."
+                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence.",
+                "Integrated5553bac3e0884081d9714cf9b83262ce4c64ef7d. Focused unchanged native repository suites72pass0fail272assertions5files2.67s; root/CLItypes and actual7affectedfile ESLint/Prettier pass. Nativeapply149unchanged0writes. Staged71pass10skip0findings42.290s. First commit code55pass3skip0findings12.6s but message body line too long; message wrapped and full normal second commit55pass3skip0findings11.8s plus message1pass. Successful normal push71pass10skip0findings48.5s; origin/main exact5553bac3e. CI37644737427 pending; no platform proof. Test source112fewerlines4729fewerbytes; surviving source-read/current-attributes/no-runner and native hook/runner/preservation behavior checked. No Linux/Windows claim."
             ]
         },
         "review/tests-cli/008": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Mise cases retain mise.toml and .config/mise/config.toml precedence; other package/Python/no-runner cases unchanged.",
-                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence."
+                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence.",
+                "Integrated5553bac3e0884081d9714cf9b83262ce4c64ef7d. Focused unchanged native repository suites72pass0fail272assertions5files2.67s; root/CLItypes and actual7affectedfile ESLint/Prettier pass. Nativeapply149unchanged0writes. Staged71pass10skip0findings42.290s. First commit code55pass3skip0findings12.6s but message body line too long; message wrapped and full normal second commit55pass3skip0findings11.8s plus message1pass. Successful normal push71pass10skip0findings48.5s; origin/main exact5553bac3e. CI37644737427 pending; no platform proof. Test source112fewerlines4729fewerbytes; surviving source-read/current-attributes/no-runner and native hook/runner/preservation behavior checked. No Linux/Windows claim."
             ]
         },
         "review/tests-cli/009": {
@@ -6214,30 +6222,33 @@
             "verification": []
         },
         "review/tests-cli/037": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Deleted repeated current-attributes reread test; unreadable attributes recovery and nested/Git precedence rereads retain behavior.",
-                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence."
+                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence.",
+                "Integrated5553bac3e0884081d9714cf9b83262ce4c64ef7d. Focused unchanged native repository suites72pass0fail272assertions5files2.67s; root/CLItypes and actual7affectedfile ESLint/Prettier pass. Nativeapply149unchanged0writes. Staged71pass10skip0findings42.290s. First commit code55pass3skip0findings12.6s but message body line too long; message wrapped and full normal second commit55pass3skip0findings11.8s plus message1pass. Successful normal push71pass10skip0findings48.5s; origin/main exact5553bac3e. CI37644737427 pending; no platform proof. Test source112fewerlines4729fewerbytes; surviving source-read/current-attributes/no-runner and native hook/runner/preservation behavior checked. No Linux/Windows claim."
             ]
         },
         "review/tests-cli/038": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Deleted duplicate linked .husky test; existing parameterized LINKED_HOOK_FOLDERS keeps both native kinds, external-byte protection and correction. Transferred newer unique internal linked-directory correction into surviving cases rather than discarding it.",
-                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence."
+                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence.",
+                "Integrated5553bac3e0884081d9714cf9b83262ce4c64ef7d. Focused unchanged native repository suites72pass0fail272assertions5files2.67s; root/CLItypes and actual7affectedfile ESLint/Prettier pass. Nativeapply149unchanged0writes. Staged71pass10skip0findings42.290s. First commit code55pass3skip0findings12.6s but message body line too long; message wrapped and full normal second commit55pass3skip0findings11.8s plus message1pass. Successful normal push71pass10skip0findings48.5s; origin/main exact5553bac3e. CI37644737427 pending; no platform proof. Test source112fewerlines4729fewerbytes; surviving source-read/current-attributes/no-runner and native hook/runner/preservation behavior checked. No Linux/Windows claim."
             ]
         },
         "review/tests-cli/039": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Deleted repeated prefix/ENOENT case and unused import. Actual source-read suite retains prefix bytes and native missing required source path; containment/correction remains.",
-                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence."
+                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence.",
+                "Integrated5553bac3e0884081d9714cf9b83262ce4c64ef7d. Focused unchanged native repository suites72pass0fail272assertions5files2.67s; root/CLItypes and actual7affectedfile ESLint/Prettier pass. Nativeapply149unchanged0writes. Staged71pass10skip0findings42.290s. First commit code55pass3skip0findings12.6s but message body line too long; message wrapped and full normal second commit55pass3skip0findings11.8s plus message1pass. Successful normal push71pass10skip0findings48.5s; origin/main exact5553bac3e. CI37644737427 pending; no platform proof. Test source112fewerlines4729fewerbytes; surviving source-read/current-attributes/no-runner and native hook/runner/preservation behavior checked. No Linux/Windows claim."
             ]
         },
         "review/tests-cli/040": {
@@ -6247,12 +6258,13 @@
             "verification": []
         },
         "review/tests-cli/041": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Deleted repeated remove/reread runner reset step and unused import; empty repository no-runner case and original file-byte preservation remain.",
-                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence."
+                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence.",
+                "Integrated5553bac3e0884081d9714cf9b83262ce4c64ef7d. Focused unchanged native repository suites72pass0fail272assertions5files2.67s; root/CLItypes and actual7affectedfile ESLint/Prettier pass. Nativeapply149unchanged0writes. Staged71pass10skip0findings42.290s. First commit code55pass3skip0findings12.6s but message body line too long; message wrapped and full normal second commit55pass3skip0findings11.8s plus message1pass. Successful normal push71pass10skip0findings48.5s; origin/main exact5553bac3e. CI37644737427 pending; no platform proof. Test source112fewerlines4729fewerbytes; surviving source-read/current-attributes/no-runner and native hook/runner/preservation behavior checked. No Linux/Windows claim."
             ]
         },
         "review/tests-cli/042": {
@@ -7303,12 +7315,13 @@
             "verification": []
         },
         "review/tests-tools/046": {
-            "status": "in-progress",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
             "verification": [
                 "Header states exact prescribed minimal manifest behavior; discovery constant remains in config owner and all harness body bytes unchanged.",
-                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence."
+                "Focused unchanged repository suites72pass0fail272assertions5files2.67s. Root types pass; first actual ESLint caught import order after deletion and corrected with owned tool. CLItypes/final lint/nativeapply/staged/hooks/push pending. Accidental full-root invocation stopped at owned runner; its partial log retained and not acceptance evidence.",
+                "Integrated5553bac3e0884081d9714cf9b83262ce4c64ef7d. Focused unchanged native repository suites72pass0fail272assertions5files2.67s; root/CLItypes and actual7affectedfile ESLint/Prettier pass. Nativeapply149unchanged0writes. Staged71pass10skip0findings42.290s. First commit code55pass3skip0findings12.6s but message body line too long; message wrapped and full normal second commit55pass3skip0findings11.8s plus message1pass. Successful normal push71pass10skip0findings48.5s; origin/main exact5553bac3e. CI37644737427 pending; no platform proof. Test source112fewerlines4729fewerbytes; surviving source-read/current-attributes/no-runner and native hook/runner/preservation behavior checked. No Linux/Windows claim."
             ]
         },
         "review/tests-tools/047": {
@@ -7318,7 +7331,8 @@
             "verification": [
                 "Frozen package-consumer packetbbba0c520ebc166dedfe65683baf809030294554816ae4ce2c620b12e6c1a119 integrated on816df72fb. Root/CLItypes and actual affected ESLint/Prettier pass. Native designated packaged runner3pass0fail29assertions2files42.26s using existing GH credential ephemerally; previous unauthenticated EC version lookup HTTP403 rate-limit failure retained, no source/account/settings workaround. Exact syntax diagnostics, correction, authored bytes, cancellation, takeover and plugin native exports/types preserved. Source reduction88lines4010bytes516AST. Staged/commit/push/platformCI pending.",
                 "Removed duplicate syntax package test and config after transferring exact diagnostic rows, correction assertions and authored-file byte preservation to launcher; cancellation, takeover and actual plugin consumer coverage stay.",
-                "Integrated and pushed9c3c43618ec300b42e23097d9d245ac93ad28d0a. Native designated package runner3pass0fail29assertions2files42.26s, root/CLItypes and actual affected ESLint/Prettier pass. Staged71pass10skip0findings47.157s; commit55pass3skip0findings10.7s plus message1pass; successful push71pass10skip0findings43.5s. First push passed checks but GitHub returned Internal Server Error; unchanged commit retry succeeded. Earlier unauthenticated version lookupHTTP403 and intermediate matcher failure retained. Source88fewerlines4010fewerbytes516fewerASTnodes. Nativeapply149unchanged0writes. CI37642640679pending; no Linux/Windows acceptance claim."
+                "Integrated and pushed9c3c43618ec300b42e23097d9d245ac93ad28d0a. Native designated package runner3pass0fail29assertions2files42.26s, root/CLItypes and actual affected ESLint/Prettier pass. Staged71pass10skip0findings47.157s; commit55pass3skip0findings10.7s plus message1pass; successful push71pass10skip0findings43.5s. First push passed checks but GitHub returned Internal Server Error; unchanged commit retry succeeded. Earlier unauthenticated version lookupHTTP403 and intermediate matcher failure retained. Source88fewerlines4010fewerbytes516fewerASTnodes. Nativeapply149unchanged0writes. CI37642640679pending; no Linux/Windows acceptance claim.",
+                "ActualCI37642640679 Linux package job completes7pass0fail5files177.82s after this source change. Docs build and local link/fragmentcheck pass; restCI inprogress, no macOS/Windows suite claim."
             ]
         },
         "review/tests-tools/048": {
@@ -7328,7 +7342,8 @@
             "verification": [
                 "Frozen package-consumer packetbbba0c520ebc166dedfe65683baf809030294554816ae4ce2c620b12e6c1a119 integrated on816df72fb. Root/CLItypes and actual affected ESLint/Prettier pass. Native designated packaged runner3pass0fail29assertions2files42.26s using existing GH credential ephemerally; previous unauthenticated EC version lookup HTTP403 rate-limit failure retained, no source/account/settings workaround. Exact syntax diagnostics, correction, authored bytes, cancellation, takeover and plugin native exports/types preserved. Source reduction88lines4010bytes516AST. Staged/commit/push/platformCI pending.",
                 "Launcher initial check selects only planted bash/syntax, dependencies/lockfile-hosts and format/prettier checks. Incidental failed/skipped/runtime lists removed; exact finding file/line projection preserves own undefined line semantics.",
-                "Integrated and pushed9c3c43618ec300b42e23097d9d245ac93ad28d0a. Native designated package runner3pass0fail29assertions2files42.26s, root/CLItypes and actual affected ESLint/Prettier pass. Staged71pass10skip0findings47.157s; commit55pass3skip0findings10.7s plus message1pass; successful push71pass10skip0findings43.5s. First push passed checks but GitHub returned Internal Server Error; unchanged commit retry succeeded. Earlier unauthenticated version lookupHTTP403 and intermediate matcher failure retained. Source88fewerlines4010fewerbytes516fewerASTnodes. Nativeapply149unchanged0writes. CI37642640679pending; no Linux/Windows acceptance claim."
+                "Integrated and pushed9c3c43618ec300b42e23097d9d245ac93ad28d0a. Native designated package runner3pass0fail29assertions2files42.26s, root/CLItypes and actual affected ESLint/Prettier pass. Staged71pass10skip0findings47.157s; commit55pass3skip0findings10.7s plus message1pass; successful push71pass10skip0findings43.5s. First push passed checks but GitHub returned Internal Server Error; unchanged commit retry succeeded. Earlier unauthenticated version lookupHTTP403 and intermediate matcher failure retained. Source88fewerlines4010fewerbytes516fewerASTnodes. Nativeapply149unchanged0writes. CI37642640679pending; no Linux/Windows acceptance claim.",
+                "ActualCI37642640679 Linux package job completes7pass0fail5files177.82s after this source change. Docs build and local link/fragmentcheck pass; restCI inprogress, no macOS/Windows suite claim."
             ]
         },
         "review/tests-tools/050": {
@@ -7338,7 +7353,8 @@
             "verification": [
                 "Frozen package-consumer packetbbba0c520ebc166dedfe65683baf809030294554816ae4ce2c620b12e6c1a119 integrated on816df72fb. Root/CLItypes and actual affected ESLint/Prettier pass. Native designated packaged runner3pass0fail29assertions2files42.26s using existing GH credential ephemerally; previous unauthenticated EC version lookup HTTP403 rate-limit failure retained, no source/account/settings workaround. Exact syntax diagnostics, correction, authored bytes, cancellation, takeover and plugin native exports/types preserved. Source reduction88lines4010bytes516AST. Staged/commit/push/platformCI pending.",
                 "Deleted only the tautological tsc-exists assertion and unused import after real successful compiler execution; native plugin exports, configs, packaged license/README and consumer types stay.",
-                "Integrated and pushed9c3c43618ec300b42e23097d9d245ac93ad28d0a. Native designated package runner3pass0fail29assertions2files42.26s, root/CLItypes and actual affected ESLint/Prettier pass. Staged71pass10skip0findings47.157s; commit55pass3skip0findings10.7s plus message1pass; successful push71pass10skip0findings43.5s. First push passed checks but GitHub returned Internal Server Error; unchanged commit retry succeeded. Earlier unauthenticated version lookupHTTP403 and intermediate matcher failure retained. Source88fewerlines4010fewerbytes516fewerASTnodes. Nativeapply149unchanged0writes. CI37642640679pending; no Linux/Windows acceptance claim."
+                "Integrated and pushed9c3c43618ec300b42e23097d9d245ac93ad28d0a. Native designated package runner3pass0fail29assertions2files42.26s, root/CLItypes and actual affected ESLint/Prettier pass. Staged71pass10skip0findings47.157s; commit55pass3skip0findings10.7s plus message1pass; successful push71pass10skip0findings43.5s. First push passed checks but GitHub returned Internal Server Error; unchanged commit retry succeeded. Earlier unauthenticated version lookupHTTP403 and intermediate matcher failure retained. Source88fewerlines4010fewerbytes516fewerASTnodes. Nativeapply149unchanged0writes. CI37642640679pending; no Linux/Windows acceptance claim.",
+                "ActualCI37642640679 Linux package job completes7pass0fail5files177.82s after this source change. Docs build and local link/fragmentcheck pass; restCI inprogress, no macOS/Windows suite claim."
             ]
         },
         "review/tests-tools/051": {
@@ -10074,7 +10090,8 @@
             "unresolvedRecords": 964,
             "validation": [
                 "Native3package-consumer tests29assertions pass; exact diagnosis/correction/authored bytes/cancellation/takeover/plugin type/export contracts retained.",
-                "Root/CLI types, affected real lint/format and normal staged/commit/message/push checks pass. Source reduction88lines4010bytes516AST."
+                "Root/CLI types, affected real lint/format and normal staged/commit/message/push checks pass. Source reduction88lines4010bytes516AST.",
+                "ActualCI37642640679 Linux package7pass0fail5files177.82s; docs Astrobuild and allbuilt-site links/fragments pass. Other platform jobs stillrunning; no completeCIclaim."
             ],
             "limitations": [
                 "CI37642640679pending; core816 and runner4daf runs cancelled while queued; prior d5 platform failures remain separate unresolved obligations.",
@@ -10083,7 +10100,39 @@
             "ci": {
                 "run": 37642640679,
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37642640679",
-                "status": "pending"
+                "status": "in_progress",
+                "jobsVerified": {
+                    "package": "success",
+                    "docs": "success"
+                }
+            }
+        },
+        {
+            "commit": "5553bac3e0884081d9714cf9b83262ce4c64ef7d",
+            "completedRecords": [
+                "review/tests-cli/007",
+                "review/tests-cli/008",
+                "review/tests-cli/037",
+                "review/tests-cli/038",
+                "review/tests-cli/039",
+                "review/tests-cli/041",
+                "review/tests-tools/046"
+            ],
+            "unresolvedRecords": 957,
+            "validation": [
+                "72 focused tests272assertions pass; root/CLItypes and affected actual lint/format pass. Original behavior retained in surviving native cases.",
+                "Normal publicapply149unchanged0writes; staged/commit/message hooks pass. Source112fewerlines4729fewerbytes.",
+                "Normal non-force push passes71checks10inputskips0findings48.5s and remote exact source commit verified. Original1092records1648assignments2259quote rows490closed rows retained."
+            ],
+            "limitations": [
+                "PlatformCI pending; no cross-platform claims from local macOS evidence.",
+                "All remaining shared policy/compiler/domain findings stay open; release publication/setup still external."
+            ],
+            "ci": {
+                "databaseId": 37644737427,
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37644737427",
+                "status": "pending",
+                "conclusion": ""
             }
         }
     ]

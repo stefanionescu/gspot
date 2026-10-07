@@ -6,6 +6,8 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { getTsconfig } from '#cli/parsers/tsconfig.ts';
 import { parseJsonRecord } from '#cli/parsers/json.ts';
 import type { Root } from '#cli/types/platform/root.ts';
+import { scratchFolder } from '#cli/platform/scratch.ts';
+import { createReadCache } from '#cli/platform/source.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
@@ -16,7 +18,6 @@ import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
-import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
 import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/files.ts';
 import { DOT_GSPOT, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
@@ -32,7 +33,7 @@ function assertOutputsInside(root: string, config: ts.ParsedCommandLine, files: 
     if (metadata !== undefined) files.stat(toPosix(relative(root, metadata)));
 }
 
-// Incremental checks write metadata only inside their disposable copy.
+// Incremental checks write metadata only inside their disposable folder.
 function appendBuildMetadata(
     command: string[],
     options: ts.CompilerOptions | undefined,
@@ -108,31 +109,26 @@ function restoreCommandPaths(result: CheckResult, scratch: string, root: string)
  * @returns compiler findings and the shared tool execution status
  */
 export async function tsc(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
-    const config = getTsconfig(
-        session.root,
-        join(session.root, planned.scope.scope.path, 'tsconfig.json'),
-        session.reads,
-    );
-    const hasReferences = (config?.projectReferences?.length ?? 0) > 0;
-    const command = hasReferences
-        ? ['tsc', '-b', '--pretty', 'false']
-        : ['tsc', '--noEmit', '-p', '{config:tsconfig}', '--pretty', 'false'];
-    using scratchFolder = await copyIntoScratch(
-        projectCopyInputs(
-            session.root,
-            [...session.repository.files.map((file) => file.path), ...commandConfigurations(session, planned, command)],
-            session.repository.scopes.map((scope) => scope.path),
-        ),
-    );
-    const scratch = scratchFolder.path;
-    if (hasReferences)
-        assertBuildInside(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'), {
-            root: scratch,
-            sources: new Map(),
-            memo: new Map(),
-        });
+    const target = join(planned.scope.scope.path, 'tsconfig.json');
+    const config = getTsconfig(session.root, join(session.root, target), session.reads);
+    const hasReferences = (config?.projectReferences ?? []).length > 0;
+    const command = ['tsc', ...(hasReferences ? ['-b'] : ['--noEmit', '-p', '{config:tsconfig}']), '--pretty', 'false'];
+    using source = hasReferences
+        ? await copyIntoScratch(
+              projectCopyInputs(
+                  session.root,
+                  session.repository.files.map((file) => file.path),
+                  session.repository.scopes.map((scope) => scope.path),
+              ),
+          )
+        : scratchFolder('gspot-tsc-');
+    const scratch = source.path;
+    if (hasReferences) assertBuildInside(scratch, join(scratch, target), createReadCache(scratch));
     else appendBuildMetadata(command, config?.options, scratch, 'tsconfig.tsbuildinfo');
-    const result = await runCheckCommand(session, planned, { command: command, workspace: scratch });
+    const result = await runCheckCommand(session, planned, {
+        command,
+        workspace: hasReferences ? scratch : session.root,
+    });
     return restoreCommandPaths(result, scratch, session.root);
 }
 
