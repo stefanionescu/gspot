@@ -95,11 +95,10 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['javascript'], {
                 level,
-                tables: '[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n"gspot/no-trivial-functions" = [{maxStatements = 4}]\n"gspot/instances-in-registry" = [{files = ["source.js"]}]\n',
+                tables: '[tools.eslint.rules]\n"n/no-process-exit" = []\n"jsdoc/require-description" = []\n"gspot/no-trivial-functions" = [{maxStatements = 4}]\n',
             }),
             'package.json': '{"private":true,"type":"module"}',
-            'source.js': 'export const source = new Client();',
-            'another.js': 'export const source = new Client();',
+            'source.js': '',
             'scripts/run.js': '',
             'tests/example.test.js': '',
         });
@@ -108,20 +107,10 @@ test.each(['recommended', 'all'] as const)(
         const script = (await eslint.calculateConfigForFile('scripts/run.js')) as Linter.Config;
         const test = (await eslint.calculateConfigForFile('tests/example.test.js')) as Linter.Config;
         expect((source.rules!['n/no-process-exit'] as unknown[])[0]).toBe(level === 'all' ? 2 : 0);
-        expect(source.rules!['gspot/instances-in-registry']).toStrictEqual(
-            level === 'all' ? [2, { files: ['source.js'] }] : undefined,
-        );
         expect((script.rules!['n/no-process-exit'] as unknown[])[0]).toBe(0);
         expect((test.rules!['jsdoc/require-description'] as unknown[])[0]).toBe(0);
         expect((source.rules!['gspot/no-trivial-functions'] as unknown[])[0]).toBe(level === 'all' ? 2 : 0);
         if (level === 'all')
             expect(source.rules!['gspot/no-trivial-functions']).toStrictEqual([2, { maxStatements: 4 }]);
-        const results = await eslint.lintFiles(['source.js', 'another.js']);
-        const findings = results
-            .flatMap(({ messages }) => messages)
-            .filter(({ ruleId }) => ruleId === 'gspot/instances-in-registry');
-        expect(findings.map(({ messageId: diagnosticId }) => diagnosticId)).toStrictEqual(
-            level === 'all' ? ['registry'] : [],
-        );
     },
 );

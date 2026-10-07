@@ -1,6 +1,5 @@
 // SQL payloads use PostgreSQL's native node union; procedural output has a separate external shape.
 import type { Node } from '@pgsql/types';
-import { SqlError, parse as parseSql } from 'libpg-query';
 import type { SqlParse, SqlNodeFields, SqlStatementView, SqlStatementReaders } from '#cli/types/parsers/sql.ts';
 
 /**
@@ -9,6 +8,7 @@ import type { SqlParse, SqlNodeFields, SqlStatementView, SqlStatementReaders } f
  * @returns the tree, or its zero-based Unicode diagnostic offset
  */
 export async function parse(text: string): Promise<SqlParse> {
+    const { SqlError, parse: parseSql } = await import('libpg-query');
     try {
         // An empty SQL function body is valid input to PostgreSQL; the public API refuses an empty string.
         return { tree: await parseSql(text === '' ? ' ' : text), error: undefined };

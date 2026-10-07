@@ -276,7 +276,6 @@ export function parsePackageManifest(text: string, path?: string): PackageManife
 export function manifestParser(path: string): ManifestParser | undefined {
     const base = posix.basename(path);
     const reader = base.startsWith('requirements') && base.endsWith('.txt') ? parseRequirements : readers[base];
-    // eslint-disable-next-line gspot/no-trivial-functions -- reason: The callback binds the selected manifest path to its text parser without reading unsupported files.
     return reader === undefined ? undefined : (text) => reader(path, text);
 }
 

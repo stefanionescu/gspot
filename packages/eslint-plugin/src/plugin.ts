@@ -15,7 +15,6 @@ import { importExtensions } from '#plugin/rules/import-extensions.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
-import { instancesInRegistry } from '#plugin/rules/instances-in-registry.ts';
 import { noHelpersBesideTests } from '#plugin/rules/no-helpers-beside-tests.ts';
 
 const rules = {
@@ -33,7 +32,6 @@ const rules = {
     'no-reexports': noReexports,
     'no-trivial-files': noTrivialFiles,
     'no-trivial-functions': noTrivialFunctions,
-    'instances-in-registry': instancesInRegistry,
     'require-server-only': requireServerOnly,
     'no-helpers-beside-tests': noHelpersBesideTests,
 };

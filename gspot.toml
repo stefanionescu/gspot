@@ -531,18 +531,6 @@ script_files = [
 ]
 node_version = ">=24.2.0"
 
-[tools.eslint.rules]
-"gspot/instances-in-registry" = [
-    {files = [
-        "**/registry.ts",
-        "**/registry.tsx",
-        "**/registry.js",
-        "packages/*/src/config/**",
-        "tests/config/**",
-        "packages/cli/src/generation/templates.ts",
-    ]},
-]
-
 [tools.commitlint]
 scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
 

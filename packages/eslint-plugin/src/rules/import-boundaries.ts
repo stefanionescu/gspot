@@ -83,8 +83,7 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
                     data: { alias, source },
                     fix:
                         node.type === AST_NODE_TYPES.Literal
-                            ? // eslint-disable-next-line gspot/no-trivial-functions -- reason: ESLint supplies the fixer only through its required report callback.
-                              (fixer) => fixer.replaceText(node, `${node.raw.charAt(0)}${alias}${node.raw.charAt(0)}`)
+                            ? (fixer) => fixer.replaceText(node, `${node.raw.charAt(0)}${alias}${node.raw.charAt(0)}`)
                             : null,
                 });
             }

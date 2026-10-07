@@ -3,8 +3,16 @@ import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import { totalStatements, hasConstructorState } from '#plugin/syntax.ts';
 import type { TrivialFunctionsOptions } from '#plugin/types/function-content.ts';
 import type { FunctionBinding, ImplementedFunction } from '#plugin/types/syntax.ts';
-import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { SHARED_READS, VALUE_PARENTS, EXPORT_REFERENCES } from '#plugin/config/function-references.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+import {
+    SHARED_READS,
+    VALUE_PARENTS,
+    EXPORT_REFERENCES,
+    TRANSPARENT_EXPRESSIONS,
+} from '#plugin/config/function-references.ts';
+
+const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 
 // Parents that hold a function value in one of their positions, with the test for that position.
 const VALUE_HOLDERS: [AST_NODE_TYPES, (parent: TSESTree.Node, value: TSESTree.Node) => boolean][] = [
@@ -57,30 +65,21 @@ function bindings(node: ImplementedFunction, source: TSESLint.SourceCode): TSESL
     );
 }
 
-// Assertions change static types without introducing an observable function-value use.
 /**
- * Unwrap static assertions around a function value without changing its consumer.
+ * Find the consumer of a function value through assertions and conditional or logical expressions.
  * @param node the expression or declaration
  * @returns the value as observed by its parent expression
  */
 function functionValue(node: TSESTree.Expression): TSESTree.Expression {
     let value = node;
-    for (;;) {
+    while (isTransparentExpression(value.parent)) {
         const parent = value.parent;
-        switch (parent.type) {
-            case AST_NODE_TYPES.TSAsExpression:
-            case AST_NODE_TYPES.TSTypeAssertion:
-            case AST_NODE_TYPES.TSSatisfiesExpression:
-            case AST_NODE_TYPES.TSNonNullExpression:
-            case AST_NODE_TYPES.TSInstantiationExpression: {
-                value = parent;
-                break;
-            }
-            default: {
-                return value;
-            }
-        }
+        if (parent.type === AST_NODE_TYPES.ConditionalExpression && parent.test === value) break;
+        if (parent.type === AST_NODE_TYPES.LogicalExpression && parent.operator === '&&' && parent.left === value)
+            break;
+        value = parent;
     }
+    return value;
 }
 
 /**

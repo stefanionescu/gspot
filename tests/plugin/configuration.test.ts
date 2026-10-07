@@ -80,38 +80,30 @@ test.each(['recommended', 'all'] as const)('%s shares plugin identity with expli
     expect(messages).toStrictEqual([]);
 });
 
-test.each(['recommended', 'all'] as const)(
-    '%s applies instance ownership and accepts project import options',
-    (level) => {
-        const linter = new Linter({ configType: 'flat' });
-        const config: object[] = [plugin.configs[level]];
-        const source = 'import { Client } from "./client"; export const client = new Client();';
-        const ruleIds = new Set(['gspot/import-extensions', 'gspot/instances-in-registry']);
-        const selected = linter.verify(source, config, { filename: 'client.js' });
-        expect(selected.filter(({ ruleId }) => ruleIds.has(ruleId ?? ''))).toStrictEqual([]);
-        const explicit = linter.verify(
-            source,
-            [
-                ...config,
-                {
-                    rules: {
-                        'gspot/import-extensions': ['error', { style: 'js' }],
-                        'gspot/instances-in-registry': ['error', { files: ['**/registry.*'] }],
-                    },
+test.each(['recommended', 'all'] as const)('%s accepts project import options', (level) => {
+    const linter = new Linter({ configType: 'flat' });
+    const config: object[] = [plugin.configs[level]];
+    const source = 'import { Client } from "./client"; export const client = new Client();';
+    const selected = linter.verify(source, config, { filename: 'client.js' });
+    expect(selected.filter(({ ruleId }) => ruleId === 'gspot/import-extensions')).toStrictEqual([]);
+    const explicit = linter.verify(
+        source,
+        [
+            ...config,
+            {
+                rules: {
+                    'gspot/import-extensions': ['error', { style: 'js' }],
                 },
-            ],
-            { filename: 'client.js' },
-        );
-        expect(
-            explicit
-                .filter(({ ruleId }) => ruleIds.has(ruleId ?? ''))
-                .map(({ ruleId, line, messageId: diagnosticId }) => ({ ruleId, line, messageId: diagnosticId })),
-        ).toStrictEqual([
-            { ruleId: 'gspot/import-extensions', line: 1, messageId: 'js' },
-            { ruleId: 'gspot/instances-in-registry', line: 1, messageId: 'registry' },
-        ]);
-    },
-);
+            },
+        ],
+        { filename: 'client.js' },
+    );
+    expect(
+        explicit
+            .filter(({ ruleId }) => ruleId === 'gspot/import-extensions')
+            .map(({ ruleId, line, messageId: diagnosticId }) => ({ ruleId, line, messageId: diagnosticId })),
+    ).toStrictEqual([{ ruleId: 'gspot/import-extensions', line: 1, messageId: 'js' }]);
+});
 
 test('permitted index barrels remain valid when both reexport and file rules run', () => {
     const linter = new Linter({ configType: 'flat' });

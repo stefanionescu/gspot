@@ -124,7 +124,6 @@ its own. Without options they report nothing:
 
 - `import-direction` takes `roles`: the globs of your types, tests, harness, config, env, and
   runtime files.
-- `instances-in-registry` takes `files`: the paths that may export constructed instances.
 - `env-owner` takes `owners`: the files that may read `process.env` or `import.meta.env`.
 - `no-helpers-beside-tests` takes `harness`: the folder the shared test helpers move to.
 - `import-boundaries` takes `folders`: boundary folders or folder globs, relative to the repository root. It defaults to `*/*`, which selects folders such as `src/turn` or `packages/cli`. The nearest matching ancestor owns each file. Set `aliases` to map import prefixes to repository folders for automatic fixes.

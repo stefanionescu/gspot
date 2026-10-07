@@ -112,7 +112,6 @@ export const PLUGIN_OPTIONS: Record<string, Record<string, string>> = {
         folders: 'Boundary folders or folder globs. The nearest matching ancestor owns each file. Defaults to */*.',
         aliases: 'Import alias prefixes mapped to folders for fixes.',
     },
-    'instances-in-registry': { files: 'File patterns allowed to export new instances.' },
     'no-reexports': { allowIndex: 'Allow re-exports in index files.' },
     'max-barrel-reexports': { max: 'Maximum number of re-export declarations in an index file.' },
     'no-trivial-functions': { maxStatements: 'Functions with this many statements or fewer are reported.' },
@@ -123,12 +122,7 @@ export const PLUGIN_OPTIONS: Record<string, Record<string, string>> = {
 };
 
 /** Rules that need project-owned selectors before they can report findings. */
-export const PLUGIN_REQUIRES_OPTIONS = [
-    'env-owner',
-    'import-direction',
-    'instances-in-registry',
-    'no-helpers-beside-tests',
-];
+export const PLUGIN_REQUIRES_OPTIONS = ['env-owner', 'import-direction', 'no-helpers-beside-tests'];
 
 /** Configuration details that explain interactions between tools. */
 export const CONFIGURATION_NOTES: Record<string, string> = {

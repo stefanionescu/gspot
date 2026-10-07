@@ -57,8 +57,12 @@ async function expectInstalledSql(installation: Consumer): Promise<void> {
         offlineOptions,
     );
     expect(defect.code, defect.stdout + defect.stderr).toBe(1);
-    expect((JSON.parse(defect.stdout) as RunReport).checks).toMatchObject([
-        { check: 'sql/trivial-functions', status: 'failed', findings: [{ file: 'query.sql', line: 1 }] },
+    const defectReport = JSON.parse(defect.stdout) as RunReport;
+    expect(defectReport.skips).toStrictEqual([]);
+    expect(defectReport.checks).toMatchObject([{ check: 'sql/trivial-functions', status: 'failed', fileCount: 1 }]);
+    expect(defectReport.checks[0]!.findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'query.sql', line: 1, rule: 'trivial-function' },
+        { file: 'query.sql', line: 1, rule: 'trivial-file' },
     ]);
     expect(readFileSync(join(root, 'query.sql'), 'utf8')).toBe(
         'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n',

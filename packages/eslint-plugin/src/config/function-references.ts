@@ -5,3 +5,13 @@ export const VALUE_PARENTS = new Set<string>(['ReturnStatement', 'JSXExpressionC
 export const SHARED_READS = 2;
 
 export const EXPORT_REFERENCES = new Set(['ExportSpecifier', 'ExportDefaultDeclaration', 'TSExportAssignment']);
+
+export const TRANSPARENT_EXPRESSIONS = [
+    'ConditionalExpression',
+    'LogicalExpression',
+    'TSAsExpression',
+    'TSTypeAssertion',
+    'TSSatisfiesExpression',
+    'TSNonNullExpression',
+    'TSInstantiationExpression',
+] as const;

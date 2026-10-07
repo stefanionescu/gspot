@@ -122,7 +122,6 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
             ? { 'gspot/no-reexports': 'error' }
             : { 'gspot/no-reexports': ['error', { allowIndex: true }] };
     return {
-        'gspot/instances-in-registry': 'error',
         'gspot/no-alias-exports': 'error',
         'gspot/no-index-imports': 'error',
         'gspot/header-first': 'error',

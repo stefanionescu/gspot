@@ -1,4 +1,3 @@
-import { parsePlPgSQL } from 'libpg-query';
 import { findingAt } from '#cli/checks/finding.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { readSource } from '#cli/platform/source.ts';
@@ -68,6 +67,7 @@ async function bodyStatements(
 ): Promise<number | undefined> {
     const language = nodeOf(functionOption(statement, 'language'), 'String')?.sval;
     if (language === 'plpgsql') {
+        const { parsePlPgSQL } = await import('libpg-query');
         const end = parsed.statements[index + 1]?.start ?? parsed.source.length;
         return countNodes(await parsePlPgSQL(parsed.source.slice(statement.start, end)), isProceduralStatement);
     }
