@@ -1,6 +1,6 @@
 # Carve-Outs
 
-1 unresolved review record remains. IDs and verification evidence are retained in the JSON checklist.
+1 unresolved review record remains.
 
 On October 6, 2026, the owner set a rule for the whole repository: one setting for each concern. Do not add a special time limit, a per-suite or per-OS budget, an environment switch, or an option that exists for one caller or one situation. When something is slow or special, fix the cause.
 

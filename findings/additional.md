@@ -1,6 +1,6 @@
 # Findings From Implementation Verification
 
-1 unresolved review record remains. Its ID and verification evidence are retained in the JSON checklist.
+1 unresolved review record remains.
 
 ## Next.js link validation
 

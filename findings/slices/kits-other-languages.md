@@ -1,6 +1,6 @@
 # Kits: Python, Swift, Bash, and SQL
 
-8 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+8 unresolved review records remain.
 
 ## Open findings
 

@@ -1,6 +1,6 @@
 # Developer Experience in Non-JavaScript and Mixed Projects
 
-9 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+9 unresolved review records remain.
 
 ## 1. Whether gspot installs cleanly in each kind of project
 

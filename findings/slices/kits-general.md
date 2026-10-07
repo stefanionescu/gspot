@@ -1,6 +1,6 @@
 # Kits: General
 
-11 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+11 unresolved review records remain.
 
 ## Open findings
 

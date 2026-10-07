@@ -1,6 +1,6 @@
 # Found While Verifying the Open Records
 
-11 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+11 unresolved review records remain.
 
 Six read-only verifiers checked every open record against commit `3e1445a2d` on October 6, 2026. These are the new problems they found on the way. The status of each older record is in the "Status on October 6, 2026" section of its own file.
 

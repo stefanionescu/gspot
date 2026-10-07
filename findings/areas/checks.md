@@ -1,6 +1,6 @@
 # Built-in Checks
 
-35 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+35 unresolved review records remain.
 
 ## Findings
 

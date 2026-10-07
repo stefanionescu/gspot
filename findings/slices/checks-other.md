@@ -1,6 +1,6 @@
 # Checks: Database, Framework, Library, Platform, Tool, and the Registry
 
-10 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+10 unresolved review records remain.
 
 ## Open findings
 

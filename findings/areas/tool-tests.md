@@ -1,6 +1,6 @@
 # Native-Tool, Acceptance, and Package Tests
 
-26 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+26 unresolved review records remain.
 
 ## Findings
 

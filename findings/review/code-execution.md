@@ -1,6 +1,6 @@
 # Code Review: Execution, Tools, Parsers, Platform, Repository, Checks
 
-46 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+46 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 

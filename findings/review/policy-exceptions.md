@@ -1,6 +1,6 @@
 # This Repository's Own gspot Policy: Entries and Customizations
 
-34 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+34 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -16,7 +16,7 @@ Checked against HEAD 3e1445a2d on 2026-10-06. gspot.toml has 1,006 lines. It hol
 4. `tools.eslint.node_version = ">=24.2.0"` overrides the ESLint plugin's own `engines.node >=22`. The plugin is linted against the wrong Node version.
 5. `naming.banned` blocks `render` and `resolve` but not `rendered` or `resolved`. Code goes around it: `renderedFragments`, `resolvedAttributes`, `synced`.
 6. 16 of the 19 root `configurations` and all 4 scope `javascript` entries are selected automatically anyway. They are noise.
-7. Of the 31 `docs.exclude` paths, 17 can go: fix 4 CONTRIBUTING commands, make two small `docs/stale-paths` fixes, and delete `bash`.
+7. Of the 31 `docs.exclude` paths, 17 can go: delete `CONTRIBUTING.md` (`review/owner-decisions/007`), make two small `docs/stale-paths` fixes, and delete `bash`.
 8. `tools.lychee.exclude` switches off external link checks for the whole manual, not only its root-relative links.
 9. Code holds 16 real suppressions. Seven of them work around a rule instead of fixing the code.
 

@@ -1,6 +1,6 @@
 # Tests: Lifecycle and Repository Integration Tests
 
-43 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+43 unresolved review records remain.
 
 ## Open findings
 

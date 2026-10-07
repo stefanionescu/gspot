@@ -68,5 +68,5 @@ scripts/acceptance.ts, harness/cli/{nextjs,tooling,site,swift}.ts and harness/pl
 Tasks: test = bun test ./cli ./plugin; test:tools = bun ../scripts/plugin.ts bun test ./tools;
 test:acceptance deleted; test:package drops `depends = ["build:plugin"]`.
 CI: the tools-and-acceptance job runs one sharded step instead of two.
-Also update CONTRIBUTING.md:98-109 and the test paths in gspot.toml (lines 92, 264-279, 548-553, 567, 575, 652-658).
+Also update the test paths in gspot.toml (lines 92, 264-279, 548-553, 567, 575, 652-658).
 ```

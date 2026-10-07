@@ -18,7 +18,7 @@ IIFEs = "IIFEs"
 LICENCE = "LICENCE"
 
 [files]
-extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/config/vale/", "tests/config/harness/spelling.ts", "tests/config/cli/execution/parse-output/formats.ts", "tests/config/cli/generation/eslint/runtimes.ts", "packages/cli/configurations/general/prose/styles/gspot/us-english.yml", "findings/implementation/areas/repository.json" ]
+extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/config/vale/", "tests/config/harness/spelling.ts", "tests/config/cli/execution/parse-output/formats.ts", "tests/config/cli/generation/eslint/runtimes.ts", "packages/cli/configurations/general/prose/styles/gspot/us-english.yml" ]
 
 [type.gspot-policy]
 extend-glob = [ "gspot.toml" ]

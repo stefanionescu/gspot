@@ -1,6 +1,6 @@
 # Kits: JavaScript, TypeScript, CSS, HTML, and Markdown
 
-5 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+5 unresolved review records remain.
 
 ## Open findings
 

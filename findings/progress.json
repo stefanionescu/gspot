@@ -124,232 +124,12 @@
             "scope": "Proposals and names",
             "decision": "Every proposal in the ledger simplifies: it deletes, merges, or replaces with less code. It keeps every CLI command. It uses one name for each concept, as fixed in findings/review/glossary.md, and never two names for one thing or one name for two things.",
             "evidence": ["Owner statement of October 7, 2026"]
-        }
-    ],
-    "relocations": {
-        "source": "findings/relocations.json",
-        "items": 2834
-    },
-    "checklists": [
-        {
-            "source": "FINDINGS.md",
-            "checklist": "findings/implementation/FINDINGS.json",
-            "items": 4
         },
         {
-            "source": "findings/additional.md",
-            "checklist": "findings/implementation/additional.json",
-            "items": 1
-        },
-        {
-            "source": "findings/areas/checks.md",
-            "checklist": "findings/implementation/areas/checks.json",
-            "items": 35
-        },
-        {
-            "source": "findings/areas/developer-experience.md",
-            "checklist": "findings/implementation/areas/developer-experience.json",
-            "items": 9
-        },
-        {
-            "source": "findings/areas/integration-tests.md",
-            "checklist": "findings/implementation/areas/integration-tests.json",
-            "items": 57
-        },
-        {
-            "source": "findings/areas/kits.md",
-            "checklist": "findings/implementation/areas/kits.json",
-            "items": 70
-        },
-        {
-            "source": "findings/areas/repository.md",
-            "checklist": "findings/implementation/areas/repository.json",
-            "items": 4
-        },
-        {
-            "source": "findings/areas/tool-tests.md",
-            "checklist": "findings/implementation/areas/tool-tests.json",
-            "items": 26
-        },
-        {
-            "source": "findings/areas/unit-tests.md",
-            "checklist": "findings/implementation/areas/unit-tests.json",
-            "items": 8
-        },
-        {
-            "source": "findings/images/docs.png",
-            "checklist": "findings/implementation/images/docs.json",
-            "items": 0
-        },
-        {
-            "source": "findings/images/install.png",
-            "checklist": "findings/implementation/images/install.json",
-            "items": 0
-        },
-        {
-            "source": "findings/images/repository.png",
-            "checklist": "findings/implementation/images/repository.json",
-            "items": 1
-        },
-        {
-            "source": "findings/images/source.png",
-            "checklist": "findings/implementation/images/source.json",
-            "items": 0
-        },
-        {
-            "source": "findings/slices/checks-other.md",
-            "checklist": "findings/implementation/slices/checks/other.json",
-            "items": 10
-        },
-        {
-            "source": "findings/slices/config.md",
-            "checklist": "findings/implementation/slices/config.json",
-            "items": 6
-        },
-        {
-            "source": "findings/slices/kits-frameworks-tools.md",
-            "checklist": "findings/implementation/slices/configurations/frameworks-tools.json",
-            "items": 35
-        },
-        {
-            "source": "findings/slices/kits-general.md",
-            "checklist": "findings/implementation/slices/configurations/general.json",
-            "items": 11
-        },
-        {
-            "source": "findings/slices/kits-other-languages.md",
-            "checklist": "findings/implementation/slices/configurations/other-languages.json",
-            "items": 8
-        },
-        {
-            "source": "findings/slices/kits-web-languages.md",
-            "checklist": "findings/implementation/slices/configurations/web-languages.json",
-            "items": 5
-        },
-        {
-            "source": "findings/slices/repository-root.md",
-            "checklist": "findings/implementation/slices/repository/root.json",
-            "items": 0
-        },
-        {
-            "source": "findings/slices/tests-acceptance.md",
-            "checklist": "findings/implementation/slices/tests/acceptance.json",
-            "items": 21
-        },
-        {
-            "source": "findings/slices/tests-integration-checks.md",
-            "checklist": "findings/implementation/slices/tests/integration/checks.json",
-            "items": 35
-        },
-        {
-            "source": "findings/slices/tests-integration-commands.md",
-            "checklist": "findings/implementation/slices/tests/integration/command-review.json",
-            "items": 19
-        },
-        {
-            "source": "findings/slices/tests-integration-execution.md",
-            "checklist": "findings/implementation/slices/tests/integration/execution.json",
-            "items": 18
-        },
-        {
-            "source": "findings/slices/tests-integration-generation.md",
-            "checklist": "findings/implementation/slices/tests/integration/generation.json",
-            "items": 2
-        },
-        {
-            "source": "findings/slices/tests-integration-lifecycle.md",
-            "checklist": "findings/implementation/slices/tests/integration/lifecycle.json",
-            "items": 43
-        },
-        {
-            "source": "findings/slices/tests-tools-samples.md",
-            "checklist": "findings/implementation/slices/tests/tools-samples.json",
-            "items": 48
-        },
-        {
-            "source": "findings/slices/tests-unit.md",
-            "checklist": "findings/implementation/slices/tests/unit.json",
-            "items": 0
-        },
-        {
-            "source": "findings/review/carve-outs.md",
-            "checklist": "findings/implementation/review/carve-outs.json",
-            "items": 1
-        },
-        {
-            "source": "findings/review/code-commands.md",
-            "checklist": "findings/implementation/review/code/command-review.json",
-            "items": 43
-        },
-        {
-            "source": "findings/review/code-execution.md",
-            "checklist": "findings/implementation/review/code/execution.json",
-            "items": 46
-        },
-        {
-            "source": "findings/review/commands-templates.md",
-            "checklist": "findings/implementation/review/commands-templates.json",
-            "items": 27
-        },
-        {
-            "source": "findings/review/configurations-plugin.md",
-            "checklist": "findings/implementation/review/configurations-plugin.json",
-            "items": 59
-        },
-        {
-            "source": "findings/review/docs-site.md",
-            "checklist": "findings/implementation/review/docs-site.json",
-            "items": 40
-        },
-        {
-            "source": "findings/review/owner-decisions.md",
-            "checklist": "findings/implementation/review/owner-decisions.json",
-            "items": 6
-        },
-        {
-            "source": "findings/review/policy-exceptions.md",
-            "checklist": "findings/implementation/review/policy/exceptions.json",
-            "items": 34
-        },
-        {
-            "source": "findings/review/policy-format.md",
-            "checklist": "findings/implementation/review/policy/format.json",
-            "items": 29
-        },
-        {
-            "source": "findings/review/repository-root.md",
-            "checklist": "findings/implementation/review/repository-root.json",
-            "items": 28
-        },
-        {
-            "source": "findings/review/source-layout.md",
-            "checklist": "findings/implementation/review/source-layout.json",
-            "items": 51
-        },
-        {
-            "source": "findings/review/tests-cli.md",
-            "checklist": "findings/implementation/review/tests/cli.json",
-            "items": 125
-        },
-        {
-            "source": "findings/review/tests-layout.md",
-            "checklist": "findings/implementation/review/tests/layout.json",
-            "items": 38
-        },
-        {
-            "source": "findings/review/tests-tools.md",
-            "checklist": "findings/implementation/review/tests/tools.json",
-            "items": 50
-        },
-        {
-            "source": "findings/review/verification.md",
-            "checklist": "findings/implementation/review/verification.json",
-            "items": 11
-        },
-        {
-            "source": "findings/review/glossary.md",
-            "checklist": "findings/implementation/review/glossary.json",
-            "items": 28
+            "date": "2026-10-07",
+            "scope": "CONTRIBUTING.md",
+            "decision": "Delete CONTRIBUTING.md and every link to it. The repository rules that no check enforces live in the authored part of AGENTS.md. No record edits CONTRIBUTING.md.",
+            "evidence": ["Owner statement of October 7, 2026", "findings/review/owner-decisions.md"]
         }
     ],
     "implementationBatches": {
@@ -1642,7 +1422,8 @@
                     "review/owner-decisions/006",
                     "review/repository-root/045",
                     "review/repository-root/046",
-                    "review/repository-root/047"
+                    "review/repository-root/047",
+                    "review/owner-decisions/007"
                 ]
             },
             {
@@ -1777,7 +1558,6 @@
                     "review/docs-site/033",
                     "review/docs-site/034",
                     "review/docs-site/037",
-                    "review/docs-site/038",
                     "review/docs-site/040",
                     "review/docs-site/041",
                     "review/docs-site/042",

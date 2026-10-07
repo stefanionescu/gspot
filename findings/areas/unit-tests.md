@@ -1,6 +1,6 @@
 # Unit Tests and Check Integration Tests
 
-8 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+8 unresolved review records remain.
 
 ## Findings
 

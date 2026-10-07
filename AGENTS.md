@@ -87,3 +87,4 @@ Owner decisions are recorded in `findings/progress.json`. Read them before you c
 - The documentation site is generativespotting.com, deployed to Cloudflare Workers.
 - Every change simplifies: it deletes, merges, or replaces with less code, and it keeps every CLI command.
 - Use one name for each concept, as `findings/review/glossary.md` fixes it. Never give one thing two names or one name two meanings.
+- This repository has no `CONTRIBUTING.md`. Repository rules that no check enforces live in this file.

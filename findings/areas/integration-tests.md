@@ -1,6 +1,6 @@
 # Integration Tests Outside the Checks Folder
 
-57 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+57 unresolved review records remain.
 
 ## Findings
 

@@ -911,14 +911,6 @@ check = "typescript/tsc"
 paths = ["tests/**"]
 reason = "The root compiler includes tests/**/*.ts. Running a second compiler for the tests scope would duplicate the same target."
 
-[[tools.typos.exclude]]
-paths = ["findings/implementation/areas/repository.json"]
-reason = "This audit ledger quotes the British spellings of proposed command names from the original review."
-
-[[tools.jscpd.exclude]]
-paths = ["findings/implementation/**"]
-reason = "These audit ledgers reproduce the original findings and their verification records. Repeated record fields preserve the required audit evidence rather than executable behavior."
-
 
 [[naming.fixed_keys]]
 file = "tests/types/generation/configuration-files.ts"

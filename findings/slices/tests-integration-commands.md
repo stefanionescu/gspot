@@ -1,6 +1,6 @@
 # Tests: Command, Policy, Platform, and Tools Integration Tests
 
-19 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+19 unresolved review records remain.
 
 ## Open findings
 

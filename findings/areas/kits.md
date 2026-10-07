@@ -1,6 +1,6 @@
 # Kits, Settings, and Names
 
-70 unresolved review records remain. IDs and verification evidence are retained in the JSON checklist.
+70 unresolved review records remain.
 
 ## Findings
 
