@@ -1,6 +1,6 @@
 # Native-Tool, Acceptance, and Package Tests
 
-26 unresolved review records remain.
+25 unresolved review records remain.
 
 ## Findings
 
@@ -65,3 +65,11 @@ A read-only verification checked every record against the code at commit `3e1445
 | `areas/tool-tests/045` | open    | tests/config/tools/configurations/tool/docker.ts:39-41                                                          | Delete the `docker/trivy-config` DS-0002 row at `tests/config/tools/configurations/tool/docker.ts:39-41`; `tests/tools/generation/docker.test.ts:10` covers the same rule through the same check, with scopes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `areas/tool-tests/049` | open    | tests/packages/languages.test.ts:87; tests/config/packages/languages.ts:13,21                                   | Delete the `python/ruff` F821 and `bash/shellcheck` SC2086 cases (`tests/config/packages/languages.ts:13,21`) and their run in `tests/packages/languages.test.ts:87`; the tools come from the install, not the package. Keep the checks that need packaged assets: the Vale styles and vocabulary, the naming grammar, and the SQL parser.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `areas/tool-tests/052` | open    | tests/packages/tools.test.ts:101-135,137-196                                                                    | In `tests/packages/tools.test.ts`, keep the Prettier fix of the first test (`:121-131`). Delete its registry-URL lockfile checks (`:111-112`) and its `--dry-run` run (`:113-115`), which `tests/tools/npm/locks.test.ts` and `tests/tools/npm/project.test.ts` cover, and its old-mise refusal with the preserved manifest and lockfile (`:116-120`), which repeats `tests/tools/lifecycle/mise-execution.test.ts:80-99`. In the second test (`:137-196`), keep the `files/taplo` row (native) and the `format/editorconfig-checker` row (npm) only for the assertion of where each tool's executable is installed (`:181-184`), drop their finding assertions, and delete the `files/taplo-format` row; `tests/tools/configurations/general/files.test.ts` covers those findings. |
+
+## Implementation checkpoint of October 7, 2026
+
+Original records and quotations remain above.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                            |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/tool-tests/004` | complete | One fixer table runs actual checks through changed, repeated unchanged, and manual correction. SQLFluff and typos preserve distinct findings exit codes 1 and 2. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |

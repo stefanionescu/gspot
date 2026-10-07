@@ -28,3 +28,11 @@ The original records above are retained. These records are complete at `c6aa35af
 | `review/owner-decisions/004` | complete | Domain and schema URLs use generativespotting.com; Workers route and source docs dispatch updated. Docs build passed 314 pages and local fragments. Live setup stays in main/001.        |
 | `review/owner-decisions/006` | complete | Release and docs workflow environments removed; repository secrets and workflow trusted-publisher instructions retained. Authenticated actions/pinact and staged workflow checks passed. |
 | `review/owner-decisions/007` | complete | CONTRIBUTING and its links removed. AGENTS now owns check-name, test-layout and three schema-home rules. Staged documentation and architecture checks passed.                            |
+
+## Implementation checkpoint of October 7, 2026
+
+Original records and quotations remain above.
+
+| ID                           | Status  | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/owner-decisions/005` | partial | Packed workspace packages and the flat small registry replace Verdaccio. Temporary npmrc routes only @gspothq; token npm/Python credential tests remain. CLI/plugin runner starts no registry; installation fixture moves remain. Eight packaged consumers pass. Later pnpm credential failures have a validated working-tree fix. CLI installation fixtures and platform verification remain open. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |

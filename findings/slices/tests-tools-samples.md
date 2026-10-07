@@ -1,6 +1,6 @@
 # Tests: Native-Tool Tests and Samples
 
-48 unresolved review records remain.
+46 unresolved review records remain.
 
 ## Open findings
 
@@ -109,3 +109,12 @@ A read-only verification checked every record against the code at commit `3e1445
 | `slices/tests-tools-samples/066` | open    | refusals.test.ts:62,176                                                                                                        | Delete `toHaveBeenCalled()` at `tests/tools/npm/refusals.test.ts:176`, and rename the spy `initialize` (`:62`) to `executableDownload`.                                                                                                                                                                                                   |
 | `slices/tests-tools-samples/067` | open    | tests/tools/generation/parameter-limits.test.ts:13,16,28                                                                       | Read the level-`all` default of the parameter limit from the manifest (`knownSettings`) for the `7` row at `tests/tools/generation/parameter-limits.test.ts:13,16,28`, instead of relying on an unstated copy of the default.                                                                                                             |
 | `slices/tests-tools-samples/068` | open    | tests/tools/checks/swift-build.test.ts:89                                                                                      | Glob `**/main.o` instead of `derived/**/main.o` at `tests/tools/checks/swift-build.test.ts:89`.                                                                                                                                                                                                                                           |
+
+## Implementation checkpoint of October 7, 2026
+
+Original records and quotations remain above.
+
+| ID                               | Status   | Evidence                                                                                                                                                                |
+| -------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-tools-samples/028` | complete | Permission-error test restores permissions and stops; separate SQLFluff case retains correction coverage and passes. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |
+| `slices/tests-tools-samples/029` | complete | Fixer cases use one buildRunOptions call instead of three spreads. Repeated-fix acceptance passes. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`.                   |

@@ -44,7 +44,10 @@ async function installSuiteTools(work: string, execute: typeof run): Promise<str
         ...Object.fromEntries(pythonTools),
     };
     const config = join(work, 'mise.toml');
-    writeFileSync(config, stringify({ min_version: CLI_PINS.mise, tools }));
+    writeFileSync(
+        config,
+        stringify({ min_version: CLI_PINS.mise, settings: { npm: { package_manager: 'npm' } }, tools }),
+    );
     const trusted = await execute(['mise', 'trust', config], { cwd: work });
     if (trusted.code !== 0) throw new Error(`Test tools configuration failed: ${trusted.stderr}`);
     const installed = await execute(['mise', 'install'], {

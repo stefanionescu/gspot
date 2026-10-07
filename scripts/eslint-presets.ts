@@ -1,4 +1,4 @@
-// Explicitly refresh shipped preset data from an already installed private tool project.
+// Explicitly refresh shipped preset data from an already installed tool project.
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
@@ -27,7 +27,7 @@ if (project === undefined || process.argv.length !== ESLINT_REFRESH_ARGUMENT_COU
     throw new Error('Pass the folder of the installed tool project: bun scripts/eslint-presets.ts .gspot');
 const manifests = configurationManifests();
 const versions = npmPins([...manifests.values()], undefined);
-const prepared = new Map<string, string>();
+const prepared = new Map<string, unknown>();
 const eslintEntry = Bun.resolveSync(ESLINT_RULE_NAMES_MODULE, join(process.cwd(), project));
 const eslintPackage = readInstalledNpmPackage(eslintEntry, 'eslint');
 if (eslintPackage.version !== versions['eslint'])
@@ -41,14 +41,7 @@ const presets = eslintRuleNamesSchema.parse({
     rules: [...eslint.builtinRules.keys()].toSorted((first, second) => first.localeCompare(second)),
 });
 const ruleNamesPath = assetPath(ESLINT_RULE_NAMES_FILE);
-prepared.set(
-    ruleNamesPath,
-    await format(JSON.stringify(presets), {
-        ...(await resolveConfig(ruleNamesPath)),
-        parser: 'json',
-        tabWidth: JSON_INDENT,
-    }),
-);
+prepared.set(ruleNamesPath, presets);
 for (const [configuration, sources] of Object.entries(ESLINT_PRESET_SOURCES)) {
     const manifest = manifests.get(configuration);
     if (manifest === undefined) throw new Error(`No configuration owns ${configuration}.`);
@@ -69,14 +62,14 @@ for (const [configuration, sources] of Object.entries(ESLINT_PRESET_SOURCES)) {
         ),
     );
     const presetsPath = assetPath(`${manifest.dir}/eslint-presets.json`);
-    prepared.set(
-        presetsPath,
-        await format(JSON.stringify(presetsByName), {
-            ...(await resolveConfig(presetsPath)),
-            parser: 'json',
-            tabWidth: JSON_INDENT,
-        }),
-    );
+    prepared.set(presetsPath, presetsByName);
 }
-for (const [path, content] of prepared) writeFileSync(path, content);
+for (const [path, value] of prepared) await writeFormattedJson(path, value);
 console.log(`Refreshed ${String(prepared.size)} ESLint data files.`);
+
+// Write each validated data file with the repository's JSON formatting.
+async function writeFormattedJson(path: string, value: unknown): Promise<void> {
+    const settings = await resolveConfig(path);
+    const text = await format(JSON.stringify(value), { ...settings, parser: 'json', tabWidth: JSON_INDENT });
+    writeFileSync(path, text);
+}

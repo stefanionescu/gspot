@@ -1,6 +1,6 @@
 # Source Layout: `packages/cli/src` and `packages/eslint-plugin/src`
 
-42 unresolved review records remain.
+41 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -441,3 +441,11 @@ The original records above are retained. The first four rows are complete at `c6
 | `review/source-layout/009` | complete | Merged ESLint constants into config/generation/eslint.ts and moved formatting constants to config/generation/formatting.ts. Old owners removed. Commit `0efd033dcb75419819619f6b78f4cfcc3ffea2f6`. Root/CLI types, 102 focused tests, staged and push checks passed; exclusive module audit passed.                                           |
 | `review/source-layout/010` | complete | Drift messages/help now belong to checks/general/gspot; lifecycle drift constants belong to lifecycle/drift. Old forwarding constant owner removed. Commit `0efd033dcb75419819619f6b78f4cfcc3ffea2f6`. Root/CLI types, 102 focused tests, staged and push checks passed; exclusive module audit passed.                                       |
 | `review/source-layout/025` | complete | Merged the manifest parser into configurations/manifests.ts and deleted the old parser owner. Commit `0efd033dcb75419819619f6b78f4cfcc3ffea2f6`. Root/CLI types, 102 focused tests, staged and push checks passed; exclusive module audit passed.                                                                                             |
+
+## Implementation checkpoint of October 7, 2026
+
+Original records and quotations remain above.
+
+| ID                         | Status   | Evidence                                                                                                                                                                                                                                                            |
+| -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/source-layout/002` | complete | Drift computes generated-file comparisons in checks/general/gspot.ts; the registry uses its session callback. The engine hook and special-case field are deleted. Modified/conflicting and once-only tests pass. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |

@@ -83,6 +83,7 @@ async function runPackageInstaller(
     const execution: PackageExecution = { work, installer, env };
     const credentials = credentialsOf(env);
     writeNpmrc(work, env);
+    env['npm_config_userconfig'] = join(work, '.npmrc');
     if (isYarnBerry(installer)) {
         delete env['YARN_REGISTRY'];
         await assertPackageInstallerVersion(execution);

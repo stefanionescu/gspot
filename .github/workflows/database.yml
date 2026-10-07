@@ -29,5 +29,4 @@ jobs:
             - name: Install workspace dependencies
               run: bun install --frozen-lockfile
             - name: Run the Supabase freshness test
-              working-directory: tests
-              run: mise exec -- bun test --timeout 900000 ./tools/checks/supabase/types.test.ts
+              run: mise run test:tools -- -- tools/checks/supabase/types.test.ts

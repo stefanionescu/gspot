@@ -1,6 +1,6 @@
 # Tests: Tools, Plugin, Packages, and the Harness
 
-50 unresolved review records remain.
+49 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -150,3 +150,11 @@ These records were fixed at HEAD and are closed in `review/closed.md`, except ar
 ## Not read
 
 None. The review read every file under `tests/tools`, `tests/plugin`, `tests/packages`, `tests/harness`, `tests/config/{tools,plugin,packages,harness,samples}`, `tests/types/{tools,plugin,harness,generation}`, and `tests/types/packages`. It also read `scripts/registry/*`, `scripts/plugin.ts`, the start of `scripts/package.ts`, and `scripts/config/registry.yaml` for the registry question. It did not read `tests/cli` test bodies except the parts named in the Flakes section and the duplicates it cites.
+
+## Implementation checkpoint of October 7, 2026
+
+Original records and quotations remain above.
+
+| ID                       | Status   | Evidence                                                                                                                                                                                                                                            |
+| ------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-tools/019` | complete | Compiler fixtures resolve TypeScript from the installed workspace modules. Compiler ownership, jsconfig, and standalone TypeScript acceptance pass without repository tool-project dependencies. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |

@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-1,067 unresolved review records remain. 591 come from the review of October 6, 2026 and the owner decisions of that day. 476 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+1,060 unresolved review records remain. 587 come from the review of October 6, 2026 and the owner decisions of that day. 473 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: test time limits sit in at least six places. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-25 records were implemented and verified in `c6aa35af7509807f32cd9427563731e801cd8d9e` and `0efd033dcb75419819619f6b78f4cfcc3ffea2f6` on October 7, 2026. Their original text is retained; current status and evidence are in each review file and [progress](findings/progress.json).
+32 records were implemented and verified in `c6aa35af7509807f32cd9427563731e801cd8d9e`, `0efd033dcb75419819619f6b78f4cfcc3ffea2f6`, and `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6` on October 7, 2026. Their original text is retained; current status and evidence are in each review file and [progress](findings/progress.json).
 
 ## Review of October 6, 2026
 
@@ -35,15 +35,15 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | [The gspot.toml format](findings/review/policy-format.md)                                             |           29 |
 | [This repository's own gspot.toml exceptions](findings/review/policy-exceptions.md)                   |           34 |
 | [Carve-outs](findings/review/carve-outs.md)                                                           |            1 |
-| [Source layout, names, and import graph](findings/review/source-layout.md)                            |           42 |
+| [Source layout, names, and import graph](findings/review/source-layout.md)                            |           41 |
 | [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |           43 |
-| [Code: execution, tools, parsers, platform, repository, checks](findings/review/code-execution.md)    |           46 |
+| [Code: execution, tools, parsers, platform, repository, checks](findings/review/code-execution.md)    |           45 |
 | [Configurations and the ESLint plugin](findings/review/configurations-plugin.md)                      |           58 |
 | [Test layout and wiring](findings/review/tests-layout.md)                                             |           34 |
 | [Tests in tests/cli](findings/review/tests-cli.md)                                                    |          125 |
-| [Tests in tests/tools, tests/plugin, tests/packages, and the harness](findings/review/tests-tools.md) |           50 |
+| [Tests in tests/tools, tests/plugin, tests/packages, and the harness](findings/review/tests-tools.md) |           49 |
 | [READMEs, guides, and the docs site](findings/review/docs-site.md)                                    |           37 |
-| [Repository root, scripts, workflows, and dependencies](findings/review/repository-root.md)           |           26 |
+| [Repository root, scripts, workflows, and dependencies](findings/review/repository-root.md)           |           25 |
 | [Found while verifying the older records](findings/review/verification.md)                            |           11 |
 
 ## Older reviews
@@ -59,7 +59,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Integration Tests Outside the Checks Folder](findings/areas/integration-tests.md)                             |           57 |
 | [Kits, Settings, and Names](findings/areas/kits.md)                                                            |           70 |
 | [Repository Setup and Ceremony](findings/areas/repository.md)                                                  |            4 |
-| [Native-Tool, Acceptance, and Package Tests](findings/areas/tool-tests.md)                                     |           26 |
+| [Native-Tool, Acceptance, and Package Tests](findings/areas/tool-tests.md)                                     |           25 |
 | [Unit Tests and Check Integration Tests](findings/areas/unit-tests.md)                                         |            8 |
 | [Checks: Database, Framework, Library, Platform, Tool, and the Registry](findings/slices/checks-other.md)      |           10 |
 | [The Config Constants](findings/slices/config.md)                                                              |            6 |
@@ -73,7 +73,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Tests: Execution Integration Tests](findings/slices/tests-integration-execution.md)                           |           18 |
 | [Tests: Generation Integration Tests](findings/slices/tests-integration-generation.md)                         |            2 |
 | [Tests: Lifecycle and Repository Integration Tests](findings/slices/tests-integration-lifecycle.md)            |           43 |
-| [Tests: Native-Tool Tests and Samples](findings/slices/tests-tools-samples.md)                                 |           48 |
+| [Tests: Native-Tool Tests and Samples](findings/slices/tests-tools-samples.md)                                 |           46 |
 
 ## Pending summary records
 

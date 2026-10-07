@@ -5,7 +5,7 @@ test.each([
     { pattern: '/{apps,packages}/web/file.ts', expected: ['/file.ts'] },
     { pattern: '/{apps,{services,packages}}/web/file.ts', expected: ['/file.ts'] },
     { pattern: String.raw`/apps/web/{a\,b,c}.ts`, expected: [String.raw`/a\,b.ts`, '/c.ts'] },
-    { pattern: '/apps/web/[{},].ts', expected: ['/[{},].ts'] },
+    { pattern: '/apps/web/a[{,}]b', expected: ['/a[{,}]b'] },
     { pattern: '/apps/web/[{a,b}.ts', expected: ['/[{a,b}.ts'] },
     { pattern: String.raw`/apps/web/[a\]{b,c}]`, expected: [String.raw`/[a\]{b,c}]`] },
     { pattern: '/apps/web/[{a,b}\\', expected: ['/[{a,b}\\'] },

@@ -1,6 +1,6 @@
 # Repository Root, Scripts, Workflows, and Package Wiring
 
-26 unresolved review records remain.
+25 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -255,3 +255,11 @@ The original records above are retained. These records are complete at `c6aa35af
 | ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `review/repository-root/002` | complete | Plugin builds no longer rewrite tracked ESLint data. Explicit maintenance captures the gspot preset; a plugin test compares the shipped recommended preset. Plugin build and preset comparison passed. |
 | `review/repository-root/035` | complete | Embedded Python replaced by the approved executable tests/harness/ruff_wheel.py and python3 caller. Ruff, format, pydoclint and basedpyright staged checks passed; private-index tests passed.         |
+
+## Implementation checkpoint of October 7, 2026
+
+Original records and quotations remain above.
+
+| ID                           | Status   | Evidence                                                                                                                                                                                                                                                                             |
+| ---------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/repository-root/015` | complete | One runner owns flags/paths, packing, scoped registry, CLI package build, and cancellation. Deleted package/deadline/registry-plugin forwarding modules, remainingTime, and test publication. Native and package acceptance pass. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |

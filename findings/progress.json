@@ -1,5 +1,5 @@
 {
-    "openRecords": 1067,
+    "openRecords": 1060,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -151,7 +151,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 1067,
+        "openRecords": 1060,
         "records": 1092,
         "batches": [
             {
@@ -163,7 +163,7 @@
             },
             {
                 "id": "policy-execution",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "main/017",
                     "slices/config/015",
@@ -457,12 +457,12 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 0,
-                "unresolvedAssignments": 291
+                "completedAssignments": 4,
+                "unresolvedAssignments": 287
             },
             {
                 "id": "python",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "slices/config/037",
                     "areas/kits/016",
@@ -504,12 +504,12 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 0,
-                "unresolvedAssignments": 39
+                "completedAssignments": 1,
+                "unresolvedAssignments": 38
             },
             {
                 "id": "javascript-web",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "additional/next-app-router-links",
                     "main/001",
@@ -611,12 +611,12 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 0,
-                "unresolvedAssignments": 99
+                "completedAssignments": 1,
+                "unresolvedAssignments": 98
             },
             {
                 "id": "swift-bash-sql",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "main/097",
                     "slices/config/037",
@@ -701,8 +701,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 0,
-                "unresolvedAssignments": 82
+                "completedAssignments": 2,
+                "unresolvedAssignments": 80
             },
             {
                 "id": "frameworks-platforms",
@@ -845,7 +845,7 @@
             },
             {
                 "id": "test-quality",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "areas/kits/031",
                     "areas/kits/054",
@@ -1317,8 +1317,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 0,
-                "unresolvedAssignments": 469
+                "completedAssignments": 4,
+                "unresolvedAssignments": 465
             },
             {
                 "id": "scripts-repository",
@@ -1457,8 +1457,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 8,
-                "unresolvedAssignments": 124
+                "completedAssignments": 9,
+                "unresolvedAssignments": 123
             },
             {
                 "id": "installation-docs",
@@ -1798,8 +1798,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 13,
-                "unresolvedAssignments": 76
+                "completedAssignments": 14,
+                "unresolvedAssignments": 75
             },
             {
                 "id": "configurations",
@@ -2972,10 +2972,13 @@
             "verification": []
         },
         "areas/tool-tests/004": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6",
+            "verification": [
+                "One fixer table runs actual checks through changed, repeated unchanged, and manual correction. SQLFluff and typos preserve distinct findings exit codes 1 and 2.",
+                "Root/CLI TypeScript checks; focused source tests and native/package acceptance; staged and commit/push checks passed."
+            ]
         },
         "areas/tool-tests/005": {
             "status": "pending",
@@ -3484,10 +3487,13 @@
             "verification": []
         },
         "review/code-execution/003": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6",
+            "verification": [
+                "Deleted unreachable miseVersion and the fourth parseVersionOutput argument, fallback, and supplying tests. Parser and executable failure tests pass.",
+                "Root/CLI TypeScript checks; focused source tests and native/package acceptance; staged and commit/push checks passed."
+            ]
         },
         "review/code-execution/004": {
             "status": "pending",
@@ -4718,13 +4724,17 @@
         },
         "review/owner-decisions/005": {
             "status": "partial",
-            "owner": "registry",
-            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "owner": "main",
+            "commit": "8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6",
             "verification": [
-                "Scoped packed registry, private token protection and Python credential index implemented; registry/auth/Bun-lock probes passed."
+                "Packed workspace packages and the flat small registry replace Verdaccio. Temporary npmrc routes only @gspothq; token npm/Python credential tests remain. CLI/plugin runner starts no registry; installation fixture moves remain. Eight packaged consumers pass.",
+                "Root/CLI TypeScript checks; focused source tests and native/package acceptance; staged and commit/push checks passed.",
+                "Later full tools run: two pnpm lock tests and one pnpm tool-project test fail ERR_PNPM_FETCH_401 after shared npm executable PATH was corrected. Earlier focused passes do not establish this later context.",
+                "Trusted temporary npm user config fixes pnpm10.34.6: actual shared-runner acceptance14passed/215assertions across locks and tool-project restoration; synthetic token probe passes npm11.19.0,Bun1.4.2,pnpm10.34.6,Yarn1.22.22,Berry4.12.0 without tokens in configuration or locks."
             ],
             "remaining": [
-                "Package launcher still failed because shfmt was absent from consumer PATH; affected package/tool acceptance remains pending."
+                "CLI fixtures still invoke executable installations and start installation registries; complete prescribed test moves so CLI/plugin need neither.",
+                "CI must verify shared temporary npm-manager settings and credential behavior on supported platforms."
             ]
         },
         "review/owner-decisions/006": {
@@ -5169,13 +5179,13 @@
             "verification": []
         },
         "review/repository-root/015": {
-            "status": "partial",
-            "owner": "registry",
-            "commit": "c6aa35af7509807f32cd9427563731e801cd8d9e",
+            "status": "complete",
+            "owner": "main",
+            "commit": "8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6",
             "verification": [
-                "Runner, packing, scoped npmrc and cancellation consolidated; SIGINT/SIGTERM cleanup tests passed."
-            ],
-            "remaining": ["Successful affected package/tool runs remain pending runner native PATH repair."]
+                "One runner owns flags/paths, packing, scoped registry, CLI package build, and cancellation. Deleted package/deadline/registry-plugin forwarding modules, remainingTime, and test publication. Native and package acceptance pass.",
+                "Root/CLI TypeScript checks; focused source tests and native/package acceptance; staged and commit/push checks passed."
+            ]
         },
         "review/repository-root/016": {
             "status": "pending",
@@ -5287,10 +5297,18 @@
             "remaining": ["Explicit all-rules data refresh or prescribed code-commands/029 removal remains."]
         },
         "review/repository-root/045": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6",
+            "verification": [
+                "Removed test pin overlay/task/CI env/cache entry and computed manifest tools in the shared runner.",
+                "Moved exact npm test pins to tests/package.json and pytest dependencies to their sandbox.",
+                "44 local native manifest pins installed/resolved, focused native tests and all package consumers passed; full tools suite started."
+            ],
+            "remaining": [
+                "Full tools suite must pass and establish every applicable tool resolves.",
+                "Cross-platform verification remains pending."
+            ]
         },
         "review/repository-root/046": {
             "status": "pending",
@@ -5314,10 +5332,13 @@
             "verification": []
         },
         "review/source-layout/002": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6",
+            "verification": [
+                "Drift computes generated-file comparisons in checks/general/gspot.ts; the registry uses its session callback. The engine hook and special-case field are deleted. Modified/conflicting and once-only tests pass.",
+                "Root/CLI TypeScript checks; focused source tests and native/package acceptance; staged and commit/push checks passed."
+            ]
         },
         "review/source-layout/003": {
             "status": "complete",
@@ -5406,19 +5427,19 @@
         },
         "review/source-layout/013": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
         "review/source-layout/014": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
         "review/source-layout/015": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
@@ -5436,7 +5457,7 @@
         },
         "review/source-layout/018": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
@@ -5548,7 +5569,7 @@
         },
         "review/source-layout/039": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
@@ -5566,37 +5587,37 @@
         },
         "review/source-layout/042": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
         "review/source-layout/043": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
         "review/source-layout/044": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
         "review/source-layout/045": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
         "review/source-layout/046": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
         "review/source-layout/047": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
@@ -5614,7 +5635,7 @@
         },
         "review/source-layout/051": {
             "status": "pending",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
             "verification": []
         },
@@ -6720,10 +6741,13 @@
             "verification": []
         },
         "review/tests-tools/019": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6",
+            "verification": [
+                "Compiler fixtures resolve TypeScript from the installed workspace modules. Compiler ownership, jsconfig, and standalone TypeScript acceptance pass without repository tool-project dependencies.",
+                "Root/CLI TypeScript checks; focused source tests and native/package acceptance; staged and commit/push checks passed."
+            ]
         },
         "review/tests-tools/020": {
             "status": "pending",
@@ -8382,16 +8406,22 @@
             "verification": []
         },
         "slices/tests-tools-samples/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6",
+            "verification": [
+                "Permission-error test restores permissions and stops; separate SQLFluff case retains correction coverage and passes.",
+                "Root/CLI TypeScript checks; focused source tests and native/package acceptance; staged and commit/push checks passed."
+            ]
         },
         "slices/tests-tools-samples/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6",
+            "verification": [
+                "Fixer cases use one buildRunOptions call instead of three spreads. Repeated-fix acceptance passes.",
+                "Root/CLI TypeScript checks; focused source tests and native/package acceptance; staged and commit/push checks passed."
+            ]
         },
         "slices/tests-tools-samples/030": {
             "status": "partial",
@@ -8614,7 +8644,7 @@
             ],
             "ci": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37566858503",
-                "status": "cancellation-requested",
+                "status": "cancelled",
                 "platformResults": {},
                 "jobs": [
                     {
@@ -8740,7 +8770,145 @@
             ],
             "ci": {
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37569175192",
-                "status": "pending"
+                "status": "cancelled",
+                "jobs": [
+                    {
+                        "name": "check",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "test (macos-15)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "package",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (macos 4/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 2/4)",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "tools (windows 4/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (linux 1/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 1/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "test (windows-2025)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (macos 2/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "docs",
+                        "status": "completed",
+                        "conclusion": "success"
+                    },
+                    {
+                        "name": "test (ubuntu-24.04)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 3/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    },
+                    {
+                        "name": "tools (linux 4/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (linux 3/4)",
+                        "status": "completed",
+                        "conclusion": "failure"
+                    },
+                    {
+                        "name": "tools (windows 2/4)",
+                        "status": "in_progress",
+                        "conclusion": ""
+                    }
+                ],
+                "notes": [
+                    "Cancelled superseded CI after preserving completed-job logs so the current commit can run.",
+                    "Docs passed. CLI init terminology and Linux case-spelling assertions failed; fixed at the next checkpoint.",
+                    "Compiler fixture, fixer and offline mise failures fixed at the next checkpoint. Other policy-edit installation and repeated test installation defects remain open.",
+                    "Manual acceptance still has CodeQL fixture races, a Semgrep Markdown false positive, unpublished public site, and scoped Wrangler discovery defects."
+                ]
+            }
+        },
+        {
+            "commit": "8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6",
+            "completedRecords": [
+                "areas/tool-tests/004",
+                "review/code-execution/003",
+                "review/repository-root/015",
+                "review/source-layout/002",
+                "review/tests-tools/019",
+                "slices/tests-tools-samples/028",
+                "slices/tests-tools-samples/029"
+            ],
+            "unresolvedRecords": 1060,
+            "validation": [
+                "Root and CLI TypeScript; repeated root TypeScript after shared runner PATH repair",
+                "84 focused source tests/193 assertions; 14 parser/case tests/19 assertions; 9 init tests/48 assertions",
+                "34 integrated native tests/264 assertions; 8 packaged consumers/124 assertions",
+                "6 package-manager preservation tests/107 assertions; 3 native lockfile tests/24 assertions",
+                "Supabase 2.118 version/init/gen/start/stop help smoke; pnpm 10.34.6 and Supabase 2.118 pass OSV and seven-day release age",
+                "gspot apply refreshed owned ESLint configuration; staged:147 passed/13 skipped/zero findings",
+                "Commit hooks:106 passed/3 skipped/zero findings; commit message check passed after wrapping body",
+                "Pre-push:147 passed/13 skipped/zero findings; main pushed without force"
+            ],
+            "limitations": [
+                "Full tools suite running; add/remove and scoped ESLint cases still fail under open policy/test obligations",
+                "Single test timeout awaits fixes and measurements of all four suites on all CI platforms",
+                "Manual check/doctor acceptance defects and cross-platform conclusions remain pending",
+                "No publication, release tag, live account setup or deployment",
+                "Later full native run exposes pnpm 10 credential rejection in three tests. Owner decision 005 remains partial pending trusted npm configuration acceptance.",
+                "Shared startup config lacked the already-declared npmmanager setting; all12CItools shards and package failed before tests. Database directBun invocation lacked Supabase PATH. Both have working-tree repairs; CI verification pending."
+            ],
+            "ci": {
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37571363798",
+                "status": "in_progress",
+                "notes": [
+                    "Docs passed. Package/all12tools shards failed on Spectral rollup trust downgrade because temporary config omitted settings.npm.package_manager=npm.",
+                    "Database37571565496 completed failure: directtestinvocationcannotfindsupabase.",
+                    "Later focusedproductionpnpm acceptance14passed with trusteduserconfig fix; owner005 remains partial forCLIinstallationfixtures andplatformacceptance."
+                ]
             }
         }
     ]

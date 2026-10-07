@@ -1,6 +1,6 @@
 # Code Review: Execution, Tools, Parsers, Platform, Repository, Checks
 
-46 unresolved review records remain.
+45 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -171,3 +171,11 @@ Saving: about 80 lines, and about two realpath calls fewer per file read.
 ## Not read
 
 None. The review read every file of `execution/`, `tools/`, `parsers/` (including `schema/` and `schema/configurations/`), `platform/`, `repository/` and `checks/`, and their counterparts under `config/` and `types/`. Outside the area, the review read only what it needed to verify claims: manifests, a few Eta sources, `generation/outputs.ts:140-200` and the libpg-query package source.
+
+## Implementation checkpoint of October 7, 2026
+
+Original records and quotations remain above.
+
+| ID                          | Status   | Evidence                                                                                                                                                                                                |
+| --------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/code-execution/003` | complete | Deleted unreachable miseVersion and the fourth parseVersionOutput argument, fallback, and supplying tests. Parser and executable failure tests pass. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |
