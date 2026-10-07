@@ -14,8 +14,6 @@ Preserve exact API identifiers and legal license text. Keep private reasoning, a
 development notes out of public content. Read the changed text for clarity and correctness.
 Do not expand a small edit into a review of unrelated pages.
 
-Your replies to the user follow these rules: short sentences, active voice, and one idea per sentence.
-
 ## Voice and tone
 
 ### Voice conventions

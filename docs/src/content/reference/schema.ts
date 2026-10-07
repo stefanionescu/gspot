@@ -70,7 +70,7 @@ export function buildJsonSchema(): Record<string, unknown> {
         $schema: 'https://json-schema.org/draft/2020-12/schema',
         $id: JSON_SCHEMA_URL,
         title: 'gspot.toml',
-        description: 'The settings of gspot for one repository.',
+        description: 'The settings of gspot for one repository in the latest release.',
         ...schema,
     };
 }

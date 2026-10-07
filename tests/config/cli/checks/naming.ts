@@ -62,7 +62,7 @@ export const NAMING_CATEGORIES = [
 ];
 
 export const DOMAIN_SOURCE =
-    'export const actualCount = 1, snapshot = 1, snapshots = 1, taxonomy = 1;\n' +
+    'export const responseCount = 1, response = 1, responses = 1, category = 1;\n' +
     'export const algorithms = { SHA256: 1, BASE64: 1 };\n';
 
 export const SCOPE_CEILINGS = [
@@ -73,7 +73,7 @@ export const SCOPE_CEILINGS = [
 
 export const NAME_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
 
-export const ORDINARY_WORDS = ['data', 'message', 'values', 'id', 'custom', 'combined'];
+export const ORDINARY_WORDS = ['data', 'message', 'values', 'id'];
 
 export const RESERVED_POLICY =
     '[naming]\nreserved = [{term = "record", uses = ["properties"]}]\n' +
@@ -91,10 +91,6 @@ export const GROUP_SOURCE =
     'export const enhancedValue = 1;\nexport const ensureValue = 1;\n' +
     'export const custom = 1;\nexport const combined = 1;\n';
 
-export const GROUP_EXCEPTIONS =
-    '[naming]\ngroups_off = [{group = "time", reason = "The public interface names old and new values."}, ' +
-    '{group = "conditions", reason = "The response state includes transient and fallback behavior."}]\n';
-
 export const NUMBERED_FILES = {
     '.mise/tasks/01-build.sh': 'echo example\n',
     'scripts/steps/01-build.sh': 'echo example\n',
@@ -107,3 +103,21 @@ export const PREFIX_EXCEPTION =
 export const REPEATED_EXCEPTION =
     '[[naming.paths]]\npaths = ["entry.ts"]\nnames = ["userUser"]\nallow_repeated_words = true\n' +
     'reason = "The generated interface fixes this exact repeated name."\n';
+
+export const RESTORED_TERMS = [
+    'taxonomy',
+    'snapshot',
+    'snapshots',
+    'actual',
+    'custom',
+    'final',
+    'latest',
+    'old',
+    'new',
+    'legacy',
+    'plus',
+    'combined',
+    'should',
+    'transient',
+    'fallback',
+];

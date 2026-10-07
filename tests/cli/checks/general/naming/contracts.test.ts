@@ -146,7 +146,7 @@ test('public checks accept ordinary domain terms and numeric words in JavaScript
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['javascript', 'typescript', 'naming'], { level: 'all' }),
         'i18n/sha256.js': DOMAIN_SOURCE + technical,
-        'taxonomy/base64.ts': DOMAIN_SOURCE + technical,
+        'categories/base64.ts': DOMAIN_SOURCE + technical,
         'entry.ts': 'export const user2 = 1;\n',
     });
     const command = ['check', '--only', 'naming/identifiers', 'naming/paths', '--json'];

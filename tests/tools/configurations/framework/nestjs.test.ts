@@ -1,7 +1,7 @@
 // A clean NestJS module passes every check, and the NestJS plugin reports a route parameter its decorator does not name.
 import { join } from 'node:path';
-import type { Level } from '#cli/types/rules.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';

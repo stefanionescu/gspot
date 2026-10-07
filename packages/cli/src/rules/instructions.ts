@@ -1,9 +1,10 @@
+import { FIRST_READ } from '#cli/config/policy/settings.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import type { RuleSettings } from '#cli/types/policy/settings.ts';
 import { CONFIGURATION_LABELS } from '#cli/config/configurations.ts';
-import type { RuleFile, RuleSettings, InstructionInputs } from '#cli/types/rules.ts';
+import type { RuleFile, InstructionInputs } from '#cli/types/rules.ts';
 
 import {
-    FIRST_READ,
     RULES_ALONE,
     LEVEL_SUMMARY,
     CHECKS_INSTALLED,

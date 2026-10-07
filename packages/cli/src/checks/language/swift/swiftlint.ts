@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 import { chmodSync, writeFileSync } from 'node:fs';
 import { compact } from '#cli/platform/objects.ts';
+import { copyFiles } from '#cli/execution/copy/files.ts';
 import { visitSwiftSources } from '#cli/parsers/swift.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
-import { createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
 import type { InlineDocumentation } from '#cli/types/checks/language/swift.ts';
 import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
@@ -88,7 +88,7 @@ export async function swiftlint(session: Session, planned: PlannedCheck): Promis
             return inline.length === 0 ? [] : [{ source, comments, inline }];
         });
         if (candidates.length === 0) return result;
-        using workspace = createFileWorkspace(session.root, [
+        using workspace = copyFiles(session.root, [
             ...session.repository.files.map((file) => file.path),
             ...commandConfigurations(session, planned, SWIFTLINT_COMMAND),
         ]);

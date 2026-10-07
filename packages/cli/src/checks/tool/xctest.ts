@@ -165,7 +165,7 @@ export async function sleeps(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * One finding for each snapshot test left in a recording mode.
+ * One finding for each copy test left in a recording mode.
  * @param input the engine input
  * @returns the findings
  */
@@ -242,7 +242,7 @@ export async function xctestCoverage(input: EngineInput): Promise<Finding[]> {
 
 /**
  * Report references whose layout names no Swift test file in the same directory.
- * @param input the scoped files and snapshot layout
+ * @param input the scoped files and copy layout
  * @returns the orphan reference findings
  */
 export function xctestReferences(input: EngineInput): Finding[] {

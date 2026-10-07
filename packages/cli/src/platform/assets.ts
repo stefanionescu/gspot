@@ -6,7 +6,7 @@ import { createRequire } from 'node:module';
 import { statSync, readFileSync } from 'node:fs';
 import { toPosix, globPaths } from '#cli/platform/paths.ts';
 import { ROOT_SEARCH_DEPTH } from '#cli/config/platform/runtime.ts';
-import { RUNTIME_WASM, GRAMMAR_PACKAGES, STANDALONE_BUILD, SWIFT_GRAMMAR_FILE } from '#cli/config/platform/assets.ts';
+import { RUNTIME_WASM, GRAMMAR_PACKAGES, SWIFT_GRAMMAR_FILE } from '#cli/config/platform/assets.ts';
 
 let packageDirectory: string | undefined;
 
@@ -28,9 +28,8 @@ function nearestPackage(): string | undefined {
 // into another build, such as the documentation site, finds the package through module resolution instead.
 
 function packageRoot(): string {
-    packageDirectory ??= STANDALONE_BUILD
-        ? dirname(process.execPath)
-        : (nearestPackage() ?? dirname(createRequire(import.meta.url).resolve('@gspothq/cli/package.json')));
+    packageDirectory ??=
+        nearestPackage() ?? dirname(createRequire(import.meta.url).resolve('@gspothq/cli/package.json'));
     return packageDirectory;
 }
 

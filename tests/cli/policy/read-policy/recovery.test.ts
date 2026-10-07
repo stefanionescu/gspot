@@ -1,6 +1,5 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { namingTerms } from '#cli/parsers/schema/naming.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
 import { GOOD_IGNORE } from '#tests/config/cli/policy/read/recovery.ts';
@@ -69,17 +68,6 @@ test('a syntax error stops reading with a TOML diagnostic', () => {
 
 test('an unknown top-level key stops reading and names that key', () => {
     expect(() => readPolicyText(`${buildPolicy(['bash'])}hue = "red"\n`)).toThrow('`hue`');
-});
-
-test('one naming entry reports both a missing reason and a prohibited group while being removed once', () => {
-    const group = Object.entries(namingTerms().groups).find(([, entry]) => !entry.removable)![0];
-    const text = `${buildPolicy(['naming'])}require_reasons = true\n[[naming.groups_off]]\ngroup = "${group}"\n`;
-    const result = readPolicyText(text);
-    expect(result.problems).toMatchObject([
-        { path: ['naming', 'groups_off', 0, 'group'], message: textContaining('cannot be removed') },
-        { path: ['naming', 'groups_off', 0, 'reason'], message: textContaining('needs a reason') },
-    ]);
-    expect(result.policy.naming.groups_off).toStrictEqual([]);
 });
 
 test('unknown configurations retain duplicate root entries and scoped declaration order', () => {

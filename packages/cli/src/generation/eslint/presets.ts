@@ -1,6 +1,6 @@
-import { npmPins } from '#cli/tools/pins.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { readAsset } from '#cli/platform/assets.ts';
+import { npmPins } from '#cli/configurations/pins.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { EslintPresets, EslintRuleNames } from '#cli/types/parsers/eslint.ts';
 import { eslintPresetsSchema, eslintRuleNamesSchema } from '#cli/parsers/schema/eslint.ts';
@@ -8,7 +8,7 @@ import { ESLINT_PRESET_SOURCES, ESLINT_RULE_NAMES_FILE } from '#cli/config/gener
 
 /**
  * Read the exact pinned presets shipped beside their configuration.
- * @param manifest the configuration owning the snapshot
+ * @param manifest the configuration owning the preset
  * @returns preset blocks without executable plugin or parser objects
  */
 export function readEslintPresets(manifest: Manifest): EslintPresets {
@@ -24,7 +24,7 @@ export function readEslintRuleNames(): EslintRuleNames {
 }
 
 /**
- * Reject snapshots whose package, pin, or preset source does not match the shipped manifests.
+ * Reject presets whose package, pin, or preset source does not match the shipped manifests.
  * @param manifests every shipped configuration
  */
 export function validateEslintPresets(manifests: Map<string, Manifest>): void {
@@ -48,12 +48,12 @@ export function validateEslintPresets(manifests: Map<string, Manifest>): void {
         Object.entries(sources).map(([name, [packageName, source]]) => ({ configuration, name, packageName, source })),
     );
     for (const { configuration, name, packageName, source } of declared) {
-        const snapshot = presetsByName.get(configuration)?.[name];
+        const preset = presetsByName.get(configuration)?.[name];
         const version = versions[packageName];
         const identity =
-            snapshot === undefined
+            preset === undefined
                 ? undefined
-                : { package: snapshot.package, source: snapshot.source, version: snapshot.version };
+                : { package: preset.package, source: preset.source, version: preset.version };
         if (!isDeepStrictEqual(identity, { package: packageName, source, version }))
             throw new Error(
                 `Refresh ${configuration}/${name}: its ESLint preset must use ${packageName}@${String(version)}.`,

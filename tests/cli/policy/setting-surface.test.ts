@@ -2,8 +2,8 @@ import { test, expect, describe } from 'bun:test';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
+import { validateAgainstSurface } from '#cli/policy/errors/keys.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import { validateAgainstSurface } from '#cli/policy/problems/keys.ts';
 import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
 import { specFor, settingValue } from '#cli/policy/settings/entries.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -234,13 +234,15 @@ describe('setting validation', () => {
         expect(problems[0]).toContain('No selected configuration has the setting `tools.shellcheck.severity`');
     });
 
-    test('the marketing group cannot be removed', () => {
+    test('term-group controls are refused because no group can be removed', () => {
         const problems = policyProblems(
             buildPolicy(['bash'], {
                 tables: '[naming]\ngroups_off = [{ group = "marketing", reason = "We like adjectives here." }]\n',
             }),
         );
-        expect(problems[0]).toContain('`marketing` term group cannot be removed');
+        expect(problems).toStrictEqual([
+            'gspot.toml: naming.groups_off: Invalid input: expected object, received array',
+        ]);
     });
 });
 

@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, spyOn, expect } from 'bun:test';
-import { collectPins } from '#cli/tools/pins.ts';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/execution/session.ts';
+import { collectPins } from '#cli/configurations/pins.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';

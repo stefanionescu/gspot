@@ -12,7 +12,7 @@ export const eslintRuleNamesSchema = z.strictObject({
     rules: z.array(z.string().min(1)),
 });
 
-/** The installed public export read only by the explicit snapshot producer. */
+/** The installed public export read only by the explicit copy producer. */
 export const eslintRuleModuleSchema = z.object({ builtinRules: z.map(z.string(), z.unknown()) });
 
 export const eslintCoverageRequestSchema = z.strictObject({
@@ -34,7 +34,7 @@ export const eslintPresetBlockSchema = z.strictObject({
     rules: z.record(z.string(), z.json()).optional(),
 });
 
-/** A snapshot identifies its exact installed package and public preset export. */
+/** A copy identifies its exact installed package and public preset export. */
 export const eslintPresetSchema = z.strictObject({
     package: z.string(),
     version: z.string(),

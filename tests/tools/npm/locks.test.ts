@@ -13,6 +13,7 @@ import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
+import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
 import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
 
 test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' && runner === 'mise'))(
@@ -27,7 +28,7 @@ test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' 
                 code: preview.code,
                 dryRun: (JSON.parse(preview.stdout) as InstallJson).dryRun,
                 ownership: readFileSync(ownershipPath),
-                includesCredentials: lock.toString('utf8').includes(registry.token),
+                includesCredentials: lock.toString('utf8').includes(PACKAGE_REGISTRY_TOKEN),
             },
             preview.stdout + preview.stderr,
         ).toStrictEqual({ code: 0, dryRun: true, ownership, includesCredentials: false });

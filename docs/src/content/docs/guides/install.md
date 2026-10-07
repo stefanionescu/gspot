@@ -3,14 +3,14 @@ title: Install gspot
 description: Choose an installation method for your repository and prepare its checks.
 ---
 
-gspot is not published on npm yet. To run the current source, follow [Contributing](https://github.com/stefanionescu/gspot/blob/main/CONTRIBUTING.md). The installation procedures below apply after release.
+gspot is not published on npm yet. The installation procedures below apply after release.
 
 Read the [requirements](/guides/requirements/) first. Choose one installation method:
 
 | Repository                                         | Install method                                               | Prefix for later commands                                     |
 | -------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------- |
 | Has `package.json`                                 | Exact development dependency in its declared package manager | `npx gspot`, `pnpm exec gspot`, `yarn gspot`, or `bunx gspot` |
-| Python, Swift, or another repository using mise    | Download the standalone CLI through mise                     | `mise exec -- gspot`                                          |
+| Python, Swift, or another repository using mise    | Install the npm CLI through mise                             | `mise exec -- gspot`                                          |
 | Uses neither a JavaScript package manager nor mise | Exact global npm installation                                | `gspot` on `PATH`                                             |
 
 Commands in the guides start with `gspot`. Add the prefix from this table for your installation.
@@ -43,10 +43,10 @@ Commit that manager's manifest and lockfile before initialization.
 In a clean Git repository, run:
 
 ```shell
-mise exec github:stefanionescu/gspot@0.1.0 -- gspot init
+mise exec npm:@gspothq/cli@0.1.0 -- gspot init
 ```
 
-Choose mise at the runner question. The generated mise file pins the standalone CLI archive and required native tools. This delivery needs no Node.js or Bun for gspot; applicable checks can still require those runtimes. Trust the file before installing its tools:
+Choose mise at the runner question. The generated mise file pins the CLI through the npm backend (`npm:@gspothq/cli`) and pins required executable tools. gspot needs Node.js 24.2 or newer, or Bun 1.4.2 or newer, with mise too. Trust the file before installing its tools:
 
 ```shell
 mise trust .mise/conf.d/gspot-tools.toml

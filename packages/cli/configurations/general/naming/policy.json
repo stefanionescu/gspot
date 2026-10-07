@@ -6,7 +6,6 @@
     },
     "groups": {
         "containers": {
-            "removable": true,
             "terms": [
                 "core",
                 "common",
@@ -18,12 +17,12 @@
                 "details",
                 "info",
                 "object",
+                "taxonomy",
                 "tmp",
                 "temp"
             ]
         },
         "roles": {
-            "removable": true,
             "terms": [
                 "helper",
                 "helpers",
@@ -39,7 +38,6 @@
             ]
         },
         "marketing": {
-            "removable": false,
             "terms": [
                 "advanced",
                 "enhanced",
@@ -52,15 +50,23 @@
                 "ultimate",
                 "comprehensive",
                 "optimized",
-                "reusable"
+                "reusable",
+                "custom",
+                "final",
+                "latest",
+                "old",
+                "new",
+                "legacy",
+                "plus",
+                "combined"
             ]
         },
         "defensive": {
-            "removable": false,
             "terms": [
                 "ensure",
                 "maybe",
                 "likely",
+                "should",
                 "if needed",
                 "ifneeded",
                 "if available",
@@ -73,27 +79,29 @@
                 "orthrow",
                 "waitfor",
                 "with retries",
+                "transient",
                 "belt and suspenders",
+                "fallback",
                 "load bearing",
                 "load-bearing",
                 "loadbearing"
             ]
         },
         "conjunctions": {
-            "removable": true,
             "terms": ["and", "or", "with", "when", "what", "whatever", "once", "plus"]
         },
         "tests": {
-            "removable": true,
-            "terms": ["test case", "testcase", "under test", "undertest", "edge case", "edge cases"]
-        },
-        "time": {
-            "removable": true,
-            "terms": ["new", "old", "latest", "legacy", "final"]
-        },
-        "conditions": {
-            "removable": true,
-            "terms": ["fallback", "should", "transient"]
+            "terms": [
+                "test case",
+                "testcase",
+                "under test",
+                "undertest",
+                "edge case",
+                "edge cases",
+                "snapshot",
+                "snapshots",
+                "actual"
+            ]
         }
     },
     "reserved": [

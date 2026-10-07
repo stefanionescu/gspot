@@ -109,7 +109,10 @@ test('a reinstall the registry answers with 404 keeps the working tools and leav
     const missing = createHash('sha512').update('missing tarball').digest('base64');
     const changed = lock
         .toString('utf8')
-        .replace(`${registry.url}/prettier.tgz`, `${registry.url}/prettier-missing.tgz`)
+        .replace(
+            `${registry.url}/prettier/-/prettier-${prettierManifest.version}.tgz`,
+            `${registry.url}/prettier/-/prettier-missing.tgz`,
+        )
         .replace(/"integrity": "sha512-[^"]+"/u, `"integrity": "sha512-${missing}"`);
     chmodSync(lockPath, 0o644);
     writeFileSync(lockPath, changed);

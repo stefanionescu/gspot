@@ -4,8 +4,8 @@ import { join, dirname, basename } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { typescriptNodes } from '#cli/parsers/typescript.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
-import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
@@ -90,7 +90,7 @@ export async function migrations(input: EngineInput): Promise<Finding[]> {
         )
     )
         return [];
-    using scratchFolder = await scratchCopy(
+    using scratchFolder = await copyIntoScratch(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),

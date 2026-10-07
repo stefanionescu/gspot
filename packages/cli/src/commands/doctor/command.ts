@@ -1,10 +1,10 @@
 import { resolve } from 'node:path';
-import { collectPins } from '#cli/tools/pins.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import type { CommandResult } from '#cli/types/output.ts';
+import { collectPins } from '#cli/configurations/pins.ts';
 import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { hostPlatform } from '#cli/platform/environment.ts';
 import type { Program } from '#cli/types/commands/program.ts';

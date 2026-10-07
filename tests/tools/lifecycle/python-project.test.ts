@@ -4,7 +4,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
-import { createPythonRegistry } from '#registry/python.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
@@ -16,9 +15,9 @@ import type { InstalledOutput } from '#cli/types/tools/install.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { installPythonProject } from '#cli/tools/python/project.ts';
-import { preparePythonInstallation } from '#tests/harness/python-installation.ts';
 import { cpSync, chmodSync, existsSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { PYTHON_PROJECTS, PYTHON_INSTALL_STEPS } from '#tests/config/tools/lifecycle/python-project.ts';
+import { createPythonRegistry, preparePythonInstallation } from '#tests/harness/python-installation.ts';
 
 test.skipIf(!isPosix).each(PYTHON_PROJECTS)(
     'private Python CLI installation preserves authored and generated inputs with %s and %s',
@@ -72,11 +71,9 @@ test.skipIf(!isPosix).each([
     async (configuration, runner) => {
         await using repository = await testdir();
         await using artifacts = await testdir();
-        await using registry = await createPythonRegistry(artifacts.path, runTestCommand);
         await using prepared = await preparePythonInstallation(repository.path, {
             indexFile: configuration,
             runner,
-            indexUrl: registry.url,
         });
         const { rootConfiguration } = prepared;
         const manifest = readFileSync(join(repository.path, '.gspot/pyproject.toml'));
@@ -103,7 +100,7 @@ test.skipIf(!isPosix).each([
             }).toStrictEqual({ manifest, lock, configuration: rootConfiguration });
         }
         const prefix = await runTestCommand(
-            [environmentExecutable(join(clone, '.gspot/.venv'), 'gspot-relocation-marker')],
+            [environmentExecutable(join(clone, '.gspot/.venv'), 'python'), '-c', 'import sys; print(sys.prefix)'],
             {
                 cwd: clone,
             },
@@ -113,9 +110,12 @@ test.skipIf(!isPosix).each([
         // A copied environment runs its console scripts from the copy.
         const copied = join(artifacts.path, 'relocated environment');
         cpSync(join(clone, '.gspot/.venv'), copied, { recursive: true, verbatimSymlinks: true });
-        const relocated = await runTestCommand([environmentExecutable(copied, 'gspot-relocation-marker')], {
-            cwd: artifacts.path,
-        });
+        const relocated = await runTestCommand(
+            [environmentExecutable(copied, 'python'), '-c', 'import sys; print(sys.prefix)'],
+            {
+                cwd: artifacts.path,
+            },
+        );
         expect(relocated.code, relocated.stderr).toBe(0);
         expect(realpathSync(relocated.stdout.trim())).toBe(realpathSync(copied));
     },
@@ -128,12 +128,9 @@ test.skipIf(!isPosix)(
         const configuration = 'uv.toml';
         const runner = 'none';
         await using repository = await testdir();
-        await using artifacts = await testdir();
-        await using registry = await createPythonRegistry(artifacts.path, runTestCommand);
         await using prepared = await preparePythonInstallation(repository.path, {
             indexFile: configuration,
             runner,
-            indexUrl: registry.url,
         });
         const { rootConfiguration } = prepared;
         const lockPath = join(repository.path, '.gspot/uv.lock');

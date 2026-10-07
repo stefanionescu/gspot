@@ -1,12 +1,11 @@
 // Settings and defaults declared by gspot and selected configurations. Framework, platform, library, and database
 // configurations override an earlier scalar default; other scalar disagreements are reported as conflicts.
 import { isDeepStrictEqual } from 'node:util';
-import type { Level } from '#cli/types/rules.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { mergeValue } from '#cli/policy/settings/entries.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import type { Manifest, SettingSpec } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import type { Level, Manifest, SettingSpec } from '#cli/types/configurations.ts';
 import { TOOL_DEADLINE, OVERRIDING_KINDS } from '#cli/config/policy/settings.ts';
 import type { TomlTable, KnownSettings, SettingDefault } from '#cli/types/policy/settings.ts';
 import { policySchema, rootSettingSchemas, tableSettingSchemas } from '#cli/policy/schema/policy.ts';

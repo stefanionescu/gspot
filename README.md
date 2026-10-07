@@ -8,11 +8,11 @@ gspot sets up linters and checks for the languages in your repository. Git hooks
 
 ## Status
 
-gspot is not published on npm yet. To run it from source, see [Contributing](https://github.com/stefanionescu/gspot/blob/main/CONTRIBUTING.md).
+gspot is not published on npm yet.
 
 ## Requirements
 
-You need Git. The npm CLI requires Node.js 24.2 or newer, or Bun. Standalone archives include the runtime for gspot; applicable tools still require their own runtimes.
+You need Git. gspot requires Node.js 24.2 or newer, or Bun 1.4.2 or newer, under every runner, including mise.
 
 Requirements follow applicable checks. Python tools need uv. npm tools need their package manager and runtime. Native tools need mise or the pinned executables on `PATH`. Shared files count: a Python project with Markdown can need npm-based Markdown checks. `gspot doctor` prints missing tools and acquisition commands.
 
@@ -23,7 +23,7 @@ After publication, choose by repository:
 | Repository                                   | Install                                                        | Run commands with                                             |
 | -------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
 | Has `package.json`                           | Exact CLI development dependency using npm, pnpm, Yarn, or Bun | `npx gspot`, `pnpm exec gspot`, `yarn gspot`, or `bunx gspot` |
-| Python, Swift, or another project using mise | Download the standalone CLI through mise                       | `mise exec -- gspot`                                          |
+| Python, Swift, or another project using mise | Install the npm CLI through mise                               | `mise exec -- gspot`                                          |
 | Uses neither a package manager nor mise      | Exact global npm install                                       | `gspot` on `PATH`                                             |
 
 For npm:
@@ -38,7 +38,7 @@ npx gspot doctor
 
 Commit the install first because initialization requires a clean working tree. For other package managers, use their exact install command and commit their lockfile.
 
-Without `package.json`, use `mise exec github:stefanionescu/gspot@0.1.0 -- gspot init` and choose mise. The generated mise file pins the CLI and applicable native tools. Without mise, install `npm install --global @gspothq/cli@0.1.0` and run `gspot init`. A global installation supplies one CLI version per machine; each repository pins its version in `.gspot/version`.
+Without `package.json`, use `mise exec npm:@gspothq/cli@0.1.0 -- gspot init` and choose mise. The generated mise file pins the CLI and applicable native tools. Without mise, install `npm install --global @gspothq/cli@0.1.0` and run `gspot init`. A global installation supplies one CLI version per machine; each repository pins its version in `.gspot/version`.
 
 Read the initialization plan before accepting it. `--no-install` writes setup without resolving tool locks; run `gspot install` later. Guides use `gspot` as shorthand for the prefix in the table.
 
@@ -86,7 +86,6 @@ Each finding names the file, the line, the rule, and what to do. The
 - [TypeScript](docs/src/content/docs/guides/quickstart/typescript.md), [Python](docs/src/content/docs/guides/quickstart/python.md), and [Swift](docs/src/content/docs/guides/quickstart/swift.md) quickstarts.
 - [Policy](docs/src/content/docs/guides/policy.md) and [template reuse](docs/src/content/docs/guides/templates.md).
 - [Coding agents](docs/src/content/docs/guides/agents.md).
-- [Contributing](CONTRIBUTING.md).
 
 ## License
 

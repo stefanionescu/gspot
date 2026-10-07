@@ -3,7 +3,7 @@ import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import type { LockName, PrivateLockFileName } from '#cli/types/parsers/lockfiles.ts';
+import type { LockName, ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 
 import {
     RUNTIME_COMMAND,
@@ -281,11 +281,11 @@ export function manifestParser(path: string): ManifestParser | undefined {
 }
 
 /**
- * Select the native lockfile of a private npm tool project's manager.
+ * Select the native lockfile of a npm tool project's manager.
  * @param installer the validated package manager
  * @returns the lockfile basename declared by its registry entry
  */
-export function packageLockFile(installer: LockName): PrivateLockFileName {
+export function packageLockFile(installer: LockName): ToolProjectLockfileName {
     for (const entry of LOCKFILES) if ('private' in entry && entry.client === installer) return entry.file;
     throw new Error(`The lockfile registry declares no private lock for ${installer}.`);
 }

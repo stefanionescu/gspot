@@ -11,9 +11,9 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { toolProjectPackage } from '#cli/configurations/pins.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { privateToolInstallation } from '#cli/tools/installation.ts';
 import { installTree } from '#cli/lifecycle/ownership/installations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { FlagCommand } from '#tests/types/tools/manifest-flags-in-help.ts';
@@ -151,7 +151,7 @@ for (const command of distinct) {
         async () => {
             const { tool } = command;
             let log = privateContext;
-            if (privateToolInstallation(tool, 'mise') === undefined)
+            if (toolProjectPackage(tool, 'mise') === undefined)
                 log = tool.system === true || tool.version === undefined ? hostContext : context;
             const inspection = inspectTool(log, command.tool);
             expect(inspection.state, `${title}: ${inspection.hint ?? ''} ${inspection.note ?? ''}`).toBe(

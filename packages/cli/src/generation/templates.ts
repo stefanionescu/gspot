@@ -1,9 +1,9 @@
 // Render configuration assets with the effective settings and inputs of their scope.
 import { Eta } from 'eta';
-import { collectPins } from '#cli/tools/pins.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
+import { collectPins } from '#cli/configurations/pins.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
 import { buildJsconfig } from '#cli/generation/jsconfig.ts';
 import { buildTsconfig } from '#cli/generation/tsconfig.ts';

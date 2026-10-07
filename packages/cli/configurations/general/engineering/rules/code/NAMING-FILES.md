@@ -4,23 +4,8 @@ title: Naming Files
 
 # Naming Files
 
-Casing across languages, file and directory names, boundary and external names, and test names.
+Files and directories, and boundaries and external names.
 The vocabulary and function-name rules are in the Naming file.
-
-## Casing across languages
-
-<!-- level: all -->
-
-Each language naming file states its own case table. These decisions hold across every language so
-the same concept reads the same way at every boundary.
-
-| Concern               | Rule                                                                                                                                                                                                                                                                                                                          |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Acronyms              | Follow the language: TypeScript, JavaScript treat them as words (`parseHttpUrl`, `userId`); Swift keeps uppercase initialisms (`avatarURL`, `userID`, `apiClient` at the start of a name); Python, SQL, Bash lowercase them inside snake_case (`http_url`, `user_id`). A platform name keeps its spelling (`XMLHttpRequest`). |
-| Directories           | kebab-case for TypeScript, JavaScript, Bash, HTML, CSS, and static sites; snake_case for Python packages; PascalCase for Swift directories, which mirror type names.                                                                                                                                                          |
-| On the wire           | Preserve existing external contracts. For project-owned contracts, use camelCase JSON fields, kebab-case URL segments.                                                                                                                                                                                                        |
-| Environment variables | `UPPER_SNAKE_CASE`, named by the external contract. No application prefix is required; platform-owned names are kept verbatim.                                                                                                                                                                                                |
-| Constants             | Module-level constants bound to a literal or a frozen object are `UPPER_SNAKE_CASE` in TypeScript, JavaScript, Python, and Bash, and lowerCamelCase in Swift.                                                                                                                                                                 |
 
 ## Files and directories
 
@@ -56,11 +41,3 @@ mechanics stay out of domain names.
 A wire shape such as `MessageAttachmentDTO` keeps `storage_object_path`. The validated
 `MessageAttachment` uses `attachmentPath`, and the boundary that knows the storage protocol
 converts one into the other.
-
-## Structural ownership
-
-<!-- level: all -->
-
-Follow the repository's declared arrangement for constants, types, and schemas. Group each by
-the behavior it belongs to. Do not impose a config or types folder on another project, and do
-not mirror the source tree in tests.

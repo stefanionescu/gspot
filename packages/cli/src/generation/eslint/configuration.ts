@@ -276,13 +276,13 @@ export function eslintInputs(
         eslintRuleSettings: eslintRuleSettings,
         eslintErrorRules,
         eslintPresets: (name) => {
-            let snapshot = presets.get(name);
-            if (snapshot !== undefined) return snapshot;
+            let preset = presets.get(name);
+            if (preset !== undefined) return preset;
             const manifest = session.manifests.get(name);
             if (manifest === undefined) throw new Error(`No configuration owns the ${name} ESLint presets.`);
-            snapshot = readEslintPresets(manifest);
-            presets.set(name, snapshot);
-            return snapshot;
+            preset = readEslintPresets(manifest);
+            presets.set(name, preset);
+            return preset;
         },
     };
 }

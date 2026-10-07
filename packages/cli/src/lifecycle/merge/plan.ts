@@ -144,7 +144,7 @@ export function pruneParents(
 /**
  * Plans the merge of owned keys into a shared configuration file the developer keeps.
  * @param request the destination, requested fields, and read ownership
- * @returns the next snapshot with its ownership, or undefined when the file must be preserved
+ * @returns the next copy with its ownership, or undefined when the file must be preserved
  */
 export function planMerge(request: MergeRequest): MergePlan | undefined {
     const { changes, current, existing } = request;

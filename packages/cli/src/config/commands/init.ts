@@ -18,7 +18,7 @@ export const CI_SETUP = {
     commands: [`npm install --global "@gspothq/cli@$(cat ${VERSION_FILE})"`, 'gspot install', 'gspot check'],
 };
 
-export const JSON_SCHEMA_URL = 'https://gspot.dev/schema/gspot.schema.json';
+export const JSON_SCHEMA_URL = 'https://generativespotting.com/schema/gspot.schema.json';
 
 export const SCHEMA_LINE = `#:schema ${JSON_SCHEMA_URL}`;
 

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { throws } from 'node:assert/strict';
-import { toolPin } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { rootView } from '#cli/policy/settings/view.ts';

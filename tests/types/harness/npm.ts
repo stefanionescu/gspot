@@ -1,6 +1,6 @@
 import type { ToolPin } from '#cli/types/configurations.ts';
 import type { LockName } from '#cli/types/parsers/lockfiles.ts';
-import type { PackageRegistry } from '#automation/types/registry.ts';
+import type { PackageRegistry } from '#tests/types/harness/registry.ts';
 
 /** A package project in a sandbox: the project, its local registry, and the files the install reads. */
 export type PackageProject = {

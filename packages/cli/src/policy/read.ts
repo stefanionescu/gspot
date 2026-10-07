@@ -10,8 +10,8 @@ import type { KeyPath } from '#cli/types/platform/document.ts';
 import { FIELD_PROBLEMS } from '#cli/config/policy/settings.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { Policy, RawPolicy, PolicyFile, PolicyProblem } from '#cli/types/policy/settings.ts';
-import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/problems/selection.ts';
-import { reasonProblems, restrictionProblems, pathProblems as getPathProblems } from '#cli/policy/problems/reasons.ts';
+import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/errors/selection.ts';
+import { reasonProblems, restrictionProblems, pathProblems as getPathProblems } from '#cli/policy/errors/reasons.ts';
 
 function issueLines(path: string, issue: z.core.$ZodIssue): string[] {
     const segments = issue.path.filter((part): part is KeyPath[number] => typeof part !== 'symbol');
@@ -19,7 +19,7 @@ function issueLines(path: string, issue: z.core.$ZodIssue): string[] {
     const where = segments.map(String).join('.');
     return issue.keys.map(
         (key) =>
-            `${path}: \`${key}\` is not a setting gspot knows under ${where === '' ? 'the top level' : '[' + where + ']'}. The gspot.toml schema reference (gspot.dev/reference/configuration/) lists every key.`,
+            `${path}: \`${key}\` is not a setting gspot knows under ${where === '' ? 'the top level' : '[' + where + ']'}. The gspot.toml schema reference (generativespotting.com/reference/configuration/) lists every key.`,
     );
 }
 

@@ -1,3 +1,4 @@
+import type { Plugin } from './types/plugin.ts';
 import { envOwner } from '#plugin/rules/env-owner.ts';
 import { headerFirst } from '#plugin/rules/header-first.ts';
 import { noReexports } from '#plugin/rules/no-reexports.ts';
@@ -49,10 +50,9 @@ const recommendedRules = Object.fromEntries(
         .map(([name]) => [`gspot/${name}`, 'error' as const]),
 );
 
-const plugin = {
+const plugin: Plugin = {
     meta: { name: packageManifest.name, version: packageManifest.version },
     rules,
-    configs: {},
 };
 
 // All adds naming, import order, layout and complexity conventions, and forbids re-exports.

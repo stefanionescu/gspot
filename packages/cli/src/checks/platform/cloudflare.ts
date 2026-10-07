@@ -2,9 +2,9 @@ import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { portableSegments } from '#cli/platform/root/rules.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
-import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { COMPATIBILITY_DATE } from '#cli/config/checks/platform/cloudflare.ts';
@@ -102,7 +102,7 @@ export async function typesFresh(input: EngineInput): Promise<Finding[]> {
     portableSegments(file);
     const paths = scopePathsNamed(input, file);
     if (paths.length === 0) return [];
-    using scratchFolder = await scratchCopy(
+    using scratchFolder = await copyIntoScratch(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),

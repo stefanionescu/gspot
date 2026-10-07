@@ -20,4 +20,6 @@
 /packages/eslint-plugin/.markdownlint-cli2.mjs text eol=lf
 /packages/eslint-plugin/.semgrepignore text eol=lf
 /tests/.semgrepignore text eol=lf
+/tests/pyrightconfig.json text eol=lf
+/tests/ruff.toml text eol=lf
 # <<< gspot managed <<<

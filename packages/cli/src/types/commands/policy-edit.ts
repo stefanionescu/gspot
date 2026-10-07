@@ -1,10 +1,10 @@
 import type { CommandResult } from '#cli/types/output.ts';
-import type { Snapshot } from '#cli/types/platform/root.ts';
+import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Proposal } from '#cli/types/policy/settings.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
 
-export type PreparedPolicy = Proposal & { original: Snapshot };
+export type PreparedPolicy = Proposal & { original: FileCopy };
 
 /** The validated authored policy a command previews without publishing. */
 export type PolicyPreviewJson = { policy: string; dryRun: true };

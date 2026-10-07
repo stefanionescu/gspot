@@ -1,4 +1,4 @@
-// Resolve and install private npm tool projects without writing credentials to locks.
+// Resolve and install npm tool projects without writing credentials to locks.
 import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/platform/errors.ts';

@@ -142,14 +142,7 @@ test('an OSV expiry cannot inject another TOML table', async () => {
     expect(await rejection(openSession(sandbox.path))).toContain('ignore.0.until');
 });
 
-test('Mise pins the native archive with its complete asset directory on PATH', async () => {
+test('Mise pins the CLI through the npm backend', async () => {
     const text = await emitFile(buildPolicy([], { tables: 'run_with = "mise"\n' }), MISE_CONFIG_PATH);
-    expect(parse(text)['tools']).toMatchObject({
-        [GSPOT_MISE_TOOL]: {
-            version: packageManifest.version,
-            asset_pattern: 'gspot-{{ version }}-{{ os(macos="darwin") }}-{{ arch() }}.tar.gz',
-            strip_components: 1,
-        },
-    });
-    expect((parse(text)['tools'] as Record<string, unknown>)[GSPOT_MISE_TOOL]).not.toHaveProperty('filter_bins');
+    expect(parse(text)['tools']).toMatchObject({ [GSPOT_MISE_TOOL]: packageManifest.version });
 });

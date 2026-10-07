@@ -5,9 +5,9 @@ import { findingAt } from '#cli/execution/finding.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { parseCommand } from '#cli/parsers/command.ts';
 import { nativeSegments } from '#cli/platform/root/rules.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { SPECTRAL_LINE } from '#cli/config/checks/tool/openapi.ts';
-import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import type { ConfigurationFile } from '#cli/types/configurations.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
@@ -71,7 +71,7 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
     const document = documentPath(input);
     if (document === undefined) return [];
     const before = readSource(input.root, document, input.reads);
-    using scratchFolder = await scratchCopy(
+    using scratchFolder = await copyIntoScratch(
         input.root,
         [...input.files.map((file) => file.path), document],
         input.scopeEntries.map((scope) => scope.path),

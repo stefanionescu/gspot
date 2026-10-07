@@ -13,8 +13,8 @@ import { gspot, spawnGspot, startGspot } from '#tests/harness/gspot.ts';
 import type { FakeGitOptions } from '#tests/types/cli/commands/cancellation.ts';
 import { READY_POLL_MS, READY_TIMEOUT_MS } from '#tests/config/harness/process.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
+import type { CopyMarker, DirectoryCopyMarker } from '#tests/types/harness/process.ts';
 import { mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import type { SnapshotMarker, DirectoryCopyMarker } from '#tests/types/harness/process.ts';
 import { SLOW_CHECK, CHILD_OPTIONS, SLOW_TOOL_PROGRAM } from '#tests/config/cli/commands/cancellation.ts';
 
 // A readiness file can become visible before the child has finished writing its JSON.
@@ -109,7 +109,7 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'] as const)(
         );
         await using capture = captureChild(child);
         const { output, errors } = capture;
-        const started = (await waitForJson(marker)) as SnapshotMarker;
+        const started = (await waitForJson(marker)) as CopyMarker;
         if (operation === 'diff') expect(readdirSync(scratch)).toStrictEqual([]);
         child.kill(operation === 'clone' ? 'SIGINT' : 'SIGTERM');
         expect(await child.exited, await errors).toBe(2);
@@ -165,7 +165,7 @@ test.skipIf(!isPosix)(
         );
         await using capture = captureChild(child);
         const { output, errors } = capture;
-        const started = (await waitForJson(marker)) as Required<SnapshotMarker>;
+        const started = (await waitForJson(marker)) as Required<CopyMarker>;
         child.kill('SIGINT');
         expect(await child.exited, await errors).toBe(2);
         const report = JSON.parse(await output) as PushReport;

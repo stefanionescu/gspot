@@ -1,5 +1,5 @@
 name: docs
-# The release calls this workflow after publication; a manual dispatch rebuilds an earlier release for rollback.
+# Release runs use their published tag. Manual runs can build the selected source before publication.
 on:
     workflow_call:
         inputs:
@@ -10,8 +10,8 @@ on:
     workflow_dispatch:
         inputs:
             release_tag:
-                description: Published stable release tag (use the prior tag to roll back)
-                required: true
+                description: Published stable release tag (omit to build the selected source)
+                required: false
                 type: string
 permissions:
     contents: read
@@ -21,9 +21,10 @@ concurrency:
 jobs:
     build:
         runs-on: ubuntu-24.04
-        timeout-minutes: 15
+        timeout-minutes: 60
         steps:
             - name: Verify the published release
+              if: inputs.release_tag != ''
               shell: bash
               run: |
                   set -euo pipefail
@@ -32,10 +33,10 @@ jobs:
                   GH_TOKEN: ${{ github.token }}
                   DOCS_RELEASE: ${{ inputs.release_tag }}
                   DOCS_REPOSITORY: ${{ github.repository }}
-            - name: Check out the release tag
+            - name: Check out the documentation source
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
-                  ref: ${{ inputs.release_tag }}
+                  ref: ${{ inputs.release_tag || github.ref }}
                   persist-credentials: false
             - name: Install mise
               uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
@@ -62,15 +63,12 @@ jobs:
     deploy:
         needs: build
         runs-on: ubuntu-24.04
-        timeout-minutes: 10
-        environment:
-            name: documentation
-            url: https://gspot.dev
+        timeout-minutes: 60
         steps:
-            - name: Check out the release deployment settings
+            - name: Check out the documentation deployment settings
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
-                  ref: ${{ inputs.release_tag }}
+                  ref: ${{ inputs.release_tag || github.ref }}
                   persist-credentials: false
             - name: Install mise
               uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0

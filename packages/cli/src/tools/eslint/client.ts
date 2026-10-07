@@ -1,12 +1,10 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assetPath } from '#cli/platform/assets.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { ESLINT_WORKER_FILES } from '#cli/config/tools/eslint.ts';
-import { STANDALONE_BUILD } from '#cli/config/platform/assets.ts';
 import type { EslintCoverageRequest } from '#cli/types/parsers/eslint.ts';
 
 /**
@@ -24,9 +22,7 @@ export async function readEslintCoverage(
     using files = openRoot(work);
     files.write('request.json', { bytes: Buffer.from(JSON.stringify(request)), mode: PRIVATE_FILE }, undefined);
     const program = import.meta.url.endsWith('.ts') ? ESLINT_WORKER_FILES.source : ESLINT_WORKER_FILES.bundle;
-    const worker = STANDALONE_BUILD
-        ? assetPath(ESLINT_WORKER_FILES.bundle)
-        : fileURLToPath(new URL(program, import.meta.url));
+    const worker = fileURLToPath(new URL(program, import.meta.url));
     const result = await run(['node', worker, join(work, 'request.json'), join(work, 'result.json')]);
     if (result.code !== 0)
         throw new Error(

@@ -4,8 +4,23 @@ title: Naming
 
 # Naming
 
-Principles, vocabulary, functions, and booleans. Naming Files covers casing across languages,
-files and directories, boundaries and external names, and tests.
+Principles, vocabulary, casing across languages, functions, and booleans. Naming Files covers
+files and directories, and boundaries and external names.
+
+## Casing across languages
+
+<!-- level: all -->
+
+Each language naming file states its own case table. These decisions hold across every language so
+the same concept reads the same way at every boundary.
+
+| Concern               | Rule                                                                                                                                                                                                                                                                                                                          |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Acronyms              | Follow the language: TypeScript, JavaScript treat them as words (`parseHttpUrl`, `userId`); Swift keeps uppercase initialisms (`avatarURL`, `userID`, `apiClient` at the start of a name); Python, SQL, Bash lowercase them inside snake_case (`http_url`, `user_id`). A platform name keeps its spelling (`XMLHttpRequest`). |
+| Directories           | kebab-case for TypeScript, JavaScript, Bash, HTML, CSS, and static sites; snake_case for Python packages; PascalCase for Swift directories, which mirror type names.                                                                                                                                                          |
+| On the wire           | Preserve existing external contracts. For project-owned contracts, use camelCase JSON fields, kebab-case URL segments.                                                                                                                                                                                                        |
+| Environment variables | `UPPER_SNAKE_CASE`, named by the external contract. No application prefix is required; platform-owned names are kept verbatim.                                                                                                                                                                                                |
+| Constants             | Module-level constants bound to a literal or a frozen object are `UPPER_SNAKE_CASE` in TypeScript, JavaScript, Python, and Bash, and lowerCamelCase in Swift.                                                                                                                                                                 |
 
 ## Authority
 

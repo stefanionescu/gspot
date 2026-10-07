@@ -1,12 +1,11 @@
 import { z } from 'zod';
 import { namingLists } from '#cli/parsers/schema/naming.ts';
-import { relativePath } from '#cli/parsers/schema/paths.ts';
 import { outputSchema } from '#cli/parsers/schema/output.ts';
-import { agentRulesSchema } from '#cli/parsers/schema/agent-rules.ts';
-import { reasoned, namingCategorySchema } from '#cli/policy/schema/fields.ts';
+import { agentRulesSchema } from '#cli/policy/schema/agent-rules.ts';
 import { toolsSchema, licenseSettingsSchema } from '#cli/policy/schema/tools.ts';
 import { configurationSettingSchemas } from '#cli/policy/schema/configurations.ts';
 import { vendoredSchema, generatedSchema } from '#cli/parsers/schema/inventory.ts';
+import { reasoned, relativePath, namingCategorySchema } from '#cli/policy/schema/fields.ts';
 import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
 import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN, DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
 import { levelSchema, runnerSchema, numberSettingSchema, operatingSystemSchema } from '#cli/parsers/schema/settings.ts';

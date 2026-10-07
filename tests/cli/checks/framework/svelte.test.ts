@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { chmodSync } from 'node:fs';
-import { toolPin } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildEngineInput } from '#tests/harness/input.ts';

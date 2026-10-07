@@ -1,8 +1,8 @@
-import { toolPin } from '#cli/tools/pins.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { join, toNamespacedPath } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';

@@ -38,7 +38,7 @@ async function prepareFormatterConsumer(installation: Consumer, release: Publish
         scripts: { test: 'authored-command' },
     });
     writeFileSync(join(toolConsumer, 'package.json'), authoredPackage);
-    writeFileSync(join(toolConsumer, '.npmrc'), `registry=${release.registry.url}\n`);
+    writeFileSync(join(toolConsumer, '.npmrc'), `@gspothq:registry=${release.registry.url}/\n`);
     writeFileSync(join(toolConsumer, 'source.js'), 'export const greeting="hello";');
     // A mise file makes mise the runner init takes.
     writeFileSync(join(toolConsumer, 'mise.toml'), '');

@@ -1,4 +1,4 @@
-import { npmPins } from '#cli/tools/pins.ts';
+import { npmPins } from '#cli/configurations/pins.ts';
 import { isYarnBerry } from '#cli/parsers/packages.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { YARN_PRIVATE_SETTINGS } from '#cli/config/tools/npm.ts';

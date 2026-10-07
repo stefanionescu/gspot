@@ -17,7 +17,7 @@ use it on its own with Node.js 22 or newer and ESLint 9.38.0 or newer.
 
 ## Status
 
-The plugin is not published on npm yet. Build it from the source checkout using [Contributing](https://github.com/stefanionescu/gspot/blob/main/CONTRIBUTING.md). The following installation applies after publication.
+The plugin is not published on npm yet. The following installation applies after publication.
 
 ## Install
 
@@ -160,7 +160,7 @@ export default [{
 `projectService` provides the type information that `no-trivial-functions` needs to exempt
 methods declared by an interface or base class. That rule is part of `gspot.configs.all`.
 
-The [rule reference](https://gspot.dev/reference/plugin/) lists every
+The [rule reference](https://generativespotting.com/reference/plugin/) lists every
 rule with its options and examples. The package ships ECMAScript and CommonJS modules with
 TypeScript declarations, and `gspot.rules` holds each rule.
 

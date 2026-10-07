@@ -3,7 +3,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { decodeUtf8 } from '#cli/platform/text.ts';
 import { normalizeTables } from '#cli/platform/objects.ts';
-import type { Snapshot } from '#cli/types/platform/root.ts';
+import type { FileCopy } from '#cli/types/platform/root.ts';
 import { blockSpan } from '#cli/platform/managed-blocks.ts';
 import { pruneParents } from '#cli/lifecycle/merge/plan.ts';
 import { isRecorded } from '#cli/lifecycle/ownership/log.ts';
@@ -14,7 +14,7 @@ import { getOnDisk, recordedBlockStart } from '#cli/lifecycle/ownership/plans.ts
 import type { Log, Restoration, OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
 
 // The configuration record whose fields go back, when the file was edited or merged into an authored file.
-function restorableRecord(existing: OwnershipEntry, current: Snapshot | undefined): MergeRecord | undefined {
+function restorableRecord(existing: OwnershipEntry, current: FileCopy | undefined): MergeRecord | undefined {
     const { configuration } = existing;
     if (current === undefined || configuration === undefined) return undefined;
     const applies = configuration.edited || !configuration.created || !isRecorded(current, existing.installed);
@@ -22,7 +22,7 @@ function restorableRecord(existing: OwnershipEntry, current: Snapshot | undefine
 }
 
 // Puts the original values back into the merged fields, when the installed values are still in place.
-function restoreFields(path: string, current: Snapshot, configuration: MergeRecord): Snapshot | undefined {
+function restoreFields(path: string, current: FileCopy, configuration: MergeRecord): FileCopy | undefined {
     if (decodeUtf8(current.bytes) === undefined) return undefined;
     const document = openMergedDocument(path, current, configuration.format);
     for (const field of configuration.fields) {
@@ -37,7 +37,7 @@ function restoreFields(path: string, current: Snapshot, configuration: MergeReco
 // created is deleted when nothing else was written to it.
 function restoreBlock(
     path: string,
-    current: Snapshot,
+    current: FileCopy,
     block: NonNullable<OwnershipEntry['block']>,
 ): Restoration | undefined {
     const text = decodeUtf8(current.bytes);
@@ -52,14 +52,14 @@ function restoreBlock(
 
 // What giving back a whole file writes: an adopted file stays as it is, any other is deleted. Only gspot writes under
 // `.gspot`, so a file adopted there is generated output and goes like any other.
-function fileRestoration(existing: OwnershipEntry, current: Snapshot | undefined): Restoration | undefined {
+function fileRestoration(existing: OwnershipEntry, current: FileCopy | undefined): Restoration | undefined {
     if (current !== undefined && !isRecorded(current, existing.installed)) return undefined;
     const isKept = existing.adopted === true && current !== undefined && !existing.path.startsWith(`${DOT_GSPOT}/`);
     return isKept ? { next: current } : {};
 }
 
 // What a restoration writes, {} for a removal, or undefined when the file must be preserved.
-function getRestoration(existing: OwnershipEntry, current: Snapshot | undefined): Restoration | undefined {
+function getRestoration(existing: OwnershipEntry, current: FileCopy | undefined): Restoration | undefined {
     const record = restorableRecord(existing, current);
     if (current !== undefined && record !== undefined) {
         const next = restoreFields(existing.path, current, record);

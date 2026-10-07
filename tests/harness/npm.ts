@@ -1,18 +1,19 @@
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { collectPins } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
+import { collectPins } from '#cli/configurations/pins.ts';
 import { packageLockFile } from '#cli/parsers/packages.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { createPackageRegistry } from '#registry/packages.ts';
 import type { LockName } from '#cli/types/parsers/lockfiles.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/output.ts';
+import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
+import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
 import { statSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import { RUNNER_POLICY, NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
@@ -45,7 +46,7 @@ async function writePackageProject(
     await createFileTree(root, {
         [projectPath]: rootPackage,
         ...(projectPath === 'package.json' ? { 'pnpm-workspace.yaml': 'packages:\n  - "**"\n' } : {}),
-        '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${registry.token}\n`,
+        '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${PACKAGE_REGISTRY_TOKEN}\n`,
         'gspot.toml': buildPolicy(['format'], {
             tables: RUNNER_POLICY[runner] + NO_AGENT_RULES + ignoredChecks,
             level: 'recommended',
@@ -54,7 +55,7 @@ async function writePackageProject(
     });
     const yarnConfiguration =
         installer === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2
-            ? `npmRegistryServer: "${registry.url}"\nnpmAuthToken: "${registry.token}"\nnpmAlwaysAuth: true\nunsafeHttpWhitelist: ["127.0.0.1"]\n`
+            ? `npmRegistryServer: "${registry.url}"\nnpmAuthToken: "${PACKAGE_REGISTRY_TOKEN}"\nnpmAlwaysAuth: true\nunsafeHttpWhitelist: ["127.0.0.1"]\n`
             : undefined;
     if (yarnConfiguration !== undefined) writeFileSync(join(root, '.yarnrc.yml'), yarnConfiguration, { mode: 0o600 });
     const initialized = await runTestCommand(['git', 'init', '--quiet'], { cwd: root });
@@ -104,9 +105,8 @@ export async function createPackageProject(
         const artifacts = join(directory.path, 'artifacts');
         mkdirSync(artifacts);
         const registry = resources.use(
-            await createPackageRegistry(
-                artifacts,
-                [
+            await createPackageRegistry(artifacts, {
+                declarations: [
                     {
                         name: prettierManifest.name,
                         source: dirname(fileURLToPath(import.meta.resolve('prettier/package.json'))),
@@ -115,8 +115,9 @@ export async function createPackageProject(
                     },
                     ...(runner === 'none' ? [EDITORCONFIG_PACKAGE] : []),
                 ],
-                runTestCommand,
-            ),
+                execute: runTestCommand,
+                token: PACKAGE_REGISTRY_TOKEN,
+            }),
         );
         const previous = Object.fromEntries(
             ['BUN_INSTALL_CACHE_DIR', 'YARN_CACHE_FOLDER', 'YARN_GLOBAL_FOLDER'].map((name) => [

@@ -1,10 +1,10 @@
 import { join, posix, dirname } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import { copyFiles } from '#cli/execution/copy/files.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
-import { createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { STALE_LOCK_DIAGNOSTICS, LOCKFILE_DIAGNOSTIC_LINES } from '#cli/config/checks/general/dependencies.ts';
 
@@ -39,7 +39,7 @@ function lockfileRefusal(command: string[], result: SpawnResult): string {
 export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     // Package managers can write installation metadata even when they refuse a frozen lock.
-    using workspace = createFileWorkspace(
+    using workspace = copyFiles(
         input.root,
         input.files.map((file) => file.path),
     );

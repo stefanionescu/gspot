@@ -2,9 +2,9 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import { npmPins } from '#cli/tools/pins.ts';
 import { format, resolveConfig } from 'prettier';
 import { assetPath } from '#cli/platform/assets.ts';
+import { npmPins } from '#cli/configurations/pins.ts';
 import { JSON_INDENT } from '#cli/config/generation/templates.ts';
 import { readInstalledNpmPackage } from '#automation/parsers/npm.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

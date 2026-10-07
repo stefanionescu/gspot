@@ -4,7 +4,7 @@ import type { Replaced } from '#cli/types/commands/init.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
 
-// Captures files selected for removal. Retained authored content has no mutation snapshot.
+// Captures files selected for removal. Retained authored content has no mutation copy.
 function captureOwned(root: string, owned: ToolFile[], replaced: Replaced): void {
     using files = openRoot(root);
     for (const path of new Set(owned.map((entry) => entry.path))) {

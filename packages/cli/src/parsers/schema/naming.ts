@@ -16,8 +16,6 @@ const reservedTerm = z.strictObject({
         .meta({ description: 'Identifier categories where the term is permitted, such as properties or directories.' }),
 });
 
-const groupReason = z.strictObject({ group: z.string(), reason: z.string().optional() });
-
 const fixedKeyEntry = z.strictObject({ file: z.string(), names: z.array(z.string()), reason: z.string().optional() });
 
 let shipped: NamingTerms | undefined;
@@ -41,7 +39,6 @@ export const namingLists = z.object({
     banned: z.array(z.string()).default([]),
     allowed: z.array(namedReason).default([]),
     reserved: z.array(reservedTerm).default([]),
-    groups_off: z.array(groupReason).default([]),
     fixed_keys: z.array(fixedKeyEntry).default([]),
     paths: z.array(namingRuleSchema).default([]),
 });
@@ -52,7 +49,7 @@ export const shippedNamingSchema = z.strictObject({
     matching: z.strictObject({ whole_parts: z.boolean(), case_insensitive: z.boolean() }),
     allow_digits: z.boolean(),
     allow_repeated_words: z.boolean(),
-    groups: z.record(z.string(), z.strictObject({ removable: z.boolean(), terms: z.array(z.string()) })),
+    groups: z.record(z.string(), z.strictObject({ terms: z.array(z.string()) })),
     reserved: z.array(reservedTerm),
     allowed: z.array(z.string()),
     languages: z.record(

@@ -6,7 +6,7 @@ import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
-import type { Snapshot } from '#cli/types/platform/root.ts';
+import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
@@ -23,7 +23,7 @@ import type { Written, InitPrepared, RetirementResult } from '#cli/types/command
 function retireReplaced(
     log: Log,
     removed: InitPrepared['removed'],
-    read: ReadonlyMap<string, Snapshot | undefined>,
+    read: ReadonlyMap<string, FileCopy | undefined>,
 ): RetirementResult {
     const result: RetirementResult = { removed: [], preserved: [] };
     const plans = [];
@@ -49,7 +49,7 @@ function retireReplaced(
 }
 
 // Refuses writes when an input changed after init read it.
-function assertReadUnchanged(log: Log, read: ReadonlyMap<string, Snapshot | undefined>): void {
+function assertReadUnchanged(log: Log, read: ReadonlyMap<string, FileCopy | undefined>): void {
     for (const [path, original] of read)
         if (!isDeepStrictEqual(log.files.read(path), original))
             throw new GspotError('policy', [

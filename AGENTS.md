@@ -13,6 +13,8 @@ Repository:
 - `.gspot/rules/general/engineering/agent/GIT.md`
 - `.gspot/rules/general/engineering/agent/PLANNING.md`
 - `.gspot/rules/general/engineering/agent/SUPPRESSIONS.md`
+- `.gspot/rules/general/engineering/agent/TALKING.md`
+- `.gspot/rules/general/engineering/agent/TASKS.md`
 - `.gspot/rules/general/engineering/agent/WORKING.md`
 - `.gspot/rules/general/engineering/code/ACCESSIBILITY.md`
 - `.gspot/rules/general/engineering/code/CLI.md`
@@ -31,11 +33,9 @@ Repository:
 - `.gspot/rules/general/engineering/prose/DOCS-CONTENT.md`
 - `.gspot/rules/general/engineering/prose/DOCS-FORMAT.md`
 - `.gspot/rules/general/engineering/prose/DOCS-MEDIA.md`
-- `.gspot/rules/general/engineering/prose/DOCS-REVIEW.md`
 - `.gspot/rules/general/engineering/prose/DOCS-SURFACES.md`
 - `.gspot/rules/general/engineering/prose/DOCS.md`
 - `.gspot/rules/general/engineering/prose/WRITING.md`
-- `.gspot/rules/general/files/TASKS.md`
 - `.gspot/rules/general/files/YAML.md`
 
 Languages:
@@ -48,6 +48,12 @@ Languages:
 - `.gspot/rules/language/typescript/TYPESCRIPT.md`
 - `.gspot/rules/language/css/CSS.md`
 - `.gspot/rules/language/css/NAMING.md`
+- `.gspot/rules/language/python/DESIGN.md`
+- `.gspot/rules/language/python/FLOW.md`
+- `.gspot/rules/language/python/NAMING.md`
+- `.gspot/rules/language/python/PACKAGING.md`
+- `.gspot/rules/language/python/PYTHON.md`
+- `.gspot/rules/language/python/TYPING.md`
 
 Tools:
 
@@ -77,6 +83,12 @@ Run `gspot check --staged` before committing. Change policy with `gspot set` or 
 Do not use subagents or parallel agents unless asked in the conversation.
 
 This repository keeps module-level types in each package's `types/` folder and static constants in its `config/` folder, grouped by behavior. This applies to CLI source, the ESLint plugin, test support, and test data. Shipped configuration assets live under `packages/cli/configurations/`; their parsers remain under source parsing owners. These folder choices are specific to this repository and are not required of consumer repositories. Inline redundant forwarding functions; retain required callbacks and shared calculations with real callers.
+
+A check that runs a tool uses the tool name, so readers know which rules and suppression syntax apply. A check that gspot implements uses the name of what it checks. Both use the configuration name as their prefix and the names in `findings/review/glossary.md`.
+
+Test `config/` and `types/` folders mirror the tests that use them. Flatten a one-file folder into its parent. Keep text shared by two or more test files in `config/samples/`.
+
+Schemas live in `parsers/schema/` for file formats and small shared contracts, `policy/schema/` for `gspot.toml` tables including `[agent_rules]`, and `packages/cli/src/lifecycle/ownership/schema.ts` for the ownership log.
 
 Owner decisions are recorded in `findings/progress.json`. Read them before you change how gspot ships, installs, or is configured, and never reverse one inside unrelated work. These decisions are final:
 

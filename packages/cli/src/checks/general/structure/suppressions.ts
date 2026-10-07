@@ -1,11 +1,11 @@
 // Validate suppression comments against the repository reason policy.
-import { toolName } from '#cli/tools/pins.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
+import { toolName } from '#cli/configurations/pins.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { isReasonAccepted } from '#cli/policy/problems/reasons.ts';
+import { isReasonAccepted } from '#cli/policy/errors/reasons.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';

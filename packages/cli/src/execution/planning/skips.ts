@@ -1,7 +1,7 @@
 // Why a planned check does not run: an ignore, a waiting setting, a rule, the platform, or a flag.
 import ignore from 'ignore';
-import { toolName } from '#cli/tools/pins.ts';
 import { readText } from '#cli/platform/source.ts';
+import { toolName } from '#cli/configurations/pins.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { PlannedCheck } from '#cli/types/execution/runtime.ts';

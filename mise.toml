@@ -1,6 +1,6 @@
 [settings]
 # Repository tasks run the CLI source, so mise does not install the published package.
-disable_tools = ["github:stefanionescu/gspot"]
+disable_tools = ["npm:@gspothq/cli"]
 
 # `mise run` does not install missing tools. Run `mise install` first.
 [settings.task]
@@ -50,18 +50,9 @@ run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p packages/cli/
 description = "Build the gspot package into packages/cli/dist, with its grammars."
 run = "bun packages/cli/scripts/build.ts"
 
-[tasks."build:binaries"]
-description = "Compile standalone release archives for Linux, macOS, and Windows."
-run = "bun scripts/binaries.ts"
-
-[tasks."test:binary"]
-description = "Test the native standalone archive without Node.js or Bun on PATH."
-dir = "{{config_root}}/tests"
-run = "bun test --timeout 900000 ./packages/binaries.test.ts"
-
 [tasks."build:plugin"]
 description = "Build the standalone ESLint plugin and include its license."
-run = "bun scripts/build.ts"
+run = "bun packages/eslint-plugin/build.ts"
 
 [tasks.test]
 description = "Run deterministic CLI and plugin tests."
@@ -74,9 +65,9 @@ dir = "{{config_root}}/tests"
 run = "bun {{config_root}}/scripts/plugin.ts test"
 
 [tasks."test:package"]
-description = "Build the CLI and publish it with the built plugin to an isolated registry, then test consumers."
+description = "Build and pack the CLI with the plugin, then test installed consumers."
 dir = "{{config_root}}/tests"
-run = "bun {{config_root}}/scripts/package.ts"
+run = "bun {{config_root}}/scripts/plugin.ts package"
 
 [tasks."generate:docs"]
 description = "Generate Astro content and TypeScript metadata."

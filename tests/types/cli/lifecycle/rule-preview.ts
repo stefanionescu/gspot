@@ -1,4 +1,4 @@
-import type { Level } from '#cli/types/rules.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import type { Drift } from '#cli/types/lifecycle/output.ts';
 
 /** One public policy transition and its expected native rule changes. */

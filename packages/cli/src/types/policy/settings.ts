@@ -1,9 +1,9 @@
 import type { z } from 'zod';
-import type { RuleSettings } from '#cli/types/rules.ts';
 import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { KeyPath } from '#cli/types/platform/document.ts';
 import type { namingLists } from '#cli/parsers/schema/naming.ts';
 import type { namingCategorySchema } from '#cli/policy/schema/fields.ts';
+import type { agentRulesSchema } from '#cli/policy/schema/agent-rules.ts';
 import type { scopeSchema, policySchema } from '#cli/policy/schema/policy.ts';
 import type { Manifest, CheckSpec, SettingSpec } from '#cli/types/configurations.ts';
 import type { ScopeEntry, FileDeclaration } from '#cli/types/repository/inventory.ts';
@@ -182,3 +182,9 @@ export type ReasonedSchema<T extends z.ZodType> = z.ZodUnion<
 export type PathAllowance = NonNullable<NonNullable<RawPolicy['structure']>['lone_files_allowed']>[number];
 /** Named entries accepted by a configuration-specific policy, with their authored reason. */
 export type NameAllowance = { names?: string[]; reason?: string };
+
+/** The [agent_rules] table of gspot.toml: whether and where the rules install, and which to leave out. */
+export type RuleSettings = z.output<typeof agentRulesSchema>;
+
+/** An invalid rule exclusion at its position in the authored list. */
+export type RuleExclusionError = { index: number; message: string };

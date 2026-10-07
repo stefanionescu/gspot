@@ -1,14 +1,14 @@
-// Checking every revision a push sends, each in its own snapshot, with one report for the push.
+// Checking every revision a push sends, each in its own copy, with one report for the push.
 import { GspotError } from '#cli/platform/errors.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
 import type { CommandResult } from '#cli/types/output.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import { selectPush } from '#cli/repository/revisions/push.ts';
-import { checkOutRevision } from '#cli/execution/snapshot/revision.ts';
+import { checkOutRevision } from '#cli/execution/copy/revision.ts';
 import type { PushRevision, PushSelection } from '#cli/types/repository/revisions.ts';
 import type { Checked, PushReport, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
 
-// Checks one pushed commit in a snapshot of it, or undefined when the run was canceled.
+// Checks one pushed commit in a copy of it, or undefined when the run was canceled.
 async function checkRevision(
     root: string,
     options: CheckOptions,
@@ -70,7 +70,7 @@ export function assertPushOptions(options: CheckOptions): void {
 }
 
 /**
- * Checks the revisions Git's pre-push protocol names, each in an exact snapshot.
+ * Checks the revisions Git's pre-push protocol names, each in an exact copy.
  * @param root the repository root.
  * @param options the parsed flags, with the pre-push input.
  * @param signal cancellation for the run.

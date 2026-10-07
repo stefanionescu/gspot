@@ -2,12 +2,11 @@
 
 import semver from 'semver';
 import { join, relative } from 'node:path';
-import { misePin } from '#cli/tools/mise.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { parseVersionOutput } from '#cli/parsers/tool/version.ts';
-import { privateToolInstallation } from '#cli/tools/installation.ts';
+import { misePin, toolProjectPackage } from '#cli/configurations/pins.ts';
 import type { ParsedToolVersion } from '#cli/types/parsers/tool-version.ts';
 import { HOST_HINTS, VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
@@ -35,7 +34,7 @@ import type {
  * @returns the hint
  */
 function installHint(tool: ToolPin, runner?: string): string {
-    if (privateToolInstallation(tool, runner) !== undefined || (tool.system !== true && runner === 'mise'))
+    if (toolProjectPackage(tool, runner) !== undefined || (tool.system !== true && runner === 'mise'))
         return 'Run: gspot install';
     const [command] = OPERATING_SYSTEMS.filter(({ node }) => node === process.platform).flatMap((system) =>
         system.installers.flatMap(({ installer, command }) => {
@@ -71,7 +70,7 @@ function libraryInspection(root: string, tool: ToolPin, path: string, found: str
     return { name: tool.name, state, path: join(root, path), found, hint, floor, ...want };
 }
 
-// Read library versions from the private installation used by generated configurations.
+// Read library versions from the tool project installation used by generated configurations.
 function inspectLibrary(root: string, tool: ToolPin): ToolInspection {
     using files = openRoot(root);
     const hint = installHint(tool);
@@ -126,7 +125,7 @@ function inspectProjectExecutable(
     runner?: string,
 ): ToolInspection | undefined {
     if (tool.system !== true) return undefined;
-    const installation = privateToolInstallation(tool, runner);
+    const installation = toolProjectPackage(tool, runner);
     if (installation === undefined) return undefined;
     const { root } = context;
     const hint = installHint(tool, runner);
@@ -164,7 +163,7 @@ function inspectExecutable(context: ToolSearch, cwd: string, tool: ToolPin, runn
     const { root } = context;
     const isExternal = tool.system === true || (runner === 'mise' && tool.installers['mise'] !== undefined);
     const searchFolders = isExternal ? [cwd, root] : [join(root, DOT_GSPOT), cwd, root];
-    const installation = privateToolInstallation(tool, runner);
+    const installation = toolProjectPackage(tool, runner);
     const kind = installation?.kind;
     const hint = installHint(tool, runner);
     const [path] = locateCandidates(root, tool.name, {
@@ -177,18 +176,18 @@ function inspectExecutable(context: ToolSearch, cwd: string, tool: ToolPin, runn
     return executableInspection(inspected);
 }
 
-// Only the selected private installation can make its tool unavailable while installation is pending.
+// Only the selected tool project installation can make its tool unavailable while installation is pending.
 function isInstallationPending(
     search: Pick<ToolSearch, 'root' | 'installedRoot' | 'getPendingInstallations'>,
     tool: ToolPin,
     runner?: string,
 ): boolean {
-    const installation = privateToolInstallation(tool, runner);
+    const installation = toolProjectPackage(tool, runner);
     const pending = search.getPendingInstallations?.(search.installedRoot ?? search.root);
     return installation !== undefined && pending?.includes(installation.kind) === true;
 }
 
-// Incomplete private installations block their tools, including a compiler selected after project lookup.
+// Incomplete tool project installations block their tools, including a compiler selected after project lookup.
 function pendingInspection(tool: ToolPin): ToolInspection {
     return {
         name: tool.name,

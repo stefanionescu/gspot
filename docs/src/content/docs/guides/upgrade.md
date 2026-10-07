@@ -18,8 +18,8 @@ Use the equivalent exact install with pnpm, Yarn, or Bun. With a global installa
 For mise, first run the new version explicitly so the old repository pin does not choose the old executable:
 
 ```shell
-mise exec github:stefanionescu/gspot@0.1.0 -- gspot apply --dry-run
-mise exec github:stefanionescu/gspot@0.1.0 -- gspot apply
+mise exec npm:@gspothq/cli@0.1.0 -- gspot apply --dry-run
+mise exec npm:@gspothq/cli@0.1.0 -- gspot apply
 ```
 
 Replace the example version with the release you reviewed. `apply` updates `.gspot/version` and the generated mise pin from the running CLI.

@@ -1,8 +1,8 @@
 // Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
-import { toolName } from '#cli/tools/pins.ts';
 import { kindOf } from '#cli/repository/kind.ts';
 import { tagEntry } from '#cli/repository/tags.ts';
 import { isRecord } from '#cli/platform/objects.ts';
+import { toolName } from '#cli/configurations/pins.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { PlannedCheck } from '#cli/types/execution/runtime.ts';

@@ -3,7 +3,7 @@
 min_version = "2026.8.8"
 
 [tools]
-"github:stefanionescu/gspot" = {version = "0.1.0", asset_pattern = "gspot-{{ version }}-{{ os(macos=\"darwin\") }}-{{ arch() }}.tar.gz", strip_components = 1}
+"npm:@gspothq/cli" = "0.1.0"
 actionlint = "1.7.12"
 "github:github/codeql-cli-binaries" = "v2.24.3"
 "npm:@commitlint/cli" = "21.2.2"

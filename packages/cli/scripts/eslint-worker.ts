@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { ESLINT_WORKER_FILES } from '#cli/config/tools/eslint.ts';
 
 /**
- * Bundle the Node worker and its static dependencies for npm and standalone delivery.
+ * Bundle the Node worker and its static dependencies for npm delivery.
  * @param destination the folder receiving worker.js
  */
 export async function buildEslintWorker(destination: string): Promise<void> {

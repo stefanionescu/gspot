@@ -3,10 +3,7 @@ title: Requirements
 description: Install Git and the runtimes needed by your applicable checks.
 ---
 
-Every repository needs Git. The npm CLI requires Node.js 24.2 or newer, or Bun. The source checkout pins its tested runtimes in `mise.toml`.
-
-The standalone archives include the JavaScript runtime for gspot. They still need the runtimes of the checks selected for your repository. See the release assets for the supported operating systems and architectures.
-When ESLint checks apply, install Node.js even if you run gspot from a standalone archive.
+Every repository needs Git. gspot requires Node.js 24.2 or newer, or Bun 1.4.2 or newer, under every runner, including mise.
 
 ## Requirements depend on your files
 
@@ -19,9 +16,9 @@ When ESLint checks apply, install Node.js even if you run gspot from a standalon
 | Native tools, such as ShellCheck, Gitleaks, or typos             | mise, or the exact pinned tools on `PATH`. `gspot doctor` lists missing tools with acquisition commands. |
 | Project commands, such as Jest, Vitest, Next.js, or Swift builds | The project runtime, dependencies, and build tools. These remain your project's dependencies.            |
 
-mise installs the native tool pins gspot writes to `.mise/conf.d/gspot-tools.toml`. Initialization proposes mise when it is available. An explicit runner choice takes precedence. The generated mise configuration requires mise 2026.8.8 or newer. It acquires the standalone CLI archive through the GitHub backend.
+mise installs the native tool pins gspot writes to `.mise/conf.d/gspot-tools.toml`. Initialization proposes mise when it is available. An explicit runner choice takes precedence. The generated mise configuration requires mise 2026.8.8 or newer. It installs the CLI through the npm backend (`npm:@gspothq/cli`).
 
-JavaScript and TypeScript checks use the project's TypeScript compiler when it is installed. If the project has none, gspot prefers its pinned private compiler over a global compiler. Run `gspot install` to install that compiler. An interrupted private installation reports an error; it does not block an available project compiler.
+JavaScript and TypeScript checks use the project's TypeScript compiler when it is installed. If the project has none, gspot prefers its pinned compiler in the tool project over a global compiler. Run `gspot install` to install that compiler. An interrupted tool-project installation reports an error; it does not block an available project compiler.
 
 TypeScript source files or an authored `tsconfig.json` select TypeScript checks. A TypeScript tool dependency or declaration files alone do not. When a scope has no authored configuration, gspot generates a standalone compiler project for its source files and declarations. The project excludes generated files, vendored files, and child scopes. An authored configuration keeps its project settings and receives the strict options required by the selected level.
 

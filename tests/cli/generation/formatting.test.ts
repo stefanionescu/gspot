@@ -178,7 +178,7 @@ const selected = selectConfigurations(policy.configurations, configurationManife
 const { format } = scopeView(knownSettings(selected, policy.level), policy, selected, '');
 
 describe('prettierConfiguration', () => {
-    test('a plugin is loaded from the private installation relative to each configuration file', () => {
+    test('a plugin is loaded from the tool project installation relative to each configuration file', () => {
         expect(
             prettierConfiguration({
                 policy,

@@ -1,8 +1,8 @@
 // A tool config and its pointer exist only where an enabled check consumes the tool.
 import { test, expect } from 'bun:test';
-import { npmPins } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
+import { npmPins } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { configuredChecks } from '#cli/execution/planning/plan.ts';

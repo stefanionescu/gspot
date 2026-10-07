@@ -1,12 +1,12 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
-import { toolPin } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { locateCandidates } from '#cli/tools/locate.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
@@ -151,7 +151,7 @@ test('the tool inspection > color codes around a version are no part of it', asy
     expect(inspection.state).toBe('ok');
 });
 
-test('the tool inspection > a library is found only in its private installation', async () => {
+test('the tool inspection > a library is found only in its tool project installation', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',

@@ -6,13 +6,14 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { createPackageRegistry } from '#registry/packages.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { installPackageProject } from '#cli/tools/npm/project.ts';
 import type { InstalledOutput } from '#cli/types/tools/install.ts';
+import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { rejection, containingAll } from '#tests/harness/expectations.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
+import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
 import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
 import { cpSync, chmodSync, mkdirSync, existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -73,9 +74,8 @@ test('explicit lock refresh installs changed package bytes at the same version a
     const changed = `${original}\nFixture package bytes changed at the same version.\n`;
     writeFileSync(join(changedSource, 'README.md'), changed);
     mkdirSync(join(fixture.artifacts, 'updated-registry'));
-    await using registry = await createPackageRegistry(
-        join(fixture.artifacts, 'updated-registry'),
-        [
+    await using registry = await createPackageRegistry(join(fixture.artifacts, 'updated-registry'), {
+        declarations: [
             {
                 name: prettierManifest.name,
                 source: changedSource,
@@ -83,10 +83,11 @@ test('explicit lock refresh installs changed package bytes at the same version a
                 bin: { prettier: prettierManifest.bin },
             },
         ],
-        runTestCommand,
-    );
+        execute: runTestCommand,
+        token: PACKAGE_REGISTRY_TOKEN,
+    });
     await createFileTree(fixture.root, {
-        '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${registry.token}\n`,
+        '.npmrc': `registry=${registry.url}/\nalways-auth=true\n${registry.url.replace('http:', '')}/:_authToken=${PACKAGE_REGISTRY_TOKEN}\n`,
     });
     const preview = await runGspot(fixture.root, ['install', '--refresh-locks', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);

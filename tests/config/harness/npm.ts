@@ -1,6 +1,8 @@
-import type { RegistryPackage } from '#automation/types/registry.ts';
+import type { RegistryPackage } from '#tests/types/harness/registry.ts';
 // The authored files every package project starts from.
 export const AUTHORED_FILES = {
+    // These fixtures invoke the source launcher, so mise must not install the unpublished CLI.
+    'mise.toml': '[settings]\ndisable_tools = ["npm:@gspothq/cli"]\n',
     'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
     'source.js': 'export const greeting="hello";',
     'node_modules/authored.txt': 'keep project dependencies',

@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { toolPin } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { rmSync, writeFileSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { environmentBin } from '#cli/platform/paths.ts';
 import { openSession } from '#cli/execution/session.ts';
@@ -138,4 +138,25 @@ test('import-linter follows INI precedence and retains separate chains for decor
     expect(findings[1]?.message).toContain('example.other -> example.high (l. 3)');
     expect(command.mock.calls[0]?.[0]).toContain('setup.cfg');
     expect(await Bun.file(join(sandbox.path, 'setup.cfg')).text()).toBe(config);
+});
+
+test('deptry skips a standalone script without a project and rejects malformed project metadata', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['python']),
+        '.gspot/version': `${RUNNING_VERSION}\n`,
+        'main.py': 'value = 1\n',
+    });
+    const command = ['check', '--only', 'python/deptry', '--json'];
+    const absent = await runGspot(sandbox.path, command);
+    expect(absent.code, absent.stdout + absent.stderr).toBe(0);
+    expect((JSON.parse(absent.stdout) as RunReport).checks).toMatchObject([
+        { check: 'python/deptry', status: 'skipped', note: 'This scope has no pyproject.toml for deptry to read.' },
+    ]);
+    writeFileSync(join(sandbox.path, 'pyproject.toml'), '[broken');
+    const malformed = await runGspot(sandbox.path, command);
+    expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
+    expect((JSON.parse(malformed.stdout) as RunReport).checks).toMatchObject([
+        { check: 'python/deptry', status: 'error' },
+    ]);
 });

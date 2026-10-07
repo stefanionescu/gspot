@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { PrivateLockFileName } from '#cli/types/parsers/lockfiles.ts';
+import type { ToolProjectLockfileName } from '#cli/types/parsers/lockfiles.ts';
 
 import type {
     poetryToolSchema,
@@ -42,6 +42,6 @@ export type PoetrySettings = z.infer<typeof poetryToolSchema> | undefined;
 export type ToolProject = {
     installer: PackageInstaller;
     dependencies: z.infer<typeof toolProjectSchema>['devDependencies'];
-    lock: PrivateLockFileName;
+    lock: ToolProjectLockfileName;
     lockPath: string;
 };

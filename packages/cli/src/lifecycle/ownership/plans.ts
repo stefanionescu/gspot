@@ -2,7 +2,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { decodeUtf8 } from '#cli/platform/text.ts';
 import { planMerge } from '#cli/lifecycle/merge/plan.ts';
-import type { Snapshot } from '#cli/types/platform/root.ts';
+import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Planned } from '#cli/types/lifecycle/output.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
@@ -22,7 +22,7 @@ import type {
 } from '#cli/types/lifecycle/ownership.ts';
 
 // An authored file is edited when its current bytes differ from the recorded gspot write.
-function isEdited(existing: OwnershipEntry | undefined, current: Snapshot | undefined): boolean {
+function isEdited(existing: OwnershipEntry | undefined, current: FileCopy | undefined): boolean {
     if (existing === undefined) return false;
     if (current === undefined) return false;
     return !isRecorded(current, existing.installed);
@@ -32,7 +32,7 @@ function isEdited(existing: OwnershipEntry | undefined, current: Snapshot | unde
 function isPreservedReplacement(
     request: ReplacementRequest,
     existing: OwnershipEntry | undefined,
-    current: Snapshot | undefined,
+    current: FileCopy | undefined,
 ): boolean {
     if (current === undefined) return false;
     const installed: Identity = identify(request.next);
@@ -47,9 +47,9 @@ function isPreservedReplacement(
 // The plan that installs the next bytes. A file gspot first records while it already holds them is adopted.
 function planChange(
     path: string,
-    current: Snapshot | undefined,
+    current: FileCopy | undefined,
     existing: OwnershipEntry | undefined,
-    next: Snapshot,
+    next: FileCopy,
     kind: OwnedKind,
 ): Planned & Required<Pick<Planned, 'entry'>> {
     const installed = identify(next);
@@ -77,7 +77,7 @@ function planUpdate(
 // The next text and record for a file whose block is not recorded yet.
 function planInsert(
     text: string,
-    current: Snapshot | undefined,
+    current: FileCopy | undefined,
     span: BlockSpan | undefined,
     context: BlockContext,
     body: string,
@@ -93,7 +93,7 @@ function planInsert(
 // The plan a planned block yields: unchanged when the bytes already stand, otherwise the new record.
 function planBlock(
     path: string,
-    current: Snapshot | undefined,
+    current: FileCopy | undefined,
     existing: OwnershipEntry | undefined,
     planned: PlannedBlock,
 ): Planned {
@@ -110,9 +110,9 @@ function planBlock(
  * @param log the open log
  * @param path the file
  * @param sides the current file, the next bytes, or the record
- * @returns the snapshot, or undefined when the file does not exist
+ * @returns the copy, or undefined when the file does not exist
  */
-export function getOnDisk(log: Log, path: string, ...sides: (Snapshot | Identity | undefined)[]): Snapshot | undefined {
+export function getOnDisk(log: Log, path: string, ...sides: (FileCopy | Identity | undefined)[]): FileCopy | undefined {
     const isLink = sides.some((side) => side?.isLink === true);
     return isLink ? log.files.readKeepingLinks(path) : log.files.read(path);
 }
@@ -208,7 +208,7 @@ export function proposeMerge(
  * @param expected the bytes the caller reviewed, which must still be the file's
  * @returns the plan
  */
-export function proposeRetirement(log: Log, path: string, expected: Snapshot): Planned {
+export function proposeRetirement(log: Log, path: string, expected: FileCopy): Planned {
     const existing = log.entryFor(path);
     const current = log.files.read(path);
     if (!isDeepStrictEqual(current, expected))

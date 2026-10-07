@@ -4,7 +4,7 @@ import { join, posix } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { PORTABLE_LINK_TARGET } from '#cli/config/platform/root.ts';
-import type { Bounds, Proposed, Snapshot, PathFormat } from '#cli/types/platform/root.ts';
+import type { Bounds, FileCopy, Proposed, PathFormat } from '#cli/types/platform/root.ts';
 import { lstatSync, mkdirSync, existsSync, readFileSync, readlinkSync, realpathSync } from 'node:fs';
 import { fileMode, nativeSegments, assertNotPrivate, portableSegments } from '#cli/platform/root/rules.ts';
 
@@ -23,15 +23,15 @@ function preparedDirectory(directory: string): Stats {
     return lstatSync(directory);
 }
 
-// The snapshot of a symbolic link: its target text and its own mode.
-function linkRead(target: string, stat: Stats): Snapshot {
+// The copy of a symbolic link: its target text and its own mode.
+function linkRead(target: string, stat: Stats): FileCopy {
     const bytes = Buffer.from(readlinkSync(target));
     const mode = fileMode({ mode: stat.mode & MODE_BITS, isLink: true });
     return { bytes, mode, isLink: true };
 }
 
-// The snapshot of a regular file, refusing one that changed while it was read.
-function fileRead(target: string, stat: Stats, path: string): Snapshot {
+// The copy of a regular file, refusing one that changed while it was read.
+function fileRead(target: string, stat: Stats, path: string): FileCopy {
     if (!stat.isFile() || stat.nlink !== 1)
         throw new Error(`Lifecycle destination is not a private regular file: ${path}`);
     const bytes = readFileSync(target);
@@ -42,7 +42,7 @@ function fileRead(target: string, stat: Stats, path: string): Snapshot {
 }
 
 // Whether a link's target text is one the lifecycle refuses: not valid UTF-8, empty, absolute, or unsafe.
-function isUnsafeLinkTarget(bounds: Bounds, value: Snapshot, target: string): boolean {
+function isUnsafeLinkTarget(bounds: Bounds, value: FileCopy, target: string): boolean {
     if (!Buffer.from(target).equals(value.bytes) || target === '' || target.startsWith('/')) return true;
     return bounds.pathFormat === 'portable' ? PORTABLE_LINK_TARGET.test(target) : target.includes('\0');
 }
@@ -106,13 +106,13 @@ export function preparedPath(bounds: Bounds, path: string): string {
 }
 
 /**
- * The snapshot at a path, or undefined when nothing is there.
+ * The copy at a path, or undefined when nothing is there.
  * @param bounds the root
  * @param path the root-relative path
  * @param allowLink whether a symbolic link is read as itself instead of refused
- * @returns the snapshot
+ * @returns the copy
  */
-export function readEntry(bounds: Bounds, path: string, allowLink: boolean): Snapshot | undefined {
+export function readEntry(bounds: Bounds, path: string, allowLink: boolean): FileCopy | undefined {
     try {
         const target = checkedPath(bounds, path);
         const stat = lstatSync(target);
@@ -125,15 +125,15 @@ export function readEntry(bounds: Bounds, path: string, allowLink: boolean): Sna
 }
 
 /**
- * Checks a snapshot's path and, for a link, its target, which must be a normalized relative path to a regular file
+ * Checks a copy's path and, for a link, its target, which must be a normalized relative path to a regular file
  * inside the root.
  * @param bounds the root.
  * @param path the root-relative path.
- * @param value the snapshot.
+ * @param value the copy.
  * @param proposed files about to be written, consulted before the disk for a link's destination.
  * @returns the link target text, or undefined for a regular file.
  */
-export function validateRead(bounds: Bounds, path: string, value: Snapshot, proposed?: Proposed): string | undefined {
+export function validateRead(bounds: Bounds, path: string, value: FileCopy, proposed?: Proposed): string | undefined {
     bounds.partsOf(path);
     if (!value.isLink) return undefined;
     const target = value.bytes.toString('utf8');

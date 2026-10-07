@@ -12,6 +12,6 @@ export type PythonInstallation = {
 /** The authored file receiving an isolated uv index and the selected tool runner. */
 export type PythonInstallationOptions = {
     indexFile: 'pyproject.toml' | 'uv.toml';
-    indexUrl: string;
+    indexUrl?: string;
     runner: 'mise' | 'none';
 };

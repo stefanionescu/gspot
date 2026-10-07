@@ -171,7 +171,6 @@ example = "A function docstring describing parameter `name` when its signature a
 level = "recommended"
 stage = "commit"
 cwd = "scope"
-nested_config_file = "pyproject.toml"
 tool = "pydoclint"
 files = {extensions = [".py"]}
 output = {format = "grouped", file_pattern = "^(?<file>\\S.*\\.py)$", pattern = "^\\s+(?<line>\\d+): (?<rule>DOC\\d+): (?<message>.*)$"}

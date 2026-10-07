@@ -28,6 +28,23 @@ test('wildcard examples stay intact while emphasized literal paths remain checke
     ]);
 });
 
+test('literal gitignore paths resolve while missing paths remain findings', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'a.md': 'Build `output/report.json` and `app/cache`.\nSee `app/absent.ts` and `app/private.ts`.\n',
+        '.gitignore': '/output/report.json\n',
+        'app/.gitignore': 'cache/\n*.ts\n!private.ts\n',
+    });
+    await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
+    const found = stalePaths(
+        buildEngineInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
+    );
+    expect(found.map(({ line, message: description }) => [line, description])).toStrictEqual([
+        [2, 'app/absent.ts names no tracked file or folder.'],
+        [2, 'app/private.ts names no tracked file or folder.'],
+    ]);
+});
+
 test('custom check identifiers resolve while undefined checks remain findings', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

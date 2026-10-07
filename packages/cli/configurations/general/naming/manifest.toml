@@ -61,13 +61,6 @@ default = []
 summary = "Terms restricted to identifier categories, such as properties or directories."
 
 [[setting]]
-name = "naming.groups_off"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Removable term groups this repository drops, each with a reason. The marketing and defensive groups never drop."
-
-[[setting]]
 name = "naming.fixed_keys"
 type = "list"
 direction = "loosening"

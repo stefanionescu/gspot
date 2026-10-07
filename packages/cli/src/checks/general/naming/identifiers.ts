@@ -4,7 +4,6 @@ import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { isOwned } from '#cli/configurations/owners.ts';
 import { CASE_NAMES } from '#cli/parsers/naming/names.ts';
-import { namingTerms } from '#cli/parsers/schema/naming.ts';
 import { sqlIdentifiers } from '#cli/parsers/naming/sql.ts';
 import { bashIdentifiers } from '#cli/parsers/naming/bash.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
@@ -111,15 +110,10 @@ async function declaredNames(input: EngineInput): Promise<FileNames[]> {
     return files;
 }
 
-// Reports root and scope entries in gspot.toml that match no file, name, or removable group.
+// Reports root and scope entries in gspot.toml that match no file or name.
 async function policyFindings(input: EngineInput): Promise<Finding[]> {
     const policy = input.policyFiles.policy;
     const files = await declaredNames(input);
-    const removable = new Set(
-        Object.entries(namingTerms().groups)
-            .filter(([, group]) => group.removable)
-            .map(([name]) => name),
-    );
     const layers = everyTable(policy).flatMap(({ table, scope = '' }) =>
         table.naming === undefined ? [] : [{ scope, naming: table.naming }],
     );
@@ -142,10 +136,7 @@ async function policyFindings(input: EngineInput): Promise<Finding[]> {
                 (name) =>
                     `A [[naming.paths]] entry names the case "${name}", which is not one of ${CASE_NAMES.join(', ')}.`,
             );
-        const groups = naming.groups_off
-            .filter((entry) => !removable.has(entry.group))
-            .map((entry) => `naming.groups_off names "${entry.group}", which is not a removable group.`);
-        return [...unused, ...dead, ...groups, ...cases].map((text) =>
+        return [...unused, ...dead, ...cases].map((text) =>
             findingAt(input, { file: POLICY_FILE }, 'stale-entry', scope === '' ? text : `${text} (scope ${scope})`),
         );
     });

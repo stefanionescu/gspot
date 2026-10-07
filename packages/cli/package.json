@@ -12,7 +12,7 @@
         "url": "git+https://github.com/stefanionescu/gspot.git",
         "directory": "packages/cli"
     },
-    "homepage": "https://gspot.dev",
+    "homepage": "https://generativespotting.com",
     "keywords": [
         "lint",
         "linter",

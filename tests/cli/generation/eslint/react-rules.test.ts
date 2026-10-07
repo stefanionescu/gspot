@@ -1,8 +1,8 @@
 // The React and React Native rules the generated ESLint configuration enables, each seen on a test file.
 import { test, expect } from 'bun:test';
-import type { Level } from '#cli/types/rules.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { FileRuleFinding } from '#tests/types/generation/findings.ts';
 import { WEB_TSCONFIG, NATIVE_TSCONFIG, WEB_DEPENDENCIES, EXPO_DEPENDENCIES } from '#tests/config/samples/react.ts';

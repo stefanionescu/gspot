@@ -6,7 +6,7 @@ import { readSource } from '#cli/platform/source.ts';
 import { contentDigest } from '#cli/platform/text.ts';
 import { cacheDirectory } from '#cli/platform/environment.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
-import type { Root, Snapshot } from '#cli/types/platform/root.ts';
+import type { Root, FileCopy } from '#cli/types/platform/root.ts';
 import type { EngineInput } from '#cli/types/execution/runtime.ts';
 import { statSync, lstatSync, mkdirSync, realpathSync } from 'node:fs';
 import { MODE_BITS, PRIVATE_DIRECTORY } from '#cli/config/platform/modes.ts';
@@ -28,10 +28,10 @@ function assertBuildLinksInside(folder: string, files: Root): void {
     });
 }
 
-// The sources to build, each as the snapshot it must have under source/ in the build folder.
-function readBuildSources(root: string, paths: string[]): Map<string, Snapshot> {
+// The sources to build, each as the copy it must have under source/ in the build folder.
+function readBuildSources(root: string, paths: string[]): Map<string, FileCopy> {
     using source = openRoot(root, 'native');
-    const wantedFiles = new Map<string, Snapshot>();
+    const wantedFiles = new Map<string, FileCopy>();
     for (const file of paths) {
         const mode = statSync(source.realPath(file)).mode & MODE_BITS;
         wantedFiles.set(`${BUILD_SOURCE_DIRECTORY}/${file}`, { bytes: readSource(root, file), mode });
@@ -40,7 +40,7 @@ function readBuildSources(root: string, paths: string[]): Map<string, Snapshot> 
 }
 
 // Removes unwanted files and then their containing folders, deepest first.
-function pruneSources(folder: string, files: Root, wantedFiles: Map<string, Snapshot>): void {
+function pruneSources(folder: string, files: Root, wantedFiles: Map<string, FileCopy>): void {
     const wantedFolders = new Set(
         [...wantedFiles.keys()].flatMap((path) => {
             const parts = path.split('/');

@@ -6,7 +6,7 @@ import { SIDEBAR } from './src/config/navigation.ts';
 import { sourceRevision } from './src/content/revision.ts';
 
 export default defineConfig({
-    site: 'https://gspot.dev',
+    site: 'https://generativespotting.com',
     // Lower CLI syntax for Vite and keep the Markdown native loader at its installed package origin.
     vite: { oxc: { target: 'es2022' }, environments: { prerender: { resolve: { external: ['satteri'] } } } },
     integrations: [
@@ -30,7 +30,10 @@ export default defineConfig({
             head: [
                 {
                     tag: 'meta',
-                    attrs: { property: 'og:image', content: 'https://gspot.dev/brand/identity/social.png' },
+                    attrs: {
+                        property: 'og:image',
+                        content: 'https://generativespotting.com/brand/identity/social.png',
+                    },
                 },
                 { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
                 { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
@@ -38,7 +41,10 @@ export default defineConfig({
                 { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
                 {
                     tag: 'meta',
-                    attrs: { name: 'twitter:image', content: 'https://gspot.dev/brand/identity/social.png' },
+                    attrs: {
+                        name: 'twitter:image',
+                        content: 'https://generativespotting.com/brand/identity/social.png',
+                    },
                 },
             ],
             components: {

@@ -44,11 +44,6 @@
             "package": "lightningcss@1.33.0",
             "license": "MPL-2.0",
             "reason": "A build dependency of the manual site; the license binds changes to its own files, and none are made."
-        },
-        {
-            "package": "truncate-utf8-bytes@1.0.2",
-            "license": "WTFPL",
-            "reason": "A permissive license with no conditions; it arrives through a test tool and ships in nothing."
         }
     ]
 }

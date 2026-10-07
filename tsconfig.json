@@ -27,7 +27,6 @@
             "#cli-package": ["./packages/cli/package.json"],
             "#workspace-package": ["./package.json"],
             "#plugin-package": ["./packages/eslint-plugin/package.json"],
-            "#registry/*": ["./scripts/registry/*"],
             "#automation/*": ["./scripts/*"]
         }
     },

@@ -1,15 +1,3 @@
-import type { MiseBackend } from '#cli/types/tools/install.ts';
-
-export const UV_INSTALLER = { name: 'uv', version: '0.12.13' };
-
-export const MISE_BACKENDS: MiseBackend[] = [
-    { installer: 'mise', prefix: '' },
-    { installer: 'npm', prefix: 'npm:' },
-    { installer: 'pypi', prefix: 'pipx:' },
-    { installer: 'github', prefix: 'github:' },
-    { installer: 'cargo', prefix: 'cargo:' },
-];
-
 export const SETUP = 'Run: gspot apply, then gspot install';
 
 export const VERSION_TIMEOUT_MS = 15_000;
@@ -40,6 +28,3 @@ export const CREDENTIAL_ASSIGNMENT =
     /((?:_authToken|_auth|_password|password|token|secret|credential)\s*[=:]\s*)(?:"[^"\r\n]*"|'[^'\r\n]*'|[^\s,;]+)/giu;
 
 export const AUTHORIZATION_HEADER = /(authorization\s*:\s*)(?:bearer|basic)\s+[^\s]+/giu;
-
-/** Private tool trees owned and replaced as complete installations. */
-export const INSTALLATION_KINDS = ['npm', 'python'] as const;

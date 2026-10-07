@@ -1,19 +1,19 @@
 // Fixes run in passes until they settle; dry runs use a scratch copy and return diffs.
 import { createTwoFilesPatch } from 'diff';
 import { runTool } from '#cli/tools/run.ts';
-import { toolPin } from '#cli/tools/pins.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { unlinkSync, writeFileSync } from 'node:fs';
 import { readSource } from '#cli/platform/source.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import type { PreparedCommand } from '#cli/types/execution/command.ts';
 import { isolatedFiles } from '#cli/execution/command/placeholders.ts';
+import { copyFiles, copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { FIX_PASSES, FIX_DIFF_CONTEXT } from '#cli/config/execution/runtime.ts';
 import { prepareCommand, commandEnvironment } from '#cli/execution/command/runner.ts';
-import { scratchCopy, createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
 import { hasToolError, toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
 import type { FixReport, FixResult, FixOptions, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
@@ -83,7 +83,7 @@ async function isolatedFix(
     command: string[],
     toolPath: string,
 ): Promise<FixResult> {
-    using workspace = createFileWorkspace(root, isolatedFiles(session, planned, command));
+    using workspace = copyFiles(root, isolatedFiles(session, planned, command));
     const workspaceSession = { ...session, root: workspace.root };
     const prepared = prepareCommand(
         workspaceSession,
@@ -202,7 +202,7 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], opt
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
     ].toSorted((a, b) => a.localeCompare(b));
     using scratch = isDryRun
-        ? await scratchCopy(
+        ? await copyIntoScratch(
               session.root,
               [...paths, ...session.repository.files.map((file) => file.path)],
               session.repository.scopes.map((scope) => scope.path),

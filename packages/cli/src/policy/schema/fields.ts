@@ -30,3 +30,11 @@ export const namingCategorySchema = z.strictObject({
     max_words: reasoned(z.number()).optional(),
     case: reasoned(z.array(z.string())).optional(),
 });
+
+export const relativePath = z
+    .string()
+    .min(1)
+    .regex(
+        /^(?!\/)(?![\s\S]*(?:^|\/)\.\.(?:\/|$))[^\\:\p{Cc}]+$/u,
+        'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
+    );

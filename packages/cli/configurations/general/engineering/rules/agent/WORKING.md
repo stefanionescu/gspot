@@ -83,3 +83,10 @@ When something is replaced or renamed:
 
 - Delete the old implementation entirely.
 - Update every call site to use the new version.
+
+## Structural ownership
+
+<!-- level: all -->
+
+Group constants, types, and schemas by the behavior they belong to. Do not impose a config or
+types folder on another project, and do not mirror the source tree in tests.

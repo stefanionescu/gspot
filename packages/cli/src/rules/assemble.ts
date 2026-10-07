@@ -1,22 +1,18 @@
 // Select agent instructions from configuration assets and render them into the configured rules folder.
 import { posix } from 'node:path';
+import type { RuleFile } from '#cli/types/rules.ts';
+import { FRONT_MATTER } from '#cli/config/rules.ts';
+import { readAsset } from '#cli/platform/assets.ts';
 import { ruleSections } from '#cli/parsers/markdown.ts';
-import { similar, codeList } from '#cli/platform/text.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
+import { isExcluded } from '#cli/policy/errors/selection.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import { FIRST_READ, FRONT_MATTER } from '#cli/config/rules.ts';
-import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import { detectConditions } from '#cli/configurations/detect.ts';
+import type { RuleSettings } from '#cli/types/policy/settings.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
+import { configurationFiles } from '#cli/configurations/declarations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
-import type { Level, RuleFile, RuleSource, RuleSettings, RuleExclusionProblem } from '#cli/types/rules.ts';
-
-// Whether an exclude entry names the file or a folder above it, both relative to the rules folder.
-
-function isExcluded(entry: string, path: string): boolean {
-    return path === entry || path.startsWith(`${entry.replace(/\/$/u, '')}/`);
-}
+import type { Level, Manifest, RuleSource } from '#cli/types/configurations.ts';
 
 // The rules of the selected configurations; a file with a condition installs only when the repository meets it.
 function configurationRules(manifests: Manifest[], repository: Repository): RuleSource[] {
@@ -34,20 +30,6 @@ function configurationRules(manifests: Manifest[], repository: Repository): Rule
             return condition === undefined || matched.has(condition);
         }),
     );
-}
-
-/**
- * The files of a configuration's rules folder. Each installs under the configuration's category and name, as language/bash/BASH.md.
- * @param manifest the configuration
- * @returns each file with its path inside the rules folder
- */
-export function configurationFiles(manifest: Manifest): RuleSource[] {
-    const { kind, name } = manifest.configuration;
-    const sources = listAssets(`${manifest.dir}/${CONFIGURATION_RULES_FOLDER}/`);
-    return sources.map((source) => ({
-        source,
-        path: `${kind}/${name}/${posix.relative(manifest.dir + '/' + CONFIGURATION_RULES_FOLDER, source)}`,
-    }));
 }
 
 /**
@@ -81,31 +63,6 @@ export function selectRuleFiles(
             return [{ path, target: `${rules.folder}/${path}`, content }];
         })
         .toArray();
-}
-
-/**
- * The problems of [agent_rules] exclude: an entry that matches no rule, and an entry that hides a file the reader opens first.
- * @param exclude the entries as written, relative to the rules folder
- * @returns each problem with its position in the exclusion list
- */
-export function excludeProblems(exclude: string[]): RuleExclusionProblem[] {
-    if (exclude.length === 0) return [];
-    const paths = [...configurationManifests().values()].flatMap((manifest) =>
-        configurationFiles(manifest).map((file) => file.path),
-    );
-    return exclude.flatMap((entry, index) => {
-        if (FIRST_READ.some((file) => isExcluded(entry, file)))
-            return [
-                {
-                    index,
-                    message: `[agent_rules] exclude names ${codeList([entry])}, which holds a file every agent opens first (${codeList(FIRST_READ)}). Remove the entry.`,
-                },
-            ];
-        if (paths.some((path) => isExcluded(entry, path))) return [];
-        const near = similar(entry, paths);
-        const hint = near.length > 0 ? ` Did you mean ${codeList(near)}?` : '';
-        return [{ index, message: `[agent_rules] exclude names ${codeList([entry])}, which matches no rule.${hint}` }];
-    });
 }
 
 /**

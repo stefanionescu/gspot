@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import type { Scalar, Document } from 'yaml';
 import { readSource } from '#cli/platform/source.ts';
+import { copyFiles } from '#cli/execution/copy/files.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import type { Session } from '#cli/types/execution/session.ts';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
 import { isMap, isSeq, isAlias, isScalar, parseDocument } from 'yaml';
 import { ACTIONLINT_COMMAND } from '#cli/config/checks/tool/actions.ts';
-import { createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
 import type { CheckResult, PlannedCheck } from '#cli/types/execution/runtime.ts';
 
 function stepReferences(steps: unknown): unknown[] {
@@ -79,7 +79,7 @@ export async function actionlint(session: Session, planned: PlannedCheck): Promi
         if (prepared !== source) replacements.set(file.path, prepared);
     }
     if (replacements.size === 0) return runCommandCheck(session, planned, { command: ACTIONLINT_COMMAND });
-    using workspace = createFileWorkspace(
+    using workspace = copyFiles(
         session.root,
         session.repository.files.map((file) => file.path),
     );

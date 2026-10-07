@@ -1,9 +1,10 @@
 // A private tool installation as one unit: written beside its folder, swapped in by a rename, and recorded by kind
 // instead of file by file. A crash between the renames leaves the previous folder where recovery finds it.
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
+import type { InstalledOutput } from '#cli/types/tools/install.ts';
+import type { InstallationKind } from '#cli/types/configurations.ts';
 import { INSTALLATION_DIRECTORIES } from '#cli/config/platform/locations.ts';
 import type { Log, InstallationFolders } from '#cli/types/lifecycle/ownership.ts';
-import type { InstalledOutput, InstallationKind } from '#cli/types/tools/install.ts';
 
 // The folder an installation is staged in before the swap, and the one the previous installation waits in.
 

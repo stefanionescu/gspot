@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { decodeUtf8 } from '#cli/platform/text.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { normalizeTables } from '#cli/platform/objects.ts';
-import type { Snapshot } from '#cli/types/platform/root.ts';
+import type { FileCopy } from '#cli/types/platform/root.ts';
 import { openConfigurationDocument } from '#cli/parsers/document.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 import type { ConfigurationDocument } from '#cli/types/platform/document.ts';
@@ -16,7 +16,7 @@ import type { ConfigurationDocument } from '#cli/types/platform/document.ts';
  */
 export function openMergedDocument(
     path: string,
-    current: Snapshot | undefined,
+    current: FileCopy | undefined,
     recordedFormat?: ConfigurationDocument['format'],
 ): ConfigurationDocument {
     const text = current === undefined ? undefined : decodeUtf8(current.bytes);

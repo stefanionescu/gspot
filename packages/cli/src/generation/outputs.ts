@@ -130,7 +130,7 @@ function assertDistinctPaths(generated: Generated): void {
 }
 
 /**
- * The managed .gitignore block for private tool projects and generated outputs.
+ * The managed .gitignore block for tool projects and generated outputs.
  * @param manifests the manifests whose ignored paths count, every shipped configuration by default
  * @returns the paths that Git must leave untracked
  */

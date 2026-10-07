@@ -1,9 +1,9 @@
-import type { Level } from '#cli/types/rules.ts';
 import { test, expect, beforeAll } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import { DRIZZLE_DRIVERS } from '#tests/config/cli/generation/guides.ts';
 import { RUNTIME_EVIDENCE_CASES } from '#tests/config/cli/repository/manifests.ts';
 

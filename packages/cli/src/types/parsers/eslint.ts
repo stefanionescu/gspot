@@ -19,5 +19,5 @@ export type EslintAllRules = z.output<typeof eslintAllRulesSchema>;
 /** The exact package identity and actual core rule names from its public export. */
 export type EslintRuleNames = z.output<typeof eslintRuleNamesSchema>;
 
-/** Snapshot data read before a configuration renders. */
+/** Preset data read before a configuration renders. */
 export type EslintPresets = z.infer<typeof eslintPresetsSchema>;

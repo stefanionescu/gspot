@@ -1,8 +1,8 @@
 // The tool configuration a configuration replaces: the file or section each tool owns, found among the tracked files.
 import { readText } from '#cli/platform/source.ts';
+import { npmToolNames } from '#cli/configurations/pins.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { surveyRepository } from '#cli/repository/survey.ts';
-import { npmToolNames } from '#cli/configurations/declarations.ts';
 import { hasToolSection } from '#cli/parsers/tool/configuration.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';

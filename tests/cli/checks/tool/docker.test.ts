@@ -1,7 +1,7 @@
-import { toolPin } from '#cli/tools/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { trivyImage } from '#cli/checks/tool/docker.ts';

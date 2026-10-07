@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { toolPin } from '#cli/tools/pins.ts';
 import { mkdirSync, symlinkSync } from 'node:fs';
 import { readPolicy } from '#cli/policy/read.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/runtime.ts';

@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import type { bunPackageSchema } from '#cli/parsers/schema/lockfiles.ts';
 
-type PrivateLockfile = Extract<Lockfile, { private: true }>;
+type ToolProjectLockfile = Extract<Lockfile, { private: true }>;
 
 /** One npm package entry in a Bun lock, with each slot derived from its parser schema. */
 export type BunPackage = [
@@ -15,10 +15,10 @@ export type BunPackage = [
 /** One declared lockfile and its applicable consumers. */
 export type Lockfile = (typeof LOCKFILES)[number];
 
-export type LockName = PrivateLockfile['client'];
+export type LockName = ToolProjectLockfile['client'];
 
-/** The lock a private npm tool project records. */
-export type PrivateLockFileName = PrivateLockfile['file'];
+/** The lock a npm tool project records. */
+export type ToolProjectLockfileName = ToolProjectLockfile['file'];
 
 /** Textual dependency formats read by the shared lockfile parser. */
 export type LockFileName = Extract<Lockfile, { parsed: true }>['file'];

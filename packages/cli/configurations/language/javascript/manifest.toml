@@ -85,7 +85,7 @@ name = "@gspothq/eslint-plugin"
 kind = "library"
 version = "0.1.0"
 npm = "@gspothq/eslint-plugin"
-rule_url = "https://gspot.dev/reference/plugin/{rule}/"
+rule_url = "https://generativespotting.com/reference/plugin/{rule}/"
 
 [[tool]]
 name = "eslint-plugin-sonarjs"

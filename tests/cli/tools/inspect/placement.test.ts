@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { toolPin } from '#cli/tools/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';

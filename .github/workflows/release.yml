@@ -12,8 +12,6 @@ jobs:
         permissions:
             contents: read
             actions: read
-        outputs:
-            ci_run: ${{ steps.ci.outputs.run }}
         runs-on: ubuntu-24.04
         timeout-minutes: 10
         steps:
@@ -31,11 +29,10 @@ jobs:
               run: |
                   mise install bun node
                   bun install --frozen-lockfile
-                  bun scripts/release/version.ts "${TAG}"
+                  bun scripts/release.ts "${TAG}"
               env:
                   TAG: ${{ github.ref_name }}
             - name: Require successful main CI for the exact release commit
-              id: ci
               shell: bash
               run: |
                   set -euo pipefail
@@ -44,30 +41,15 @@ jobs:
                       echo 'Run main CI successfully for this exact commit before releasing.' >&2
                       exit 1
                   fi
-                  printf 'run=%s\n' "$ci_run" >> "$GITHUB_OUTPUT"
               env:
                   GH_TOKEN: ${{ github.token }}
                   RELEASE_COMMIT: ${{ github.sha }}
-            - name: Require a reviewed release environment
-              shell: bash
-              run: |
-                  set -euo pipefail
-                  reviewed=$(gh api "repos/${RELEASE_REPOSITORY}/environments/release" --jq '[.protection_rules[] | select(.type == "required_reviewers") | .reviewers[]] | length > 0')
-                  if [ "$reviewed" != true ]; then
-                      echo 'Configure a required reviewer on the release environment before publishing.' >&2
-                      exit 1
-                  fi
-              env:
-                  GH_TOKEN: ${{ github.token }}
-                  RELEASE_REPOSITORY: ${{ github.repository }}
     publish:
         needs: version
         runs-on: ubuntu-24.04
         timeout-minutes: 60
-        environment: release
         permissions:
             contents: write
-            actions: read
             id-token: write
         defaults:
             run:
@@ -88,22 +70,13 @@ jobs:
             - name: Set up the repository
               run: mise run setup
             - name: Check the release version
-              run: bun scripts/release/version.ts "${TAG}"
+              run: bun scripts/release.ts "${TAG}"
               env:
                   TAG: ${{ github.ref_name }}
             - name: Build the CLI package
               run: mise run build:cli
-            - name: Download archives verified by this commit's CI
-              uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-              with:
-                  github-token: ${{ github.token }}
-                  run-id: ${{ needs.version.outputs.ci_run }}
-                  pattern: gspot-binary-*
-                  path: verified-binaries
-            - name: Verify all standalone archive checksums
-              run: bun scripts/release/artifacts.ts verified-binaries packages/cli/dist-binaries/release
             # First publish each package manually with a short-lived granular token. Configure this workflow and
-            # the release environment as trusted publishers on npm before using OIDC for later releases.
+            # the repository and workflow file as trusted publishers on npm before using OIDC for later releases.
             - name: Publish the packages to npm
               run: |
                   set -euo pipefail
@@ -123,7 +96,7 @@ jobs:
                       npm publish "./${package}"
                   done
             - name: Create the GitHub release
-              run: gh release create "${TAG}" --verify-tag --title "${TAG}" --generate-notes packages/cli/dist-binaries/release/*.tar.gz packages/cli/dist-binaries/release/SHA256SUMS
+              run: gh release create "${TAG}" --verify-tag --title "${TAG}" --generate-notes
               env:
                   GH_TOKEN: ${{ github.token }}
                   TAG: ${{ github.ref_name }}

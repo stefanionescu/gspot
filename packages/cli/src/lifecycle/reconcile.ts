@@ -1,12 +1,12 @@
 // Reuses initialization selection to reconcile the saved setup with current repository evidence.
 import { isDeepStrictEqual } from 'node:util';
+import { npmToolNames } from '#cli/configurations/pins.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { selectForInit } from '#cli/lifecycle/selection.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { npmToolNames } from '#cli/configurations/declarations.ts';
 import type { Policy, Mutation, TomlTable } from '#cli/types/policy/settings.ts';
 import { updateConfigurationOverrides } from '#cli/lifecycle/configuration-overrides.ts';
 import type { InitSelection, ConfigurationMerge, ConfigurationReconciliation } from '#cli/types/lifecycle/selection.ts';

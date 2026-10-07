@@ -7,10 +7,10 @@ import { readSource } from '#cli/platform/source.ts';
 import { contentDigest } from '#cli/platform/text.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { parseCommand } from '#cli/parsers/command.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/open.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import type { SiteBuild } from '#cli/types/checks/general/site.ts';
-import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { portableSegments, assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { OUTPUT_TAIL_LINES, SHOWN_DIFFERENCES } from '#cli/config/checks/general/site.ts';
@@ -90,7 +90,7 @@ export function cachedBuild(input: EngineInput): Promise<SiteBuild> {
         if (resources === undefined)
             throw new Error('The site/build check needs temporary directories that are disposed after the run.');
         resources.defer(() => scopeBuilds.delete(key));
-        const folder = await scratchCopy(
+        const folder = await copyIntoScratch(
             input.root,
             input.files.map((file) => file.path),
             input.scopeEntries.map((scope) => scope.path),
@@ -138,7 +138,7 @@ export async function siteBuild(input: EngineInput): Promise<Finding[]> {
 export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
     const first = await requireBuild(input);
     const before = outputDigests(first.output);
-    using folder = await scratchCopy(
+    using folder = await copyIntoScratch(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),

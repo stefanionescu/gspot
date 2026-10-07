@@ -32,3 +32,13 @@ export const DOCSTRING_STYLES = [
         expected: 'numpy',
     },
 ] as const;
+
+/** Native docstring checks accept a standalone script as well as a configured project. */
+export const DOCSTRING_PROJECTS = [
+    {
+        name: 'project Google docstring convention',
+        files: { 'pyproject.toml': '[tool.ruff.lint.pydocstyle]\nconvention = "google"\n' },
+        style: 'google',
+    },
+    { name: 'standalone script without project metadata', files: {}, style: 'numpy' },
+];

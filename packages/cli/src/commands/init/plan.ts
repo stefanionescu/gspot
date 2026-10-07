@@ -1,13 +1,13 @@
 // The plan initialization shows before writing files, including dry runs.
 import { colors } from '#cli/output/messages.ts';
 import { compact } from '#cli/platform/objects.ts';
+import { duplicateMisePins } from '#cli/tools/mise.ts';
 import { getLintJobs } from '#cli/repository/survey.ts';
-import { npmPins, pythonPins } from '#cli/tools/pins.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { misePins, duplicateMisePins } from '#cli/tools/mise.ts';
 import type { Tooling } from '#cli/types/repository/inventory.ts';
 import type { DuplicateMisePin } from '#cli/types/tools/install.ts';
+import { npmPins, misePins, pythonPins } from '#cli/configurations/pins.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import { readIndexEntries, getSubmodulePaths } from '#cli/repository/tracked.ts';
 import type { InitPlan, Planning, InitAnswers, InitFileRow } from '#cli/types/commands/init.ts';

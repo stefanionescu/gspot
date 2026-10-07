@@ -98,17 +98,13 @@ export function effectivePolicy(
         banned: [...new Set(tables.flatMap((table) => table?.banned ?? []))],
         allowed: tables.flatMap((table) => table?.allowed ?? []),
         reserved: tables.flatMap((table) => table?.reserved ?? []),
-        groups_off: tables.flatMap((table) => table?.groups_off ?? []),
         fixed_keys: tables.flatMap((table) => table?.fixed_keys ?? []),
         paths: tables.flatMap((table) => table?.paths ?? []),
     };
-    const removed = new Set(
-        naming.groups_off.map((entry) => entry.group).filter((group) => shipped.groups[group]?.removable === true),
-    );
     const terms = [
-        ...Object.entries(shipped.groups)
-            .filter(([group]) => !removed.has(group))
-            .flatMap(([group, { terms }]) => compileTerms(terms, { source: `${group} group`, group })),
+        ...Object.entries(shipped.groups).flatMap(([group, { terms }]) =>
+            compileTerms(terms, { source: `${group} group`, group }),
+        ),
         ...compileTerms(naming.banned, { source: 'naming.banned' }),
     ];
     // The shipped rules first, then what the selected configurations know about their own files, then the repository's.

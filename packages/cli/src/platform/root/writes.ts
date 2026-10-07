@@ -2,7 +2,7 @@
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
 import { sameEntry } from '#cli/platform/root/rules.ts';
-import type { Bounds, Staging, Snapshot } from '#cli/types/platform/root.ts';
+import type { Bounds, Staging, FileCopy } from '#cli/types/platform/root.ts';
 import { PRIVATE_FILE, OWNER_WRITE_BIT } from '#cli/config/platform/modes.ts';
 import { readEntry, preparedPath, validateRead } from '#cli/platform/root/reads.ts';
 import { LOCK_POLL_MS, LOCK_WAIT_BYTES, LOCK_INITIALIZATION_MS } from '#cli/config/platform/root.ts';
@@ -24,7 +24,7 @@ import {
 
 // Writes the bytes and mode of a regular file to the staging path, which must not exist yet.
 // A staging file that cannot be completed is removed before the error leaves.
-function stageFile(temporary: string, value: Snapshot): void {
+function stageFile(temporary: string, value: FileCopy): void {
     const file = openSync(temporary, 'wx', PRIVATE_FILE);
     try {
         writeFileSync(file, value.bytes);
@@ -40,13 +40,13 @@ function stageFile(temporary: string, value: Snapshot): void {
 
 // Windows cannot rename over a read-only file, so it goes first. The owner's recovery treats an absent target of an
 // interrupted replacement as not written.
-function mustUnlinkFirst(expected: Snapshot | undefined): boolean {
+function mustUnlinkFirst(expected: FileCopy | undefined): boolean {
     if (process.platform !== 'win32' || expected === undefined || expected.isLink === true) return false;
     return (expected.mode & OWNER_WRITE_BIT) === 0;
 }
 
 // Moves the staged entry over the destination, after checking that the destination is still as expected.
-function commitStaged(staging: Staging, expected: Snapshot | undefined): void {
+function commitStaged(staging: Staging, expected: FileCopy | undefined): void {
     const { bounds, path, target, temporary } = staging;
     if (!sameEntry(readEntry(bounds, path, expected?.isLink === true), expected))
         throw new Error(`Lifecycle destination changed during the operation: ${path}`);
@@ -64,7 +64,7 @@ function commitStaged(staging: Staging, expected: Snapshot | undefined): void {
 }
 
 // Puts the expected file back after a replacement that removed it failed.
-function restoreRemoved(bounds: Bounds, path: string, expected: Snapshot, error: unknown): void {
+function restoreRemoved(bounds: Bounds, path: string, expected: FileCopy, error: unknown): void {
     try {
         if (readEntry(bounds, path, false) === undefined) replaceEntry(bounds, path, expected, undefined);
     } catch (restorationError) {
@@ -72,8 +72,8 @@ function restoreRemoved(bounds: Bounds, path: string, expected: Snapshot, error:
     }
 }
 
-// Stages the snapshot beside its destination: a file, or a link when link is set.
-function stage(staging: Staging, value: Snapshot, link: string | undefined): void {
+// Stages the copy beside its destination: a file, or a link when link is set.
+function stage(staging: Staging, value: FileCopy, link: string | undefined): void {
     if (link === undefined) stageFile(staging.temporary, value);
     else writeLink(staging.temporary, link, value.mode);
 }
@@ -90,7 +90,7 @@ function claimLock(target: string, token: string): boolean {
 }
 
 // The process id a lock file records, refusing a lock that records none.
-function lockHolder(current: Snapshot | undefined, path: string): number {
+function lockHolder(current: FileCopy | undefined, path: string): number {
     const pid = Number(current?.bytes.toString('utf8').split(':', 1)[0]);
     if (!Number.isSafeInteger(pid) || pid <= 0)
         throw new Error(`Incomplete lifecycle lock: ${path}. Remove it after checking that no writer is running.`);
@@ -138,7 +138,7 @@ function retireStaleLock(bounds: Bounds, path: string, target: string): void {
 }
 
 /**
- * Creates a link at a path where nothing exists yet, with, on macOS, the mode the snapshot carries. The target is not
+ * Creates a link at a path where nothing exists yet, with, on macOS, the mode the copy carries. The target is not
  * checked here: lifecycle writes check it first, and a revision copy keeps a tracked link wherever it points.
  * @param path the path of the new link
  * @param target the target text or bytes
@@ -157,13 +157,13 @@ export function writeLink(path: string, target: string | Buffer, mode: number): 
 }
 
 /**
- * Replaces the entry at a path with the snapshot, through a staged file renamed into place.
+ * Replaces the entry at a path with the copy, through a staged file renamed into place.
  * @param bounds the root
  * @param path the root-relative path
- * @param value the snapshot to write
- * @param expected the snapshot the caller last saw there, or undefined for a new file
+ * @param value the copy to write
+ * @param expected the copy the caller last saw there, or undefined for a new file
  */
-export function replaceEntry(bounds: Bounds, path: string, value: Snapshot, expected: Snapshot | undefined): void {
+export function replaceEntry(bounds: Bounds, path: string, value: FileCopy, expected: FileCopy | undefined): void {
     const link = validateRead(bounds, path, value);
     const target = preparedPath(bounds, path);
     const staging: Staging = {

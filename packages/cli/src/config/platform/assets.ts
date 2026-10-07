@@ -1,6 +1,3 @@
-/** Whether the running build resolves its assets beside the compiled executable. */
-export const STANDALONE_BUILD = typeof GSPOT_STANDALONE !== 'undefined' && GSPOT_STANDALONE;
-
 /** The grammar packages whose WebAssembly files gspot ships in grammars/, by file name. */
 export const GRAMMAR_PACKAGES: Record<string, string> = {
     'bash.wasm': 'tree-sitter-bash/tree-sitter-bash.wasm',

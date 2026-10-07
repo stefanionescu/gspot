@@ -8,10 +8,10 @@ export type CapturedProcess = Pick<
 export type CapturedChild = AsyncDisposable & { output: Promise<string>; errors: Promise<string> };
 
 /** The owned process and work directory recorded by a stalled registry boundary. */
-export type RegistryStartupMarker = { pid: number; work: string };
+export type PackageArchiveMarker = { pid: number; work: string };
 
-/** A stalled Git boundary and the snapshot path it started. */
-export type SnapshotMarker = { pid: number; checkout?: string };
+/** A stalled Git boundary and the copy path it started. */
+export type CopyMarker = { pid: number; checkout?: string };
 
-/** A directory copy started by a snapshot acquisition. */
+/** A directory copy started by a copy acquisition. */
 export type DirectoryCopyMarker = { destination: string };

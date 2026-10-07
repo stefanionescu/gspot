@@ -7,7 +7,7 @@ The `run_with` setting determines how hooks and CI launch gspot. A runner choice
 
 ## mise
 
-With `run_with = "mise"`, gspot writes `.mise/conf.d/gspot-tools.toml` with the standalone CLI archive pin and required native tools. The GitHub backend selects the archive for the host platform and keeps its configuration assets and grammar files beside the executable. It leaves your authored `mise.toml` unchanged. Hooks run `mise exec -- gspot`. This delivery does not require Node.js or Bun for gspot. The applicable tools still require their own runtimes.
+With `run_with = "mise"`, gspot writes `.mise/conf.d/gspot-tools.toml` with the CLI pin on the npm backend (`npm:@gspothq/cli`) and required executable tools. It leaves your authored `mise.toml` unchanged. Hooks run `mise exec -- gspot`. gspot needs Node.js 24.2 or newer, or Bun 1.4.2 or newer, under every runner, including mise. Applicable tools still require their own runtimes.
 
 Initialize a Python repository interactively and choose mise:
 
@@ -29,7 +29,7 @@ Applicable Python tools live in `.gspot/pyproject.toml`; uv installs them into `
 
 ## No runner
 
-`gspot init --no-task` leaves out `run_with`. Hooks call `gspot` on `PATH`, so install the pinned CLI globally or provide the standalone executable. Native tools still need mise or a separate installation. `gspot doctor` prints acquisition commands.
+`gspot init --no-task` leaves out `run_with`. Hooks call `gspot` on `PATH`, so install the pinned CLI globally. Native tools still need mise or a separate installation. `gspot doctor` prints acquisition commands.
 
 A missing `[hooks]` or `[ci]` table disables that integration. `--no-hooks` and `--no-ci` leave those tables out during initialization.
 

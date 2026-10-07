@@ -11,9 +11,9 @@ import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import { Option, Command } from '@commander-js/extra-typings';
 import { PUSH_ARGUMENTS } from '#cli/config/commands/options.ts';
 import { getStaged } from '#cli/repository/revisions/changes.ts';
+import { checkOutRevision } from '#cli/execution/copy/revision.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { findRoot, isGitRepository } from '#cli/repository/root.ts';
-import { checkOutRevision } from '#cli/execution/snapshot/revision.ts';
 import { printResult, selectVerbosity } from '#cli/output/messages.ts';
 import type { Program, GlobalFlags } from '#cli/types/commands/program.ts';
 import { HOOKS, CHECK_FLAG_DEFAULTS } from '#cli/config/commands/check.ts';
@@ -45,7 +45,7 @@ async function pushOptions(options: CheckOptions, paths: string[], signal: Abort
     return { ...options, paths: [], push: { stdin: input, ...(paths[0] === undefined ? {} : { remote: paths[0] }) } };
 }
 
-// Checks an exact staged-index snapshot and writes the report in the working repository.
+// Checks an exact staged-index copy and writes the report in the working repository.
 async function checkStaged(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     if (options.fix)
         throw new GspotError('selection', [
@@ -70,7 +70,7 @@ async function checkStaged(root: string, options: CheckOptions, signal: AbortSig
     );
 }
 
-// Validate command input and dispatch the selected working tree or exact snapshot.
+// Validate command input and dispatch the selected working tree or exact copy.
 async function checkCommand(root: string, options: CheckOptions, signal: AbortSignal): Promise<CommandResult> {
     let selected = options;
     if (options.isDryRun && !options.fix) throw new GspotError('selection', ['--dry-run requires --fix.']);
@@ -177,7 +177,7 @@ export function registerCheck(program: Program): void {
             '\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged',
         )
         .option('--only <checks...>', 'Run only these checks')
-        .option('--staged', 'Check staged files in an exact snapshot of the index')
+        .option('--staged', 'Check staged files in an exact copy of the index')
         .option('--changed', 'Check files changed from the upstream or default branch')
         .addOption(
             new Option('--base <ref>', 'Compare changed files against this Git reference')

@@ -12,12 +12,12 @@ import { preserveMode } from '#cli/lifecycle/ownership/log.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import type { LockPreparation } from '#cli/types/tools/install.ts';
-import { toolPin, pythonPins, collectPins } from '#cli/tools/pins.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { installTree } from '#cli/lifecycle/ownership/installations.ts';
 import { getHookPlan, installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
+import { toolPin, pythonPins, collectPins } from '#cli/configurations/pins.ts';
 import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { packageInstallSteps, installPackageProject, preparePackageProject } from '#cli/tools/npm/project.ts';
 import { installPythonProject, preparePythonProject, pythonInstallationPlan } from '#cli/tools/python/project.ts';
@@ -270,7 +270,7 @@ export function installationPlan(session: Session, refreshLocks = false): Instal
 }
 
 /**
- * Install private tool projects and clone-local hooks, with optional task-runner integration.
+ * Install tool projects and clone-local hooks, with optional task-runner integration.
  * @param session the selected tools and repository.
  * @param log the command's locked ownership context.
  * @param options whether to resolve declared pins again before installing.

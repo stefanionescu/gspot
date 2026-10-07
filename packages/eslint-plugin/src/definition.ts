@@ -3,7 +3,9 @@ import type { RuleDocs } from '#plugin/types/definition.ts';
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
 /** Create rule modules with their public documentation URL. */
-export const createRule = ESLintUtils.RuleCreator<RuleDocs>((name) => `https://gspot.dev/reference/plugin/${name}/`);
+export const createRule = ESLintUtils.RuleCreator<RuleDocs>(
+    (name) => `https://generativespotting.com/reference/plugin/${name}/`,
+);
 
 /**
  * An object with the given properties and nothing else.

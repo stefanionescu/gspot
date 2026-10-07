@@ -1,10 +1,9 @@
 // Write test-tool pins that the base generated mise configuration does not pin.
 import { stringify } from 'smol-toml';
-import { misePins } from '#cli/tools/mise.ts';
-import { collectPins } from '#cli/tools/pins.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { parseMiseToolKeys } from '#cli/parsers/mise.ts';
 import { MISE_MIN_VERSION } from '#cli/config/tools/mise.ts';
+import { misePins, collectPins } from '#cli/configurations/pins.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { TEST_TOOLS, TEST_TOOLS_PATH, PYTHON_TEST_TOOLS, TEST_TOOLS_HEADER } from '#automation/config/test-tools.ts';

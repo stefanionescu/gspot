@@ -5,17 +5,17 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { emptyResult } from '#cli/execution/report.ts';
-import { toolPin, checkToolPin } from '#cli/tools/pins.ts';
+import { copyFiles } from '#cli/execution/copy/files.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { OutputPaths } from '#cli/types/parsers/output.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/parsers/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { toolPin, checkToolPin } from '#cli/configurations/pins.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { checkCompanions } from '#cli/execution/planning/requirements.ts';
-import { createFileWorkspace } from '#cli/execution/snapshot/workspace.ts';
 import { checkedFindings, recordInvocation } from '#cli/execution/output.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform/runtime.ts';
 import { toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
@@ -183,7 +183,7 @@ async function runInWorkspace(run: CommandRun, workspace: string | undefined): P
     const { session, planned, tool, command, toolPath, environment, base } = run;
     using created =
         workspace === undefined && planned.spec.run_in_copy === true
-            ? createFileWorkspace(session.root, isolatedFiles(session, planned, command))
+            ? copyFiles(session.root, isolatedFiles(session, planned, command))
             : undefined;
     const root = workspace ?? created?.root;
     const workspaceSession = root === undefined ? session : { ...session, root };

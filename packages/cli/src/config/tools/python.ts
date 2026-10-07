@@ -1,4 +1,4 @@
-import { UV_INSTALLER } from '#cli/config/tools/install.ts';
+import { UV_INSTALLER } from '#cli/config/configurations.ts';
 
 /** Arguments shared by uv execution and its installation preview. */
 export const UV_LOCK_ARGUMENTS = ['lock'] as const;

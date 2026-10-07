@@ -1,6 +1,8 @@
 import type { z } from 'zod';
 import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { KeyPath } from '#cli/types/platform/document.ts';
+import type { levelSchema } from '#cli/parsers/schema/settings.ts';
+import type { INSTALLATION_KINDS } from '#cli/config/configurations.ts';
 import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { manifestSchema } from '#cli/parsers/schema/configurations/manifest.ts';
 import type { toolSchema, installerPinSchema } from '#cli/parsers/schema/configurations/tool.ts';
@@ -91,3 +93,29 @@ export type ConfigurationDeclaration = { name: string; path: KeyPath };
 export type UnknownConfiguration<Declaration extends Pick<ConfigurationDeclaration, 'name'>> = Declaration & {
     message: string;
 };
+
+/** The configuration responsible for one declared acquisition version. */
+export type PinRequirement = { version: string; owner: string };
+
+/** A pinned package installed in the npm or Python tool project. */
+export type ToolProjectPackage = { kind: InstallationKind; name: string; version: string };
+
+/** One tool pin as mise reads it: the version, the operating systems that have a build, and backend options. */
+export type MisePin = {
+    name: string;
+    version: string;
+    os?: string[];
+    options?: Record<string, string | number | boolean>;
+};
+
+/** A tool project installation gspot writes whole: the npm tools or the Python environment. */
+export type InstallationKind = (typeof INSTALLATION_KINDS)[number];
+
+/** A declared mise installer and its backend prefix. */
+export type MiseBackend = { installer: string; prefix: string };
+
+/** The level of a check, a rule, or the whole policy. */
+export type Level = z.output<typeof levelSchema>;
+
+/** A rule asset and its path inside the rules folder before selection. */
+export type RuleSource = { source: string; path: string };

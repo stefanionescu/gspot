@@ -1,4 +1,4 @@
-import type { Manifest } from '#cli/types/configurations.ts';
+import type { Manifest, MiseBackend } from '#cli/types/configurations.ts';
 import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 /** The rule assets within each shipped configuration. */
@@ -23,3 +23,16 @@ export const CONFIGURATION_LABELS: Record<Manifest['configuration']['kind'], str
     library: 'Libraries',
     general: 'Repository',
 };
+
+export const UV_INSTALLER = { name: 'uv', version: '0.12.13' };
+
+export const MISE_BACKENDS: MiseBackend[] = [
+    { installer: 'mise', prefix: '' },
+    { installer: 'npm', prefix: 'npm:' },
+    { installer: 'pypi', prefix: 'pipx:' },
+    { installer: 'github', prefix: 'github:' },
+    { installer: 'cargo', prefix: 'cargo:' },
+];
+
+/** Tool project trees owned and replaced as complete installations. */
+export const INSTALLATION_KINDS = ['npm', 'python'] as const;

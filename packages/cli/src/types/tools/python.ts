@@ -1,7 +1,7 @@
-import type { Snapshot } from '#cli/types/platform/root.ts';
+import type { FileCopy } from '#cli/types/platform/root.ts';
 
 /** Immutable Python project and lock inputs for preparing an installation. */
-export type PythonToolInputs = { project: Snapshot; lock: Snapshot };
+export type PythonToolInputs = { project: FileCopy; lock: FileCopy };
 
 /** Repository identity and the command-owned Python installer used during preparation. */
 export type PythonPreparation = {

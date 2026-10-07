@@ -7,15 +7,15 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { planRun } from '#cli/execution/planning/plan.ts';
 import { PYPROJECT } from '#tests/config/samples/python/source.ts';
-import { DOCSTRING_STYLES } from '#tests/config/cli/checks/language/python/pydoclint.ts';
 import { pydoclint, docstringConfiguration } from '#cli/checks/language/python/pydoclint.ts';
+import { DOCSTRING_STYLES, DOCSTRING_PROJECTS } from '#tests/config/cli/checks/language/python/pydoclint.ts';
 
-test('pydoclint passes the project Google docstring convention to its native command', async () => {
+test.each(DOCSTRING_PROJECTS)('pydoclint runs with $name', async ({ files, style }) => {
     await using sandbox = await testdir();
     const executable = `.gspot/.venv/${process.platform === 'win32' ? 'Scripts/pydoclint.exe' : 'bin/pydoclint'}`;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python']),
-        'pyproject.toml': `${PYPROJECT}\n[tool.ruff.lint.pydocstyle]\nconvention = "google"\n`,
+        ...files,
         'example/__init__.py': '"""Test."""\n',
         [executable]: '',
     });
@@ -44,7 +44,7 @@ test('pydoclint passes the project Google docstring convention to its native com
             style: argv[argv.indexOf('--style') + 1],
             cwd: options.cwd,
         })),
-    ).toStrictEqual([{ executable: join(sandbox.path, executable), style: 'google', cwd: sandbox.path }]);
+    ).toStrictEqual([{ executable: join(sandbox.path, executable), style, cwd: sandbox.path }]);
 });
 
 test.each([...DOCSTRING_STYLES])('the docstring convention $name', ({ project, setting, expected }) => {

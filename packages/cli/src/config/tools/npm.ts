@@ -62,7 +62,7 @@ export const YARN_ENVIRONMENT_SETTINGS = [
     },
 ];
 
-/** Native lock resolution runs without committing a private installation. */
+/** Native lock resolution runs without committing a tool project installation. */
 export const LOCK_ARGUMENTS: Record<Exclude<PackageInstaller['name'], 'yarn'>, readonly string[]> = {
     npm: ['npm', 'install', '--package-lock-only', '--no-audit', '--no-fund', '--omit-lockfile-registry-resolved'],
     bun: ['bun', 'install', '--lockfile-only', '--linker', 'hoisted'],

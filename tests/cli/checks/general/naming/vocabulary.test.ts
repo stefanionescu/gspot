@@ -12,8 +12,8 @@ import {
     NUMBERED_FILES,
     ORDINARY_WORDS,
     RESERVED_FILES,
+    RESTORED_TERMS,
     RESERVED_POLICY,
-    GROUP_EXCEPTIONS,
     PREFIX_EXCEPTION,
     REPEATED_EXCEPTION,
 } from '#tests/config/cli/checks/naming.ts';
@@ -68,7 +68,7 @@ test('reserved categories apply literally and child declarations leave sibling c
     ).toBe(true);
 });
 
-test('reasoned time and condition word exceptions leave required groups and conjunctions active', async () => {
+test('all shipped groups apply and exact allowances leave adjacent banned names active', async () => {
     await using sandbox = await testdir();
     const policy = buildPolicy(['typescript', 'naming'], { level: 'all' });
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'entry.ts': GROUP_SOURCE });
@@ -85,8 +85,13 @@ test('reasoned time and condition word exceptions leave required groups and conj
         { line: 3, rule: 'banned-term' },
         { line: 4, rule: 'banned-term' },
         { line: 5, rule: 'banned-term' },
+        { line: 6, rule: 'banned-term' },
+        { line: 7, rule: 'banned-term' },
     ]);
-    await Bun.write(join(sandbox.path, 'gspot.toml'), policy + GROUP_EXCEPTIONS);
+    await Bun.write(
+        join(sandbox.path, 'gspot.toml'),
+        policy + '[naming]\nallowed = [{name = "oldValue", reason = "The public interface fixes this exact name."}]\n',
+    );
     const narrowed = await runGspot(sandbox.path, command);
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(1);
     expect(
@@ -94,15 +99,21 @@ test('reasoned time and condition word exceptions leave required groups and conj
             findings.map(({ line, rule }) => ({ line, rule })),
         ),
     ).toStrictEqual([
+        { line: 2, rule: 'banned-term' },
         { line: 3, rule: 'banned-term' },
         { line: 4, rule: 'banned-term' },
         { line: 5, rule: 'banned-term' },
+        { line: 6, rule: 'banned-term' },
+        { line: 7, rule: 'banned-term' },
     ]);
     await Bun.write(
         join(sandbox.path, 'entry.ts'),
-        GROUP_SOURCE.replace('plusValue', 'sumValue')
+        GROUP_SOURCE.replace('fallback', 'result')
+            .replace('plusValue', 'sumValue')
             .replace('enhancedValue', 'entry')
-            .replace('ensureValue', 'validatedValue'),
+            .replace('ensureValue', 'validatedValue')
+            .replace('custom', 'authored')
+            .replace('combined', 'merged'),
     );
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -186,4 +197,32 @@ test('an exact repeated-word exception preserves the neighboring duplicate-word 
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
+});
+
+test('restored terms fail in identifiers and paths at all and neither check runs at recommended', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['javascript', 'naming'], { level: 'all' }),
+        ...Object.fromEntries(RESTORED_TERMS.map((term) => [`${term}.js`, `export const ${term}Count = 1;\n`])),
+    });
+    const command = ['check', '--only', 'naming/identifiers', 'naming/paths', '--json'];
+    const failed = await runGspot(sandbox.path, command);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    const checks = (JSON.parse(failed.stdout) as RunReport).checks;
+    expect(checks.map(({ check, status }) => [check, status])).toStrictEqual([
+        ['naming/identifiers', 'failed'],
+        ['naming/paths', 'failed'],
+    ]);
+    for (const check of checks) {
+        expect(check.findings).toHaveLength(RESTORED_TERMS.length);
+        expect(check.findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
+            RESTORED_TERMS.map((term) => ({ file: `${term}.js`, rule: 'banned-term' })).toSorted((left, right) =>
+                left.file.localeCompare(right.file),
+            ),
+        );
+    }
+    await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['javascript', 'naming'], { level: 'recommended' }));
+    const recommended = await runGspot(sandbox.path, command);
+    expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
+    expect((JSON.parse(recommended.stdout) as RunReport).checks).toStrictEqual([]);
 });

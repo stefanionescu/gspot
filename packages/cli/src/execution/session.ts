@@ -1,6 +1,6 @@
 // One session per command: the policy, the manifests, the repository, the selection, and the merged view per scope.
-import { npmPins } from '#cli/tools/pins.ts';
 import { readPolicy } from '#cli/policy/read.ts';
+import { npmPins } from '#cli/configurations/pins.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { scopeView } from '#cli/policy/settings/view.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
@@ -10,15 +10,15 @@ import type { Session } from '#cli/types/execution/session.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
+import { acquirePythonInstaller } from '#cli/tools/python/uv.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { FILE_PREFIX_BYTES } from '#cli/config/repository/inventory.ts';
-import { acquirePythonInstaller } from '#cli/tools/python/installer.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { applicableManifests } from '#cli/execution/planning/requirements.ts';
 import type { Policy, PolicyFile, ScopeSelection } from '#cli/types/policy/settings.ts';
-import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/installer.ts';
+import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/client.ts';
 import type { PackageInstaller, PackageInstallerIdentity } from '#cli/types/parsers/packages.ts';
 
 // Resolves every scope: its selected configurations, settings surface, and merged view.

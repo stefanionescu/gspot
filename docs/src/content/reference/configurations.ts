@@ -1,9 +1,9 @@
 import { posix } from 'node:path';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
-import { configurationFiles } from '@gspothq/cli/src/rules/assemble.ts';
 import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
 import { DETECTION_LABELS, CONFIGURATION_NOTES } from '../../config/reference.ts';
+import { configurationFiles } from '@gspothq/cli/src/configurations/declarations.ts';
 
 // A rule file of the configuration, with the condition that installs it when it has one.
 function ruleSelection(manifest: Manifest, path: string): string {

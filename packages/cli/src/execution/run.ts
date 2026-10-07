@@ -1,10 +1,10 @@
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
 import pLimit from 'p-limit';
 import { cpus } from 'node:os';
-import { toolPin } from '#cli/tools/pins.ts';
 import { problemText } from '#cli/policy/read.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { getCheckRunner } from '#cli/execution/engines.ts';

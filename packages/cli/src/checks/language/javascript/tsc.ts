@@ -9,9 +9,9 @@ import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { ownedInputs } from '#cli/execution/planning/plan.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
 import type { Session } from '#cli/types/execution/session.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { runCommandCheck } from '#cli/execution/command/runner.ts';
-import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
 import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
@@ -111,7 +111,7 @@ export async function tsc(session: Session, planned: PlannedCheck): Promise<Chec
     const command = hasReferences
         ? ['tsc', '-b', '--pretty', 'false']
         : ['tsc', '--noEmit', '-p', '{config:tsconfig}', '--pretty', 'false'];
-    using scratchFolder = await scratchCopy(
+    using scratchFolder = await copyIntoScratch(
         session.root,
         [...session.repository.files.map((file) => file.path), ...commandConfigurations(session, planned, command)],
         session.repository.scopes.map((scope) => scope.path),
@@ -137,7 +137,7 @@ export async function checkjs(session: Session, planned: PlannedCheck): Promise<
     if (jsconfig === undefined)
         throw new Error(`The javascript configuration declares no ${CONFIGURATION_DIRECTORY}/jsconfig.json target.`);
     const target = targetInScope(scope, jsconfig);
-    using scratchFolder = await scratchCopy(
+    using scratchFolder = await copyIntoScratch(
         session.root,
         [...session.repository.files.map((file) => file.path), target],
         session.repository.scopes.map((entry) => entry.path),

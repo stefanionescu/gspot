@@ -3,7 +3,19 @@ import { join } from 'node:path';
 import plugin from '#plugin/plugin.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { readAsset } from '#cli/platform/assets.ts';
+import packageManifest from '#plugin-package' with { type: 'json' };
 import { ENVIRONMENT_GLOBALS } from '#tests/config/plugin/environment.ts';
+import { captureEslintPreset, eslintPresetsSchema } from '#cli/parsers/schema/eslint.ts';
+
+test('the shipped recommended preset agrees with the plugin', () => {
+    const presets = eslintPresetsSchema.parse(
+        JSON.parse(readAsset('configurations/language/javascript/eslint-presets.json')),
+    );
+    expect(presets['gspot']).toStrictEqual(
+        captureEslintPreset(packageManifest.name, packageManifest.version, 'configs.recommended', plugin),
+    );
+});
 
 describe('the plugin', () => {
     test.each(['recommended', 'all'] as const)('%s applies its trivial-function rule', async (level) => {

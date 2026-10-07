@@ -1,16 +1,15 @@
-import { misePin } from '#cli/tools/mise.ts';
-import { toolPin } from '#cli/tools/pins.ts';
 import { readPolicy } from '#cli/policy/read.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 import { VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
-import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { privateToolInstallation } from '#cli/tools/installation.ts';
+import { createInstallationRegistry } from '#tests/harness/registry.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { SandboxInstallation } from '#tests/types/harness/install.ts';
+import { misePin, toolPin, toolProjectPackage } from '#cli/configurations/pins.ts';
+import { runTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
 import { testModules, installedModules, sourceLauncherDirectory } from '#tests/harness/environment.ts';
 
 /**
@@ -46,7 +45,7 @@ export function buildToolsPath(names: string[]): string {
     const manifests = [...configurationManifests().values()];
     const folders = names.flatMap((name) => {
         const tool = toolPin(manifests, name.replace(/^[a-z]+:/u, ''));
-        if (tool.system === true || privateToolInstallation(tool, 'mise') !== undefined) return [];
+        if (tool.system === true || toolProjectPackage(tool, 'mise') !== undefined) return [];
         // A pin without a build for this machine is skipped by the checks that need it, so no PATH entry is owed.
         if (!hasToolBuild(tool.name)) return [];
         const pin = misePin(tool)!;
@@ -88,26 +87,31 @@ export async function install(
     environment: Record<string, string>,
     settings: SandboxInstallation = {},
 ): Promise<void> {
-    const outcome = await spawnGspot(cwd, argv, environment);
+    const outcome = await spawnGspot(cwd, [...argv, '--no-install'], environment);
     if (outcome.code !== 0)
         throw new Error(
             `Test repository init failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`,
         );
-    if (!(await Bun.file(join(cwd, 'gspot.toml')).exists()))
-        throw new Error(`The init command wrote no policy in the test repository: ${outcome.stderr}${outcome.stdout}`);
+    await using registry = await createInstallationRegistry(cwd, runTestCommand);
+    const installationEnvironment = { ...environment, ...registry.environment };
     const { without = [], level } = settings;
     if (level !== undefined) {
-        const selected = await spawnGspot(cwd, ['set', 'level', level], environment);
+        const selected = await spawnGspot(cwd, ['set', 'level', level], installationEnvironment);
         if (selected.code !== 0)
             throw new Error(`The ${level} level was not selected: ${selected.stdout}${selected.stderr}`);
     }
-    const removed = await removeConfigurations(cwd, without, environment);
-    if (removed === 0) await installPrivateTools(cwd);
+    const removed = await removeConfigurations(cwd, without, installationEnvironment);
+    if (removed === 0) {
+        const installed = await spawnGspot(cwd, ['install'], installationEnvironment);
+        if (installed.code !== 0)
+            throw new Error(`Test repository installation failed: ${installed.stdout}${installed.stderr}`);
+    }
 }
 
 /** Install generated, locked tool projects through the public command. */
 export async function installPrivateTools(cwd: string): Promise<void> {
-    const outcome = await spawnGspot(cwd, ['install']);
+    await using registry = await createInstallationRegistry(cwd, runTestCommand);
+    const outcome = await spawnGspot(cwd, ['install'], registry.environment);
     if (outcome.code !== 0)
         throw new Error(
             `Test repository installation failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`,

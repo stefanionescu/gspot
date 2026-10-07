@@ -1,4 +1,4 @@
-#:schema https://gspot.dev/schema/gspot.schema.json
+#:schema https://generativespotting.com/schema/gspot.schema.json
 
 # Run gspot apply after changing policy. Use gspot explain <name> to inspect a setting.
 
@@ -94,6 +94,7 @@ configurations = [
     "svelte",
     "vitest",
     "react-dom",
+    "python",
 ]
 
 [hooks]
@@ -107,16 +108,6 @@ paths = [
     ".github/workflows/gspot.yml",
     ".github/copilot-instructions.md",
     ".gitlab/ci/gspot.yml",
-    "packages/cli/grammars",
-    "packages/eslint-plugin/dist",
-    "packages/cli/dist",
-    ".gspot/state",
-    ".gspot/.venv",
-    ".gspot/node_modules/",
-    "tools/configurations/language/css.test.ts",
-    "tools/commands/commit-hook.test.ts",
-    "tools/checks/lockfile-fresh.test.ts",
-    "packages/plugin.test.ts",
     "Tests/orders-swiftTests/orders_swiftTests.swift",
     "src/orders.ts",
     "src/discounts.ts",
@@ -369,7 +360,7 @@ paths = [
 # The ESLint plugin is one more element, which neither imports the CLI nor is imported by it.
 [[architecture.modules]]
 name = "plugin"
-paths = ["packages/eslint-plugin/src/**"]
+paths = ["packages/eslint-plugin/src/**", "packages/eslint-plugin/build.ts"]
 
 [[architecture.imports_allowed]]
 from = "main"
@@ -472,12 +463,11 @@ reason = "Tool installation prepares generated lock files and consumes the gener
 
 [[architecture.imports_allowed]]
 from = "policy"
-to = ["parsers", "policy", "rules", "configurations", "repository", "platform"]
+to = ["parsers", "policy", "configurations", "repository", "platform"]
 
 [[architecture.imports_allowed]]
 from = "rules"
-to = ["rules", "parsers", "configurations", "repository", "platform"]
-reason = "Agent instruction settings derive from their parser schema, so rules consume the validated contract without duplicating it."
+to = ["rules", "policy", "parsers", "configurations", "repository", "platform"]
 
 [[architecture.imports_allowed]]
 from = "configurations"
@@ -652,11 +642,6 @@ reason = "A lint plugin that runs at development time and is linked dynamically;
 package = "lightningcss@1.33.0"
 license = "MPL-2.0"
 reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."
-
-[[licenses.exceptions]]
-package = "truncate-utf8-bytes@1.0.2"
-license = "WTFPL"
-reason = "A permissive license with no conditions; it arrives through a test tool and ships in nothing."
 
 [[ignore]]
 check = "security/semgrep"
@@ -971,7 +956,6 @@ paths = [
     "tests/types/cli/docs",
     "tests/types/cli/execution",
     "tests/types/cli/generation",
-    "tests/types/cli/tools",
     "tests/types/plugin/rules",
     "tests/types/tools/checks/supabase",
     "tests/types/tools/configurations/general",

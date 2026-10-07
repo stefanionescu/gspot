@@ -71,3 +71,6 @@ export const DEFAULT_TEST_PATTERNS = [
     '**/Tests/**',
     '**/*Tests.swift',
 ];
+
+/** The files the managed block tells the reader to open first; they cannot be left out. */
+export const FIRST_READ = ['general/engineering/agent/WORKING.md', 'general/engineering/prose/WRITING.md'];

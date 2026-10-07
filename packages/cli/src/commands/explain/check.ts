@@ -1,17 +1,16 @@
 // Explain a check, or one rule of the tool a check runs.
-import { toolName } from '#cli/tools/pins.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { toolName } from '#cli/configurations/pins.ts';
 import { quoteArgument } from '#cli/platform/quoting.ts';
-import { configurationFiles } from '#cli/rules/assemble.ts';
 import type { Session } from '#cli/types/execution/session.ts';
-import { allChecks } from '#cli/configurations/declarations.ts';
 import { parseRuffRuleSummary } from '#cli/parsers/tool/rule.ts';
 import type { ToolPin, CheckSpec } from '#cli/types/configurations.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import type { RepositoryDefinition } from '#cli/types/policy/settings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { allChecks, configurationFiles } from '#cli/configurations/declarations.ts';
 import type { Found, CheckFacts, Explanation, RuleSummarizer } from '#cli/types/commands/explain.ts';
 import { ESLINT_RULE_PACKAGES, SWIFTLINT_LINE_LIMIT, RULE_LOOKUP_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
 

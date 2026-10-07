@@ -6,8 +6,6 @@ import { writeFileSync } from 'node:fs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
-import { createPythonRegistry } from '#registry/python.ts';
-import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
@@ -22,12 +20,9 @@ test.skipIf(!isPosix)(
     'a staged Python defect is reported by Ruff from the installed environment while the working tree differs',
     async () => {
         await using repository = await testdir();
-        await using artifacts = await testdir();
-        await using registry = await createPythonRegistry(artifacts.path, runTestCommand);
         await using prepared = await preparePythonInstallation(repository.path, {
             indexFile: 'pyproject.toml',
             runner: 'none',
-            indexUrl: registry.url,
         });
         {
             using log = openOwnership(prepared.root);

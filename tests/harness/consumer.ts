@@ -25,16 +25,7 @@ export async function createConsumer(
         mkdirSync(root);
         writeFileSync(join(root, 'package.json'), '{"name":"consumer","private":true}\n');
         const installed = await runTestCommand(
-            [
-                'npm',
-                'install',
-                `@gspothq/cli@${version}`,
-                '--ignore-scripts',
-                '--registry',
-                registry.url,
-                '--no-audit',
-                '--no-fund',
-            ],
+            ['npm', 'install', `@gspothq/cli@${version}`, '--ignore-scripts', '--no-audit', '--no-fund'],
             {
                 cwd: root,
                 env: { ...consumerEnvironment, NPM_CONFIG_USERCONFIG: registry.npmrc },

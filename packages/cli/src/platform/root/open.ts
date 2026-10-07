@@ -5,7 +5,7 @@ import { isInside } from '#cli/platform/paths.ts';
 import { join, posix, relative } from 'node:path';
 import { sameEntry } from '#cli/platform/root/rules.ts';
 import { writeLink, acquireLock, replaceEntry } from '#cli/platform/root/writes.ts';
-import type { Root, Bounds, Snapshot, PathFormat } from '#cli/types/platform/root.ts';
+import type { Root, Bounds, FileCopy, PathFormat } from '#cli/types/platform/root.ts';
 import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, renameSync, unlinkSync, readdirSync } from 'node:fs';
 
 import {
@@ -65,7 +65,7 @@ function removeTree(bounds: Bounds, path: string): void {
 }
 
 // Removes a file inside the root after checking that it is still the one the caller last saw.
-function removeEntry(bounds: Bounds, path: string, expected: Snapshot): void {
+function removeEntry(bounds: Bounds, path: string, expected: FileCopy): void {
     if (!sameEntry(readEntry(bounds, path, expected.isLink === true), expected))
         throw new Error(`Lifecycle destination changed during removal: ${path}`);
     unlinkSync(checkedPath(bounds, path));

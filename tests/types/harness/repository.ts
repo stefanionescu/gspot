@@ -1,4 +1,4 @@
-import type { Level } from '#cli/types/rules.ts';
+import type { Level } from '#cli/types/configurations.ts';
 import type { Correction, FindingCase, CheckCommand } from '#tests/types/harness/check-case.ts';
 
 /** What a test repository holds and selects. */

@@ -35,7 +35,7 @@ test('a plugin rule is explained with the page of the plugin whose prefix it car
 });
 
 test.each([
-    ['gspot/no-trivial-functions', 'https://gspot.dev/reference/plugin/no-trivial-functions/'],
+    ['gspot/no-trivial-functions', 'https://generativespotting.com/reference/plugin/no-trivial-functions/'],
     ['@typescript-eslint/no-explicit-any', 'https://typescript-eslint.io/rules/no-explicit-any'],
     [
         'unicorn/prefer-set-has',

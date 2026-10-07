@@ -1,7 +1,5 @@
-import type { Registry } from '#automation/types/registry.ts';
-
-/** The registry holding the published release, its version, and the npmrc private tool installs read. */
+/** The registry holding the packed release, its version, and the npmrc private tool installs read. */
 export type PublishedRelease = {
-    registry: Pick<Registry, 'url' | 'npmrc' | 'work'>;
+    registry: { url: string; npmrc: string; work: string };
     version: string;
 };

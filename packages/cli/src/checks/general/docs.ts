@@ -7,12 +7,12 @@ import { readSource } from '#cli/platform/source.ts';
 import { findingAt } from '#cli/execution/finding.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { ProseLine } from '#cli/types/parsers/source.ts';
 import { runnerSchema } from '#cli/parsers/schema/settings.ts';
 import { globPaths, expandPaths } from '#cli/platform/paths.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
 import type { PathAllowance } from '#cli/types/policy/settings.ts';
+import { isGlob, pathMatcher } from '#cli/repository/selectors.ts';
 import { scopeOf, scopeAncestors } from '#cli/repository/scopes.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 import { MISE_FILES, LICENSE_FILE } from '#cli/config/repository/inventory.ts';
@@ -33,6 +33,17 @@ function knownPaths(input: EngineInput): Set<string> {
             'The docs/stale-paths check needs the full list of tracked files. Its manifest must say runs = "once".',
         );
     const known = expandPaths(input.repositoryFiles.map((file) => file.path));
+    const ignored = input.repositoryFiles
+        .filter((file) => posix.basename(file.path) === '.gitignore')
+        .flatMap((file) =>
+            readSource(input.root, file.path, input.reads)
+                .toString('utf8')
+                .split('\n')
+                .map((line) => line.trim())
+                .filter((line) => line !== '' && !line.startsWith('#') && !line.startsWith('!') && !isGlob(line))
+                .map((line) => posix.join(posix.dirname(file.path), line.replace(/^\//u, '').replace(/\/$/u, ''))),
+        );
+    for (const path of expandPaths(ignored)) known.add(path);
     // A check id is written like a path, and a document that names supabase/config means the check, not a file.
     for (const manifest of input.manifests.values()) for (const check of manifest.checks) known.add(check.name);
     for (const check of input.policyFiles.policy.checks) known.add(check.name);

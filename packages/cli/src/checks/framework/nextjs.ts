@@ -3,9 +3,9 @@ import { readSource } from '#cli/platform/source.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { findingAt } from '#cli/execution/finding.ts';
 import { nextSettingsProblems } from '#cli/parsers/nextjs.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
-import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
 import type { Finding, EngineInput } from '#cli/types/execution/runtime.ts';
 
 import {
@@ -147,7 +147,7 @@ export function versionPairs(input: EngineInput): Finding[] {
  * @returns one finding for each type error
  */
 export async function nextTypes(input: EngineInput): Promise<Finding[]> {
-    using scratchFolder = await scratchCopy(
+    using scratchFolder = await copyIntoScratch(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),
@@ -170,7 +170,7 @@ export async function nextTypes(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for a build that fails
  */
 export async function nextBuild(input: EngineInput): Promise<Finding[]> {
-    using scratchFolder = await scratchCopy(
+    using scratchFolder = await copyIntoScratch(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),

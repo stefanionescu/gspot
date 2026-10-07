@@ -1,4 +1,4 @@
-import type { Snapshot } from '#cli/types/platform/root.ts';
+import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { KeyChange } from '#cli/types/platform/document.ts';
 import type { RuleSettings } from '#cli/types/generation/rules.ts';
@@ -21,7 +21,7 @@ export type GeneratedFile = {
     content: string;
     readOnly: boolean;
     executable?: boolean;
-    read?: Snapshot;
+    read?: FileCopy;
     kind: 'lock' | 'config' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
 };
 

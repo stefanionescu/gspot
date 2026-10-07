@@ -15,13 +15,13 @@ import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { toPosix, environmentBin, executableNames } from '#cli/platform/paths.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
 
-// The folders a tool of the private kind, or a host tool, is located in. A snapshot has no private tools or virtual
-// environments of its own: they run from the working tree the snapshot stands for.
+// The folders a tool of the private kind, or a host tool, is located in. A copy has no private tools or virtual
+// environments of its own: they run from the working tree the copy stands for.
 function searchDirectories(root: string, options: LocateOptions): string[] {
     const { searchFolders, privateKind, installedRoot = root } = options;
     if (privateKind === 'npm') return [join(installedRoot, NODE_MODULES_DIRECTORY, '.bin')];
     if (privateKind === 'python') return [environmentBin(join(installedRoot, PYTHON_ENVIRONMENT_DIRECTORY))];
-    // A snapshot's private tools run from the original working tree.
+    // A copy's private tools run from the original working tree.
     return [...new Set(searchFolders)].flatMap((folder) => [
         join(
             basename(folder) === DOT_GSPOT ? join(installedRoot, relative(root, folder)) : folder,
@@ -81,8 +81,8 @@ function versionAbove(files: Root | undefined, root: string, start: string, name
 }
 
 /**
- * Read package metadata from a private installation or a native host installation.
- * @param files the private installation boundary, or undefined for a host installation.
+ * Read package metadata from a tool project installation or a native host installation.
+ * @param files the tool project installation boundary, or undefined for a host installation.
  * @param root the repository root owning the private boundary.
  * @param manifest the absolute package.json path.
  * @returns the validated package fields, or undefined when the file is absent.
@@ -104,7 +104,7 @@ export function installedPackage(files: Root | undefined, root: string, manifest
 }
 
 /**
- * Executables owned by the repository or its selected private installation, without PATH tools.
+ * Executables owned by the repository or its selected tool project installation, without PATH tools.
  * @param root the repository root
  * @param name the executable name
  * @param options the search folders and installation ownership
@@ -119,7 +119,7 @@ export function locateRepositoryCandidates(root: string, name: string, options: 
  * Every executable of the name, in the order gspot prefers them.
  * @param root the repository root.
  * @param name the executable name.
- * @param options the search folders and private installation ownership.
+ * @param options the search folders and tool project installation ownership.
  * @returns the paths that exist.
  */
 export function locateCandidates(root: string, name: string, options: LocateOptions): string[] {

@@ -1,19 +1,19 @@
+import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
-import type { Snapshot } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import type { Planned } from '#cli/types/lifecycle/output.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
-import type { ToolOwner, InstalledOutput, InstallationKind } from '#cli/types/tools/install.ts';
+import type { ToolOwner, InstalledOutput } from '#cli/types/tools/install.ts';
+import type { Manifest, InstallationKind } from '#cli/types/configurations.ts';
 
 /** Proposed tool inputs and complete temporary installations awaiting a successful run. */
 export type InstallationContext = {
     log: Log;
     inputs: ToolOwner;
-    original: Map<string, Snapshot | undefined>;
-    prepared: Map<string, Snapshot>;
+    original: Map<string, FileCopy | undefined>;
+    prepared: Map<string, FileCopy>;
     plans: Planned[];
     trees: Map<InstallationKind, InstalledOutput[]>;
     refreshLocks: boolean;

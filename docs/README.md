@@ -4,7 +4,9 @@ The documentation site uses Astro Starlight.
 
 ## Setup
 
-Follow [Contributing: Documentation](../CONTRIBUTING.md#documentation) for setup, preview, build, and reference ownership.
+Run `mise run setup` from the repository root. Use `mise run dev` to preview the site and
+`mise run build:docs` to build it. Reference pages come from the CLI contracts in
+`docs/src/content/reference/`.
 
 ## Asset licenses
 

@@ -36,8 +36,8 @@ const summary = example.rejected.trimEnd().split('\n').at(-1) ?? '';
                 />
             </TabItem>
             <TabItem label="mise">
-                <Code code="mise exec github:stefanionescu/gspot@0.1.0 -- gspot init" lang="sh" frame="none" />
-                <p>Choose mise as the runner. It pins the standalone CLI and required native tools.</p>
+                <Code code="mise exec npm:@gspothq/cli@0.1.0 -- gspot init" lang="sh" frame="none" />
+                <p>Choose mise as the runner. It pins the npm CLI and required executable tools.</p>
             </TabItem>
             <TabItem label="Global">
                 <Code code={'npm install --global @gspothq/cli@0.1.0\ngspot init'} lang="sh" frame="none" />

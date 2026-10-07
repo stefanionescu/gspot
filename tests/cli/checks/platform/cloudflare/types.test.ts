@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { toolPin } from '#cli/tools/pins.ts';
 import * as tools from '#cli/tools/inspect.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/execution/session.ts';
 import { buildEngineInput } from '#tests/harness/input.ts';

@@ -30,7 +30,8 @@ import {
  * @returns the native dependency findings, including undeclared application imports.
  */
 export async function deptry(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const text = readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST)) ?? '';
+    const text = readText(session.root, posix.join(planned.scope.scope.path, PYTHON_MANIFEST));
+    if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;
     return await runCommandCheck(session, planned, {
         command: [

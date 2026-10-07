@@ -1,4 +1,4 @@
-// Checking one tree: the working tree, or a snapshot of the index or of a pushed commit.
+// Checking one tree: the working tree, or a copy of the index or of a pushed commit.
 import { CHECKS } from '#cli/checks/registry.ts';
 import { codeList } from '#cli/platform/text.ts';
 import { runText } from '#cli/output/reporter.ts';
@@ -10,9 +10,9 @@ import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
+import type { RevisionSource } from '#cli/types/execution/copy.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
 import type { ChangedPaths } from '#cli/types/repository/revisions.ts';
-import type { RevisionSource } from '#cli/types/execution/snapshot.ts';
 import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
 import { selectedPaths, refuseUnknownChecks } from '#cli/commands/check/selection.ts';
 import type { Selections, CheckOptions, CheckCommandResult } from '#cli/types/commands/check.ts';
@@ -72,7 +72,7 @@ async function stagedSet(
     return options.staged ? getStaged(session.root, signal) : { staged: undefined, unstaged: 0 };
 }
 
-// A pushed commit is reproduced through the push options, not through the snapshot the check ran in.
+// A pushed commit is reproduced through the push options, not through the copy the check ran in.
 function rewriteReproductions(checks: RunReport['checks'], options: CheckOptions): void {
     for (const check of checks)
         if (check.reproduce !== undefined) check.reproduce = reproduceLine(check.check, check.scope, options);
@@ -137,10 +137,10 @@ async function runSelected(
 
 /**
  * Runs check and returns what to print.
- * @param root the tree to check: the repository, or a snapshot of a revision.
+ * @param root the tree to check: the repository, or a copy of a revision.
  * @param options the parsed flags.
  * @param signal cancellation for the run.
- * @param revision what the snapshot stands for, when the root is one.
+ * @param revision what the copy stands for, when the root is one.
  * @returns the text, the run report, and the exit code.
  */
 export async function checkTree(

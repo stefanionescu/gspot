@@ -1,13 +1,13 @@
 import { join } from 'node:path';
-import { toolPin } from '#cli/tools/pins.ts';
 import { readSource } from '#cli/platform/source.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import { sarifLogSchema } from '#cli/parsers/schema/sarif.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { CODEQL } from '#cli/config/checks/general/security.ts';
 import { runEngineTool } from '#cli/execution/command/runner.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
-import { scratchCopy } from '#cli/execution/snapshot/workspace.ts';
 import { placeOf } from '#cli/checks/general/security/locations.ts';
 import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
@@ -132,7 +132,7 @@ export async function codeql(input: EngineInput): Promise<Finding[]> {
     );
     using workFolder = scratchFolder('gspot-codeql-');
     const work = workFolder.path;
-    using sourceFolder = await scratchCopy(
+    using sourceFolder = await copyIntoScratch(
         input.root,
         input.files.map((file) => file.path),
         input.scopeEntries.map((scope) => scope.path),

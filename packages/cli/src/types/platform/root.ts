@@ -1,7 +1,7 @@
 import type { Stats } from 'node:fs';
 
 /** File bytes and mode, or a symbolic link's target bytes and mode. */
-export type Snapshot = { bytes: Buffer; mode: number; isLink?: true };
+export type FileCopy = { bytes: Buffer; mode: number; isLink?: true };
 
 export type PathFormat = 'portable' | 'native';
 
@@ -21,18 +21,18 @@ export type Root = {
     list(path?: string): string[];
     /** Return metadata for an entry that is not a symbolic link, or undefined if absent. */
     stat(path: string): Stats | undefined;
-    /** Check the snapshot path and link target, consulting proposed entries before the disk. */
-    validate(path: string, value: Snapshot, proposed?: Proposed): void;
+    /** Check the copy path and link target, consulting proposed entries before the disk. */
+    validate(path: string, value: FileCopy, proposed?: Proposed): void;
     /** Read file bytes or a symbolic link's target bytes, or return undefined if absent. */
-    readKeepingLinks(path: string): Snapshot | undefined;
+    readKeepingLinks(path: string): FileCopy | undefined;
     /** Read a regular file with no other hard link, or return undefined if absent. */
-    read(path: string): Snapshot | undefined;
-    /** Replace an entry only while its current snapshot matches expected. */
-    write(path: string, value: Snapshot, expected: Snapshot | undefined): void;
-    /** Create a symbolic link from the snapshot's target bytes and mode. */
-    link(path: string, value: Snapshot): void;
-    /** Remove an entry only while its current snapshot matches expected. */
-    remove(path: string, expected: Snapshot): void;
+    read(path: string): FileCopy | undefined;
+    /** Replace an entry only while its current copy matches expected. */
+    write(path: string, value: FileCopy, expected: FileCopy | undefined): void;
+    /** Create a symbolic link from the copy's target bytes and mode. */
+    link(path: string, value: FileCopy): void;
+    /** Remove an entry only while its current copy matches expected. */
+    remove(path: string, expected: FileCopy): void;
     /** Create a directory or set the mode of an existing directory. */
     mkdir(path: string, mode: number): void;
     /** Remove an empty directory. */
@@ -49,6 +49,6 @@ export type Root = {
     [Symbol.dispose](): void;
 };
 
-export type Proposed = ReadonlyMap<string, Snapshot | undefined>;
+export type Proposed = ReadonlyMap<string, FileCopy | undefined>;
 
 export type Staging = { bounds: Bounds; path: string; target: string; temporary: string };

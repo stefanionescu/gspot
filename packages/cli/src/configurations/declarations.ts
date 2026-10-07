@@ -1,7 +1,8 @@
-// Pure calculations over validated configuration declarations. Registry reads stay with the manifest reader.
+// Validated configuration declarations and their shipped rule assets.
 import { posix } from 'node:path';
-import { CONFIG_PREFIX } from '#cli/config/configurations.ts';
-import type { Manifest, OwnedCheck, ConfigurationFile } from '#cli/types/configurations.ts';
+import { listAssets } from '#cli/platform/assets.ts';
+import { CONFIG_PREFIX, CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
+import type { Manifest, OwnedCheck, RuleSource, ConfigurationFile } from '#cli/types/configurations.ts';
 
 /**
  * Every declared check by ID, with the configuration that ships it. Borrowed checks retain their original owner.
@@ -45,17 +46,15 @@ export function configurationName(target: string): string {
 }
 
 /**
- * Exact npm package names declared by the supplied configurations.
- * @param manifests the configuration declarations
- * @returns installer package names for tooling-only package detection
+ * The files of a configuration's rules folder. Each installs under the configuration's category and name, as language/bash/BASH.md.
+ * @param manifest the configuration
+ * @returns each file with its path inside the rules folder
  */
-export function npmToolNames(manifests: Iterable<Manifest>): Set<string> {
-    return new Set(
-        [...manifests].flatMap((manifest) =>
-            manifest.tools.flatMap((tool) => {
-                const npm = tool.installers['npm'];
-                return npm === undefined ? [] : [npm.name];
-            }),
-        ),
-    );
+export function configurationFiles(manifest: Manifest): RuleSource[] {
+    const { kind, name } = manifest.configuration;
+    const sources = listAssets(`${manifest.dir}/${CONFIGURATION_RULES_FOLDER}/`);
+    return sources.map((source) => ({
+        source,
+        path: `${kind}/${name}/${posix.relative(manifest.dir + '/' + CONFIGURATION_RULES_FOLDER, source)}`,
+    }));
 }

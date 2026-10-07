@@ -1,13 +1,12 @@
 // Tool requirements derived from the same applicable check plan used by execution.
-import { toolPin, checkToolPin } from '#cli/tools/pins.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import type { Session } from '#cli/types/execution/session.ts';
 import { configuredChecks } from '#cli/execution/planning/plan.ts';
 import type { PlannedCheck } from '#cli/types/execution/runtime.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
-import { privateToolInstallation } from '#cli/tools/installation.ts';
 import type { Manifest, CheckSpec } from '#cli/types/configurations.ts';
 import { declaredArchitectures } from '#cli/policy/settings/entries.ts';
+import { toolPin, checkToolPin, toolProjectPackage } from '#cli/configurations/pins.ts';
 
 /**
  * Companion tools consumed by a check's command and its selected native configuration.
@@ -36,8 +35,8 @@ export function requiredToolNames(check: PlannedCheck, runner: string | undefine
     const names = new Set(
         [check.tool?.name, ...checkCompanions(check.scope, check.spec), check.spec.fix?.[0]].flatMap((name) => {
             if (name === undefined) return [];
-            // v8r loads Ajv through an optional peer in private installations.
-            if (name === 'v8r' && privateToolInstallation(toolPin(check.scope.selected, name), runner)?.kind === 'npm')
+            // v8r loads Ajv through an optional peer in tool project installations.
+            if (name === 'v8r' && toolProjectPackage(toolPin(check.scope.selected, name), runner)?.kind === 'npm')
                 return [name, 'ajv'];
             return [name];
         }),
@@ -46,7 +45,7 @@ export function requiredToolNames(check: PlannedCheck, runner: string | undefine
         if (check.files.some((file) => file.path.endsWith('package.json'))) names.add('license-checker-rseidelsohn');
         if (check.files.some((file) => file.path.endsWith('pyproject.toml'))) names.add('pip-licenses');
     }
-    if ([...names].some((name) => privateToolInstallation(toolPin(check.scope.selected, name), runner)?.kind === 'npm'))
+    if ([...names].some((name) => toolProjectPackage(toolPin(check.scope.selected, name), runner)?.kind === 'npm'))
         names.add('node');
     return [...names];
 }

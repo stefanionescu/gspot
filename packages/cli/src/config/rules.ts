@@ -1,9 +1,6 @@
 /** The YAML front matter that opens a rule file. */
 export const FRONT_MATTER = /^---\n[\s\S]*?\n---\n/u;
 
-/** The files the managed block tells the reader to open first; they cannot be left out. */
-export const FIRST_READ = ['general/engineering/agent/WORKING.md', 'general/engineering/prose/WRITING.md'];
-
 export const CHECKS_INSTALLED =
     'Run `gspot check --staged` before committing. Change policy with `gspot set` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`.';
 

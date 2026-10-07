@@ -6,7 +6,7 @@ export const PACKAGES_LOCKFILE = 3;
 
 export const LOCKFILE_VERSIONS = [HYBRID_LOCKFILE, PACKAGES_LOCKFILE] as const;
 
-/** Lockfile clients, runner priority, private tool projects, and native verification. */
+/** Lockfile clients, runner priority, tool projects, and native verification. */
 export const LOCKFILES = [
     {
         file: 'bun.lock',
