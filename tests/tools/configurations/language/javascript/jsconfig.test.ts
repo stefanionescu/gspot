@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { cp, mkdir, symlink } from 'node:fs/promises';
 import { openSession } from '#cli/commands/public.ts';
@@ -34,7 +35,7 @@ for (const entry of JAVASCRIPT_COMPILER_CASES)
             await symlink('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
             const session = await openSession(sandbox.path);
             using log = openOwnership(sandbox.path);
-            writeGeneratedFiles(session, log);
+            writeGeneratedFiles(session, emitAll(session), log);
             const command = ['check', '--only', 'javascript/tsc', '--json'];
             const broken = await spawnGspot(sandbox.path, command);
             expect(broken.code, broken.stdout + broken.stderr).toBe(1);

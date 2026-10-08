@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -30,7 +31,7 @@ test('Python uses one function-size ceiling without a second statement-count fin
     });
     const session = await openSession(sandbox.path);
     using log = openOwnership(sandbox.path);
-    writeGeneratedFiles(session, log);
+    writeGeneratedFiles(session, emitAll(session), log);
     const checked = runTestCommandBlocking(
         ['ruff', 'check', '--config', '.gspot/config/ruff.toml', '--no-cache', '--output-format', 'json', 'sample.py'],
         { cwd: sandbox.path },
@@ -54,7 +55,7 @@ test('Ruff editor discovery and explicit formatting agree on root and nested pol
     });
     const session = await openSession(sandbox.path);
     using log = openOwnership(sandbox.path);
-    writeGeneratedFiles(session, log);
+    writeGeneratedFiles(session, emitAll(session), log);
     for (const { file, config, formatted } of FORMAT_CASES) {
         const fixed = runTestCommandBlocking(['ruff', 'format', '--config', config, '--no-cache', file], {
             cwd: sandbox.path,
@@ -170,7 +171,7 @@ reason = "The import has an external side effect."
             });
             const session = await openSession(sandbox.path);
             using log = openOwnership(sandbox.path);
-            writeGeneratedFiles(session, log);
+            writeGeneratedFiles(session, emitAll(session), log);
             for (const scope of ['root', 'app'] as const) {
                 const folder = scope === 'root' ? '' : scope;
                 const config = join('.gspot/config', folder, 'ruff.toml');

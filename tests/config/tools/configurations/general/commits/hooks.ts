@@ -18,7 +18,7 @@ export const COMMIT_MESSAGES = [
 
 /** Native preparation commands shared by the four installed commit scenarios. */
 export const COMMITS_SETUP = [
-    ['init', '--yes', '--configurations', 'commits', '--no-task', '--no-ci', '--no-agent-rules', '--no-install'],
+    ['init', '--yes', '--configurations', 'commits', '--no-runner', '--no-ci', '--no-agent-rules', '--no-install'],
     ['set', 'level', 'all'],
     ['install'],
 ];

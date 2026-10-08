@@ -4,7 +4,7 @@ export const INIT = [
     '--json',
     '--configurations',
     'bash',
-    '--no-task',
+    '--no-runner',
     '--no-hooks',
     '--no-ci',
     '--no-install',

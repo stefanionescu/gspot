@@ -15,7 +15,7 @@ Initialize a Python repository interactively and choose mise:
 gspot init --configurations python
 ```
 
-mise is the default proposal when available. Explicit settings take precedence.
+`gspot init --runner mise` selects mise without a runner prompt. mise is the default proposal when available. Explicit settings take precedence.
 
 ## npm, pnpm, Yarn, or Bun
 
@@ -29,9 +29,9 @@ Applicable Python tools live in `.gspot/pyproject.toml`; uv installs them into `
 
 ## No runner
 
-`gspot init --no-task` selects `runner = "none"`. Hooks call `gspot` on `PATH`, so install the pinned CLI globally. Native tools still need mise or a separate installation. `gspot doctor` prints install commands.
+`gspot init --no-runner` omits the `runner` setting. Hooks call `gspot` on `PATH`, so install the pinned CLI globally. Executable tools need mise or a separate installation. `gspot doctor` prints install commands.
 
-`hooks.enabled = false` disables hooks; an absent `[ci]` disables CI. `--no-hooks` and `--no-ci` select those choices during initialization.
+`hooks.enabled = false` disables hooks; an absent `[ci]` disables CI. `--no-hooks` and `--no-ci` select those choices during initialization. Apply prunes recorded hook files and prints `run gspot install`. Install unsets `core.hooksPath` when the path belongs to gspot and hooks are disabled.
 
 ## Private registries
 

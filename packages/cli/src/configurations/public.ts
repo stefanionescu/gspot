@@ -283,14 +283,21 @@ export function selectConfigurations(configurationNames: string[], manifests: Ma
 }
 
 /**
+ * Tests whether a configuration owns language or framework source.
+ * @param manifest the configuration declaration
+ * @returns whether it contributes source to shared checks
+ */
+export function isSourceKind(manifest: Manifest): boolean {
+    return manifest.configuration.kind === 'language' || manifest.configuration.kind === 'framework';
+}
+
+/**
  * Language and framework configurations that contribute source to shared checks.
  * @param selected the selected manifests.
  * @returns the source policy owners.
  */
 export function sourceConfigurations(selected: Manifest[]): Manifest[] {
-    return selected.filter(
-        (manifest) => manifest.configuration.kind === 'language' || manifest.configuration.kind === 'framework',
-    );
+    return selected.filter((manifest) => isSourceKind(manifest));
 }
 
 /**

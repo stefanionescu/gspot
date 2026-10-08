@@ -17,6 +17,7 @@ replaces = [".commitlintrc", ".commitlintrc.json", ".commitlintrc.yml", ".commit
 [[tool.replace]]
 file = "package.json"
 key = "commitlint"
+redirect = true
 shared = true
 
 [[tool_file]]

@@ -37,7 +37,7 @@ test('check path ignores remove unused Prettier output and remain stable after i
     await createFileTree(sandbox.path, { 'gspot.toml': FORMAT_POLICY, 'sample.json': '{"value":1}\n' });
     const initial = await openSession(sandbox.path);
     using log = openOwnership(initial.root);
-    writeGeneratedFiles(initial, log, undefined, emitAll(initial));
+    writeGeneratedFiles(initial, emitAll(initial), log);
     expect(await pathExists(join(sandbox.path, '.gspot/config/prettierignore'))).toBe(true);
     expect(await pathExists(join(sandbox.path, '.gspot/config/prettier.json'))).toBe(true);
     await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_POLICY + PRETTIER_PATH_IGNORE);
@@ -50,12 +50,12 @@ test('check path ignores remove unused Prettier output and remain stable after i
     );
     const generated = emitAll(excluded);
     expect(generated.files.map((file) => file.path)).not.toContain('.gspot/config/prettier.json');
-    const removed = writeGeneratedFiles(excluded, log, undefined, generated);
+    const removed = writeGeneratedFiles(excluded, generated, log);
     expect(removed.removed).toContain('.gspot/config/prettierignore');
     expect(await pathExists(join(sandbox.path, '.gspot/config/prettierignore'))).toBe(false);
     const settled = await openSession(sandbox.path);
     expect(configuredChecks(settled).map((check) => check.check.name)).not.toContain('format/prettier');
-    const repeated = writeGeneratedFiles(settled, log, undefined, emitAll(settled));
+    const repeated = writeGeneratedFiles(settled, emitAll(settled), log);
     expect(repeated.written).toStrictEqual([]);
     expect(repeated.removed).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(FORMAT_POLICY + PRETTIER_PATH_IGNORE);

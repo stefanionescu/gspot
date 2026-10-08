@@ -28,7 +28,7 @@ async function prepareLockfile(root: string) {
     const session = await openSession(root);
     const generated = emitAll(session);
     await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
-    writeGeneratedFiles(session, log, undefined, generated);
+    writeGeneratedFiles(session, generated, log);
     const lockfilePath = join(root, '.gspot/uv.lock');
     return {
         manifest: await readFile(join(root, '.gspot/pyproject.toml')),

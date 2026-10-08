@@ -9,9 +9,9 @@ import { everyTable } from '#cli/policy/settings/contracts.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { hashCommentHeader } from '#cli/generation/documents/contracts.ts';
 import type { Policy, FormatSettings } from '#cli/types/policy/settings.ts';
-import { byScopeDepth, expandedPaths } from '#cli/repository/paths/public.ts';
 import { UNREPRESENTABLE_SELECTOR } from '#cli/config/generation/formatting.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
+import { literalGlob, byScopeDepth, expandedPaths } from '#cli/repository/paths/public.ts';
 import { CACHED_PATHS, GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 
 import {
@@ -48,7 +48,7 @@ function setupSteps(pipeline: Pipeline): Record<string, unknown>[] {
         ];
     return [
         { uses: pinned(CLI_PINS.actions.node), with: { 'node-version': CLI_PINS.node } },
-        { run: `npm install --global @gspothq/cli@${pipeline.version}` },
+        { run: ciNpmInstall(pipeline.version) },
         { run: 'gspot install' },
         { run: 'gspot doctor' },
     ];
@@ -138,15 +138,6 @@ function rebaseOverrides(
             ];
         });
     });
-}
-
-/**
- * A path as a glob that matches only itself.
- * @param path the literal path
- * @returns the path with every glob character escaped
- */
-function literalGlob(path: string): string {
-    return path.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
 }
 
 function formatEntries(policy: Policy): ScopeFormat[] {
@@ -273,7 +264,7 @@ export function gitlabFile(pipeline: Pipeline): GeneratedFile {
     const command = HOOK_RUNNERS[pipeline.isMise ? 'mise' : 'gspot'].command;
     const setup = pipeline.isMise
         ? [`mise trust ${MISE_CONFIG_PATH}`, 'mise install']
-        : [`npm install --global @gspothq/cli@${pipeline.version}`];
+        : [ciNpmInstall(pipeline.version)];
     const check = [
         'GSPOT_CI_BASE="${CI_MERGE_REQUEST_DIFF_BASE_SHA:-${CI_COMMIT_BEFORE_SHA:-}}"',
         buildCheckScript(`${command} check`, pipeline.run === 'all'),
@@ -336,4 +327,13 @@ export function editorconfigOverrides(policy: Policy): EditorconfigOverride[] {
         if (Object.keys(options).length === 0) return [];
         return expandedPaths(paths).map((pattern) => ({ path: `/${editorconfigSelector(pattern, scope)}`, options }));
     });
+}
+
+/**
+ * The npm installation command shared by workflows and the initialization plan.
+ * @param version the selected version or native shell expression that reads it
+ * @returns the command that installs that exact gspot version
+ */
+export function ciNpmInstall(version: string): string {
+    return `npm install --global @gspothq/cli@${version}`;
 }

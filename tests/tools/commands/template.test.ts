@@ -26,7 +26,7 @@ const prepareSource = async () => {
     commitAll(path);
     const initialized = await spawnGspot(
         path,
-        ['init', '--yes', '--configurations', 'bash', '--no-task', '--no-ci', '--no-hooks', '--no-install'],
+        ['init', '--yes', '--configurations', 'bash', '--no-runner', '--no-ci', '--no-hooks', '--no-install'],
         TOOLS,
     );
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);

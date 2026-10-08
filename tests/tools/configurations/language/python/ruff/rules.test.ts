@@ -47,7 +47,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
         '.gspot/config/ruff.toml',
     ]);
     using log = openOwnership(sandbox.path);
-    writeGeneratedFiles(session, log, undefined, emitted);
+    writeGeneratedFiles(session, emitted, log);
     const app = parse(configs.find(({ path }) => path === '.gspot/config/app/ruff.toml')!.content);
     expect(app).toMatchObject({ lint: { select: containingAll(['PT001']) } });
 
@@ -84,7 +84,7 @@ test.each(['recommended', 'all'] as const)(
         });
         const session = await openSession(sandbox.path);
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(session, log);
+        writeGeneratedFiles(session, emitAll(session), log);
         const command = [
             'ruff',
             'check',

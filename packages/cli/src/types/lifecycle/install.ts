@@ -27,12 +27,12 @@ export type InstallationStep = {
         manifests: Manifest[],
         generated: Generated,
         refreshLockfiles: boolean,
-    ) => Pick<InstallationPlan, 'steps' | 'notes'>;
+    ) => Pick<InstallationPlan, 'steps' | 'notes' | 'hooks'>;
     run: (
         session: ToolSession,
         manifests: Manifest[],
         context: InstallationContext,
-        preview: Pick<InstallationPlan, 'steps' | 'notes'>,
+        preview: Pick<InstallationPlan, 'steps' | 'notes' | 'hooks'>,
     ) => string | Promise<string>;
 };
 
@@ -41,14 +41,15 @@ export type InstallationResult = { note: string; exitCode: number };
 
 /** Applicable installation phases with their calculated commands and instructions. */
 export type InstallationPlan = {
+    hooks?: string;
     steps: string[][];
     notes: string[];
-    preparation: Pick<InstallationPlan, 'steps' | 'notes'> & { phase: InstallationStep };
-    phases: Array<Pick<InstallationPlan, 'steps' | 'notes'> & { phase: InstallationStep }>;
+    preparation: Pick<InstallationPlan, 'steps' | 'notes' | 'hooks'> & { phase: InstallationStep };
+    phases: Array<Pick<InstallationPlan, 'steps' | 'notes' | 'hooks'> & { phase: InstallationStep }>;
 };
 /** Policy and repository evidence for installing and inspect clone-local Git hooks. */
 export type HookContext = { policy: Policy; repository: Pick<Repository, 'root' | 'hasGit'> };
 /** Whether configured hooks are ready, with a human-readable status. */
 export type HookStatus = { ready: boolean; text: string };
 /** The Git setting to write, or instructions for hooks already owned by the repository. */
-export type HookPlan = { command?: string[]; note: string };
+export type HookPlan = { path?: string; command?: string[]; note: string };

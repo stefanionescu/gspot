@@ -5,6 +5,7 @@ import type { Session } from '#cli/types/planning.ts';
 import { isInScope } from '#cli/repository/paths/public.ts';
 import { toPosix, isInside } from '#cli/platform/contracts.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
+import { unknownCheckDiagnostic } from '#cli/configurations/errors/public.ts';
 
 // The repository files a selector names: the file itself, or everything under a folder.
 function matchingFiles(session: Session, options: CheckOptions, path: string, candidates: string[]): string[] {
@@ -42,8 +43,5 @@ export function refuseUnknownChecks(session: Session, only: string[] | undefined
         ...Object.values(session.policyFiles.policy.check).map((check) => check.name),
     ]);
     const unknown = only?.find((check) => !known.has(check));
-    if (unknown !== undefined)
-        throw new GspotError('selection', [
-            `No selected configuration runs a check called \`${unknown}\` here. Run gspot explain ${unknown} to see which configuration ships it.`,
-        ]);
+    if (unknown !== undefined) throw new GspotError('selection', [unknownCheckDiagnostic(unknown, [...known])]);
 }

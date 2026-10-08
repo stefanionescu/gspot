@@ -28,7 +28,7 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
     const configs = emitted.files.filter(({ path }) => path.endsWith('typos.toml'));
     expect(configs.map(({ path }) => path)).toStrictEqual(['.gspot/config/typos.toml']);
     using log = openOwnership(sandbox.path);
-    writeGeneratedFiles(session, log, undefined, emitted);
+    writeGeneratedFiles(session, emitted, log);
     const policy = runTestCommandBlocking(
         ['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'gspot.toml'],
         {
@@ -87,7 +87,7 @@ test('spelling locales and word allowances remain scoped in generated configurat
         '.gspot/config/typos.toml',
     ]);
     using log = openOwnership(sandbox.path);
-    writeGeneratedFiles(session, log, undefined, output);
+    writeGeneratedFiles(session, output, log);
 
     const run = (config: string, path: string) =>
         runTestCommandBlocking(
@@ -138,7 +138,7 @@ test.each([
     });
     const session = await openSession(sandbox.path);
     using log = openOwnership(sandbox.path);
-    writeGeneratedFiles(session, log);
+    writeGeneratedFiles(session, emitAll(session), log);
     const selected = patterns.includes('nested')
         ? ['.gspot/config/typos.toml']
         : ['.gspot/config/typos.toml', '.gspot/config/nested/typos.toml'];

@@ -8,6 +8,7 @@ import { createConsumer } from '#tests/harness/consumer.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runPackageCheck } from '#tests/harness/check-case.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
+import type { DoctorReport } from '#cli/types/commands/doctor.ts';
 import type { ConfigurationsListJson } from '#cli/types/commands/list.ts';
 import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/packages/languages.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/harness/release.ts';
@@ -41,10 +42,16 @@ async function prepareLanguages(installation: Consumer): Promise<void> {
 async function expectInstalledSql(installation: Consumer): Promise<void> {
     const { root, command, offlineOptions, onlineOptions } = installation;
     await writeFile(join(root, 'query.sql'), 'SELECT 1;\n');
-    const detected = await runTestCommand([...command, 'list', '--json'], offlineOptions);
-    expect(detected.code, detected.stdout + detected.stderr).toBe(0);
-    const available = JSON.parse(detected.stdout) as ConfigurationsListJson;
-    expect(available.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
+    const listed = await runTestCommand([...command, 'list', '--json'], offlineOptions);
+    expect(listed.code, listed.stdout + listed.stderr).toBe(0);
+    const available = JSON.parse(listed.stdout) as ConfigurationsListJson;
+    expect(available.available.some((configuration) => configuration.name === 'sql')).toBe(true);
+    const inspected = await runTestCommand([...command, 'doctor', '--json'], offlineOptions);
+    const report = JSON.parse(inspected.stdout) as DoctorReport;
+    expect(inspected.code, inspected.stdout + inspected.stderr).toBe(report.exitCode);
+    expect(report.suggestions.detected.find((configuration) => configuration.configuration === 'sql')?.command).toBe(
+        'gspot add sql',
+    );
     const added = await runTestCommand([...command, 'add', 'sql'], onlineOptions);
     expect(added.code, added.stdout + added.stderr).toBe(0);
     const configured = await runTestCommand([...command, 'set', 'tools.sqlfluff.dialect', 'postgres'], onlineOptions);

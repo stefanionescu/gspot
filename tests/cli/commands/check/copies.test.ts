@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, gitOutput } from '#tests/harness/git.ts';
@@ -201,7 +202,7 @@ test.each(['recommended', 'all'] as const)(
         for (const scope of ['', 'child']) await mkdir(join(sandbox.path, scope, '.venv'));
         const session = await openSession(sandbox.path);
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(session, log);
+        writeGeneratedFiles(session, emitAll(session), log);
         gitOutput(sandbox.path, ['init', '-q']);
         gitOutput(sandbox.path, ['add', '-A']);
         const original = await readFile(join(sandbox.path, '.gspot/config/basedpyrightconfig.json'));

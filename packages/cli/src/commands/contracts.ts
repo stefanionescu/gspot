@@ -5,7 +5,6 @@ import { createTwoFilesPatch } from 'diff';
 import { readPolicy } from '#cli/policy/public.ts';
 import { emitAll } from '#cli/generation/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
-import { printResult } from '#cli/terminal/public.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { canonicalPath } from '#cli/platform/root/reads.ts';
@@ -15,15 +14,16 @@ import { compact, toPosix } from '#cli/platform/contracts.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { readIndexEntries } from '#cli/repository/contracts.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
+import { noteLines, printResult } from '#cli/terminal/public.ts';
 import { writePolicyFile } from '#cli/policy/document/public.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { commandHelp, openSession } from '#cli/commands/public.ts';
 import type { PreparedPolicy } from '#cli/types/policy/settings.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { join, win32, dirname, resolve, basename, relative } from 'node:path';
 import type { ExportJson, ExportOptions } from '#cli/types/commands/export.ts';
+import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
 import { assertVersionPin, writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import type { InstallJson, InstallOptions } from '#cli/types/commands/install.ts';
 import { installTools, installationPlan } from '#cli/lifecycle/install/public.ts';
@@ -68,11 +68,9 @@ export function registerInstall(program: Program): void {
         .option('--dry-run', 'Print the install commands and write nothing')
         .option('--refresh-lockfiles', 'Resolve the declared tool pins again and install the prepared lockfiles')
         .action(async (flags, command) => {
-            const global = command.optsWithGlobals();
-            const cwd = resolve(global.C ?? process.cwd());
             printResult(
                 await installCommand({
-                    cwd,
+                    cwd: commandRoot(command),
                     isDryRun: flags.dryRun === true,
                     refreshLockfiles: flags.refreshLockfiles === true,
                 }),
@@ -90,10 +88,9 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
     assertVersionPin(root);
     const session = await openSession(root);
     const generated = emitAll(session);
-    const { steps, notes } = installationPlan(session, generated, options.refreshLockfiles === true);
+    const { steps, notes, hooks } = installationPlan(session, generated, options.refreshLockfiles === true);
     if (options.isDryRun) {
         const lines = [...steps.map((step) => step.join(' ')), ...notes];
-        const hooks = steps.find((step) => step[0] === 'git' && step[2] === 'core.hooksPath')?.[3];
         return {
             text: lines.length === 0 ? 'No managed tools or hooks to install.\n' : `${lines.join('\n')}\n`,
             json: { dryRun: true, steps, notes, ...compact({ hooks }) } satisfies InstallJson,
@@ -161,7 +158,7 @@ export async function savePolicy(root: string, options: SavePolicyOptions): Prom
     });
     let applied: ApplyReport;
     try {
-        applied = writeGeneratedFiles(session, log, undefined, generated);
+        applied = writeGeneratedFiles(session, generated, log);
     } catch (error) {
         // The policy is written by now, so the result says it keeps the change and how to finish.
         const reason = errorText(error);
@@ -171,7 +168,7 @@ export async function savePolicy(root: string, options: SavePolicyOptions): Prom
             exitCode: EXIT_ERROR,
         };
     }
-    const notes = applied.notes.map((note) => `note     ${note}\n`).join('');
+    const notes = noteLines(applied.notes);
     return {
         text: `${summary}\n${notes}`,
         json: { changed: result.changed, notes: applied.notes },
@@ -251,8 +248,6 @@ export function registerExport(program: Program): void {
         .addHelpText('after', commandHelp('export'))
         .option('--dry-run', 'Print the template without writing its destination')
         .action(async (file, flags, command) => {
-            const global = command.optsWithGlobals();
-            const cwd = resolve(global.C ?? process.cwd());
-            printResult(await exportCommand({ cwd, file, isDryRun: flags.dryRun === true }));
+            printResult(await exportCommand({ cwd: commandRoot(command), file, isDryRun: flags.dryRun === true }));
         });
 }

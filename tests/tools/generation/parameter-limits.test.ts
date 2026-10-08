@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
@@ -32,7 +33,7 @@ for (const scenario of PARAMETER_CASES.filter((entry) => entry.language !== 'swi
             });
             const session = await openSession(directory.path);
             using log = openOwnership(directory.path);
-            writeGeneratedFiles(session, log);
+            writeGeneratedFiles(session, emitAll(session), log);
             const result = runTestCommandBlocking(scenario.command, {
                 cwd: directory.path,
             });

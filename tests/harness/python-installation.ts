@@ -122,7 +122,7 @@ export async function sharePythonTools(root: string): Promise<Record<string, str
         kind: 'lock',
         ...compact({ read: original }),
     });
-    writeGeneratedFiles(session, log, undefined, generated);
+    writeGeneratedFiles(session, generated, log);
     installTree(
         log,
         'python',
@@ -142,7 +142,7 @@ export async function preparePythonInstallation(
             `[[ignore]]\ncheck = "${check}"\nreason = "This installation scenario exercises the pinned Ruff installation."\n`,
     ).join('\n');
     await createFileTree(root, {
-        '.gitignore': `${gitignoreBlock()}\n.venv/\n`,
+        '.gitignore': `${gitignoreBlock([configurationManifests().get('python')!])}\n.venv/\n`,
         'gspot.toml': buildPolicy(['python'], {
             tables: `${RUNNER_POLICY[runner]}${NO_AGENT_RULES}${ignores}`,
             level: 'recommended',

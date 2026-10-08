@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -19,7 +20,7 @@ async function prepareFixer(root: string, checkId: string): Promise<void> {
     const session = await openSession(root);
     {
         using log = openOwnership(root);
-        writeGeneratedFiles(session, log);
+        writeGeneratedFiles(session, emitAll(session), log);
     }
     const manifests = session.scopes[0]!.selected;
     const check = manifests.flatMap((manifest) => manifest.checks).find((entry) => entry.name === checkId)!;

@@ -91,8 +91,8 @@ export function structuralRuleBlocks(input: Pick<EslintContext, 'scopes' | 'poli
         ];
     for (const selection of scopes.toSorted((a, b) => byScopeDepth(a.scope.path, b.scope.path))) {
         for (const [language, patterns] of [
-            ['javascript', ['**/*.{js,mjs,cjs,jsx}', ...eslintNodePatterns(nodeFiles, selection.scope.path)]],
-            ['typescript', ['**/*.{ts,tsx,mts,cts,vue,svelte,astro}']],
+            ['javascript', [eslintSourcePattern('javascript'), ...eslintNodePatterns(nodeFiles, selection.scope.path)]],
+            ['typescript', [eslintSourcePattern('typescript', 'vue', 'svelte', 'astro')]],
         ] as const) {
             const maxStatements = selection.view.limit('min_function_statements', language);
             const options = maxStatements === undefined ? {} : { maxStatements };

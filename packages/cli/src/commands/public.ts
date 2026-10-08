@@ -4,7 +4,6 @@ import { readPolicy } from '#cli/policy/public.ts';
 import { emitAll } from '#cli/generation/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { printResult } from '#cli/terminal/public.ts';
 import { installUv } from '#cli/tools/python/public.ts';
 import { npmPins } from '#cli/configurations/contracts.ts';
 import { readRepository } from '#cli/repository/public.ts';
@@ -13,11 +12,11 @@ import type { Policy } from '#cli/types/policy/settings.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
-import type { Program } from '#cli/types/commands/program.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { createReadCache } from '#cli/platform/root/public.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
+import { noteLines, printResult } from '#cli/terminal/public.ts';
 import { writePolicyFile } from '#cli/policy/document/public.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
@@ -30,6 +29,7 @@ import type { Drift, ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { FILE_PREFIX_BYTES } from '#cli/config/repository/inventory.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { scopeView, knownSettings } from '#cli/policy/settings/public.ts';
+import type { Program, GlobalCommand } from '#cli/types/commands/program.ts';
 import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
 import { pathMatcher, filenameMatcher } from '#cli/repository/paths/public.ts';
 import type { ApplyOptions, ApplyPlanJson } from '#cli/types/commands/apply.ts';
@@ -118,13 +118,13 @@ function driftText(drift: Drift[]): string {
     return `${lines.join('\n')}\n`;
 }
 
-function planApply(session: Session, policy: string, configurations: string[]): CommandResult {
+function planApply(session: Session, policy: string, reconciled: string[]): CommandResult {
     const generated = emitAll(session);
-    const drift = computeDrift(session.root, session.policyFiles.policy, generated);
+    const drift = computeDrift(session.root, generated);
     const summary = drift.length === 0 ? 'every generated file is up to date\n' : driftText(drift);
-    const text = summary + generated.notes.map((note) => `note     ${note}\n`).join('');
+    const text = summary + noteLines(generated.notes);
     const pin = { from: readVersionPin(session.root), to: session.version };
-    const json: ApplyPlanJson = { dryRun: true, policy, configurations, pin, drift, notes: generated.notes };
+    const json: ApplyPlanJson = { dryRun: true, policy, reconciled, pin, drift, notes: generated.notes };
     const version = pin.from === pin.to ? '' : `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n`;
     return { text: `${version}${text}`, json, exitCode: 0 };
 }
@@ -134,10 +134,10 @@ function reportText(report: ApplyReport): string {
         ...report.written.map((path) => `wrote    ${path}`),
         ...report.updated.map((path) => `updated  ${path}`),
         ...report.removed.map((path) => `removed  ${path}`),
-        ...report.notes.map((note) => `note     ${note}`),
     ];
-    if (lines.length === 0) lines.push(`everything up to date (${String(report.unchanged.length)} files)`);
-    return `${lines.join('\n')}\n`;
+    if (lines.length === 0 && report.notes.length === 0)
+        lines.push(`everything up to date (${String(report.unchanged.length)} files)`);
+    return `${lines.length === 0 ? '' : lines.join('\n') + '\n'}${noteLines(report.notes)}`;
 }
 
 /**
@@ -206,6 +206,15 @@ export async function openSession(rootPath: string, policyFiles = readPolicy(roo
 }
 
 /**
+ * Resolve the working directory shared by every command registration.
+ * @param command the native command carrying the global directory flag
+ * @returns the absolute directory the command starts in
+ */
+export function commandRoot(command: GlobalCommand): string {
+    return resolve(command.optsWithGlobals().C ?? process.cwd());
+}
+
+/**
  * Format the command's shared documentation for Commander.
  * @param name the registered command name
  * @returns levels, exit descriptions, and examples
@@ -234,11 +243,9 @@ export function registerApply(program: Program): void {
         .addHelpText('after', commandHelp('apply'))
         .option('--dry-run', 'Show the changes without writing project files')
         .action(async (flags, command) => {
-            const global = command.optsWithGlobals();
-            const cwd = resolve(global.C ?? process.cwd());
             printResult(
                 await applyCommand({
-                    cwd,
+                    cwd: commandRoot(command),
                     isDryRun: flags.dryRun === true,
                 }),
             );
@@ -268,7 +275,7 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
         const result = planApply(session, proposal.text, reconciliation.notes);
         return {
             ...result,
-            text: `${reconciliation.notes.map((note) => 'note     ' + note + '\n').join('')}${result.text}`,
+            text: `${noteLines(reconciliation.notes)}${result.text}`,
         };
     }
     const generated = emitAll(session);
@@ -283,7 +290,7 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
             });
         },
     });
-    const report = writeGeneratedFiles(session, log, undefined, generated);
+    const report = writeGeneratedFiles(session, generated, log);
     report.notes.unshift(...reconciliation.notes);
     return { text: reportText(report), json: report, exitCode: 0 };
 }

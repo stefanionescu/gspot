@@ -1,14 +1,15 @@
-import { join, dirname, relative } from 'node:path';
 import { GspotError } from '#cli/platform/public.ts';
 import { toPosix } from '#cli/platform/contracts.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
+import { join, dirname, resolve, relative } from 'node:path';
 import { isValePackageFile } from '#cli/repository/public.ts';
 import type { HookName } from '#cli/types/generation/hooks.ts';
 import { getHooks } from '#cli/repository/discovery/public.ts';
 import { runGitBlocking } from '#cli/platform/git/contracts.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
+import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { openRoot, walkRoot } from '#cli/platform/root/public.ts';
 import type { ValeInstallation } from '#cli/types/tools/install.ts';
 import { hookLine, hookPrefix } from '#cli/generation/contracts.ts';
@@ -19,7 +20,7 @@ import { PRIVATE_FILE, READ_ONLY_FILE } from '#cli/config/platform/modes.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git/public.ts';
 import type { HookPlan, HookStatus, HookContext } from '#cli/types/lifecycle/install.ts';
 import { VALE_CONFIG, HOOKS_DIRECTORY, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
-import { lstatSync, mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { statSync, lstatSync, mkdirSync, existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 // The folder a package file belongs to: a top folder of the styles, or a folder of its config folder. A loose file
 // beside the packages belongs to none.
@@ -100,17 +101,29 @@ function ownHooksPath(root: string): string {
 
 // The hooks this clone already runs that are not the gspot ones: another hooks folder, a hook manager, or scripts
 // in the default Git hooks folder.
-function foreignHooks(root: string): string[] {
-    const own = ownHooksPath(root);
-    const found = getHooks(root)
-        .filter((hook) => !(hook.kind === 'hooksPath' && hook.path === own))
-        .map((hook) => hook.path);
+function foreignHooks(root: string, own: string): Tooling['hooks'] {
+    const found = getHooks(root).filter((hook) => !(hook.kind === 'hooksPath' && hook.path === own));
     const directory = hooksDirectory(root);
     if (readGitSetting(root, 'core.hooksPath') !== undefined || !existsSync(directory)) return found;
     const scripts = readdirSync(directory, { withFileTypes: true }).filter(
         (entry) => entry.isFile() && !entry.name.endsWith('.sample'),
     );
-    return scripts.length === 0 ? found : [...found, toPosix(relative(root, directory))];
+    return scripts.length === 0
+        ? found
+        : [
+              ...found,
+              {
+                  kind: 'hooksPath',
+                  path: toPosix(relative(root, directory)),
+                  files: scripts.map((entry) => entry.name),
+              },
+          ];
+}
+
+// The native hook commands a foreign setup must invoke; install and readiness use the same instructions.
+function foreignHookNote(hooks: Tooling['hooks'], policy: Policy): string {
+    const lines = (Object.keys(HOOK_ARGS) as HookName[]).map((name) => `  ${name}: ${hookLine(name, policy.runner)}`);
+    return `hooks already run from ${hooks.map((hook) => hook.path).join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`;
 }
 
 /**
@@ -185,18 +198,16 @@ export async function installValePackages(request: ValeInstallation): Promise<st
  * @returns the command and completion note, or instructions for existing hooks
  */
 export function getHookPlan({ policy, repository }: HookContext): HookPlan {
-    if (policy.hooks?.enabled !== true || !repository.hasGit) return { note: '' };
-    const foreign = foreignHooks(repository.root);
-    if (foreign.length > 0) {
-        const lines = (Object.keys(HOOK_ARGS) as HookName[]).map(
-            (name) => `  ${name}: ${hookLine(name, policy.runner)}`,
-        );
-        return {
-            note: `hooks already run from ${foreign.join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`,
-        };
-    }
+    if (!repository.hasGit) return { note: '' };
     const path = ownHooksPath(repository.root);
+    if (policy.hooks?.enabled !== true)
+        return readGitSetting(repository.root, 'core.hooksPath') === path
+            ? { command: ['git', 'config', '--unset', 'core.hooksPath'], note: 'disabled hooks: unset core.hooksPath' }
+            : { note: '' };
+    const foreign = foreignHooks(repository.root, path);
+    if (foreign.length > 0) return { note: foreignHookNote(foreign, policy) };
     return {
+        path,
         command: ['git', 'config', 'core.hooksPath', path],
         note: `installed hooks: core.hooksPath is ${path}`,
     };
@@ -229,8 +240,22 @@ export function hookStatus({ policy, repository }: HookContext): HookStatus {
     if (!repository.hasGit) return { ready: false, text: 'not installed: no Git repository' };
     const path = ownHooksPath(repository.root);
     if (readGitSetting(repository.root, 'core.hooksPath') === path) return { ready: true, text: `${path}: installed` };
-    const foreign = foreignHooks(repository.root);
-    if (foreign.length > 0)
-        return { ready: true, text: `run from ${foreign.join(', ')}; gspot install prints the lines they need` };
+    const foreign = foreignHooks(repository.root, path);
+    if (foreign.length > 0) {
+        const paths = foreign.flatMap((hook) => {
+            const directory =
+                hook.kind === 'hooksPath' ? hooksDirectory(repository.root) : resolve(repository.root, hook.path);
+            return hook.files.length === 0 ? [directory] : hook.files.map((file) => resolve(directory, file));
+        });
+        const ready = paths.some(
+            (file) => statSync(file).isFile() && readFileSync(file, 'utf8').includes('gspot check --hook'),
+        );
+        return {
+            ready,
+            text: ready
+                ? `run from ${foreign.map((hook) => hook.path).join(', ')}`
+                : `not installed; ${foreignHookNote(foreign, policy)}`,
+        };
+    }
     return { ready: false, text: 'not installed; run gspot install' };
 }

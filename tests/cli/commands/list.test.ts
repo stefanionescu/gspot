@@ -3,12 +3,14 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { getSuggestions } from '#cli/commands/doctor/contracts.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { NESTED_SCOPES_POLICY } from '#tests/config/cli/commands/nested-scopes.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
-test('list shows selected policy states, detected configurations, and setting values without writing', async () => {
+test('list shows selected policy states and available configurations while doctor keeps suggestions without writing', async () => {
     await using directory = await testdir();
     const policy = buildPolicy(['bash', 'nextjs'], {
         tables: '[[ignore]]\ncheck = "bash/bash-syntax"\nreason = "Review this separately."\n',
@@ -22,14 +24,19 @@ test('list shows selected policy states, detected configurations, and setting va
     const listed = await runGspot(directory.path, ['list', 'configurations', '--json']);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
     const result = JSON.parse(listed.stdout) as ConfigurationsListJson;
-    expect(Object.keys(result)).toStrictEqual(['selected', 'detected', 'available']);
+    expect(Object.keys(result)).toStrictEqual(['selected', 'available']);
     const checks = result.selected.flatMap((configuration) => configuration.checks);
     expect(checks).toContainEqual({ name: 'bash/shellcheck', scope: '', state: 'on' });
     expect(checks).toContainEqual({ name: 'bash/bash-syntax', scope: '', state: 'off (ignore)' });
     expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'on' });
     expect(checks).toContainEqual({ name: 'structure/prefix-collisions', scope: '', state: 'off (level)' });
     expect(checks).toContainEqual({ name: 'nextjs/build', scope: '', state: 'off (level)' });
-    expect(result.detected.find((configuration) => configuration.name === 'sql')?.command).toBe('gspot add sql');
+    expect(
+        getSuggestions(await openSession(directory.path)).detected.find(
+            (configuration) => configuration.configuration === 'sql',
+        )?.command,
+    ).toBe('gspot add sql');
+    expect(result.available.some((configuration) => configuration.name === 'sql')).toBe(true);
     expect(result.available.some((configuration) => configuration.name === 'python')).toBe(true);
     const defaults = await runGspot(directory.path, ['list', '--json']);
     expect(defaults.code, defaults.stdout + defaults.stderr).toBe(0);

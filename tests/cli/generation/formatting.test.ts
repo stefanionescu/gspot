@@ -112,7 +112,7 @@ test('an explicit YAML width override remains consistent between EditorConfig an
     const session = await openSession(directory.path);
     const generated = emitAll(session);
     using log = openOwnership(directory.path);
-    writeGeneratedFiles(session, log, undefined, generated);
+    writeGeneratedFiles(session, generated, log);
     const path = join(directory.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     const native = await prettier.resolveConfig(path, {
@@ -141,7 +141,8 @@ test('formatter overrides agree for explicit configuration and editor discovery'
         ...Object.fromEntries(FORMAT_CASES.map(({ file }) => [file, 'const greeting="hello";'])),
     });
     using log = openOwnership(root);
-    writeGeneratedFiles(await openSession(root), log);
+    const session = await openSession(root);
+    writeGeneratedFiles(session, emitAll(session), log);
     for (const { file, ...expected } of FORMAT_CASES) {
         for (const config of ['.gspot/config/prettier.json', 'prettier.config.mjs']) {
             const computed = await prettier.resolveConfig(join(root, file), {

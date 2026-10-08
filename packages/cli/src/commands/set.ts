@@ -1,9 +1,7 @@
 // Preview or publish setting changes with the same validation and mutation.
-import { resolve } from 'node:path';
 import { readPolicy } from '#cli/policy/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import { Option } from '@commander-js/extra-typings';
-import { commandHelp } from '#cli/commands/public.ts';
 import { printResult } from '#cli/terminal/public.ts';
 import { savePolicy } from '#cli/commands/contracts.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
@@ -13,6 +11,7 @@ import type { Program } from '#cli/types/commands/program.ts';
 import { knownSettings } from '#cli/policy/settings/public.ts';
 import { parseTomlText } from '#cli/policy/document/public.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
+import { commandHelp, commandRoot } from '#cli/commands/public.ts';
 import { selectForScope } from '#cli/repository/selection/public.ts';
 import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
@@ -200,11 +199,9 @@ export function registerSet(program: Program): void {
         .action(async (setting, items, flags, command) => {
             if (flags.default === true && items.length > 0)
                 command.error('--default cannot be used with setting values.', { exitCode: EXIT_ERROR });
-            const global = command.optsWithGlobals();
-            const cwd = resolve(global.C ?? process.cwd());
             printResult(
                 await setCommand({
-                    cwd,
+                    cwd: commandRoot(command),
                     key: setting,
                     items,
                     replace: flags.replace === true,

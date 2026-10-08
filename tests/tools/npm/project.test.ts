@@ -22,7 +22,7 @@ async function prepareInputs(root: string, log: Log) {
     const session = await openSession(root);
     const generated = emitAll(session);
     await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
-    writeGeneratedFiles(session, log, undefined, generated);
+    writeGeneratedFiles(session, generated, log);
     return { session, inputs: await readPackageInputs(root, session.packageInstaller()!.name) };
 }
 
@@ -110,8 +110,10 @@ test.each(PACKAGE_PROJECTS)(
             });
             expect(binaries.some((path) => /(?:^|[/\\])editorconfig-checker(?:\.exe)?$/u.test(path))).toBe(true);
         }
-        expect(computeDrift(root, session.policyFiles.policy, emitAll(session))).toStrictEqual([]);
-        const second = writeGeneratedFiles(await openSession(root), log);
+        expect(computeDrift(root, emitAll(session))).toStrictEqual([]);
+        const second = await openSession(root).then((refreshed) =>
+            writeGeneratedFiles(refreshed, emitAll(refreshed), log),
+        );
         expect(second.written).toStrictEqual([]);
         expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
         if (projectPath === 'package.json' && runner === 'mise') await expectCloneInstallation(sandbox, inputs, tools);

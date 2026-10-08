@@ -166,7 +166,7 @@ for (const { name, scope } of XCTEST_SCOPES) {
             const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
             expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
             using log = openOwnership(root);
-            writeGeneratedFiles(session, log, undefined, emitted);
+            writeGeneratedFiles(session, emitted, log);
             const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
             expect(planned).toHaveLength(1);
             expect(commandConfigurations(session, planned[0]!)).toContain(`${prefix}AppTests/.swiftlint.yml`);
@@ -191,7 +191,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.filter(({ path }) => path === `${scope}/.swiftlint.yml`)).toHaveLength(1);
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(session, log, undefined, emitted);
+        writeGeneratedFiles(session, emitted, log);
         const native = await runTestCommand(
             ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
             { cwd: join(sandbox.path, scope) },

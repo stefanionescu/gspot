@@ -2,22 +2,24 @@
 import { readFileSync } from 'node:fs';
 import { addAbortSignal } from 'node:stream';
 import { resolve, relative } from 'node:path';
+import { GspotError } from '#cli/platform/public.ts';
 import { compact } from '#cli/platform/contracts.ts';
-import { commandHelp } from '#cli/commands/public.ts';
 import { progress } from '#cli/terminal/contracts.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
+import { HOOK_ARGS } from '#cli/config/generation/hooks.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import { Option, Command } from '@commander-js/extra-typings';
+import type { HookName } from '#cli/types/generation/hooks.ts';
 import { getStaged } from '#cli/repository/revisions/public.ts';
 import { checkOutRevision } from '#cli/execution/copy/public.ts';
+import { commandHelp, commandRoot } from '#cli/commands/public.ts';
 import { printResult, selectVerbosity } from '#cli/terminal/public.ts';
-import type { Program, GlobalFlags } from '#cli/types/commands/program.ts';
-import { GspotError, environmentVariables } from '#cli/platform/public.ts';
 import { checkPush, assertPushOptions } from '#cli/commands/check/push.ts';
 import type { CheckFlags, CheckOptions } from '#cli/types/commands/check.ts';
 import { findRoot, isGitRepository } from '#cli/repository/discovery/contracts.ts';
-import { HOOKS, PUSH_ARGUMENTS, CHECK_FLAG_DEFAULTS } from '#cli/config/commands/check.ts';
+import { PUSH_ARGUMENTS, CHECK_FLAG_DEFAULTS } from '#cli/config/commands/check.ts';
+import type { Program, GlobalFlags, GlobalCommand } from '#cli/types/commands/program.ts';
 
 // Reads the pre-push protocol from standard input, stopping when the run is canceled.
 async function readPushInput(signal: AbortSignal): Promise<string> {
@@ -116,9 +118,9 @@ async function runCancelable(
 }
 
 // Runs check with an abort signal wired to the termination signals for the duration of the run.
-async function runCheck(paths: string[], flags: CheckFlags, global: GlobalFlags): Promise<void> {
+async function runCheck(paths: string[], flags: CheckFlags, command: GlobalCommand): Promise<void> {
     const controller = new AbortController();
-    const hook = flags.hook ?? HOOKS.find((name) => name === environmentVariables()['GSPOT_HOOK']);
+    const hook = flags.hook;
 
     const cancel = (): void => {
         controller.abort();
@@ -126,12 +128,12 @@ async function runCheck(paths: string[], flags: CheckFlags, global: GlobalFlags)
     process.on('SIGINT', cancel);
     process.on('SIGTERM', cancel);
     try {
-        const cwd = resolve(global.C ?? process.cwd());
+        const global = command.optsWithGlobals();
         const verbosity = selectVerbosity(global);
 
         // Git passes a message file to commit-msg; an explicit file selects the same stage.
         const options: CheckOptions = {
-            cwd,
+            cwd: commandRoot(command),
             staged: flags.staged === true,
             fix: flags.fix === true,
             isDryRun: flags.dryRun === true,
@@ -182,10 +184,14 @@ export function registerCheck(program: Program): void {
         )
         .option('--fix', 'Run every fixer, then run the checks again')
         .option('--dry-run', 'With --fix, print the diff of each fix and write nothing')
-        .addOption(new Option('--hook <hook>', 'Run the checks of one Git hook, as that hook does').choices(HOOKS))
+        .addOption(
+            new Option('--hook <hook>', 'Run the checks of one Git hook, as that hook does').choices(
+                Object.keys(HOOK_ARGS) as HookName[],
+            ),
+        )
         .option('--skip <checks...>', 'Skip these checks for this run', CHECK_FLAG_DEFAULTS.skip)
         .addOption(new Option('--message-file <path>', 'Check this commit message file, as the commit-msg hook does'))
         .action(async (paths, flags, command) => {
-            await runCheck(paths, flags, command.optsWithGlobals());
+            await runCheck(paths, flags, command);
         });
 }

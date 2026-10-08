@@ -256,3 +256,26 @@ test('initialization flags control integrations without changing the authored fo
     expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
     expect(await Bun.file(join(sandbox.path, '.prettierrc.json')).text()).toBe('{"semi":false,"tabWidth":8}\n');
 });
+
+test.each(['mise', 'bun', 'npm', 'pnpm', 'yarn'] as const)(
+    'an explicit %s runner is selected without a prompt or tool installation',
+    async (runner) => {
+        await using sandbox = await testdir();
+        const original = await readTree(sandbox.path);
+        const result = await runGspot(sandbox.path, [
+            'init',
+            '--yes',
+            '--dry-run',
+            '--json',
+            '--configurations',
+            'none',
+            '--runner',
+            runner,
+            ...QUIET_INIT.filter((argument) => argument !== '--no-runner'),
+        ]);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        const report = JSON.parse(result.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;
+        expect(parseStrictPolicy(report.policy).runner).toBe(runner);
+        expect(await readTree(sandbox.path)).toStrictEqual(original);
+    },
+);

@@ -6,3 +6,6 @@ export type GlobalFlags = VerbosityFlags & { json?: true; color: boolean; C?: st
 
 /** The program the commands register on, typed by its global flags. */
 export type Program = Command<[], GlobalFlags>;
+
+/** The native command capability that carries inherited global flags. */
+export type GlobalCommand = Pick<Program, 'optsWithGlobals'>;

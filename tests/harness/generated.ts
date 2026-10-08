@@ -26,7 +26,7 @@ export async function createEslint(root: string, options: ESLint.Options = {}): 
     await linkInstalledModules(join(root, 'node_modules'));
     const session = await openSession(root);
     using log = openOwnership(root);
-    writeGeneratedFiles(session, log);
+    writeGeneratedFiles(session, emitAll(session), log);
     return new ESLint({ ...options, cwd: root, overrideConfigFile: join(root, '.gspot/config/eslint.config.mjs') });
 }
 

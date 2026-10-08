@@ -7,7 +7,7 @@ import { buildInitOptions } from '#tests/harness/init.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { EMPTY_TOOLING } from '#tests/config/harness/tooling.ts';
 import { askQuestions, askConfirmation } from '#cli/commands/init/contracts.ts';
-import { RUNNER_ANSWERS, RUNNER_FAILURES } from '#tests/config/cli/commands/init/questions.ts';
+import { RUNNER_ANSWERS, RUNNER_OPTIONS, RUNNER_FAILURES } from '#tests/config/cli/commands/init/questions.ts';
 
 describe('initialization confirmations', () => {
     test('uses the proposed answer without opening a prompt', async () => {
@@ -49,7 +49,7 @@ test.each([...RUNNER_ANSWERS])('initialization $name', async ({ terminal, defaul
     using resources = new DisposableStack();
     resources.use(spyOn(environment, 'isInteractive').mockReturnValue(terminal));
     resources.use(spyOn(which, 'sync').mockReturnValue('/provided/mise'));
-    resources.use(spyOn(clack, 'select').mockResolvedValue(answer));
+    const selection = resources.use(spyOn(clack, 'select').mockResolvedValue(answer));
     const options = buildInitOptions(directory.path, { yes: defaults });
     delete options.runner;
     expect(await askQuestions(directory.path, options, EMPTY_TOOLING)).toStrictEqual({
@@ -58,6 +58,7 @@ test.each([...RUNNER_ANSWERS])('initialization $name', async ({ terminal, defaul
         agentRules: false,
         runner: expected,
     });
+    if (terminal) expect(selection.mock.calls[0]?.[0]).toMatchObject({ message: 'Runner?', options: RUNNER_OPTIONS });
 });
 
 test.each([...RUNNER_FAILURES])('initialization $name', async ({ terminal, answer, error }) => {

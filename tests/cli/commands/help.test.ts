@@ -1,5 +1,8 @@
 import { test, expect } from 'bun:test';
 import { buildProgram } from '#cli/public.ts';
+import { runGspot } from '#tests/harness/gspot.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { rootSettingSchemas } from '#cli/policy/schema/public.ts';
 import { commandPages } from '#docs/src/content/reference/commands.ts';
@@ -50,4 +53,28 @@ test('set help, reference levels, and policy metadata retain the authoritative c
         expect(pages.get('commands/set.md')?.body).toContain(summary);
         expect(description).toContain(summary);
     }
+});
+
+test('--no-color prints the finding without ANSI escape codes on terminal streams', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'gspot.toml': buildPolicy([], { tables: 'exclude = ["absent/**"]\n' }),
+    });
+    using resources = new DisposableStack();
+    for (const stream of [process.stdout, process.stderr]) {
+        const original = Object.getOwnPropertyDescriptor(stream, 'isTTY');
+        resources.defer(() => {
+            if (original === undefined) Reflect.deleteProperty(stream, 'isTTY');
+            else Object.defineProperty(stream, 'isTTY', original);
+        });
+        Object.defineProperty(stream, 'isTTY', { value: true, configurable: true });
+    }
+    const result = await runGspot(directory.path, ['check', '--only', 'gspot/unmatched-paths', '--no-color'], {
+        NO_COLOR: '',
+        CI: '',
+    });
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(result.stdout).toContain('absent/** under exclude matches no tracked file or folder.');
+    expect(result.stdout).toContain('gspot/unmatched-paths');
+    expect(result.stdout + result.stderr).not.toContain('\u001B[');
 });

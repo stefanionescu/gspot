@@ -2,11 +2,11 @@ import { isDeepStrictEqual } from 'node:util';
 import { readAsset } from '#cli/platform/root/public.ts';
 import { npmPins } from '#cli/configurations/contracts.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { isInScope, pathMatcher } from '#cli/repository/paths/public.ts';
 import { ESLINT_RULE_NAMES_FILE } from '#cli/config/generation/eslint.ts';
 import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
 import type { ResolvedSelector } from '#cli/types/generation/fragments.ts';
 import type { EslintPresets, EslintRuleNames } from '#cli/types/parsers/eslint.ts';
+import { isInScope, literalGlob, pathMatcher } from '#cli/repository/paths/public.ts';
 import { eslintPresetsSchema, eslintRuleNamesSchema } from '#cli/parsers/schema/public.ts';
 
 import type {
@@ -214,9 +214,7 @@ export function eslintSourcePattern(...languages: string[]): string {
  * @returns literal native file patterns that cannot select neighboring filenames
  */
 export function eslintNodePatterns(paths: string[], scope: string): string[] {
-    return paths
-        .filter((path) => isInScope(path, scope))
-        .map((path) => path.replaceAll(/[\\?*[\]{}()!]/gu, String.raw`\$&`));
+    return paths.filter((path) => isInScope(path, scope)).map((path) => literalGlob(path));
 }
 
 /**

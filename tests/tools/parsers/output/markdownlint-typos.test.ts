@@ -22,7 +22,7 @@ async function runMarkdown(root: string, paths: string[]) {
     const session = await openSession(root);
     const generated = emitAll(session);
     using log = openOwnership(root);
-    writeGeneratedFiles(session, log, undefined, generated);
+    writeGeneratedFiles(session, generated, log);
     const configuration = generated.files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
     const plans = planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] });
     const planned = plans[0]!;

@@ -12,8 +12,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { managedBlock } from '#cli/agent-rules/contracts.ts';
 import { selectRuleFiles } from '#cli/agent-rules/public.ts';
 import { emitToolFiles } from '#cli/generation/tool-files.ts';
-import { stylelintChanges } from '#cli/generation/stylelint.ts';
-import { commitlintChanges } from '#cli/generation/commitlint.ts';
+import { packageRedirects } from '#cli/generation/redirects.ts';
 import { etaInputs } from '#cli/generation/compilation/public.ts';
 import { installedDependency } from '#cli/repository/contracts.ts';
 import type { NpmProjectInputs } from '#cli/types/generation/npm.ts';
@@ -25,10 +24,10 @@ import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { githubFile, gitlabFile } from '#cli/generation/documents/public.ts';
 import type { Generated, GeneratedFile } from '#cli/types/generation/files.ts';
 import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN } from '#cli/config/parsers/packages.ts';
+import { everyManifest, isConfigurationSelected } from '#cli/configurations/public.ts';
 import { JSON_INDENT, YARN_TOOL_PROJECT_SETTINGS } from '#cli/config/generation/eta.ts';
 import { configuredChecks, requiredToolNames, applicableManifests } from '#cli/planning/public.ts';
 import { isYarnBerry, parseToolProject, getPackageInstallerMajor } from '#cli/parsers/packages/contracts.ts';
-import { everyManifest, configurationManifests, isConfigurationSelected } from '#cli/configurations/public.ts';
 
 import {
     DOT_GSPOT,
@@ -93,7 +92,8 @@ function emitBlocks(
     rules: RuleFile[],
     generated: Generated,
 ): void {
-    if (repository.hasGit) generated.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
+    if (repository.hasGit)
+        generated.blocks.push({ path: '.gitignore', block: gitignoreBlock(manifests), style: 'hash' });
     generated.blocks.push({ path: '.gitattributes', block: attributesBlock(generated.files), style: 'hash' });
     if (!policy.agent_rules.enabled) return;
     if (repository.files.some((file) => file.path === 'CLAUDE.md'))
@@ -134,12 +134,10 @@ function assertDistinctPaths(generated: Generated): void {
 
 /**
  * The managed .gitignore block for tool projects and generated files.
- * @param manifests the manifests whose ignored paths count, every shipped configuration by default
+ * @param manifests the selected manifests whose ignored paths count
  * @returns the paths that Git must leave untracked
  */
-export function gitignoreBlock(
-    manifests: Iterable<Pick<Manifest, 'ignored'>> = configurationManifests().values(),
-): string {
+export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'ignored'>>): string {
     const toolProjectPaths = [...Object.values(INSTALLATION_DIRECTORIES), STATE_DIRECTORY].map((path) => `${path}/`);
     return [...new Set([...toolProjectPaths, ...[...manifests].flatMap((manifest) => manifest.ignored)])].join('\n');
 }
@@ -178,11 +176,7 @@ export function emitAll(session: Session): Generated {
             scope: scopeConsumers,
         });
     }
-    generated.toolFiles.push(
-        ...bunfigChanges(root, scopes),
-        ...stylelintChanges(root, files, scopes, generated.files),
-        ...commitlintChanges(root, files, generated.files),
-    );
+    generated.toolFiles.push(...bunfigChanges(root, scopes), ...packageRedirects(session, generated.files));
     generated.files.push(
         ...hookFiles(root, policy, version),
         ...npmProject({ root, scopes, manifests, installer: packageInstaller, runner: policy.runner }),

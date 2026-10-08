@@ -6,7 +6,7 @@ export const PLAN_INIT = [
     'javascript',
     'spelling',
     'markdown',
-    '--no-task',
+    '--no-runner',
     '--no-ci',
     '--no-agent-rules',
     '--no-install',

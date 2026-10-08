@@ -34,7 +34,7 @@ function hookScript(name: HookName, runner: Policy['runner'], prefix: string, ve
         ...absolutePath,
         ...(prefix === '' ? [] : [`cd '${quoted}' || exit 2`]),
         `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${install}' >&2; exit 2; }`,
-        `GSPOT_HOOK=${name} exec ${hookLine(name, runner)}`,
+        `exec ${hookLine(name, runner)}`,
         '',
     ].join('\n');
     return `#!/bin/sh\n${hashCommentHeader(version)}${body}`;
@@ -48,7 +48,7 @@ function hookScript(name: HookName, runner: Policy['runner'], prefix: string, ve
 export function hookPrefix(root: string): string {
     if (!isGitRepository(root)) return '';
     const result = runGitBlocking(root, ['rev-parse', '--show-prefix']);
-    if (result.code !== 0) throw new Error(`Cannot resolve the hook directory: ${result.stderr.trim()}`);
+    if (result.code !== 0) throw new Error(`Cannot find the hook directory: ${result.stderr.trim()}`);
     return result.stdout.replace(/\n$/u, '');
 }
 

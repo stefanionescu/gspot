@@ -13,9 +13,8 @@ export const MOVED_HEADING = '## Other instructions';
 
 export const OWNERSHIP_JSON_INDENT = 2;
 
-/** Files and owned kinds kept when a selected configuration does not write them. */
+/** Files kept when a selected configuration does not write them. */
 export const RETAINED_PATHS = new Set([POLICY_FILE, '.gitignore', VERSION_FILE]);
-export const RETAINED_KINDS = new Set<OwnedKind>(['hook']);
 
 /** Native formats of authored configuration fields managed by lifecycle merges. */
 export const MERGED_CONFIGURATION_FORMATS = ['toml', 'json'] as const;

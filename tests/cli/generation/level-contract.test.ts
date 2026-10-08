@@ -73,7 +73,7 @@ test('switching levels restores generated defaults and agent instructions', asyn
         const output = emitAll(session);
         const config = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!;
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(session, log, undefined, output);
+        writeGeneratedFiles(session, output, log);
         const block = output.blocks.find((block) => block.path === 'AGENTS.md')!.block;
         expect(block).toContain(`Selected level: \`${level}\``);
         outputs.push(config.content);

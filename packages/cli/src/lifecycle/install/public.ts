@@ -94,13 +94,14 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
     },
     {
         preview: (session) => {
-            const { command, note } = getHookPlan({
+            const { command, note, path } = getHookPlan({
                 policy: session.policyFiles.policy,
                 repository: session.repository,
             });
             return {
                 steps: command === undefined ? [] : [command],
                 notes: command === undefined && note !== '' ? [note] : [],
+                ...(path === undefined ? {} : { hooks: path }),
             };
         },
         run: (session) => installHooks({ policy: session.policyFiles.policy, repository: session.repository }),
@@ -237,9 +238,11 @@ export function installationPlan(
     const phases = remaining
         .map((phase) => ({ phase, ...phase.preview(session, manifests, generated, refreshLockfiles) }))
         .filter(({ steps, notes }) => steps.length > 0 || notes.length > 0);
+    const hooks = phases.find((phase) => phase.hooks !== undefined)?.hooks;
     return {
         preparation,
         phases,
+        ...(hooks === undefined ? {} : { hooks }),
         steps: [...preparation.steps, ...phases.flatMap(({ steps }) => steps)],
         notes: [...preparation.notes, ...phases.flatMap(({ notes }) => notes)],
     };

@@ -1,6 +1,13 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { compareRules } from '#cli/lifecycle/public.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { emitAll, generatedPaths } from '#cli/generation/public.ts';
+import { openSession, applyCommand } from '#cli/commands/public.ts';
 import { collectRules } from '#cli/generation/documents/contracts.ts';
+import { isStray, compareRules, computeDrift } from '#cli/lifecycle/public.ts';
 
 test('rule changes name additions, removals, and changed options across every declared path', () => {
     expect(
@@ -81,4 +88,26 @@ test('rule collection separates native rule groups and supports absent paths wit
         'sqlfluff:rules': { 'capitalisation.keywords': { capitalisation_policy: 'upper' } },
     });
     expect(collectRules(['missing', 'rules'], { rules: null })).toStrictEqual({ missing: {}, rules: {} });
+});
+
+test('disabled agent rules have the same stray paths in preview and apply pruning', async () => {
+    await using sandbox = await testdir();
+    const policy = buildPolicy([], { tables: '[agent_rules]\nenabled = true\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policy });
+    expect(await applyCommand({ cwd: sandbox.path, isDryRun: false })).toHaveProperty('exitCode', 0);
+    const owned = getOwnership(sandbox.path).files.filter((entry) => entry.path.startsWith('.gspot/rules/'));
+    expect(owned.length).toBeGreaterThan(0);
+    await Bun.write(join(sandbox.path, 'gspot.toml'), policy.replace('enabled = true', 'enabled = false'));
+    const session = await openSession(sandbox.path);
+    const generated = emitAll(session);
+    const expected = generatedPaths(generated);
+    const strays = computeDrift(sandbox.path, generated).filter((entry) => entry.kind === 'stray');
+    for (const entry of owned) {
+        expect(isStray(entry, expected)).toBe(true);
+        expect(strays).toContainEqual({ path: entry.path, kind: 'stray' });
+        expect(await pathExists(join(sandbox.path, entry.path))).toBe(true);
+    }
+    const written = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(written.exitCode).toBe(0);
+    for (const entry of owned) expect(await pathExists(join(sandbox.path, entry.path))).toBe(false);
 });

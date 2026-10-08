@@ -1,8 +1,6 @@
-import { resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { readPolicy } from '#cli/policy/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
-import { commandHelp } from '#cli/commands/public.ts';
 import { printResult } from '#cli/terminal/public.ts';
 import { savePolicy } from '#cli/commands/contracts.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
@@ -12,17 +10,17 @@ import type { Program } from '#cli/types/commands/program.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
+import { commandHelp, commandRoot } from '#cli/commands/public.ts';
 import { reasonDiagnostic } from '#cli/policy/errors/contracts.ts';
+import { compact, quoteArgument } from '#cli/platform/contracts.ts';
+import { unknownCheckDiagnostic } from '#cli/configurations/errors/public.ts';
 import type { Policy, Mutation, TomlTable } from '#cli/types/policy/settings.ts';
-import { compact, similar, codeList, quoteArgument } from '#cli/platform/contracts.ts';
 import { emitPolicy, mergeIgnore, parseTomlText, parseExpiryDate } from '#cli/policy/document/public.ts';
 
 function assertKnownCheck(checkName: string, policy: Policy): void {
     const known = knownChecks(Object.values(policy.check));
     if (known.includes(checkName)) return;
-    throw new GspotError('policy', [
-        `There is no check called \`${checkName}\`.${similar(checkName, known).length > 0 ? ' Did you mean ' + codeList(similar(checkName, known)) + '?' : ''}`,
-    ]);
+    throw new GspotError('selection', [unknownCheckDiagnostic(checkName, known)]);
 }
 
 function buildReasonHint(options: IgnoreOptions): string {
@@ -141,11 +139,9 @@ export function registerIgnore(program: Program): void {
         .option('--remove', 'Delete the matching ignore entries')
         .option('--dry-run', 'Print the change and write nothing')
         .action(async (check, flags, command) => {
-            const global = command.optsWithGlobals();
-            const cwd = resolve(global.C ?? process.cwd());
             printResult(
                 await ignoreCommand({
-                    cwd,
+                    cwd: commandRoot(command),
                     check,
                     remove: flags.remove === true,
                     isDryRun: flags.dryRun === true,

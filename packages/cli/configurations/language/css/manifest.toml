@@ -51,6 +51,7 @@ replaces = [".stylelintrc", ".stylelintrc.json", ".stylelintrc.js", ".stylelintr
 [[tool.replace]]
 file = "package.json"
 key = "stylelint"
+redirect = true
 shared = true
 
 [[tool]]

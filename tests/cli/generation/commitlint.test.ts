@@ -24,20 +24,20 @@ test('repository commit fields preserve unrelated package content and restore it
     expect(generated.toolFiles).toStrictEqual([
         {
             path: 'package.json',
-            changes: [{ path: ['commitlint'], value: { extends: ['./.gspot/config/commitlint.config.cjs'] } }],
+            changes: [{ path: ['commitlint'], value: { extends: './.gspot/config/commitlint.config.cjs' } }],
         },
         {
             path: 'app/child/package.json',
-            changes: [{ path: ['commitlint'], value: { extends: ['../../.gspot/config/commitlint.config.cjs'] } }],
+            changes: [{ path: ['commitlint'], value: { extends: '../../.gspot/config/commitlint.config.cjs' } }],
         },
         {
             path: 'app/package.json',
-            changes: [{ path: ['commitlint'], value: { extends: ['../.gspot/config/commitlint.config.cjs'] } }],
+            changes: [{ path: ['commitlint'], value: { extends: '../.gspot/config/commitlint.config.cjs' } }],
         },
     ]);
     {
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(session, log, undefined, generated);
+        writeGeneratedFiles(session, generated, log);
         expect(log.entryFor('app/package.json')?.configuration?.format).toBe('json');
     }
     expect(await readFile(join(sandbox.path, 'plain/package.json'), 'utf8')).toBe('{"private":true}\n');
@@ -53,7 +53,7 @@ test('repository commit fields preserve unrelated package content and restore it
     expect(emitAll(session).toolFiles).toStrictEqual([]);
     {
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(session, log);
+        writeGeneratedFiles(session, emitAll(session), log);
         expect(log.entryFor('package.json')).toBeUndefined();
         expect(log.entryFor('app/package.json')).toBeUndefined();
     }

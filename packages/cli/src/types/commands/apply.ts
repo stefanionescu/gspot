@@ -9,7 +9,7 @@ export type ApplyOptions = {
 export type ApplyPlanJson = {
     dryRun: true;
     policy: string;
-    configurations: string[];
+    reconciled: string[];
     pin: { from: string | undefined; to: string };
     drift: Drift[];
     notes: string[];

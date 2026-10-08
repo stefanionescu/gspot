@@ -1,8 +1,6 @@
 // Add authored configuration choices through the policy transaction.
-import { resolve } from 'node:path';
 import { GspotError } from '#cli/platform/public.ts';
 import { compact } from '#cli/platform/contracts.ts';
-import { commandHelp } from '#cli/commands/public.ts';
 import { printResult } from '#cli/terminal/public.ts';
 import { savePolicy } from '#cli/commands/contracts.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
@@ -14,6 +12,7 @@ import type { Program } from '#cli/types/commands/program.ts';
 import { defaultValue } from '#cli/policy/schema/contracts.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import { getScopeTable } from '#cli/policy/document/contracts.ts';
+import { commandHelp, commandRoot } from '#cli/commands/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { unknownConfigurations } from '#cli/configurations/errors/public.ts';
 
@@ -64,17 +63,15 @@ export function registerAdd(program: Program): void {
         .argument('<configuration...>', 'Built-in configuration names to add')
         .summary('Add configurations')
         .description(
-            'Add configurations to the root selection or to one scope, apply the policy. Run gspot install when the change needs tools. Required configurations are added with them. --dry-run prints the change and writes nothing.',
+            'Add configurations to the root selection or to one scope, apply the policy. Run gspot install when the change needs tools. Configurations they require are selected too; gspot.toml lists only the names you give. --dry-run prints the change and writes nothing.',
         )
         .addHelpText('after', commandHelp('add'))
         .option('--scope <path>', 'Add the configurations to this scope')
         .option('--dry-run', 'Print the change and write nothing')
         .action(async (configurations, flags, command) => {
-            const global = command.optsWithGlobals();
-            const cwd = resolve(global.C ?? process.cwd());
             printResult(
                 await addCommand({
-                    cwd,
+                    cwd: commandRoot(command),
                     configurations: configurations,
                     isDryRun: flags.dryRun === true,
                     ...compact({ scope: flags.scope }),

@@ -1,26 +1,28 @@
 // Explain a check, rule, configuration, setting, or file path.
-import { resolve } from 'node:path';
 import { hasPolicy } from '#cli/policy/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { printResult } from '#cli/terminal/public.ts';
+import { quoteArgument } from '#cli/platform/contracts.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { pathMatcher } from '#cli/repository/paths/public.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
+import { knownSettings } from '#cli/policy/settings/public.ts';
 import { ownersOf } from '#cli/repository/selection/public.ts';
 import { DIRECTION_TEXTS } from '#cli/config/commands/explain.ts';
 import { checkStageSchema } from '#cli/parsers/schema/command.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { commandHelp, openSession } from '#cli/commands/public.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { readEslintRuleNames } from '#cli/generation/eslint/public.ts';
 import { ownedInputs, configuredChecks } from '#cli/planning/public.ts';
-import { similar, codeList, quoteArgument } from '#cli/platform/contracts.ts';
+import { unknownSettingDiagnostic } from '#cli/policy/errors/public.ts';
+import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
 import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
 import { explainCheck, explainToolRule } from '#cli/commands/explain/contracts.ts';
 import { knownChecks, configurationFiles, configurationManifests } from '#cli/configurations/public.ts';
+import { unknownCheckDiagnostic, unknownConfigurationDiagnostic } from '#cli/configurations/errors/public.ts';
 
 import type {
     Explanation,
@@ -136,27 +138,18 @@ function explainSetting(session: ToolSession | undefined, key: string): Explanat
     };
 }
 
-function buildSubjectSuggestion(subject: string, candidates: string[]): string {
-    const matches = similar(subject, candidates);
-    if (matches.length === 0) return '';
-    return ' Did you mean ' + codeList(matches) + '?';
-}
-
 function buildUnknownSubjectDiagnostic(session: ToolSession | undefined, subject: string): string {
-    const checks = knownChecks(session === undefined ? [] : Object.values(session.policyFiles.policy.check));
-    if (subject.includes('/')) {
-        return `There is no check called \`${subject}\`.${buildSubjectSuggestion(subject, checks)}`;
-    }
-    if (subject.includes('.')) {
-        const known = [...new Set(session?.scopes.flatMap((scope) => [...scope.surface.declarations.keys()]))];
-        const matches = similar(subject, known);
-        return `No selected configuration has the setting \`${subject}\`. ${
-            matches.length === 0
-                ? 'No setting exists under that table.'
-                : 'The settings that exist under that table are ' + codeList(matches) + '.'
-        } Run \`gspot list settings\` to see every one.`;
-    }
-    return `There is no configuration called \`${subject}\`.${buildSubjectSuggestion(subject, configurationManifests().keys().toArray())} Run \`gspot list configurations\` to see the available configurations.`;
+    if (subject.includes('/'))
+        return unknownCheckDiagnostic(
+            subject,
+            knownChecks(session === undefined ? [] : Object.values(session.policyFiles.policy.check)),
+        );
+    if (subject.includes('.'))
+        return unknownSettingDiagnostic(
+            knownSettings(session?.scopes.flatMap((scope) => scope.selected) ?? [], session?.policyFiles.policy.level),
+            subject,
+        );
+    return unknownConfigurationDiagnostic(subject, configurationManifests().keys().toArray());
 }
 
 // A check retains its meaning; a tracked path precedes a rule with the same first folder.
@@ -291,9 +284,7 @@ export function registerExplain(program: Program): void {
         )
         .addHelpText('after', commandHelp('explain'))
         .action(async (subject, _flags, command) => {
-            const global = command.optsWithGlobals();
-            const cwd = resolve(global.C ?? process.cwd());
-            const root = findRoot(cwd);
+            const root = findRoot(commandRoot(command));
             const session = hasPolicy(root) ? await openSession(root) : undefined;
             const result = explain(session, subject);
             printResult({

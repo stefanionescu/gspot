@@ -96,6 +96,7 @@ const toolFileSchema = z
         rule_keys: z.array(z.string()).optional(),
         pointer: pointerSchema.optional(),
         fragment: z.boolean().default(false),
+        scope_fragments: z.boolean().default(false),
         per_scope: z.boolean().default(false),
         generated_header: z.boolean().default(true),
         when: conditionSchema.pick({ configuration: true }).optional(),

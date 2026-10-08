@@ -185,7 +185,7 @@ export function manifestError(configuration: string, errors: string[]): GspotErr
 
 /**
  * Indexes complete tool declarations and refuses independent declarations of the same tool.
- * @param manifests the parsed or resolved configuration declarations
+ * @param manifests the parsed configuration declarations
  * @returns the canonical tools by name
  */
 export function declaredTools(manifests: Iterable<ManifestDeclaration>): Map<string, ToolPin> {

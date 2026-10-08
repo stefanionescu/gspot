@@ -10,7 +10,7 @@ export const RUNNER_FAILURES = [
         name: 'refuses an unanswered runner without a terminal',
         terminal: false,
         answer: 'npm',
-        error: 'Pass --no-task',
+        error: 'Pass --no-runner',
     },
     {
         name: 'reports runner cancellation without writing',
@@ -18,4 +18,14 @@ export const RUNNER_FAILURES = [
         answer: 'cancel',
         error: 'Cancelled; nothing written.',
     },
+] as const;
+
+/** The runner question names the actual command that each selection uses. */
+export const RUNNER_OPTIONS = [
+    { value: 'mise', label: 'mise (mise exec -- gspot)' },
+    { value: 'bun', label: 'bun (bun run --no-install gspot)' },
+    { value: 'npm', label: 'npm (npm exec --no -- gspot)' },
+    { value: 'pnpm', label: 'pnpm (pnpm exec gspot)' },
+    { value: 'yarn', label: 'yarn (yarn exec gspot)' },
+    { value: 'none', label: 'none' },
 ] as const;

@@ -1,4 +1,5 @@
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
@@ -44,7 +45,8 @@ beforeAll(async () => {
     await chmod(join(state.path, 'old/mise'), 0o755);
     {
         using log = openOwnership(repository.path);
-        writeGeneratedFiles(await openSession(repository.path), log);
+        const session = await openSession(repository.path);
+        writeGeneratedFiles(session, emitAll(session), log);
     }
     project = {
         root: repository.path,

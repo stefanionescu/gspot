@@ -1,4 +1,3 @@
-import { resolve } from 'node:path';
 import { compact } from '#cli/platform/contracts.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { printResult } from '#cli/terminal/public.ts';
@@ -8,11 +7,10 @@ import { selectionStatus } from '#cli/planning/contracts.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { everyManifest } from '#cli/configurations/public.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { commandHelp, openSession } from '#cli/commands/public.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/list.ts';
-import { detectUnselected } from '#cli/repository/selection/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { everyTable, listSettings } from '#cli/policy/settings/contracts.ts';
+import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
 import type { SettingsListing, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 function scopeTag(scope: string | undefined): string {
@@ -55,19 +53,9 @@ function buildConfigurationsResult(session: Session): CommandResult {
                 : [],
         ),
     }));
-    const detected = detectUnselected(session.root, session.repository.files, session.manifests, manifests).map(
-        ({ configuration, evidence, command }) => ({
-            name: configuration,
-            evidence,
-            command,
-        }),
-    );
-    const detectedNames = new Set(detected.map((entry) => entry.name));
     const available = session.manifests
         .values()
-        .filter(
-            (manifest) => !names.has(manifest.configuration.name) && !detectedNames.has(manifest.configuration.name),
-        )
+        .filter((manifest) => !names.has(manifest.configuration.name))
         .map((manifest) => ({ name: manifest.configuration.name, description: manifest.configuration.description }))
         .toArray();
     const lines = ['selected'];
@@ -78,14 +66,11 @@ function buildConfigurationsResult(session: Session): CommandResult {
             lines.push(`    ${name}  ${states.join(', ')}`);
         }
     }
-    lines.push('', 'detected, not selected');
-    for (const configuration of detected)
-        lines.push(`  ${configuration.name}  ${configuration.evidence}\n    ${configuration.command}`);
     lines.push('', 'available');
     for (const configuration of available) lines.push(`  ${configuration.name}  ${configuration.description}`);
     return {
         text: `${lines.join('\n')}\n`,
-        json: { selected, detected, available } satisfies ConfigurationsListJson,
+        json: { selected, available } satisfies ConfigurationsListJson,
         exitCode: 0,
     };
 }
@@ -140,17 +125,14 @@ export function registerList(program: Program): void {
         .command('list')
         .summary('List configurations, checks, and settings')
         .description(
-            'List the selected, detected, and available configurations. Each check has one row with its state in each scope that selects its configuration. gspot list settings shows root values and the settings each scope changes. Long values are shortened; --json retains complete values and inherited settings. list changes nothing and runs no check.',
+            'List the selected and available configurations. Each check has one row with its state in each scope that selects its configuration. gspot list settings shows root values and the settings each scope changes. Long values are shortened; --json retains complete values and inherited settings. list changes nothing and runs no check.',
         )
         .addHelpText('after', commandHelp('list'))
         .addArgument(
             new Argument('[kind]', 'List configurations or effective settings').choices(['configurations', 'settings']),
         )
         .action(async (kind, _flags, command) => {
-            const global = command.optsWithGlobals();
-            const cwd = resolve(global.C ?? process.cwd());
-
-            const session = await openSession(findRoot(cwd));
+            const session = await openSession(findRoot(commandRoot(command)));
             printResult(kind === 'settings' ? buildSettingsResult(session) : buildConfigurationsResult(session));
         });
 }

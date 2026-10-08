@@ -8,6 +8,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
+import { useEnvironment } from '#tests/harness/environment.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 
 // A sandbox with three commit checks that report every file they receive.
@@ -120,6 +121,7 @@ test('-C resolves file arguments from the folder it names', async () => {
 });
 
 test('--staged keeps default stages while --hook pre-commit selects commit checks', async () => {
+    using _environment = useEnvironment({ GSPOT_HOOK: 'pre-commit' });
     const definitions = ['commit', 'push', 'manual'].map(
         (name) => `
 [check."sandbox/${name}"]

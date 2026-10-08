@@ -44,7 +44,7 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         '.gspot/config/transactional/child/squawk.toml': true,
     });
     using log = openOwnership(sandbox.path);
-    writeGeneratedFiles(session, log, undefined, emitted);
+    writeGeneratedFiles(session, emitted, log);
     const transactional = squawk(
         sandbox.path,
         '.gspot/config/transactional/child/squawk.toml',

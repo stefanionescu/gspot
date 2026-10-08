@@ -34,7 +34,7 @@ test('a missing tool fails with the install hint', async () => {
     };
     const initialized = await spawnGspot(
         sandbox.path,
-        ['init', '--yes', '--configurations', 'bash', '--no-task', '--no-ci', '--no-agent-rules', '--no-install'],
+        ['init', '--yes', '--configurations', 'bash', '--no-runner', '--no-ci', '--no-agent-rules', '--no-install'],
         { ...environment, PATH: buildToolsPath([]) },
     );
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);

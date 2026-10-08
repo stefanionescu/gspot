@@ -3,6 +3,7 @@ import executables from 'which';
 import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -41,7 +42,8 @@ test('doctor identifies unowned generated-directory files that apply preserves',
     });
     {
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(await openSession(sandbox.path), log);
+        const session = await openSession(sandbox.path);
+        writeGeneratedFiles(session, emitAll(session), log);
     }
     const result = await doctorCommand(sandbox.path);
     expect(result.json).toMatchObject({
@@ -82,7 +84,8 @@ test('doctor reports a new Python file after setup with the command that adds it
     });
     {
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(await openSession(sandbox.path), log);
+        const session = await openSession(sandbox.path);
+        writeGeneratedFiles(session, emitAll(session), log);
     }
     await writeFile(join(sandbox.path, 'service.py'), 'print("hello")\n');
     const result = await doctorCommand(sandbox.path);

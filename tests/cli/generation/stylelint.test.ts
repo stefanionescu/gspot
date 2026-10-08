@@ -27,7 +27,7 @@ test.each(['recommended', 'all'] as const)(
         ]);
         {
             using log = openOwnership(sandbox.path);
-            writeGeneratedFiles(session, log, undefined, generated);
+            writeGeneratedFiles(session, generated, log);
             expect(log.entryFor('app/package.json')?.configuration?.format).toBe('json');
         }
         expect(await readFile(join(sandbox.path, 'app/child/package.json'), 'utf8')).toBe(TAKEOVER_PACKAGE);
@@ -52,7 +52,7 @@ test.each(['recommended', 'all'] as const)(
         expect(emitAll(session).toolFiles).toStrictEqual([]);
         {
             using log = openOwnership(sandbox.path);
-            writeGeneratedFiles(session, log);
+            writeGeneratedFiles(session, emitAll(session), log);
             expect(log.entryFor('package.json')).toBeUndefined();
             expect(log.entryFor('app/package.json')).toBeUndefined();
         }

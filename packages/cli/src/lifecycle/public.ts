@@ -7,8 +7,8 @@ import type { Session } from '#cli/types/planning.ts';
 import { assertNoErrors } from '#cli/policy/public.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
 import { toolProjectDrift } from '#cli/tools/public.ts';
+import { generatedPaths } from '#cli/generation/public.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
-import type { Policy } from '#cli/types/policy/settings.ts';
 import { CONFLICT_MARKERS } from '#cli/config/parsers/git.ts';
 import { hasFields } from '#cli/lifecycle/merge/contracts.ts';
 import { currentBlock } from '#cli/platform/root/contracts.ts';
@@ -17,12 +17,11 @@ import { readPolicyFile } from '#cli/policy/document/public.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import { DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/drift.ts';
-import { emitAll, generatedPaths } from '#cli/generation/public.ts';
+import { RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
 import type { Log, Ownership } from '#cli/types/lifecycle/ownership.ts';
 import { planClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
 import { removeValePackages } from '#cli/lifecycle/install/contracts.ts';
 import { deleteInstallation } from '#cli/lifecycle/ownership/state/public.ts';
-import { RETAINED_KINDS, RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import type { Drift, ApplyReport, WriteRequest } from '#cli/types/lifecycle/apply.ts';
 import { applyPlan, applyPlans, getOwnership } from '#cli/lifecycle/ownership/public.ts';
@@ -84,12 +83,10 @@ function writeGenerated(log: Log, request: WriteRequest): void {
     const blocks = generated.blocks.map((block) => planBlock(log, block.path, block.block, block.style));
     const generatedPlans = [...replacements, ...blocks, ...configurations];
     // `CLAUDE.md` is no output: it moves into `AGENTS.md` after the batch instead of getting its old text back.
-    const expected = new Set([...RETAINED_PATHS, ...generatedPaths(generated), 'CLAUDE.md']);
+    const expected = new Set([...generatedPaths(generated), 'CLAUDE.md']);
     // Pruning restores only recorded outputs that no selected owner still needs.
     const pruning = log.state.files
-        .filter(
-            (entry) => entry.installed !== undefined && !expected.has(entry.path) && !RETAINED_KINDS.has(entry.kind),
-        )
+        .filter((entry) => isStray(entry, expected))
         .map((entry) => planRestoration(log, entry.path));
     const plans = [...generatedPlans, ...pruning];
     const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
@@ -109,6 +106,8 @@ function writeGenerated(log: Log, request: WriteRequest): void {
         ...[...blocks, ...configurations].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
     );
     report.removed.push(...pruning.filter((plan) => plan.status !== 'preserved').map(({ path }) => path));
+    if (report.removed.some((path) => path.startsWith(`${HOOKS_DIRECTORY}/`)))
+        report.notes.push('Git hooks changed. Run: gspot install');
     if (conflicts.length > 0)
         throw new Error(
             `These edited files were not overwritten by gspot: ${conflicts.join(', ')}. Move them aside and run gspot apply again. The version pin is unchanged.`,
@@ -124,12 +123,6 @@ function conflictedOutputs(log: Log, generated: Generated): Map<string, FileCopy
             conflicted.set(file.path, current);
     }
     return conflicted;
-}
-
-function isStrayCandidate(path: string, policy: Policy): boolean {
-    if (path.startsWith(`${policy.agent_rules.folder}/`) && !policy.agent_rules.enabled) return false;
-    if (path.startsWith(`${HOOKS_DIRECTORY}/`) && policy.hooks?.enabled !== true) return false;
-    return !RETAINED_PATHS.has(path);
 }
 
 function patch(path: string, before: string, after: string, beforeName: string): string {
@@ -192,25 +185,35 @@ function keyDrift(root: string, generated: Generated): Drift[] {
 }
 
 /**
+ * Whether a recorded output has no selected owner and is not retained.
+ * @param entry the recorded output
+ * @param expectedPaths the outputs and moves selected now
+ * @returns whether apply restores the original file or removes the output
+ */
+export function isStray(entry: Ownership['files'][number], expectedPaths: ReadonlySet<string>): boolean {
+    return entry.installed !== undefined && !expectedPaths.has(entry.path) && !RETAINED_PATHS.has(entry.path);
+}
+
+/**
  * Apply generated plans through the repository's lifecycle owner.
  * @param session the configuration and repository reads.
+ * @param generated the generated outputs whose lockfiles were resolved before committing policy.
  * @param log the command's locked ownership context.
- * @param reviewedOriginals reviewed originals authorized for replacement.
- * @param prepared the generated outputs whose lockfiles were resolved before committing policy.
+ * @param options reviewed originals authorized for replacement.
  * @returns generated changes.
  */
 export function writeGeneratedFiles(
     session: Session,
+    generated: Generated,
     log: Log,
-    reviewedOriginals?: ReadonlyMap<string, FileCopy | undefined>,
-    prepared?: Generated,
+    options?: Pick<WriteRequest, 'reviewedOriginals'>,
 ): ApplyReport {
     // Generation requires a valid policy. Refuse errors before writing proposed files.
     assertNoErrors(session.policyFiles);
 
     if (readPolicyFile(session.root) !== session.policyFiles.text)
         throw new Error('The gspot.toml file changed while gspot was running. Run the command again.');
-    const generated = prepared ?? emitAll(session);
+    const reviewedOriginals = options?.reviewedOriginals;
     const report: ApplyReport = {
         written: [],
         unchanged: [],
@@ -303,22 +306,15 @@ export function assertVersionPin(root: string): void {
 /**
  * Every generated file that differs from its emitted text, is missing, or is a stray gspot file. Managed blocks and authored config-file edits count too.
  * @param root the repository root
- * @param policy the repository policy
  * @param generated the generated files as generated now
  * @returns the drift entries in path order
  */
-export function computeDrift(root: string, policy: Policy, generated: Generated): Drift[] {
+export function computeDrift(root: string, generated: Generated): Drift[] {
     const ownership = getOwnership(root);
-    const known = generatedPaths(generated);
+    const known = new Set([...generatedPaths(generated), 'CLAUDE.md']);
     const lockfiles = toolProjectDrift(root, generated.files);
     const strays = ownership.files
-        .filter(
-            (entry) =>
-                !RETAINED_KINDS.has(entry.kind) &&
-                entry.installed !== undefined &&
-                !known.has(entry.path) &&
-                isStrayCandidate(entry.path, policy),
-        )
+        .filter((entry) => isStray(entry, known))
         .map((entry): Drift => ({ path: entry.path, kind: 'stray' }));
     return [
         ...lockfiles.flatMap(({ path, kind }) => (kind === undefined ? [] : [{ path, kind }])),

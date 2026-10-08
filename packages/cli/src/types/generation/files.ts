@@ -21,7 +21,7 @@ export type GeneratedFile = {
     content: string;
     executable?: boolean;
     read?: FileCopy;
-    kind: 'lock' | 'tool_file' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
+    kind: 'lock' | 'tool_file' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules';
 };
 
 export type Generated = {

@@ -5,21 +5,16 @@ import { duplicateMisePins } from '#cli/tools/public.ts';
 import { misePins } from '#cli/configurations/public.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { CI_FILE_NOTES } from '#cli/config/generation/ci.ts';
+import type { Generated } from '#cli/types/generation/files.ts';
 import { getSubmodulePaths } from '#cli/repository/contracts.ts';
 import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { getLintJobs } from '#cli/repository/discovery/public.ts';
+import { ciNpmInstall } from '#cli/generation/documents/public.ts';
 import type { DuplicateMisePin } from '#cli/types/tools/install.ts';
 import { npmPins, pythonPins } from '#cli/configurations/contracts.ts';
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import type { InitPlan, Planning, InitAnswers, InitFileRow } from '#cli/types/commands/init.ts';
 
-import {
-    DOT_GSPOT,
-    POLICY_FILE,
-    MISE_CONFIG_PATH,
-    TOOL_PYTHON_PROJECT,
-    TOOL_PACKAGE_PROJECT,
-} from '#cli/config/platform/locations.ts';
 import {
     CI_SETUP,
     HOOKS_ROW,
@@ -28,6 +23,14 @@ import {
     ATTRIBUTES_ROW,
     CONFIGURATION_WIDTH,
 } from '#cli/config/commands/init.ts';
+import {
+    DOT_GSPOT,
+    POLICY_FILE,
+    VERSION_FILE,
+    MISE_CONFIG_PATH,
+    TOOL_PYTHON_PROJECT,
+    TOOL_PACKAGE_PROJECT,
+} from '#cli/config/platform/locations.ts';
 
 function runnerRows(answers: InitAnswers, everySelected: Manifest[]): InitPlan['change'] {
     const count = Object.keys(npmPins(everySelected, answers.runner)).length;
@@ -65,20 +68,6 @@ function noLongerRuns(tooling: Tooling, duplicatePins: DuplicateMisePin[]): Init
         });
     }
     return list;
-}
-
-// The agent instruction files init writes, when any agent is configured.
-function agentRows(agents: string[], rules: string): InitPlan['write'] {
-    if (agents.length === 0) return [];
-    const files = agents.map((path) => ({ path, note: 'managed instruction block' }));
-    return [...files, { path: `${rules}/`, note: 'agent rules' }];
-}
-
-// The CI workflow init writes for the chosen host.
-function ciRows(ci: InitAnswers['ci']): InitPlan['write'] {
-    if (ci === 'none') return [];
-    if (ci === 'github') return [{ path: GITHUB_WORKFLOW, note: 'check workflow' }];
-    return [{ path: GITLAB_WORKFLOW, note: `add include: [{ local: ${GITLAB_WORKFLOW} }] to .gitlab-ci.yml` }];
 }
 
 // The CI files init leaves alone: every one when no workflow is written, and every existing lint job.
@@ -135,10 +124,11 @@ function templateSection(template: InitPlan['template']): string[] {
 
 /**
  * Builds the plan init prints before asking to continue.
- * @param planning the selection, the answers, and the replaced configuration
- * @param policy the validated proposed policy
- * @param policyText the proposed policy text
- * @param requirements the manifests containing applicable tool requirements
+ * @param planning the init answers and selection
+ * @param policy the validated policy
+ * @param policyText the authored text
+ * @param requirements the applicable manifests
+ * @param generated the takeover outputs
  * @returns the plan
  */
 export function buildInitPlan(
@@ -146,8 +136,9 @@ export function buildInitPlan(
     policy: Policy,
     policyText: string,
     requirements: Manifest[],
+    generated: Generated,
 ): InitPlan {
-    const { root, hasGit, tooling, everySelected, selection, answers, replaced, options } = planning;
+    const { root, hasGit, tooling, selection, answers, replaced, options } = planning;
     const template = options.template && {
         name: options.template.tables.template,
         digest: options.template.digest,
@@ -163,22 +154,17 @@ export function buildInitPlan(
     }
     return {
         ...compact({ template }),
-        ...(answers.ci === 'none' ? { ci: CI_SETUP } : {}),
+        ...(answers.ci === 'none'
+            ? { ci: { commands: [ciNpmInstall(`"$(cat ${VERSION_FILE})"`), ...CI_SETUP.commands] } }
+            : {}),
         level: policy.level,
         configurations: configurationRows(planning, policy),
         write: [
             { path: POLICY_FILE, note: `your policy, ${String(policyText.split('\n').length)} lines` },
             { path: `${DOT_GSPOT}/`, note: 'generated configuration and version pin' },
-            ...everySelected
-                .flatMap((manifest) => manifest.toolFiles)
-                .map((config) => config.pointer?.path)
-                .filter((path) => path !== undefined)
-                .map((path) => ({ path, note: 'pointer' })),
-            ...agentRows(
-                policy.agent_rules.enabled ? [...new Set(['AGENTS.md', ...policy.agent_rules.instruction_files])] : [],
-                policy.agent_rules.folder,
-            ),
-            ...ciRows(answers.ci),
+            ...[...generated.files, ...generated.blocks]
+                .filter(({ path }) => !path.startsWith(`${DOT_GSPOT}/`) && !change.some((row) => row.path === path))
+                .map(({ path }) => ({ path, note: CI_FILE_NOTES[path] ?? 'generated file' })),
         ],
         remove: [
             ...replaced.removed,

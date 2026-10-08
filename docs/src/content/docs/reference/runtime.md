@@ -15,7 +15,6 @@ Each [command reference](/reference/commands/) gives its exact exit contract.
 | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `GSPOT_JOBS`   | Positive integer limiting concurrent checks. By default, execution uses the available processor count.                  |
 | `GITHUB_TOKEN` | Credentials for supported GitHub release downloads. Keep it in the environment and out of committed policy and reports. |
-| `GSPOT_HOOK`   | Hook context set by generated hook scripts. Use `--hook` when invoking hook behavior manually.                          |
 
 To limit concurrent checks in a POSIX shell:
 

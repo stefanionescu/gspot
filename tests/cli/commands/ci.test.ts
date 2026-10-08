@@ -43,7 +43,7 @@ test.each([
             '--yes',
             '--configurations',
             'none',
-            '--no-task',
+            '--no-runner',
             '--no-hooks',
             '--no-agent-rules',
             '--no-install',

@@ -1,4 +1,3 @@
-import { resolve } from 'node:path';
 import { emitAll } from '#cli/generation/public.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import { readRepository } from '#cli/repository/public.ts';
@@ -18,7 +17,6 @@ import { ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
 import { getTooling } from '#cli/repository/discovery/public.ts';
 import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { commandHelp, openSession } from '#cli/commands/public.ts';
 import { note, print, printResult } from '#cli/terminal/public.ts';
 import { plannedScopes } from '#cli/repository/paths/contracts.ts';
 import { selectForInit } from '#cli/lifecycle/selection/public.ts';
@@ -29,6 +27,7 @@ import { configurationManifests } from '#cli/configurations/public.ts';
 import { initPlanText, buildInitPlan } from '#cli/commands/init/plan.ts';
 import { compact, trimTrailingSlashes } from '#cli/platform/contracts.ts';
 import { Option, InvalidArgumentError } from '@commander-js/extra-typings';
+import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
 import type { InitInputs, InitOptions, InitSelection } from '#cli/types/lifecycle/selection.ts';
 import { writeSetup, proposeText, askQuestions, askConfirmation } from '#cli/commands/init/contracts.ts';
 import type { InitJson, Planning, InitAnswers, PolicyDraft, InitPrepared } from '#cli/types/commands/init.ts';
@@ -173,7 +172,7 @@ export function registerInit(program: Program): void {
         )
         .addHelpText('after', commandHelp('init'))
         .option('--yes', 'Accept the plan without asking')
-        .option('--from <template>', 'Start from a template: a path, an https URL, or github:owner/repo')
+        .option('--from <template>', 'Start from a template: a path, an https URL, or github:owner/repo[/path][@ref]')
         .option(
             '--configurations <configurations...>',
             'Override detected project configurations at the root; general checks remain automatic',
@@ -193,7 +192,10 @@ export function registerInit(program: Program): void {
         .option('--no-hooks', 'Install no Git hooks')
         .option('--no-ci', 'Write no CI workflow')
         .option('--no-agent-rules', 'Write no agent rules')
-        .option('--no-task', 'Set up no task runner')
+        .addOption(
+            new Option('--runner <runner>', 'Select a runner').choices(policySchema.shape.runner.unwrap().options),
+        )
+        .option('--no-runner', 'Set up no runner')
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags, command) => {
             const global = command.optsWithGlobals();
@@ -201,10 +203,9 @@ export function registerInit(program: Program): void {
                 throw new GspotError('prompt', [
                     'JSON initialization requires --yes to accept the plan without prompts.',
                 ]);
-            const cwd = resolve(global.C ?? process.cwd());
             printResult(
                 await initCommand({
-                    cwd,
+                    cwd: commandRoot(command),
                     yes: flags.yes === true,
                     isDryRun: flags.dryRun === true,
                     install: flags.install,
@@ -214,7 +215,7 @@ export function registerInit(program: Program): void {
                         scopes: flags.scopeConfigurations,
                         hooks: flags.hooks ? undefined : false,
                         ci: flags.ci === false ? ('none' as const) : flags.ci,
-                        runner: flags.task ? undefined : ('none' as const),
+                        runner: flags.runner === false ? ('none' as const) : flags.runner,
                         agentRules: flags.agentRules ? undefined : false,
                     }),
                 }),
@@ -253,7 +254,8 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const applicable = applicableManifests(session);
     const tools = new Set(applicable.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     printDetection(inputs, selection, tooling, tools);
-    const replaced = planTakeover(root, tooling, tools, emitAll(session).toolFiles);
+    const generated = emitAll(session);
+    const replaced = planTakeover(root, tooling, tools, generated.toolFiles);
     const planning: Planning = {
         root,
         hasGit: repo.hasGit,
@@ -266,7 +268,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         replaced,
     };
     return {
-        plan: buildInitPlan(planning, policy, policyText, applicable),
+        plan: buildInitPlan(planning, policy, policyText, applicable, generated),
         policyText,
         removed: replaced.removed,
         read: replaced.read,

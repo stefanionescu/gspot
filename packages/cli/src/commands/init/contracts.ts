@@ -12,6 +12,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import { readGitSetting } from '#cli/platform/git/public.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
+import { HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { installTools } from '#cli/lifecycle/install/public.ts';
@@ -93,11 +94,7 @@ async function askChoice<T extends string>(
     requireTerminal(question, flag);
     const answer = await select<T>({
         message: question,
-        options: choices.map(({ value, label, hint }) => ({
-            value,
-            label,
-            ...(hint === undefined ? {} : { hint }),
-        })) as Parameters<typeof select<T>>[0]['options'],
+        options: choices,
         initialValue: initial,
     });
     if (typeof answer === 'symbol') throw new GspotError('prompt', `${question} Cancelled; nothing written.`);
@@ -228,7 +225,7 @@ export async function writeSetup(
         },
     });
     const destinations = generatedPaths(generated);
-    const applied = writeGeneratedFiles(session, log, prepared.read, generated);
+    const applied = writeGeneratedFiles(session, generated, log, { reviewedOriginals: prepared.read });
     const retired = retireReplaced(
         log,
         prepared.removed.filter((entry) => !destinations.has(entry.path)),
@@ -267,9 +264,13 @@ export async function askQuestions(root: string, options: InitOptions, tooling: 
     const runner =
         options.runner ??
         (await askChoice(
-            'Task runner?',
-            '--no-task',
-            RUNNER_CHOICES,
+            'Runner?',
+            '--no-runner',
+            RUNNER_CHOICES.map((choice) =>
+                choice.value === 'none'
+                    ? choice
+                    : { ...choice, label: `${choice.label} (${HOOK_RUNNERS[choice.value].command})` },
+            ),
             which.sync('mise', { nothrow: true }) === null ? tooling.runner : 'mise',
             options.yes,
         ));

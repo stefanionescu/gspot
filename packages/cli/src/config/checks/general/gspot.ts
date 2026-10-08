@@ -5,12 +5,12 @@ export const CONFLICT_HELP = 'Run gspot apply to write the file again, then gspo
 export const APPLY_HELP =
     'Change policy in gspot.toml, then run gspot apply. Edited outputs are preserved; move them aside to regenerate.';
 
-export const STRAY_HELP = 'Delete the file, or add the configuration that renders it.';
+export const STRAY_HELP = 'Delete the file, or add the configuration that emits it.';
 
 export const DRIFT_MESSAGES: Record<Drift['kind'], string> = {
-    changed: 'This generated file differs from what gspot.toml renders.',
+    changed: 'This generated file differs from what gspot.toml emits.',
     missing: 'This generated file is missing.',
-    stray: 'This file carries the gspot header but nothing in the selection renders it.',
+    stray: 'gspot wrote this file, and no selected configuration writes it now.',
     conflict: 'This generated file holds merge conflict markers, so no tool can read it.',
 };
 

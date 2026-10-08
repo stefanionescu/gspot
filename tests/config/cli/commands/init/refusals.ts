@@ -1,4 +1,4 @@
-export const QUIET = ['--no-task', '--no-ci', '--no-agent-rules', '--no-install'];
+export const QUIET = ['--no-runner', '--no-ci', '--no-agent-rules', '--no-install'];
 
 export const ARGUMENT_REFUSALS = [
     { name: 'a choice outside its list', argv: ['init', '--yes', '--ci', 'foo'], cause: 'foo' },

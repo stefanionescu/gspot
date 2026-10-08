@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { inspectTool } from '#cli/tools/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -34,7 +35,7 @@ test.skipIf(!isPosix).each(['recommended', 'all'] as const)(
         await symlink('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
         const session = await openSession(sandbox.path);
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(session, log);
+        writeGeneratedFiles(session, emitAll(session), log);
         const compiler = toolPin(session.scopes[0]!.selected, 'tsc');
         expect(inspectTool(session, compiler)).toMatchObject({
             state: 'ok',

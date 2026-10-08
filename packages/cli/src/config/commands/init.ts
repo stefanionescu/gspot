@@ -1,6 +1,6 @@
+import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Choice, InitAnswers } from '#cli/types/commands/init.ts';
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
-import { VERSION_FILE, HOOKS_DIRECTORY, MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
+import { GITHUB_WORKFLOW, GITLAB_INCLUDE_LABEL } from '#cli/config/generation/ci.ts';
 
 export const COLUMN_GAP = 2;
 
@@ -15,7 +15,7 @@ export const HOOKS_ROW = {
 };
 
 export const CI_SETUP = {
-    commands: [`npm install --global "@gspothq/cli@$(cat ${VERSION_FILE})"`, 'gspot install', 'gspot check'],
+    commands: ['gspot install', 'gspot check'],
 };
 
 export const JSON_SCHEMA_URL = 'https://generativespotting.com/schema/gspot.schema.json';
@@ -25,17 +25,17 @@ export const SCHEMA_LINE = `#:schema ${JSON_SCHEMA_URL}`;
 export const TEMPLATE_HEAD = new Set(['template', 'selection', 'configurations']);
 
 export const RUNNER_CHOICES: Choice<InitAnswers['runner']>[] = [
-    { value: 'mise', label: `mise (${MISE_CONFIG_PATH})` },
-    { value: 'bun', label: 'bun (package.json scripts)' },
-    { value: 'npm', label: 'npm (package.json scripts)' },
-    { value: 'pnpm', label: 'pnpm (package.json scripts)' },
-    { value: 'yarn', label: 'yarn (package.json scripts)' },
+    { value: 'mise', label: 'mise' },
+    { value: 'bun', label: 'bun' },
+    { value: 'npm', label: 'npm' },
+    { value: 'pnpm', label: 'pnpm' },
+    { value: 'yarn', label: 'yarn' },
     { value: 'none', label: 'none' },
 ];
 
 export const CI_CHOICES: Choice<InitAnswers['ci']>[] = [
     { value: 'github', label: GITHUB_WORKFLOW },
-    { value: 'gitlab', label: `${GITLAB_WORKFLOW} (include from .gitlab-ci.yml)` },
+    { value: 'gitlab', label: GITLAB_INCLUDE_LABEL },
     { value: 'none', label: 'no workflow' },
 ];
 

@@ -12,10 +12,9 @@ export type ExtraRow = { tool: string; keys: string[]; reason?: string; scope: s
 /** The settings listing. */
 export type SettingsListing = { rows: SettingRow[]; extras: ExtraRow[] };
 
-/** The JSON response of list configurations with detected configurations and their install commands. */
+/** The JSON response of selected and available configurations. */
 export type ConfigurationsListJson = {
     selected: { name: string; checks: { name: string; scope: string; state: string }[] }[];
-    detected: { name: string; evidence: string; command: string }[];
     available: { name: string; description: string }[];
 };
 

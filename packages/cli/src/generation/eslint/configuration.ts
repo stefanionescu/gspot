@@ -2,10 +2,10 @@
 import type { Session } from '#cli/types/planning.ts';
 import { aliasesFor } from '#cli/repository/contracts.ts';
 import type { EtaInputs } from '#cli/types/generation/eta.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { tablesFor } from '#cli/policy/settings/contracts.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
 import { boundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
-import { isInScope, pathMatcher } from '#cli/repository/paths/public.ts';
 import { generatedIgnores } from '#cli/generation/documents/contracts.ts';
 import type { ScopeView, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { scriptPaths, runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
@@ -45,10 +45,7 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
             return {
                 files: [
                     `${path}/${eslintSourcePattern('javascript', 'typescript')}`,
-                    ...eslintNodePatterns(
-                        nodeFiles.filter((file) => isInScope(file, path)),
-                        '',
-                    ),
+                    ...eslintNodePatterns(nodeFiles, path),
                 ],
                 rules: {
                     'gspot/import-boundaries': ['error', { folders, aliases }],

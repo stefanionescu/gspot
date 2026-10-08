@@ -19,12 +19,17 @@ function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, tar
 }
 
 // The emitted text of every fragment that has a template.
-function emittedFragments(fragments: Fragment[], inputs: EtaInputs, scopes: ScopeSelection[]): string[] {
+function emittedFragments(
+    fragments: Fragment[],
+    inputs: EtaInputs,
+    scopes: ScopeSelection[],
+    target: ToolFileDeclaration,
+): string[] {
     const emitted: string[] = [];
     for (const { manifest, toolFile } of fragments) {
         if (toolFile.source === undefined) continue;
         const source = readAsset(`${manifest.dir}/${toolFile.source}`);
-        if (!toolFile.target.endsWith('eslint.config.mjs')) {
+        if (!target.scope_fragments) {
             emitted.push(eta.renderString(source, inputs));
             continue;
         }
@@ -90,7 +95,7 @@ export function fragmentInputs(
             .filter((toolFile) => toolFile.fragment && toolFile.target === target.target)
             .map((toolFile) => ({ manifest, toolFile })),
     );
-    const config = target.target.endsWith('eslint.config.mjs') ? inputs.eslint() : undefined;
+    const config = target.scope_fragments ? inputs.eslint() : undefined;
     const eslintFiles =
         config === undefined
             ? inputs.eslintFiles
@@ -106,8 +111,9 @@ export function fragmentInputs(
         fragments,
         { ...inputs, fragmentFiles, eslintFragmentBlocks, eslintFiles },
         scopes,
+        target,
     );
-    const parsed = target.target.endsWith('eslint.config.mjs')
+    const parsed = target.scope_fragments
         ? emitted.map((fragment) => typescriptImports(fragment))
         : emitted.map((body) => ({ body, imports: [] }));
     const imports = parsed.flatMap(({ imports }) => imports);

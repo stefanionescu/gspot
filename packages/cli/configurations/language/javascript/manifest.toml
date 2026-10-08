@@ -434,6 +434,7 @@ npm = "typescript"
 
 [[tool_file]]
 target = ".gspot/config/eslint.config.mjs"
+scope_fragments = true
 tool = "eslint"
 rule_keys = ["rules"]
 pointer = { path = "eslint.config.mjs", body = "export { default } from {target_module};" }

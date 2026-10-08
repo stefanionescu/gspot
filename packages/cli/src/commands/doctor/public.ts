@@ -1,4 +1,4 @@
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { hostPlatform } from '#cli/platform/public.ts';
 import { missingBuild } from '#cli/planning/contracts.ts';
 import { readVersionPin } from '#cli/lifecycle/public.ts';
@@ -15,10 +15,10 @@ import { getSubmodulePaths } from '#cli/repository/contracts.ts';
 import { hookStatus } from '#cli/lifecycle/install/contracts.ts';
 import type { ToolInspection } from '#cli/types/tools/install.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
-import { commandHelp, openSession } from '#cli/commands/public.ts';
 import { getSuggestions } from '#cli/commands/doctor/contracts.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/public.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
+import { commandHelp, commandRoot, openSession } from '#cli/commands/public.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/selection/contracts.ts';
 
 import {
@@ -164,8 +164,6 @@ export function registerDoctor(program: Program): void {
         )
         .addHelpText('after', commandHelp('doctor'))
         .action(async (_flags, command) => {
-            const global = command.optsWithGlobals();
-            const cwd = resolve(global.C ?? process.cwd());
-            printResult(await doctorCommand(cwd));
+            printResult(await doctorCommand(commandRoot(command)));
         });
 }

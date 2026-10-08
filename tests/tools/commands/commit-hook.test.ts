@@ -45,7 +45,7 @@ test('installed and freshly cloned repositories enforce staged findings through 
         '--yes',
         '--configurations',
         'bash',
-        '--no-task',
+        '--no-runner',
         '--no-ci',
         '--no-agent-rules',
         '--no-install',

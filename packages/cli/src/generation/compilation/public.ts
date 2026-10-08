@@ -58,7 +58,12 @@ import {
 const stylelintRuleNames = stylelintRuleNamesSchema.parse(nativeStylelintRuleNames).rules;
 
 // Resolve target rules, then the selected level and the check's finding ignores.
-function htmlRules(view: ScopeView, level: Policy['level'], check: string, overrides: Record<string, unknown> = {}) {
+function htmlRules(
+    view: Pick<ScopeView, 'rulesOff'>,
+    level: Policy['level'],
+    check: string,
+    overrides: Record<string, unknown> = {},
+) {
     const rules: Record<string, unknown> = { ...HTML_RULES, ...overrides };
     const ignored = [...(level === 'all' ? [] : HTML_ALL_RULES), ...view.rulesOff(check)];
     for (const rule of ignored) rules[rule] = 'off';
@@ -108,16 +113,8 @@ function scopeInputs(input: ScopeEtaInputs) {
                     verbatim: entry.view.verbatim,
                 })),
         ignoredPaths: selectedIgnorePaths(scopes),
-        configurations: view.configurations,
         policy,
-        format: view.format,
-        roles: view.roles,
-        settings: view.settings,
         entryFiles: (scope: string) => entryFiles(policy, scopes, scope),
-        limit: view.limit,
-        rulesOff: view.rulesOff,
-        ignoresFor: view.ignoresFor,
-        verbatim: view.verbatim,
         testRuleNames: TEST_RULE_NAMES,
         stylelintRuleNames,
         toolBinaries: tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name),
@@ -143,7 +140,7 @@ export function etaInputs(session: Session, selection: ScopeSelection, manifests
     const { root, reads, scopes, version } = session;
     const { policy } = session.policyFiles;
     const sourceFiles = session.repository.files;
-    const { view } = selection;
+    const { options, ...view } = selection.view;
     const compilerOptions = Object.entries(requiredTsconfigOptions(policy.level, selection.selected)).filter(
         ([option]) => !view.rulesOff('typescript/tsconfig').includes(option),
     );
@@ -155,18 +152,19 @@ export function etaInputs(session: Session, selection: ScopeSelection, manifests
         scope: selection.scope.path,
     };
     return {
+        ...view,
         ...scopeInputs({ session, selection, manifests, projects: readPackageManifests(root, sourceFiles) }),
         ...eslintInputs(session, selection),
         javascriptConfig: (target) =>
             buildJsconfig({
                 ...compilerContext,
                 declarationPaths: policy.declarations.flatMap((entry) => entry.paths),
-                importStyles: view.options('tools.eslint')['import_extensions'],
+                importStyles: options('tools.eslint')['import_extensions'],
                 target,
             }),
         scopeIgnorePatterns,
         frozenMigrationPaths,
-        swiftVersion: () => readSwiftVersion(compilerContext, view.options('swift').xcode_project),
+        swiftVersion: () => readSwiftVersion(compilerContext, options('swift').xcode_project),
         editorconfigOverrides: () => editorconfigOverrides(policy),
         isAll: policy.level === 'all',
         htmlRules: htmlRules.bind(undefined, view, policy.level),

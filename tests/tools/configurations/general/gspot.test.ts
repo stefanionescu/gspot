@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -31,7 +32,8 @@ test('an edited generated file and one holding merge markers are drift findings,
     });
     {
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(await openSession(sandbox.path), log);
+        const session = await openSession(sandbox.path);
+        writeGeneratedFiles(session, emitAll(session), log);
     }
     const project = parseToolProject(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'));
     for (const command of [
@@ -67,7 +69,8 @@ test('an edited generated file and one holding merge markers are drift findings,
     ]);
     {
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(await openSession(sandbox.path), log);
+        const session = await openSession(sandbox.path);
+        writeGeneratedFiles(session, emitAll(session), log);
     }
     const repaired = await executeRun(await openSession(sandbox.path), runOptions);
     expect(repaired.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });

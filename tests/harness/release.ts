@@ -25,7 +25,7 @@ export async function initializeConsumer(release: PublishedRelease, installation
             'bash',
             'python',
             'swift',
-            '--no-task',
+            '--no-runner',
             '--no-ci',
             '--no-hooks',
             '--no-install',

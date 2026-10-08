@@ -136,3 +136,14 @@ export function unknownConfigurations<Declaration extends Pick<ConfigurationDecl
             message: unknownConfigurationDiagnostic(declaration.name, known),
         }));
 }
+
+/**
+ * Name an unknown check and suggest nearby checks from the caller's native inventory.
+ * @param name the requested check identifier
+ * @param known the check names available to the caller
+ * @returns the shared selection diagnostic
+ */
+export function unknownCheckDiagnostic(name: string, known: string[]): string {
+    const suggestions = similar(name, known);
+    return `There is no check called \`${name}\`.${suggestions.length > 0 ? ' Did you mean ' + codeList(suggestions) + '?' : ''}`;
+}

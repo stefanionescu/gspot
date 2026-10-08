@@ -92,3 +92,12 @@ export function print(text: string): void {
     if (options.json) return;
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 }
+
+/**
+ * Emit command notes in their existing order, each with its native line prefix.
+ * @param notes the messages attached to the prepared command result
+ * @returns the note lines, or no text when there are none
+ */
+export function noteLines(notes: string[]): string {
+    return notes.map((note) => `note     ${note}\n`).join('');
+}

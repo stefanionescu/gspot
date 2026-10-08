@@ -21,7 +21,7 @@ async function prepareLockfile(root: string): Promise<void> {
     const session = await openSession(root);
     const generated = emitAll(session);
     await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
-    writeGeneratedFiles(session, log, undefined, generated);
+    writeGeneratedFiles(session, generated, log);
 }
 
 test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' && runner === 'mise'))(
@@ -69,7 +69,7 @@ test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' 
             ownership,
         });
         const read = await openSession(root);
-        expect(computeDrift(read.root, read.policyFiles.policy, emitAll(read))).toContainEqual({
+        expect(computeDrift(read.root, emitAll(read))).toContainEqual({
             path: `.gspot/${packageLockfile(installer)}`,
             kind: 'changed',
         });
@@ -78,7 +78,7 @@ test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' 
         expect(JSON.parse(installed.stdout) as InstallJson).toMatchObject({ installed: true, steps: repair.steps });
         expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
         const repaired = await openSession(root);
-        expect(computeDrift(root, repaired.policyFiles.policy, emitAll(repaired))).not.toContainEqual({
+        expect(computeDrift(root, emitAll(repaired))).not.toContainEqual({
             path: `.gspot/${packageLockfile(installer)}`,
             kind: 'changed',
         });
@@ -109,7 +109,8 @@ test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' 
         let repaired: ApplyReport;
         {
             using log = openOwnership(root);
-            repaired = writeGeneratedFiles(await openSession(root), log);
+            const session = await openSession(root);
+            repaired = writeGeneratedFiles(session, emitAll(session), log);
         }
         expect(repaired.written).not.toContain(`.gspot/${packageLockfile(installer)}`);
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);

@@ -1,3 +1,4 @@
+import type { Option } from '@clack/prompts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Template } from '#cli/types/policy/templates.ts';
 import type { Level, Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
@@ -11,7 +12,7 @@ import type {
     ConfigurationReason,
 } from '#cli/types/lifecycle/selection.ts';
 
-export type Choice<T extends string> = { value: T; label: string; hint?: string | undefined };
+export type Choice<T extends string> = Option<T> & { label: string };
 
 export type Planning = {
     root: string;
@@ -101,8 +102,6 @@ export type DetectionSummary = {
     manifests: Map<string, Manifest>;
     hasGit: boolean;
 };
-
-/** A detected configuration family printed as one initialization section. */
 
 /** A file initialization writes, removes, or preserves, with its explanation. */
 export type InitFileRow = { path: string; note: string };

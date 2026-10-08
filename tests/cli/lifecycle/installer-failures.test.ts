@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { CLI_PINS } from '#cli/config/generation/pins.ts';
@@ -115,7 +116,8 @@ test('a repository that already runs hooks keeps them, gets the gspot lines, and
     gitOutput(sandbox.path, ['config', 'core.hooksPath', '.githooks']);
     {
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(await openSession(sandbox.path), log);
+        const session = await openSession(sandbox.path);
+        writeGeneratedFiles(session, emitAll(session), log);
     }
     const read: string[][] = [];
     const run = processes.run;

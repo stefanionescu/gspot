@@ -237,7 +237,7 @@ export function addJsonHeader(emitted: string, version: string, format: JsonForm
 
 /**
  * Resolve target placeholders in native pointer text.
- * @param value the body text or rendered Eta source
+ * @param value the body text or emitted Eta source
  * @param pointerPath the native pointer file
  * @param targetPath the generated tool file
  * @returns the native text with quoted module and JSON paths preserved

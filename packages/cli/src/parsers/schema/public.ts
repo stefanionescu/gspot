@@ -58,6 +58,13 @@ const suppressionPattern = z
 
 const requirementSchema = z.object({ name: z.string(), specifier: z.string() });
 
+const replacementSchema = z.strictObject({
+    file: z.string().min(1),
+    table: z.string().min(1).optional(),
+    key: z.string().min(1).optional(),
+    shared: z.boolean().default(false),
+});
+
 /** Installer strings inherit the tool version; explicit definitions retain their own version. */
 export const installerPinSchema = installerDefinition.partial({ version: true }).extend({
     options: installerOptionsSchema.optional(),
@@ -151,12 +158,14 @@ export const toolSchema = z
         replace: z
             .array(
                 z
-                    .strictObject({
-                        file: z.string().min(1),
-                        table: z.string().min(1).optional(),
-                        key: z.string().min(1).optional(),
-                        shared: z.boolean().default(false),
-                    })
+                    .discriminatedUnion('redirect', [
+                        replacementSchema.extend({ redirect: z.literal(false).optional() }),
+                        replacementSchema.extend({
+                            file: z.literal('package.json'),
+                            key: z.string().min(1),
+                            redirect: z.literal(true),
+                        }),
+                    ])
                     .superRefine((row, context) => {
                         if (row.key !== undefined && row.table !== undefined)
                             context.addIssue({

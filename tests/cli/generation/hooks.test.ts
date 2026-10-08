@@ -34,7 +34,8 @@ test.each(RUNNER_CASES)(
             );
             expect(file.content).toContain(String.raw`cd 'app'\''s dir/' || exit 2`);
             const name = file.path.slice(file.path.lastIndexOf('/') + 1);
-            expect(file.content).toContain(`GSPOT_HOOK=${name} exec ${command} check`);
+            expect(file.content).toContain(`exec ${command} check --hook ${name}`);
+            expect(file.content).not.toContain('GSPOT_HOOK=');
             const path = join(sandbox.path, name);
             await Bun.write(path, file.content);
             const parsed = await runTestCommand(['sh', '-n', path], { cwd: sandbox.path });

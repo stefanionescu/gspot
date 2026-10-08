@@ -3,6 +3,7 @@ import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
@@ -34,7 +35,8 @@ test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks', async
     expect(hookStatus(await hooksOf(root))).toStrictEqual({ ready: false, text: 'not installed; run gspot install' });
     {
         using log = openOwnership(root);
-        writeGeneratedFiles(await openSession(root), log);
+        const session = await openSession(root);
+        writeGeneratedFiles(session, emitAll(session), log);
     }
     await using registry = await createInstallationRegistry(root, runTestCommand);
     using _environment = useEnvironment(registry.environment);
@@ -72,7 +74,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     commitAll(main);
     {
         using log = openOwnership(main);
-        writeGeneratedFiles(await openSession(main), log);
+        await openSession(main).then((session) => writeGeneratedFiles(session, emitAll(session), log));
     }
     await using registry = await createInstallationRegistry(main, runTestCommand);
     const environment = {
@@ -121,7 +123,8 @@ command = ${JSON.stringify([process.execPath, '-e', INDEX_COMMAND])}
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
     {
         using log = openOwnership(project);
-        writeGeneratedFiles(await openSession(project), log);
+        const session = await openSession(project);
+        writeGeneratedFiles(session, emitAll(session), log);
     }
     await using registry = await createInstallationRegistry(project, runTestCommand);
     const applied = await runGspot(project, ['apply']);

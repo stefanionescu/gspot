@@ -33,7 +33,7 @@ test('JavaScript checking includes authored build directories at level all', asy
     const environment = { PATH: buildToolsPath(['tsc']) };
     const session = await openSession(sandbox.path);
     using log = openOwnership(sandbox.path);
-    writeGeneratedFiles(session, log);
+    writeGeneratedFiles(session, emitAll(session), log);
     const command = ['check', '--only', 'javascript/tsc', '--json'];
     const broken = await spawnGspot(sandbox.path, command, environment);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
@@ -66,7 +66,7 @@ test.each(JAVASCRIPT_CONFIG_CASES)(
         const emitted = emitAll(session);
         const generated = emitted.files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(session, log, undefined, emitted);
+        writeGeneratedFiles(session, emitted, log);
         await chmod(join(sandbox.path, generated.path), 0o444);
         const command = ['check', '--only', 'javascript/tsc', '--json'];
         const env = { PATH: buildToolsPath(['tsc']) };
@@ -118,7 +118,7 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
         JAVASCRIPT_CONFIG_PATHS,
     );
     using log = openOwnership(sandbox.path);
-    writeGeneratedFiles(session, log, undefined, emitted);
+    writeGeneratedFiles(session, emitted, log);
     const command = ['check', '--only', 'javascript/tsc', '--json'];
     const env = { PATH: buildToolsPath(['tsc']) };
     const broken = await spawnGspot(sandbox.path, command, env);

@@ -8,7 +8,7 @@ export const ACTIONS_INIT = [
     '--yes',
     '--configurations',
     'actions',
-    '--no-task',
+    '--no-runner',
     '--no-ci',
     '--no-agent-rules',
     '--no-install',

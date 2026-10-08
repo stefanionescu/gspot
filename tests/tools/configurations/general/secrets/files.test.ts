@@ -1,6 +1,7 @@
 // Without git the secrets configuration scans the files themselves, and the git scans wait for a repository.
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -29,7 +30,8 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     });
     {
         using log = openOwnership(sandbox.path);
-        writeGeneratedFiles(await openSession(sandbox.path), log);
+        const session = await openSession(sandbox.path);
+        writeGeneratedFiles(session, emitAll(session), log);
     }
     const withoutGit = await secretChecks(sandbox.path);
     expect(withoutGit).toContainEqual(

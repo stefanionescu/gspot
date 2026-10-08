@@ -154,3 +154,12 @@ export function filenameMatcher(names: string[]): (path: string) => boolean {
         return literals.has(base) || literals.has(path) || globs(base) || globs(path);
     };
 }
+
+/**
+ * Escape a repository path so native glob selectors match that literal path.
+ * @param path the literal repository path
+ * @returns a glob with every special character escaped
+ */
+export function literalGlob(path: string): string {
+    return path.replaceAll(/[\\*?{}[\]()!+@,]/gu, String.raw`\$&`);
+}

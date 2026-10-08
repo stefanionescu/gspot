@@ -202,7 +202,7 @@ test('generated recommended Vale configuration reports unhelpful link text and a
     });
     const session = await openSession(directory.path);
     using ownership = openOwnership(directory.path);
-    writeGeneratedFiles(session, ownership, undefined, emitAll(session));
+    writeGeneratedFiles(session, emitAll(session), ownership);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
     const failed = await runBuiltInCheck(BUILT_IN_CHECKS['prose/vale'].input)(session, planned!);
     expect(failed.status, failed.note).toBe('failed');

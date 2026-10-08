@@ -25,7 +25,7 @@ export type ScopeEtaInputs = {
     projects: PackageManifest[];
 };
 
-export type EtaInputs = {
+export type EtaInputs = Omit<ScopeView, 'options'> & {
     testRuleNames: string[];
     stylelintRuleNames: string[];
     /** Present for a configuration whose manifest declares rule paths. */
@@ -79,11 +79,7 @@ export type EtaInputs = {
         verbatim: ScopeView['verbatim'];
     }[];
     ignoredPaths: string[];
-    configurations: string[];
     policy: Policy;
-    format: ScopeView['format'];
-    roles: ScopeView['roles'];
-    settings: Record<string, unknown>;
     fragments: string;
     /** Separately emitted fragments for targets that consume structured configuration. */
     fragmentParts: string[];
@@ -91,12 +87,8 @@ export type EtaInputs = {
     fragmentFiles: string[];
     fragmentSelectors: SelectorGroup[];
     entryFiles: (scope: string) => string[];
-    limit: (key: string, language?: string) => number | undefined;
     /** Shared native HTML rules with target overrides, then level and finding ignores. */
     htmlRules: (check: string, overrides?: Record<string, unknown>) => Record<string, unknown>;
-    rulesOff: (check: string) => string[];
-    ignoresFor: ScopeView['ignoresFor'];
-    verbatim: (name: string) => Record<string, unknown> | undefined;
     json: (value: unknown, indent?: number) => string;
     toml: (value: Record<string, unknown>) => string;
     yaml: (value: Record<string, unknown>) => string;

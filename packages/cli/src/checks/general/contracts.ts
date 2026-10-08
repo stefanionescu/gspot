@@ -31,7 +31,7 @@ export function gspotDrift(session: Session, planned: PlannedCheck): Promise<Che
             'The gspot/drift check needs generated file comparisons, so its manifest must say runs = "once".',
         );
     const started = performance.now();
-    const findings = computeDrift(session.root, session.policyFiles.policy, emitAll(session)).map((entry) => ({
+    const findings = computeDrift(session.root, emitAll(session)).map((entry) => ({
         check: planned.check.name,
         file: entry.path,
         rule: entry.kind,

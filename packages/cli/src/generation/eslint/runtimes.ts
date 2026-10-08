@@ -2,8 +2,8 @@ import { posix } from 'node:path';
 import { compact } from '#cli/platform/contracts.ts';
 import { rolePaths } from '#cli/policy/settings/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
-import { isInScope, pathExpressions } from '#cli/repository/paths/public.ts';
 import type { EslintContext, EslintRuntimeBlock } from '#cli/types/generation/eslint.ts';
+import { literalGlob, nestedScopes, pathExpressions } from '#cli/repository/paths/public.ts';
 import { MISE_SCRIPT_PATH, ESLINT_BROWSER_CONFIGURATIONS } from '#cli/config/generation/eslint.ts';
 
 function frameworkRuntime(configurations: string[]): string | undefined {
@@ -36,13 +36,10 @@ export function runtimeBlocks(policy: Policy, scopes: ScopeSelection[]): EslintR
     const blocks: EslintRuntimeBlock[] = [];
     for (const selection of scopes.toSorted((left, right) => left.scope.path.length - right.scope.path.length)) {
         const scope = selection.scope.path;
-        const children = scopes
-            .map((entry) => entry.scope.path)
-            .filter((path) => path !== scope && isInScope(path, scope))
-            .map((path) => {
-                const literal = path.replaceAll(/[?*[\]{}()!]/gu, String.raw`\$&`);
-                return `!${literal}/**`;
-            });
+        const children = nestedScopes(
+            scopes.map((entry) => entry.scope.path),
+            scope,
+        ).map((path) => `!${literalGlob(path)}/**`);
         const prefix = scope === '' ? '' : `${scope}/`;
         const tool = selection.view.values['tools.eslint'];
         const version = compact({

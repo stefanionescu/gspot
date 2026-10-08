@@ -5,11 +5,11 @@ import { run } from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { gitignoreBlock } from '#cli/generation/public.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { applyBlock } from '#cli/platform/root/contracts.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { emitAll, gitignoreBlock } from '#cli/generation/public.ts';
 import { CONFIGURATION_TABLE } from '#tests/config/cli/generation/managed-ignores.ts';
 import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/public.ts';
 
@@ -24,7 +24,8 @@ test.each([true, false])(
         });
         {
             using log = openOwnership(repository.path);
-            writeGeneratedFiles(await openSession(repository.path), log);
+            const session = await openSession(repository.path);
+            writeGeneratedFiles(session, emitAll(session), log);
         }
         const path = join(repository.path, '.gitignore');
         // Without Git there is nothing to manage: an authored file is untouched and none is created.
@@ -35,14 +36,16 @@ test.each([true, false])(
         expect(initialized.code, initialized.stderr).toBe(0);
         {
             using log = openOwnership(repository.path);
-            writeGeneratedFiles(await openSession(repository.path), log);
+            const session = await openSession(repository.path);
+            writeGeneratedFiles(session, emitAll(session), log);
         }
         const installed = await readFile(path, 'utf8');
         expect(installed.startsWith(original)).toBe(authored);
         expect(installed).toContain('.gspot/state/');
         {
             using log = openOwnership(repository.path);
-            writeGeneratedFiles(await openSession(repository.path), log);
+            const session = await openSession(repository.path);
+            writeGeneratedFiles(session, emitAll(session), log);
         }
         expect(await readFile(path, 'utf8')).toBe(installed);
     },
@@ -56,6 +59,9 @@ test('manifest-owned tool directories are ignored while generated rules and auth
     );
     const resolved = linkManifestTools([manifest]);
     const block = gitignoreBlock([...configurationManifests().values(), ...resolved.values(), ...resolved.values()]);
+    const selected = gitignoreBlock(resolved.values());
+    expect(selected).toContain('.gspot/local/downloads/');
+    for (const path of configurationManifests().get('prose')!.ignored) expect(selected).not.toContain(path);
     const authored = '# Authored entries\nprivate.tmp\n';
     const content = applyBlock(authored, block, { path: '.gitignore', style: 'hash' });
     await createFileTree(repository.path, { '.gitignore': content });

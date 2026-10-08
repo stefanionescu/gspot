@@ -27,7 +27,7 @@ test.each(INIT_CI_CASES)(
                 '--json',
                 '--configurations',
                 'none',
-                '--no-task',
+                '--no-runner',
                 '--no-hooks',
                 '--no-agent-rules',
                 '--no-install',
