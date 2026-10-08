@@ -1,7 +1,6 @@
 import type { Plugin } from './types/plugin.ts';
 import { envOwner } from '#plugin/rules/env-owner.ts';
 import { headerFirst } from '#plugin/rules/header-first.ts';
-import { noReexports } from '#plugin/rules/no-reexports.ts';
 import { sortExports } from '#plugin/rules/sort-exports.ts';
 import { sortImports } from '#plugin/rules/sort-imports.ts';
 import { noClientEnv } from '#plugin/rules/no-client-env.ts';
@@ -11,9 +10,7 @@ import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';
 import packageManifest from '#plugin-package' with { type: 'json' };
 import { importDirection } from '#plugin/rules/import-direction.ts';
 import { importBoundaries } from '#plugin/rules/import-boundaries.ts';
-import { importExtensions } from '#plugin/rules/import-extensions.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
-import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
 
 const rules = {
@@ -22,13 +19,10 @@ const rules = {
     'header-first': headerFirst,
     'import-direction': importDirection,
     'sort-imports': sortImports,
-    'import-extensions': importExtensions,
-    'max-barrel-reexports': maxBarrelReexports,
     'no-client-env': noClientEnv,
     'import-boundaries': importBoundaries,
     'no-alias-exports': noAliasExports,
     'no-index-imports': noIndexImports,
-    'no-reexports': noReexports,
     'no-trivial-files': noTrivialFiles,
     'no-trivial-functions': noTrivialFunctions,
     'require-server-only': requireServerOnly,
@@ -51,7 +45,7 @@ const plugin: Plugin = {
     rules,
 };
 
-// All adds naming, import order, layout and complexity conventions, and forbids re-exports.
+// All adds naming, import order, layout, and complexity conventions.
 export default Object.assign(plugin, {
     configs: {
         recommended: { name: 'gspot/recommended', plugins: { gspot: plugin }, rules: recommendedRules },

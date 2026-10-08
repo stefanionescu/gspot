@@ -1,5 +1,6 @@
 // User restrictions coexist with configuration restrictions at their declared levels and paths.
 import { test, expect } from 'bun:test';
+import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
@@ -20,7 +21,7 @@ test.each(['recommended', 'all'] as const)(
             messages
                 .filter(({ ruleId }) => ruleId === 'no-restricted-imports')
                 .map(({ line, message: diagnostic }) => ({
-                    file: filePath.slice(sandbox.path.length + 1),
+                    file: toPosix(filePath.slice(sandbox.path.length + 1)),
                     line,
                     message: diagnostic,
                 })),

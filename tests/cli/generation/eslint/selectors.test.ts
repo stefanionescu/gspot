@@ -10,6 +10,7 @@ import {
     INJECTED,
     PROCEDURE,
     LEVEL_RULES,
+    ALIAS_IMPORT,
     RESPONSE_MESSAGES,
 } from '#tests/config/cli/generation/eslint/selectors.ts';
 
@@ -20,8 +21,8 @@ test('general selectors form one group for every code file, in first-mention ord
 test('an allowed path set gets its own group without the selector that allows it', () => {
     const groups = selectorGroups([STORE, { ...RAW_SQL, except: ['db/migrations/**'] }]);
     expect(groups).toStrictEqual([
-        { selectors: [STORE, RAW_SQL] },
-        { files: ['db/migrations/**'], selectors: [STORE] },
+        { files: [['db/migrations/**']], selectors: [STORE] },
+        { ignores: ['db/migrations/**'], selectors: [STORE, RAW_SQL] },
     ]);
 });
 
@@ -35,9 +36,10 @@ test('a selector with files applies there together with the general ones', () =>
         { ...RAW_SQL, files: controllers },
     ]);
     expect(groups).toStrictEqual([
-        { selectors: [STORE] },
-        { files: controllers, selectors: [STORE, INJECTED, RAW_SQL] },
-        { files: routers, selectors: [STORE, PROCEDURE] },
+        { files: [['**/*.controller.ts', '**/routers/**/*.ts']], selectors: [STORE, INJECTED, PROCEDURE, RAW_SQL] },
+        { files: [['**/*.controller.ts']], ignores: routers, selectors: [STORE, INJECTED, RAW_SQL] },
+        { files: [['**/routers/**/*.ts']], ignores: controllers, selectors: [STORE, PROCEDURE] },
+        { ignores: [...controllers, ...routers], selectors: [STORE] },
     ]);
 });
 
@@ -50,10 +52,12 @@ test.each(['recommended', 'all'] as const)(
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `level = "${level}"\nconfigurations = ["javascript"]\n[scope.api]\nconfigurations = ["express"]\n`,
-            'source.js': RESPONSE_MESSAGES,
-            'api/source.js': RESPONSE_MESSAGES,
-            'api/child/source.js': RESPONSE_MESSAGES,
+            'gspot.toml': `level = "${level}"\nconfigurations = ["javascript"]\n[tools.eslint]\nimport_extensions = {"**/*" = "js"}\n[scope.api]\nconfigurations = ["express"]\n`,
+            'package.json': '{"private":true,"type":"module","imports":{"#owner":"./owner.js"}}',
+            'owner.js': 'export const value = 1;',
+            'source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,
+            'api/source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,
+            'api/child/source.js': ALIAS_IMPORT + RESPONSE_MESSAGES,
         });
         const eslint = await createEslint(sandbox.path);
         const root = (await eslint.calculateConfigForFile('source.js')) as RuntimeConfiguration;
@@ -70,6 +74,14 @@ test.each(['recommended', 'all'] as const)(
             results.map(({ messages }) =>
                 messages.filter(({ ruleId }) => ruleId === 'no-restricted-syntax').map(({ line }) => line),
             ),
-        ).toStrictEqual(level === 'all' ? [[2], [1, 2], [1, 2]] : [[], [], []]);
+        ).toStrictEqual(
+            level === 'all'
+                ? [
+                      [1, 3],
+                      [1, 2, 3],
+                      [1, 2, 3],
+                  ]
+                : [[1], [1], [1]],
+        );
     },
 );

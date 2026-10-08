@@ -177,7 +177,7 @@ test.each([true, false])(
             note: textContaining('Delete the section when ready'),
         });
         expect(plan.remove.some((entry) => entry.path === 'setup.cfg')).toBe(false);
-        expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe('settings/shared.cfg');
+        expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe(join('settings', 'shared.cfg'));
         expect(await readFile(target, 'utf8')).toBe(original);
         const attributes = await stat(target);
         expect(attributes.mode & 0o777).toBe(getKeptMode(0o640));

@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { createHash } from 'node:crypto';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
@@ -15,12 +16,16 @@ import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import type { RuffFinding } from '#tests/types/tools/generation/ruff.ts';
 
 import {
+    RULE_CODES,
     RULE_SOURCE,
     FORMAT_CASES,
+    ENABLED_RULES,
     VERSION_CASES,
     VERSION_SOURCE,
     FUNCTION_SOURCE,
+    RULE_SELECTIONS,
     DUPLICATE_SOURCE,
+    DOCSTRING_CONVENTIONS,
 } from '#tests/config/tools/generation/ruff.ts';
 
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
@@ -30,7 +35,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python'], {
             level: 'all',
-            tables: '[scope."app"]\nconfigurations = ["pytest"]\n[scope."app".limits.python]\nfunction_parameters = 3\n',
+            tables: '[scope."app"]\nconfigurations = ["pytest"]\n[scope."app".limits.python]\nfunction_parameters = 3\n[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["app/tests/**"]\nreason = "Test assertions deliberately verify the behavior."\n',
         }),
         'tests/__init__.py': '"""Root test package."""\n',
         'app/__init__.py': '"""Application package."""\n',
@@ -252,5 +257,49 @@ test.each(['recommended', 'all'] as const)(
         expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual(
             [],
         );
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s Ruff prefixes retain the native rules in root and child projects with every docstring convention',
+    async (level) => {
+        for (const convention of DOCSTRING_CONVENTIONS) {
+            await using sandbox = await testdir({
+                'gspot.toml': buildPolicy(['python'], {
+                    level,
+                    tables: `[tools.ruff]
+docstring_convention = "${convention}"
+[scope.app]
+configurations = ["pytest", "fastapi"]
+[[ignore]]
+check = "python/ruff"
+rule = "F401"
+reason = "The import has an external side effect."
+`,
+                }),
+                'sample.py': 'VALUE = 1\n',
+                'app/sample.py': 'VALUE = 1\n',
+            });
+            const session = await openSession(sandbox.path);
+            using log = openOwnership(sandbox.path);
+            writeGeneratedFiles(session, log);
+            for (const scope of ['root', 'app'] as const) {
+                const folder = scope === 'root' ? '' : scope;
+                const config = join('.gspot/config', folder, 'ruff.toml');
+                const result = runTestCommandBlocking(
+                    ['ruff', 'check', '--config', config, '--show-settings', join(folder, 'sample.py')],
+                    { cwd: sandbox.path },
+                );
+                expect(result.code, result.stderr).toBe(0);
+                const selected = ENABLED_RULES.exec(result.stdout);
+                expect(selected).not.toBeNull();
+                const codes = [...selected![1]!.matchAll(RULE_CODES)]
+                    .map((match) => match[1]!)
+                    .toSorted((left, right) => left.localeCompare(right));
+                const digest = createHash('sha256').update(codes.join('\n')).digest('hex');
+                expect(codes).toHaveLength(RULE_SELECTIONS[level][scope].count);
+                expect(digest).toBe(RULE_SELECTIONS[level][scope].digest);
+            }
+        }
     },
 );

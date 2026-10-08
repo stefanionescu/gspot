@@ -1,16 +1,24 @@
 // The rule blocks of the generated ESLint configuration: policy overrides, structural ceilings, manifest exclusions,
 // and the selector groups of framework fragments.
+import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { isRecord } from '#cli/platform/objects.ts';
 import { activeIgnores } from '#cli/policy/settings/view.ts';
-import { LINT_CHECK } from '#cli/config/generation/eslint.ts';
-import { eslintNodePatterns } from '#cli/generation/eslint/serialize.ts';
+import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { everyTable, policyValue } from '#cli/policy/settings/lookup.ts';
+import type { ResolvedSelector } from '#cli/types/generation/fragments.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
-import type { Fragment, ResolvedSelector } from '#cli/types/generation/fragments.ts';
 import { byScopeDepth, nestedScopes, pathExpressions } from '#cli/repository/selectors.ts';
+import { eslintNodePatterns, eslintSourcePattern } from '#cli/generation/eslint/serialize.ts';
 
+import {
+    LINT_CHECK,
+    IMPORT_EXTENSIONS,
+    ALIAS_IMPORT_SELECTORS,
+    TYPESCRIPT_EXTENSION_MAP,
+} from '#cli/config/generation/eslint.ts';
 import type {
+    EslintBlock,
     EslintContext,
     SelectorGroup,
     EslintRuleBlock,
@@ -154,62 +162,90 @@ export function manifestRuleBlocks(scopes: ScopeSelection[], policy: Policy): Es
  * Groups the selectors the selected fragments add so each file set gets one no-restricted-syntax rule.
  *
  * A selector without files applies to every code file. A selector with an allowed setting is left out of the group for
- * the paths that setting names. A selector with files applies there in addition to the general ones. The general group
- * comes first, then one group per allowed path set, then one group per file set, each in first-mention order.
+ * the paths that setting names. File and allowed-path intersections produce exclusive native blocks,
+ * each retaining every selector that applies there in first-mention order.
  * @param selectors the selectors of the selected fragments, with the paths their allowed settings hold
  * @returns the groups, where an absent files list means every code file
  */
 export function selectorGroups(selectors: ResolvedSelector[]): SelectorGroup[] {
-    const general = selectors.filter((entry) => entry.files === undefined);
-    const groups: SelectorGroup[] =
-        general.length === 0
-            ? []
-            : [{ selectors: general.map((entry) => ({ selector: entry.selector, message: entry.message })) }];
-    for (const paths of distinctLists(
-        general.flatMap((entry) => (entry.except === undefined || entry.except.length === 0 ? [] : [entry.except])),
-    ))
-        groups.push({
-            files: paths,
-            selectors: general
-                .filter((entry) => !isDeepStrictEqual(entry.except, paths))
-                .map((entry) => ({ selector: entry.selector, message: entry.message })),
-        });
-    for (const files of distinctLists(selectors.flatMap((entry) => (entry.files === undefined ? [] : [entry.files]))))
-        groups.push({
-            files,
-            selectors: [...general, ...selectors.filter((entry) => isDeepStrictEqual(entry.files, files))].map(
-                (entry) => ({ selector: entry.selector, message: entry.message }),
-            ),
-        });
-    return groups;
+    const boundaries = distinctLists(
+        selectors.flatMap((entry) => [entry.files ?? [], entry.except ?? []]).filter((paths) => paths.length > 0),
+    );
+    let groups: { files: string[][]; ignores: string[]; matched: string[][] }[] = [
+        { files: [], ignores: [], matched: [] },
+    ];
+    for (const paths of boundaries)
+        groups = groups.flatMap((group) => [
+            {
+                files:
+                    group.files.length === 0
+                        ? paths.map((path) => [path])
+                        : group.files.flatMap((parts) => paths.map((path) => [...parts, path])),
+                ignores: group.ignores,
+                matched: [...group.matched, paths],
+            },
+            { ...group, ignores: [...group.ignores, ...paths] },
+        ]);
+    return groups.map((group) => ({
+        ...(group.files.length === 0 ? {} : { files: group.files }),
+        ...(group.ignores.length === 0 ? {} : { ignores: group.ignores }),
+        selectors: selectors
+            .filter(
+                (entry) =>
+                    (entry.files === undefined ||
+                        group.matched.some((paths) => isDeepStrictEqual(paths, entry.files))) &&
+                    (entry.except === undefined ||
+                        !group.matched.some((paths) => isDeepStrictEqual(paths, entry.except))),
+            )
+            .map((entry) => ({ selector: entry.selector, message: entry.message })),
+    }));
 }
 
 /**
  * Resolve the actual selectors contributed by selected fragments within each project scope.
  * @param scopes every resolved project scope
- * @param fragments the fragments contributing to this configuration
+ * @param target the root tool file whose selected declarations contribute selectors
  * @param isAll whether house style selectors apply
  * @returns selector groups with their owning scope and excluded child projects
  */
 export function fragmentSelectorGroups(
     scopes: ScopeSelection[],
-    fragments: Fragment[],
+    target: ToolFileDeclaration,
     isAll: boolean,
 ): SelectorGroup[] {
-    if (!isAll) return [];
     return scopes.flatMap((scope) => {
-        const resolved = fragments
-            .filter(({ manifest }) => scope.selected.includes(manifest))
-            .flatMap(({ toolFile }) =>
-                toolFile.selectors.map(
-                    (entry): ResolvedSelector => ({
-                        selector: entry.selector,
-                        message: entry.message,
-                        ...(entry.files === undefined ? {} : { files: entry.files }),
-                        ...(entry.allowed === undefined ? {} : { except: allowedPaths(scope, entry.allowed) }),
-                    }),
-                ),
-            );
+        const declarations = scope.selected.flatMap((manifest) =>
+            manifest.toolFiles
+                .filter((toolFile) => toolFile.target === target.target)
+                .flatMap((toolFile) => toolFile.selectors),
+        );
+        const enabled = declarations.filter(
+            (entry) =>
+                isAll && (entry.when === undefined || scope.view.settings[entry.when.setting] === entry.when.value),
+        );
+        const resolved: ResolvedSelector[] = [...new Map(enabled.map((entry) => [entry.selector, entry])).values()].map(
+            (entry) => ({
+                selector: entry.selector,
+                message: entry.message,
+                ...(entry.files === undefined
+                    ? {}
+                    : {
+                          files: entry.files.map((path) => posix.join(scope.scope.path, path)),
+                      }),
+                except: [
+                    ...(entry.ignores ?? []).map((path) => posix.join(scope.scope.path, path)),
+                    ...(entry.allowed === undefined ? [] : allowedPaths(scope, entry.allowed)),
+                ],
+            }),
+        );
+        const styles = scope.view.values['tools.eslint']?.import_extensions;
+        const entries = styles === undefined ? [] : Object.entries(styles);
+        for (const [index, [pattern, style]] of entries.entries())
+            resolved.push({
+                ...ALIAS_IMPORT_SELECTORS[style === 'extensionless' ? 'never' : 'always'],
+                ...(pattern === '**/*' ? {} : { files: [pattern] }),
+                except: entries.slice(index + 1).map(([path]) => path),
+            });
         return selectorGroups(resolved).map((group) => ({
             ...group,
             scope: scope.scope.path,
@@ -218,5 +254,39 @@ export function fragmentSelectorGroups(
                 scope.scope.path,
             ),
         }));
+    });
+}
+
+/**
+ * Build native relative-import rules for each resolved scope and ordered path style.
+ * @param scopes selected scopes with their resolved import styles
+ * @param nodeFiles authored files selected for Node.js execution
+ * @returns native rule and TypeScript-extension settings bounded by scope
+ */
+export function importStyleBlocks(scopes: ScopeSelection[], nodeFiles: string[]): EslintBlock[] {
+    return scopes.flatMap((entry) => {
+        const path = entry.scope.path;
+        const children = nestedScopes(
+            scopes.map(({ scope }) => scope.path),
+            path,
+        );
+        const styles = entry.view.values['tools.eslint']?.import_extensions;
+        return styles === undefined
+            ? []
+            : Object.entries(styles).map(([glob, style]) => ({
+                  files: [eslintSourcePattern('javascript', 'typescript'), ...eslintNodePatterns(nodeFiles, path)].map(
+                      (pattern) => [path === '' ? '**/*' : `${path}/**/*`, glob, pattern],
+                  ),
+                  ignores: children.map((child) => `${child}/**`),
+                  settings: {
+                      n: {
+                          tryExtensions: IMPORT_EXTENSIONS,
+                          typescriptExtensionMap: style === 'js' ? TYPESCRIPT_EXTENSION_MAP : [],
+                      },
+                  },
+                  rules: {
+                      'n/file-extension-in-import': ['error', style === 'extensionless' ? 'never' : 'always'],
+                  },
+              }));
     });
 }

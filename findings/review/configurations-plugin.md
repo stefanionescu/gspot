@@ -1,6 +1,6 @@
 # Configurations and the ESLint Plugin
 
-49 unresolved review records remain.
+41 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -175,3 +175,18 @@ Original records and quotations remain above. These records are complete at `327
 | ---------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/configurations-plugin/044` | complete | SwiftFormat reads format.line_ending. Empty rules/lint-only and stale Swift/gixy rule metadata removed. Native SwiftFormat newline correction and mode preservation pass. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.                                                  |
 | `review/configurations-plugin/045` | complete | Nested SwiftLint YAML now belongs to its Eta source; manifest body removed. Shared root/directory pointer emission preserves native quoted/scoped target replacement and fragment precedence. Native SwiftLint tools pass. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`. |
+
+## Implementation checkpoint 29585ba69 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `29585ba69df9b37b5e0bfcb9ac1a58f693533c19`.
+
+| ID                                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                   |
+| ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/configurations-plugin/055` | complete | Deno guidance is owned by JavaScript and selected by the declared Deno runtime; plain Node and non-Supabase Deno controls pass. Commit `29585ba69df9b37b5e0bfcb9ac1a58f693533c19`.                                                                                                                                                         |
+| `review/configurations-plugin/058` | complete | Removed duplicated Next.js reserved-name prose; manifest remains the naming owner. Commit `29585ba69df9b37b5e0bfcb9ac1a58f693533c19`.                                                                                                                                                                                                      |
+| `review/configurations-plugin/060` | complete | Shared component guidance has one conditional JavaScript asset; duplicated framework, TypeScript truthiness and error prose removed. Both levels and each declared dependency control pass. Commit `29585ba69df9b37b5e0bfcb9ac1a58f693533c19`.                                                                                             |
+| `review/configurations-plugin/061` | complete | Deleted the empty Svelte Markup heading. Commit `29585ba69df9b37b5e0bfcb9ac1a58f693533c19`.                                                                                                                                                                                                                                                |
+| `review/configurations-plugin/063` | complete | Zustand native diagnostic now instructs provider-owned factory creation, matching the authored rule. Native diagnostic and preserved store exemption tests pass. Commit `29585ba69df9b37b5e0bfcb9ac1a58f693533c19`.                                                                                                                        |
+| `review/configurations-plugin/057` | complete | Removed authored prose that repeated shipped check decisions across eleven requested asset owners, retaining non-checkable decisions. Original checked-line absence controls and generated selections pass. Commit `29585ba69df9b37b5e0bfcb9ac1a58f693533c19`.                                                                             |
+| `review/configurations-plugin/059` | complete | Removed duplicate Bash recursive-delete guidance; SAFETY now gives the prescribed reasoned bash/safety ignore contract. Commit `29585ba69df9b37b5e0bfcb9ac1a58f693533c19`.                                                                                                                                                                 |
+| `review/configurations-plugin/067` | complete | Shortened TanStack Query, tRPC, Next.js, Drizzle, Zod and all six actual authored prose files to owner decisions plus authoritative links. Authored guidance removes96461bytes1488lines; TALKING66bytes remains exact and ships both levels. All34 authoritative link probes return200. Commit `29585ba69df9b37b5e0bfcb9ac1a58f693533c19`. |

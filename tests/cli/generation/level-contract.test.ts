@@ -36,17 +36,22 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
     );
     const config = parseToml(text) as RuffConfiguration;
     expect(config.lint.select.filter((code) => RUFF_PREVIEW_RULES.has(code))).toStrictEqual([]);
-    expect(config.lint.select.includes('N802')).toBe(level === 'all');
+    expect(config.lint.select.includes('N')).toBe(level === 'all');
     expect(config.lint.select.includes('PT001')).toBe(level === 'all');
     expect(config.lint.select).toContain('PT009');
     expect(config.lint.select).toContain('FAST003');
     for (const code of ['C901', 'PLR2004', 'ERA001', 'T201', 'T203'])
-        expect(config.lint.select.includes(code), code).toBe(level === 'all');
+        expect(
+            config.lint.select.some((prefix) => code.startsWith(prefix)),
+            code,
+        ).toBe(level === 'all');
     expect(config.lint.select).not.toContain('PLR0915');
     const types = await emitFile(buildPolicy(['python'], { level }), '.gspot/config/basedpyrightconfig.json', {
         'sample.py': 'value = 1',
     });
-    expect(JSON.parse(types)).toHaveProperty('reportImportCycles', level === 'all' ? 'error' : 'none');
+    expect(JSON.parse(types)).toHaveProperty('typeCheckingMode', level);
+    if (level === 'all') expect(JSON.parse(types)).not.toHaveProperty('reportImportCycles');
+    else expect(JSON.parse(types)).toHaveProperty('reportImportCycles', 'none');
     for (const rule of [
         'reportUnusedImport',
         'reportUnusedVariable',

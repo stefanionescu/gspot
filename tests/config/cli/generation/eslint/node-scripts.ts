@@ -172,7 +172,7 @@ export const NODE_SCRIPT_CONTRACTS = [
         file: 'scripts/imports',
         source: '#!/usr/bin/env node\nimport { value } from "../source";\nconsole.log(value);\n',
         corrected: '#!/usr/bin/env node\nimport { value } from "../source.js";\nconsole.log(value);\n',
-        routine: [{ ruleId: 'gspot/import-extensions', line: 2, severity: 2 }],
+        routine: [{ ruleId: 'n/file-extension-in-import', line: 2, severity: 2 }],
         strict: [],
     },
 ];
@@ -197,5 +197,5 @@ export const NODE_CONTRACT_RULES = [
     'max-params',
     'gspot/no-trivial-functions',
     'n/no-unsupported-features/es-builtins',
-    'gspot/import-extensions',
+    'n/file-extension-in-import',
 ];

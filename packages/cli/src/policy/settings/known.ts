@@ -4,11 +4,11 @@ import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { toolsSchema } from '#cli/policy/schema/tools.ts';
 import { mergeValue } from '#cli/policy/settings/lookup.ts';
-import { settingTypeSchema } from '#cli/parsers/schema/settings.ts';
 import { TOOL_DEADLINE, OVERRIDING_KINDS } from '#cli/config/policy/settings.ts';
 import type { KnownSettings, SettingDefault } from '#cli/types/policy/settings.ts';
 import { rootSettingSchemas, tableSettingSchemas } from '#cli/policy/schema/policy.ts';
 import type { Level, Manifest, SettingDeclaration } from '#cli/types/configurations.ts';
+import { settingTypeSchema, settingItemsSchema } from '#cli/parsers/schema/settings.ts';
 
 // Whether another configuration's scalar default disagrees with this one, and this one may not override it.
 function isScalarConflict(previous: SettingDefault, manifest: Manifest, declaration: SettingDeclaration): boolean {
@@ -55,12 +55,38 @@ function addOverride(surface: KnownSettings, manifest: Manifest, name: string, v
     addDefault(surface, manifest, { ...declaration, default: value });
 }
 
-// The command value kind comes from the same schema that accepts it.
-function typeOf(schema: z.ZodType): SettingDeclaration['type'] {
-    const type = z.toJSONSchema(schema, { io: 'input' }).type;
+// The command value kind comes from the same native input schema that accepts it.
+function typeOf(type: z.core.JSONSchema.JSONSchema['type']): SettingDeclaration['type'] {
     if (type === 'array') return 'list';
     if (type === 'object') return 'table';
     return settingTypeSchema.parse(type === 'integer' ? 'number' : type);
+}
+
+// Convert each native declaration once, retaining typed record items whose reasons belong to the item.
+function declarationOf(schema: z.ZodType): Pick<SettingDeclaration, 'type' | 'items'> {
+    const input = z.toJSONSchema(schema, { io: 'input' });
+    const type = typeOf(input.type);
+    const item = input.items;
+    if (typeof item !== 'object' || Array.isArray(item) || item.properties?.['reason'] === undefined) return { type };
+    const fields = Object.fromEntries(
+        Object.entries(item.properties).map(([name, field]): [string, unknown] => {
+            if (typeof field === 'boolean') return [name, field];
+            const element = field.items;
+            return [
+                name,
+                {
+                    type: typeOf(field.type),
+                    optional: item.required?.includes(name) !== true,
+                    ...(typeof element !== 'object' || Array.isArray(element)
+                        ? {}
+                        : {
+                              items: element['pathRole'] === undefined ? typeOf(element.type) : 'path',
+                          }),
+                },
+            ];
+        }),
+    );
+    return { type, items: settingItemsSchema.parse(fields) };
 }
 
 const rootDeclarations: SettingDeclaration[] = [
@@ -70,7 +96,7 @@ const rootDeclarations: SettingDeclaration[] = [
         return {
             name,
             validation: {},
-            type: typeOf(schema),
+            ...declarationOf(schema),
             direction: 'neutral',
             default: value,
             summary: schema.description ?? '',
@@ -84,7 +110,7 @@ const nativeDeclarations = new Map(
         Object.entries<z.ZodType>(table.unwrap().shape).map<SettingDeclaration>(([field, schema]) => ({
             name: `tools.${tool}.${field}`,
             validation: {},
-            type: typeOf(schema),
+            ...declarationOf(schema),
             direction: 'neutral',
             summary: schema.description ?? `Native ${tool} ${field.replaceAll('_', ' ')} options.`,
         })),

@@ -24,3 +24,5 @@ export const LEVEL_RULES = {
     'n/no-sync': 2,
     'for-direction': 2,
 };
+
+export const ALIAS_IMPORT = 'import value from "#owner";\n';

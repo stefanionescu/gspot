@@ -48,7 +48,15 @@ test.each(['none', 'index-only'])(
             ['app/page.tsx', 'app/format.ts', 'library/page.tsx'],
         );
         expect(rules['app/page.tsx']!['gspot/no-trivial-files']![0]).toBe(0);
-        expect(rules['app/page.tsx']!['gspot/no-reexports']![0]).toBe(reexports === 'index-only' ? 0 : 2);
+        expect(
+            rules['app/page.tsx']!['no-restricted-syntax']!.some(
+                (entry) =>
+                    typeof entry === 'object' &&
+                    entry !== null &&
+                    'selector' in entry &&
+                    entry.selector === 'ExportAllDeclaration',
+            ),
+        ).toBe(reexports !== 'index-only');
         // A component may be small, but a plain module of the scope keeps the rule.
         expect(rules['app/format.ts']!['gspot/no-trivial-files']![0]).toBe(2);
         expect(rules['library/page.tsx']!['gspot/no-trivial-files']![0]).toBe(2);
@@ -116,17 +124,19 @@ test.each(['astro', 'expo', 'react', 'react-native', 'svelte', 'vue'])(
         await createFileTree(sandbox.path, {
             'gspot.toml': `configurations = ["javascript"]\n[scope.app]\nconfigurations = ["${framework}"]\n`,
             'source.js': '',
+            'value.js': 'export const value = 1;\n',
             'app/source.js': '',
+            'app/value.js': 'export const value = 1;\n',
         });
         const eslint = await createEslint(sandbox.path);
         const source = 'import { value } from "./value";\n';
         const root = await eslint.lintText(source, { filePath: 'source.js' });
         const nested = await eslint.lintText(source, { filePath: 'app/source.js' });
         expect(
-            root.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'gspot/import-extensions')),
+            root.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'n/file-extension-in-import')),
         ).toMatchObject([{ line: 1 }]);
         expect(
-            nested.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'gspot/import-extensions')),
+            nested.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'n/file-extension-in-import')),
         ).toStrictEqual([]);
     },
 );

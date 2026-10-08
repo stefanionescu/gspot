@@ -20,6 +20,7 @@ import type {
 } from '#cli/types/generation/eslint.ts';
 import {
     eslintRuleOptions,
+    importStyleBlocks,
     eslintIgnoreBlocks,
     manifestRuleBlocks,
     structuralRuleBlocks,
@@ -152,12 +153,7 @@ function boundaryBlocks(context: EslintContext): EslintBlock[] {
 
 // The gspot rules the all level adds: import layout, direction, ownership, and re-exports.
 function allLevelRules(context: EslintContext, aliases: Record<string, string>, roles: Record<string, string[]>) {
-    const { structure } = context.policy;
     const scopePaths = context.scopes.map((entry) => entry.scope.path).filter((path) => path !== '');
-    const reexports =
-        structure.reexports === 'none'
-            ? { 'gspot/no-reexports': 'error' }
-            : { 'gspot/no-reexports': ['error', { allowIndex: true }] };
     return {
         'gspot/no-alias-exports': 'error',
         'gspot/no-index-imports': 'error',
@@ -168,7 +164,6 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
         'import-x/exports-last': 'error',
         'gspot/import-direction': ['error', { roles, aliases }],
         'gspot/env-owner': ['error', { owners: roles['env'] }],
-        ...reexports,
     };
 }
 
@@ -180,7 +175,12 @@ function gspotRules(context: EslintContext, aliases: Record<string, string>, lim
         { ...architecture, roles: selection.view.roles },
         harnessFolders(policy, selection.scope.path),
     );
-    const barrels = { 'gspot/max-barrel-reexports': ['error', { max: limits['barrelReexports'] }] };
+    const barrels = {
+        'barrel-files/avoid-barrel-files': [
+            'error',
+            { amountOfExportsToConsiderModuleAsBarrel: limits['indexExports'] },
+        ],
+    };
     return {
         ...(policy.level === 'all' ? allLevelRules(context, aliases, roles) : {}),
         ...(policy.level === 'all' && policy.structure.reexports !== 'none' ? barrels : {}),
@@ -214,7 +214,6 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
     const tool = view.options('tools.eslint');
     const aliases = aliasesFor(root, '', reads);
     const limits = limitsOf(view, 'typescript', ESLINT_LIMITS);
-    const internalPrefixes = ['./', '../', ...Object.keys(aliases)];
     return {
         aliases,
         nodeFiles,
@@ -232,24 +231,7 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
                   }
                 : {},
         commentLevel: 'error',
-        importStyleBlocks: scopes.flatMap((entry) => {
-            const path = entry.scope.path;
-            const children = nestedScopes(
-                scopes.map(({ scope }) => scope.path),
-                path,
-            );
-            const styles = entry.view.values['tools.eslint']?.import_extensions;
-            return styles === undefined
-                ? []
-                : Object.entries(styles).map(([glob, style]) => ({
-                      files: [
-                          eslintSourcePattern('javascript', 'typescript'),
-                          ...eslintNodePatterns(nodeFiles, path),
-                      ].map((pattern) => [path === '' ? '**/*' : `${path}/**/*`, glob, pattern]),
-                      ignores: children.map((child) => `${child}/**`),
-                      rules: { 'gspot/import-extensions': ['error', { style, internalPrefixes }] },
-                  }));
-        }),
+        importStyleBlocks: importStyleBlocks(scopes, nodeFiles),
         runtimes: runtimeBlocks(policy, scopes),
         boundaryBlocks: boundaryBlocks(context),
         scopeBlocks: scopeBlocks(context),

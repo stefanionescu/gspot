@@ -25,14 +25,6 @@ const filesSchema = z.strictObject({
     kinds: z.array(fileKindSchema).default(['source']),
 });
 
-// An all-level syntax selector a fragment adds to the one no-restricted-syntax rule: everywhere, in the named files, or everywhere except the paths a setting allows.
-const selectorSchema = z.strictObject({
-    selector: z.string().min(1),
-    message: z.string().min(1),
-    files: z.array(z.string().min(1)).min(1).optional(),
-    allowed: z.string().min(1).optional(),
-});
-
 // The one way a manifest limits where something applies. It names a selected configuration, a setting with a value, detected
 // files, tags, or dependencies, or a git checkout. `git = false` means a folder with no .git. Each table takes the
 // conditions it can test.
@@ -45,6 +37,16 @@ const conditionSchema = z.strictObject({
     filenames: z.array(z.string().min(1)).min(1),
     tags: z.array(z.string().min(1)).min(1),
     runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).min(1),
+});
+
+// An all-level syntax selector a fragment adds to the one no-restricted-syntax rule: everywhere, in the named files, or everywhere except the paths a setting allows.
+const selectorSchema = z.strictObject({
+    selector: z.string().min(1),
+    message: z.string().min(1),
+    files: z.array(z.string().min(1)).min(1).optional(),
+    allowed: z.string().min(1).optional(),
+    ignores: z.array(z.string().min(1)).min(1).optional(),
+    when: conditionSchema.pick({ setting: true, value: true }).optional(),
 });
 
 const pointerSchema = z

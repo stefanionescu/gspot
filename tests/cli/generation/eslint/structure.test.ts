@@ -4,6 +4,14 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
 
+import {
+    BARREL_CASES,
+    IMPORT_CASES,
+    IMPORT_FILES,
+    REEXPORT_CASES,
+    NATIVE_POLICY_CASES,
+} from '#tests/config/cli/generation/eslint/structure.ts';
+
 test('generated all lint checks authored directories named after build outputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -98,22 +106,97 @@ test.each(['recommended', 'all'])(
         const eslint = await createEslint(sandbox.path);
         for (const filePath of ['main.js', 'app/main.js']) {
             const config = (await eslint.calculateConfigForFile(filePath)) as ComputedEslint;
-            expect(config.rules['gspot/import-extensions']![0]).toBe(2);
+            expect(config.rules['n/file-extension-in-import']![0]).toBe(2);
             const ordinary = await eslint.lintText('import manifest from "#manifest";', { filePath });
             expect(
                 ordinary
                     .flatMap((file) => file.messages)
-                    .filter(({ ruleId, fatal }) => ruleId === 'gspot/import-extensions' || fatal === true)
+                    .filter(({ ruleId, fatal }) => ruleId === 'no-restricted-syntax' || fatal === true)
                     .map(({ ruleId, line }) => ({ ruleId, line })),
-            ).toStrictEqual([{ ruleId: 'gspot/import-extensions', line: 1 }]);
+            ).toStrictEqual([{ ruleId: 'no-restricted-syntax', line: 1 }]);
             const metadata = await eslint.lintText('import manifest from "#manifest" with { type: "json" };', {
                 filePath,
             });
             expect(
                 metadata
                     .flatMap((file) => file.messages)
-                    .filter(({ ruleId, fatal }) => ruleId === 'gspot/import-extensions' || fatal === true),
+                    .filter(({ ruleId, fatal }) => ruleId === 'no-restricted-syntax' || fatal === true),
             ).toStrictEqual([]);
+        }
+    },
+);
+
+test.each(NATIVE_POLICY_CASES)('%s %s preserves native root and child import rules', async (level, reexports) => {
+    await using sandbox = await testdir({
+        ...IMPORT_FILES,
+        'gspot.toml': buildPolicy(['typescript'], {
+            level,
+            tables: `[structure]\nreexports = "${reexports}"\n[limits]\nindex_exports = 2\n[scope.app]\nconfigurations = ["typescript"]\n[reasons]\n"limits.index_exports" = "This public module has two native exports."\n`,
+        }),
+    });
+    const eslint = await createEslint(sandbox.path);
+    for (const filePath of ['src/source.ts', 'app/src/source.ts']) {
+        for (const [name, source, ruleId, count] of IMPORT_CASES) {
+            const result = await eslint.lintText(source, { filePath });
+            expect(
+                result
+                    .flatMap(({ messages }) => messages)
+                    .filter((message) => message.ruleId === ruleId || message.fatal),
+                name,
+            ).toHaveLength(count);
+        }
+    }
+    for (const [path, source] of Object.entries(IMPORT_FILES))
+        expect(await Bun.file(`${sandbox.path}/${path}`).text()).toBe(source);
+});
+
+test.each(NATIVE_POLICY_CASES)(
+    '%s %s preserves exact native reexport selectors and index exemptions',
+    async (level, reexports) => {
+        await using sandbox = await testdir({
+            ...IMPORT_FILES,
+            'gspot.toml': buildPolicy(['typescript'], {
+                level,
+                tables: `[structure]\nreexports = "${reexports}"\n[limits]\nindex_exports = 2\n[scope.app]\nconfigurations = ["typescript"]\n[reasons]\n"limits.index_exports" = "This public module has two native exports."\n`,
+            }),
+        });
+        const eslint = await createEslint(sandbox.path);
+        for (const filePath of ['src/source.ts', 'src/index.ts', 'app/src/source.ts', 'app/src/index.ts']) {
+            for (const [source, count] of REEXPORT_CASES) {
+                const result = await eslint.lintText(source, { filePath });
+                expect(
+                    result
+                        .flatMap(({ messages }) => messages)
+                        .filter(({ ruleId, fatal }) => ruleId === 'no-restricted-syntax' || fatal),
+                ).toHaveLength(
+                    level === 'all' && (reexports === 'none' || !filePath.endsWith('/index.ts')) ? count : 0,
+                );
+            }
+        }
+    },
+);
+
+test.each(NATIVE_POLICY_CASES)(
+    '%s %s preserves the native barrel threshold and module classification',
+    async (level, reexports) => {
+        await using sandbox = await testdir({
+            ...IMPORT_FILES,
+            'gspot.toml': buildPolicy(['typescript'], {
+                level,
+                tables: `[structure]\nreexports = "${reexports}"\n[limits]\nindex_exports = 2\n[scope.app]\nconfigurations = ["typescript"]\n[reasons]\n"limits.index_exports" = "This public module has two native exports."\n`,
+            }),
+        });
+        const eslint = await createEslint(sandbox.path);
+        for (const filePath of ['src/index.ts', 'app/src/index.ts']) {
+            for (const [name, source, count] of BARREL_CASES) {
+                const result = await eslint.lintText(source, { filePath });
+                expect(
+                    result
+                        .flatMap(({ messages }) => messages)
+                        .filter(({ ruleId, fatal }) => ruleId === 'barrel-files/avoid-barrel-files' || fatal),
+                    name,
+                ).toHaveLength(level === 'all' && reexports === 'index-only' ? count : 0);
+            }
         }
     },
 );

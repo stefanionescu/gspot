@@ -125,6 +125,6 @@ export function fragmentInputs(
             codeFiles: eslintFiles.code,
             ruleOptions: eslintRuleOptions(inputs.policy),
         }),
-        fragmentSelectors: fragmentSelectorGroups(scopes, fragments, inputs.isAll),
+        fragmentSelectors: fragmentSelectorGroups(scopes, target, inputs.isAll),
     };
 }

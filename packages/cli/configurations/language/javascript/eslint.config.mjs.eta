@@ -13,6 +13,9 @@ import boundaries from 'eslint-plugin-boundaries';
 import importX from 'eslint-plugin-import-x';
 import jsdoc from 'eslint-plugin-jsdoc';
 import nodePlugin from 'eslint-plugin-n';
+<% if (isAll && policy.structure.reexports === 'index-only') { %>
+import barrelFiles from 'eslint-plugin-barrel-files';
+<% } %>
 import packageJson from 'eslint-plugin-package-json';
 import regexp from 'eslint-plugin-regexp';
 import security from 'eslint-plugin-security';
@@ -115,7 +118,7 @@ const unicornRules = {
     // Import path extensions do not constrain default or named imports.
     'unicorn/import-style': 'off',
     // A forwarding export would contradict exports at their declarations.
-    ...(gspotRules['gspot/no-reexports'] === undefined ? {} : { 'unicorn/prefer-export-from': 'off' }),
+    ...(IS_ALL ? { 'unicorn/prefer-export-from': 'off' } : {}),
     'unicorn/prefer-ternary': ['error', 'only-single-line'],
     'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
 };
@@ -271,11 +274,11 @@ export default [
 <% for (const [name, source] of [['eslint', 'eslint.configs.recommended'], ['sonar', 'sonarjs.configs.recommended'], ['unicorn', 'unicorn.configs.recommended']]) { const { parser, ...preset } = presets[name].blocks[0]; %>
     <%~ eslintModule.block({ files: CODE, ...preset }, `...${source}`) %>,
 <% } %>
-    <%~ eslintModule.block({ files: CODE, rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules } }, `plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security${config.boundaryBlocks.length > 0 ? ', boundaries' : ''}${config.commentLevel === 'error' ? ", '@eslint-community/eslint-comments': eslintComments" : ''} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }${config.boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`) %>,
+    <%~ eslintModule.block({ files: CODE, rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules } }, `plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin${isAll && policy.structure.reexports === 'index-only' ? ", 'barrel-files': barrelFiles" : ''}, regexp, security${config.boundaryBlocks.length > 0 ? ', boundaries' : ''}${config.commentLevel === 'error' ? ", '@eslint-community/eslint-comments': eslintComments" : ''} }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }${config.boundaryBlocks.length > 0 ? ", 'boundaries/root-path': root" : ''} }`) %>,
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } }) %>,
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'jsdoc/require-param-type': 'error', 'jsdoc/require-returns-type': 'error', 'jsdoc/check-types': 'error', 'jsdoc/no-undefined-types': 'error', 'jsdoc/valid-types': 'error' } }) %>,
 <% for (const block of [...config.importStyleBlocks, ...config.scopeBlocks, ...config.boundaryBlocks]) { const { settings, ...data } = block; %>
-    <%~ eslintModule.block(data, settings === undefined ? '' : `settings: { ...${json(settings)}, 'import/resolver': { typescript: { project: ${json(projects)}.map((project) => join(root, project)) } } }`) %>,
+    <%~ eslintModule.block(data, settings === undefined ? '' : settings['boundaries/files'] === undefined ? `settings: ${json(settings)}` : `settings: { ...${json(settings)}, 'import/resolver': { typescript: { project: ${json(projects)}.map((project) => join(root, project)) } } }`) %>,
 <% } if (RESTRICTED.length > 0) { %>
     <%~ eslintModule.block({ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }) %>,
 <% } eslintModule.blocks.push(...eslintFragmentBlocks); %>
@@ -283,7 +286,7 @@ export default [
 <% for (const [index, declaration] of config.runtimes.entries()) { const { runtime, nodeVersion } = declaration; const isNode = ['node', 'nodeBuiltin', 'commonjs'].includes(runtime); const names = runtime === 'node' ? 'nodeBuiltin' : runtime === 'commonjs' ? 'node' : runtime === 'service-worker' ? 'serviceworker' : runtime; %>
     <%~ eslintModule.block({ files: CODE.map((pattern) => [pattern, { runtime: { declarations: config.runtimes, index } }]), rules: { ...(isNode ? nodeRules(nodeVersion) : {}), ...(runtime === 'commonjs' ? { 'unicorn/prefer-module': 'off' } : {}) } }, `languageOptions: { sourceType: ${json(runtime === 'commonjs' ? 'commonjs' : 'module')}, globals: globals[${json(names)}] }`) %>,
 <% } for (const group of fragmentSelectors) { %>
-    <%~ eslintModule.block({ files: (group.files ?? CODE).map((pattern) => [pattern, group.scope ? `${group.scope}/**/*` : '**/*']), ignores: (group.ignoredScopes ?? []).map((scope) => `${scope}/**`), rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...group.selectors] } }) %>,
+    <%~ eslintModule.block({ files: (group.files ?? ['**/*']).flatMap((pattern) => CODE.map((code) => [...(Array.isArray(pattern) ? pattern : [pattern]), code, group.scope ? `${group.scope}/**/*` : '**/*'])), ignores: [...(group.ignoredScopes ?? []).map((scope) => `${scope}/**`), ...(group.ignores ?? [])], rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...group.selectors] } }) %>,
 <% } %>
     <%~ eslintModule.block({ files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } }) %>,
     <%~ eslintModule.block({ files: SCRIPT_CODE, rules: { 'n/no-process-exit': 'off', 'unicorn/no-process-exit': 'off' } }) %>,

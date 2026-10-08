@@ -119,7 +119,9 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
         formatting: { [option]: text, column_width: 88, indent_string: '\t' },
     });
     expect(parsed.get('.gspot/config/lychee.toml')).toMatchObject({ exclude: [text] });
-    expect(parsed.get('.gspot/config/ruff.toml')).toMatchObject({ lint: { 'per-file-ignores': { [path]: ['F401'] } } });
+    expect(parsed.get('.gspot/config/ruff.toml')).toMatchObject({
+        lint: { 'per-file-ignores': { [`../../${path}`]: ['F401'] } },
+    });
 });
 
 test('an OSV expiry cannot inject another TOML table', async () => {

@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -53,7 +53,7 @@ for (const configuration of ['react', 'nextjs'])
             if (row.findings === 1) {
                 expect(found[0]).toMatchObject({
                     check,
-                    file: join(scope, 'package.json'),
+                    file: posix.join(scope, 'package.json'),
                     line: 1,
                     rule: 'version-pair',
                 });

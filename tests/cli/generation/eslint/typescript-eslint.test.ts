@@ -74,19 +74,20 @@ test('index-only reexports keep a nonduplicate barrel and reject forwarding from
         'src/forward.ts': 'export { shared } from "./first.js";\n',
     });
     const reported = await messagesOf(sandbox.path);
-    expect(reported.filter(({ rule }) => rule === 'gspot/no-reexports')).toStrictEqual([
-        { rule: 'gspot/no-reexports', file: 'src/forward.ts', line: 1 },
+    expect(reported.filter(({ rule }) => rule === 'no-restricted-syntax')).toStrictEqual([
+        { rule: 'no-restricted-syntax', file: 'src/forward.ts', line: 1 },
+        { rule: 'no-restricted-syntax', file: 'src/forward.ts', line: 1 },
     ]);
     expect(
         reported.filter(
             ({ file, rule }) =>
                 file === 'src/index.ts' &&
-                ['gspot/no-trivial-files', 'gspot/no-reexports', 'import-x/export'].includes(rule ?? ''),
+                ['gspot/no-trivial-files', 'no-restricted-syntax', 'import-x/export'].includes(rule ?? ''),
         ),
     ).toStrictEqual([]);
     await writeFile(join(sandbox.path, 'src/forward.ts'), 'export const shared = 1;\n');
     const corrected = await messagesOf(sandbox.path);
-    expect(corrected.filter(({ rule }) => rule === 'gspot/no-reexports' || rule === 'import-x/export')).toStrictEqual(
+    expect(corrected.filter(({ rule }) => rule === 'no-restricted-syntax' || rule === 'import-x/export')).toStrictEqual(
         [],
     );
 });

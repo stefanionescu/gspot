@@ -96,7 +96,7 @@ test.each([
     });
     const root = join(directory.path, 'project');
     await symlink('../../outside', join(root, 'packages/linked'));
-    expect(() => packageWorkspaces(root)).toThrow(`Workspace package leaves the repository: ${escaped}`);
+    expect(() => packageWorkspaces(root)).toThrow(`Workspace package leaves the repository: ${join(escaped)}`);
     expect(packageWorkspaces(join(root, 'packages'))).toStrictEqual([]);
     await unlink(join(root, 'packages/linked'));
     await writeFile(join(root, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');

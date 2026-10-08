@@ -16,9 +16,9 @@ gspot translates policy settings into plugin rule options:
 | Policy setting | Plugin rule | Rule option |
 | --- | --- | --- |
 | `architecture.roles.env` | `env-owner` | `owners` |
-| `tools.eslint.import_extensions` | `import-extensions` | `style` |
-| `limits.index_exports` | `max-barrel-reexports` | `max` |
-| `structure.reexports = "index-only"` | `no-reexports` and `no-trivial-files` | `allowIndex: true` |
+| `tools.eslint.import_extensions` | `n/file-extension-in-import` | native import style |
+| `limits.index_exports` | `barrel-files/avoid-barrel-files` | `amountOfExportsToConsiderModuleAsBarrel` |
+| `structure.reexports = "index-only"` | core re-export selectors and `no-trivial-files` | index exemptions |
 
 Environment ownership and barrel limits apply at level `all`. Barrel limits apply when index re-exports are allowed. See the [standalone plugin reference](/reference/plugin/) for the rule options.
 
@@ -155,6 +155,12 @@ version = "4.0.1"
 npm = "eslint-plugin-security"
 
 [[tool]]
+name = "eslint-plugin-barrel-files"
+kind = "library"
+version = "3.0.1"
+npm = "eslint-plugin-barrel-files"
+
+[[tool]]
 name = "eslint-plugin-n"
 kind = "library"
 version = "18.3.0"
@@ -268,6 +274,39 @@ target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 rule_keys = ["rules"]
 pointer = { path = "eslint.config.mjs", body = "export { default } from {target_module};" }
+
+[[tool_file.selectors]]
+selector = "ExportAllDeclaration"
+message = "Export values at their declaration instead of re-exporting them."
+when = { setting = "structure.reexports", value = "none" }
+
+[[tool_file.selectors]]
+selector = "ExportNamedDeclaration[source]"
+message = "Export values at their declaration instead of re-exporting them."
+when = { setting = "structure.reexports", value = "none" }
+
+[[tool_file.selectors]]
+selector = "ExportNamedDeclaration[declaration=null]"
+message = "Export values at their declaration instead of re-exporting them."
+when = { setting = "structure.reexports", value = "none" }
+
+[[tool_file.selectors]]
+selector = "ExportAllDeclaration"
+message = "Export values at their declaration instead of re-exporting them."
+when = { setting = "structure.reexports", value = "index-only" }
+ignores = ["**/index.*"]
+
+[[tool_file.selectors]]
+selector = "ExportNamedDeclaration[source]"
+message = "Export values at their declaration instead of re-exporting them."
+when = { setting = "structure.reexports", value = "index-only" }
+ignores = ["**/index.*"]
+
+[[tool_file.selectors]]
+selector = "ExportNamedDeclaration[declaration=null]"
+message = "Export values at their declaration instead of re-exporting them."
+when = { setting = "structure.reexports", value = "index-only" }
+ignores = ["**/index.*"]
 
 [[tool_file]]
 target = ".gspot/config/jsconfig.json"

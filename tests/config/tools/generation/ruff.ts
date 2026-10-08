@@ -76,3 +76,22 @@ def retain(values: Optional[List[int]]) -> Optional[List[int]]:
 
 /** Ruff owns unused imports; basedpyright retains the independent assignment error. */
 export const DUPLICATE_SOURCE = '"""An example module."""\n\nimport math\n\nTOTAL: int = "one"\n';
+
+/** Ruff 0.16.8 enabled sets captured from the original rule lists, after accepting F401. */
+export const RULE_SELECTIONS = {
+    recommended: {
+        root: { count: 519, digest: '217b0e34e2e081d1053c99a05b3224cc10f1cb4d960135229e20b99c48a3a938' },
+        app: { count: 540, digest: '6b47f251bff3a96b756b95c3452b606cab7f91d4ca7b1b46357e638934b2c7e4' },
+    },
+    all: {
+        root: { count: 726, digest: 'cbd918719f4cd55a88ad08aefb04e6b4ff680f3580b6cc82ea46819df0d58761' },
+        app: { count: 757, digest: '701586e8f6592e89e8d9fac39ba161f35215004d503e2de1dfdf830e8043366f' },
+    },
+} as const;
+
+/** Every declared docstring convention preserves explicit rule choices at both levels. */
+export const DOCSTRING_CONVENTIONS = ['', 'google', 'numpy', 'pep257'];
+
+/** Ruff prints the selected rules separately from rules available to its fixer. */
+export const ENABLED_RULES = /^linter\.rules\.enabled = \[([\s\S]*?)\n\]/mu;
+export const RULE_CODES = /\(([A-Z]+\d+)\)/gu;

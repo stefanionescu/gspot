@@ -21,7 +21,9 @@ test('generated and vendored settings classify directories and removal returns f
         const changed = await runGspot(directory.path, [
             'set',
             kind!,
-            JSON.stringify({ paths: [path], reason: 'External files retained for consumers' }),
+            JSON.stringify({ paths: [path] }),
+            '--reason',
+            'External files retained for consumers',
         ]);
         expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     }

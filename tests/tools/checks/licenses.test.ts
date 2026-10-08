@@ -47,7 +47,7 @@ test('native Python license scanning ignores project scanner exclusions and matc
     await Bun.write(
         join(root, 'gspot.toml'),
         buildPolicy(['licenses'], {
-            tables: '[licenses]\nallowed = ["MIT"]\n[[licenses.exceptions]]\npackage = "Licensed._Example@1.0.0"\nlicense = "GPL-3.0-only"\nreason = "The sandbox tests exact reported license consent."\n',
+            tables: '[licenses]\nallowed = ["MIT"]\n[licenses.exceptions]\n"Licensed._Example@1.0.0" = { license = "GPL-3.0-only", reason = "The sandbox tests exact reported license consent." }\n',
             level: 'all',
         }),
     );

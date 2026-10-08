@@ -124,7 +124,7 @@ test('policy ignores for the same test path share the native rule list', async (
         }),
         RUFF,
     );
-    expect(ignored.lint['per-file-ignores']['**/conftest.py']).toStrictEqual(['S101', 'D103']);
+    expect(ignored.lint['per-file-ignores']['../../**/conftest.py']).toStrictEqual(['S101', 'D103']);
 });
 
 test.each(PATH_IGNORE_CONFIGURATIONS)(

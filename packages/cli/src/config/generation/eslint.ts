@@ -72,7 +72,7 @@ export const ESLINT_LIMITS: Record<string, string> = {
     depth: 'nesting',
     statements: 'statements',
     nestedCallbacks: 'callback_nesting',
-    barrelReexports: 'index_exports',
+    indexExports: 'index_exports',
 };
 
 // The limits JavaScript files read on their own, over the TypeScript ones.
@@ -127,3 +127,37 @@ export const TRPC_SERVER_VALUE_POLICY: EslintBoundaryPolicy = {
     from: { file: [{ isUnknown: true }, { categories: { noneOf: ['server'] } }] },
     disallow: { to: { file: { categories: 'server' } }, dependency: { kind: 'value' } },
 };
+
+/** Native selectors cover alias import suffixes alongside the relative-import rule. */
+export const ALIAS_IMPORT_SELECTORS = {
+    always: {
+        selector: String.raw`:matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#|@\/)/][source.value!=/\.[^/?.]+$/]:not([source.value=/\?/]):not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))`,
+        message: 'Give an alias import its file extension.',
+    },
+    never: {
+        selector: String.raw`:matches(ImportDeclaration, ExportAllDeclaration, ExportNamedDeclaration, ImportExpression)[source.value=/^(#|@\/)/][source.value=/\.[cm]?[jt]sx?$/]:not(:has(ImportAttribute:matches([key.name='type'],[key.value='type'])[value.value='json']))`,
+        message: 'Keep alias imports extensionless in bundled code.',
+    },
+};
+
+/** Native compiled imports use the emitted JavaScript suffix for TypeScript sources. */
+export const TYPESCRIPT_EXTENSION_MAP = [
+    ['.ts', '.js'],
+    ['.mts', '.mjs'],
+    ['.cts', '.cjs'],
+    ['.tsx', '.js'],
+] as const;
+
+/** Native import resolution includes authored TypeScript modules before checking emitted suffixes. */
+export const IMPORT_EXTENSIONS = [
+    '.js',
+    '.ts',
+    '.jsx',
+    '.tsx',
+    '.mjs',
+    '.mts',
+    '.cjs',
+    '.cts',
+    '.json',
+    '.node',
+] as const;

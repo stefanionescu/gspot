@@ -38,6 +38,24 @@ tool = "eslint"
 imports = "eslint.imports.js.eta"
 fragment = true
 
+[[tool_file.selectors]]
+selector = "ExportAllDeclaration"
+message = "Export values at their declaration instead of re-exporting them."
+when = { setting = "structure.reexports", value = "index-only" }
+ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
+
+[[tool_file.selectors]]
+selector = "ExportNamedDeclaration[source]"
+message = "Export values at their declaration instead of re-exporting them."
+when = { setting = "structure.reexports", value = "index-only" }
+ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
+
+[[tool_file.selectors]]
+selector = "ExportNamedDeclaration[declaration=null]"
+message = "Export values at their declaration instead of re-exporting them."
+when = { setting = "structure.reexports", value = "index-only" }
+ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
+
 [[check]]
 name = "tsc"
 tool = "next"
@@ -119,11 +137,6 @@ rules = ["gspot/no-trivial-files"]
 files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
 reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
 
-[[eslint_rules_off]]
-rules = ["gspot/no-reexports"]
-files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
-when = { setting = "structure.reexports", value = "index-only" }
-reason = "Next.js route files act as framework entry points when the project permits entry-point re-exports."
 
 [set]
 "tools.eslint.import_extensions" = { "**/*" = "extensionless" }

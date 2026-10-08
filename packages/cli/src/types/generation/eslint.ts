@@ -21,7 +21,8 @@ export type EslintModuleInput = {
 export type SelectorGroup = {
     scope?: string;
     ignoredScopes?: string[];
-    files?: string[];
+    files?: (string | string[])[];
+    ignores?: string[];
     selectors: { selector: string; message: string }[];
 };
 

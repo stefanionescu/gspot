@@ -272,8 +272,8 @@ export function manifestErrors(raw: ParsedManifest): string[] {
         ...(config.imports !== undefined && !config.fragment
             ? [`config ${config.target} declares imports, which only a fragment renders.`]
             : []),
-        ...(!config.fragment && (config.component_globs.length > 0 || config.selectors.length > 0)
-            ? [`config ${config.target} declares code files or selectors, which only a fragment adds.`]
+        ...(!config.fragment && config.component_globs.length > 0
+            ? [`config ${config.target} declares code files, which only a fragment adds.`]
             : []),
     ]);
     const declarations = [...checks, ...fragments];

@@ -1,6 +1,6 @@
 // The test site build script whose output the site checks read.
 const BUILD =
-    "// Copies the pages, the stylesheet, the sitemap, and the assets into dist.\nimport { cpSync, rmSync, mkdirSync } from 'node:fs';\n\nrmSync('dist', { recursive: true, force: true });\nmkdirSync('dist', { recursive: true });\nfor (const name of ['index.html', 'about.html', 'site.css', 'sitemap.xml']) cpSync(name, `dist/${name}`);\ncpSync('assets', 'dist/assets', { recursive: true });\n";
+    "// Copies the pages, the stylesheet, the sitemap, and the assets into dist.\nimport { cp, rm, mkdir } from 'node:fs/promises';\n\nawait rm('dist', { recursive: true, force: true });\nawait mkdir('dist', { recursive: true });\nfor (const name of ['index.html', 'about.html', 'site.css', 'sitemap.xml']) await cp(name, `dist/${name}`);\nawait cp('assets', 'dist/assets', { recursive: true });\n";
 
 const STATIC_SITE_HEADERS =
     '/*\n    X-Content-Type-Options: nosniff\n    Referrer-Policy: strict-origin-when-cross-origin\n    X-Frame-Options: DENY\n';
@@ -24,7 +24,7 @@ export const SITE_POLICY = 'level = "all"\nconfigurations = ["site"]\n[site]\nbu
 
 export const STATIC_SITE_FILES = {
     '.gitignore': 'node_modules\ndist\n',
-    'package.json': `{\n    "name": "example",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}",\n    "description": "A test site.",\n    "type": "module",\n    "devDependencies": {\n        "@types/node": "22.18.6"\n    },\n    "scripts": {\n        "build": "bun build.js"\n    }\n}\n`,
+    'package.json': `{\n    "name": "example",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}",\n    "description": "A test site.",\n    "type": "module",\n    "engines": {\n        "node": ">=24.2.0"\n    },\n    "devDependencies": {\n        "@types/node": "22.18.6"\n    },\n    "scripts": {\n        "build": "bun build.js"\n    }\n}\n`,
     'build.js': BUILD,
     'index.html': HOME,
     'about.html': ABOUT,

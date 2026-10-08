@@ -36,3 +36,19 @@ system = true
 
 export const SELECTOR_DECLARATION =
     '[[tool]]\nname = "example"\nversion = "1.0.0"\n[[tool.replace]]\nfile = "package.json"\n';
+
+/** A root ESLint target owns its native core selector declarations. */
+export const ROOT_SELECTOR_DECLARATION = `[[tool_file]]
+target = ".gspot/config/eslint.config.mjs"
+source = "eslint.config.mjs.eta"
+pointer = { path = "eslint.config.mjs", body = "export { default } from {target_module};" }
+[[tool_file.selectors]]
+selector = "ExportAllDeclaration"
+message = "Import from the declaration."
+when = { setting = "structure.reexports", value = "none" }
+`;
+
+export const ROOT_SELECTOR_REFUSALS = [
+    ['component_globs = ["**/*.vue"]', 'declares code files, which only a fragment adds.'],
+    ['imports = "eslint.imports.js.eta"', 'declares imports, which only a fragment renders.'],
+] as const;

@@ -9,6 +9,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { environmentExecutable } from '#cli/platform/paths.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
@@ -65,9 +66,7 @@ test.each(EXCEPTION_MEMBERSHIP)('license inventory preserves $name', async (scen
     using output = spyOn(processes, 'run').mockImplementation((command) => {
         const interpreter = command.at(-1)!;
         const [scope, identity] = Object.entries(reports).find(
-            ([entry]) =>
-                interpreter ===
-                join(sandbox.path, entry, '.venv', process.platform === 'win32' ? 'Scripts' : 'bin', 'python'),
+            ([entry]) => interpreter === environmentExecutable(join(sandbox.path, entry, '.venv'), 'python'),
         )!;
         scanned.push(scope);
         const [name, version] = identity.split('@');

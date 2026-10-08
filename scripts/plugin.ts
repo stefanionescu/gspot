@@ -110,15 +110,14 @@ if (suite !== undefined && options.length === 1 && options[0] === '--help') {
             controller.signal.throwIfAborted();
             return result;
         };
-        const built =
-            suite === 'packages'
-                ? await execute([process.execPath, 'packages/cli/scripts/build.ts'], {
-                      cwd: workspaceRoot,
-                      onStderr: (chunk) => {
-                          process.stderr.write(chunk);
-                      },
-                  })
-                : undefined;
+        const built = isSourceSuite
+            ? undefined
+            : await execute([process.execPath, 'packages/cli/scripts/build.ts'], {
+                  cwd: workspaceRoot,
+                  onStderr: (chunk) => {
+                      process.stderr.write(chunk);
+                  },
+              });
         if (built !== undefined && built.code !== 0)
             throw new Error(`CLI build failed: ${built.stdout}${built.stderr}`);
         const archives = isSourceSuite

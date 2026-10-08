@@ -1,5 +1,5 @@
 {
-    "openRecords": 861,
+    "openRecords": 853,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 861,
+        "openRecords": 853,
         "records": 1092,
         "batches": [
             {
@@ -1950,8 +1950,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 10,
-                "unresolvedAssignments": 49
+                "completedAssignments": 18,
+                "unresolvedAssignments": 41
             },
             {
                 "id": "names",
@@ -5971,10 +5971,12 @@
             ]
         },
         "review/configurations-plugin/055": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
+            "verification": [
+                "Deno guidance is owned by JavaScript and selected by the declared Deno runtime; plain Node and non-Supabase Deno controls pass."
+            ]
         },
         "review/configurations-plugin/056": {
             "status": "pending",
@@ -5983,34 +5985,40 @@
             "verification": []
         },
         "review/configurations-plugin/057": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
+            "verification": [
+                "Removed authored prose that repeated shipped check decisions across eleven requested asset owners, retaining non-checkable decisions. Original checked-line absence controls and generated selections pass."
+            ]
         },
         "review/configurations-plugin/058": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
+            "verification": ["Removed duplicated Next.js reserved-name prose; manifest remains the naming owner."]
         },
         "review/configurations-plugin/059": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
+            "verification": [
+                "Removed duplicate Bash recursive-delete guidance; SAFETY now gives the prescribed reasoned bash/safety ignore contract."
+            ]
         },
         "review/configurations-plugin/060": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
+            "verification": [
+                "Shared component guidance has one conditional JavaScript asset; duplicated framework, TypeScript truthiness and error prose removed. Both levels and each declared dependency control pass."
+            ]
         },
         "review/configurations-plugin/061": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
+            "verification": ["Deleted the empty Svelte Markup heading."]
         },
         "review/configurations-plugin/062": {
             "status": "pending",
@@ -6019,10 +6027,12 @@
             "verification": []
         },
         "review/configurations-plugin/063": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
+            "verification": [
+                "Zustand native diagnostic now instructs provider-owned factory creation, matching the authored rule. Native diagnostic and preserved store exemption tests pass."
+            ]
         },
         "review/configurations-plugin/064": {
             "status": "complete",
@@ -6040,10 +6050,12 @@
             "verification": []
         },
         "review/configurations-plugin/067": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
+            "verification": [
+                "Shortened TanStack Query, tRPC, Next.js, Drizzle, Zod and all six actual authored prose files to owner decisions plus authoritative links. Authored guidance removes96461bytes1488lines; TALKING66bytes remains exact and ships both levels. All34 authoritative link probes return200."
+            ]
         },
         "review/docs-site/001": {
             "status": "complete",
@@ -15370,6 +15382,28 @@
             ],
             "limitations": [
                 "No Linux/Windows proof claimed; Linux Docker nginx case skipped on macOS. Stage-area022 remains partial until its dependencies/secrets sites are resolved. No publication/tag/deployment."
+            ]
+        },
+        {
+            "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
+            "completedRecords": [
+                "review/configurations-plugin/055",
+                "review/configurations-plugin/058",
+                "review/configurations-plugin/060",
+                "review/configurations-plugin/061",
+                "review/configurations-plugin/063",
+                "review/configurations-plugin/057",
+                "review/configurations-plugin/059",
+                "review/configurations-plugin/067"
+            ],
+            "unresolvedRecords": 853,
+            "validation": [
+                "Main107CLIpass694assert6files; roottypes0; normal producer/apply/CLIbuild0.",
+                "Full staged150pass14skip and two actual defects; fixed Oxford-comma sentence and four unescaped native help examples. Native affected Vale and builtHTML2pass0findings71.541s. Normal commit/message hooks pass."
+            ],
+            "limitations": [
+                "Historical067 seventh prose owner is absent; all six current owners treated and no file invented.",
+                "CI327fc run pending after obsolete4137 cancellation; no Windows/runtime platform acceptance inferred. No publication/tag/deploy."
             ]
         }
     ],

@@ -10,7 +10,9 @@ import {
     SELECTOR_DECLARATION,
     MINIMUM_VERSION_CASES,
     INVALID_VERSION_FLOORS,
+    ROOT_SELECTOR_REFUSALS,
     SYSTEM_TOOL_DECLARATION,
+    ROOT_SELECTOR_DECLARATION,
 } from '#tests/config/cli/configurations/errors.ts';
 
 describe('assertManifests setting meanings', () => {
@@ -248,4 +250,15 @@ test('a replacement selecting a shared key preserves the containing file', () =>
             tables: `${SELECTOR_DECLARATION}key = "eslintConfig"\nshared = true\n`,
         }),
     ).not.toThrow();
+});
+
+test('native root selectors retain fragment-only component and import refusals', () => {
+    expect(() => parseConfigurationManifest('owner', { tables: ROOT_SELECTOR_DECLARATION })).not.toThrow();
+    for (const [field, diagnostic] of ROOT_SELECTOR_REFUSALS) {
+        const tables = ROOT_SELECTOR_DECLARATION.replace(
+            '[[tool_file.selectors]]',
+            `${field}\n[[tool_file.selectors]]`,
+        );
+        expect(() => parseConfigurationManifest('owner', { tables })).toThrow(diagnostic);
+    }
 });
