@@ -4,11 +4,14 @@ import semver from 'semver';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { listAssets } from '#cli/platform/assets.ts';
+import { parseDocument } from '@decimalturn/toml-patch';
 import { similar, codeList } from '#cli/platform/text.ts';
+import { isComment, isKeyValue } from '#cli/parsers/toml/nodes.ts';
 import { allChecks, toolFileName } from '#cli/configurations/declarations.ts';
 
 import {
     SETTING_PLACEHOLDER,
+    MANIFEST_TABLE_ORDER,
     TOOL_FILE_PLACEHOLDER,
     SETTING_DEFAULT_FIELDS,
     CONFIGURATION_RULES_FOLDER,
@@ -17,7 +20,6 @@ import type {
     ToolPin,
     Manifest,
     CheckRule,
-    OwnedCheck,
     ParsedCheck,
     ParsedManifest,
     SettingMeaning,
@@ -78,23 +80,6 @@ function assertRequirementsExist(manifest: Manifest, manifests: Map<string, Mani
     for (const required of manifest.configuration.requires)
         if (!manifests.has(required))
             throw manifestError(manifest.configuration.name, [`it requires \`${required}\`, which does not exist.`]);
-}
-
-// Refuses a check reference that does not name another configuration's standalone built-in check.
-function assertReferences(manifest: Manifest, checks: Map<string, OwnedCheck>): void {
-    for (const reference of manifest.configuration.borrowed_checks) {
-        const owner = checks.get(reference);
-        if (
-            owner === undefined ||
-            owner.configuration.configuration.name === manifest.configuration.name ||
-            owner.check.command !== undefined ||
-            owner.check.tool !== undefined ||
-            owner.check.runs !== 'once'
-        )
-            throw manifestError(manifest.configuration.name, [
-                `Referenced check ${reference} must name another configuration's standalone built-in check that runs once.`,
-            ]);
-    }
 }
 
 // Refuses a default for a setting no configuration declares, or one the configuration declares itself.
@@ -249,6 +234,22 @@ function assertRuleFiles(manifest: Manifest): void {
         );
 }
 
+// Native table headers retain source order; nested values have no separate header.
+function manifestTableErrors(text: string): string[] {
+    let previous = 0;
+    return parseDocument(text).cst.flatMap((node): string[] => {
+        if (isComment(node) || isKeyValue(node)) return [];
+        const table = node.key.item.value.join('.');
+        const position = MANIFEST_TABLE_ORDER.indexOf(table);
+        if (position === -1) return [`line ${String(node.loc.start.line)}: write ${table} as an inline value.`];
+        // Each tool owns its replacement tables, before the next tool.
+        const order = table === 'tool.replace' ? MANIFEST_TABLE_ORDER.indexOf('tool') : position;
+        if (order < previous) return [`line ${String(node.loc.start.line)}: ${table} is out of manifest table order.`];
+        previous = order;
+        return [];
+    });
+}
+
 /**
  * The error of a configuration manifest that is not valid.
  * @param configuration the configuration name
@@ -262,23 +263,19 @@ export function manifestError(configuration: string, errors: string[]): GspotErr
 /**
  * Contradictory check declarations and generated configurations with no reader or pointer.
  * @param raw the parsed manifest
+ * @param text the authored native TOML declaration
  * @returns contradictory declarations and config files without a declared reader
  */
-export function manifestErrors(raw: ParsedManifest): string[] {
+export function manifestErrors(raw: ParsedManifest, text: string): string[] {
     const checks = raw.checks.flatMap((check) =>
         CHECK_RULES.filter((rule) => rule.applies(check)).map((rule) => rule.error(check)),
     );
-    const fragments = raw.toolFiles.flatMap((config) => [
-        ...(config.imports !== undefined && !config.fragment
+    const fragments = raw.toolFiles.flatMap((config) =>
+        config.imports !== undefined && !config.fragment
             ? [`config ${config.target} declares imports, which only a fragment renders.`]
-            : []),
-        ...(!config.fragment && config.component_globs.length > 0
-            ? [`config ${config.target} declares code files, which only a fragment adds.`]
-            : []),
-    ]);
-    const declarations = [...checks, ...fragments];
-    if (raw.checks.some((check) => raw.configuration.borrowed_checks.includes(check.name)))
-        declarations.push('A configuration cannot both declare and reference the same check.');
+            : [],
+    );
+    const declarations = [...manifestTableErrors(text), ...checks, ...fragments];
     const readers = toolFileReaders(raw.checks);
     // Built-in checks read assets in source; command placeholders cannot prove which configs they use.
     if (raw.checks.some((check) => check.command === undefined)) return declarations;
@@ -322,7 +319,6 @@ export function assertManifests(manifests: Map<string, Manifest>): void {
         assertDefaultsDeclared(manifest, settings);
     }
     for (const manifest of entries) {
-        assertReferences(manifest, ownedChecks);
         for (const check of manifest.checks) assertReplacement(manifest, check, checks);
     }
 }

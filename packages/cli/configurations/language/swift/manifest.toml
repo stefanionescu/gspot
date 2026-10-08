@@ -2,7 +2,7 @@ ignored_folders = [".build/", "DerivedData/", "Pods/"]
 
 [configuration]
 title = "Swift"
-requires = ["format", "structure"]
+requires = ["format"]
 suggests = ["naming"]
 description = "Swift sources: SwiftLint with stable rules selected by level and analyzer rules, SwiftFormat, a build, and Periphery for dead code."
 
@@ -13,7 +13,6 @@ project_files = ["Package.swift"]
 [files]
 extensions = [".swift"]
 filenames = ["Package.swift", "Package.resolved"]
-kinds = ["source"]
 
 [[tool]]
 name = "swiftlint"
@@ -25,12 +24,7 @@ mise = "swiftlint"
 brew = "swiftlint"
 github = { name = "realm/SwiftLint", version = "0.63.2" }
 version_command = ["version"]
-
-[[tool.replace]]
-file = ".swiftlint.yml"
-
-[[tool.replace]]
-file = ".swiftlint.yaml"
+replaces = [".swiftlint.yml", ".swiftlint.yaml"]
 
 [[tool]]
 name = "swiftformat"
@@ -42,9 +36,7 @@ min_version = "0.54.0"
 mise = { name = "swiftformat", version = "0.61.1", options = { no_app = true, rename_exe = "swiftformat" } }
 brew = "swiftformat"
 github = { name = "nicklockwood/SwiftFormat", version = "0.61.1" }
-
-[[tool.replace]]
-file = ".swiftformat"
+replaces = [".swiftformat"]
 
 [[tool]]
 name = "periphery"
@@ -56,12 +48,7 @@ mise = "periphery"
 brew = "periphery"
 github = { name = "peripheryapp/periphery", version = "3.6.0" }
 version_command = ["version"]
-
-[[tool.replace]]
-file = ".periphery.yml"
-
-[[tool.replace]]
-file = ".periphery.yaml"
+replaces = [".periphery.yml", ".periphery.yaml"]
 
 [[tool]]
 name = "swift"
@@ -75,19 +62,19 @@ system = true
 target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
 rule_keys = ["opt_in_rules", "analyzer_rules", "disabled_rules"]
-scoped = true
+per_scope = true
 pointer = { path = ".swiftlint.yml", body = "parent_config: {target_json}\n" }
 
 [[tool_file]]
 target = ".gspot/config/swiftformat"
 tool = "swiftformat"
 rule_keys = ["enable", "disable"]
-scoped = true
+per_scope = true
 
 [[tool_file]]
 target = ".gspot/config/periphery.yml"
 tool = "periphery"
-scoped = true
+per_scope = true
 
 [[check]]
 name = "swiftlint"

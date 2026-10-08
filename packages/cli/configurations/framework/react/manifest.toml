@@ -7,6 +7,9 @@ description = "React components: the recommended React and hooks rules as errors
 [detect]
 dependencies = ["react"]
 
+[set]
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
+
 [[tool]]
 name = "eslint-plugin-react-hooks"
 kind = "library"
@@ -38,6 +41,26 @@ tool = "eslint"
 imports = "eslint.imports.js.eta"
 fragment = true
 
+[[check]]
+name = "version-pairs"
+title = "Keep React packages on one version"
+example = "Different installed versions of react and react-dom report an alignment finding. Install the same version of both and update the lockfile with the package manager."
+level = "recommended"
+stage = "commit"
+runs = "once"
+summary = "Checks that react and react-dom use the same installed version."
+why = "React and its DOM renderer ship together and expect matching versions."
+help = "Install the same version of react and react-dom."
+
+[required_eslint_rules]
+jsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
+tsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
+
+[[eslint_rules_off]]
+rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
+files = ["**/*.tsx", "**/*.jsx"]
+reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
+
 [[naming.overrides]]
 paths = ["**/*.tsx", "**/*.jsx"]
 categories = ["files"]
@@ -57,32 +80,9 @@ categories = ["functions", "methods"]
 ignored_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
-[[eslint_rules_off]]
-rules = ["gspot/no-trivial-files", "gspot/no-trivial-functions"]
-files = ["**/*.tsx", "**/*.jsx"]
-reason = "React renders a component by its name, so a component of one statement, alone in its file, is the shape React asks for."
-
-[required_eslint_rules]
-jsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
-tsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
-
 [[naming.overrides]]
 paths = ["**"]
 languages = ["typescript", "javascript"]
 categories = ["functions", "methods", "variables"]
 allowed = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
 reason = "React defines these subscription and snapshot callback names."
-
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
-
-[[check]]
-name = "version-pairs"
-title = "Keep React packages on one version"
-example = "Different installed versions of react and react-dom report an alignment finding. Install the same version of both and update the lockfile with the package manager."
-level = "recommended"
-stage = "commit"
-runs = "once"
-summary = "Checks that react and react-dom use the same installed version."
-why = "React and its DOM renderer ship together and expect matching versions."
-help = "Install the same version of react and react-dom."

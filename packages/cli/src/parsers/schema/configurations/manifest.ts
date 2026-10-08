@@ -50,6 +50,7 @@ const selectorSchema = z.strictObject({
     selector: z.string().min(1),
     message: z.string().min(1),
     files: z.array(z.string().min(1)).min(1).optional(),
+    role: z.string().min(1).optional(),
     allowed: z.string().min(1).optional(),
     ignores: z.array(z.string().min(1)).min(1).optional(),
     when: conditionSchema.pick({ setting: true, value: true }).optional(),
@@ -91,10 +92,9 @@ const toolFileSchema = z
         rule_keys: z.array(z.string()).optional(),
         pointer: pointerSchema.optional(),
         fragment: z.boolean().default(false),
-        scoped: z.boolean().default(false),
+        per_scope: z.boolean().default(false),
         generated_header: z.boolean().default(true),
         when: conditionSchema.pick({ configuration: true }).optional(),
-        component_globs: z.array(z.string().min(1)).default([]),
         selectors: z.array(selectorSchema).default([]),
     })
     .refine(
@@ -117,7 +117,7 @@ const sentence = z.string().min(SENTENCE_MIN_CHARS);
 const stringListTable = z.record(z.string(), z.array(z.string()));
 
 const checkFields = z.strictObject({
-    title: z.string().min(1).optional(),
+    title: z.string().min(1),
     // The name inside the configuration; the check's ID is the configuration's name, a slash, and this, as python/ruff.
     name: z.string().regex(/^[a-z0-9-]+$/),
     level: levelSchema,
@@ -160,7 +160,6 @@ const checkFields = z.strictObject({
     example: z.string().trim().min(1),
     why: sentence,
     help: sentence,
-    alternatives_checked: z.array(z.string()).optional(),
 });
 
 // A check runs its command, or gspot runs it itself when the check registry names its ID. A list of tools names the
@@ -207,20 +206,18 @@ function isIgnoredPath(path: string): boolean {
     );
 }
 
-const detectionSchema = z
-    .strictObject({
-        content: z.record(z.string().min(1), settingValidationSchema.shape.pattern.unwrap()).default({}),
-        extensions: stringList,
-        filenames: stringList,
-        dependencies: stringList,
-        shebangs: stringList,
-        runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).default([]),
-        tags: stringList,
-        paths: stringList,
-        // A file, or a folder such as *.xcodeproj, whose folder is a project: init proposes a scope there.
-        project_files: stringList,
-    })
-    .prefault({});
+const detectionSchema = z.strictObject({
+    content: z.record(z.string().min(1), settingValidationSchema.shape.pattern.unwrap()).default({}),
+    extensions: stringList,
+    filenames: stringList,
+    dependencies: stringList,
+    shebangs: stringList,
+    runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).default([]),
+    tags: stringList,
+    paths: stringList,
+    // A file, or a folder such as *.xcodeproj, whose folder is a project: init proposes a scope there.
+    project_files: stringList,
+});
 
 // The shape of a configuration manifest.toml after validation.
 export const manifestSchema = z
@@ -235,7 +232,6 @@ export const manifestSchema = z
             kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'general']),
             title: z.string(),
             requires: stringList,
-            borrowed_checks: z.array(z.string().min(1)).default([]),
             suggests: stringList,
             always_selected: z.boolean().default(false),
             // A configuration whose checks all read git is not proposed in a folder with no .git.
@@ -243,7 +239,7 @@ export const manifestSchema = z
             description: sentence,
             notes: z.string().optional(),
         }),
-        detect: detectionSchema,
+        detect: detectionSchema.optional(),
         files: filesSchema.prefault({}),
         tool: z.array(toolSchema).default([]),
         tool_file: z.array(toolFileSchema).default([]),
@@ -281,8 +277,10 @@ export const manifestSchema = z
             .default([]),
     })
     // A manifest writes one [[tool]], [[tool_file]], [[check]], or [[setting]] table per entry; the code reads the lists.
-    .transform(({ tool, tool_file: toolFiles, check, setting, ...rest }) => ({
+    .transform(({ tool, tool_file: toolFiles, check, setting, detect, ...rest }) => ({
         ...rest,
+        // An absent detection table inherits only the native matcher fields of the validated file declaration.
+        detect: detect ?? detectionSchema.strip().parse(rest.files),
         tools: tool,
         toolFiles,
         checks: check,

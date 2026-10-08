@@ -144,3 +144,30 @@ test.each((['recommended', 'all'] as const).flatMap((level) => ['', 'ios # app']
         expect(files.some((file) => file.path === 'omitted/AppTests/.swiftlint.yml')).toBe(false);
     },
 );
+
+test.each(['recommended', 'all'] as const)(
+    '%s Markdown defaults retain native rule options and the all-only heading checks',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['markdown'], {
+                level,
+                tables: `[tools.markdownlint.rules.MD044]
+names = ["Widget"]
+`,
+            }),
+            'source.md': '# Widget\n',
+        });
+        const session = await openSession(sandbox.path);
+        const file = emitAll(session).files.find(({ path }) => path === '.gspot/config/markdownlint.jsonc')!;
+        const config = parseJsonc(file.content) as Record<string, unknown>;
+        expect(config['default']).toBe(true);
+        expect(config['MD013']).toBe(false);
+        expect(config['MD033']).toBe(false);
+        expect(config['MD041']).toBe(level === 'all');
+        expect(config['MD025']).toStrictEqual(level === 'all' ? { front_matter_title: '' } : false);
+        expect(config['MD043']).toBeUndefined();
+        expect(config['MD044']).toStrictEqual({ names: ['Widget'] });
+        expect(config['MD001']).toBeUndefined();
+    },
+);

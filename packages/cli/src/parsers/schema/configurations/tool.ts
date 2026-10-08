@@ -138,6 +138,7 @@ export const toolSchema = z
             .optional(),
         // The file types an ESLint plugin or parser lints; a configuration whose files take plugins owns them while it is selected.
         eslint: z.strictObject({ extensions: z.array(z.string().regex(/^\.[a-z0-9]+$/u)).min(1) }).optional(),
+        replaces: z.array(z.string().min(1)).default([]),
         replace: z
             .array(
                 z
@@ -163,7 +164,7 @@ export const toolSchema = z
             .optional(),
         ...installerFields,
     })
-    .transform(({ npm, pypi, mise, brew, apt, cargo, github, winget, scoop, ...tool }) => {
+    .transform(({ npm, pypi, mise, brew, apt, cargo, github, winget, scoop, replaces, ...tool }) => {
         const definitions = { npm, pypi, mise, brew, apt, cargo, github, winget, scoop };
         const installers: Record<string, InstallerPin> = {};
         for (const [name, definition] of Object.entries(definitions)) {
@@ -171,5 +172,7 @@ export const toolSchema = z
             installers[name] =
                 typeof definition === 'string' ? compact({ name: definition, version: tool.version }) : definition;
         }
+        if (replaces.length > 0)
+            tool.replace = [...replaces.map((file) => ({ file, shared: false })), ...(tool.replace ?? [])];
         return { ...compact(tool), installers };
     });

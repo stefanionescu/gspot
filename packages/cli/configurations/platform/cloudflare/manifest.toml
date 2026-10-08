@@ -14,7 +14,6 @@ dependencies = ["wrangler", "@opennextjs/cloudflare"]
 [files]
 extensions = [".d.ts"]
 filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "_headers", "_redirects"]
-kinds = ["source"]
 
 [[tool]]
 name = "wrangler"

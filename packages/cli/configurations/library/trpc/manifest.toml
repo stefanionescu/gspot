@@ -10,8 +10,12 @@ dependencies = ["@trpc/server"]
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 fragment = true
+selectors = [{ selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))", message = "Give the procedure an input schema before its resolver, even when the input is nothing.", role = "routers" }]
 
-[[tool_file.selectors]]
-selector = "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))"
-message = "Give the procedure an input schema before its resolver, even when the input is nothing."
-files = ["**/routers/**/*.ts", "**/*router*.ts", "**/trpc/**/*.ts"]
+[[setting]]
+name = "architecture.roles.routers"
+type = "list"
+items = "path"
+direction = "neutral"
+default = ["**/routers/**", "**/*router*.ts", "**/trpc/**"]
+summary = "The files that declare tRPC procedures."

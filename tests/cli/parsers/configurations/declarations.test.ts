@@ -23,10 +23,13 @@ test('the folder gives a configuration its name and kind, and the [configuration
 });
 
 test('a template pointer rejects a conflicting emission mode', () => {
-    const source = `[[tool_file]]\nsource = "config.eta"\ntarget = ".gspot/config.toml"\n[tool_file.pointer]\npath = "config.toml"\ntemplate = "editor.eta"\n`;
-    expect(() => parseConfigurationManifest('example', { kind: 'general', tables: `${source}copy = true\n` })).toThrow(
-        'tool_file.0.pointer: Unrecognized key: "copy"',
-    );
+    const source = `[[tool_file]]\nsource = "config.eta"\ntarget = ".gspot/config.toml"\npointer = { path = "config.toml", template = "editor.eta" }\n`;
+    expect(() =>
+        parseConfigurationManifest('example', {
+            kind: 'general',
+            tables: source.replace('template = "editor.eta"', 'template = "editor.eta", copy = true'),
+        }),
+    ).toThrow('tool_file.0.pointer: Unrecognized key: "copy"');
     expect(() => parseConfigurationManifest('example', { kind: 'general', tables: source })).not.toThrow();
 });
 
@@ -72,12 +75,12 @@ test('tool suppression metadata validates an inline pattern without requiring it
     expect(() =>
         parseConfigurationManifest('example', {
             kind: 'language',
-            tables: `${SUPPRESSION_DECLARATION}inline_marker = "("\n`,
+            tables: SUPPRESSION_DECLARATION.replace(' }', ', inline_marker = "(" }'),
         }),
     ).toThrow('regular expression');
     const manifest = parseConfigurationManifest('example', {
         kind: 'language',
-        tables: `${SUPPRESSION_DECLARATION}inline_marker = "# line-disable"\n`,
+        tables: SUPPRESSION_DECLARATION.replace(' }', ', inline_marker = "# line-disable" }'),
     });
     expect(manifest.tools[0]?.suppression).toStrictEqual({
         marker: '# file-disable',
@@ -118,7 +121,7 @@ test('syntax selector coverage has no separate level declaration and retains its
     for (const level of ['recommended', 'all'])
         expect(() =>
             parseConfigurationManifest('example', {
-                tables: `${SYNTAX_SELECTOR_DECLARATION}level = "${level}"\n`,
+                tables: SYNTAX_SELECTOR_DECLARATION.replace(' }]', `, level = "${level}" }]`),
             }),
         ).toThrow('tool_file.0.selectors.0: Unrecognized key: "level"');
     expect(
@@ -136,7 +139,7 @@ test('syntax selector coverage has no separate level declaration and retains its
 test('Semgrep packs infer their scoped security declaration while explicit unrelated targets stay authored', () => {
     using _assets = spyOn(assets, 'listAssets').mockReturnValue(SEMGREP_ASSETS);
     const manifest = parseConfigurationManifest('example', {
-        tables: '[[tool_file]]\nsource = "other.eta"\ntarget = ".gspot/config/other.yml"\n[tool_file.pointer]\npath = "other.yml"\n',
+        tables: '[[tool_file]]\nsource = "other.eta"\ntarget = ".gspot/config/other.yml"\npointer = { path = "other.yml" }\n',
     });
     expect(manifest.toolFiles.map(({ source, target }) => [source, target])).toStrictEqual([
         ['other.eta', '.gspot/config/other.yml'],
@@ -144,8 +147,8 @@ test('Semgrep packs infer their scoped security declaration while explicit unrel
         ['semgrep/second.yml.eta', '.gspot/config/semgrep/second.yml'],
     ]);
     expect(manifest.toolFiles.slice(1)).toMatchObject([
-        { tool: ['semgrep'], rule_keys: ['rules'], scoped: true, when: { configuration: 'security' } },
-        { tool: ['semgrep'], rule_keys: ['rules'], scoped: true, when: { configuration: 'security' } },
+        { tool: ['semgrep'], rule_keys: ['rules'], per_scope: true, when: { configuration: 'security' } },
+        { tool: ['semgrep'], rule_keys: ['rules'], per_scope: true, when: { configuration: 'security' } },
     ]);
     expect(() => parseConfigurationManifest('example', { tables: 'tool_file = "invalid"\n' })).toThrow('tool_file');
 });

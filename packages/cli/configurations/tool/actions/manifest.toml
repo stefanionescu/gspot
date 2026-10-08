@@ -1,14 +1,9 @@
 [configuration]
 title = "GitHub Actions"
-requires = ["files"]
 description = "GitHub Actions workflows: actionlint for syntax and expressions, pinact for the commits actions are pinned to, and zizmor for security audits."
-
-[detect]
-paths = ["**/.github/workflows/*.{yml,yaml}", "**/action.{yml,yaml}"]
 
 [files]
 paths = ["**/.github/workflows/*.{yml,yaml}", "**/action.{yml,yaml}"]
-kinds = ["source"]
 
 [[tool]]
 name = "actionlint"
@@ -53,7 +48,6 @@ title = "Validate GitHub Actions workflows"
 example = "A workflow using an unknown expression context such as `${{ unknown.value }}` reports an actionlint error. Replace it with a supported context and property for that workflow location."
 level = "recommended"
 stage = "commit"
-runs = "files"
 tool = ["actionlint", "shellcheck"]
 files = { paths = ["**/.github/workflows/*.{yml,yaml}"] }
 exit_codes = [1]
@@ -68,7 +62,6 @@ title = "Verify GitHub Actions pins"
 example = "An action reference such as `actions/checkout@v4` without a full commit pin reports an unpinned action. Resolve a reviewed release to its full commit SHA and record the matching version comment beside the pin."
 level = "recommended"
 stage = "push"
-runs = "files"
 needs = ["network"]
 command = ["pinact", "run", "--verify-comment", "--check", "{files}"]
 output = { format = "lines" }
@@ -82,7 +75,6 @@ title = "Audit GitHub Actions security"
 example = "A workflow interpolating pull-request text directly into a shell command can report a template-injection audit. Pass the text through a step environment variable and quote its expansion instead of interpolating it into shell code."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["zizmor", "--offline", "--no-progress", "--format", "github", "--config", "{tool_file:zizmor}", "{files}"]
 exit_codes = [11, 12, 13, 14]
 output = { format = "regex", pattern = "^::(?:warning|error|notice) file=(?<file>[^,]+),line=(?<line>\\d+),title=(?<rule>[^:]+)::(?<message>.*)$" }

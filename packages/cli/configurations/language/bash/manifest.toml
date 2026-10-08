@@ -1,6 +1,5 @@
 [configuration]
 title = "Bash, zsh, and Bats scripts"
-requires = ["structure"]
 suggests = ["naming", "format"]
 description = "Shell scripts, hooks and task files: ShellCheck, shfmt, a syntax pass, and the structure rules for shell."
 
@@ -26,9 +25,7 @@ apt = "shellcheck"
 winget = "koalaman.shellcheck"
 scoop = "shellcheck"
 github = { name = "koalaman/shellcheck", version = "v0.11.0" }
-
-[[tool.replace]]
-file = ".shellcheckrc"
+replaces = [".shellcheckrc"]
 
 [[tool]]
 name = "shfmt"
@@ -57,7 +54,7 @@ system = true
 target = ".gspot/config/shellcheckrc"
 tool = "shellcheck"
 rule_keys = ["enable", "disable"]
-scoped = true
+per_scope = true
 
 [[check]]
 name = "bash-syntax"
@@ -65,7 +62,6 @@ title = "Check Bash syntax"
 example = "In `greet.sh`, `if then` has no condition. Use a real test: `if [ -f \"$file\" ]; then printf \"%s\\n\" \"$file\"; fi`, then rerun the syntax check."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["bash", "-n", "{file}"]
 files = { tags = ["bash"] }
 output = { format = "regex", pattern = "^.*: line (?<line>\\d+): (?<message>.*)$" }
@@ -79,7 +75,6 @@ title = "Check Zsh syntax"
 example = "In a Zsh script, `if then` has no condition. Use a real test: `if [[ -f \"$file\" ]]; then print -r -- \"$file\"; fi`, then rerun with Zsh installed."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["zsh", "-n", "{file}"]
 files = { tags = ["zsh"] }
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):\\s*(?<message>.*)$" }
@@ -93,7 +88,6 @@ title = "Check Bats syntax"
 example = "In a `.bats` file, an unterminated `@test \"greeting\" {` block fails parsing. Complete the test body and close it with `}` before rerunning with Bats installed."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["bats", "--count", "{file}"]
 # Bats parses the file with the bash on PATH, and under Bash 3.2 it passes a file that does not parse.
 tool = ["bats", "bash"]
@@ -110,7 +104,6 @@ title = "Lint shell scripts"
 example = "In a Bash script, `printf \"%s\\n\" $name` reports SC2086 because the expansion permits word splitting and globbing. Use `printf \"%s\\n\" \"$name\"` to pass the value as one argument."
 level = "recommended"
 stage = "commit"
-runs = "files"
 files = { tags = ["bash", "sh", "bats"] }
 command = ["shellcheck", "--rcfile", "{tool_file:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 exit_codes = [1]
@@ -125,7 +118,6 @@ title = "Format shell scripts"
 example = "In a script, `if true;then echo hello;fi` differs from shfmt output. Run the configured formatter to add the required spacing and block layout, then rerun the check."
 level = "recommended"
 stage = "commit"
-runs = "files"
 files = { tags = ["bash", "sh", "bats"] }
 command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
 fix = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
@@ -140,7 +132,6 @@ title = "Check the Bash script contract"
 example = "An executable Bash script without `set -euo pipefail` reports a strict-mode finding. Put strict mode before the first command and, when the script defines functions, call the documented `main` function last."
 level = "all"
 stage = "commit"
-alternatives_checked = ["shellcheck", "shfmt", "bashate"]
 summary = "Checks the contract every Bash script keeps: the shebang, strict mode, a main called last when functions are defined, declarative libraries, cleaned-up temporary files."
 why = "A script that skips strict mode or hides its runtime fails on the machine where it matters, silently."
 help = "Open with the shebang and run set -euo pipefail first. When an executable defines functions, end it with a call to main."
@@ -151,7 +142,6 @@ title = "Document shell functions"
 example = "A function `_quiet() { printf \"%s\\n\" \"Hello\"; }` without a preceding description reports a missing comment. Add `# _quiet: prints a greeting.` immediately above the function. Other structural checks still apply."
 level = "all"
 stage = "commit"
-alternatives_checked = ["shellcheck", "bashdoc", "shdoc"]
 summary = "Checks that every shell function announces itself in a comment above it that says more than its name."
 why = "A function with no summary makes the reader run it in their head; a vague summary is a summary nobody will trust."
 help = "Write \"# name: what it does\" above the function; when it carries doc sections, keep Globals, Arguments, Outputs, Returns in that order."
@@ -162,7 +152,6 @@ title = "Find unused shell functions"
 example = "A private shell function `_orphan` that no script calls reports an unused-function finding. Delete the unused definition. If an external hook requires the function, record that contract with `gspot ignore` and a reason."
 level = "recommended"
 stage = "commit"
-alternatives_checked = ["shellcheck SC2329", "knip"]
 summary = "Finds shell functions no script in the scope calls."
 why = "Dead code is read and maintained for nobody."
 help = "Delete the function. For a required hook entry point, run `gspot ignore bash/unused-functions --paths <file> --reason <why>`."
@@ -173,7 +162,6 @@ title = "Remove unused shell arguments"
 example = "A call `_deaf one two` whose function never reads positional arguments reports dead parameters. If both arguments are unnecessary, remove them from the call. Otherwise read and use the arguments in the function."
 level = "recommended"
 stage = "commit"
-alternatives_checked = ["shellcheck"]
 summary = "Finds shell functions called with arguments they never read."
 why = "A caller that passes an argument expects it to affect the result. An unread argument misleads the caller."
 help = "Read the argument in the function, or drop it from every call."
@@ -184,7 +172,6 @@ title = "Order source statements"
 example = "A block of `source` lines that is not ordered shortest first reports the sorted order. Reorder the lines."
 level = "all"
 stage = "commit"
-alternatives_checked = ["shellcheck"]
 summary = "Checks that the source statements of a block go shortest first, alphabetically among lines of one length."
 why = "One order for every block means a reader never searches it."
 help = "Reorder the source statements shortest first."
@@ -195,7 +182,6 @@ title = "Prefix private shell functions"
 example = "A function `build_it` called only from its own script reports a missing private prefix. Rename it `_build_it` and update each local call. A function called from another script keeps its public name."
 level = "all"
 stage = "commit"
-alternatives_checked = ["shellcheck"]
 summary = "Checks that a shell function no other file calls starts with an underscore, and that an underscore function is not called from outside."
 why = "The underscore tells a reader what the file publishes without reading every caller."
 help = "Rename the function with a leading underscore, or drop the underscore when another file calls it."
@@ -207,7 +193,6 @@ title = "Keep shell functions within the size limits"
 example = "A function over `limits.bash.function_lines`, `limits.bash.branches`, `limits.bash.nesting`, or `limits.bash.assignments` reports the count and the ceiling under `function-lines`, `branches`, `nesting`, or `assignments`. Split the function by the job, then rerun."
 level = "all"
 stage = "commit"
-alternatives_checked = ["shellcheck", "shfmt"]
 summary = "Checks every shell function against the size ceilings: code lines, branches, nesting, and assignments."
 why = "A long script holds more than one job, and a function with many branches or assignments is several functions with one name."
 help = "Split the script or the function, or raise the named limits.bash setting with a reason."
@@ -218,7 +203,6 @@ title = "Find wrappers and aliases"
 example = "A short launcher containing only `exec bash scripts/build.sh` reports a forwarding-wrapper finding. Invoke `scripts/build.sh` directly and remove the redundant launcher."
 level = "all"
 stage = "commit"
-alternatives_checked = ["shellcheck", "semgrep"]
 summary = "Finds forwarding wrappers and compatibility aliases in shell scripts."
 why = "A wrapper is a second entry point that drifts from the first."
 help = "Call the target script directly and delete the redundant launcher or alias."
@@ -229,7 +213,6 @@ title = "Avoid embedded scripts"
 example = "A shell heredoc containing a Python program reports embedded code. Move the program into a `.py` file and invoke that file from the shell script."
 level = "all"
 stage = "commit"
-alternatives_checked = ["shellcheck", "semgrep"]
 summary = "Finds inline Python, Node, and generated-script heredocs in shell scripts."
 why = "Code inside a heredoc is checked by nothing."
 help = "Move the embedded code into its own file and run that."
@@ -240,7 +223,6 @@ title = "Name and document SSH blocks"
 example = "An anonymous SSH heredoc reports a remote-block finding. Move the remote operation into a named function with a comment that explains its purpose, then invoke that function through the supported remote call."
 level = "all"
 stage = "commit"
-alternatives_checked = ["shellcheck"]
 summary = "Checks that ssh heredocs are documented."
 why = "A remote command block with no name is the hardest thing in a script to test or reuse."
 help = "Move the block into a named function and write \"# name: what it does\" above it."
@@ -251,7 +233,6 @@ title = "Keep defaults in configuration owners"
 example = "A default such as `${PORT:-8080}` outside a declared configuration owner reports a misplaced default. Set the default in a path listed in `architecture.roles.env` and consume the configured value elsewhere."
 level = "all"
 stage = "commit"
-alternatives_checked = ["shellcheck"]
 summary = "Finds variable defaults of the form name:-value outside the configuration owners."
 why = "A default set in three places is three settings with one name."
 help = "Set the default in a configuration owner named under architecture.roles.env and read the variable everywhere else."
@@ -262,7 +243,6 @@ title = "Guard shell configuration imports"
 example = "A sourced configuration owner without a load guard reports a guard finding. Begin it with `[[ -n ${APP_CONFIG_READY:-} ]] && return 0`, followed by `readonly APP_CONFIG_READY=1`, before declaring its configuration."
 level = "all"
 stage = "commit"
-alternatives_checked = ["shellcheck"]
 summary = "Checks that each script in architecture.roles.env starts with an include guard of its own."
 why = "A configuration file sourced twice runs its side effects twice."
 help = "Open the owner with [[ -n ${NAME_READY:-} ]] && return 0 and then readonly NAME_READY=1, with a guard name no other owner uses."
@@ -273,7 +253,6 @@ title = "Find unsafe shell commands"
 example = "A `killall worker` command outside bash.safety_owners reports a broad-kill finding. Target the specific process, or move shared process management into its declared owner."
 level = "recommended"
 stage = "commit"
-alternatives_checked = ["shellcheck", "semgrep"]
 summary = "Finds broad process kills and recursive deletes outside their owners, except traps that remove mktemp paths. At all, it also reports discarded failures."
 why = "Each of these is a way a script destroys something it did not mean to and says nothing."
 help = "Handle the failure, and move the delete or kill into a script named under bash.safety_owners."

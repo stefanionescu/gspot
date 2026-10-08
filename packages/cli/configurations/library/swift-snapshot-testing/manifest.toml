@@ -16,7 +16,6 @@ title = "Disable snapshot recording"
 example = "A snapshot test left in recording mode reports a recording finding. Inspect and retain the intended reference images, remove the recording flag, and rerun in comparison mode."
 level = "recommended"
 stage = "commit"
-runs = "files"
 files = { tags = ["swift-test"] }
 summary = "Refuses a snapshot test left in a recording mode."
 why = "A recording test writes a new reference and passes, so it approves whatever the screen shows."

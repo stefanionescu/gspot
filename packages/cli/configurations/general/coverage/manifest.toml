@@ -9,10 +9,7 @@ direction = "floor"
 default = 0
 default_all = 80
 summary = "The minimum percentage of source lines covered by tests."
-
-[setting.validation]
-minimum = 0
-maximum = 100
+validation = { minimum = 0, maximum = 100 }
 
 [[setting]]
 name = "coverage.branches"
@@ -21,10 +18,7 @@ direction = "floor"
 default = 0
 default_all = 80
 summary = "The minimum percentage of source branches covered by tests."
-
-[setting.validation]
-minimum = 0
-maximum = 100
+validation = { minimum = 0, maximum = 100 }
 
 [[setting]]
 name = "coverage.functions"
@@ -33,10 +27,7 @@ direction = "floor"
 default = 0
 default_all = 80
 summary = "The minimum percentage of source functions covered by tests."
-
-[setting.validation]
-minimum = 0
-maximum = 100
+validation = { minimum = 0, maximum = 100 }
 
 [[setting]]
 name = "coverage.statements"
@@ -45,10 +36,7 @@ direction = "floor"
 default = 0
 default_all = 80
 summary = "The minimum percentage of source statements covered by tests."
-
-[setting.validation]
-minimum = 0
-maximum = 100
+validation = { minimum = 0, maximum = 100 }
 
 [[setting]]
 name = "coverage.overrides"

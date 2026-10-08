@@ -32,18 +32,6 @@ function locatedConfiguration(configuration: unknown, dir: string): Record<strin
 const state: ManifestCache = { cache: undefined };
 let shipped: NamingTerms | undefined;
 
-// Appends each referenced check, declared by another configuration, to the manifest that references it.
-function appendReferences(manifests: Map<string, Manifest>): void {
-    const declared = new Map(
-        [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => [check.name, check] as const)),
-    );
-    for (const manifest of manifests.values())
-        for (const reference of new Set(manifest.configuration.borrowed_checks)) {
-            const check = declared.get(reference);
-            if (check !== undefined) manifest.checks.push(check);
-        }
-}
-
 // Parses one embedded manifest and registers it under its folder name.
 function registerManifest(manifests: Map<string, Manifest>, path: string): void {
     const dir = path.slice(0, -'/manifest.toml'.length);
@@ -70,7 +58,7 @@ export function parseManifest(text: string, dir: string): Manifest {
                 target: CONFIG_PREFIX + source.slice(0, -'.eta'.length),
                 tool: 'semgrep',
                 rule_keys: ['rules'],
-                scoped: true,
+                per_scope: true,
                 when: { configuration: 'security' },
             };
         });
@@ -92,7 +80,7 @@ export function parseManifest(text: string, dir: string): Manifest {
         ...declared,
         checks: declared.checks.map((check) => ({ ...check, name: `${declared.configuration.name}/${check.name}` })),
     };
-    const errors = manifestErrors(raw);
+    const errors = manifestErrors(raw, text);
     if (errors.length > 0) throw manifestError(raw.configuration.name, errors);
     return {
         ...raw,
@@ -112,7 +100,6 @@ export function configurationManifests(): Map<string, Manifest> {
     // The checks across manifests run at build time and in the tests, not on every start.
     for (const path of listAssets('configurations/'))
         if (path.endsWith('/manifest.toml')) registerManifest(manifests, path);
-    appendReferences(manifests);
     state.cache = new Map([...manifests].toSorted(([first], [second]) => first.localeCompare(second)));
     return state.cache;
 }

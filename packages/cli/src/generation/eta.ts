@@ -15,18 +15,22 @@ import { packageWorkspaces } from '#cli/repository/scopes.ts';
 import { readSwiftVersion } from '#cli/parsers/swift/source.ts';
 import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
+import { TEST_RULE_NAMES } from '#cli/config/generation/eslint.ts';
 import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
 import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
 import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
 import { eslintInputs } from '#cli/generation/eslint/configuration.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
 import { tablesFor, policyValue } from '#cli/policy/settings/lookup.ts';
-import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { HTML_RULES, HTML_ALL_RULES } from '#cli/config/generation/html.ts';
+import { stylelintRuleNamesSchema } from '#cli/parsers/schema/stylelint.ts';
 import type { EtaInputs, ScopeEtaInputs } from '#cli/types/generation/eta.ts';
 import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
+import type { Policy, ScopeView, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting.ts';
 import { scopeIgnorePatterns, selectedIgnorePaths } from '#cli/generation/ignore-patterns.ts';
 import { readPackageManifests, getProjectDependencies } from '#cli/repository/package-manifests.ts';
+import nativeStylelintRuleNames from '../../configurations/language/css/rule-names.json' with { type: 'json' };
 
 import {
     ETA_OPTIONS,
@@ -61,6 +65,7 @@ function proseInputs(session: Session, manifests: Manifest[]): EtaInputs['prose'
         ),
     };
 }
+const stylelintRuleNames = stylelintRuleNamesSchema.parse(nativeStylelintRuleNames).rules;
 
 function prefixed(path: string, pattern: string): string {
     if (path === '') return pattern;
@@ -81,13 +86,20 @@ function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): st
     return [...new Set([...authored, ...declared])];
 }
 
+// Resolve target rules, then the selected level and the check's finding ignores.
+function htmlRules(view: ScopeView, level: Policy['level'], check: string, overrides: Record<string, unknown> = {}) {
+    const rules: Record<string, unknown> = { ...HTML_RULES, ...overrides };
+    const ignored = [...(level === 'all' ? [] : HTML_ALL_RULES), ...view.rulesOff(check)];
+    for (const rule of ignored) rules[rule] = 'off';
+    return rules;
+}
+
 function scopeInputs(input: ScopeEtaInputs) {
     const { session, selection, manifests, projects } = input;
     const { scopes } = session;
     const { policy } = session.policyFiles;
     const { view } = selection;
     const tools = collectPins(manifests);
-    const names = tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name);
     const packages = [
         ...new Set(
             tools.flatMap((tool) => (tool.installers['npm']?.name === undefined ? [] : [tool.installers['npm'].name])),
@@ -126,7 +138,7 @@ function scopeInputs(input: ScopeEtaInputs) {
                 })),
         ignoredPaths: selectedIgnorePaths(scopes),
         configurations: view.configurations,
-        policy: policy,
+        policy,
         format: view.format,
         roles: view.roles,
         settings: view.settings,
@@ -136,7 +148,9 @@ function scopeInputs(input: ScopeEtaInputs) {
         rulesOff: view.rulesOff,
         ignoresFor: view.ignoresFor,
         verbatim: view.verbatim,
-        toolBinaries: names,
+        testRuleNames: TEST_RULE_NAMES,
+        stylelintRuleNames,
+        toolBinaries: tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name),
         toolPackages: packages,
     };
 }
@@ -181,6 +195,7 @@ export function etaInputs(session: Session, selection: ScopeSelection, manifests
         swiftVersion: () => readSwiftVersion(compilerContext, view.options('swift').xcode_project),
         editorconfigOverrides: () => editorconfigOverrides(policy),
         isAll: policy.level === 'all',
+        htmlRules: htmlRules.bind(undefined, view, policy.level),
         typescriptConfig: (target) =>
             buildTsconfig({
                 ...compilerContext,

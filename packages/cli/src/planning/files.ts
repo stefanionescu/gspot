@@ -130,7 +130,7 @@ export function runsAtRoot(manifest: Manifest | undefined, check: CheckDeclarati
     const command = [...(check.command ?? []), ...(check.env === undefined ? [] : Object.values(check.env))];
     return !manifest.toolFiles.some(
         (config) =>
-            config.scoped &&
+            config.per_scope &&
             !config.fragment &&
             command.some((part) => part.includes(`{tool_file:${toolFileName(config.target)}}`)),
     );

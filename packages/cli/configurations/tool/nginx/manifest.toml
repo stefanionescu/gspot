@@ -2,12 +2,8 @@
 title = "nginx"
 description = "nginx configuration: gixy for the security mistakes, and the server's own parser in a container for the rest."
 
-[detect]
-paths = ["**/nginx.conf", "**/nginx/**/*.conf", "**/nginx/*.conf"]
-
 [files]
 paths = ["**/nginx.conf", "**/nginx/**/*.conf", "**/nginx/*.conf"]
-kinds = ["source"]
 
 [[tool]]
 name = "gixy"

@@ -30,7 +30,9 @@ dependencies = ["react-native"]
 
 [files]
 filenames = ["app.json", "app.config.js", "app.config.ts", "metro.config.js", "eas.json"]
-kinds = ["source"]
+
+[set]
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
 
 [[tool]]
 name = "@react-native/eslint-plugin"
@@ -50,18 +52,4 @@ target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"
 fragment = true
-
-[[tool_file.selectors]]
-selector = "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]"
-message = "Use Pressable. The Touchable components are kept for old code and get no new behavior."
-
-[[tool_file.selectors]]
-selector = "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']"
-message = "A ScrollView renders every row at once. Render a list that grows through FlatList."
-
-[[tool_file.selectors]]
-selector = "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]"
-message = "AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform."
-
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
+selectors = [{ selector = "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]", message = "Use Pressable. The Touchable components are kept for old code and get no new behavior." }, { selector = "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']", message = "A ScrollView renders every row at once. Render a list that grows through FlatList." }, { selector = "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]", message = "AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform." }]

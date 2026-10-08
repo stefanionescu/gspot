@@ -26,6 +26,8 @@ export type ScopeEtaInputs = {
 };
 
 export type EtaInputs = {
+    testRuleNames: string[];
+    stylelintRuleNames: string[];
     /** Present for a configuration whose manifest declares rule paths. */
     recordRules?: (document: unknown) => void;
     /** The parts of the ESLint configuration the policy decides, computed when that Eta source emits. */
@@ -91,6 +93,8 @@ export type EtaInputs = {
     options: ScopeView['options'];
     entryFiles: (scope: string) => string[];
     limit: (key: string, language?: string) => number | undefined;
+    /** Shared native HTML rules with target overrides, then level and finding ignores. */
+    htmlRules: (check: string, overrides?: Record<string, unknown>) => Record<string, unknown>;
     rulesOff: (check: string) => string[];
     ignoresFor: ScopeView['ignoresFor'];
     verbatim: (name: string) => Record<string, unknown> | undefined;

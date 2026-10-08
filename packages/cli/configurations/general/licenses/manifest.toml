@@ -1,10 +1,6 @@
 [configuration]
 title = "Licenses"
-borrowed_checks = ["gspot/unmatched-paths"]
 description = "Every installed dependency reports a license from the allowed list, or carries an exception that names the license it reports."
-
-[detect]
-filenames = ["package.json", "pyproject.toml"]
 
 [files]
 filenames = ["package.json", "pyproject.toml"]
@@ -15,9 +11,7 @@ version = "5.0.1"
 npm = "license-checker-rseidelsohn"
 version_exit_code = 1
 mise = "npm:license-checker-rseidelsohn"
-
-[[tool.replace]]
-file = ".license-checker.json"
+replaces = [".license-checker.json"]
 
 [[tool]]
 name = "pip-licenses"
@@ -28,7 +22,7 @@ mise = "pipx:pip-licenses"
 [[tool_file]]
 target = ".gspot/config/licenses.json"
 tool = ["license-checker-rseidelsohn", "pip-licenses"]
-scoped = true
+per_scope = true
 
 [[check]]
 name = "packages"

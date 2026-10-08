@@ -14,9 +14,7 @@ mise = "ast-grep"
 brew = "ast-grep"
 cargo = "ast-grep"
 github = { name = "ast-grep/ast-grep", version = "0.45.3" }
-
-[[tool.replace]]
-file = ".qlty"
+replaces = [".qlty"]
 
 [[check]]
 name = "lone-files"
@@ -25,7 +23,6 @@ example = "With the TypeScript configuration at level `all`, `feature/only.ts` r
 runs = "scope"
 level = "all"
 stage = "commit"
-alternatives_checked = ["eslint-plugin-unicorn", "ls-lint", "knip"]
 summary = "Finds a folder that holds one code file and nothing else."
 why = "A folder of one file adds a level to every path and promises siblings that never arrive."
 help = "Move the file up beside its neighbors, or use gspot ignore structure/lone-files with paths and a reason."
@@ -38,7 +35,6 @@ runs = "scope"
 level = "all"
 stage = "commit"
 limit = "limits.prefix_collisions"
-alternatives_checked = ["ls-lint", "eslint-plugin-unicorn"]
 summary = "Finds sibling files that share a name prefix, like asset-card, asset-list and asset-row in one folder."
 why = "Files that share a prefix are one concept split by suffix; they belong in a folder named after the prefix."
 help = "Move the files into a folder named after the shared prefix, or allow the set with a reason."
@@ -50,7 +46,6 @@ example = "Sibling entries `report.ts` and `report/` have the same stem and repo
 runs = "scope"
 level = "all"
 stage = "commit"
-alternatives_checked = ["ls-lint"]
 summary = "Finds a file and a folder in the same place with the same stem, like turn.ts beside turn/."
 why = "An import of ./turn names both, and a reader cannot tell which one loads."
 help = "Rename the file or the folder so their stems differ."
@@ -61,7 +56,6 @@ title = "Name folders after what they hold"
 example = "A folder containing `helpers/first.sh` and `helpers/second.sh` reports `container-name` because `helpers` does not name its responsibility. Rename the folder after the operation it owns, such as `deployment`, and update every source path. A required ecosystem name needs a specific allowance."
 level = "all"
 stage = "commit"
-alternatives_checked = ["ls-lint"]
 summary = "Finds a folder named after a container word like common, core, helpers or utils, or after a language."
 why = "A folder with no owner collects everything nobody wanted to place, and grows until nobody reads it."
 help = "Name the folder after what it holds, or use gspot ignore structure/folder-names with paths and a reason."
@@ -121,6 +115,65 @@ files = { extensions = [".sh", ".bash", ".zsh", ".bats", ".py", ".pyi", ".sql", 
 summary = "Checks source code lines against each language's ceiling."
 why = "A long file hides independent responsibilities from the reader."
 help = "Split the file by its responsibility, or raise its limits.`<language>`.file_lines with a reason."
+
+[[check]]
+name = "test-placement"
+title = "Keep test support in its declared folder"
+example = "With architecture.roles.test_harness = 'tests/support', tests/unit/builders.ts beside order.spec.ts reports misplaced. Move builders.ts to tests/support. Tests, declarations, and assertion modules may stay."
+runs = "scope"
+level = "all"
+stage = "commit"
+summary = "Finds support files beside JavaScript and TypeScript tests outside their declared harness."
+why = "Keep shared setup in its declared folder and assertions with tests."
+help = "Move support into the declared test harness, or use gspot ignore structure/test-placement with paths and a reason."
+
+[[check]]
+name = "private-before-public"
+title = "Declare private members first"
+example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+summary = "Checks private declaration order, including Bash entrypoints."
+why = "Keep each responsibility in its declared owner."
+help = "Correct the finding. To record an exception, run `gspot ignore structure/private-before-public --paths <file> --reason \"<why>\"`."
+
+[[check]]
+name = "import-comments"
+title = "Keep prose outside import blocks"
+example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+summary = "Checks comments among native import and source statements."
+why = "Keep each responsibility in its declared owner."
+help = "Correct the finding. To record an exception, run `gspot ignore structure/import-comments --paths <file> --reason \"<why>\"`."
+
+[[check]]
+name = "trivial-functions"
+title = "Inline unnecessary functions"
+example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+summary = "Checks function statement floors and trivial source files."
+why = "Keep each responsibility in its declared owner."
+help = "Correct the finding. To record an exception, run `gspot ignore structure/trivial-functions --paths <file> --reason \"<why>\"`."
+
+[[check]]
+name = "env-owner"
+title = "Read environment values in their declared owner"
+example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+summary = "Checks native environment reads against architecture.roles.env."
+why = "Keep each responsibility in its declared owner."
+help = "Correct the finding. To record an exception, run `gspot ignore structure/env-owner --paths <file> --reason \"<why>\"`."
 
 [[setting]]
 name = "limits.file_lines"
@@ -224,11 +277,7 @@ direction = "floor"
 default = 2
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
 summary = "Functions with this many statements or fewer are reported. Any whole number of 1 or more works, and a higher number reports more functions. Set it for one language under limits.`<language>`."
-
-[setting.validation]
-integer = true
-minimum = 1
-message = "Use a whole number of statements, 1 or more."
+validation = { integer = true, minimum = 1, message = "Use a whole number of statements, 1 or more." }
 
 [[setting]]
 name = "limits.file_kb"
@@ -314,6 +363,7 @@ type = "string"
 direction = "tightening"
 default = "none"
 summary = "Whether re-exports are allowed: none, or index-only for libraries with barrels."
+validation = { enum = ["none", "index-only"] }
 
 [[setting]]
 name = "architecture.roles"
@@ -329,62 +379,3 @@ items = { name = "string", paths = { type = "list", items = "path" }, may_import
 direction = "tightening"
 default = []
 summary = "Which module may import which; a module imports itself and the modules in its may_import list"
-
-[[check]]
-name = "test-placement"
-title = "Keep test support in its declared folder"
-example = "With architecture.roles.test_harness = 'tests/support', tests/unit/builders.ts beside order.spec.ts reports misplaced. Move builders.ts to tests/support. Tests, declarations, and assertion modules may stay."
-runs = "scope"
-level = "all"
-stage = "commit"
-summary = "Finds support files beside JavaScript and TypeScript tests outside their declared harness."
-why = "Keep shared setup in its declared folder and assertions with tests."
-help = "Move support into the declared test harness, or use gspot ignore structure/test-placement with paths and a reason."
-
-[[check]]
-name = "private-before-public"
-title = "Declare private members first"
-example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
-summary = "Checks private declaration order, including Bash entrypoints."
-why = "Keep each responsibility in its declared owner."
-help = "Correct the finding. To record an exception, run `gspot ignore structure/private-before-public --paths <file> --reason \"<why>\"`."
-
-[[check]]
-name = "import-comments"
-title = "Keep prose outside import blocks"
-example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
-summary = "Checks comments among native import and source statements."
-why = "Keep each responsibility in its declared owner."
-help = "Correct the finding. To record an exception, run `gspot ignore structure/import-comments --paths <file> --reason \"<why>\"`."
-
-[[check]]
-name = "trivial-functions"
-title = "Inline unnecessary functions"
-example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
-summary = "Checks function statement floors and trivial source files."
-why = "Keep each responsibility in its declared owner."
-help = "Correct the finding. To record an exception, run `gspot ignore structure/trivial-functions --paths <file> --reason \"<why>\"`."
-
-[[check]]
-name = "env-owner"
-title = "Read environment values in their declared owner"
-example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
-summary = "Checks native environment reads against architecture.roles.env."
-why = "Keep each responsibility in its declared owner."
-help = "Correct the finding. To record an exception, run `gspot ignore structure/env-owner --paths <file> --reason \"<why>\"`."

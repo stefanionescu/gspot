@@ -10,7 +10,10 @@ project_files = ["supabase/config.toml"]
 
 [files]
 paths = ["supabase/config.toml", "supabase/functions/**", "supabase/seed.sql"]
-kinds = ["source"]
+
+[set]
+"postgres.client_schemas" = ["public"]
+"tools.squawk.assume_in_transaction" = true
 
 [[tool]]
 name = "deno"
@@ -132,7 +135,3 @@ type = "path"
 direction = "neutral"
 default = "supabase/functions"
 summary = "The folder relative to the scope that holds one folder for each edge function."
-
-[set]
-"postgres.client_schemas" = ["public"]
-"tools.squawk.assume_in_transaction" = true

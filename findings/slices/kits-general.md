@@ -1,6 +1,6 @@
 # Kits: General
 
-10 unresolved review records remain.
+9 unresolved review records remain.
 
 ## Open findings
 
@@ -43,3 +43,11 @@ Original records and quotations remain above. These records are complete at `989
 | ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/kits-general/016` | complete | Deleted the repeated shell EditorConfig section and unused switch_case_indent; Bash retains its single declared Shfmt command owner. Main CLI37/152 passed. Initial native tool family26pass/3fail; malformed declared-pack replay1/9 and both-level native pack syntax replay2/6 passed. Native full prose1711files0findings; types/format and staged148passing checks plus corrected11affected checks passed. Original failures retained. Agent native boundary/byte-equivalence evidence retained in frozen handoffs; no whole-suite/all-platform claim. Commit `989aafe5ba0d3794ab7928d050801d718b5f5813`. |
+
+## Implementation checkpoint 7e7008abc of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `7e7008abcdbc3fd23638084f785c345c611382c1`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/kits-general/058` | complete | Native manifest reasonForm drives suppression findings; current suppression positive/refusal cases pass. Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim. Commit `7e7008abcdbc3fd23638084f785c345c611382c1`. |

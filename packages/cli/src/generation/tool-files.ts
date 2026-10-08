@@ -37,7 +37,7 @@ function pointerFiles(context: ToolFileInputs, toolFile: ToolFileDeclaration, ta
     const { pointer } = toolFile;
     if (pointer === undefined) return [];
     const scope = selection.scope.path;
-    let paths = [toolFile.scoped && scope !== '' ? `${scope}/${pointer.path}` : pointer.path];
+    let paths = [toolFile.per_scope && scope !== '' ? `${scope}/${pointer.path}` : pointer.path];
     if (pointer.directories !== undefined) {
         const children = nestedScopes(
             context.scopes.map((entry) => entry.scope.path),
@@ -71,12 +71,12 @@ function isConditionMet(
     condition: ToolFileDeclaration['when'],
 ): boolean {
     if (condition === undefined) return true;
-    return isConfigurationSelected(toolFile.scoped ? [context.selection] : context.scopes, condition.configuration);
+    return isConfigurationSelected(toolFile.per_scope ? [context.selection] : context.scopes, condition.configuration);
 }
 
 // Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
 function isTargetEnabled(toolFile: ToolFileDeclaration, context: EmitInputs, consumers: EmitConsumers): boolean {
-    const needed = toolFile.scoped ? consumers.scope : consumers.repository;
+    const needed = toolFile.per_scope ? consumers.scope : consumers.repository;
     const constraints = [
         [toolFile.tool, needed.tools],
         [toolFile.check, needed.checks],

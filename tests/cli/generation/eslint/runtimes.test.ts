@@ -8,6 +8,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { eslintGlobalsSchema } from '#cli/parsers/schema/eslint.ts';
 import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {
@@ -200,4 +201,10 @@ test.each(['mise', 'npm'] as const)('Mise task defaults follow the selected runn
         const computed = (await eslint.calculateConfigForFile(file)) as RuntimeConfiguration;
         expect(computed.languageOptions.globals['process'], file).toBe(runner === 'mise' ? false : undefined);
     }
+});
+
+test('native globals capture refuses malformed runtime dictionaries', () => {
+    expect(eslintGlobalsSchema.safeParse({ default: globals }).success).toBe(true);
+    for (const exported of [{}, { default: [] }, { default: { browser: { window: 'readonly' } } }])
+        expect(eslintGlobalsSchema.safeParse(exported).success).toBe(false);
 });

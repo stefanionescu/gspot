@@ -31,7 +31,6 @@ summary = "Runs the test suite with coverage, and fails when a test fails or the
 why = "A floor keeps new code from arriving untested."
 help = "Fix the failing test, or add tests for the code the report shows uncovered. Lower coverage.lines with a reason."
 
-
 [ruff_rules]
 recommended = ["PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "PT015", "PT016", "PT017", "PT020", "PT021", "PT024", "PT025", "PT027", "PT028", "PT030", "PT031"]
 all = ["PT001", "PT002", "PT003", "PT006", "PT007", "PT018", "PT019", "PT022", "PT023", "PT026"]

@@ -5,7 +5,6 @@ description = "typos over every text file, with the words this repository allows
 
 [files]
 paths = ["**"]
-kinds = ["source"]
 
 [[tool]]
 name = "typos"
@@ -16,20 +15,12 @@ cargo = "typos-cli"
 winget = "crate-ci.typos"
 scoop = "typos"
 github = { name = "crate-ci/typos", version = "v1.43.5" }
-
-[[tool.replace]]
-file = "typos.toml"
-
-[[tool.replace]]
-file = ".typos.toml"
-
-[[tool.replace]]
-file = "_typos.toml"
+replaces = ["typos.toml", ".typos.toml", "_typos.toml"]
 
 [[tool_file]]
 target = ".gspot/config/typos.toml"
 tool = "typos"
-scoped = true
+per_scope = true
 
 [[check]]
 name = "typos"
@@ -37,7 +28,6 @@ title = "Check spelling"
 example = "A misspelled word in selected text reports a spelling finding. Correct it and rerun. Filename findings require a manual rename and reference updates."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
 fix = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
 exit_codes = [2]
@@ -52,6 +42,4 @@ type = "string"
 direction = "neutral"
 default = "en-us"
 summary = "The English locale typos checks against: en, en-us, en-gb, en-ca, or en-au."
-
-[setting.validation]
-enum = ["en", "en-us", "en-gb", "en-ca", "en-au"]
+validation = { enum = ["en", "en-us", "en-gb", "en-ca", "en-au"] }

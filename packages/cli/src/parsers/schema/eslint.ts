@@ -36,6 +36,9 @@ export const eslintPresetsSchema = z.record(z.string(), eslintPresetSchema);
 
 export const eslintModuleSchema = z.object({ default: z.unknown() });
 
+/** Native runtime dictionaries map each global name to its write permission. */
+export const eslintGlobalsSchema = z.object({ default: z.record(z.string(), z.record(z.string(), z.boolean())) });
+
 /**
  * Capture the actual public preset export before executable plugin objects are discarded.
  * @param packageName the owning npm package.

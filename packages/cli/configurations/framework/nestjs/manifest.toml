@@ -1,6 +1,4 @@
-[compiler_options]
-experimentalDecorators = true
-emitDecoratorMetadata = true
+compiler_options = { experimentalDecorators = true, emitDecoratorMetadata = true }
 
 [configuration]
 title = "NestJS"
@@ -14,7 +12,6 @@ filenames = ["nest-cli.json"]
 
 [files]
 filenames = ["nest-cli.json"]
-kinds = ["source"]
 
 [[tool]]
 name = "@darraghor/eslint-plugin-nestjs-typed"
@@ -28,32 +25,8 @@ target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"
 fragment = true
-
-[[tool_file.selectors]]
-selector = "CallExpression[callee.name='forwardRef']"
-message = "forwardRef papers over two modules that import each other. Move what both need into a third module."
-
-[[tool_file.selectors]]
-selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))"
-message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }."
-
 # A controller turns a request into a call, and a service owns the data.
-[[tool_file.selectors]]
-selector = "TSParameterProperty TSTypeReference[typeName.name=/(Repository|DataSource|EntityManager|PrismaClient|PrismaService)$/]"
-message = "A controller reaches data through a service. Inject the service, and keep the repository behind it."
-files = ["**/*.controller.ts"]
-
-[[tool_file.selectors]]
-selector = "Decorator[expression.callee.name=/^(InjectRepository|InjectModel|InjectDataSource)$/]"
-message = "A controller reaches data through a service. Inject the service, and keep the repository behind it."
-files = ["**/*.controller.ts"]
-
-[[naming.overrides]]
-paths = ["**"]
-languages = ["typescript", "javascript"]
-categories = ["functions", "methods"]
-ignored_prefix = "^handle(?=[A-Z])"
-reason = "A handler starts with handle and then names the event."
+selectors = [{ selector = "CallExpression[callee.name='forwardRef']", message = "forwardRef papers over two modules that import each other. Move what both need into a third module." }, { selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))", message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }." }, { selector = "TSParameterProperty TSTypeReference[typeName.name=/(Repository|DataSource|EntityManager|PrismaClient|PrismaService)$/]", message = "A controller reaches data through a service. Inject the service, and keep the repository behind it.", files = ["**/*.controller.ts"] }, { selector = "Decorator[expression.callee.name=/^(InjectRepository|InjectModel|InjectDataSource)$/]", message = "A controller reaches data through a service. Inject the service, and keep the repository behind it.", files = ["**/*.controller.ts"] }]
 
 [required_eslint_rules]
 ts = ["@typescript-eslint/no-extraneous-class", "no-restricted-syntax"]
@@ -67,3 +40,10 @@ reason = "A Nest module is an empty decorated class that registers providers and
 rules = ["class-methods-use-this"]
 files = ["**/*.{ts,tsx,mts,cts,vue,svelte}"]
 reason = "NestJS invokes decorated instance methods through dependency injection even when they do not access instance state."
+
+[[naming.overrides]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods"]
+ignored_prefix = "^handle(?=[A-Z])"
+reason = "A handler starts with handle and then names the event."

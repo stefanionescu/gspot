@@ -6,61 +6,13 @@ description = "Checks commit messages for a conventional type, an optional proje
 
 [files]
 paths = ["**"]
-kinds = ["source"]
 
 [[tool]]
 name = "commitlint"
 version = "21.2.2"
 npm = "@commitlint/cli"
 mise = "npm:@commitlint/cli"
-
-[[tool.replace]]
-file = ".commitlintrc"
-
-[[tool.replace]]
-file = ".commitlintrc.json"
-
-[[tool.replace]]
-file = ".commitlintrc.yml"
-
-[[tool.replace]]
-file = ".commitlintrc.yaml"
-
-[[tool.replace]]
-file = ".commitlintrc.js"
-
-[[tool.replace]]
-file = ".commitlintrc.cjs"
-
-[[tool.replace]]
-file = ".commitlintrc.mjs"
-
-[[tool.replace]]
-file = ".commitlintrc.ts"
-
-[[tool.replace]]
-file = ".commitlintrc.cts"
-
-[[tool.replace]]
-file = ".commitlintrc.mts"
-
-[[tool.replace]]
-file = "commitlint.config.js"
-
-[[tool.replace]]
-file = "commitlint.config.cjs"
-
-[[tool.replace]]
-file = "commitlint.config.mjs"
-
-[[tool.replace]]
-file = "commitlint.config.ts"
-
-[[tool.replace]]
-file = "commitlint.config.cts"
-
-[[tool.replace]]
-file = "commitlint.config.mts"
+replaces = [".commitlintrc", ".commitlintrc.json", ".commitlintrc.yml", ".commitlintrc.yaml", ".commitlintrc.js", ".commitlintrc.cjs", ".commitlintrc.mjs", ".commitlintrc.ts", ".commitlintrc.cts", ".commitlintrc.mts", "commitlint.config.js", "commitlint.config.cjs", "commitlint.config.mjs", "commitlint.config.ts", "commitlint.config.cts", "commitlint.config.mts"]
 
 [[tool.replace]]
 file = "package.json"
@@ -78,7 +30,6 @@ title = "Lint the commit message"
 example = "The proposed message `changed stuff` lacks the configured conventional-commit structure. A message such as `fix(cli): report missing configuration` supplies a type, scope, and subject. Use a type and scope accepted by the repository policy."
 level = "all"
 stage = "message"
-runs = "files"
 command = ["commitlint", "--config", "{tool_file:commitlint}", "--edit", "{message_file}"]
 output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
 summary = "Checks the commit message being written: a conventional type, an optional known scope, a first line of 72 characters or fewer, and a wrapped body."
@@ -116,6 +67,7 @@ summary = "Optional commit scopes accepted by the scope-enum rule. Empty derives
 
 [[setting]]
 name = "tools.commitlint.rules"
+off_values = [0]
 type = "table"
 direction = "rule-options"
 default = {}

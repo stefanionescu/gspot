@@ -12,7 +12,7 @@ import { eslintRuleOptions, fragmentSelectorGroups } from '#cli/generation/eslin
 // The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
 // written once asks every scope.
 function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, target: ToolFileDeclaration): Manifest[] {
-    if (target.scoped) return selection.selected;
+    if (target.per_scope) return selection.selected;
     const every = [selection, ...scopes].flatMap((entry) => entry.selected);
     return new Map(every.map((manifest) => [manifest.configuration.name, manifest])).values().toArray();
 }
@@ -89,20 +89,17 @@ export function fragmentInputs(
             .filter((toolFile) => toolFile.fragment && toolFile.target === target.target)
             .map((toolFile) => ({ manifest, toolFile })),
     );
-    const components = fragments.flatMap(({ manifest, toolFile }) =>
-        toolFile.component_globs.map((pattern) => ({ pattern, configuration: manifest.configuration.name })),
-    );
-    const fragmentFiles = [...new Set(components.map(({ pattern }) => pattern))];
     const config = target.target.endsWith('eslint.config.mjs') ? inputs.eslint() : undefined;
     const eslintFiles =
         config === undefined
             ? inputs.eslintFiles
             : eslintFilePatterns({
-                  components,
+                  components: fragments.map(({ manifest }) => manifest),
                   tests: config.testFiles,
                   scripts: config.scriptFiles,
                   nodeFiles: config.nodeFiles,
               });
+    const fragmentFiles = eslintFiles.fragmentFiles;
     const eslintFragmentBlocks: EtaInputs['eslintFragmentBlocks'] = [];
     const emitted = emittedFragments(
         fragments,

@@ -1,4 +1,5 @@
 ignored_folders = ["node_modules/"]
+
 dockerignore = ["node_modules"]
 
 # Where a dead-code scan starts when no framework names its own entries.
@@ -6,7 +7,6 @@ entry = ["src/main.{ts,js}", "src/index.{ts,js}", "**/*.{test,spec}.{ts,tsx,js}"
 
 [configuration]
 title = "JavaScript"
-requires = ["structure"]
 suggests = ["naming", "format"]
 description = "ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code."
 
@@ -56,6 +56,7 @@ For compiler selection, see [TypeScript details](/reference/configurations/types
 '''
 
 [detect]
+project_files = ["package.json"]
 extensions = [".js", ".jsx", ".mjs", ".cjs"]
 shebangs = ["node"]
 
@@ -74,51 +75,12 @@ suppression = { marker = "^(?:/\\*\\s*eslint-disable(?:-next-line|-line)?|//\\s*
 version = "9.39.5"
 npm = "eslint"
 min_version = "9.38.0"
-
-
-[[tool.replace]]
-file = "eslint.config.js"
-
-[[tool.replace]]
-file = "eslint.config.mjs"
-
-[[tool.replace]]
-file = "eslint.config.cjs"
-
-[[tool.replace]]
-file = "eslint.config.ts"
-
-[[tool.replace]]
-file = "eslint.config.mts"
-
-[[tool.replace]]
-file = "eslint.config.cts"
-
-[[tool.replace]]
-file = ".eslintrc"
-
-[[tool.replace]]
-file = ".eslintrc.js"
-
-[[tool.replace]]
-file = ".eslintrc.cjs"
-
-[[tool.replace]]
-file = ".eslintrc.json"
-
-[[tool.replace]]
-file = ".eslintrc.yml"
-
-[[tool.replace]]
-file = ".eslintrc.yaml"
+replaces = ["eslint.config.js", "eslint.config.mjs", "eslint.config.cjs", "eslint.config.ts", "eslint.config.mts", "eslint.config.cts", ".eslintrc", ".eslintrc.js", ".eslintrc.cjs", ".eslintrc.json", ".eslintrc.yml", ".eslintrc.yaml", ".eslintignore"]
 
 [[tool.replace]]
 file = "package.json"
 key = "eslintConfig"
 shared = true
-
-[[tool.replace]]
-file = ".eslintignore"
 
 [[tool]]
 name = "@eslint/js"
@@ -229,31 +191,7 @@ name = "knip"
 version = "6.35.1"
 npm = "knip"
 min_version = "5.85.0"
-
-[[tool.replace]]
-file = "knip.json"
-
-[[tool.replace]]
-file = "knip.jsonc"
-
-[[tool.replace]]
-file = ".knip.json"
-
-[[tool.replace]]
-file = ".knip.jsonc"
-
-[[tool.replace]]
-file = "knip.ts"
-
-[[tool.replace]]
-file = "knip.js"
-
-[[tool.replace]]
-file = "knip.config.js"
-
-[[tool.replace]]
-file = "knip.config.ts"
-
+replaces = ["knip.json", "knip.jsonc", ".knip.json", ".knip.jsonc", "knip.ts", "knip.js", "knip.config.js", "knip.config.ts"]
 
 [[tool]]
 name = "tsc"
@@ -274,45 +212,13 @@ target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 rule_keys = ["rules"]
 pointer = { path = "eslint.config.mjs", body = "export { default } from {target_module};" }
-
-[[tool_file.selectors]]
-selector = "ExportAllDeclaration"
-message = "Export values at their declaration instead of re-exporting them."
-when = { setting = "structure.reexports", value = "none" }
-
-[[tool_file.selectors]]
-selector = "ExportNamedDeclaration[source]"
-message = "Export values at their declaration instead of re-exporting them."
-when = { setting = "structure.reexports", value = "none" }
-
-[[tool_file.selectors]]
-selector = "ExportNamedDeclaration[declaration=null]"
-message = "Export values at their declaration instead of re-exporting them."
-when = { setting = "structure.reexports", value = "none" }
-
-[[tool_file.selectors]]
-selector = "ExportAllDeclaration"
-message = "Export values at their declaration instead of re-exporting them."
-when = { setting = "structure.reexports", value = "index-only" }
-ignores = ["**/index.*"]
-
-[[tool_file.selectors]]
-selector = "ExportNamedDeclaration[source]"
-message = "Export values at their declaration instead of re-exporting them."
-when = { setting = "structure.reexports", value = "index-only" }
-ignores = ["**/index.*"]
-
-[[tool_file.selectors]]
-selector = "ExportNamedDeclaration[declaration=null]"
-message = "Export values at their declaration instead of re-exporting them."
-when = { setting = "structure.reexports", value = "index-only" }
-ignores = ["**/index.*"]
+selectors = [{ selector = "ExportAllDeclaration", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "none" } }, { selector = "ExportNamedDeclaration[source]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "none" } }, { selector = "ExportNamedDeclaration[declaration=null]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "none" } }, { selector = "ExportAllDeclaration", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*"] }, { selector = "ExportNamedDeclaration[source]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*"] }, { selector = "ExportNamedDeclaration[declaration=null]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*"] }]
 
 [[tool_file]]
 target = ".gspot/config/jsconfig.json"
 tool = "tsc"
 check = "javascript/tsc"
-scoped = true
+per_scope = true
 
 [[tool_file]]
 target = ".gspot/config/knip.json"
@@ -326,7 +232,6 @@ tool = ["eslint", "node"]
 example = "The declaration `const unused = 1;` reports no-unused-vars. Delete the variable."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{tool_file:eslint}", "--format", "json", "{files}"]
 fix = ["eslint", "--fix", "--config", "{tool_file:eslint}", "{files}"]
 exit_codes = [1]
@@ -367,6 +272,7 @@ help = "Delete what knip names, or add a knip entry point with gspot set tools.k
 
 [[setting]]
 name = "tools.eslint.rules"
+off_values = ["off", 0]
 type = "table"
 direction = "rule-options"
 default = {}
@@ -431,11 +337,11 @@ direction = "loosening"
 default = {}
 summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses. A name that looks like a regular expression matches as one; an entry with workspace applies to that package.json workspace alone."
 
+[required_eslint_rules]
+js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "import-x/exports-last"]
+
 [agent_rules]
 "NODE.md" = { runtimes = ["node"] }
 "DENO.md" = { runtimes = ["deno"] }
 "COMPONENTS.md" = { dependencies = ["astro", "svelte", "vue", "react"] }
 "BUN.md" = { filenames = ["bun.lock", "bun.lockb", "bunfig.toml"] }
-
-[required_eslint_rules]
-js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "import-x/exports-last"]

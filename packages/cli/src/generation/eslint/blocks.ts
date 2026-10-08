@@ -224,19 +224,23 @@ export function fragmentSelectorGroups(
                 isAll && (entry.when === undefined || scope.view.settings[entry.when.setting] === entry.when.value),
         );
         const resolved: ResolvedSelector[] = [...new Map(enabled.map((entry) => [entry.selector, entry])).values()].map(
-            (entry) => ({
-                selector: entry.selector,
-                message: entry.message,
-                ...(entry.files === undefined
-                    ? {}
-                    : {
-                          files: entry.files.map((path) => posix.join(scope.scope.path, path)),
-                      }),
-                except: [
-                    ...(entry.ignores ?? []).map((path) => posix.join(scope.scope.path, path)),
-                    ...(entry.allowed === undefined ? [] : allowedPaths(scope, entry.allowed)),
-                ],
-            }),
+            (entry) => {
+                const files =
+                    entry.role === undefined
+                        ? entry.files?.map((path) => posix.join(scope.scope.path, path))
+                        : Object.entries(scope.view.roles).flatMap(([name, paths]) =>
+                              name === entry.role && paths !== undefined ? [paths].flat() : [],
+                          );
+                return {
+                    selector: entry.selector,
+                    message: entry.message,
+                    ...(files === undefined ? {} : { files }),
+                    except: [
+                        ...(entry.ignores ?? []).map((path) => posix.join(scope.scope.path, path)),
+                        ...(entry.allowed === undefined ? [] : allowedPaths(scope, entry.allowed)),
+                    ],
+                };
+            },
         );
         const styles = scope.view.values['tools.eslint']?.import_extensions;
         const entries = styles === undefined ? [] : Object.entries(styles);

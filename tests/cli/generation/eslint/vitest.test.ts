@@ -6,6 +6,7 @@ import { createEslint } from '#tests/harness/generated.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { APP_JEST } from '#tests/config/cli/generation/eslint/jest.ts';
 import { VITEST_FILES } from '#tests/config/cli/generation/eslint/vitest.ts';
+import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
 
 async function ruleReports(eslint: ESLint, file: string, rule: string): Promise<Pick<Linter.LintMessage, 'message'>[]> {
     const results = await eslint.lintFiles([file]);
@@ -49,3 +50,36 @@ test('Vitest rules apply without a harness role', async () => {
     const config = (await eslint.calculateConfigForFile('tests/unit/example.test.js')) as Linter.Config;
     expect((config.rules!['vitest/no-focused-tests'] as unknown[])[0]).toBe(2);
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s Vitest retains required test rules and all-only strict equality',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            ...VITEST_FILES,
+            'gspot.toml': buildPolicy(['vitest'], { level, tables: '[agent_rules]\nenabled = false\n' }),
+        });
+        const eslint = await createEslint(sandbox.path);
+        const config = (await eslint.calculateConfigForFile('tests/unit/example.test.js')) as ComputedEslint;
+        expect(config.rules['vitest/no-focused-tests']).toStrictEqual([2, { fixable: false }]);
+        expect(config.rules['vitest/valid-expect']![0]).toBe(2);
+        expect(config.rules['vitest/prefer-strict-equal']?.[0] ?? 0).toBe(level === 'all' ? 2 : 0);
+        const results = await eslint.lintText(
+            `import { test, expect } from 'vitest';
+test.only('checks the value', () => { expect({value: 1}).toEqual({value: 1}); });
+`,
+            { filePath: 'tests/unit/example.test.js' },
+        );
+        expect(
+            results
+                .flatMap((result) => result.messages)
+                .filter(({ ruleId }) => ruleId === 'vitest/no-focused-tests')
+                .map(({ fix }) => fix),
+        ).toStrictEqual([undefined]);
+        expect(
+            results
+                .flatMap((result) => result.messages)
+                .filter(({ ruleId }) => ruleId === 'vitest/prefer-strict-equal'),
+        ).toHaveLength(level === 'all' ? 1 : 0);
+    },
+);

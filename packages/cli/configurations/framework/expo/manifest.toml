@@ -8,7 +8,9 @@ dependencies = ["expo"]
 
 [files]
 filenames = ["app.json", "app.config.js", "app.config.ts", "eas.json"]
-kinds = ["source"]
+
+[set]
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
 
 [[tool]]
 name = "eslint-plugin-expo"
@@ -46,6 +48,3 @@ ts = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
 js = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
 tsx = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
 jsx = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
-
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }

@@ -7,6 +7,10 @@ export const MISE_SCRIPT_PATH = '.mise/tasks/**';
 export const ESLINT_RULE_NAMES_FILE = 'configurations/language/javascript/eslint-rule-names.json';
 export const ESLINT_RULE_NAMES_MODULE = 'eslint/use-at-your-own-risk';
 
+/** Runtime names captured from the declared native globals package. */
+export const ESLINT_RUNTIME_NAMES_FILE = 'configurations/language/javascript/runtime-names.json';
+export const ESLINT_RUNTIME_NAMES_MODULE = 'globals';
+
 /** Installed preset sources whose rule and file data is shipped with its owning configuration. */
 export const ESLINT_PRESET_SOURCES: EslintPresetSources = {
     javascript: {
@@ -53,6 +57,20 @@ export const ESLINT_PRESET_SOURCES: EslintPresetSources = {
     'tanstack-query': { recommended: ['@tanstack/eslint-plugin-query', 'configs.flat/recommended'] },
     vitest: { recommended: ['@vitest/eslint-plugin', 'configs.recommended'] },
 };
+
+/** Test correctness rules shared by the two native test plugins, without their namespace. */
+export const TEST_RULE_NAMES = [
+    'no-focused-tests',
+    'no-disabled-tests',
+    'no-identical-title',
+    'no-standalone-expect',
+    'no-commented-out-tests',
+    'expect-expect',
+    'valid-describe-callback',
+    'no-conditional-expect',
+    'valid-expect',
+    'prefer-strict-equal',
+];
 
 // Shared ESLint data comes from the JavaScript configuration's shipped assets.
 

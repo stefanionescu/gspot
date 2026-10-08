@@ -17,9 +17,7 @@ pypi = "semgrep"
 mise = "pipx:semgrep"
 brew = "semgrep"
 platforms = ["macos", "linux"]
-
-[[tool.replace]]
-file = ".semgrepignore"
+replaces = [".semgrepignore"]
 
 [[tool]]
 name = "codeql"
@@ -35,7 +33,7 @@ query_packs = { actions = "0.6.21", cpp = "1.5.12", csharp = "1.6.3", go = "1.5.
 source = "semgrepignore.eta"
 target = ".semgrepignore"
 tool = "semgrep"
-scoped = true
+per_scope = true
 
 [[check]]
 name = "semgrep"
@@ -43,7 +41,6 @@ title = "Scan code for security patterns"
 example = "Code matching a selected local Semgrep rule reports that rule ID and source location. For a rule banning dynamic evaluation, replace `eval(userInput)` with explicit parsing and permitted operations, then rerun the same rule set."
 level = "recommended"
 stage = "push"
-runs = "files"
 exit_codes = [1, 3]
 platforms = ["macos", "linux"]
 command = ["semgrep", "scan", "--strict", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]
@@ -58,7 +55,6 @@ title = "Scan code with registry rules"
 example = "Code matching a configured Semgrep registry rule reports its upstream rule ID. Correct the operation identified by that rule and rerun with network access. The configured rule set determines which patterns are findings."
 level = "recommended"
 stage = "manual"
-runs = "files"
 exit_codes = [1, 3]
 needs = ["network"]
 when = { setting = "tools.semgrep.registry" }
@@ -97,6 +93,7 @@ type = "string"
 direction = "neutral"
 default = "security-extended"
 summary = "The CodeQL query suite: security-extended, or security-and-quality."
+validation = { enum = ["security-extended", "security-and-quality"] }
 
 [[setting]]
 name = "tools.semgrep.rule_files"

@@ -1,6 +1,6 @@
 [configuration]
 title = "TypeScript"
-requires = ["javascript", "structure"]
+requires = ["javascript"]
 suggests = ["naming", "format"]
 description = "The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code."
 
@@ -40,7 +40,7 @@ fragment = true
 target = ".gspot/config/tsconfig.json"
 tool = ["tsc", "vue-tsc", "svelte-check", "next"]
 check = ["typescript/tsc", "vue/vue-tsc", "svelte/svelte-check", "nextjs/tsc"]
-scoped = true
+per_scope = true
 
 [[check]]
 name = "tsc"

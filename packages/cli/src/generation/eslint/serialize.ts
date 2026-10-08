@@ -25,8 +25,15 @@ function selectorSource(selector: EslintFileSelector): string {
  */
 export function eslintFilePatterns(input: EslintFileInputs): EslintFiles {
     const { tests, scripts, nodeFiles } = input;
-    const components = input.components.map(({ pattern }) => pattern);
     const source = eslintSourcePattern('javascript', 'typescript');
+    const matchesSource = pathMatcher([source]);
+    const selected = input.components.flatMap(({ configuration, tools }) =>
+        tools
+            .flatMap(({ eslint }) => eslint?.extensions ?? [])
+            .filter((extension) => !matchesSource(`component${extension}`))
+            .map((extension) => ({ pattern: `**/*${extension}`, configuration: configuration.name })),
+    );
+    const components = selected.map(({ pattern }) => pattern);
     const covered = pathMatcher([source, ...components]);
     const node = eslintNodePatterns(
         nodeFiles.filter((path) => !covered(path)),
@@ -37,10 +44,11 @@ export function eslintFilePatterns(input: EslintFileInputs): EslintFiles {
     const javascript = eslintSourcePattern('javascript');
     return {
         code,
+        fragmentFiles: components,
         typescriptSource: [typescript],
         typescript: [
             typescript,
-            ...input.components.map(({ pattern, configuration }): EslintFiles['typescript'][number] =>
+            ...selected.map(({ pattern, configuration }): EslintFiles['typescript'][number] =>
                 configuration === 'vue' || configuration === 'svelte'
                     ? [pattern, { component: configuration }]
                     : pattern,

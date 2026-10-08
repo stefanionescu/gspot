@@ -10,7 +10,9 @@ extensions = [".vue"]
 
 [files]
 extensions = [".vue"]
-kinds = ["source"]
+
+[set]
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
 
 [[tool]]
 name = "eslint-plugin-vue"
@@ -48,7 +50,6 @@ target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"
 fragment = true
-component_globs = ["**/*.vue"]
 
 [[tool_file]]
 source = "stylelint.fragment.json.eta"
@@ -56,7 +57,7 @@ target = ".gspot/config/stylelint.json"
 tool = "stylelint"
 required_tools = ["postcss-html"]
 fragment = true
-scoped = true
+per_scope = true
 
 [[check]]
 name = "vue-tsc"
@@ -77,6 +78,3 @@ help = "Read the first error vue-tsc prints and fix that file; later errors are 
 
 [required_eslint_rules]
 vue = ["vue/no-v-html", "vue/require-v-for-key", "vue/no-mutating-props", "vue/no-use-v-if-with-v-for"]
-
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }

@@ -27,8 +27,11 @@ export const settingNamespaceSchemas = {
         roles: z
             .strictObject({ roles: architectureRolesSchema })
             .shape['roles'].extend(
-                z.strictObject({ scripts: z.array(relativePath).optional(), stores: z.array(relativePath).optional() })
-                    .shape,
+                z.strictObject({
+                    routers: z.array(relativePath).optional(),
+                    scripts: z.array(relativePath).optional(),
+                    stores: z.array(relativePath).optional(),
+                }).shape,
             )
             .optional(),
     }),
@@ -156,7 +159,12 @@ export const settingNamespaceSchemas = {
             .optional(),
         sitemap_exclude: z.array(z.string()).optional(),
     }),
-    structure: z.strictObject({ reexports: z.string().optional() }),
+    structure: z.strictObject({
+        reexports: z
+            .string()
+            .and(z.literal(['none', 'index-only'], {}))
+            .optional(),
+    }),
     supabase: z.strictObject({
         functions_folder: relativePath.optional(),
         schemas: z.array(z.string()).optional(),
@@ -167,7 +175,13 @@ export const settingNamespaceSchemas = {
         xcode_project: z.union([z.literal(''), relativePath]).optional(),
         xcode_scheme: z.string().optional(),
     }),
-    'tools.codeql': z.strictObject({ languages: z.array(z.string()).optional(), suite: z.string().optional() }),
+    'tools.codeql': z.strictObject({
+        languages: z.array(z.string()).optional(),
+        suite: z
+            .string()
+            .and(z.literal(['security-extended', 'security-and-quality'], {}))
+            .optional(),
+    }),
     'tools.commitlint': z.strictObject({
         rules: toolsSchema.shape['commitlint'].unwrap().shape['rules'].unwrap().optional(),
         scopes: toolsSchema.shape['commitlint'].unwrap().shape['scopes'].unwrap().optional(),

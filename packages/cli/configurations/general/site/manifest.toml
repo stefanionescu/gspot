@@ -10,15 +10,12 @@ paths = ["_headers", "_redirects", "site.webmanifest", "sitemap.xml"]
 [files]
 filenames = ["_headers", "_redirects", "site.webmanifest", "sitemap.xml", "robots.txt"]
 extensions = [".svg"]
-kinds = ["source"]
 
 [[tool]]
 name = "linkinator"
 version = "8.1.0"
 npm = "linkinator"
-
-[[tool.replace]]
-file = "linkinator.config.json"
+replaces = ["linkinator.config.json"]
 
 [[tool]]
 name = "svgo"
@@ -32,7 +29,7 @@ npm = "purgecss"
 
 [[tool_file]]
 target = ".gspot/config/html-validate-built.json"
-scoped = true
+per_scope = true
 tool = "html-validate"
 check = "site/html-validate"
 rule_keys = ["rules"]
@@ -41,7 +38,7 @@ generated_header = false
 [[tool_file]]
 source = "purgecss.config.mjs.eta"
 target = ".gspot/config/purgecss.config.mjs"
-scoped = true
+per_scope = true
 tool = "purgecss"
 check = "site/purgecss"
 
@@ -165,7 +162,6 @@ title = "Optimize SVG assets"
 example = "An SVG containing removable editor metadata differs from optimized output. Run the configured SVGO formatter on its source, inspect the result, and rebuild before checking again."
 level = "recommended"
 stage = "commit"
-runs = "files"
 files = { extensions = [".svg"] }
 fix = ["svgo", "--quiet", "{files}"]
 summary = "Reports SVG byte reductions above tools.svgo.min_saving_percent, which defaults to 10 at level `recommended` and 0 at level `all`."
@@ -175,7 +171,7 @@ help = "Run svgo over the file."
 [[check]]
 name = "webmanifest"
 title = "Validate the web app manifest"
-example = "A web manifest referencing `icon-192.png` reports a missing icon when that output file is absent. Add the icon to the build or correct the manifest path, then rebuild."
+example = "A web manifest referencing `icon-192.png` reports a missing icon when no such file sits beside the manifest. Add the icon to the build or correct the manifest path, then rebuild."
 level = "recommended"
 stage = "commit"
 runs = "scope"

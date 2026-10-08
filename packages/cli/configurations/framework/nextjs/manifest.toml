@@ -17,7 +17,9 @@ dependencies = ["next"]
 
 [files]
 paths = ["**/next.config.js", "**/next.config.mjs", "**/next.config.ts", "next.config.js", "next.config.mjs", "next.config.ts"]
-kinds = ["source"]
+
+[set]
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
 
 [[tool]]
 name = "next"
@@ -37,24 +39,7 @@ target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"
 fragment = true
-
-[[tool_file.selectors]]
-selector = "ExportAllDeclaration"
-message = "Export values at their declaration instead of re-exporting them."
-when = { setting = "structure.reexports", value = "index-only" }
-ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
-
-[[tool_file.selectors]]
-selector = "ExportNamedDeclaration[source]"
-message = "Export values at their declaration instead of re-exporting them."
-when = { setting = "structure.reexports", value = "index-only" }
-ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
-
-[[tool_file.selectors]]
-selector = "ExportNamedDeclaration[declaration=null]"
-message = "Export values at their declaration instead of re-exporting them."
-when = { setting = "structure.reexports", value = "index-only" }
-ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
+selectors = [{ selector = "ExportAllDeclaration", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"] }, { selector = "ExportNamedDeclaration[source]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"] }, { selector = "ExportNamedDeclaration[declaration=null]", message = "Export values at their declaration instead of re-exporting them.", when = { setting = "structure.reexports", value = "index-only" }, ignores = ["**/index.*", "**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"] }]
 
 [[check]]
 name = "tsc"
@@ -116,6 +101,14 @@ summary = "Checks that Next.js and its lint packages use the same installed vers
 why = "A lint package a version behind flags what the framework allows and allows what it removed."
 help = "Move both packages to the same version."
 
+[required_eslint_rules]
+tsx = ["@next/next/no-html-link-for-pages", "@next/next/no-async-client-component"]
+
+[[eslint_rules_off]]
+rules = ["gspot/no-trivial-files"]
+files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
+reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
+
 [[naming.overrides]]
 paths = ["**/app/**", "**/pages/**"]
 categories = ["files"]
@@ -128,18 +121,6 @@ languages = ["typescript", "javascript"]
 categories = ["functions", "methods"]
 ignored_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
-
-[required_eslint_rules]
-tsx = ["@next/next/no-html-link-for-pages", "@next/next/no-async-client-component"]
-
-[[eslint_rules_off]]
-rules = ["gspot/no-trivial-files"]
-files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
-reason = "Next.js discovers route files by name, so each file can hold one export in its own folder."
-
-
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
 
 [[naming.overrides]]
 paths = ["**"]

@@ -28,15 +28,7 @@ winget = "errata-ai.Vale"
 scoop = "vale"
 github = { name = "errata-ai/vale", version = "v3.21.0" }
 suppression = { marker = "^<!--\\s*vale\\b", reason = "reason: (?<reason>\\S.*)", forbidden = true }
-
-[[tool.replace]]
-file = ".vale.ini"
-
-[[tool.replace]]
-file = "_vale.ini"
-
-[[tool.replace]]
-file = "vale.ini"
+replaces = [".vale.ini", "_vale.ini", "vale.ini"]
 
 [[tool_file]]
 target = ".gspot/config/vale.ini"

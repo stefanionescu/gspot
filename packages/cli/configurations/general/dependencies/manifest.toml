@@ -3,10 +3,6 @@ title = "Dependencies"
 always_selected = true
 description = "Dependency health: known advisories, one version for each dependency, exact pins, one package manager, and a lockfile that matches its manifest."
 
-[detect]
-project_files = ["package.json"]
-filenames = ["pyproject.toml", "Package.swift", "Cargo.toml", "go.mod", "Gemfile"]
-
 [files]
 filenames = ["package.json", "bun.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bunfig.toml", ".npmrc", "pnpm-workspace.yaml", "pyproject.toml", "uv.lock", "requirements*.txt", "Package.swift", "Package.resolved", "Cargo.toml", "Cargo.lock", "go.mod", "go.sum", "Gemfile.lock"]
 kinds = ["source", "generated"]
@@ -20,51 +16,14 @@ brew = "osv-scanner"
 github = { name = "google/osv-scanner", version = "v2.6.0" }
 winget = "Google.OSVScanner"
 scoop = "osv-scanner"
-
-[[tool.replace]]
-file = "osv-scanner.toml"
+replaces = ["osv-scanner.toml"]
 
 [[tool]]
 name = "syncpack"
 version = "15.3.3"
 npm = "syncpack"
 mise = "npm:syncpack"
-
-[[tool.replace]]
-file = ".syncpackrc"
-
-[[tool.replace]]
-file = ".syncpackrc.json"
-
-[[tool.replace]]
-file = ".syncpackrc.yaml"
-
-[[tool.replace]]
-file = ".syncpackrc.yml"
-
-[[tool.replace]]
-file = ".syncpackrc.ts"
-
-[[tool.replace]]
-file = ".syncpackrc.mjs"
-
-[[tool.replace]]
-file = ".syncpackrc.js"
-
-[[tool.replace]]
-file = ".syncpackrc.cjs"
-
-[[tool.replace]]
-file = "syncpack.config.js"
-
-[[tool.replace]]
-file = "syncpack.config.cjs"
-
-[[tool.replace]]
-file = "syncpack.config.mjs"
-
-[[tool.replace]]
-file = "syncpack.config.ts"
+replaces = [".syncpackrc", ".syncpackrc.json", ".syncpackrc.yaml", ".syncpackrc.yml", ".syncpackrc.ts", ".syncpackrc.mjs", ".syncpackrc.js", ".syncpackrc.cjs", "syncpack.config.js", "syncpack.config.cjs", "syncpack.config.mjs", "syncpack.config.ts"]
 
 [[tool_file]]
 target = ".gspot/config/osv-scanner.toml"

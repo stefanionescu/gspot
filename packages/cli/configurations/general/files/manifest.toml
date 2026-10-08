@@ -6,7 +6,6 @@ description = "Checks JSON, YAML, TOML, XML, and related formats. Its tool files
 
 [files]
 extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".xml"]
-kinds = ["source"]
 
 [[tool]]
 name = "taplo"
@@ -17,12 +16,7 @@ brew = "taplo"
 cargo = "taplo-cli"
 # No npm pin: the npm build of Taplo checks no file on Windows, so every platform takes the native release.
 github = { name = "tamasfe/taplo", version = "0.10.0" }
-
-[[tool.replace]]
-file = "taplo.toml"
-
-[[tool.replace]]
-file = ".taplo.toml"
+replaces = ["taplo.toml", ".taplo.toml"]
 
 [[tool]]
 name = "yamllint"
@@ -30,15 +24,7 @@ version = "1.38.0"
 mise = "pipx:yamllint"
 pypi = "yamllint"
 brew = "yamllint"
-
-[[tool.replace]]
-file = ".yamllint"
-
-[[tool.replace]]
-file = ".yamllint.yml"
-
-[[tool.replace]]
-file = ".yamllint.yaml"
+replaces = [".yamllint", ".yamllint.yml", ".yamllint.yaml"]
 
 [[tool]]
 name = "v8r"
@@ -47,6 +33,7 @@ mise = "npm:v8r"
 npm = "v8r"
 
 # v8r imports this optional peer when it loads ajv-draft-04. Private tool projects must install it.
+
 [[tool]]
 name = "ajv"
 kind = "library"
@@ -66,7 +53,7 @@ tool = "taplo"
 [[tool_file]]
 target = ".gspot/config/yamllint.yml"
 tool = "yamllint"
-scoped = true
+per_scope = true
 rule_keys = ["rules"]
 
 [[tool_file]]
@@ -79,7 +66,6 @@ title = "Parse TOML files"
 example = "The TOML line `enabled =` lacks a value and reports a parse error. Use `enabled = true` when the setting is a boolean."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["taplo", "check", "--config", "{tool_file:taplo}", "--colors", "never", "--no-schema", "{files}"]
 files = { extensions = [".toml"] }
 output = { format = "regex", pattern = "^\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML." }
@@ -93,7 +79,6 @@ title = "Format TOML files"
 example = "The TOML assignment `enabled=true` differs from the configured formatter output. Run the formatter to obtain `enabled = true` and rerun."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
 fix = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "{files}"]
 files = { extensions = [".toml"] }
@@ -108,7 +93,6 @@ title = "Lint YAML files"
 example = "Two `enabled` keys in the same YAML mapping report a duplicate-key finding. Keep the one intended value and remove the duplicate."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["yamllint", "-c", "{tool_file:yamllint}", "-f", "parsable", "-s", "{files}"]
 files = { extensions = [".yaml", ".yml"] }
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$" }
@@ -122,7 +106,6 @@ title = "Validate configuration schemas"
 example = "A governed JSON file with a string where its selected schema requires a boolean reports a schema mismatch. Replace the value with the intended boolean and rerun against the same schema."
 level = "recommended"
 stage = "push"
-runs = "files"
 needs = ["network"]
 command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
 env = { V8R_CONFIG_FILE = "{tool_file:v8r}" }
@@ -138,7 +121,6 @@ title = "Validate XML"
 example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["xmllint", "--noout", "{files}"]
 files = { extensions = [".xml"] }
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$" }
@@ -148,6 +130,7 @@ help = "Fix the line xmllint names."
 
 [[setting]]
 name = "tools.yamllint.rules"
+off_values = ["disable"]
 type = "table"
 direction = "rule-options"
 default = {}

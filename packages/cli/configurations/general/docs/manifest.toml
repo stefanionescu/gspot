@@ -14,17 +14,12 @@ mise = "lychee"
 brew = "lychee"
 cargo = "lychee"
 github = { name = "lycheeverse/lychee", version = "lychee-v0.24.2" }
-
-[[tool.replace]]
-file = "lychee.toml"
-
-[[tool.replace]]
-file = ".lycheeignore"
+replaces = ["lychee.toml", ".lycheeignore"]
 
 [[tool_file]]
 target = ".gspot/config/lychee.toml"
 tool = "lychee"
-scoped = true
+per_scope = true
 
 [[check]]
 name = "lychee"
@@ -32,7 +27,6 @@ title = "Check local documentation links"
 example = "The Markdown link `[Setup](missing.md)` reports a missing local target when `missing.md` does not exist. Point it at the actual setup guide or add the intended document."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["lychee", "--config", "{tool_file:lychee}", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 summary = "Checks that local documentation links reach existing files and valid anchor or text fragments."
@@ -45,7 +39,6 @@ title = "Check external documentation links"
 example = "A documentation link returning HTTP 404 reports a broken external destination. Replace it with a verified current URL or remove the obsolete link, then rerun with network access."
 level = "recommended"
 stage = "manual"
-runs = "files"
 needs = ["network"]
 command = ["lychee", "--config", "{tool_file:lychee}", "--root-dir", "{root}", "--scheme", "http", "--scheme", "https", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }

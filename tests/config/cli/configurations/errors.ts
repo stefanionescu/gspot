@@ -23,9 +23,7 @@ export const INVALID_VERSION_FLOORS = ['future', '4.4-beta', '4.4.0.1234'];
 export const CONSUMER_DECLARATION = `[[tool_file]]
 target = ".gspot/config/example.toml"
 tool = ["example"]
-[tool_file.pointer]
-path = "example.toml"
-body = "config = {config}"
+pointer = { path = "example.toml", body = "config = {config}" }
 `;
 
 /** A system executable has no downloaded package or version pin. */
@@ -42,13 +40,9 @@ export const ROOT_SELECTOR_DECLARATION = `[[tool_file]]
 target = ".gspot/config/eslint.config.mjs"
 source = "eslint.config.mjs.eta"
 pointer = { path = "eslint.config.mjs", body = "export { default } from {target_module};" }
-[[tool_file.selectors]]
-selector = "ExportAllDeclaration"
-message = "Import from the declaration."
-when = { setting = "structure.reexports", value = "none" }
+selectors = [{ selector = "ExportAllDeclaration", message = "Import from the declaration.", when = { setting = "structure.reexports", value = "none" } }]
 `;
 
 export const ROOT_SELECTOR_REFUSALS = [
-    ['component_globs = ["**/*.vue"]', 'declares code files, which only a fragment adds.'],
     ['imports = "eslint.imports.js.eta"', 'declares imports, which only a fragment renders.'],
 ] as const;

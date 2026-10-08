@@ -1,5 +1,6 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
@@ -9,6 +10,7 @@ import {
     FRAMEWORK_FILES,
     REMOVED_ZOD_RULES,
     ALL_SECURITY_RULES,
+    COMPONENT_PARSER_FILES,
 } from '#tests/config/cli/generation/eslint/framework.ts';
 
 test.each(['recommended', 'all'] as const)(
@@ -58,3 +60,102 @@ test('Next.js server-only rules use the retained explicit server paths', async (
         ),
     ).toStrictEqual([[], [1], [1]]);
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s tRPC procedure checks use declared router roles without crossing scopes',
+    async (level) => {
+        await using sandbox = await testdir();
+        const checked = new Set([
+            'custom/action.ts',
+            'routers/default.ts',
+            'child/handlers/action.ts',
+            'inherited/routers/action.ts',
+        ]);
+        const unchecked = [
+            'outside/action.ts',
+            'child/custom/action.ts',
+            'inherited/custom/action.ts',
+            'plain/routers/action.ts',
+        ];
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['trpc', 'typescript'], {
+                level,
+                tables: `[agent_rules]
+enabled = false
+[architecture.roles]
+routers = ["custom/**"]
+[scope.child.architecture.roles]
+routers = ["handlers/**"]
+[scope.inherited]
+[scope.plain]
+removed_configurations = ["trpc"]
+`,
+            }),
+            'package.json': '{"private":true,"type":"module"}',
+            'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}',
+            ...Object.fromEntries(
+                [...checked, ...unchecked].map((file) => [
+                    file,
+                    'procedure.query(() => 1);\nprocedure.input(schema).query(() => 1);\n',
+                ]),
+            ),
+        });
+        const eslint = await createEslint(sandbox.path);
+        for (const file of [...checked, ...unchecked]) {
+            const results = await eslint.lintFiles([file]);
+            expect(
+                results.flatMap((result) => result.messages).filter(({ fatal }) => fatal),
+                file,
+            ).toStrictEqual([]);
+            expect(
+                results
+                    .flatMap((result) => result.messages)
+                    .filter(
+                        ({ message }) =>
+                            message ===
+                            'Give the procedure an input schema before its resolver, even when the input is nothing.',
+                    )
+                    .map(({ line }) => line),
+                file,
+            ).toStrictEqual(level === 'all' && checked.has(file) ? [1] : []);
+        }
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s component extension declarations select native parsers without plain-scope rule leakage',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['javascript', 'typescript', 'vue', 'svelte', 'astro'], {
+                level,
+                tables: '[scope.app]\n[scope.plain]\nremoved_configurations = ["vue", "svelte", "astro"]\n',
+            }),
+            'package.json': '{"private":true,"type":"module"}',
+            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*"]}',
+            ...COMPONENT_PARSER_FILES,
+            ...Object.fromEntries(Object.entries(COMPONENT_PARSER_FILES).map(([path, text]) => [`app/${path}`, text])),
+            'plain/Card.vue': COMPONENT_PARSER_FILES['Card.vue'],
+            'plain/source.js': COMPONENT_PARSER_FILES['source.js'],
+        });
+        const eslint = await createEslint(sandbox.path);
+        for (const prefix of ['', 'app/']) {
+            const results = await eslint.lintFiles(
+                Object.keys(COMPONENT_PARSER_FILES).map((path) => `${prefix}${path}`),
+            );
+            expect(results.flatMap(({ messages }) => messages.filter(({ fatal }) => fatal))).toStrictEqual([]);
+            const vue = (await eslint.calculateConfigForFile(`${prefix}Card.vue`)) as RuntimeConfiguration;
+            expect(vue.rules['vue/no-v-html']).toBeDefined();
+        }
+        const plain = (await eslint.calculateConfigForFile('plain/Card.vue')) as RuntimeConfiguration;
+        expect(
+            Object.entries(plain.rules).filter(([name, rule]) => name.startsWith('vue/') && rule[0] !== 0),
+        ).toStrictEqual([]);
+        const script = (await eslint.calculateConfigForFile('plain/source.js')) as RuntimeConfiguration;
+        expect(
+            Object.entries(script.rules).filter(
+                ([name, rule]) => /^(?:vue|svelte|astro)\//u.test(name) && rule[0] !== 0,
+            ),
+        ).toStrictEqual([]);
+    },
+);

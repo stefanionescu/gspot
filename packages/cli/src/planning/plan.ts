@@ -19,26 +19,6 @@ function isStageWanted(filter: PlanOptions['stage'], stage: Stage): boolean {
     return filter === stage;
 }
 
-// The checks any scope references from another configuration, once each, unless the root already plans them.
-function referencedEntries(session: Session, planned: PlanEntry[]): PlanEntry[] {
-    const seen = new Set(planned.map((entry) => entry.check.name));
-    const referenced: PlanEntry[] = [];
-    const candidates = session.scopes.flatMap((scope) =>
-        scope.selected.flatMap((manifest) => {
-            const references = manifest.configuration.borrowed_checks;
-            return manifest.checks
-                .filter((check) => references.includes(check.name))
-                .map((check) => ({ check, manifest }));
-        }),
-    );
-    for (const entry of candidates) {
-        if (seen.has(entry.check.name)) continue;
-        seen.add(entry.check.name);
-        referenced.push(entry);
-    }
-    return referenced;
-}
-
 function entriesFor(session: Session, scope: ScopeSelection): PlanEntry[] {
     const isRoot = scope.scope.path === '';
     const entries = scope.selected.flatMap((manifest) =>
@@ -47,9 +27,8 @@ function entriesFor(session: Session, scope: ScopeSelection): PlanEntry[] {
             .filter((entry) => isRoot || !runsAtRoot(manifest, entry.check)),
     );
     if (!isRoot) return entries;
-    const referenced = referencedEntries(session, entries);
     const own = Object.values(session.policyFiles.policy.check).map((entry) => ({ check: entry }));
-    return [...entries, ...referenced, ...own];
+    return [...entries, ...own];
 }
 
 function isWanted(check: CheckDeclaration, options: PlanOptions): boolean {

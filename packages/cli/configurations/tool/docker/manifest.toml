@@ -1,6 +1,5 @@
 [configuration]
 title = "Docker"
-requires = ["files"]
 description = "Dockerfiles and Compose files: hadolint, a Compose file that parses, an ignore file beside every Dockerfile, and Trivy over the configuration."
 
 [detect]
@@ -8,7 +7,6 @@ paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compo
 
 [files]
 paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile", "**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml", "**/.dockerignore"]
-kinds = ["source"]
 
 [[tool]]
 name = "hadolint"
@@ -17,12 +15,7 @@ mise = "hadolint"
 brew = "hadolint"
 github = { name = "hadolint/hadolint", version = "v2.14.0" }
 scoop = "hadolint"
-
-[[tool.replace]]
-file = ".hadolint.yaml"
-
-[[tool.replace]]
-file = ".hadolint.yml"
+replaces = [".hadolint.yaml", ".hadolint.yml"]
 
 [[tool]]
 name = "trivy"
@@ -30,12 +23,7 @@ version = "0.69.3"
 mise = "trivy"
 brew = "trivy"
 github = { name = "aquasecurity/trivy", version = "v0.69.3" }
-
-[[tool.replace]]
-file = "trivy.yaml"
-
-[[tool.replace]]
-file = ".trivyignore"
+replaces = ["trivy.yaml", ".trivyignore"]
 
 [[tool]]
 name = "docker"
@@ -44,23 +32,23 @@ system = true
 [[tool_file]]
 target = ".gspot/config/hadolint.yml"
 tool = "hadolint"
-scoped = true
+per_scope = true
 rule_keys = ["ignored"]
 
 [[tool_file]]
 target = ".gspot/config/trivy.yml"
 tool = "trivy"
-scoped = true
+per_scope = true
 
 [[tool_file]]
 target = ".gspot/config/trivyignore"
 tool = "trivy"
-scoped = true
+per_scope = true
 
 [[tool_file]]
 target = ".gspot/config/trivy-findings.tpl"
 tool = "trivy"
-scoped = true
+per_scope = true
 generated_header = false
 
 [[check]]

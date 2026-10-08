@@ -1,3 +1,4 @@
+import type { Manifest } from '#cli/types/configurations.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { EslintAllRules } from '#cli/types/parsers/eslint.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
@@ -117,7 +118,7 @@ export type EslintModule = {
 
 /** Selected component patterns, detected Node files, and authored test or script patterns. */
 export type EslintFileInputs = {
-    components: { pattern: string; configuration: string }[];
+    components: Manifest[];
     tests: string[];
     scripts: string[];
     nodeFiles: string[];
@@ -126,6 +127,7 @@ export type EslintFileInputs = {
 /** Shared file patterns for code, type-aware parsing, and test or script intersections. */
 export type EslintFiles = {
     code: string[];
+    fragmentFiles: string[];
     typescriptSource: string[];
     typescript: (EslintFileSelector | EslintFileSelector[])[];
     javascript: string[];

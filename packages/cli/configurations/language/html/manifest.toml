@@ -3,12 +3,8 @@ title = "HTML"
 requires = ["format"]
 description = "HTML files: html-validate for structure and accessibility, no inline script or handler, and templates that hold placeholders in place of copy."
 
-[detect]
-extensions = [".html", ".htm"]
-
 [files]
 extensions = [".html", ".htm"]
-kinds = ["source"]
 
 [[tool]]
 name = "html-validate"
@@ -16,15 +12,7 @@ suppression = { marker = "^<!--\\s*\\[?html-validate-disable(?:-next|-block)?(?=
 version = "11.6.1"
 min_version = "11.6.1"
 npm = "html-validate"
-
-[[tool.replace]]
-file = ".htmlvalidate.json"
-
-[[tool.replace]]
-file = ".htmlvalidate.js"
-
-[[tool.replace]]
-file = ".htmlvalidate.cjs"
+replaces = [".htmlvalidate.json", ".htmlvalidate.js", ".htmlvalidate.cjs"]
 
 [[tool_file]]
 target = ".gspot/config/html-validate-source.json"

@@ -48,16 +48,7 @@ function configurationChecks(manifest: Manifest): string {
     if (manifest.checks.length === 0)
         return 'This configuration adds tool configuration or agent rules and has no checks of its own.';
     const rows = manifest.checks.map((check) => {
-        const owner = check.name.slice(0, check.name.indexOf('/'));
-        const borrowed = manifest.configuration.borrowed_checks.includes(check.name)
-            ? ' (' + owner + ' configuration)'
-            : '';
-        return [
-            `[\`${check.name}\`](/reference/checks/${check.name}/)${borrowed}`,
-            check.stage,
-            check.level,
-            cell(check.summary),
-        ];
+        return [`[\`${check.name}\`](/reference/checks/${check.name}/)`, check.stage, check.level, cell(check.summary)];
     });
     return table(['Check', 'Stage', 'Level', 'What it finds'], rows);
 }

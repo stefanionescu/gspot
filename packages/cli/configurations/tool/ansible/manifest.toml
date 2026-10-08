@@ -1,14 +1,9 @@
 [configuration]
 title = "Ansible"
-requires = ["files"]
 description = "Ansible playbooks, roles, and collections checked by ansible-lint."
-
-[detect]
-paths = ["ansible.cfg", "**/ansible.cfg", "**/galaxy.yml", "**/requirements.yml", "**/roles/*/tasks/main.yml"]
 
 [files]
 paths = ["ansible.cfg", "**/ansible.cfg", "**/galaxy.yml", "**/requirements.yml", "**/roles/*/tasks/main.yml"]
-kinds = ["source"]
 
 [[tool]]
 name = "ansible-lint"

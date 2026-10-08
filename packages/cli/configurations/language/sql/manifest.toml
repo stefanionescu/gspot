@@ -1,15 +1,11 @@
 [configuration]
 title = "SQL"
-requires = ["format", "structure"]
+requires = ["format"]
 suggests = ["naming"]
 description = "SQLFluff checks layout and style in the project dialect. At all, SQL checks line comments, file length, and PostgreSQL function structure."
 
-[detect]
-extensions = [".sql", ".pgsql", ".psql"]
-
 [files]
 extensions = [".sql", ".pgsql", ".psql"]
-kinds = ["source"]
 
 [[tool]]
 name = "sqlfluff"
@@ -20,12 +16,7 @@ min_version = "3.0.0"
 pypi = "sqlfluff"
 mise = "pipx:sqlfluff"
 brew = "sqlfluff"
-
-[[tool.replace]]
-file = ".sqlfluff"
-
-[[tool.replace]]
-file = ".sqlfluffignore"
+replaces = [".sqlfluff", ".sqlfluffignore"]
 
 [[tool.replace]]
 file = "pyproject.toml"
@@ -45,7 +36,7 @@ shared = true
 [[tool_file]]
 target = ".gspot/config/sqlfluff.cfg"
 tool = "sqlfluff"
-scoped = true
+per_scope = true
 rule_keys = ["sqlfluff.rules", "sqlfluff.exclude_rules", "sqlfluff:rules"]
 
 [[check]]
@@ -62,24 +53,6 @@ summary = "Lints every SQL file for layout, capitalization, aliasing, and ambigu
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
 help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule `<code>` --reason \"`<why>`\"."
 
-[[setting]]
-name = "tools.sqlfluff.dialect"
-type = "string"
-direction = "neutral"
-default = "ansi"
-summary = "The sqlfluff dialect; a database configuration sets it."
-
-[setting.validation]
-pattern = '^[a-z][a-z0-9_]*$'
-message = "Use a SQLFluff dialect label, such as postgres or sqlite."
-
-[[setting]]
-name = "limits.sql.file_lines"
-type = "number"
-direction = "ceiling"
-default = 400
-summary = "The most code lines a SQL file may have."
-
 [[check]]
 name = "trivial-functions"
 title = "Check trivial SQL functions and parameters"
@@ -89,3 +62,18 @@ stage = "commit"
 summary = "For the postgres dialect, reports trivial SQL and PL/pgSQL functions and excessive declared input parameters."
 why = "Unnecessary functions add indirection; excessive parameters obscure responsibilities."
 help = "Inline unnecessary functions. If a required API needs one, run `gspot ignore sql/trivial-functions --paths <file> --reason <why>`. Reduce parameters or configure limits.sql.function_parameters."
+
+[[setting]]
+name = "tools.sqlfluff.dialect"
+type = "string"
+direction = "neutral"
+default = "ansi"
+summary = "The sqlfluff dialect; a database configuration sets it."
+validation = { pattern = "^[a-z][a-z0-9_]*$", message = "Use a SQLFluff dialect label, such as postgres or sqlite." }
+
+[[setting]]
+name = "limits.sql.file_lines"
+type = "number"
+direction = "ceiling"
+default = 400
+summary = "The most code lines a SQL file may have."

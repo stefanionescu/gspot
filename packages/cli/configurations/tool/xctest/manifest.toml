@@ -10,12 +10,11 @@ paths = ["**/*.xctestplan"]
 [files]
 paths = ["**/*Tests/**/*.swift"]
 filenames = ["*.xctestplan"]
-kinds = ["source"]
 
 [[tool_file]]
 target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
-scoped = true
+per_scope = true
 fragment = true
 pointer = { path = ".swiftlint.yml", directories = ["**/*Tests"], template = "swiftlint.yml.eta" }
 
@@ -25,7 +24,6 @@ title = "Explain skipped and disabled tests"
 example = "In a Swift test, `throw XCTSkip()` reports a missing reason. Restore the test, or supply a nonempty reason such as `throw XCTSkip(\"Requires the hardware test device\")`. The check requires a reason; it does not validate when the test will be enabled."
 level = "recommended"
 stage = "commit"
-runs = "files"
 files = { tags = ["swift-test"] }
 summary = "Checks that skip calls and disabled traits name a nonempty reason, and unavailable tests carry an explanation."
 why = "A test turned off with no reason stays off, because nobody knows when it is safe to turn on."
@@ -37,7 +35,6 @@ title = "Avoid sleeps in tests"
 example = "A test using a fixed sleep to wait for asynchronous work reports a timing finding. Wait for the actual completion expectation or poll the required condition with a bounded timeout."
 level = "all"
 stage = "commit"
-runs = "files"
 files = { tags = ["swift-test"] }
 summary = "Refuses sleep calls in test files."
 why = "A sleep makes a test slow when it passes and flaky when the machine is slower than the number."

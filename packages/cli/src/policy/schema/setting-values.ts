@@ -4,6 +4,9 @@ import { settingNamespaceSchemas } from '#cli/policy/schema/namespaces.ts';
 export const settingValueSchemas = {
     'architecture.modules': settingNamespaceSchemas['architecture'].shape['modules'].unwrap(),
     'architecture.roles': settingNamespaceSchemas['architecture'].shape['roles'].unwrap(),
+    'architecture.roles.routers': settingNamespaceSchemas['architecture'].shape['roles']
+        .unwrap()
+        .shape['routers'].unwrap(),
     'architecture.roles.scripts': settingNamespaceSchemas['architecture'].shape['roles']
         .unwrap()
         .shape['scripts'].unwrap(),

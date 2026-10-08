@@ -11,7 +11,9 @@ extensions = [".astro"]
 [files]
 extensions = [".astro"]
 filenames = ["astro.config.mjs", "astro.config.ts"]
-kinds = ["source"]
+
+[set]
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
 
 [[tool]]
 name = "eslint-plugin-astro"
@@ -27,6 +29,7 @@ version = "6.10.2"
 npm = "eslint-plugin-jsx-a11y"
 
 # The astro-check binary drops the first two words it is given, so every command passes "astro check" first.
+
 [[tool]]
 name = "astro-check"
 version = "0.9.10"
@@ -46,12 +49,6 @@ target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"
 fragment = true
-component_globs = ["**/*.astro"]
-
-[[eslint_rules_off]]
-rules = ["gspot/no-trivial-files"]
-files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
-reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."
 
 [[check]]
 name = "astro-check"
@@ -72,5 +69,7 @@ help = "Read the first error astro check prints and fix that component; later er
 [required_eslint_rules]
 astro = ["astro/valid-compile", "astro/no-set-html-directive", "astro/jsx-a11y/alt-text"]
 
-[set]
-"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
+[[eslint_rules_off]]
+rules = ["gspot/no-trivial-files"]
+files = ["**/*.astro", "**/*.astro/*.ts", "**/*.astro/*.js"]
+reason = "A component is markup, never a file that only forwards: a script that only imports a module is how Astro bundles client code, and Astro reads the props of a component from the Props type in its own frontmatter."

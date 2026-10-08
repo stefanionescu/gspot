@@ -13,63 +13,7 @@ name = "prettier"
 crash_pattern = "\\[error\\] (?:No parser|Cannot find|Invalid)"
 version = "3.8.1"
 npm = "prettier"
-
-[[tool.replace]]
-file = ".prettierrc"
-
-[[tool.replace]]
-file = ".prettierrc.json"
-
-[[tool.replace]]
-file = ".prettierrc.yml"
-
-[[tool.replace]]
-file = ".prettierrc.yaml"
-
-[[tool.replace]]
-file = ".prettierrc.json5"
-
-[[tool.replace]]
-file = ".prettierrc.js"
-
-[[tool.replace]]
-file = "prettier.config.js"
-
-[[tool.replace]]
-file = ".prettierrc.ts"
-
-[[tool.replace]]
-file = "prettier.config.ts"
-
-[[tool.replace]]
-file = ".prettierrc.mjs"
-
-[[tool.replace]]
-file = "prettier.config.mjs"
-
-[[tool.replace]]
-file = ".prettierrc.mts"
-
-[[tool.replace]]
-file = "prettier.config.mts"
-
-[[tool.replace]]
-file = ".prettierrc.cjs"
-
-[[tool.replace]]
-file = "prettier.config.cjs"
-
-[[tool.replace]]
-file = ".prettierrc.cts"
-
-[[tool.replace]]
-file = "prettier.config.cts"
-
-[[tool.replace]]
-file = ".prettierrc.toml"
-
-[[tool.replace]]
-file = ".prettierignore"
+replaces = [".prettierrc", ".prettierrc.json", ".prettierrc.yml", ".prettierrc.yaml", ".prettierrc.json5", ".prettierrc.js", "prettier.config.js", ".prettierrc.ts", "prettier.config.ts", ".prettierrc.mjs", "prettier.config.mjs", ".prettierrc.mts", "prettier.config.mts", ".prettierrc.cjs", "prettier.config.cjs", ".prettierrc.cts", "prettier.config.cts", ".prettierrc.toml", ".prettierignore"]
 
 [[tool.replace]]
 file = "package.json"
@@ -89,9 +33,7 @@ npm = { name = "editorconfig-checker", version = "7.0.0" }
 mise = "aqua:editorconfig-checker/editorconfig-checker"
 brew = "editorconfig-checker"
 github = { name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0" }
-
-[[tool.replace]]
-file = ".editorconfig"
+replaces = [".editorconfig"]
 
 [[tool_file]]
 source = "editorconfig.eta"
@@ -102,11 +44,7 @@ tool = ["ec", "prettier"]
 target = ".gspot/config/prettier.json"
 tool = "prettier"
 generated_header = false
-
-[tool_file.pointer]
-path = "prettier.config.mjs"
-template = "pointer.mjs.eta"
-when = { configuration = "javascript" }
+pointer = { path = "prettier.config.mjs", template = "pointer.mjs.eta", when = { configuration = "javascript" } }
 
 [[tool_file]]
 source = "prettierignore.eta"
@@ -125,7 +63,6 @@ title = "Format code and documents"
 example = "A selected JavaScript file containing `const value={enabled:true};` differs from the configured Prettier output. Run the formatter and retain its spacing and wrapping changes before rerunning."
 level = "recommended"
 stage = "commit"
-runs = "files"
 ignore_file = ".gspot/config/prettierignore"
 command = ["prettier", "--check", "--config", "{tool_file:prettier}", "--ignore-path", ".gspot/config/prettierignore", "--log-level", "warn", "{files}"]
 exit_codes = [1]
@@ -141,7 +78,6 @@ title = "Check EditorConfig formatting"
 example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["ec", "-no-color", "-disable-indent-size", "{files}"]
 tool = "ec"
 files = { paths = ["**"] }
@@ -156,6 +92,7 @@ type = "string"
 direction = "neutral"
 default = "space"
 summary = "What one indent level is made of: space or tab."
+validation = { enum = ["space", "tab"] }
 
 [[setting]]
 name = "format.indent_width"
@@ -177,6 +114,7 @@ type = "string"
 direction = "neutral"
 default = "lf"
 summary = "The line ending every file uses: lf or crlf."
+validation = { enum = ["lf", "crlf"] }
 
 [[setting]]
 name = "format.final_newline"
@@ -191,6 +129,7 @@ type = "string"
 direction = "neutral"
 default = "single"
 summary = "single or double, for the languages where a formatter chooses."
+validation = { enum = ["single", "double"] }
 
 [[setting]]
 name = "format.trailing_commas"
@@ -198,6 +137,7 @@ type = "string"
 direction = "neutral"
 default = "all"
 summary = "Where trailing commas go: all, es5, or none."
+validation = { enum = ["all", "es5", "none"] }
 
 [[setting]]
 name = "format.semicolons"

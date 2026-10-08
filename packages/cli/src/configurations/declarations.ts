@@ -6,15 +6,14 @@ import { CONFIG_PREFIX, CONFIGURATION_RULES_FOLDER } from '#cli/config/configura
 import type { Manifest, OwnedCheck, RuleSource, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
 /**
- * Every declared check by ID, with the configuration that ships it. Borrowed checks retain their original owner.
+ * Every declared check by ID, with the configuration that ships it.
  * @param manifests the manifests to index
  * @returns the declared checks by ID
  */
 export function allChecks(manifests: Iterable<Manifest>): Map<string, OwnedCheck> {
     const checks = new Map<string, OwnedCheck>();
     for (const manifest of manifests) {
-        const owned = manifest.checks.filter((check) => !manifest.configuration.borrowed_checks.includes(check.name));
-        for (const check of owned) {
+        for (const check of manifest.checks) {
             if (checks.has(check.name)) throw new Error(`Duplicate check identity: ${check.name}`);
             checks.set(check.name, { check, configuration: manifest });
         }
@@ -29,7 +28,7 @@ export function allChecks(manifests: Iterable<Manifest>): Map<string, OwnedCheck
  * @returns the path of the generated tool file
  */
 export function targetInScope(scope: string, toolFile: ToolFileDeclaration): string {
-    if (scope === '' || !toolFile.scoped) return toolFile.target;
+    if (scope === '' || !toolFile.per_scope) return toolFile.target;
     if (toolFile.target.startsWith(CONFIG_PREFIX))
         return posix.join(CONFIG_PREFIX, scope, toolFile.target.slice(CONFIG_PREFIX.length));
     return `${scope}/${toolFile.target}`;

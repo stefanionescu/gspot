@@ -11,9 +11,7 @@ name = "jscpd"
 version = "5.2.0"
 npm = "jscpd"
 mise = "npm:jscpd"
-
-[[tool.replace]]
-file = ".jscpd.json"
+replaces = [".jscpd.json"]
 
 [[tool_file]]
 target = ".gspot/config/jscpd.json"

@@ -49,8 +49,11 @@ export type ToolFileDeclaration = ParsedManifest['toolFiles'][number];
 /** A complete generated file, with its Eta source resolved by the manifest schema. */
 export type GeneratedToolFile = Extract<ToolFileDeclaration, { fragment: false }>;
 
-/** Validated execution variants. Repository-defined commands do not require reference examples. */
-export type CheckDeclaration = ExecutionFields<Defined<ParsedCheck>> & { example?: string };
+/** Validated execution variants. Repository-defined commands do not require titles or reference examples. */
+export type CheckDeclaration = Omit<ExecutionFields<Defined<ParsedCheck>>, 'title'> & {
+    title?: string;
+    example?: string;
+};
 
 /** One [[check]] entry as written. */
 export type ParsedCheck = ParsedManifest['checks'][number];

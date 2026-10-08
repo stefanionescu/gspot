@@ -1,5 +1,5 @@
 {
-    "openRecords": 761,
+    "openRecords": 738,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 761,
+        "openRecords": 738,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 68,
-                "unresolvedAssignments": 223
+                "completedAssignments": 75,
+                "unresolvedAssignments": 216
             },
             {
                 "id": "python",
@@ -589,8 +589,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 14,
-                "unresolvedAssignments": 25
+                "completedAssignments": 19,
+                "unresolvedAssignments": 20
             },
             {
                 "id": "javascript-web",
@@ -696,8 +696,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 6,
-                "unresolvedAssignments": 93
+                "completedAssignments": 10,
+                "unresolvedAssignments": 89
             },
             {
                 "id": "swift-bash-sql",
@@ -786,8 +786,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 15,
-                "unresolvedAssignments": 67
+                "completedAssignments": 31,
+                "unresolvedAssignments": 51
             },
             {
                 "id": "frameworks-platforms",
@@ -925,8 +925,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 7,
-                "unresolvedAssignments": 124
+                "completedAssignments": 17,
+                "unresolvedAssignments": 114
             },
             {
                 "id": "test-quality",
@@ -1542,8 +1542,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 25,
-                "unresolvedAssignments": 107
+                "completedAssignments": 27,
+                "unresolvedAssignments": 105
             },
             {
                 "id": "installation-docs",
@@ -1687,8 +1687,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 53,
-                "unresolvedAssignments": 84
+                "completedAssignments": 54,
+                "unresolvedAssignments": 83
             },
             {
                 "id": "policy-file",
@@ -1950,8 +1950,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 28,
-                "unresolvedAssignments": 31
+                "completedAssignments": 29,
+                "unresolvedAssignments": 30
             },
             {
                 "id": "names",
@@ -2164,13 +2164,14 @@
         "areas/checks/032": {
             "status": "partial",
             "owner": "main",
-            "commit": null,
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
                 "Evidence ab56c1858ce26473.",
                 "Evidence 249c0b15a5538cd5.",
                 "Evidence f706f04fbb49307e.",
                 "Evidence 7bd6261850b418f3.",
-                "Evidence 4f93bbab82bba503."
+                "Evidence 4f93bbab82bba503.",
+                "Duplicate Bash/Swift implementations and identical_function_lines are absent; shared Sonar rule template uses limits.duplication.min_lines."
             ],
             "additionalChanges": [
                 {
@@ -2187,23 +2188,32 @@
                     "commit": null,
                     "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."]
                 }
-            ]
+            ],
+            "remaining": "Custom duplicate implementations and identical_function_lines deleted; native Sonar reads limits.duplication.min_lines directly. No fresh jscpd/native JS diagnostic replay in this report; whole native acceptance is not claimed."
         },
         "areas/checks/034": {
             "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Existing safety/embeds checks/constants/registrations and safety_owners remain. Semgrep1.178.0 decisive probe misclassifies same-line/shadowed traps, misses quoted mktemp+braced substitution, and reports trap rather than removal line. No passing replacement or prescribed fallback exists."
+            ],
+            "remaining": "Pinned Semgrep counterexamples misclassify safe/unsafe traps, local shadowing and quoted/braced mktemp. No prescribed fallback; existing checks remain."
         },
         "areas/checks/035": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 0247a3dd7864c686.",
+                "Evidence 22f91979c2b117aa.",
+                "Native SwiftLint replaces wrapper/custom docs owner; stale custom_rules capture deleted. Current generated YAML accepted by pinned SwiftLint; exact matching prior native docs fixtures and formatter Eta permit bounded reuse only.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-template-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."]
                 }
             ]
@@ -2218,10 +2228,14 @@
             ]
         },
         "areas/checks/040": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Native @bacons/xcode/json replaces tokenizer. Malformed/quote/source/target/root/refusal controls retained. Native number SWIFT_VERSION normalized using String at existing Zod boundary.",
+                "Current Main101 CLI cases362 assertions10files8.80s; root types0, policy ESLint0. Native SDK parser and Swift generation fixtures retained; normal CLI build is byte-identical to fresh Node/Bun tested bundle. Patched dependencies pass actual staged OSV.",
+                "Native alpha33 accepts duplicate keys/trailing text; prescribed public parser adoption retained, no obsolete tokenizer fallback. CLI packages bundle only JSON parser via existing build; consumers have no SDK/Plist/XML dependency chain."
+            ]
         },
         "areas/checks/043": {
             "status": "pending",
@@ -2264,14 +2278,19 @@
             "verification": []
         },
         "areas/checks/047": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 3a877a8d27451b62.", "Evidence 436443a483467a52."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 3a877a8d27451b62.",
+                "Evidence 436443a483467a52.",
+                "Unified native file-line counter implemented. Actual public CLI six root/child Bash/Python/SQL over-limit findings then corrected zero; source bytes/modes unchanged.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-file-lines-final-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 3a877a8d27451b62.", "Evidence 436443a483467a52."]
                 }
             ]
@@ -3325,20 +3344,22 @@
             ]
         },
         "areas/kits/060": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
                 "Evidence ab56c1858ce26473.",
                 "Evidence 249c0b15a5538cd5.",
                 "Evidence f706f04fbb49307e.",
                 "Evidence 0247a3dd7864c686.",
-                "Evidence 22f91979c2b117aa."
+                "Evidence 22f91979c2b117aa.",
+                "Default [] and direct native Eta delivery verified at both levels/root-child. Authored child [] currently unions inherited Foundation; this is existing list semantics, not an empty-list clearing claim.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -3347,7 +3368,7 @@
                 },
                 {
                     "evidence": "/tmp/gspot-swift-template-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."]
                 }
             ]
@@ -3355,12 +3376,13 @@
         "areas/kits/064": {
             "status": "partial",
             "owner": "main",
-            "commit": null,
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
                 "Evidence ab56c1858ce26473.",
                 "Evidence 249c0b15a5538cd5.",
                 "Evidence f706f04fbb49307e.",
-                "Evidence 7b3e61487ad87e53."
+                "Evidence 7b3e61487ad87e53.",
+                "readSwiftVersion reads Package.swift header or chosen pbxproj metadata at generation. Init computes SDK destination after template merge, and old swiftformat.swift_version is absent. Fixed manifest destination remains static initial default overridden by actual init inference."
             ],
             "additionalChanges": [
                 {
@@ -3377,7 +3399,8 @@
                     "commit": null,
                     "verification": ["Evidence 7b3e61487ad87e53."]
                 }
-            ]
+            ],
+            "remaining": "Generation version and post-template init SDK precedence are implemented and current focused/native cases pass. Original producer growth +5908 production bytes/+110 lines/+667 AST still needs Root simplification disposition; old whole-owner proof cannot be replayed as current byte identity."
         },
         "areas/kits/068": {
             "status": "partial",
@@ -3612,33 +3635,47 @@
             ]
         },
         "areas/kits/109": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Prescribed six adopted check names are present; retired IDs absent in live source/tests/docs. Safety replacement belongs034 and is pending separately.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ]
         },
         "areas/kits/112": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 3a877a8d27451b62.", "Evidence 436443a483467a52."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 3a877a8d27451b62.",
+                "Evidence 436443a483467a52.",
+                "Native function-size names and unified structure/file-lines are implemented. sql/trivial-functions retains its prescribed name.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-file-lines-final-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 3a877a8d27451b62.", "Evidence 436443a483467a52."]
                 }
             ]
         },
         "areas/kits/114": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Two-owner packet removes Bash/SQL language metadata from generic leaf and documents140/400/300; dedicated language settings remain.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -3750,19 +3787,21 @@
             ]
         },
         "areas/kits/127": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
                 "Evidence ab56c1858ce26473.",
                 "Evidence 249c0b15a5538cd5.",
                 "Evidence f706f04fbb49307e.",
-                "Evidence 99e4e22d5228c959."
+                "Evidence 99e4e22d5228c959.",
+                "bash.doc_style absent; colon-comment contract and SSH help retained; existing native CLI doc-comment cases pass.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -3771,7 +3810,7 @@
                 },
                 {
                     "evidence": "/tmp/gspot-bash-retired-style-before",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 99e4e22d5228c959."]
                 }
             ]
@@ -3779,12 +3818,13 @@
         "areas/kits/128": {
             "status": "partial",
             "owner": "main",
-            "commit": null,
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
                 "Evidence ab56c1858ce26473.",
                 "Evidence 249c0b15a5538cd5.",
                 "Evidence f706f04fbb49307e.",
-                "Evidence 0dadb915410423f7."
+                "Evidence 0dadb915410423f7.",
+                "config_owners/defaults_allowed/boundary_roots/platforms/remote_functions/entry_functions/boundaries are absent. guards uses architecture.roles.env. safety_owners remains because034 replacement is not equivalent."
             ],
             "additionalChanges": [
                 {
@@ -3801,7 +3841,8 @@
                     "commit": null,
                     "verification": ["Evidence 0dadb915410423f7."]
                 }
-            ]
+            ],
+            "remaining": "Most settings deleted and architecture.roles.env used. safety_owners remains until034 equivalent native cleanup contract is proven."
         },
         "areas/kits/129": {
             "status": "partial",
@@ -3889,14 +3930,19 @@
             "verification": []
         },
         "areas/kits/143": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 7bd6261850b418f3.",
+                "Evidence 4f93bbab82bba503.",
+                "Bash title/configuration vocabulary is correct; external native shell language tag stays.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-bash-contracts-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."]
                 }
             ]
@@ -6021,10 +6067,13 @@
             ]
         },
         "review/configurations-plugin/043": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Disabled root list only default-enabled rules; known opt-in/analyzer off entries omitted. Two format-owned opt-in disables removed. Native pinned0.63.2 metadata/config controls at both levels. XCTest pointer still disables parent-enabled opt-ins and remains unchanged.",
+                "Current Main101 CLI cases362 assertions10files8.80s; root types0, policy ESLint0. Native SDK parser and Swift generation fixtures retained; normal CLI build is byte-identical to fresh Node/Bun tested bundle. Patched dependencies pass actual staged OSV."
+            ]
         },
         "review/configurations-plugin/044": {
             "status": "complete",
@@ -6182,10 +6231,13 @@
             ]
         },
         "review/configurations-plugin/066": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Swift URLSession override removed. Remaining Knip/docs/Python aggregate obligations require implementation and verification."
+            ],
+            "remaining": "Swift URLSession override removed. Remaining Knip/docs/Python aggregate obligations require implementation and verification."
         },
         "review/configurations-plugin/067": {
             "status": "complete",
@@ -8549,10 +8601,13 @@
             ]
         },
         "review/tests-cli/006": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Python manifest declares tool-file paths, not Ruff rule/value or basedpyright report-value inventories. These live inside Eta templates. Comparing the emitter against itself would be tautological; arbitrary parsing Eta expressions is not a meaningful independent manifest-owned expectation. Existing level/preview-control test remains unchanged."
+            ],
+            "remaining": "Python manifest declares tool-file paths, not Ruff rule/value or basedpyright report-value inventories. These live inside Eta templates. Comparing the emitter against itself would be tautological; arbitrary parsing Eta expressions is not a meaningful independent manifest-owned expectation. Existing level/preview-control test remains unchanged."
         },
         "review/tests-cli/007": {
             "status": "complete",
@@ -9038,10 +9093,13 @@
             "remaining": ["Mandatory staged check and coherent mechanical/behavior commits, push, CI evidence."]
         },
         "review/tests-cli/056": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Five exact callbacks plus matching literal inputs moved into requirements/reconcile owners. Removed repeated unscoped license skip/tool-presence assertions already covered by automatic selection."
+            ],
+            "remaining": "Manual matrix retains distinct undefined/empty/Python initialization choices, yes/default equality, explicit child JavaScript, recommended\u2192all\u2192recommended scoped Semgrep/jscpd outcomes, CodeQL absence and MIT scanner activation. Existing automatic-selection tests do not cover these scoped/init controls; complete repeat deletion not claimed."
         },
         "review/tests-cli/057": {
             "status": "complete",
@@ -10943,16 +11001,22 @@
             "verification": []
         },
         "slices/checks-other/036": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Repository-relative projectFolder goes directly into readPbxproj; native folders/excluded sets stay repository-relative; no absolute/relative round trip.",
+                "Current Main101 CLI cases362 assertions10files8.80s; root types0, policy ESLint0. Native SDK parser and Swift generation fixtures retained; normal CLI build is byte-identical to fresh Node/Bun tested bundle. Patched dependencies pass actual staged OSV."
+            ]
         },
         "slices/checks-other/037": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "projectFolder and scopeSourcesByEnding names replace old symbols across project/resources/settings real callers; no aliases.",
+                "Current Main101 CLI cases362 assertions10files8.80s; root types0, policy ESLint0. Native SDK parser and Swift generation fixtures retained; normal CLI build is byte-identical to fresh Node/Bun tested bundle. Patched dependencies pass actual staged OSV."
+            ]
         },
         "slices/checks-other/038": {
             "status": "partial",
@@ -10972,10 +11036,13 @@
             ]
         },
         "slices/checks-other/039": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Strip terminal Color/Image then keep scule.camelCase; existing quoted full-name behavior retained. Two added suffix cases keep exact missing/orphan findings.",
+                "Current Main101 CLI cases362 assertions10files8.80s; root types0, policy ESLint0. Native SDK parser and Swift generation fixtures retained; normal CLI build is byte-identical to fresh Node/Bun tested bundle. Patched dependencies pass actual staged OSV."
+            ]
         },
         "slices/checks-other/046": {
             "status": "partial",
@@ -10985,9 +11052,12 @@
         },
         "slices/checks-other/049": {
             "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Native Xcode parser prose is simplified; remaining Docker/XCTest aggregate owners still require evidence."
+            ],
+            "remaining": "Native Xcode parser prose is simplified; remaining Docker/XCTest aggregate owners still require evidence."
         },
         "slices/config/015": {
             "status": "partial",
@@ -11029,9 +11099,12 @@
         },
         "slices/config/041": {
             "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "INHERITED_ERREXIT and BASH_FEATURES are both absent after adopted shipped strict-mode contract. Reintroducing BASH_FEATURES solely to follow stale final row would reverse that contract."
+            ],
+            "remaining": "Both INHERITED_ERREXIT and BASH_FEATURES are absent under the adopted strict-mode contract. Do not restore either solely for the stale version-row instruction."
         },
         "slices/config/043": {
             "status": "partial",
@@ -11265,15 +11338,20 @@
         "slices/kits-frameworks-tools/059": {
             "status": "partial",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7c5aca460a4e1ded.", "Evidence d87aa0948588fc99."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 7c5aca460a4e1ded.",
+                "Evidence d87aa0948588fc99.",
+                "swift.xcode_project/scheme/destination own fields; inferred project calculated before resolved view parse; effective authored empty path preserved; Periphery receives native relative value."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-build-selection-freeze.json",
                     "commit": null,
                     "verification": ["Evidence 7c5aca460a4e1ded.", "Evidence d87aa0948588fc99."]
                 }
-            ]
+            ],
+            "remaining": "Adopted project fields/default inference and native relative Periphery path implemented. Prior Root explicit-empty public apply proof remains prior evidence; current complete writer byte identity not claimed."
         },
         "slices/kits-frameworks-tools/060": {
             "status": "partial",
@@ -11293,23 +11371,31 @@
             ]
         },
         "slices/kits-frameworks-tools/062": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7c5aca460a4e1ded.", "Evidence d87aa0948588fc99."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 7c5aca460a4e1ded.",
+                "Evidence d87aa0948588fc99.",
+                "Root main097 already complete with actual two-target83% to100% native package coverage proof; not reopened or double credited. Current missing-project readiness cases pass, Xcode route remains separate.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-build-selection-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 7c5aca460a4e1ded.", "Evidence d87aa0948588fc99."]
                 }
             ]
         },
         "slices/kits-frameworks-tools/063": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Five dependency forms plus tracked scope-relative Prisma provider matching implemented; current detect tests pass, scoped5 source/test bytes match exactly.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ]
         },
         "slices/kits-frameworks-tools/064": {
             "status": "pending",
@@ -11318,16 +11404,23 @@
             "verification": []
         },
         "slices/kits-frameworks-tools/065": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Optional V before integer version, Flyway engine test derives V/native paths at actual runner; original numeric, dbmate/up-down, corrupted history/SQL controls retained.",
+                "Current Main101 CLI cases362 assertions10files8.80s; root types0, policy ESLint0. Native SDK parser and Swift generation fixtures retained; normal CLI build is byte-identical to fresh Node/Bun tested bundle. Patched dependencies pass actual staged OSV."
+            ]
         },
         "slices/kits-frameworks-tools/066": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Single frozenMigrationPaths parser owner called by Eta and native frozen history. BigInt threshold, none/all preserved. Native Squawk both levels root defect1/correction0 frozen bytes/mode600 unchanged.",
+                "Current Main101 CLI cases362 assertions10files8.80s; root types0, policy ESLint0. Native SDK parser and Swift generation fixtures retained; normal CLI build is byte-identical to fresh Node/Bun tested bundle. Patched dependencies pass actual staged OSV.",
+                "Scoped generation obligation resolved: native Squawk2.64.0 current Main root/child at recommended/all produces defect1 then correction0; frozen and unfrozen SQL bytes/mode600 and policy bytes stay exact. Same final scoped payload also passes Node24.20.0 native acceptance."
+            ]
         },
         "slices/kits-frameworks-tools/067": {
             "status": "pending",
@@ -11412,24 +11505,26 @@
             "verification": []
         },
         "slices/kits-general/058": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
             "verification": [
                 "Exact current fix assigned to independent implementation checkout; root owns integration and final evidence.",
                 "Evidence d46319e4935c1707.",
                 "Evidence aaa450b84f7aba90.",
-                "Twenty-four owners integrate internal prettierignore and selected JavaScript root pointers with native override/plugin path rebasing. Shared manifest ignored_folders plus native lock filenames feed Prettier/Semgrep; Docker requirements use selected languages. DOM rules belong to JavaScript; Workers duplicate removed; suppression help generic. Native78tests306assertions and final ignored8tests110assertions pass. Real Prettier3.8.1 plugin/exclusion probes pass Bun and Node24.2/24.20; Semgrep1.178 yields8DOM findings each level, safe neighbor0/errors empty. Types/affected policy pass. Production grows2953bytes71lines; whole8277bytes187lines; simplification/platform obligations remain partial."
+                "Twenty-four owners integrate internal prettierignore and selected JavaScript root pointers with native override/plugin path rebasing. Shared manifest ignored_folders plus native lock filenames feed Prettier/Semgrep; Docker requirements use selected languages. DOM rules belong to JavaScript; Workers duplicate removed; suppression help generic. Native78tests306assertions and final ignored8tests110assertions pass. Real Prettier3.8.1 plugin/exclusion probes pass Bun and Node24.2/24.20; Semgrep1.178 yields8DOM findings each level, safe neighbor0/errors empty. Types/affected policy pass. Production grows2953bytes71lines; whole8277bytes187lines; simplification/platform obligations remain partial.",
+                "Native manifest reasonForm drives suppression findings; current suppression positive/refusal cases pass.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-native-names-final-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence d46319e4935c1707.", "Evidence aaa450b84f7aba90."]
                 },
                 {
                     "evidence": "/tmp/gspot-javascript-web-language-tools-final-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": [
                         "Twenty-four owners integrate internal prettierignore and selected JavaScript root pointers with native override/plugin path rebasing. Shared manifest ignored_folders plus native lock filenames feed Prettier/Semgrep; Docker requirements use selected languages. DOM rules belong to JavaScript; Workers duplicate removed; suppression help generic. Native78tests306assertions and final ignored8tests110assertions pass. Real Prettier3.8.1 plugin/exclusion probes pass Bun and Node24.2/24.20; Semgrep1.178 yields8DOM findings each level, safe neighbor0/errors empty. Types/affected policy pass. Production grows2953bytes71lines; whole8277bytes187lines; simplification/platform obligations remain partial."
                     ]
@@ -11486,66 +11581,91 @@
             ]
         },
         "slices/kits-other-languages/018": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 0247a3dd7864c686.",
+                "Evidence 22f91979c2b117aa.",
+                "Native max_chars direct delivery; fallback40 gone. Both levels verified; all-only naming rule absent at recommended as required.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-template-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."]
                 }
             ]
         },
         "slices/kits-other-languages/027": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 0247a3dd7864c686.",
+                "Evidence 22f91979c2b117aa.",
+                "unused_declaration removed from analyzer_rules; unused_import/capture and Periphery retained. Current YAML absence verified; no fresh Periphery build claim.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-template-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."]
                 }
             ]
         },
         "slices/kits-other-languages/028": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 0247a3dd7864c686.",
+                "Evidence 22f91979c2b117aa.",
+                "force_cast/force_try/weak_delegate remain enabled in pinned SwiftLint table at both levels.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-template-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."]
                 }
             ]
         },
         "slices/kits-other-languages/029": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7c5aca460a4e1ded.", "Evidence d87aa0948588fc99."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 7c5aca460a4e1ded.",
+                "Evidence d87aa0948588fc99.",
+                "Missing Package.swift/configured swift.xcode_project yields readiness note naming setting for all real purposes; current plan tests pass. No Linux execution claim.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-build-selection-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 7c5aca460a4e1ded.", "Evidence d87aa0948588fc99."]
                 }
             ]
         },
         "slices/kits-other-languages/030": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."],
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "verification": [
+                "Evidence 0247a3dd7864c686.",
+                "Evidence 22f91979c2b117aa.",
+                "SwiftFormat/Periphery native markers and reason regex retained; current suppression defect/correction cases preserve source bytes.",
+                "Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-swift-template-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
                     "verification": ["Evidence 0247a3dd7864c686.", "Evidence 22f91979c2b117aa."]
                 }
             ]
@@ -15983,6 +16103,43 @@
             ],
             "limitations": [
                 "Tests-cli006 Python independent inventories and056 full scoped/license equivalence remain partial. Cross-platform and full-suite acceptance remain outstanding."
+            ]
+        },
+        {
+            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "completedRecords": [
+                "areas/checks/040",
+                "slices/checks-other/036",
+                "slices/checks-other/037",
+                "slices/checks-other/039",
+                "slices/kits-frameworks-tools/065",
+                "slices/kits-frameworks-tools/066",
+                "review/configurations-plugin/043",
+                "areas/kits/060",
+                "areas/kits/109",
+                "areas/kits/112",
+                "areas/kits/114",
+                "areas/kits/127",
+                "areas/kits/143",
+                "areas/checks/035",
+                "areas/checks/047",
+                "slices/kits-general/058",
+                "slices/kits-other-languages/018",
+                "slices/kits-other-languages/027",
+                "slices/kits-other-languages/028",
+                "slices/kits-other-languages/029",
+                "slices/kits-other-languages/030",
+                "slices/kits-frameworks-tools/062",
+                "slices/kits-frameworks-tools/063"
+            ],
+            "unresolvedRecords": 738,
+            "validation": [
+                "Main101pass362assertions; native Squawk4 root/child bothlevels; types0/policy ESLint0/freshness0; staged full first85passes known failures retained, affected Vale/Taplo and OSV corrected.",
+                "Normal Main CLI bundle SHA09dbf94ab0a45e6c93eadfca602f419415b840123931ff5163f3b52d13ebe952 exactly matches isolated secure-delivery bundle tested by fresh Node24.20/Bun1.4.2 consumers."
+            ],
+            "limitations": [
+                "SDK duplicate/trailing text follows adopted native parser semantics. Aggregate other049/plugin066 and language064/032/034/128/framework059 remain partial with precise obligations.",
+                "Final full suites/platforms/release boundary remain outstanding."
             ]
         }
     ],

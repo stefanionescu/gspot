@@ -1,6 +1,5 @@
 [configuration]
 title = "Xcode"
-requires = ["files"]
 suggests = ["swift"]
 description = "An Xcode project: property lists that parse, build settings files, and complete string catalogs. Asset catalogs hold their images, test targets sit in a plan, sources belong to a target, and entitlements stay on a list."
 
@@ -11,7 +10,6 @@ project_files = ["*.xcodeproj"]
 [files]
 extensions = [".plist", ".entitlements", ".xcconfig", ".xcstrings", ".storyboard", ".xib"]
 paths = ["**/project.pbxproj", "**/*.xcscheme", "**/*.xctestplan", "**/*.xcassets/**/Contents.json"]
-kinds = ["source"]
 
 [[tool]]
 name = "plutil"
@@ -24,7 +22,6 @@ title = "Parse property lists"
 example = "A plist containing an unclosed dictionary fails native validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
 level = "recommended"
 stage = "commit"
-runs = "files"
 platforms = ["macos"]
 command = ["plutil", "-lint", "{files}"]
 files = { extensions = [".plist", ".entitlements"] }
@@ -39,7 +36,6 @@ title = "Validate storyboard XML"
 example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["xmllint", "--noout", "{files}"]
 files = { extensions = [".storyboard", ".xib"] }
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$" }

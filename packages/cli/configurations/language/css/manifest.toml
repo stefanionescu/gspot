@@ -39,7 +39,6 @@ extensions = [".css", ".vue", ".svelte"]
 
 [files]
 extensions = [".css"]
-kinds = ["source"]
 
 [[tool]]
 name = "stylelint"
@@ -47,36 +46,7 @@ suppression = { marker = "^(?:/\\*|//)\\s*stylelint-disable(?:-next-line|-line)?
 version = "16.23.1"
 min_version = "16.0.0"
 npm = "stylelint"
-
-[[tool.replace]]
-file = ".stylelintrc"
-
-[[tool.replace]]
-file = ".stylelintrc.json"
-
-[[tool.replace]]
-file = ".stylelintrc.js"
-
-[[tool.replace]]
-file = ".stylelintrc.cjs"
-
-[[tool.replace]]
-file = ".stylelintrc.mjs"
-
-[[tool.replace]]
-file = ".stylelintrc.yml"
-
-[[tool.replace]]
-file = ".stylelintrc.yaml"
-
-[[tool.replace]]
-file = "stylelint.config.js"
-
-[[tool.replace]]
-file = "stylelint.config.cjs"
-
-[[tool.replace]]
-file = "stylelint.config.mjs"
+replaces = [".stylelintrc", ".stylelintrc.json", ".stylelintrc.js", ".stylelintrc.cjs", ".stylelintrc.mjs", ".stylelintrc.yml", ".stylelintrc.yaml", "stylelint.config.js", "stylelint.config.cjs", "stylelint.config.mjs"]
 
 [[tool.replace]]
 file = "package.json"
@@ -105,7 +75,7 @@ npm = "postcss-html"
 target = ".gspot/config/stylelint.json"
 tool = "stylelint"
 rule_keys = ["rules"]
-scoped = true
+per_scope = true
 generated_header = false
 pointer = { path = ".stylelintrc.json", body = "{\n    \"extends\": \"{target}\"\n}\n" }
 

@@ -9,7 +9,9 @@ content = { "prisma/schema.prisma" = '(?:^|\n)[\t ]*provider[\t ]*=[\t ]*"postgr
 
 [files]
 paths = ["supabase/migrations/*.sql", "db/migrations/*.sql", "migrations/*.sql", "**/supabase/migrations/*.sql"]
-kinds = ["source"]
+
+[set]
+"tools.sqlfluff.dialect" = "postgres"
 
 [[tool]]
 name = "squawk"
@@ -18,17 +20,12 @@ min_version = "2.0.0"
 mise = "github:sbdchd/squawk"
 npm = "squawk-cli"
 github = { name = "sbdchd/squawk", version = "v2.64.0" }
-
-[[tool.replace]]
-file = ".squawk.toml"
-
-[[tool.replace]]
-file = "squawk.toml"
+replaces = [".squawk.toml", "squawk.toml"]
 
 [[tool_file]]
 target = ".gspot/config/squawk.toml"
 tool = "squawk"
-scoped = true
+per_scope = true
 rule_keys = ["excluded_rules"]
 
 [[check]]
@@ -164,6 +161,3 @@ items = "string"
 direction = "neutral"
 default = ["Schema", "Tables", "Indexes", "Functions", "Triggers", "Extensions", "Row Level Security", "Grants"]
 summary = "The section names a documented migration may box."
-
-[set]
-"tools.sqlfluff.dialect" = "postgres"

@@ -1,9 +1,10 @@
 ignored_folders = [".venv/"]
+
 dockerignore = [".venv"]
 
 [configuration]
 title = "Python"
-requires = ["format", "structure"]
+requires = ["format"]
 suggests = ["naming"]
 description = "Python sources: Ruff for lint and layout, basedpyright for types, import contracts, docstrings that match signatures, unused dependencies, and dead code."
 
@@ -19,7 +20,6 @@ shebangs = ["python", "python3"]
 [files]
 extensions = [".py", ".pyi"]
 filenames = ["pyproject.toml", "setup.cfg", ".importlinter"]
-kinds = ["source"]
 
 [[tool]]
 name = "uv"
@@ -34,12 +34,7 @@ min_version = "0.9.0"
 mise = "ruff"
 pypi = "ruff"
 brew = "ruff"
-
-[[tool.replace]]
-file = "ruff.toml"
-
-[[tool.replace]]
-file = ".ruff.toml"
+replaces = ["ruff.toml", ".ruff.toml"]
 
 [[tool.replace]]
 file = "pyproject.toml"
@@ -53,9 +48,7 @@ version = "1.40.1"
 min_version = "1.20.0"
 mise = "pipx:basedpyright"
 pypi = "basedpyright"
-
-[[tool.replace]]
-file = "pyrightconfig.json"
+replaces = ["pyrightconfig.json"]
 
 [[tool.replace]]
 file = "pyproject.toml"
@@ -87,7 +80,6 @@ min_version = "0.20.0"
 mise = "pipx:deptry"
 pypi = "deptry"
 
-
 [[tool]]
 name = "validate-pyproject"
 version = "0.26"
@@ -99,14 +91,14 @@ version_pattern = "(\\d+\\.\\d+(?:\\.\\d+)?)"
 target = ".gspot/config/ruff.toml"
 tool = "ruff"
 pointer = { path = "ruff.toml", body = 'extend = "{target}"' }
-scoped = true
+per_scope = true
 rule_keys = ["lint.select", "lint.ignore", "lint.per-file-ignores"]
 
 [[tool_file]]
 target = ".gspot/config/basedpyrightconfig.json"
 tool = "basedpyright"
 pointer = { path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}" }
-scoped = true
+per_scope = true
 generated_header = false
 
 [[check]]
@@ -199,7 +191,6 @@ output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>
 summary = "Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones."
 why = "An import that works through somebody else's dependency breaks the day they drop it."
 help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule `<code>` --reason \"`<why>`\"."
-
 
 [[check]]
 name = "pyproject"
@@ -330,10 +321,7 @@ type = "string"
 direction = "neutral"
 default = ""
 summary = "The Ruff pydocstyle convention carried from project configuration, also used by pydoclint when it has no explicit style."
-
-[setting.validation]
-enum = ["", "google", "numpy", "pep257"]
-
+validation = { enum = ["", "google", "numpy", "pep257"] }
 
 [[naming.overrides]]
 paths = ["**/__init__.py", "**/__main__.py"]

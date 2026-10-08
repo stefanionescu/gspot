@@ -1,4 +1,6 @@
 import { join } from 'node:path';
+import stylelint from 'stylelint';
+import type { Config } from 'stylelint';
 import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -58,5 +60,54 @@ test.each(['recommended', 'all'] as const)(
         expect(await readFile(join(sandbox.path, 'app/package.json'), 'utf8')).toBe(
             TAKEOVER_PACKAGE.replace('native-project', 'edited-project'),
         );
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s captured Stylelint rules retain native options and filter inactive or unknown overrides',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['css'], {
+                level,
+                tables: `[agent_rules]
+enabled = false
+[tools.stylelint.rules]
+color-hex-length = "long"
+number-max-precision = 0
+unknown-rule = true
+[scope.child]
+`,
+            }),
+            'source.css': 'a { color: #fff; width: 1.23456px; }',
+            'child/source.css': 'a { color: #fff; width: 1.23456px; }',
+        });
+        const session = await openSession(sandbox.path);
+        const generated = emitAll(session);
+        for (const scope of ['', 'child']) {
+            const file = generated.files.find(
+                ({ path }) => path === `.gspot/config/${scope === '' ? '' : scope + '/'}stylelint.json`,
+            )!;
+            const config = JSON.parse(file.content) as Config;
+            expect(config.rules!['color-hex-length']).toBe('long');
+            expect(config.rules!['number-max-precision']).toBe(level === 'all' ? 0 : null);
+            expect(config.rules!['unknown-rule']).toBeUndefined();
+            const result = await stylelint.lint({
+                code: 'a { color: #fff; width: 1.23456px; }',
+                config,
+                configBasedir: join(import.meta.dir, '../../node_modules'),
+            });
+            expect(
+                result.results
+                    .flatMap(({ warnings }) => warnings)
+                    .filter(({ rule }) => rule === 'color-hex-length')
+                    .map(({ severity }) => severity),
+            ).toStrictEqual(['error']);
+            expect(
+                result.results
+                    .flatMap(({ warnings }) => warnings)
+                    .filter(({ rule }) => rule === 'number-max-precision'),
+            ).toHaveLength(level === 'all' ? 1 : 0);
+        }
     },
 );

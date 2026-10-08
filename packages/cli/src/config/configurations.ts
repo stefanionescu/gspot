@@ -56,3 +56,22 @@ export const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)
 export const FILES_PLACEHOLDER = '{files}';
 
 export const FILE_PLACEHOLDER = '{file}';
+
+/** Authored manifest sections follow their dependency and generation order. Nested values stay inline. */
+export const MANIFEST_TABLE_ORDER = [
+    'configuration',
+    'detect',
+    'files',
+    'set',
+    'set_all',
+    'tool',
+    'tool.replace',
+    'tool_file',
+    'check',
+    'setting',
+    'required_eslint_rules',
+    'eslint_rules_off',
+    'ruff_rules',
+    'naming.overrides',
+    'agent_rules',
+];

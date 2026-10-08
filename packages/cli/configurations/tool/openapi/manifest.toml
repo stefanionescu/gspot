@@ -1,6 +1,5 @@
 [configuration]
 title = "OpenAPI"
-requires = ["files"]
 description = "A committed OpenAPI document: Spectral lints it, and the command that writes it must not change it."
 
 [detect]
@@ -13,6 +12,7 @@ npm = "@stoplight/spectral-cli"
 mise = "npm:@stoplight/spectral-cli"
 
 # Spectral and its Ajv plugins share one code generator instance in the private tool project.
+
 [[tool]]
 name = "ajv"
 kind = "library"

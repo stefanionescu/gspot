@@ -1,16 +1,8 @@
 <%
-// Stable rules in the pinned markdownlint-cli2 0.23.3 distribution. Native defaults cannot add coverage.
-const selected = [
-    'MD001', 'MD003', 'MD004', 'MD005', 'MD007', 'MD009', 'MD010', 'MD011', 'MD012',
-    'MD014', 'MD018', 'MD019', 'MD020', 'MD021', 'MD022', 'MD023', 'MD024', 'MD026',
-    'MD027', 'MD028', 'MD029', 'MD030', 'MD031', 'MD032', 'MD034', 'MD035', 'MD036',
-    'MD037', 'MD038', 'MD039', 'MD040', 'MD042', 'MD043', 'MD044', 'MD045', 'MD046',
-    'MD047', 'MD048', 'MD049', 'MD050', 'MD051', 'MD052', 'MD053', 'MD054', 'MD055',
-    'MD056', 'MD058', 'MD059',
-];
 const document = {
-    default: false,
-    ...Object.fromEntries(selected.map((rule) => [rule, true])),
+    default: true,
+    MD013: false,
+    MD033: false,
     MD024: { siblings_only: true },
     MD046: { style: 'fenced' },
     MD048: { style: 'backtick' },
@@ -21,7 +13,7 @@ const document = {
     MD025: isAll ? { front_matter_title: '' } : false,
 };
 for (const [rule, settings] of Object.entries(options('tools.markdownlint').rules))
-    if (document[rule] !== undefined && document[rule] !== false)
+    if (document[rule] !== false)
         document[rule] = { ...(document[rule] === true ? {} : document[rule]), ...settings };
 Object.assign(document, Object.fromEntries(rulesOff('markdown/markdownlint').map((rule) => [rule, false])));
 recordRules(document);

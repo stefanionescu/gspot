@@ -167,3 +167,43 @@ test.each(['recommended', 'all'] as const)('Drizzle guards only its declared cli
         corrected.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId?.startsWith('drizzle/') === true)),
     ).toStrictEqual([]);
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s native Vue and Svelte presets retain their required security rules in component scopes',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `level = "${level}"
+configurations = ["javascript"]
+[agent_rules]
+enabled = false
+[scope.widgets]
+configurations = ["svelte"]
+[scope.views]
+configurations = ["vue"]
+`,
+            'package.json': '{"private":true,"type":"module"}',
+            'widgets/View.svelte': '<script>let value = "text";</script><p>{@html value}</p>',
+            'views/Display.vue':
+                '<script setup>const value = "text";</script><template><p v-html="value" /></template>',
+            'plain.js': '',
+        });
+        const eslint = await createEslint(sandbox.path);
+        const svelte = (await eslint.calculateConfigForFile('widgets/View.svelte')) as ComputedEslint;
+        for (const rule of ['svelte/no-at-html-tags', 'svelte/require-each-key', 'svelte/no-reactive-reassign'])
+            expect(svelte.rules[rule]![0], rule).toBe(2);
+        const vue = (await eslint.calculateConfigForFile('views/Display.vue')) as ComputedEslint;
+        expect(vue.rules['vue/no-v-html']![0]).toBe(2);
+        const outside = (await eslint.calculateConfigForFile('plain.js')) as ComputedEslint;
+        expect(outside.rules['svelte/no-at-html-tags']).toBeUndefined();
+        expect(outside.rules['vue/no-v-html']).toBeUndefined();
+        const reports = await eslint.lintFiles(['widgets/View.svelte', 'views/Display.vue']);
+        expect(
+            reports.map(({ messages }) =>
+                messages
+                    .filter(({ ruleId }) => ruleId === 'svelte/no-at-html-tags' || ruleId === 'vue/no-v-html')
+                    .map(({ ruleId }) => ruleId),
+            ),
+        ).toStrictEqual([['svelte/no-at-html-tags'], ['vue/no-v-html']]);
+    },
+);

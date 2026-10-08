@@ -74,37 +74,6 @@ describe('assertManifests check replacements', () => {
     });
 });
 
-describe('assertManifests borrowed checks', () => {
-    test('check references require another standalone built-in owner and preserve its definition', () => {
-        const owner = parseConfigurationManifest('owner', {
-            tables: `[[check]]\nname = "shared"\nruns = "once"\n${CHECK_FIELDS}`,
-        });
-        const consumer = parseConfigurationManifest('consumer');
-        const check = owner.checks[0]!;
-        consumer.configuration.borrowed_checks = ['owner/shared'];
-        const manifests = new Map([
-            ['owner', owner],
-            ['consumer', consumer],
-        ]);
-        expect(() => {
-            assertManifests(manifests);
-        }).not.toThrow();
-        consumer.configuration.borrowed_checks = ['missing/shared'];
-        expect(() => {
-            assertManifests(manifests);
-        }).toThrow('Referenced check missing/shared');
-        consumer.configuration.borrowed_checks = ['owner/shared'];
-        owner.checks[0] = { ...check, runs: 'scope' };
-        expect(() => {
-            assertManifests(manifests);
-        }).toThrow('standalone built-in');
-        owner.checks[0] = { ...check, tool: 'scanner' };
-        expect(() => {
-            assertManifests(manifests);
-        }).toThrow('standalone built-in');
-    });
-});
-
 describe('assertManifests native version prerequisites', () => {
     test('a native floor requires a declared tool even when its command names that tool', () => {
         const manifest = parseConfigurationManifest('minimum', {
@@ -164,7 +133,7 @@ describe('assertManifests installation and guide declarations', () => {
     ])('a check reading an empty setting validates $name', ({ wait, message: diagnostic }) => {
         const manifest = parseConfigurationManifest('waiting', {
             kind: 'tool',
-            tables: `${WAITING_SETTING}[[check]]\nname = "run"\ncommand = ["tool", "{setting:tools.waiting.target}"]\n${wait}${CHECK_FIELDS}`,
+            tables: `[[check]]\nname = "run"\ncommand = ["tool", "{setting:tools.waiting.target}"]\n${wait}${CHECK_FIELDS}${WAITING_SETTING}`,
         });
         const manifests = new Map([['waiting', manifest]]);
         if (diagnostic === undefined)
@@ -255,10 +224,84 @@ test('a replacement selecting a shared key preserves the containing file', () =>
 test('native root selectors retain fragment-only component and import refusals', () => {
     expect(() => parseConfigurationManifest('owner', { tables: ROOT_SELECTOR_DECLARATION })).not.toThrow();
     for (const [field, diagnostic] of ROOT_SELECTOR_REFUSALS) {
-        const tables = ROOT_SELECTOR_DECLARATION.replace(
-            '[[tool_file.selectors]]',
-            `${field}\n[[tool_file.selectors]]`,
-        );
+        const tables = ROOT_SELECTOR_DECLARATION.replace('selectors = [', `${field}\nselectors = [`);
         expect(() => parseConfigurationManifest('owner', { tables })).toThrow(diagnostic);
     }
+});
+
+test('native file matchers supply detection only when the manifest omits its detection table', () => {
+    const tables = '[files]\nfilenames = ["native.project"]\npaths = ["source/**"]\n';
+    const inherited = parseConfigurationManifest('native', { tables });
+    expect(inherited.detect.filenames).toStrictEqual(['native.project']);
+    expect(inherited.detect.paths).toStrictEqual(['source/**']);
+    const explicit = parseConfigurationManifest('native', {
+        tables: '[detect]\nfilenames = ["explicit.project"]\n' + tables,
+    });
+    expect(explicit.detect.filenames).toStrictEqual(['explicit.project']);
+    expect(explicit.detect.paths).toStrictEqual([]);
+    const empty = parseConfigurationManifest('native', { tables: '[detect]\n' + tables });
+    expect(empty.detect.filenames).toStrictEqual([]);
+    expect(empty.detect.paths).toStrictEqual([]);
+});
+
+test('native check declarations require a title and refuse deleted reviewer and borrowed-check fields', () => {
+    const declaration = '[[check]]\nname = "native"\ncommand = ["native"]\n' + CHECK_FIELDS;
+    expect(() =>
+        parseConfigurationManifest('native', { tables: declaration.replace('title = "Project input"\n', '') }),
+    ).toThrow('title');
+    expect(() =>
+        parseConfigurationManifest('native', { tables: declaration + 'alternatives_checked = ["review notes"]\n' }),
+    ).toThrow('alternatives_checked');
+    expect(() => parseConfigurationManifest('native', { tables: 'borrowed_checks = ["other/native"]\n' })).toThrow(
+        'borrowed_checks',
+    );
+});
+
+test('native manifest headers refuse wrong section order and separate nested values', () => {
+    expect(() =>
+        parseConfigurationManifest('native', {
+            tables: '[files]\nfilenames = ["source.native"]\n[detect]\nfilenames = ["project.native"]\n',
+        }),
+    ).toThrow('detect is out of manifest table order');
+    expect(() =>
+        parseConfigurationManifest('native', {
+            tables: '[detect]\nfilenames = ["project.native"]\n[files]\nfilenames = ["source.native"]\n',
+        }),
+    ).not.toThrow();
+    expect(() =>
+        parseConfigurationManifest('native', {
+            tables: '[[tool_file]]\ntarget = ".gspot/config/native.toml"\n[tool_file.pointer]\npath = "native.toml"\n',
+        }),
+    ).toThrow('write tool_file.pointer as an inline value');
+});
+
+test('native replacement filename lists retain shared sections and refuse invalid items', () => {
+    const tables =
+        '[[tool]]\nname = "native"\nversion = "1.0.0"\nreplaces = [".native", "native.json"]\n[[tool.replace]]\nfile = "package.json"\nkey = "native"\nshared = true\n';
+    expect(parseConfigurationManifest('native', { tables }).tools[0]?.replace).toStrictEqual([
+        { file: '.native', shared: false },
+        { file: 'native.json', shared: false },
+        { file: 'package.json', key: 'native', shared: true },
+    ]);
+    for (const invalid of ['".native"', '[""]', '[7]']) {
+        expect(() =>
+            parseConfigurationManifest('native', {
+                tables: tables.replace('[".native", "native.json"]', invalid),
+            }),
+        ).toThrow('tool.0.replaces');
+    }
+});
+
+test('per-scope tool files retain their native declaration and refuse the retired key', () => {
+    const tables =
+        '[[tool_file]]\ntarget = ".gspot/config/native.toml"\nper_scope = true\npointer = { path = "native.toml" }\n';
+    expect(parseConfigurationManifest('native', { tables }).toolFiles[0]?.per_scope).toBe(true);
+    expect(() => parseConfigurationManifest('native', { tables: tables.replace('per_scope', 'scoped') })).toThrow(
+        'scoped',
+    );
+});
+
+test('retired component globs are refused instead of replacing native tool extensions', () => {
+    const tables = ROOT_SELECTOR_DECLARATION.replace('selectors = [', 'component_globs = ["**/*.vue"]\nselectors = [');
+    expect(() => parseConfigurationManifest('owner', { tables })).toThrow('component_globs');
 });

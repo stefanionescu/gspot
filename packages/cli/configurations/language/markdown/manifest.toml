@@ -20,12 +20,8 @@ The selected level decides which rules run. Options cannot enable a rule outside
 Both levels check image alt text. Accept a specific finding with `gspot ignore markdown/markdownlint --rule <rule> --reason "<why>"`.
 '''
 
-[detect]
-extensions = [".md", ".mdx"]
-
 [files]
 extensions = [".md", ".mdx"]
-kinds = ["source"]
 
 [[tool]]
 name = "markdownlint-cli2"
@@ -37,41 +33,18 @@ mise = "npm:markdownlint-cli2"
 version_command = ["--help"]
 version_exit_code = 2
 version_pattern = "markdownlint-cli2 v(\\d+\\.\\d+\\.\\d+)"
-
-[[tool.replace]]
-file = ".markdownlint-cli2.jsonc"
-
-[[tool.replace]]
-file = ".markdownlint-cli2.yaml"
-
-[[tool.replace]]
-file = ".markdownlint-cli2.cjs"
-
-[[tool.replace]]
-file = ".markdownlint-cli2.mjs"
-
-[[tool.replace]]
-file = ".markdownlint.json"
-
-[[tool.replace]]
-file = ".markdownlint.jsonc"
-
-[[tool.replace]]
-file = ".markdownlint.yaml"
-
-[[tool.replace]]
-file = ".markdownlint.yml"
+replaces = [".markdownlint-cli2.jsonc", ".markdownlint-cli2.yaml", ".markdownlint-cli2.cjs", ".markdownlint-cli2.mjs", ".markdownlint.json", ".markdownlint.jsonc", ".markdownlint.yaml", ".markdownlint.yml"]
 
 [[tool_file]]
 target = ".gspot/config/markdownlint.jsonc"
 tool = "markdownlint-cli2"
-scoped = true
+per_scope = true
 rule_keys = [""]
 
 [[tool_file]]
 target = ".gspot/config/markdownlint-cli2.mjs"
 tool = "markdownlint-cli2"
-scoped = true
+per_scope = true
 pointer = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};" }
 
 [[check]]
@@ -82,7 +55,6 @@ run_in_copy = true
 path_prefix = ":"
 level = "recommended"
 stage = "commit"
-runs = "files"
 command = ["markdownlint-cli2", "--no-globs", "--config", "{tool_file:markdownlint-cli2}", "{files}"]
 fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{tool_file:markdownlint-cli2}", "{files}"]
 exit_codes = [1]
@@ -103,6 +75,7 @@ help = "Fix the code in the block, or tag the block text when it is not code."
 
 [[setting]]
 name = "tools.markdownlint.rules"
+off_values = [false]
 type = "table"
 direction = "rule-options"
 default = {}

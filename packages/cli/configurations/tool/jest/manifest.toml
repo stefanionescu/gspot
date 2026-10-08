@@ -9,7 +9,6 @@ filenames = ["jest.config.*"]
 
 [files]
 paths = ["**/*.{test,spec}.{ts,tsx,js,jsx}", "**/tests/**", "**/__tests__/**", "**/jest.config.*"]
-kinds = ["source"]
 
 [[tool]]
 name = "jest"
