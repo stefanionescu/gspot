@@ -5,7 +5,7 @@ import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import { parseTestSource } from '#tests/harness/syntax.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { SWIFT_SOURCES } from '#tests/config/cli/parsers/swift/source.ts';
+import { SWIFT_SOURCES } from '#tests/config/cli/parsers/tree-sitter.ts';
 import { ACCESSOR_DECLARATIONS } from '#tests/config/samples/swift/source.ts';
 import { readSwift, disposeSwift, getSwiftFunctions } from '#cli/parsers/swift/source.ts';
 

@@ -1,5 +1,5 @@
 {
-    "openRecords": 818,
+    "openRecords": 813,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 818,
+        "openRecords": 813,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 57,
-                "unresolvedAssignments": 234
+                "completedAssignments": 58,
+                "unresolvedAssignments": 233
             },
             {
                 "id": "python",
@@ -696,8 +696,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 3,
-                "unresolvedAssignments": 96
+                "completedAssignments": 4,
+                "unresolvedAssignments": 95
             },
             {
                 "id": "swift-bash-sql",
@@ -786,8 +786,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 8,
-                "unresolvedAssignments": 74
+                "completedAssignments": 9,
+                "unresolvedAssignments": 73
             },
             {
                 "id": "frameworks-platforms",
@@ -925,8 +925,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 4,
-                "unresolvedAssignments": 127
+                "completedAssignments": 5,
+                "unresolvedAssignments": 126
             },
             {
                 "id": "test-quality",
@@ -1402,8 +1402,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 85,
-                "unresolvedAssignments": 384
+                "completedAssignments": 90,
+                "unresolvedAssignments": 379
             },
             {
                 "id": "scripts-repository",
@@ -1687,8 +1687,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 42,
-                "unresolvedAssignments": 95
+                "completedAssignments": 43,
+                "unresolvedAssignments": 94
             },
             {
                 "id": "policy-file",
@@ -10244,10 +10244,13 @@
             "verification": []
         },
         "review/tests-tools/013": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29b12024ea85a52baf2a78387db280fa6cfdb6f4",
+            "verification": [
+                "Native duplicate secrets flows are deleted while retained redaction, history and fingerprint controls remain; executable eligibility follows native tool builds. The pure planner asserts one unsupported platform result with every existing stage assertion retained.",
+                "Main CLI32/235/threefiles and native16/106/ninefiles passed; isolated native catalog and matcher negative controls are preserved. Windows planner simulation is not Windows tool execution."
+            ]
         },
         "review/tests-tools/014": {
             "status": "complete",
@@ -10362,10 +10365,13 @@
             ]
         },
         "review/tests-tools/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29b12024ea85a52baf2a78387db280fa6cfdb6f4",
+            "verification": [
+                "Native duplicate secrets flows are deleted while retained redaction, history and fingerprint controls remain; executable eligibility follows native tool builds. The pure planner asserts one unsupported platform result with every existing stage assertion retained.",
+                "Main CLI32/235/threefiles and native16/106/ninefiles passed; isolated native catalog and matcher negative controls are preserved. Windows planner simulation is not Windows tool execution."
+            ]
         },
         "review/tests-tools/029": {
             "status": "pending",
@@ -11441,10 +11447,13 @@
             "verification": []
         },
         "slices/tests-acceptance/004": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29b12024ea85a52baf2a78387db280fa6cfdb6f4",
+            "verification": [
+                "Actual captured example report retains every mapped finding field and full human output. Shared cases execute native pytest/Ansible defects and fixes; clean pytest naming/Ruff/coverage remain. Current hooks, scoped policy, Vitest and Prettier controls passed.",
+                "Main native designated once-packed run16 passed,106assertions,ninefiles; Root types, ESLint and formatting passed. Native fixture transport is reduced; original failures are retained."
+            ]
         },
         "slices/tests-acceptance/007": {
             "status": "partial",
@@ -11489,10 +11498,13 @@
             "verification": []
         },
         "slices/tests-acceptance/027": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29b12024ea85a52baf2a78387db280fa6cfdb6f4",
+            "verification": [
+                "Actual captured example report retains every mapped finding field and full human output. Shared cases execute native pytest/Ansible defects and fixes; clean pytest naming/Ruff/coverage remain. Current hooks, scoped policy, Vitest and Prettier controls passed.",
+                "Main native designated once-packed run16 passed,106assertions,ninefiles; Root types, ESLint and formatting passed. Native fixture transport is reduced; original failures are retained."
+            ]
         },
         "slices/tests-acceptance/028": {
             "status": "partial",
@@ -11508,10 +11520,13 @@
             ]
         },
         "slices/tests-acceptance/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "29b12024ea85a52baf2a78387db280fa6cfdb6f4",
+            "verification": [
+                "Actual captured example report retains every mapped finding field and full human output. Shared cases execute native pytest/Ansible defects and fixes; clean pytest naming/Ruff/coverage remain. Current hooks, scoped policy, Vitest and Prettier controls passed.",
+                "Main native designated once-packed run16 passed,106assertions,ninefiles; Root types, ESLint and formatting passed. Native fixture transport is reduced; original failures are retained."
+            ]
         },
         "slices/tests-acceptance/031": {
             "status": "partial",
@@ -15576,6 +15591,25 @@
             "limitations": [
                 "Other integrated infrastructure leaves remain partial where packet simplification or platform acceptance is outstanding.",
                 "macOS native evidence; Linux/macOS/Windows CI for the new source commit queued."
+            ]
+        },
+        {
+            "commit": "29b12024ea85a52baf2a78387db280fa6cfdb6f4",
+            "completedRecords": [
+                "review/tests-tools/013",
+                "review/tests-tools/028",
+                "slices/tests-acceptance/004",
+                "slices/tests-acceptance/027",
+                "slices/tests-acceptance/029"
+            ],
+            "unresolvedRecords": 813,
+            "validation": [
+                "CLI32/235; native16/106/ninefiles286.84s; types/lint/format0.",
+                "Firstfull staged gate failed only unused SecretEnvironment; deleted after consumer search. Affected staged Knip2 checks passed0findings; normal commit49 checks passed3skips0findings +message check."
+            ],
+            "limitations": [
+                "macOS native tests; explicit planner Windows simulation is not native Windows proof.",
+                "Final all-platform suites and timeout measurement remain outstanding; baseline failure and cancelled overly broad filter logs preserved."
             ]
         }
     ],
