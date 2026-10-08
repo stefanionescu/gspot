@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { symlink, readFile, readlink } from 'node:fs/promises';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { symlinkSync, readFileSync, readlinkSync } from 'node:fs';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 
@@ -17,7 +17,7 @@ if (isPosix) {
         async (point) => {
             await using directory = await testdir();
             await createFileTree(directory.path, { target: 'installed target', original: 'authored target' });
-            symlinkSync('original', join(directory.path, 'tool'));
+            await symlink('original', join(directory.path, 'tool'));
             const script = `
             import { mock } from 'bun:test';
             const boundary = await import(${JSON.stringify(boundary)});
@@ -41,9 +41,9 @@ const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/owne
             {
                 using log = openOwnership(directory.path);
 
-                expect(readlinkSync(join(directory.path, 'tool'))).toBe(point === 'after' ? 'target' : 'original');
-                expect(readFileSync(join(directory.path, 'original'), 'utf8')).toBe('authored target');
-                expect(readFileSync(join(directory.path, 'target'), 'utf8')).toBe('installed target');
+                expect(await readlink(join(directory.path, 'tool'))).toBe(point === 'after' ? 'target' : 'original');
+                expect(await readFile(join(directory.path, 'original'), 'utf8')).toBe('authored target');
+                expect(await readFile(join(directory.path, 'target'), 'utf8')).toBe('installed target');
                 expect(log.state.files.map((entry) => entry.path)).toStrictEqual(point === 'after' ? ['tool'] : []);
             }
         },
@@ -78,7 +78,7 @@ const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/owne
             const child = runTestCommandBlocking([process.execPath, '-e', script], { cwd: directory.path });
             expect(child.code, child.stdout + child.stderr).toBe(73);
             const pending = ownershipSchema.parse(
-                JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
+                JSON.parse(await readFile(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
             );
             expect(pending.pending?.[0]?.path).toBe('config.txt');
             {
@@ -87,11 +87,11 @@ const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/owne
                 expect(log.state.files.map((entry) => entry.path)).toStrictEqual(
                     point === 'after' ? ['config.txt'] : [],
                 );
-                expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe(
+                expect(await readFile(join(directory.path, 'config.txt'), 'utf8')).toBe(
                     point === 'after' ? 'installed\n' : 'original\n',
                 );
                 const recovered = ownershipSchema.parse(
-                    JSON.parse(readFileSync(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
+                    JSON.parse(await readFile(join(directory.path, '.gspot/state/ownership.json'), 'utf8')),
                 );
                 expect(recovered.pending).toBeUndefined();
             }

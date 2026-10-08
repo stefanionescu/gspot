@@ -1,9 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { consumerEnvironment } from '#tests/harness/environment.ts';
 import type { PublishedRelease } from '#automation/types/package.ts';
 import { OFFLINE_ENVIRONMENT } from '#tests/config/harness/consumer.ts';
@@ -22,14 +21,13 @@ export async function createConsumer(
     try {
         const root = join(workspace.path, 'consumer');
         const env = { ...consumerEnvironment, BUN_INSTALL_CACHE_DIR: join(workspace.path, 'bun-cache') };
-        mkdirSync(root);
-        writeFileSync(join(root, 'package.json'), '{"name":"consumer","private":true}\n');
+        await mkdir(root);
+        await writeFile(join(root, 'package.json'), '{"name":"consumer","private":true}\n');
         const installed = await runTestCommand(
             ['npm', 'install', `@gspothq/cli@${version}`, '--ignore-scripts', '--no-audit', '--no-fund'],
             {
                 cwd: root,
                 env: { ...consumerEnvironment, NPM_CONFIG_USERCONFIG: registry.npmrc },
-                timeoutMs: NATIVE_TEST_TIMEOUT_MS,
             },
         );
         if (installed.code !== 0)
@@ -43,7 +41,6 @@ export async function createConsumer(
                 CI: '1',
                 ...OFFLINE_ENVIRONMENT,
             },
-            timeoutMs: NATIVE_TEST_TIMEOUT_MS,
         };
         const onlineOptions = {
             ...offlineOptions,

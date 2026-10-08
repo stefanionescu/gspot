@@ -134,11 +134,11 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         const scope = options.scope.replace(/\/$/u, '');
         const prefix = scope === '' ? '' : `${scope}/`;
         const roles = options.roles;
-        // A file's path relative to the scope, and the role the first matching glob gives it.
+        // Match roles at the repository root; diagnostics and aliases retain scope-relative paths.
         const placed = (absolute: string): ImportLocation => {
             const rel = absolute.startsWith(`${root}/`) ? absolute.slice(root.length + 1) : absolute;
             const path = prefix !== '' && rel.startsWith(prefix) ? rel.slice(prefix.length) : rel;
-            const role = ROLE_ORDER.find((entry) => isAnyGlobMatch(path, roles[entry])) ?? 'other';
+            const role = ROLE_ORDER.find((entry) => isAnyGlobMatch(rel, roles[entry])) ?? 'other';
             return { path, role };
         };
         const { role } = placed(file.absolute);

@@ -167,3 +167,42 @@ export const MARKDOWNLINT_REJECTED_SELECTIONS = [
 
 /** Commitlint native options omit severity and cannot select more checks. */
 export const COMMITLINT_REJECTED_SELECTIONS = ['0', '1', '2', 'false', '[0]', '[1, "always", 40]', '[2, "always", 40]'];
+
+/** Python writers reject these native tables. */
+export const UNSUPPORTED_PYTHON_OPTIONS = [
+    {
+        tool: 'ruff',
+        options: 'preview = true',
+        diagnostic: '`verbatim` is not a setting gspot knows under [tools.ruff]',
+    },
+    {
+        tool: 'ruff',
+        options: 'lint.preview = true',
+        diagnostic: '`verbatim` is not a setting gspot knows under [tools.ruff]',
+    },
+    {
+        tool: 'ruff',
+        options: 'format.preview = true',
+        diagnostic: '`verbatim` is not a setting gspot knows under [tools.ruff]',
+    },
+    {
+        tool: 'ruff',
+        options: 'select = ["N802"]',
+        diagnostic: '`verbatim` is not a setting gspot knows under [tools.ruff]',
+    },
+    {
+        tool: 'ruff',
+        options: 'extend-select = ["N802"]',
+        diagnostic: '`verbatim` is not a setting gspot knows under [tools.ruff]',
+    },
+    {
+        tool: 'basedpyright',
+        options: 'enableExperimentalFeatures = false',
+        diagnostic: '`basedpyright` is not a setting gspot knows under [tools]',
+    },
+    {
+        tool: 'basedpyright',
+        options: 'enableExperimentalFeatures = true',
+        diagnostic: '`basedpyright` is not a setting gspot knows under [tools]',
+    },
+];

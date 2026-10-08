@@ -1,7 +1,7 @@
 [configuration]
 title = "React Native"
 requires = ["react"]
-recommends = ["typescript"]
+suggests = ["typescript"]
 description = "React Native components, styles, and native APIs. Lists use stable keys and virtualized rendering, touch targets use Pressable, and AsyncStorage stores no credentials."
 
 [detect]
@@ -35,13 +35,12 @@ selector = "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imp
 message = "Use Pressable. The Touchable components are kept for old code and get no new behavior."
 
 [[config.selectors]]
-selector = "JSXOpeningElement[name.name=/^(FlatList|SectionList)$/]:not(:has(JSXAttribute[name.name='keyExtractor']))"
-message = "Give the list a keyExtractor, so a row keeps its state when the list changes."
-
-[[config.selectors]]
 selector = "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']"
 message = "A ScrollView renders every row at once. Render a list that grows through FlatList."
 
 [[config.selectors]]
 selector = "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]"
 message = "AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform."
+
+[set]
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }

@@ -61,7 +61,7 @@ export async function commitlintRange(session: ToolSession, planned: PlannedChec
         const current = await runCheckCommand(
             session,
             { ...planned, messageFile: commitFile },
-            { command: ['commitlint', '--config', '{config:commitlint}', '--edit', '{message_file}'] },
+            { command: ['commitlint', '--config', '{tool_file:commitlint}', '--edit', '{message_file}'] },
         );
         result.findings.push(
             ...current.findings.map((finding) => ({ ...finding, message: `${commit}: ${finding.message}` })),

@@ -24,7 +24,9 @@ async function hooksOf(root: string) {
 
 test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks', async (prefix) => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { [`${prefix}gspot.toml`]: buildPolicy([], { tables: '[hooks]\n' }) });
+    await createFileTree(sandbox.path, {
+        [`${prefix}gspot.toml`]: buildPolicy([], { tables: '[hooks]\nenabled = true\n' }),
+    });
     gitOutput(sandbox.path, ['init', '-q']);
     const root = join(sandbox.path, prefix);
     expect(hookStatus(await hooksOf(root))).toStrictEqual({ ready: false, text: 'not installed; run gspot install' });
@@ -60,7 +62,7 @@ test.each([
 ] as const)('a repository with %s keeps its hooks and gets the lines to add', async (_kind, files, setting) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { tables: 'run_with = "npm"\n[hooks]\n' }),
+        'gspot.toml': buildPolicy([], { tables: 'runner = "npm"\n[hooks]\nenabled = true\n' }),
         ...files,
     });
     gitOutput(sandbox.path, ['init', '-q']);
@@ -111,9 +113,9 @@ test('a commit in a linked worktree runs the staged checks and blocks a defect',
         'const found = process.argv.slice(1).filter((path) => require("node:fs").readFileSync(path, "utf8").includes("DEFECT")); found.forEach((path) => console.log(path)); process.exitCode = found.length > 0 ? 1 : 0;',
         '{files}',
     ];
-    const check = `[[check]]\nname = "sandbox/defect"\ncommand = ${JSON.stringify(finder)}\npaths = ["src/**"]\nstage = "commit"\n[check.output]\nformat = "lines"\n`;
+    const check = `[check."sandbox/defect"]\ncommand = ${JSON.stringify(finder)}\npaths = ["src/**"]\nstage = "commit"\n[check."sandbox/defect".output]\nformat = "lines"\n`;
     await createFileTree(main, {
-        'gspot.toml': buildPolicy([], { tables: `[hooks]\n[agent_rules]\nenabled = false\n${check}` }),
+        'gspot.toml': buildPolicy([], { tables: `[hooks]\nenabled = true\n[agent_rules]\nenabled = false\n${check}` }),
         'src/kept.txt': 'clean\n',
     });
     commitAll(main);
@@ -154,8 +156,8 @@ test('a hook selects configuration below the Git root and checks its exact index
 [agent_rules]
 enabled = false
 [hooks]
-[[check]]
-name = "project/content"
+enabled = true
+[check."project/content"]
 stage = "commit"
 paths = ["source.txt"]
 command = ${JSON.stringify([process.execPath, '-e', 'if ((await Bun.file("source.txt").text()).trim() === "invalid") { console.log("Indexed defect"); process.exitCode = 1; }'])}

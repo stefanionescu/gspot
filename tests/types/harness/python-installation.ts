@@ -1,8 +1,8 @@
 /** A Python project prepared for installation: the authored files before install. */
 export type PythonInstallation = {
     root: string;
-    rootProject: NonSharedBuffer;
-    rootConfiguration: NonSharedBuffer;
+    rootProject: Buffer;
+    rootConfiguration: Buffer;
     [Symbol.asyncDispose](): Promise<void>;
 };
 

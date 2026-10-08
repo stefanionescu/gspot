@@ -36,7 +36,7 @@ export const IGNORE_CASES = [
         'the removal of an entry that does not exist',
         ['ignore', 'bash/shellcheck', '--rule', 'SC1000', '--remove'],
         0,
-        'no matching ignore entry',
+        'nothing to remove: no matching ignore entry',
     ],
 ] as const;
 
@@ -44,8 +44,8 @@ export const IGNORE_CASES = [
 export const IGNORE_FEEDBACK_CASES = [
     [
         'an authored entry',
-        '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\n',
+        '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "Word splitting is intentional in this fixture."\n',
         'removed 1 ignore entry for bash/shellcheck',
     ] as const,
-    ['an empty authored list', 'ignore = []\n', 'no matching ignore entry'] as const,
+    ['an empty authored list', 'ignore = []\n', 'nothing to remove: no matching ignore entry'] as const,
 ];

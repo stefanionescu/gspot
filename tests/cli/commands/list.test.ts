@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { readTree } from '#tests/harness/preservation.ts';
+import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { NESTED_SCOPES_POLICY } from '#tests/config/cli/commands/nested-scopes.ts';
 import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
@@ -18,7 +18,7 @@ test('list shows selected policy states, detected configurations, and setting va
         'entry.sh': 'echo example\n',
         'query.sql': 'SELECT 1;\n',
     });
-    const before = readTree(directory.path);
+    const before = await readTree(directory.path);
     const listed = await runGspot(directory.path, ['list', 'configurations', '--json']);
     expect(listed.code, listed.stdout + listed.stderr).toBe(0);
     const result = JSON.parse(listed.stdout) as ConfigurationsListJson;
@@ -42,9 +42,9 @@ test('list shows selected policy states, detected configurations, and setting va
     expect(invalid.code).toBe(2);
     const obsolete = await runGspot(directory.path, ['doctor', '--settings']);
     expect(obsolete.code).toBe(2);
-    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
-    expect(existsSync(join(directory.path, '.gspot'))).toBe(false);
-    expect(readTree(directory.path)).toStrictEqual(before);
+    expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
+    expect(await pathExists(join(directory.path, '.gspot'))).toBe(false);
+    expect(await readTree(directory.path)).toStrictEqual(before);
 });
 
 test('human configuration listings retain the selected names from JSON without writing', async () => {
@@ -53,7 +53,7 @@ test('human configuration listings retain the selected names from JSON without w
         'gspot.toml': buildPolicy(['bash']),
         'entry.sh': 'echo example\n',
     });
-    const before = readTree(directory.path);
+    const before = await readTree(directory.path);
     const structured = await runGspot(directory.path, ['list', 'configurations', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
@@ -63,20 +63,20 @@ test('human configuration listings retain the selected names from JSON without w
     expect(human.stderr).toBe('');
     expect(human.stdout).toStartWith('selected\n');
     for (const configuration of result.selected) expect(human.stdout).toContain(`  ${configuration.name}\n`);
-    expect(readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(directory.path)).toStrictEqual(before);
 });
 
 test('human check listings combine scope states into one row without losing JSON scope entries', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy(['bash'], {
-            tables: '[[ignore]]\ncheck = "bash/syntax"\npaths = ["api/**"]\nreason = "Review scoped syntax separately."\n[[scope]]\npath = "api"\n[[scope]]\npath = "api/worker"\n',
+            tables: '[[ignore]]\ncheck = "bash/syntax"\npaths = ["api/**"]\nreason = "Review scoped syntax separately."\n[scope."api"]\n[scope."api/worker"]\n',
         }),
         'entry.sh': 'echo root\n',
         'api/entry.sh': 'echo api\n',
         'api/worker/entry.sh': 'echo worker\n',
     });
-    const before = readTree(directory.path);
+    const before = await readTree(directory.path);
     const structured = await runGspot(directory.path, ['list', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
     expect(structured.stderr).toBe('');
@@ -93,7 +93,7 @@ test('human check listings combine scope states into one row without losing JSON
     expect(human.stdout).toContain('    bash/syntax  root: on, api: off (ignore), api/worker: off (ignore)\n');
     for (const name of new Set(checks.map((check) => check.name)))
         expect(human.stdout.split('\n').filter((line) => line.trimStart().startsWith(`${name} `))).toHaveLength(1);
-    expect(readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(directory.path)).toStrictEqual(before);
 });
 
 test('human setting listings show authored scope overrides while JSON retains inherited values', async () => {
@@ -103,7 +103,7 @@ test('human setting listings show authored scope overrides while JSON retains in
         'api/entry.sh': 'echo api\n',
         'api/worker/query.sql': 'SELECT 1;\n',
     });
-    const before = readTree(directory.path);
+    const before = await readTree(directory.path);
     const human = await runGspot(directory.path, ['list', 'settings']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
@@ -112,7 +112,7 @@ test('human setting listings show authored scope overrides while JSON retains in
     expect(limits[0]).toContain('250');
     expect(limits[0]).toContain('gspot.toml');
     expect(limits[1]).toContain('200');
-    expect(limits[1]).toContain('[[scope]] api  [scope api]');
+    expect(limits[1]).toContain('[scope."api"]  [scope api]');
     expect(limits.join('\n')).not.toContain('[scope api/worker]');
     const structured = await runGspot(directory.path, ['list', 'settings', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(0);
@@ -120,20 +120,20 @@ test('human setting listings show authored scope overrides while JSON retains in
     const { settings } = JSON.parse(structured.stdout) as SettingsListJson;
     expect(settings.find((row) => row.scope === 'api/worker' && row.key === 'limits.file_lines')).toMatchObject({
         value: 200,
-        source: '[[scope]] api',
+        source: '[scope."api"]',
     });
-    expect(readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(directory.path)).toStrictEqual(before);
 });
 
 test('human setting listings shorten long values and name extra tables while JSON retains complete values', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy(['bash'], {
-            tables: 'exclude = ["generated-long-name-one/**", "generated-long-name-two/**"]\n[tools.shellcheck.verbatim]\nexternal_sources = true\nreason = "ShellCheck follows the authored external sources."\n',
+            tables: 'exclude = ["generated-long-name-one/**", "generated-long-name-two/**"]\n[tools.shellcheck.verbatim]\nexternal_sources = true\n[reasons]\n"tools.shellcheck.verbatim" = "ShellCheck follows the authored external sources."\n',
         }),
         'entry.sh': 'echo example\n',
     });
-    const before = readTree(directory.path);
+    const before = await readTree(directory.path);
     const human = await runGspot(directory.path, ['list', 'settings']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
@@ -159,5 +159,5 @@ test('human setting listings shorten long values and name extra tables while JSO
             scope: '',
         },
     ]);
-    expect(readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(directory.path)).toStrictEqual(before);
 });

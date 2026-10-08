@@ -1,4 +1,4 @@
-import { TYPO } from '#tests/config/harness/spelling.ts';
+import { TYPO } from '#tests/config/samples/spelling.ts';
 
 /** Native fixes leave an unresolved finding for the repeated fix and manual correction. */
 export const PARTIAL_FIX_CASES = [
@@ -21,3 +21,5 @@ export const PARTIAL_FIX_CASES = [
         corrected: 'the whether\n',
     },
 ];
+
+export const SHFMT_FORMATTED_SCRIPT = "if true; then\n    printf '%s\\n' one\nfi\n";

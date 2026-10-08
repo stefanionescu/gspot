@@ -2,12 +2,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { readdir, readFile } from 'node:fs/promises';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { proposeBlock, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { installTree, readInstalledTree, deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
+import { SWAP_CASES, BLOCK_CASES, ADOPTED_FILE_CASES } from '#tests/config/cli/lifecycle/ownership/bounded-state.ts';
 
 test('an installation is one record, and removing it deletes the folder', async () => {
     await using directory = await testdir();
@@ -19,7 +21,7 @@ test('an installation is one record, and removing it deletes the folder', async 
         installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
         expect(getOwnership(directory.path)).toMatchObject({ files: [], installed: ['npm'] });
         deleteInstallation(log, 'npm');
-        expect(existsSync(join(directory.path, '.gspot/node_modules'))).toBe(false);
+        expect(await pathExists(join(directory.path, '.gspot/node_modules'))).toBe(false);
         expect(getOwnership(directory.path).installed).toBeUndefined();
     }
 });
@@ -35,29 +37,25 @@ test('an installation refuses a folder gspot did not install and leaves it as it
         expect(() => {
             installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
         }).toThrow('.gspot/node_modules exists and gspot did not create it. Move it aside, then run gspot install.');
-        expect(existsSync(join(directory.path, '.gspot/node_modules/authored/index.js'))).toBe(true);
+        expect(await pathExists(join(directory.path, '.gspot/node_modules/authored/index.js'))).toBe(true);
         expect(getOwnership(directory.path).installing).toBeUndefined();
     }
 });
 
-test.each([true, false])(
-    'an interrupted swap recovers the previous folder when the new one is missing (%s)',
-    async (isMissing) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
-            '.gspot/state/ownership.json': `${JSON.stringify({ version: 1, files: [], installing: ['npm'] })}\n`,
-            '.gspot/node_modules.previous/tool/index.js': 'previous\n',
-            '.gspot/node_modules.next/tool/index.js': 'partial\n',
-            ...(isMissing ? {} : { '.gspot/node_modules/tool/index.js': 'swapped\n' }),
-        });
-        openOwnership(directory.path)[Symbol.dispose]();
-        const kept = isMissing ? 'previous\n' : 'swapped\n';
-        expect(readFileSync(join(directory.path, '.gspot/node_modules/tool/index.js'), 'utf8')).toBe(kept);
-        expect(existsSync(join(directory.path, '.gspot/node_modules.previous'))).toBe(false);
-        expect(existsSync(join(directory.path, '.gspot/node_modules.next'))).toBe(false);
-        expect(getOwnership(directory.path).installing).toStrictEqual(['npm']);
-    },
-);
+test.each(SWAP_CASES)('an interrupted swap retains the correct folder when $name', async ({ files, kept }) => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        '.gspot/state/ownership.json': `${JSON.stringify({ version: 1, files: [], installing: ['npm'] })}\n`,
+        '.gspot/node_modules.previous/tool/index.js': 'previous\n',
+        '.gspot/node_modules.next/tool/index.js': 'partial\n',
+        ...files,
+    });
+    openOwnership(directory.path)[Symbol.dispose]();
+    expect(await readFile(join(directory.path, '.gspot/node_modules/tool/index.js'), 'utf8')).toBe(kept);
+    expect(await pathExists(join(directory.path, '.gspot/node_modules.previous'))).toBe(false);
+    expect(await pathExists(join(directory.path, '.gspot/node_modules.next'))).toBe(false);
+    expect(getOwnership(directory.path).installing).toStrictEqual(['npm']);
+});
 
 test('an install killed after its swap and before its record is replaced by the next install', async () => {
     await using directory = await testdir();
@@ -72,16 +70,16 @@ test('an install killed after its swap and before its record is replaced by the 
 
         installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
     }
-    expect(readFileSync(join(directory.path, '.gspot/node_modules/tool/index.js'), 'utf8')).toBe('reinstalled\n');
+    expect(await readFile(join(directory.path, '.gspot/node_modules/tool/index.js'), 'utf8')).toBe('reinstalled\n');
     expect(getOwnership(directory.path)).toMatchObject({ installed: ['npm'] });
     expect(getOwnership(directory.path).installing).toBeUndefined();
 });
 
-test.each([true, false])(
-    'removing a managed block deletes the file only when the block created it (%s)',
-    async (isCreated) => {
+test.each(BLOCK_CASES)(
+    'removing a managed block restores the original state when $name',
+    async ({ files, isCreated, kept }) => {
         await using directory = await testdir();
-        if (!isCreated) await createFileTree(directory.path, { 'NOTES.md': 'Authored.\n' });
+        await createFileTree(directory.path, files);
         {
             using log = openOwnership(directory.path);
 
@@ -90,7 +88,7 @@ test.each([true, false])(
             expect(applyPlan(log, proposeRestoration(log, 'NOTES.md'))).toBe('changed');
         }
         const path = join(directory.path, 'NOTES.md');
-        expect(existsSync(path) ? readFileSync(path, 'utf8') : undefined).toBe(isCreated ? undefined : 'Authored.\n');
+        expect((await pathExists(path)) ? await readFile(path, 'utf8') : undefined).toBe(kept);
     },
 );
 
@@ -109,11 +107,11 @@ test('a replaced file keeps no copy, and giving it back deletes it', async () =>
                 canReplace: true,
             }),
         );
-        expect(readdirSync(join(directory.path, '.gspot/state'))).toContain('ownership.json');
-        expect(readdirSync(join(directory.path, '.gspot/state'))).not.toContain('recovery');
+        expect(await readdir(join(directory.path, '.gspot/state'))).toContain('ownership.json');
+        expect(await readdir(join(directory.path, '.gspot/state'))).not.toContain('recovery');
         expect(applyPlan(log, proposeRestoration(log, 'config.txt'))).toBe('changed');
     }
-    expect(existsSync(join(directory.path, 'config.txt'))).toBe(false);
+    expect(await pathExists(join(directory.path, 'config.txt'))).toBe(false);
 });
 
 test('giving back the last file of a folder removes the folders it leaves empty', async () => {
@@ -133,17 +131,13 @@ test('giving back the last file of a folder removes the folders it leaves empty'
         );
         expect(applyPlan(log, proposeRestoration(log, 'guides/agent/rules/WORKING.md'))).toBe('changed');
     }
-    expect(existsSync(join(directory.path, 'guides/agent'))).toBe(false);
-    expect(readdirSync(join(directory.path, 'guides'))).toStrictEqual(['kept.md']);
+    expect(await pathExists(join(directory.path, 'guides/agent'))).toBe(false);
+    expect(await readdir(join(directory.path, 'guides'))).toStrictEqual(['kept.md']);
 });
 
-test.each([
-    ['tool.json', false, true],
-    ['tool.json', true, false],
-    ['.gspot/config/tool.json', false, false],
-])(
-    'an adopted file outside .gspot stays when given back, until gspot writes other bytes into it (%s, rewritten %p)',
-    async (path, isChanged, isKept) => {
+test.each(ADOPTED_FILE_CASES)(
+    'restoring an adopted file retains only authored bytes: $name',
+    async ({ path, isChanged, isKept }) => {
         await using directory = await testdir();
         await createFileTree(directory.path, { [path]: '{"v":1}\n' });
         {
@@ -172,7 +166,7 @@ test.each([
                 );
             expect(applyPlan(log, proposeRestoration(log, path))).toBe('changed');
         }
-        expect(existsSync(join(directory.path, path))).toBe(isKept);
+        expect(await pathExists(join(directory.path, path))).toBe(isKept);
         expect(getOwnership(directory.path).files).toStrictEqual([]);
     },
 );

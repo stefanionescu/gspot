@@ -1,12 +1,9 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 
-export const OVER_LIMIT_KB = 1100;
-
 export const CLEAN =
     '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n# main: runs the script.\nmain() {\n    local name="$1"\n    local greeting="hello ${name}"\n    echo "${greeting}"\n}\n\nmain "$@"\n';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['bash', 'javascript'],
     modules: false,
@@ -21,7 +18,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'structure/lone-files',

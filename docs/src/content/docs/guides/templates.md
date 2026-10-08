@@ -3,7 +3,7 @@ title: Reuse templates
 description: Export portable policy and initialize another repository from it.
 ---
 
-A template is an exported setup another repository can reuse. It carries configuration choices, the level, settings, and integration choices.
+A template is an exported setup another repository can reuse. It carries authored configuration choices, settings, command checks, paths, ignores, declarations, and integrations.
 
 ## Export
 
@@ -11,9 +11,9 @@ A template is an exported setup another repository can reuse. It carries configu
 gspot export team.gspot.template.toml
 ```
 
-The export reports every omitted item. It omits scopes, command checks, installed dependencies, and the `generated`, `vendored`, and `exclude` lists. Entries that name repository paths also stay behind. Explicitly authored empty tables remain, because an empty integration table can enable that integration.
+Export omits scopes and keeps every other authored policy entry, including empty tables. It copies authored values without adding defaults. Review path choices for the destination; commands that name local executables produce a warning.
 
-A template carries hooks, CI, agent-rule, and runner settings, but no generated hook scripts, lockfiles, or installed tools. A template without `[hooks]` sets up no hooks.
+A template carries hooks, CI, agent-rule, and runner settings, but no generated hook scripts, lockfiles, or installed tools. `hooks.enabled` controls hook setup.
 
 Export writes these template fields:
 
@@ -29,11 +29,13 @@ selections include automatic general checks at the chosen level. An empty exact 
 language and framework choices; it still includes general checks. Later `apply` reconciles
 repository changes and retains manual language and framework overrides.
 
+Export can write outside the repository atomically. It refuses the policy file and managed output destinations. Use `gspot export team.gspot.template.toml --dry-run` to print the template without writing it.
+
 ## Initialize another repository
 
 In a clean destination repository, preview and initialize from the template:
 
-```shell
+```shell title="Use a local team template"
 gspot init --from ../team.gspot.template.toml --dry-run --yes
 gspot init --from ../team.gspot.template.toml --yes
 gspot doctor
@@ -42,7 +44,7 @@ gspot check
 
 `init` validates the template and writes its policy into the destination's `gspot.toml`. It does not keep a live connection to the source. Editing the source template later leaves existing consumers unchanged.
 
-Local paths, HTTPS URLs, and `github:owner/repository[/path][@ref]` are supported. A GitHub source without a path reads `gspot.template.toml`.
+Local paths, HTTPS URLs, and `github:owner/repository[/path][@ref]` are supported. A GitHub source without a path reads `gspot.template.toml`. Set `GITHUB_TOKEN` for a private GitHub source.
 
 ## Reconcile and export again
 
@@ -57,4 +59,4 @@ gspot export python.gspot.template.toml
 
 `apply` updates automatically detected configurations when their evidence changes. It keeps
 manual language and framework choices from the template. Saved stack-specific settings become
-active if that stack returns. Review the second export's omission report before sharing it.
+active if that stack returns. Review the second export before sharing it.

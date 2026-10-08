@@ -14,7 +14,7 @@ npm = "@ast-grep/cli"
 mise = "ast-grep"
 brew = "ast-grep"
 cargo = "ast-grep"
-github = {name = "ast-grep/ast-grep", version = "0.45.3"}
+github = { name = "ast-grep/ast-grep", version = "0.45.3" }
 
 [[tool.replace]]
 file = ".qlty"
@@ -29,7 +29,7 @@ stage = "commit"
 alternatives_checked = ["eslint-plugin-unicorn", "ls-lint", "knip"]
 summary = "Finds a folder that holds one code file and nothing else."
 why = "A folder of one file adds a level to every path and promises siblings that never arrive."
-help = "Move the file up beside its neighbors, or allow the folder with a reason under structure.lone_files_allowed."
+help = "Move the file up beside its neighbors, or use gspot ignore structure/lone-files with paths and a reason."
 
 [[check]]
 name = "prefix-collisions"
@@ -65,7 +65,7 @@ stage = "commit"
 alternatives_checked = ["ls-lint"]
 summary = "Finds a folder named after a container word like common, core, helpers or utils, or after a language."
 why = "A folder with no owner collects everything nobody wanted to place, and grows until nobody reads it."
-help = "Name the folder after what it holds, or allow it with a reason under structure.folder_names_allowed."
+help = "Name the folder after what it holds, or use gspot ignore structure/folder-names with paths and a reason."
 
 [[check]]
 name = "config-logic"
@@ -85,9 +85,9 @@ example = "An `eslint-disable-next-line` comment without a reason reports an une
 level = "recommended"
 stage = "commit"
 runs = "once"
-summary = "Checks suppression reasons when require_reasons is enabled; Semgrep and Vale directives are refused outright."
+summary = "Checks suppression reasons; Semgrep and Vale directives are refused outright."
 why = "A suppression with no reason hides a finding nobody reviewed."
-help = "Write the reason in the comment (after two dashes for eslint-disable, after a colon for ts-expect-error), or fix the finding and drop the suppression."
+help = "Use the tool's suppression syntax to write a meaningful reason, or fix the finding and remove the suppression."
 
 [[check]]
 name = "stale-allowlists"
@@ -121,6 +121,18 @@ runs = "once"
 summary = "Checks that git tracks no file inside a folder a package manager fills, such as node_modules."
 why = "An installed dependency in git is copied into every clone, goes stale the day it lands, and hides from every check because it looks vendored."
 help = "Run git rm -r --cached <folder>, and write the folder name with no leading slash in .gitignore so it matches at every depth."
+
+[[check]]
+name = "file-lines"
+title = "Limit source file lines"
+example = "A Python, Bash, or SQL source file above its language's code-line ceiling reports its count. Split independent responsibilities into their owners and rerun the check."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { extensions = [".sh", ".bash", ".zsh", ".bats", ".py", ".pyi", ".sql", ".pgsql", ".psql"], tags = ["shebang:shell"], kinds = ["source"] }
+summary = "Checks source code lines against each language's ceiling."
+why = "A long file hides independent responsibilities from the reader."
+help = "Split the file by its responsibility, or raise its limits.<language>.file_lines with a reason."
 
 [[setting]]
 name = "limits.file_lines"
@@ -171,14 +183,7 @@ languages = ["typescript", "javascript"]
 summary = "How deep blocks may nest inside one function."
 
 [[setting]]
-name = "limits.positional_arguments"
-type = "number"
-direction = "ceiling"
-languages = ["python"]
-summary = "The most positional arguments one Python function may take. Defaults to function_parameters when unset."
-
-[[setting]]
-name = "limits.branches"
+name = "limits.python.branches"
 type = "number"
 direction = "ceiling"
 default = 8
@@ -186,7 +191,7 @@ languages = ["python"]
 summary = "The most branches one function may have."
 
 [[setting]]
-name = "limits.returns"
+name = "limits.python.returns"
 type = "number"
 direction = "ceiling"
 default = 4
@@ -210,15 +215,7 @@ languages = ["typescript", "javascript"]
 summary = "How deep callbacks may nest."
 
 [[setting]]
-name = "limits.identical_function_lines"
-type = "number"
-direction = "ceiling"
-default = 3
-languages = ["typescript", "javascript", "bash", "swift"]
-summary = "The fewest lines two function bodies must share before they count as identical."
-
-[[setting]]
-name = "limits.barrel_reexports"
+name = "limits.index_exports"
 type = "number"
 direction = "ceiling"
 default = 20
@@ -288,13 +285,6 @@ default = 8
 summary = "The most variable assignments one shell function may make."
 
 [[setting]]
-name = "limits.bash.identical_function_lines"
-type = "number"
-direction = "ceiling"
-default = 3
-summary = "The fewest lines two shell functions must share before they count as duplicates."
-
-[[setting]]
 name = "limits.swift.type_lines"
 type = "number"
 direction = "ceiling"
@@ -337,27 +327,6 @@ default = "none"
 summary = "Whether re-exports are allowed: none, or index-only for libraries with barrels."
 
 [[setting]]
-name = "structure.lone_files_allowed"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Folders allowed to hold one file, by path, each with a reason."
-
-[[setting]]
-name = "structure.prefix_collisions_allowed"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Folders where sibling files may share a prefix, by path, each with a reason."
-
-[[setting]]
-name = "structure.folder_names_allowed"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Folder names from the banned list that this repository keeps, by path, each with a reason."
-
-[[setting]]
 name = "architecture.roles"
 type = "table"
 direction = "tightening"
@@ -366,13 +335,7 @@ summary = "Which elements or paths play the types, tests, harness, config, env, 
 [[setting]]
 name = "architecture.modules"
 type = "list"
+items = { name = "string", paths = { type = "list", items = "path" }, may_import = { type = "list", items = "string", optional = true }, reason = { type = "string", optional = true } }
 direction = "tightening"
 default = []
 summary = "The named parts of the code and the paths each covers."
-
-[[setting]]
-name = "architecture.imports_allowed"
-type = "list"
-direction = "tightening"
-default = []
-summary = "Which element may import which; an element imports only itself unless a row says otherwise."

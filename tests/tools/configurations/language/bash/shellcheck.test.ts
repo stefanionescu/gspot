@@ -1,12 +1,11 @@
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { DIALECT_SOURCES, DIALECT_CORRECTIONS } from '#tests/config/tools/configurations/language/bash/shellcheck.ts';
 
 test.each(['recommended', 'all'] as const)(
@@ -17,7 +16,7 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['bash'], {
                 level,
-                tables: '[[scope]]\npath = "app"\n',
+                tables: '[scope."app"]\n',
             }),
             ...DIALECT_SOURCES,
         });
@@ -46,7 +45,7 @@ test.each(['recommended', 'all'] as const)(
             { file: 'unchecked.sh', rule: 'SC2164' },
         ]);
         for (const [path, source] of Object.entries(DIALECT_SOURCES))
-            expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(source);
+            expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
         await createFileTree(sandbox.path, DIALECT_CORRECTIONS);
         const corrected = await spawnGspot(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -60,5 +59,4 @@ test.each(['recommended', 'all'] as const)(
             { scope: 'app', status: 'passed', fileCount: 2, findings: [] },
         ]);
     },
-    NATIVE_TEST_TIMEOUT_MS,
 );

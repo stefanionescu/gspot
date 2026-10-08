@@ -59,7 +59,7 @@ test('the Bash contract and safety agree on the specific temporary path that a t
         'source.sh': WRONG_CLEANUP_SOURCE,
     });
     commitAll(sandbox.path);
-    markExecutable(sandbox.path, 'source.sh');
+    await markExecutable(sandbox.path, 'source.sh');
     const command = ['check', '--only', 'bash/contract', 'bash/safety', '--json'];
     const wrong = await runGspot(sandbox.path, command);
     expect(wrong.code, wrong.stdout + wrong.stderr).toBe(1);

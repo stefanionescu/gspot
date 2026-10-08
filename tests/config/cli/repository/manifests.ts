@@ -5,205 +5,6 @@ export const AUTHORED_PACKAGE_FIELDS = {
     customSettings: { enabled: true },
 } as const;
 
-export const RUNTIME_EVIDENCE_CASES = [
-    {
-        name: 'node engine',
-        runtime: 'node',
-        package: {
-            engines: {
-                node: '>=1',
-            },
-        },
-        source: '',
-        detected: true,
-    },
-    {
-        name: 'node script',
-        runtime: 'node',
-        package: {
-            scripts: {
-                start: 'node run entry.js',
-            },
-        },
-        source: '',
-        detected: true,
-    },
-    {
-        name: 'node shebang',
-        runtime: 'node',
-        package: {},
-        source: '#!/usr/bin/env node\nconsole.log(1);\n',
-        detected: true,
-    },
-    {
-        name: 'node quoted script text',
-        runtime: 'node',
-        package: {
-            scripts: {
-                start: 'echo "node entry.js"',
-            },
-        },
-        source: '',
-        detected: false,
-    },
-    {
-        name: 'node type dependency',
-        runtime: 'node',
-        package: {
-            devDependencies: {
-                '@types/node': '1.0.0',
-            },
-        },
-        source: '',
-        detected: false,
-    },
-    {
-        name: 'node tool-project manifest',
-        runtime: 'node',
-        package: {},
-        source: '',
-        toolProjectManifest: {
-            engines: {
-                node: '>=1',
-            },
-        },
-        detected: false,
-    },
-    {
-        name: 'bun engine',
-        runtime: 'bun',
-        package: {
-            engines: {
-                bun: '>=1',
-            },
-        },
-        source: '',
-        detected: true,
-    },
-    {
-        name: 'bun script',
-        runtime: 'bun',
-        package: {
-            scripts: {
-                start: 'bun run entry.js',
-            },
-        },
-        source: '',
-        detected: true,
-    },
-    {
-        name: 'bun shebang',
-        runtime: 'bun',
-        package: {},
-        source: '#!/usr/bin/env bun\nconsole.log(1);\n',
-        detected: true,
-    },
-    {
-        name: 'bun quoted script text',
-        runtime: 'bun',
-        package: {
-            scripts: {
-                start: 'echo "bun entry.js"',
-            },
-        },
-        source: '',
-        detected: false,
-    },
-    {
-        name: 'bun type dependency',
-        runtime: 'bun',
-        package: {
-            devDependencies: {
-                '@types/bun': '1.0.0',
-            },
-        },
-        source: '',
-        detected: false,
-    },
-    {
-        name: 'bun tool-project manifest',
-        runtime: 'bun',
-        package: {},
-        source: '',
-        toolProjectManifest: {
-            engines: {
-                bun: '>=1',
-            },
-        },
-        detected: false,
-    },
-    {
-        name: 'deno engine',
-        runtime: 'deno',
-        package: {
-            engines: {
-                deno: '>=1',
-            },
-        },
-        source: '',
-        detected: true,
-    },
-    {
-        name: 'deno script',
-        runtime: 'deno',
-        package: {
-            scripts: {
-                start: 'deno run entry.js',
-            },
-        },
-        source: '',
-        detected: true,
-    },
-    {
-        name: 'deno shebang',
-        runtime: 'deno',
-        package: {},
-        source: '#!/usr/bin/env deno\nconsole.log(1);\n',
-        detected: true,
-    },
-    {
-        name: 'deno quoted script text',
-        runtime: 'deno',
-        package: {
-            scripts: {
-                start: 'echo "deno entry.js"',
-            },
-        },
-        source: '',
-        detected: false,
-    },
-    {
-        name: 'deno type dependency',
-        runtime: 'deno',
-        package: {
-            devDependencies: {
-                '@types/deno': '1.0.0',
-            },
-        },
-        source: '',
-        detected: false,
-    },
-    {
-        name: 'deno tool-project manifest',
-        runtime: 'deno',
-        package: {},
-        source: '',
-        toolProjectManifest: {
-            engines: {
-                deno: '>=1',
-            },
-        },
-        detected: false,
-    },
-    {
-        name: 'JavaScript without a declared runtime',
-        runtime: 'node',
-        package: {},
-        source: 'console.log(1);\n',
-        detected: false,
-    },
-];
-
 /** npm project boundaries separate framework-specific dependency contracts. */
 export const PROJECT_DEPENDENCY_FILES = {
     'package.json': '{"dependencies":{"@nestjs/swagger":"11.2.3"}}',
@@ -221,4 +22,24 @@ export const PROJECT_DEPENDENCY_SCOPES = [
     { scope: 'other', dependencies: { next: '16.3.5' } },
     { scope: 'empty', dependencies: {} },
     { scope: 'empty/src', dependencies: {} },
+];
+
+/** Distinct native Python manifest forms retain their own input and expected dependency behavior. */
+export const INVALID_PYTHON_DEPENDENCY_CASES = [
+    { name: 'Poetry numeric dependency', path: 'pyproject.toml', source: '[tool.poetry.dependencies]\nFastAPI = 7\n' },
+    {
+        name: 'Poetry boolean group dependency',
+        path: 'pyproject.toml',
+        source: '[tool.poetry.group.web.dependencies]\nFastAPI = false\n',
+    },
+    { name: 'Pipfile numeric dependency', path: 'Pipfile', source: '[packages]\nFastAPI = 7\n' },
+];
+
+/** Invalid authored fields remain manifest-reader errors. */
+export const INVALID_MANIFESTS = [
+    ['package.json', '{"dependencies":{"typescript":7}}'],
+    ['package.json', '{"scripts":{"lint":false}}'],
+    ['package.json', '{"workspaces":[7]}'],
+    ['pyproject.toml', '[project'],
+    ['pyproject.toml', '[project]\ndependencies = [7]\n'],
 ];

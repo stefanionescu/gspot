@@ -1,5 +1,5 @@
 export const APP_SEMGREP =
-    '[agent_rules]\nenabled = false\n[[scope]]\npath = "app"\nconfigurations = ["express"]\n[scope.tools.semgrep]\nexclude = [{ paths = ["app/**/ignored.js"], reason = "Generated fixtures are checked by their producer." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n';
+    '[agent_rules]\nenabled = false\n[[ignore]]\ncheck = "security/semgrep"\npaths = ["app/**/ignored.js"]\nreason = "Generated fixtures are checked by their producer."\n[scope."app"]\nconfigurations = ["express"]\n[scope."app/child"]\n[scope."sibling"]\n';
 
 /** Express project evidence and inherited source paths for the scoped security test. */
 export const FRAMEWORK_FILES = {
@@ -13,20 +13,11 @@ export const FRAMEWORK_FILES = {
     'sibling/ignored.js': 'eval(input);\n',
 };
 
-/* eslint-disable unicorn/prefer-https -- reason: These Swift fixtures prove that license comments and URL literals do not produce the removed HTTP finding. */
-/** Real findings beside background accessibility, pointer operations, and obsolete compiler diagnostics. */
+/** Keychain and hashing defects beside a safe keychain setting. */
 export const SWIFT_DEFECTS = `let access = kSecAttrAccessibleAlways
-let pointer = UnsafeRawPointer(value)
 let hash = Insecure.MD5
 let background = kSecAttrAccessibleAfterFirstUnlock
-let webView = UIWebView()
-configuration.preferences.javaScriptEnabled = true
-buffer.withUnsafeMutableBytes { bytes in consume(bytes) }
-// License: http://www.apache.org/licenses/LICENSE-2.0
-let address = URL(string: "http://example.com")
-let query = URL(string: "https://api.example.com:8443/v1/users?email=a@b.com")
 `;
-/* eslint-enable unicorn/prefer-https */
 
 /** Shell downloads executed through pipelines, process substitution, and command substitution. */
 export const BASH_DOWNLOAD_DEFECTS = String.raw`#!/usr/bin/env bash
@@ -127,7 +118,6 @@ export const PLATFORM_SOURCE_FINDINGS = [
     { file: 'src/search.js', rule: 'gspot.supabase.postgrest-filter-interpolation', line: 1 },
     { file: 'supabase/functions/cors/index.ts', rule: 'gspot.supabase.edge-cors-wildcard-with-credentials', line: 1 },
     { file: 'supabase/functions/eval/index.ts', rule: 'gspot.javascript.no-eval', line: 1 },
-    { file: 'supabase/functions/remote/index.ts', rule: 'gspot.javascript.no-dynamic-require', line: 1 },
 ];
 
 export const PLATFORM_SOURCE_CORRECTIONS: Record<string, string> = {

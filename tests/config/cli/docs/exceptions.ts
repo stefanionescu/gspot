@@ -3,42 +3,111 @@ import type { RuntimeSchemaCase } from '#tests/types/cli/docs/schema.ts';
 /** Saved exceptions use the same accepted shapes at the root and in a project scope. */
 export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
     {
-        name: 'reasoned formatter exclusions',
+        name: 'removed documentation path exception setting',
         input: {
-            tools: {
-                prettier: {
-                    exclude: {
-                        value: ['generated/**'],
-                        reason: 'Reviewed generated output.',
+            docs: {
+                exclude: [
+                    {
+                        paths: ['example.ts'],
+                        reason: 'This example belongs to its titled code block.',
+                    },
+                ],
+            },
+        },
+        valid: false,
+        diagnostic: '`exclude` is not a setting gspot knows under [docs]',
+    },
+    {
+        name: 'scope.app.removed documentation path exception setting',
+        input: {
+            scope: {
+                app: {
+                    docs: {
+                        exclude: [
+                            {
+                                paths: ['example.ts'],
+                                reason: 'This example belongs to its titled code block.',
+                            },
+                        ],
                     },
                 },
             },
         },
-        valid: true,
+        valid: false,
+        diagnostic: '`exclude` is not a setting gspot knows under [scope.app.docs]',
+    },
+    {
+        name: 'removed CodeQL finding exception setting',
+        input: {
+            tools: {
+                codeql: {
+                    ignore: [
+                        {
+                            rule: 'example',
+                            paths: ['source.ts'],
+                            reason: 'This fixture demonstrates an accepted finding.',
+                        },
+                    ],
+                },
+            },
+        },
+        valid: false,
+        diagnostic: '`ignore` is not a setting gspot knows under [tools.codeql]',
+    },
+    {
+        name: 'scope.app.removed CodeQL finding exception setting',
+        input: {
+            scope: {
+                app: {
+                    tools: {
+                        codeql: {
+                            ignore: [
+                                {
+                                    rule: 'example',
+                                    paths: ['source.ts'],
+                                    reason: 'This fixture demonstrates an accepted finding.',
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+        valid: false,
+        diagnostic: '`ignore` is not a setting gspot knows under [scope.app.tools.codeql]',
+    },
+    {
+        name: 'removed formatter exclusion setting',
+        input: {
+            tools: {
+                prettier: {
+                    exclude: ['generated/**'],
+                },
+            },
+        },
+        valid: false,
+        diagnostic: '`exclude` is not a setting gspot knows under [tools.prettier]',
     },
     {
         name: 'invalid formatter exclusion list',
         input: {
             tools: {
                 prettier: {
-                    exclude: {
-                        value: false,
-                        reason: 'Reviewed generated output.',
-                    },
+                    exclude: false,
                 },
             },
         },
         valid: false,
-        diagnostic: 'gspot.toml: tools.prettier.exclude:',
+        diagnostic: '`exclude` is not a setting gspot knows under [tools.prettier]',
     },
     {
         name: 'reasoned registry hosts',
         input: {
             dependencies: {
-                registry_hosts: {
-                    value: ['registry.example.test'],
-                    reason: 'Reviewed package registry.',
-                },
+                registry_hosts: ['registry.example.test'],
+            },
+            reasons: {
+                'dependencies.registry_hosts': 'Reviewed package registry.',
             },
         },
         valid: true,
@@ -51,10 +120,10 @@ export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
             },
         },
         valid: false,
-        diagnostic: 'gspot.toml: dependencies.registry_hosts:',
+        diagnostic: 'gspot.toml: dependencies.registry_hosts.0:',
     },
     {
-        name: 'reasoned manifest range allowance',
+        name: 'removed manifest range allowance',
         input: {
             dependencies: {
                 ranges_allowed: [
@@ -65,7 +134,8 @@ export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
                 ],
             },
         },
-        valid: true,
+        valid: false,
+        diagnostic: '`ranges_allowed` is not a setting gspot knows under [dependencies]',
     },
     {
         name: 'invalid manifest range paths',
@@ -79,85 +149,75 @@ export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
             },
         },
         valid: false,
-        diagnostic: 'gspot.toml: dependencies.ranges_allowed.0.paths:',
+        diagnostic: '`ranges_allowed` is not a setting gspot knows under [dependencies]',
     },
     {
-        name: 'scope.0.reasoned formatter exclusions',
+        name: 'scope.app.removed formatter exclusion setting',
         input: {
-            scope: [
-                {
-                    path: 'app',
+            scope: {
+                app: {
                     tools: {
                         prettier: {
-                            exclude: {
-                                value: ['generated/**'],
-                                reason: 'Reviewed generated output.',
-                            },
+                            exclude: ['generated/**'],
                         },
                     },
                 },
-            ],
-        },
-        valid: true,
-    },
-    {
-        name: 'scope.0.invalid formatter exclusion list',
-        input: {
-            scope: [
-                {
-                    path: 'app',
-                    tools: {
-                        prettier: {
-                            exclude: {
-                                value: false,
-                                reason: 'Reviewed generated output.',
-                            },
-                        },
-                    },
-                },
-            ],
+            },
         },
         valid: false,
-        diagnostic: 'gspot.toml: scope.0.tools.prettier.exclude:',
+        diagnostic: '`exclude` is not a setting gspot knows under [scope.app.tools.prettier]',
     },
     {
-        name: 'scope.0.reasoned registry hosts',
+        name: 'scope.app.invalid formatter exclusion list',
         input: {
-            scope: [
-                {
-                    path: 'app',
-                    dependencies: {
-                        registry_hosts: {
-                            value: ['registry.example.test'],
-                            reason: 'Reviewed package registry.',
+            scope: {
+                app: {
+                    tools: {
+                        prettier: {
+                            exclude: false,
                         },
                     },
                 },
-            ],
+            },
+        },
+        valid: false,
+        diagnostic: '`exclude` is not a setting gspot knows under [scope.app.tools.prettier]',
+    },
+    {
+        name: 'scope.app.reasoned registry hosts',
+        input: {
+            scope: {
+                app: {
+                    dependencies: {
+                        registry_hosts: ['registry.example.test'],
+                    },
+                    reasons: {
+                        'dependencies.registry_hosts': 'Reviewed package registry.',
+                    },
+                },
+            },
         },
         valid: true,
     },
     {
-        name: 'scope.0.invalid registry host',
+        name: 'scope.app.invalid registry host',
         input: {
-            scope: [
-                {
-                    path: 'app',
+            scope: {
+                app: {
                     dependencies: {
                         registry_hosts: [false],
                     },
                 },
-            ],
+            },
         },
         valid: false,
-        diagnostic: 'gspot.toml: scope.0.dependencies.registry_hosts:',
+        diagnostic: 'gspot.toml: scope.app.dependencies.registry_hosts.0:',
     },
     {
-        name: 'scope.0.reasoned manifest range allowance',
+        name: 'scope.app.removed manifest range allowance',
         input: {
-            scope: [
-                {
-                    path: 'app',
+            scope: {
+                app: {
                     dependencies: {
                         ranges_allowed: [
                             {
@@ -167,16 +227,16 @@ export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
                         ],
                     },
                 },
-            ],
+            },
         },
-        valid: true,
+        valid: false,
+        diagnostic: '`ranges_allowed` is not a setting gspot knows under [scope.app.dependencies]',
     },
     {
-        name: 'scope.0.invalid manifest range paths',
+        name: 'scope.app.invalid manifest range paths',
         input: {
-            scope: [
-                {
-                    path: 'app',
+            scope: {
+                app: {
                     dependencies: {
                         ranges_allowed: [
                             {
@@ -185,34 +245,28 @@ export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
                         ],
                     },
                 },
-            ],
+            },
         },
         valid: false,
-        diagnostic: 'gspot.toml: scope.0.dependencies.ranges_allowed.0.paths:',
+        diagnostic: '`ranges_allowed` is not a setting gspot knows under [scope.app.dependencies]',
     },
     {
-        name: 'reasoned prose vocabulary',
+        name: 'accepted words with reasons',
         input: {
-            prose: {
-                vocabulary: {
-                    value: ['NebulaConfiguration'],
-                    reason: 'Reviewed project name.',
-                },
+            words: {
+                NebulaConfiguration: 'Reviewed project name.',
             },
         },
         valid: true,
     },
     {
-        name: 'invalid prose vocabulary',
+        name: 'invalid accepted word map',
         input: {
-            prose: {
-                vocabulary: {
-                    value: [false],
-                    reason: 'Reviewed project name.',
-                },
+            words: {
+                NebulaConfiguration: false,
             },
         },
         valid: false,
-        diagnostic: 'gspot.toml: prose.vocabulary:',
+        diagnostic: 'gspot.toml: words.NebulaConfiguration:',
     },
 ];

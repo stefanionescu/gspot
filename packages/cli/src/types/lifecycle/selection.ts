@@ -1,5 +1,4 @@
 import type { Template } from '#cli/types/policy/templates.ts';
-import type { Ownership } from '#cli/types/lifecycle/ownership.ts';
 import type { Policy, Mutation } from '#cli/types/policy/settings.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
@@ -9,14 +8,14 @@ import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/
 export type CiChoice = NonNullable<Policy['ci']>['provider'] | 'none';
 
 /** The runner init selects, including an explicit choice to write no task setup. */
-export type RunnerChoice = NonNullable<Policy['run_with']> | 'none';
+export type RunnerChoice = NonNullable<Policy['runner']> | 'none';
 
 export type InitOptions = {
     cwd: string;
     yes: boolean;
     isDryRun: boolean;
     configurations?: string[];
-    scopes?: string[];
+    scopes?: Map<string, string[]>;
     hooks?: boolean;
     ci?: CiChoice;
     rules?: boolean;
@@ -26,14 +25,14 @@ export type InitOptions = {
     install: boolean;
 };
 
-export type ConfigurationReason = 'named' | 'detected' | 'recommended' | 'required';
+export type ConfigurationReason = 'named' | 'detected' | 'suggested' | 'required';
 
 /** What init selection reads. */
 export type InitDetection = {
     manifests: Map<string, Manifest>;
     files: TrackedFile[];
     projectManifests: ProjectManifest[];
-    options: InitOptions;
+    options: Pick<InitOptions, 'configurations' | 'scopes' | 'template'>;
     /** Whether the folder is a git repository; a configuration whose checks all read git stays out otherwise. */
     hasGit: boolean;
 };
@@ -55,27 +54,17 @@ export type InitInputs = {
     projectManifests: ProjectManifest[];
     workspace: ScopeEntry[];
     manifests: Map<string, Manifest>;
-    options: InitOptions;
+    options: Pick<InitOptions, 'configurations' | 'scopes' | 'template'>;
 };
 
 /** Policy mutation and selection changes calculated from repository evidence. */
-export type ConfigurationReconciliation = { mutate: Mutation; notes: string[]; selections: ConfigurationSelections };
-
-/** Private language and framework override history, by scope. */
-export type ConfigurationSelections = NonNullable<Ownership['selections']>;
-
-/** Authored choices and the last applied baseline for identifying edits. */
-export type SelectionUpdate = {
-    choices: ReadonlyMap<string, string[]>;
-    manifests: Map<string, Manifest>;
-    previous: ConfigurationSelections | undefined;
-};
+export type ConfigurationReconciliation = { mutate: Mutation; notes: string[] };
 
 /** Existing and detected choices with a scope's recorded overrides. */
 export type ConfigurationMerge = {
     saved: string[];
     found: string[];
-    overrides: ConfigurationSelections[string] | undefined;
+    removed: string[];
 };
 
 /** Explicit, detected, and recommended choices for explaining initial selection. */

@@ -1,12 +1,3 @@
-const AUTHORED_VERSION_INPUTS: Record<string, string> = {
-    'package.json': '{"packageManager":"bun@0.0.0"}\n',
-};
-
-const RECORDED_VERSION_INPUTS: Record<string, string> = {
-    'bun.lock': 'recorded root lockfile\n',
-    '.gspot/package.json': '{"packageManager":"bun@0.0.0"}\n',
-};
-
 export const PACKAGE_SELECTIONS = [
     [
         'a packageManager with a hash suffix',
@@ -19,9 +10,9 @@ export const PACKAGE_SELECTIONS = [
         'yarn@4.2.0',
     ],
     [
-        'a lockfile with the version the tool project recorded',
-        { 'pnpm-lock.yaml': "lockfileVersion: '9.0'\n", '.gspot/package.json': '{"packageManager":"pnpm@9.4.0"}' },
-        'pnpm@9.4.0',
+        'a lockfile with the major requirement the tool project recorded',
+        { 'pnpm-lock.yaml': "lockfileVersion: '9.0'\n", '.gspot/package.json': '{"packageManager":"pnpm@9.x"}' },
+        'pnpm@9.x',
     ],
     [
         'an explicit manager before a competing lockfile and devEngines declaration',
@@ -46,11 +37,4 @@ export const NON_EXACT_MANAGERS = [
     '{"devEngines":{"packageManager":{"name":"pnpm","version":"^9.1.0"}}}',
     '{"packageManager":"pnpm@^9.1.0"}',
     '{"packageManager":"pnpm"}',
-];
-
-export const PACKAGE_VERSION_CASES = [
-    { source: 'authored', operation: 'lockfile', files: AUTHORED_VERSION_INPUTS } as const,
-    { source: 'authored', operation: 'install', files: AUTHORED_VERSION_INPUTS } as const,
-    { source: 'recorded', operation: 'lockfile', files: RECORDED_VERSION_INPUTS } as const,
-    { source: 'recorded', operation: 'install', files: RECORDED_VERSION_INPUTS } as const,
 ];

@@ -5,8 +5,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { RULES_DIRECTORY } from '#cli/config/platform/locations.ts';
+import { runtimeEvidenceCases } from '#tests/harness/repository.ts';
 import { DRIZZLE_DRIVERS } from '#tests/config/cli/generation/guides.ts';
-import { RUNTIME_EVIDENCE_CASES } from '#tests/config/cli/repository/manifests.ts';
 
 async function generatedGuides(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir();
@@ -67,7 +67,7 @@ test('Swift guides require parsed imports and ignore comments and strings', asyn
     }
 });
 
-test.each(RUNTIME_EVIDENCE_CASES)('Node instructions follow $name evidence', async (entry) => {
+test.each(runtimeEvidenceCases())('Node instructions follow $name evidence', async (entry) => {
     const guides = await generatedGuides('all', {
         'package.json': JSON.stringify(entry.package),
         'entry.js': entry.source,

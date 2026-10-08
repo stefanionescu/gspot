@@ -6,18 +6,16 @@ file_lines = 250
 indent_width = 4
 [agent_rules]
 enabled = false
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = ["bash"]
-[scope.limits]
+[scope."api".limits]
 file_lines = 200
-[scope.format]
+[scope."api".format]
 indent_width = 2
-[[scope]]
-path = "api/worker"
+[scope."api/worker"]
 configurations = ["sql"]
-[scope.limits]
+[scope."api/worker".limits]
 function_lines = 30
-[scope.tools.sqlfluff]
+[scope."api/worker".tools.sqlfluff]
 dialect = "postgres"
 `;

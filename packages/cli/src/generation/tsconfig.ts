@@ -2,17 +2,11 @@ import ts from 'typescript';
 import { join, dirname, relative } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { getTsconfig } from '#cli/parsers/tsconfig.ts';
-import type { Level } from '#cli/types/configurations.ts';
 import { toPosix, extensionOf } from '#cli/platform/paths.ts';
+import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { TsconfigInput } from '#cli/types/generation/tsconfig.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
-
-import {
-    COMPILER_OPTIONS,
-    DECORATOR_OPTIONS,
-    RECOMMENDED_OPTIONS,
-    TYPESCRIPT_DEFAULTS,
-} from '#cli/config/generation/typescript.ts';
+import { COMPILER_OPTIONS, RECOMMENDED_OPTIONS, TYPESCRIPT_DEFAULTS } from '#cli/config/generation/typescript.ts';
 
 /**
  * Preserve authored projects and supply a standalone source project when the scope has none.
@@ -44,10 +38,11 @@ export function buildTsconfig(input: TsconfigInput): Record<string, unknown> {
 /**
  * Required compiler diagnostics and framework settings for generation and authored option auditing.
  * @param level the selected check level
- * @param configurations the applicable configurations
+ * @param selected the applicable configuration manifests
  * @returns the required compiler options
  */
-export function requiredTsconfigOptions(level: Level, configurations: string[]): Record<string, boolean> {
-    const options = level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS;
-    return configurations.includes('nestjs') ? { ...options, ...DECORATOR_OPTIONS } : options;
+export function requiredTsconfigOptions(level: Level, selected: Manifest[]): Record<string, boolean> {
+    const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : RECOMMENDED_OPTIONS) };
+    for (const manifest of selected) Object.assign(options, manifest.compiler_options);
+    return options;
 }

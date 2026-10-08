@@ -31,7 +31,7 @@ test.each(['jest', 'vitest'])(
                 configuration === 'jest'
                     ? APP_JEST
                     : buildPolicy(['vitest'], {
-                          tables: '[agent_rules]\nenabled = false\n[architecture.roles]\nruntime = ["src/**"]\ntest_support = "tests/fixtures"\n',
+                          tables: '[agent_rules]\nenabled = false\n[architecture.roles]\nruntime = ["src/**"]\ntest_harness = "tests/fixtures"\n',
                           level: 'all',
                       }),
         });

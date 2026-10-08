@@ -2,7 +2,6 @@
 import { join } from 'node:path';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PublishedRelease } from '#automation/types/package.ts';
@@ -42,7 +41,6 @@ export async function initializeConsumer(release: PublishedRelease, installation
             NPM_CONFIG_USERCONFIG: registry.npmrc,
             BUN_INSTALL_CACHE_DIR: join(registry.work, 'tool-cache'),
         },
-        timeoutMs: NATIVE_TEST_TIMEOUT_MS,
     });
     if (installedTools.code !== 0)
         throw new Error(`Consumer tool installation failed: ${installedTools.stdout}${installedTools.stderr}`);

@@ -27,7 +27,6 @@ export function proposeClaudeMove(log: Log): Planned[] {
     const removal: Planned = {
         path: 'CLAUDE.md',
         before: claude,
-        previous: log.entryFor('CLAUDE.md'),
         status: 'changed',
     };
     const moved = authoredText(claude);
@@ -39,5 +38,5 @@ export function proposeClaudeMove(log: Log): Planned[] {
     // A recorded block keeps its record, which now names the file with the moved text.
     const previous = log.entryFor('AGENTS.md');
     const entry = previous === undefined ? {} : { entry: { ...previous, installed: identify(next) } };
-    return [{ path: 'AGENTS.md', before: agents, previous, after: next, ...entry, status: 'changed' }, removal];
+    return [{ path: 'AGENTS.md', before: agents, after: next, ...entry, status: 'changed' }, removal];
 }

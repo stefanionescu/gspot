@@ -6,8 +6,8 @@ import { REJECTED_YAML_OPTIONS } from '#tests/config/cli/generation/yaml.ts';
 test.each(['recommended', 'all'] as const)(
     '%s keeps YAML coverage and exclusions in level and ignore policy for every scope',
     (level) => {
-        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
-            const prefix = scope === '' ? 'tools' : 'scope.tools';
+        for (const scope of ['', '[scope."app"]\n']) {
+            const prefix = scope === '' ? 'tools' : 'scope."app".tools';
             for (const option of REJECTED_YAML_OPTIONS)
                 expect(() =>
                     parseStrictPolicy(

@@ -11,7 +11,7 @@
         "@darraghor/eslint-plugin-nestjs-typed": "7.5.5",
         "@nestjs/common": "11.2.3",
         "@nestjs/core": "11.2.3",
-        "@next/eslint-plugin-next": "16.3.6",
+        "@next/eslint-plugin-next": "16.3.8",
         "@react-native/eslint-plugin": "0.87.1",
         "@tanstack/eslint-plugin-query": "5.91.2",
         "@types/react": "19.1.13",
@@ -41,7 +41,7 @@
         "html-validate": "11.6.1",
         "jest": "30.2.0",
         "linkinator": "8.1.0",
-        "next": "16.3.6",
+        "next": "16.3.8",
         "pnpm": "10.34.6",
         "prettier-plugin-astro": "1.0.1",
         "purgecss": "7.0.2",
@@ -60,5 +60,8 @@
         "web-tree-sitter": "0.27.0",
         "which": "7.0.0",
         "yarn": "1.22.22"
+    },
+    "engines": {
+        "node": ">=24.2.0"
     }
 }

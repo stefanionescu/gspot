@@ -1,9 +1,9 @@
-import { join, posix } from 'node:path';
+import { join } from 'node:path';
 import { decodeUtf8 } from '#cli/platform/text.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/platform/source.ts';
-import { openRoot } from '#cli/platform/root/open.ts';
+import { writeFileSync, appendFileSync } from 'node:fs';
 import { isInScope } from '#cli/repository/selectors.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -15,14 +15,10 @@ import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
 import { getBlobs } from '#cli/repository/revisions/objects.ts';
-import { parseGitleaksBaseline } from '#cli/parsers/gitleaks.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { statSync, writeFileSync, appendFileSync } from 'node:fs';
 import { getPushBase } from '#cli/repository/revisions/changes.ts';
-import { GITLEAKS_BASELINE } from '#cli/config/platform/locations.ts';
-import type { EnvironmentSettings } from '#cli/types/policy/settings.ts';
+import type { SecretScan } from '#cli/types/checks/general/secrets.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
-import type { SecretScan, BaselineReason } from '#cli/types/checks/general/secrets.ts';
 
 import {
     DIFF_TREE,
@@ -119,46 +115,6 @@ async function scanCommits(session: ToolSession, planned: PlannedCheck, commits:
 }
 
 /**
- * One finding for each baseline entry with no reason, and one for each whose file is gone.
- * @param input the check input
- * @returns the findings
- */
-export function gitleaksBaseline(input: CheckInput): Finding[] {
-    using files = openRoot(input.root);
-    const bytes: Buffer | undefined = files.read(GITLEAKS_BASELINE)?.bytes;
-    if (bytes === undefined) return [];
-    const entries = parseGitleaksBaseline(bytes.toString('utf8'));
-    const reasons = input.view.options('tools.gitleaks')['baseline_reasons'] as BaselineReason[];
-    const explained = new Set(reasons.map((entry) => entry.fingerprint));
-    const findings: Finding[] = [];
-    for (const entry of entries) {
-        if (!explained.has(entry.Fingerprint))
-            findings.push(
-                findingAt(
-                    input,
-                    { file: GITLEAKS_BASELINE, line: 1 },
-                    'missing-reason',
-                    `The baseline entry ${entry.Fingerprint} has no reason.`,
-                ),
-            );
-        // Historical findings remain meaningful after their file is removed from the current tree.
-        if (
-            (entry.Commit ?? '') === '' &&
-            statSync(join(input.root, entry.File), { throwIfNoEntry: false }) === undefined
-        )
-            findings.push(
-                findingAt(
-                    input,
-                    { file: GITLEAKS_BASELINE, line: 1 },
-                    'stale-entry',
-                    `The baseline entry ${entry.Fingerprint} names ${entry.File}, which is gone.`,
-                ),
-            );
-    }
-    return findings;
-}
-
-/**
  * Scan the exact selected commits, including secrets removed before the final pushed tree.
  * @param session the open session
  * @param planned the planned check
@@ -184,8 +140,7 @@ export async function gitleaksHistory(session: ToolSession, planned: PlannedChec
         '--exit-code',
         '1',
         '--config',
-        '{config:gitleaks}',
-        `{existing:--baseline-path:${GITLEAKS_BASELINE}}`,
+        '{tool_file:gitleaks}',
         '--report-format',
         'json',
         '--report-path',
@@ -256,22 +211,22 @@ export async function trufflehog(session: ToolSession, planned: PlannedCheck): P
 }
 
 /**
- * Reports supported environment reads missing from project templates, or the absent template prerequisite.
+ * Reports supported environment reads missing from example environment files, or the absent example prerequisite.
  * @param input the check input
  * @returns the findings
  */
 export function envTemplate(input: CheckInput): Finding[] {
-    const { templates: names, reader_functions: readers } = input.view.options('env') as EnvironmentSettings;
+    const { env_examples: names, reader_functions: readers } = input.view.options('secrets');
     // The owned files are configuration; the reads are in code, so the whole scope is inspected.
     const inScope = input.files.filter((file) => isInScope(file.path, input.scope));
-    const templates = inScope.filter((file) => names.includes(posix.basename(file.path)));
-    if (templates.length === 0)
+    const examples = inScope.filter((file) => names.includes(file.path));
+    if (examples.length === 0)
         throw new GspotError(
             'skip',
-            `No environment template exists in ${input.scope === '' ? 'the repository root' : input.scope}. Declare the project templates under env.templates.`,
+            `No example environment file exists in ${input.scope === '' ? 'the repository root' : input.scope}. Declare the example environment files under secrets.env_examples.`,
         );
     const known = new Set(
-        templates.flatMap((file) => {
+        examples.flatMap((file) => {
             const lines = readSource(input.root, file.path, input.reads).toString('utf8').split('\n');
             return lines.flatMap((line) => {
                 const key = ENV_KEY_LINE.exec(line.trim())?.groups?.['key'];
@@ -308,7 +263,7 @@ export function envTemplate(input: CheckInput): Finding[] {
                             input,
                             { file: file.path, line: index + 1 },
                             'missing-key',
-                            `${key} is read here and appears in no environment template.`,
+                            `${key} is read here and appears in no example environment file.`,
                         ),
                     );
                 }

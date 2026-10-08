@@ -3,7 +3,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { unlinkSync, writeFileSync } from 'node:fs';
+import { unlink, writeFile } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { ESLINT_OVERRIDE_POLICY } from '#tests/config/samples/javascript.ts';
@@ -20,9 +20,12 @@ test('generated ESLint applies explicit ignores after native rule options', asyn
         'source.js': 'console.log("example");\n',
     });
     for (const ignored of [false, true]) {
-        writeFileSync(
+        await writeFile(
             join(directory.path, 'gspot.toml'),
-            policy + (ignored ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "no-console"\n' : ''),
+            policy +
+                (ignored
+                    ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "no-console"\nreason = "This fixture accepts the native console finding."\n'
+                    : ''),
         );
         const eslint = await createEslint(directory.path);
         const results = await eslint.lintFiles(['source.js']);
@@ -49,16 +52,18 @@ test('ESLint overrides preserve order, nested scope bounds, future files, and pa
         'apps/web/admin/page.js': source,
     });
     for (const ignored of [false, true]) {
-        writeFileSync(
+        await writeFile(
             join(directory.path, 'gspot.toml'),
             ESLINT_OVERRIDE_POLICY +
-                (ignored ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "eqeqeq"\npaths = ["tests"]\n' : ''),
+                (ignored
+                    ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "eqeqeq"\npaths = ["tests"]\nreason = "These authored tests intentionally exercise native equality."\n'
+                    : ''),
         );
         const eslint = await createEslint(directory.path);
-        writeFileSync(join(directory.path, 'tests/future.js'), source);
+        await writeFile(join(directory.path, 'tests/future.js'), source);
         const results = await eslint.lintFiles(['source.js', 'tests', 'apps']);
-        unlinkSync(join(directory.path, 'tests/future.js'));
-        const actual = results.flatMap(({ filePath, messages }) =>
+        await unlink(join(directory.path, 'tests/future.js'));
+        const output = results.flatMap(({ filePath, messages }) =>
             messages
                 .filter(({ ruleId }) => ruleId === 'eqeqeq')
                 .map(({ severity, line, column }) => ({
@@ -68,7 +73,7 @@ test('ESLint overrides preserve order, nested scope bounds, future files, and pa
                     column,
                 })),
         );
-        const expected: typeof actual = [
+        const expected: typeof output = [
             { file: 'apps/web/admin/page.js', severity: 2, line: 1, column: 41 },
             { file: 'apps/web/exempt.js', severity: 2, line: 1, column: 41 },
         ];
@@ -77,6 +82,6 @@ test('ESLint overrides preserve order, nested scope bounds, future files, and pa
                 { file: 'tests/future.js', severity: 2, line: 1, column: 41 },
                 { file: 'tests/unit.js', severity: 2, line: 1, column: 41 },
             );
-        expect(actual.toSorted((a, b) => a.file.localeCompare(b.file))).toStrictEqual(expected);
+        expect(output.toSorted((a, b) => a.file.localeCompare(b.file))).toStrictEqual(expected);
     }
 });

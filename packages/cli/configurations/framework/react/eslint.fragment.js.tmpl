@@ -1,3 +1,6 @@
 <% const presets = eslintPresets('react'); %>
 <%~ eslintModule.block({ files: ['**/*.{js,jsx,ts,tsx}'], rules: { ...presets.recommended.blocks[0].rules, ...presets.jsx.blocks[0].rules, ...eslintErrorRules(presets.hooks.blocks[0].rules), ...presets.refresh.blocks[0].rules, ...(isAll ? { 'react/no-array-index-key': 'error', 'react/self-closing-comp': 'error' } : {}), 'react/no-danger': 'error', 'react/no-unstable-nested-components': 'error', 'react/jsx-no-constructed-context-values': 'error', 'react/no-object-type-as-default-prop': 'error' } }, "plugins: { 'react-hooks': reactHooks, react, 'react-refresh': reactRefresh }, languageOptions: react.configs.flat.recommended.languageOptions, settings: { react: { version: 'detect' } }") %>,
+<% if (scopeDependencies.some((name) => name.startsWith('@testing-library/'))) { %>
 <%~ eslintModule.block({ files: eslintFiles.tests, rules: eslintErrorRules(presets.testing.blocks[0].rules) }, "plugins: { 'testing-library': testingLibrary }") %>,
+
+<% } %>

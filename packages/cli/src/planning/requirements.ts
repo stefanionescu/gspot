@@ -5,7 +5,6 @@ import { configuredChecks } from '#cli/planning/plan.ts';
 import { selectionStatus } from '#cli/planning/skips.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { isToolProjectPath } from '#cli/repository/selectors.ts';
-import { allowlistSchema } from '#cli/parsers/schema/licenses.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { declaredArchitectures } from '#cli/policy/settings/lookup.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
@@ -60,8 +59,8 @@ export function licenseProjects(
             )
         )
             return [];
-        const configuration = allowlistSchema.parse(selection.view.options('licenses'));
-        return configuration.allowed.length === 0 && configuration.exceptions.length === 0
+        const configuration = selection.view.options('licenses');
+        return configuration.allowed.length === 0 && Object.keys(configuration.exceptions).length === 0
             ? []
             : [{ manifest: file.path, selection, configuration, skip: selectionStatus(policy, selection, check) }];
     });
@@ -74,7 +73,7 @@ export function licenseProjects(
  * @returns required tool names, including manifest-specific scanner branches
  */
 export function requiredToolNames(check: PlannedCheck, session: Pick<Session, 'scopes' | 'policyFiles'>): string[] {
-    const runner = session.policyFiles.policy.run_with;
+    const runner = session.policyFiles.policy.runner;
     const names = new Set(
         [check.tool?.name, ...checkCompanions(check.scope, check.check), check.check.fix?.[0]].flatMap((name) => {
             if (name === undefined) return [];
@@ -105,7 +104,7 @@ export function requiredToolNames(check: PlannedCheck, session: Pick<Session, 's
  */
 export function applicableManifests(session: Session): Manifest[] {
     const checks = configuredChecks(session, true);
-    const architectures = declaredArchitectures(session.policyFiles.policy, session.scopes);
+    const architectures = declaredArchitectures(session.scopes);
     const needed = new Set(checks.flatMap((check) => requiredToolNames(check, session)));
     const selected = everyManifest(session.scopes);
     const owners = new Set(selected);
@@ -123,12 +122,7 @@ export function applicableManifests(session: Session): Manifest[] {
         return {
             ...manifest,
             tools: manifest.tools
-                .filter(
-                    (tool) =>
-                        (tool.name !== '@eslint-community/eslint-plugin-eslint-comments' ||
-                            session.policyFiles.policy.require_reasons) &&
-                        (tool.name !== 'eslint-plugin-boundaries' || architectures.length > 0),
-                )
+                .filter((tool) => tool.name !== 'eslint-plugin-boundaries' || architectures.length > 0)
                 .filter(
                     (tool) =>
                         needed.has(tool.name) ||

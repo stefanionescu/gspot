@@ -1,33 +1,33 @@
-export const POLICY = `configurations = ["bash", "structure"]
+export const POLICY = `configurations = ["bash", "swift", "structure"]
 [agent_rules]
 enabled = false
 [limits.bash]
 file_lines = 100
-[bash]
-boundary_roots = ["root"]
-doc_style = "colon"
+[swift]
+xcode_scheme = "5.0"
+[tools.swiftlint]
+keep_imports = ["Foundation"]
 [[ignore]]
 check = "bash/shellcheck"
 rule = "SC2086"
 paths = ["api/**"]
 reason = "The api scripts pass word lists on purpose."
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = ["bash"]
-[scope.limits.bash]
+[scope."api".limits.bash]
 file_lines = 80
-[scope.bash]
-boundary_roots = ["api"]
-doc_style = "dash"
-[[scope]]
-path = "api/v1"
+[scope."api".swift]
+xcode_scheme = "6.0"
+[scope."api".tools.swiftlint]
+keep_imports = ["UIKit"]
+[scope."api/v1"]
 configurations = ["bash"]
-[scope.limits.bash]
+[scope."api/v1".limits.bash]
 file_lines = 60
-[scope.bash]
-boundary_roots = ["api/v1"]
-doc_style = "colon"
-[[scope]]
-path = "web"
+[scope."api/v1".swift]
+xcode_scheme = "5.0"
+[scope."api/v1".tools.swiftlint]
+keep_imports = ["SwiftUI"]
+[scope."web"]
 configurations = ["bash"]
 `;

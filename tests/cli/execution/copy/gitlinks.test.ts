@@ -1,20 +1,20 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { rejects } from 'node:assert/strict';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { selectPush } from '#cli/repository/revisions/push.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
 import { checkOutRevision } from '#cli/execution/copy/revision.ts';
-import { mkdirSync, readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdir, readdir, symlink, writeFile } from 'node:fs/promises';
 import { readIndexEntries, getSubmodulePaths } from '#cli/repository/tracked.ts';
 import { getBlobs, getEntries, getHeadEntries } from '#cli/repository/revisions/objects.ts';
 
 test.each(['index', 'commit'] as const)(
-    'a %s snapshot retains gitlinks without reading submodule contents',
+    'a %s copy retains gitlinks without reading submodule contents',
     async (kind) => {
         await using sandbox = await testdir();
         await using outside = await testdir();
@@ -30,8 +30,8 @@ test.each(['index', 'commit'] as const)(
         const path = 'vendor/external project';
         gitOutput(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commitId},${path}`]);
         gitOutput(sandbox.path, ['commit', '-qm', 'Gitlink']);
-        mkdirSync(join(sandbox.path, 'vendor'));
-        symlinkSync(outside.path, join(sandbox.path, path), 'dir');
+        await mkdir(join(sandbox.path, 'vendor'));
+        await symlink(outside.path, join(sandbox.path, path), 'dir');
         expect(getSubmodulePaths(await readIndexEntries(sandbox.path))).toStrictEqual([path]);
         const session = await openSession(sandbox.path);
         expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
@@ -40,12 +40,12 @@ test.each(['index', 'commit'] as const)(
         expect(result.text.split(`submodule  ${path} (contents are not read)`)).toHaveLength(2);
         const expected = gitOutput(sandbox.path, ['write-tree']);
         const source = kind === 'index' ? { kind } : { kind, hash: gitOutput(sandbox.path, ['rev-parse', 'HEAD']) };
-        await checkOutRevision(sandbox.path, source, async (snapshot, tree) => {
+        await checkOutRevision(sandbox.path, source, async (copy, tree) => {
             expect(tree).toBe(expected);
-            expect(gitOutput(snapshot, ['write-tree'])).toBe(expected);
-            expect(readdirSync(join(snapshot, path))).toStrictEqual([]);
-            expect(await Bun.file(join(snapshot, 'source.txt')).text()).toBe('selected source');
-            expect(getSubmodulePaths(await readIndexEntries(snapshot))).toStrictEqual([path]);
+            expect(gitOutput(copy, ['write-tree'])).toBe(expected);
+            expect(await readdir(join(copy, path))).toStrictEqual([]);
+            expect(await Bun.file(join(copy, 'source.txt')).text()).toBe('selected source');
+            expect(getSubmodulePaths(await readIndexEntries(copy))).toStrictEqual([path]);
         });
         expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{');
         expect(await Bun.file(join(outside.path, 'source.txt')).text()).toBe('outside source');
@@ -76,12 +76,12 @@ test('nested policies retain repository context with policy-relative index and c
     const entries = await getEntries(project, { kind: 'index' });
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.txt']);
     for (const source of [{ kind: 'index' } as const, { kind: 'commit', hash: commitId } as const]) {
-        await checkOutRevision(project, source, async (snapshot, tree) => {
-            expect(await Bun.file(join(snapshot, 'source.txt')).text()).toBe(
+        await checkOutRevision(project, source, async (copy, tree) => {
+            expect(await Bun.file(join(copy, 'source.txt')).text()).toBe(
                 source.kind === 'index' ? 'indexed' : 'pushed',
             );
-            expect(await Bun.file(join(snapshot, '..', 'outside.txt')).text()).toBe('changed context');
-            expect(gitOutput(snapshot, ['write-tree'])).toBe(tree);
+            expect(await Bun.file(join(copy, '..', 'outside.txt')).text()).toBe('changed context');
+            expect(gitOutput(copy, ['write-tree'])).toBe(tree);
         });
     }
     const protocol = `refs/heads/main ${commitId} refs/heads/main ${base}\n`;
@@ -112,13 +112,11 @@ if (isPosix)
             entries.map((entry) => entry.hash),
         );
         expect(blobs.get(entries[0]!.hash)?.toString()).toBe('select 1;\n');
-        await checkOutRevision(sandbox.path, { kind: 'index' }, async (snapshot) => {
-            expect(await Bun.file(join(snapshot, path)).text()).toBe('select 1;\n');
+        await checkOutRevision(sandbox.path, { kind: 'index' }, async (copy) => {
+            expect(await Bun.file(join(copy, path)).text()).toBe('select 1;\n');
         });
-        writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
-        await rejects(getEntries(sandbox.path, { kind: 'index' }), {
-            message: /Git ls-files failed/u,
-        });
-        writeFileSync(join(sandbox.path, '.git', 'HEAD'), 'broken');
-        await rejects(getHeadEntries(sandbox.path));
+        await writeFile(join(sandbox.path, '.git', 'index'), 'broken');
+        expect(await rejection(getEntries(sandbox.path, { kind: 'index' }))).toContain('Git ls-files failed');
+        await writeFile(join(sandbox.path, '.git', 'HEAD'), 'broken');
+        await rejection(getHeadEntries(sandbox.path));
     });

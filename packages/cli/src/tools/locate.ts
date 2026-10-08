@@ -1,15 +1,14 @@
 // Where an executable and its installed package version are found: repository bin folders, PATH, and mise shims.
 
 import which from 'which';
+import { statSync, realpathSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import { miseHome } from '#cli/platform/environment.ts';
-import { statSync, readFileSync, realpathSync } from 'node:fs';
-import { parsePackageManifest } from '#cli/parsers/packages.ts';
+import { installedPackage } from '#cli/repository/manifests.ts';
 import type { LocateOptions } from '#cli/types/tools/install.ts';
 import { VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
-import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import { toPosix, environmentBin, executableNames } from '#cli/platform/paths.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
@@ -77,29 +76,6 @@ function versionAbove(files: Root | undefined, root: string, start: string, name
         if (parsed?.name === name) return parsed.version;
     }
     return undefined;
-}
-
-/**
- * Read package metadata from a tool project installation or a native host installation.
- * @param files the tool project installation boundary, or undefined for a host installation.
- * @param root the repository root owning the tool-project boundary.
- * @param manifest the absolute package.json path.
- * @returns the validated package fields, or undefined when the file is absent.
- */
-export function installedPackage(files: Root | undefined, root: string, manifest: string): PackageManifest | undefined {
-    try {
-        let text: string | undefined;
-        if (files === undefined) text = readFileSync(manifest, 'utf8');
-        else {
-            const directory = files.realPath(toPosix(relative(root, dirname(manifest))));
-            const path = toPosix(relative(root, join(directory, basename(manifest))));
-            text = files.read(path)?.bytes.toString('utf8');
-        }
-        return text === undefined ? undefined : parsePackageManifest(text, manifest);
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
-        throw error;
-    }
 }
 
 /**

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { cpSync, realpathSync } from 'node:fs';
+import { cp, realpath } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
@@ -16,9 +16,9 @@ test('library inspection reads native package metadata without executing an auth
         'main.js': 'export const value = 1;\n',
         'eslint.config.mjs': 'throw new Error("Authored ESLint configuration executed during version inspection.");\n',
     });
-    linkInstalledModules(join(sandbox.path, 'node_modules'));
-    cpSync(
-        realpathSync(join(sandbox.path, 'node_modules/eslint-config-prettier')),
+    await linkInstalledModules(join(sandbox.path, 'node_modules'));
+    await cp(
+        await realpath(join(sandbox.path, 'node_modules/eslint-config-prettier')),
         join(sandbox.path, '.gspot/node_modules/eslint-config-prettier'),
         { recursive: true },
     );

@@ -3,7 +3,7 @@ title: Git hooks
 description: Run checks before commits and pushes and check commit messages.
 ---
 
-gspot installs three Git hooks when `[hooks]` is present:
+gspot installs three Git hooks when `hooks.enabled = true`:
 
 | Hook         | Checks                                               |
 | ------------ | ---------------------------------------------------- |
@@ -32,7 +32,7 @@ npm exec --no -- gspot check --hook commit-msg --message-file "$1"
 
 Use the exact lines printed by your installation for its runner. A missing integration line leaves that hook's checks inactive.
 
-## Run a hook yourself
+## Check hooks
 
 ```shell
 gspot check --hook pre-commit
@@ -45,9 +45,10 @@ The pre-push hook requires Git's remote arguments and revision updates on standa
 gspot check --changed --base origin/main
 ```
 
-To check the whole tree of each pushed revision:
+Changing hook coverage keeps the current enabled choice. To enable hooks and check the whole tree of each pushed revision:
 
 ```shell
+gspot set hooks.enabled true
 gspot set hooks.push_files all
 ```
 

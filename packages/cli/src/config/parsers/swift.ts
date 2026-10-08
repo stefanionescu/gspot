@@ -31,3 +31,6 @@ export const ACCESSOR_NODES = new Set([
     'willset_clause',
     'didset_clause',
 ]);
+
+/** Swift package manifests declare their compiler version in the opening comment. */
+export const SWIFT_TOOLS_VERSION = /^\s*\/\/\s*swift-tools-version\s*:\s*(\d+(?:\.\d+){1,2})\b/u;

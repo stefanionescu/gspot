@@ -5,7 +5,7 @@ const workspaceEntries = (scope) => entryFiles(scope).flatMap((pattern) => {
     if (scope === '' || path.startsWith('**/')) return [pattern];
     return path.startsWith(`${scope}/`) ? [`${sign}${path.slice(scope.length + 1)}`] : [];
 });
-const ignored = settings['tools.knip.ignore_dependencies'].map((entry) => (typeof entry === 'string' ? { name: entry } : entry));
+const ignored = Object.entries(settings['tools.knip.ignore_dependencies']).map(([name, entry]) => ({ name, ...(typeof entry === 'string' ? {} : entry) }));
 const ignoredNames = (workspace) => ignored.filter((entry) => entry.workspace === workspace).map((entry) => entry.name);
 const named = ignored.flatMap((entry) => (entry.workspace === undefined ? [] : [entry.workspace]));
 const paths = [...new Set(['', ...packageWorkspaces(), ...named])];
@@ -16,9 +16,9 @@ const workspaces = Object.fromEntries(paths.map((path) => [path === '' ? '.' : p
 %>
 {
     "$schema": "https://unpkg.com/knip@6/schema.json",
-    "ignore": <%= json(['.gspot/**', 'eslint.config.{js,mjs,cjs}', ...(options('tools.knip').exclude ?? []).flatMap((entry) => entry.paths ?? []), ...policy.declarations.flatMap((entry) => entry.paths)]) %>,
+    "ignore": <%= json(['.gspot/**', 'eslint.config.{js,mjs,cjs}', ...ignoresFor('javascript/knip').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths ?? []), ...policy.declarations.flatMap((entry) => entry.paths)]) %>,
     "ignoreDependencies": <%= json([...new Set(['@gspothq/cli', ...toolPackages, ...(settings['dependencies.scanner'] === undefined ? [] : [settings['dependencies.scanner']]), ...ignoredNames(undefined)])]) %>,
-    "ignoreBinaries": <%= json([...new Set([...toolBinaries, ...(policy.run_with === undefined ? [] : [policy.run_with])])]) %>,
+    "ignoreBinaries": <%= json([...new Set([...toolBinaries, ...(policy.runner === undefined ? [] : [policy.runner])])]) %>,
     "ignoreExportsUsedInFile": true,
     "workspaces": <%= json(workspaces) %><% const extras = verbatim('knip'); if (extras) { for (const [key, value] of Object.entries(extras)) { %>,
     <%= json(key, 0) %>: <%= json(value) %><% } } %>

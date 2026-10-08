@@ -18,9 +18,8 @@ const resultSchema = z.object({
                             .object({
                                 startLine: z.number().int().positive().optional(),
                                 startColumn: z.number().int().positive().optional(),
-                                charOffset: z.number().int().min(-1).default(-1),
                             })
-                            .default({ charOffset: -1 }),
+                            .optional(),
                     })
                     .optional(),
             }),
@@ -29,10 +28,7 @@ const resultSchema = z.object({
 });
 const runSchema = z.object({
     results: z.array(resultSchema),
-    artifacts: z.array(z.object({ location: locationSchema.optional(), encoding: z.string().optional() })).optional(),
-    defaultEncoding: z.string().optional(),
-    columnKind: z.enum(['utf16CodeUnits', 'unicodeCodePoints']).optional(),
-    newlineSequences: z.array(z.string().min(1)).min(1).optional(),
+    artifacts: z.array(z.object({ location: locationSchema.optional() })).optional(),
     originalUriBaseIds: z.record(z.string(), locationSchema).optional(),
     invocations: z
         .array(

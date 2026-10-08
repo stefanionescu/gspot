@@ -2,8 +2,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { readSwift, disposeSwift } from '#cli/parsers/swift.ts';
-import type { SwiftFunction } from '#cli/types/parsers/swift.ts';
+import { readSwift, disposeSwift } from '#cli/parsers/swift/source.ts';
 import { trivialText, isTrivialFile, executableStatements } from '#cli/parsers/statements.ts';
 
 /**
@@ -47,45 +46,4 @@ export async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
                 ),
             ),
     ];
-}
-
-/**
- * Groups of matching function bodies that meet the minimum line count.
- * @param input the selected scope, files, and policy settings
- * @returns one finding for each group
- */
-export async function duplicateFunctions(input: CheckInput): Promise<Finding[]> {
-    const minimum = input.view.limit('identical_function_lines', 'swift');
-    if (minimum === undefined) return [];
-    using parsed = await visitParsed(input, readSwift, disposeSwift);
-    const { functions } = parsed.value;
-    const groups = new Map<string, SwiftFunction[]>();
-    for (const definition of functions) {
-        const lines = definition.body.flatMap((statement) =>
-            statement.text
-                .split('\n')
-                .map((line) => line.trim().replaceAll(/\s+/gu, ' '))
-                .filter((line) => line !== '' && !line.startsWith('//')),
-        );
-        if (lines.length < minimum) continue;
-        const key = lines.join('\n');
-        groups.set(key, [...(groups.get(key) ?? []), definition]);
-    }
-    return groups
-        .values()
-        .filter((group): group is [SwiftFunction, SwiftFunction, ...SwiftFunction[]] => group.length > 1)
-        .map((group) => {
-            const [first] = group;
-            const places = group.map(
-                (definition) =>
-                    `${definition.path}:${String(definition.node.startPosition.row + 1)} (${definition.name})`,
-            );
-            return findingAt(
-                input,
-                { file: first.path, line: first.node.startPosition.row + 1 },
-                'same-body',
-                `These functions have the same body: ${places.join(', ')}.`,
-            );
-        })
-        .toArray();
 }

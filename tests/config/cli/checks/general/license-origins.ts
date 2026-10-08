@@ -1,6 +1,5 @@
 /** The same reviewed exception is authored at the origin under test. */
-export const EXCEPTION_ENTRY =
-    'package = "Absent_Package@2.0.0"\nlicense = "MIT"\nreason = "Reviewed the installed project."\n';
+export const EXCEPTION_ENTRY = 'license = "MIT"\nreason = "Reviewed the installed project."\n';
 
 /** Authored exception origins are audited over actual selected installed projects. */
 export const EXCEPTION_MEMBERSHIP = [

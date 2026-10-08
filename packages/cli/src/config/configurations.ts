@@ -24,8 +24,6 @@ export const CONFIGURATION_LABELS: Record<Manifest['configuration']['kind'], str
     general: 'Repository',
 };
 
-export const UV_INSTALLER = { name: 'uv', version: '0.12.13' };
-
 export const MISE_BACKENDS: MiseBackend[] = [
     { installer: 'mise', prefix: '' },
     { installer: 'npm', prefix: 'npm:' },
@@ -45,7 +43,7 @@ export const CLI_PINS = { mise: '2026.8.8' };
 
 export const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
 
-export const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
+export const TOOL_FILE_PLACEHOLDER = /\{tool_file:(?<name>[a-z0-9-]+)\}/gu;
 
 export const POINTER_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
 

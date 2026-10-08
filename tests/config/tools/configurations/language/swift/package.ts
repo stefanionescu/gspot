@@ -9,7 +9,6 @@ export const LIBRARY =
 
 export const PAIR = '/// The size of a pair.\npublic func pairSize(of count: Int) -> Int {\n    count * 2\n}\n';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['swift', 'naming'],
     modules: false,
@@ -18,7 +17,6 @@ export const REPOSITORY: RepositoryScenario = {
     files: { '.gitignore': '.build\n', 'Package.swift': SWIFT_PACKAGE, 'Sources/App/Greeting.swift': LIBRARY },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'swift/build',

@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { parse as parseToml } from 'smol-toml';
 import { patchToml } from '#cli/parsers/toml/patch.ts';
+import { tomlSyntax } from '#cli/parsers/toml/comments.ts';
 import type { ConfigurationDocument } from '#cli/types/parsers/document.ts';
 import type { TomlInput, TomlTableOptions } from '#cli/types/parsers/toml.ts';
 import { isRecord, normalizeTables, valueAt as getValue } from '#cli/platform/objects.ts';
@@ -38,6 +39,7 @@ function getTomlTable(
  */
 export function openTomlDocument(input: TomlInput): ConfigurationDocument {
     const document: Record<string, unknown> = parseTomlFile(input);
+    const original = tomlSyntax(input.source, document);
     return {
         format: 'toml',
         value: (path) => getValue(document, path),
@@ -61,7 +63,7 @@ export function openTomlDocument(input: TomlInput): ConfigurationDocument {
                 });
         },
         text() {
-            const text = patchToml(input.source, document);
+            const text = patchToml(original, document);
             if (!isDeepStrictEqual(parseTomlFile({ path: input.path, source: text }), document))
                 throw new Error(`Cannot preserve ${input.path} while editing its TOML fields.`);
             return text;

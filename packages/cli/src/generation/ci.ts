@@ -145,7 +145,7 @@ export function githubFile(pipeline: Pipeline): GeneratedFile {
     });
     const path = GITHUB_WORKFLOW;
     const content = `${hashCommentHeader(pipeline.version)}${workflow.toString({ lineWidth: 0 })}`;
-    return { path, content, readOnly: true, kind: 'workflow' };
+    return { path, content, kind: 'workflow' };
 }
 
 /**
@@ -175,5 +175,5 @@ export function gitlabFile(pipeline: Pipeline): GeneratedFile {
             script: ['set -euo pipefail', ...setup, `${command} install`, `${command} doctor`, check],
         },
     });
-    return { path, content: `${hashCommentHeader(pipeline.version)}${content}`, readOnly: true, kind: 'workflow' };
+    return { path, content: `${hashCommentHeader(pipeline.version)}${content}`, kind: 'workflow' };
 }

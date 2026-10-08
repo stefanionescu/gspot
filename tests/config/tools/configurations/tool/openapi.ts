@@ -1,7 +1,7 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 
-export const OPENAPI_POLICY = '[tools.openapi]\ndocument = "openapi.yaml"\ngenerate = "bun write-document.js"\n';
+export const OPENAPI_POLICY = '[openapi]\ndocument = "openapi.yaml"\ngenerate_command = ["bun", "write-document.js"]\n';
 
 export const DOCUMENT = `openapi: 3.1.0
 info:
@@ -27,7 +27,6 @@ paths:
                     description: The service is up.
 `;
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['openapi'],
     modules: false,
@@ -38,7 +37,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'openapi/spectral',

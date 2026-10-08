@@ -1,6 +1,6 @@
 // The recorded example of the README, the quickstart, and the homepage, replayed through the source CLI.
 import { join } from 'node:path';
-import { rmSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import example from '#docs/src/config/example.json';
@@ -9,7 +9,6 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
 // The fields a recorded finding holds, in one order, so a run compares with the record whatever order it reports in.
 function recorded(findings: readonly Pick<Finding, 'check' | 'file' | 'line' | 'column' | 'rule' | 'message'>[]) {
@@ -27,38 +26,30 @@ function recorded(findings: readonly Pick<Finding, 'check' | 'file' | 'line' | '
         );
 }
 
-test(
-    'the recorded example rejects the agent commit with its findings and accepts the fixed commit',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            ...Object.fromEntries(example.project.map((file) => [file.path, file.content])),
-            'gspot.toml': example.policy,
-        });
-        commitAll(sandbox.path);
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installToolProjects(sandbox.path);
-        gitOutput(sandbox.path, ['add', '-A']);
-        gitOutput(sandbox.path, ['commit', '-qm', 'chore: Set up gspot', '--no-verify']);
-        await createFileTree(
-            sandbox.path,
-            Object.fromEntries(example.agent.files.map((file) => [file.path, file.content])),
-        );
-        gitOutput(sandbox.path, ['add', '-A']);
-        const rejected = await spawnGspot(sandbox.path, ['check', '--staged', '--json']);
-        expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-        const findings = (JSON.parse(rejected.stdout) as RunReport).checks.flatMap((check) => check.findings);
-        expect(recorded(findings)).toStrictEqual(recorded(example.findings));
-        for (const path of example.fix.deleted) rmSync(join(sandbox.path, path));
-        await createFileTree(
-            sandbox.path,
-            Object.fromEntries(example.fix.files.map((file) => [file.path, file.content])),
-        );
-        expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const passed = await spawnGspot(sandbox.path, ['check', '--staged', '--json']);
-        expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    },
-    // The journey installs the private tools, then runs apply and two full staged checks.
-    NATIVE_TEST_TIMEOUT_MS,
-);
+test('the recorded example rejects the agent commit with its findings and accepts the fixed commit', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        ...Object.fromEntries(example.project.map((file) => [file.path, file.content])),
+        'gspot.toml': example.policy,
+    });
+    commitAll(sandbox.path);
+    const applied = await spawnGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await installToolProjects(sandbox.path);
+    gitOutput(sandbox.path, ['add', '-A']);
+    gitOutput(sandbox.path, ['commit', '-qm', 'chore: Set up gspot', '--no-verify']);
+    await createFileTree(
+        sandbox.path,
+        Object.fromEntries(example.agent.files.map((file) => [file.path, file.content])),
+    );
+    gitOutput(sandbox.path, ['add', '-A']);
+    const rejected = await spawnGspot(sandbox.path, ['check', '--staged', '--json']);
+    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
+    const findings = (JSON.parse(rejected.stdout) as RunReport).checks.flatMap((check) => check.findings);
+    expect(recorded(findings)).toStrictEqual(recorded(example.findings));
+    for (const path of example.fix.deleted) await rm(join(sandbox.path, path));
+    await createFileTree(sandbox.path, Object.fromEntries(example.fix.files.map((file) => [file.path, file.content])));
+    expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
+    const passed = await spawnGspot(sandbox.path, ['check', '--staged', '--json']);
+    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+});

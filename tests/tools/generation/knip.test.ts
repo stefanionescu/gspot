@@ -28,7 +28,7 @@ test.each(['recommended', 'all'] as const)(
         const policy = buildPolicy(['javascript'], { level, tables: KNIP_ENTRY_TABLES });
         const configuration = await emitFile(policy, '.gspot/config/knip.json', KNIP_COMPONENT_FILES);
         await createFileTree(sandbox.path, { ...KNIP_COMPONENT_FILES, '.gspot/config/knip.json': configuration });
-        linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
+        await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
         const command = [
             'node',
             '.gspot/node_modules/knip/bin/knip.js',
@@ -67,7 +67,7 @@ test('Knip owns global binary exclusions and still reports an unlisted command',
     const files = { 'package.json': KNIP_BINARY_PACKAGE, 'main.js': 'export const value = 1;\n' };
     const configuration = await emitFile(buildPolicy(['javascript']), '.gspot/config/knip.json', files);
     await createFileTree(sandbox.path, { ...files, '.gspot/config/knip.json': configuration });
-    linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
+    await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
     const native = await runTestCommand(
         [
             'node',
@@ -102,7 +102,7 @@ test.each(['recommended', 'all'] as const)(
         const files = { 'package.json': KNIP_DEPENDENCY_PACKAGE, 'main.js': 'export const value = 1;\n' };
         const configuration = await emitFile(buildPolicy(['javascript'], { level }), '.gspot/config/knip.json', files);
         await createFileTree(sandbox.path, { ...files, '.gspot/config/knip.json': configuration });
-        linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
+        await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
         const command = [
             'node',
             '.gspot/node_modules/knip/bin/knip.js',
@@ -149,7 +149,7 @@ test('native Knip distinguishes positioned unused exports from an unlisted depen
     const policy = buildPolicy(['javascript'], { tables: '[tools.knip]\nentry = ["main.js"]\n' });
     const configuration = await emitFile(policy, '.gspot/config/knip.json', KNIP_DIAGNOSTIC_FILES);
     await createFileTree(sandbox.path, { ...KNIP_DIAGNOSTIC_FILES, '.gspot/config/knip.json': configuration });
-    linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
+    await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
     const command = [
         'node',
         '.gspot/node_modules/knip/bin/knip.js',

@@ -19,7 +19,10 @@ for (const language of ['javascript', 'typescript']) {
                 })
                 .join('\n');
             // Seven declared parameters is the shipped default; the other row changes it.
-            const limits = maximum === 7 ? '' : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n`;
+            const limits =
+                maximum === 7
+                    ? ''
+                    : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n[reasons]\n"limits.${language}.function_parameters" = "This fixture exercises the authored parameter ceiling."\n`;
             await createFileTree(directory.path, {
                 'gspot.toml': buildPolicy([language], { tables: limits, level: 'all' }),
                 'package.json': '{"private":true,"type":"module"}',

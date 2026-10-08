@@ -1,7 +1,7 @@
 [configuration]
 title = "Express"
 requires = ["javascript", "openapi"]
-recommends = ["security"]
+suggests = ["security"]
 description = "An Express service: the Semgrep rules for request handling, an OpenAPI document that lints and matches its source."
 
 [detect]
@@ -13,11 +13,21 @@ target = ".gspot/config/semgrep/express.yml"
 tool = "semgrep"
 rule_keys = ["rules"]
 scoped = true
-when = {configuration = "security"}
+when = { configuration = "security" }
 
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["**"]
 languages = ["typescript", "javascript"]
 categories = ["functions", "methods"]
 ignored_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
+
+[[config]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/config/eslint.config.mjs"
+tool = "eslint"
+fragment = true
+
+[[config.selectors]]
+selector = 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]'
+message = "A message a client reads names no identifier; put the value in its own field."

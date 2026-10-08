@@ -32,8 +32,7 @@ test('tracked-file checks distinguish environment files from templates in nested
 test.each([...STAGED_CASES])('staged environment policy respects a check that is $name', async (entry) => {
     await using sandbox = await testdir();
     const policy = buildPolicy([...entry.configurations], {
-        tables: `[[check]]
-name = "project/source"
+        tables: `[check."project/source"]
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 paths = ["source.txt"]
 stage = "commit"

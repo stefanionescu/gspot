@@ -6,7 +6,6 @@ export const LOOSE =
 export const BASH_IN_API = `configurations = []
 [agent_rules]
 enabled = false
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = ["bash"]
 `;

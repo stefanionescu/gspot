@@ -1,12 +1,22 @@
 import { VALUE_KINDS, NODE_KIND_SET } from '#cli/config/parsers/toml.ts';
-import type { Value, Kinded, Comment, KeyValue, NodeKind, InlineArray, InlineTable } from '#cli/types/parsers/toml.ts';
+
+import type {
+    Value,
+    Kinded,
+    Comment,
+    KeyValue,
+    NodeKind,
+    InlineArray,
+    InlineTable,
+    SourceRange,
+} from '#cli/types/parsers/toml.ts';
 
 /**
  * The kind of a syntax node as the literal the parser names it by.
  * @param node the syntax node
  * @returns the kind
  */
-function getKind(node: Kinded): NodeKind {
+export function getKind(node: Kinded): NodeKind {
     const kind = String(node.type);
     if (!NODE_KIND_SET.has(kind)) throw new Error(`The TOML parser produced a node of an unknown kind: ${kind}.`);
     return kind as NodeKind;
@@ -55,4 +65,14 @@ export function isInlineTable(node: Kinded): node is InlineTable {
  */
 export function isInlineArray(node: Kinded): node is InlineArray {
     return getKind(node) === 'InlineArray';
+}
+
+/**
+ * Retrieve the extent of a concrete syntax token produced by the native parser.
+ * @param node parsed syntax
+ * @returns the token's source extent
+ */
+export function tomlRange(node: SourceRange): readonly [number, number] {
+    if (node.range === undefined) throw new Error('The TOML parser omitted a source range.');
+    return node.range;
 }

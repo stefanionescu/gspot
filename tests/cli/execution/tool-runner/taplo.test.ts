@@ -1,5 +1,5 @@
-import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { chmod } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
@@ -8,8 +8,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
-const TOOL_FAILURES_POLICY = buildPolicy(['files', 'actions'], {
-    tables: 'run_with = "mise"\n[agent_rules]\nenabled = false\n',
+const TOOL_FAILURES_POLICY = buildPolicy(['files'], {
+    tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n',
     level: 'all',
 });
 
@@ -29,7 +29,7 @@ process.exit(2);
 `,
         'bin/taplo.cmd': '@echo off\r\nbun "%~dp0taplo" %*\r\n',
     });
-    chmodSync(join(sandbox.path, 'bin/taplo'), 0o755);
+    await chmod(join(sandbox.path, 'bin/taplo'), 0o755);
     commitAll(sandbox.path);
     const environment = {
         PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,

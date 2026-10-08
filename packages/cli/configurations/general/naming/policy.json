@@ -104,23 +104,20 @@
             ]
         }
     },
-    "reserved": [
-        {
-            "term": "config",
-            "uses": [
-                "directories",
-                "packages",
-                "files",
-                "modules",
-                "variables",
-                "constants",
-                "parameters",
-                "properties",
-                "attributes",
-                "enum_cases"
-            ]
-        }
-    ],
+    "reserved": {
+        "config": [
+            "directories",
+            "packages",
+            "files",
+            "modules",
+            "variables",
+            "constants",
+            "parameters",
+            "properties",
+            "attributes",
+            "enum_cases"
+        ]
+    },
     "languages": {
         "typescript": {
             "acronyms": "word",
@@ -360,20 +357,20 @@
         "GITHUB_SHA",
         "GITHUB_REF"
     ],
-    "paths": [
+    "allow_digits": false,
+    "allow_repeated_words": false,
+    "overrides": [
         {
             "paths": ["**"],
             "categories": ["variables", "parameters"],
-            "names": ["_", "i", "j", "k", "x", "y", "n"],
             "reason": "Loop and lambda positions take single letters.",
-            "skip": true
+            "allowed": ["_", "i", "j", "k", "x", "y", "n"]
         },
         {
             "paths": ["**"],
             "categories": ["directories"],
-            "names": ["node_modules", "__pycache__", "__tests__", "__mocks__"],
             "reason": "Tools name these directories.",
-            "skip": true
+            "allowed": ["node_modules", "__pycache__", "__tests__", "__mocks__"]
         },
         {
             "paths": ["**"],
@@ -384,7 +381,8 @@
         {
             "paths": ["**/.githooks/**", "**/.gspot/hooks/**", "**/.husky/**", "**/hooks/**"],
             "categories": ["files"],
-            "names": [
+            "reason": "git names its hooks.",
+            "allowed": [
                 "pre-commit",
                 "pre-push",
                 "commit-msg",
@@ -392,9 +390,7 @@
                 "post-merge",
                 "pre-rebase",
                 "prepare-commit-msg"
-            ],
-            "reason": "git names its hooks.",
-            "skip": true
+            ]
         },
         {
             "paths": ["**/e2e/**"],
@@ -406,7 +402,5 @@
             "categories": ["files"],
             "allow_digits": true
         }
-    ],
-    "allow_digits": false,
-    "allow_repeated_words": false
+    ]
 }

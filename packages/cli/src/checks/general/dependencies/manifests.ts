@@ -1,20 +1,11 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
-
-import {
-    NPM_MANIFEST,
-    EXACT_VERSION,
-    DEPENDENCY_TABLES,
-    JAVASCRIPT_CLIENTS,
-    NON_REGISTRY_VERSION,
-} from '#cli/config/checks/general/dependencies.ts';
+import { NPM_MANIFEST, JAVASCRIPT_CLIENTS } from '#cli/config/checks/general/dependencies.ts';
 
 function rootFindings(input: CheckInput, root: PackageManifest | undefined): Finding[] {
     if (root === undefined) return [];
@@ -86,8 +77,6 @@ function lockfileFindings(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export function manifests(input: CheckInput): Finding[] {
-    const allowed = (input.view.options('dependencies')['ranges_allowed'] as PathAllowance[] | undefined) ?? [];
-    const isRangeAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const manifests = new Map<string, PackageManifest>();
     for (const file of input.files) {
         if (file.kind !== 'source') continue;
@@ -96,26 +85,7 @@ export function manifests(input: CheckInput): Finding[] {
         if (manifest === undefined) throw new Error(`Manifest is missing: ${file.path}`);
         manifests.set(file.path, manifest);
     }
-    const ranges = [...manifests].flatMap(([path, manifest]) => {
-        if (isRangeAllowed(path)) return [];
-        return DEPENDENCY_TABLES.flatMap((table) =>
-            (manifest[table] === undefined ? [] : Object.entries(manifest[table]))
-                .filter(([, version]) => {
-                    const declared = version.startsWith('npm:') ? version.slice(version.lastIndexOf('@') + 1) : version;
-                    return !EXACT_VERSION.test(declared) && !NON_REGISTRY_VERSION.test(version);
-                })
-                .map(([name, version]) =>
-                    findingAt(
-                        input,
-                        { file: path, line: 1 },
-                        'version-range',
-                        `${name} is "${version}" under ${table}; pin the exact version the lockfile holds.`,
-                    ),
-                ),
-        );
-    });
     return [
-        ...ranges,
         ...rootFindings(input, manifests.get(NPM_MANIFEST)),
         ...packageClientFindings(input, manifests),
         ...lockfileFindings(input),

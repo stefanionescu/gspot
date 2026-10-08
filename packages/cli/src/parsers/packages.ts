@@ -33,6 +33,13 @@ import type {
     PackageInstallerDeclaration,
 } from '#cli/types/parsers/packages.ts';
 
+function packageInstallerDeclaration(value: string): PackageInstallerDeclaration {
+    const [name, declared, ...verbatim] = value.split('@');
+    if (verbatim.length > 0) throw new Error('Invalid packageManager declaration.');
+    const version = (declared ?? '').split('+sha', 1)[0];
+    return packageInstallerDeclarationSchema.parse({ name, version });
+}
+
 // A requirement names a distribution: letters or digits at both ends, dots, dashes, and underscores between.
 function requirementName(spec: string): string | undefined {
     const trimmed = spec.trim();
@@ -174,25 +181,31 @@ function parseSwiftPackage(path: string, text: string): ProjectManifest {
 }
 
 /**
- * Identify the Yarn version that uses Berry configuration and installation arguments.
- * @param installer the validated package manager and its exact version
+ * Identify the Yarn major version that uses Berry configuration and installation arguments.
+ * @param installer the validated package manager and version requirement
  * @returns whether the manager is Yarn Berry
  */
 export function isYarnBerry(installer: PackageInstaller): boolean {
     if (installer.name !== 'yarn') return false;
-    const major = semver.major(installer.version);
-    return major >= YARN_BERRY_MAJOR;
+    return getPackageInstallerMajor(installer) >= YARN_BERRY_MAJOR;
 }
 
 /**
- * Validate an exact package-manager identity at the manifest boundary.
+ * Get the major version from a validated package-manager version or major requirement.
+ * @param installer the validated package manager
+ * @returns the required major version
+ */
+export function getPackageInstallerMajor(installer: PackageInstaller): number {
+    return semver.major(installer.version.replace('.x', '.0.0'));
+}
+
+/**
+ * Validate a package-manager version requirement at the manifest boundary.
  * @param value the packageManager declaration
- * @returns the manager name and exact version
+ * @returns the manager name and version requirement
  */
 export function parsePackageInstaller(value: string): PackageInstaller {
-    const [name, version, ...verbatim] = value.split('@');
-    if (verbatim.length > 0) throw new Error('Invalid packageManager declaration.');
-    return packageInstallerSchema.parse({ name, version });
+    return packageInstallerSchema.parse(packageInstallerDeclaration(value));
 }
 
 /**
@@ -201,11 +214,7 @@ export function parsePackageInstaller(value: string): PackageInstaller {
  * @returns packageManager first, then the first devEngines declaration, or no declaration
  */
 export function declaredPackageInstaller(manifest: PackageManifest): PackageInstallerDeclaration | undefined {
-    if (manifest.packageManager !== undefined) {
-        const [name, declared] = manifest.packageManager.split('@');
-        const [version] = (declared ?? '').split('+', 1);
-        return packageInstallerDeclarationSchema.parse({ name, version });
-    }
+    if (manifest.packageManager !== undefined) return packageInstallerDeclaration(manifest.packageManager);
     const engines = manifest.devEngines?.packageManager;
     const entry = Array.isArray(engines) ? engines[0] : engines;
     return entry?.name === undefined ? undefined : packageInstallerDeclarationSchema.parse(entry);

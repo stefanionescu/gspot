@@ -1,7 +1,4 @@
-const INVALID_PATH_PREFIX = [
-    49, 48, 48, 54, 52, 52, 32, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97,
-    97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 32, 48, 9,
-];
+const INVALID_PATH_PREFIX = '100644 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 0\t';
 
 export const SHA1 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 
@@ -27,7 +24,7 @@ export const INVALID_ENTRIES = [
     {
         name: 'invalid UTF-8 path',
         message: 'Revision paths must be valid UTF-8.',
-        output: [...INVALID_PATH_PREFIX, 255, 0],
+        output: { prefix: INVALID_PATH_PREFIX, bytes: [255, 0] },
     },
 ];
 

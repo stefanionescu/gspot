@@ -28,13 +28,3 @@ export const reportSchema = z.object({
         }),
     ),
 });
-
-/** Required coverage floors read by the native Jest check. */
-export const thresholdsSchema = z.object({
-    coverage: z.object({
-        lines: percentageSchema,
-        branches: percentageSchema,
-        functions: percentageSchema,
-        statements: percentageSchema,
-    }),
-});

@@ -3,7 +3,7 @@
 import { parse } from 'yaml';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
-import { chmodSync, readFileSync } from 'node:fs';
+import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { NODE_VERSION } from '#cli/config/generation/ci.ts';
@@ -16,19 +16,24 @@ test('the GitHub workflow has a check and a manual job per platform and only rea
     const file = githubFile(PIPELINE);
     const workflow = parse(file.content) as GithubWorkflow;
     expect(file.path).toBe('.github/workflows/gspot.yml');
-    expect(file.readOnly).toBe(true);
     expect(workflow.name).toBe('gspot');
     expect(workflow.permissions).toStrictEqual({ contents: 'read' });
     expect(Object.keys(workflow.jobs)).toStrictEqual(['check-linux', 'manual-linux']);
 });
 
-test('the manual job runs the selected manual checks by name, and is left out when none is selected', () => {
-    const workflow = parse(githubFile(PIPELINE).content) as GithubWorkflow;
-    const runs = workflow.jobs['manual-linux']!.steps.map((step) => step.run ?? '');
-    expect(runs.some((run) => run.includes('mise exec -- gspot check --only security/codeql'))).toBe(true);
-    const none = parse(githubFile({ ...PIPELINE, manualChecks: [] }).content) as GithubWorkflow;
-    expect(Object.keys(none.jobs)).toStrictEqual(['check-linux']);
-});
+test.each(['security/codeql', 'project/audit'])(
+    'the manual job runs %s by name while ordinary jobs retain default coverage',
+    (name) => {
+        const workflow = parse(githubFile({ ...PIPELINE, manualChecks: [name] }).content) as GithubWorkflow;
+        const runs = workflow.jobs['manual-linux']!.steps.map((step) => step.run ?? '');
+        expect(
+            runs.some((run) => run.includes('mise exec -- gspot check --only ') && run.split(/\s+/u).includes(name)),
+        ).toBe(true);
+        expect(workflow.jobs['check-linux']!.steps.some((step) => step.run?.includes('--only') === true)).toBe(false);
+        const none = parse(githubFile({ ...PIPELINE, manualChecks: [] }).content) as GithubWorkflow;
+        expect(Object.keys(none.jobs)).toStrictEqual(['check-linux']);
+    },
+);
 
 test('a Swift scope adds the macOS jobs', () => {
     const workflow = parse(githubFile({ ...PIPELINE, hasSwift: true }).content) as GithubWorkflow;
@@ -58,7 +63,7 @@ test.each(DOCTOR_EXIT_CODES)(
     async (doctorExit) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'bin/mise': MISE_PROGRAM, 'bin/gspot': GSPOT_PROGRAM });
-        for (const name of ['mise', 'gspot']) chmodSync(join(sandbox.path, 'bin', name), 0o755);
+        for (const name of ['mise', 'gspot']) await chmod(join(sandbox.path, 'bin', name), 0o755);
         const commands = join(sandbox.path, 'commands.log');
         const workflow = parse(githubFile({ ...PIPELINE, manualChecks: [] }).content) as GithubWorkflow;
         const script = workflow.jobs['check-linux']!.steps.flatMap((step) =>
@@ -71,12 +76,11 @@ test.each(DOCTOR_EXIT_CODES)(
                 GSPOT_COMMAND_LOG: commands,
                 GSPOT_DOCTOR_EXIT: String(doctorExit),
             },
-            timeoutMs: 10_000,
         });
         expect(result.code, result.stdout + result.stderr).toBe(doctorExit);
         expect(result.stdout).toBe('');
         expect(result.stderr).toBe('');
-        expect(readFileSync(commands, 'utf8')).toBe(
+        expect(await readFile(commands, 'utf8')).toBe(
             doctorExit === 0 ? 'install\ndoctor\ncheck\n' : 'install\ndoctor\n',
         );
     },

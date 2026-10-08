@@ -46,3 +46,6 @@ ts = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
 js = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
 tsx = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
 jsx = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
+
+[set]
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }

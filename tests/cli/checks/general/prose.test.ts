@@ -18,7 +18,7 @@ import { DIAGNOSTIC, EXECUTION_FAILURES } from '#tests/config/cli/checks/general
 test('an outdated Vale executable reports its missing acquisition without scanning', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['prose', 'markdown'], { tables: 'run_with = "mise"\n' }),
+        'gspot.toml': buildPolicy(['prose', 'markdown'], { tables: 'runner = "mise"\n' }),
         '.gspot/config/vale.ini': 'Packages =\n',
         'sample.md': '# Example text\n',
     });

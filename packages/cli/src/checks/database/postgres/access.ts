@@ -48,7 +48,7 @@ async function statementFindings(
  */
 export async function rls(input: CheckInput): Promise<Finding[]> {
     const schema = buildSchema(await migrationsOf(input));
-    const schemas = new Set(input.view.options('postgres')['client_schemas'] as string[]);
+    const schemas = new Set(input.view.options('postgres')['client_schemas']);
     return schema.tables
         .entries()
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))))

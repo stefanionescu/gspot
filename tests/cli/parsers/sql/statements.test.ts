@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { TYPO } from '#tests/config/harness/spelling.ts';
+import { TYPO } from '#tests/config/samples/spelling.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { sqlIdentifiers } from '#cli/parsers/naming/sql.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';

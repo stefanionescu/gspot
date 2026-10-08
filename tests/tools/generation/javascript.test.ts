@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { stat, chmod } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
@@ -7,11 +8,11 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { statSync, chmodSync, existsSync } from 'node:fs';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 
@@ -165,11 +166,11 @@ test.each([false, true])(
             ...authoredFiles,
         });
         const session = await openSession(sandbox.path);
-        const rendered = emitAll(session);
-        const generated = rendered.files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
+        const emitted = emitAll(session);
+        const generated = emitted.files.find(({ path }) => path === '.gspot/config/jsconfig.json')!;
         using log = openOwnership(sandbox.path);
-        writeOutputs(session, log, undefined, rendered);
-        chmodSync(join(sandbox.path, generated.path), 0o444);
+        writeOutputs(session, log, undefined, emitted);
+        await chmod(join(sandbox.path, generated.path), 0o444);
         const command = ['check', '--only', 'javascript/tsc', '--json'];
         const env = { PATH: buildToolsPath(['tsc']) };
         const broken = await spawnGspot(sandbox.path, command, env);
@@ -185,18 +186,18 @@ test.each([false, true])(
             'Preserve this authored metadata.\n',
         );
         expect(await Bun.file(join(sandbox.path, generated.path)).text()).toBe(generated.content);
-        expect(statSync(join(sandbox.path, generated.path)).mode & 0o777).toBe(getKeptMode(0o444));
-        expect(existsSync(join(sandbox.path, 'jsconfig.json'))).toBe(authored);
+        const { mode } = await stat(join(sandbox.path, generated.path));
+        expect(mode & 0o777).toBe(getKeptMode(0o444));
+        expect(await pathExists(join(sandbox.path, 'jsconfig.json'))).toBe(authored);
         for (const [path, original] of Object.entries(authoredFiles))
             expect(await Bun.file(join(sandbox.path, path)).text()).toBe(original);
     },
-    60_000,
 );
 
 test('JavaScript projects retain nested compiler options and isolate the deepest scope', async () => {
     await using sandbox = await testdir();
     const policy = buildPolicy(['javascript'], {
-        tables: '[agent_rules]\nenabled = false\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+        tables: '[agent_rules]\nenabled = false\n[scope."app"]\n[scope."app/child"]\n[scope."sibling"]\n',
     });
     const bad = '/** @type {string} */\nexport const name = 42;\n';
     const corrected = bad.replace('42', '"name"');
@@ -215,8 +216,8 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
         'sibling/source.js': corrected,
     });
     const session = await openSession(sandbox.path);
-    const rendered = emitAll(session);
-    const outputs = rendered.files.filter(({ path }) => path.endsWith('/jsconfig.json'));
+    const emitted = emitAll(session);
+    const outputs = emitted.files.filter(({ path }) => path.endsWith('/jsconfig.json'));
     expect(outputs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/app/child/jsconfig.json',
         '.gspot/config/app/jsconfig.json',
@@ -224,7 +225,7 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
         '.gspot/config/sibling/jsconfig.json',
     ]);
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log, undefined, rendered);
+    writeOutputs(session, log, undefined, emitted);
     const command = ['check', '--only', 'javascript/tsc', '--json'];
     const env = { PATH: buildToolsPath(['tsc']) };
     const broken = await spawnGspot(sandbox.path, command, env);
@@ -251,4 +252,4 @@ test('JavaScript projects retain nested compiler options and isolate the deepest
     const errored = (JSON.parse(invalid.stdout) as RunReport).checks.filter((check) => check.status === 'error');
     expect(errored.map((check) => check.note?.includes('app/jsconfig.json'))).toStrictEqual([true]);
     expect(await Bun.file(join(sandbox.path, 'app/jsconfig.json')).text()).toBe('{');
-}, 60_000);
+});

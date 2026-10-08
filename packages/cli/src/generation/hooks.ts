@@ -10,7 +10,7 @@ import { HOOK_ARGS, HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 
 // The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there
 // becomes absolute first, in the Windows spelling under Git for Windows.
-function hookScript(name: HookName, runner: Policy['run_with'], prefix: string, version: string): string {
+function hookScript(name: HookName, runner: Policy['runner'], prefix: string, version: string): string {
     const program = runner ?? 'gspot';
     const { acquisition } = HOOK_RUNNERS[program];
     const quoted = prefix.replaceAll("'", String.raw`'\''`);
@@ -50,7 +50,7 @@ export function hookPrefix(root: string): string {
  * @param runner the task runner the policy names, or undefined
  * @returns the command line
  */
-export function hookLine(name: HookName, runner: Policy['run_with']): string {
+export function hookLine(name: HookName, runner: Policy['runner']): string {
     return `${HOOK_RUNNERS[runner ?? 'gspot'].command} ${HOOK_ARGS[name]}`;
 }
 
@@ -62,12 +62,11 @@ export function hookLine(name: HookName, runner: Policy['run_with']): string {
  * @returns the generated files
  */
 export function hookFiles(root: string, policy: Policy, version: string): GeneratedFile[] {
-    if (policy.hooks === undefined) return [];
+    if (policy.hooks?.enabled !== true) return [];
     const prefix = hookPrefix(root);
     return (Object.keys(HOOK_ARGS) as HookName[]).map((name) => ({
         path: `${HOOKS_DIRECTORY}/${name}`,
-        content: hookScript(name, policy.run_with, prefix, version),
-        readOnly: true,
+        content: hookScript(name, policy.runner, prefix, version),
         executable: true,
         kind: 'hook',
     }));

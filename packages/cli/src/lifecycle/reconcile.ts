@@ -1,56 +1,32 @@
 // Reuses initialization selection to reconcile the saved setup with current repository evidence.
 import { isDeepStrictEqual } from 'node:util';
+import { isRecord } from '#cli/platform/objects.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { npmToolNames } from '#cli/configurations/pins.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { selectForInit } from '#cli/lifecycle/selection.ts';
-import type { Manifest } from '#cli/types/configurations.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { Policy, Mutation, TomlTable } from '#cli/types/policy/settings.ts';
-import { updateConfigurationOverrides } from '#cli/lifecycle/configuration-overrides.ts';
+import type { Policy, Mutation } from '#cli/types/policy/settings.ts';
 import type { InitSelection, ConfigurationMerge, ConfigurationReconciliation } from '#cli/types/lifecycle/selection.ts';
 
-function mergeConfigurationChoices(manifests: Map<string, Manifest>, input: ConfigurationMerge): string[] {
-    const { saved, found, overrides } = input;
-    const preserved = saved.filter((id) => {
-        const kind = manifests.get(id)?.configuration.kind;
-        return kind !== 'language' && kind !== 'framework';
-    });
-    const wanted = new Set([
-        ...found.filter((id) => !(overrides?.removed ?? []).includes(id)),
-        ...(overrides?.added ?? []),
-        ...preserved,
-    ]);
-    return [...saved.filter((id) => wanted.has(id)), ...wanted.values().filter((id) => !saved.includes(id))];
+function mergeConfigurationChoices({ saved, found, removed }: ConfigurationMerge): string[] {
+    return [...new Set([...saved, ...found.filter((id) => !removed.includes(id))])];
 }
 
 function reconcileChoices(session: Session, detected: InitSelection): ConfigurationReconciliation {
-    const {
-        root,
-        manifests,
-        policyFiles: { policy },
-    } = session;
-    const selections = updateConfigurationOverrides({
-        choices: new Map([
-            ['', policy.configurations],
-            ...policy.scopes.map((scope): [string, string[]] => [scope.path, scope.configurations]),
-        ]),
-        manifests,
-        previous: getOwnership(root).selections,
-    });
-    const rootIds = mergeConfigurationChoices(manifests, {
+    const { policy } = session.policyFiles;
+    const rootIds = mergeConfigurationChoices({
         saved: policy.configurations,
         found: detected.rootIds,
-        overrides: selections[''],
+        removed: policy.removed_configurations,
     });
     const scopeIds = new Map(
         [...detected.scopeConfigurations].map(([path, found]) => [
             path,
-            mergeConfigurationChoices(manifests, {
-                saved: policy.scopes.find((scope) => scope.path === path)?.configurations ?? [],
+            mergeConfigurationChoices({
+                saved: policy.scope[path]?.configurations ?? [],
                 found,
-                overrides: selections[path],
+                removed: policy.scope[path]?.removed_configurations ?? [],
             }),
         ]),
     );
@@ -60,28 +36,9 @@ function reconcileChoices(session: Session, detected: InitSelection): Configurat
         for (const id of saved) if (!wanted.includes(id)) notes.push(`removed configuration ${id} in ${path}`);
     };
     describe('root', policy.configurations, rootIds);
-    for (const [path, ids] of scopeIds)
-        describe(path, policy.scopes.find((scope) => scope.path === path)?.configurations ?? [], ids);
+    for (const [path, ids] of scopeIds) describe(path, policy.scope[path]?.configurations ?? [], ids);
     return {
         notes,
-        selections: Object.fromEntries(
-            new Map([
-                ...policy.scopes.map((scope): [string, string[]] => [scope.path, scope.configurations]),
-                ['', rootIds],
-                ...scopeIds,
-            ])
-                .entries()
-                .map(([path, ids]) => [
-                    path,
-                    {
-                        configurations: ids.filter((id) =>
-                            ['language', 'framework'].includes(manifests.get(id)?.configuration.kind ?? ''),
-                        ),
-                        added: selections[path]?.added ?? [],
-                        removed: selections[path]?.removed ?? [],
-                    },
-                ]),
-        ),
         mutate: configurationMutation(policy, rootIds, scopeIds),
     };
 }
@@ -89,14 +46,14 @@ function reconcileChoices(session: Session, detected: InitSelection): Configurat
 function configurationMutation(policy: Policy, rootIds: string[], scopeIds: Map<string, string[]>): Mutation {
     return (raw) => {
         if (!isDeepStrictEqual(policy.configurations, rootIds)) raw['configurations'] = rootIds;
-        const scopes = (raw['scope'] as TomlTable[] | undefined) ?? [];
+        const scopes = isRecord(raw['scope']) ? raw['scope'] : {};
         for (const [path, configurations] of scopeIds) {
-            const existing = scopes.find((scope) => scope['path'] === path);
-            if (existing === undefined) scopes.push({ path, configurations });
+            const existing = scopes[path];
+            if (!isRecord(existing)) scopes[path] = { configurations };
             else if (!isDeepStrictEqual(existing['configurations'], configurations))
                 existing['configurations'] = configurations;
         }
-        if (scopes.length > 0) raw['scope'] = scopes;
+        if (Object.keys(scopes).length > 0) raw['scope'] = scopes;
     };
 }
 
@@ -123,7 +80,7 @@ export function reconcileConfigurations(session: Session): ConfigurationReconcil
         projectManifests,
         manifests,
         workspace: [...workspace.values()],
-        options: { cwd: root, yes: true, isDryRun: true, install: false },
+        options: {},
     });
     return reconcileChoices(session, detected);
 }

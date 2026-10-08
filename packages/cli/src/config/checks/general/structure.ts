@@ -1,3 +1,5 @@
+import type { CommentStyle } from '#cli/types/checks/general/structure.ts';
+
 export const CONFIG_STATEMENTS = new Set([
     'import_statement',
     'export_statement',
@@ -82,3 +84,17 @@ export const TOOL_PREFIXES = new Set([
     'package',
     'pnpm',
 ]);
+
+/** Comment styles for the languages whose code lines gspot counts. */
+export const COMMENT_STYLE_BY_EXTENSION: Record<string, CommentStyle> = {
+    '': ['bash', '#'],
+    '.sh': ['bash', '#'],
+    '.bash': ['bash', '#'],
+    '.zsh': ['bash', '#'],
+    '.bats': ['bash', '#'],
+    '.py': ['python', '#'],
+    '.pyi': ['python', '#'],
+    '.sql': ['sql', '--'],
+    '.pgsql': ['sql', '--'],
+    '.psql': ['sql', '--'],
+};

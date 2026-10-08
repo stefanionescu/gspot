@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { readTree } from '#tests/harness/preservation.ts';
@@ -20,10 +20,10 @@ test.each(NON_JAVASCRIPT_PROJECTS)(
             'app/package.json': '{"name":"example-app","private":true}\n',
             [`app/${file}`]: source,
         });
-        const before = readTree(sandbox.path);
+        const before = await readTree(sandbox.path);
         const argv = ['init', '--dry-run', ...QUIET_INIT];
-        const preview = await spawnGspot(sandbox.path, argv);
-        const accepted = await spawnGspot(sandbox.path, [...argv, '--yes']);
+        const preview = await runGspot(sandbox.path, argv);
+        const accepted = await runGspot(sandbox.path, [...argv, '--yes']);
         for (const result of [preview, accepted]) {
             expect(result.code, `${language}: ${result.stdout}${result.stderr}`).toBe(0);
             expect(result.stdout).toContain('\nconfigurations\n');
@@ -32,13 +32,13 @@ test.each(NON_JAVASCRIPT_PROJECTS)(
         expect(preview.stdout.slice(preview.stdout.indexOf('\nconfigurations\n'))).toBe(
             accepted.stdout.slice(accepted.stdout.indexOf('\nconfigurations\n')),
         );
-        const json = await spawnGspot(sandbox.path, [...argv, '--yes', '--json']);
+        const json = await runGspot(sandbox.path, [...argv, '--yes', '--json']);
         expect(json.code, json.stdout + json.stderr).toBe(0);
         const output = JSON.parse(json.stdout) as Required<Pick<InitJson, 'plan' | 'policy'>>;
         expect(output.plan.configurations.map(({ configuration }) => configuration)).not.toContain('javascript');
-        expect(parseStrictPolicy(output.policy, sandbox.path).scopes.map(({ path }) => path)).toStrictEqual(['app']);
-        expect(readTree(sandbox.path)).toStrictEqual(before);
-        const written = await spawnGspot(sandbox.path, ['init', '--yes', '--json', ...QUIET_INIT]);
+        expect(Object.keys(parseStrictPolicy(output.policy, sandbox.path).scope)).toStrictEqual(['app']);
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
+        const written = await runGspot(sandbox.path, ['init', '--yes', '--json', ...QUIET_INIT]);
         expect(written.code, written.stdout + written.stderr).toBe(0);
         const session = await openSession(sandbox.path);
         expect(session.repository.scopes.map(({ path }) => path)).toStrictEqual(['', 'app']);
@@ -51,10 +51,10 @@ test.each(NON_JAVASCRIPT_PROJECTS)(
     async (language, file, source) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'package.json': TOOLING_PACKAGE, [file]: source });
-        const initialized = await spawnGspot(sandbox.path, ['init', '--yes', '--json', ...QUIET_INIT]);
+        const initialized = await runGspot(sandbox.path, ['init', '--yes', '--json', ...QUIET_INIT]);
         expect(initialized.code, `${language}: ${initialized.stdout}${initialized.stderr}`).toBe(0);
         for (const level of ['recommended', 'all']) {
-            const selected = await spawnGspot(sandbox.path, ['set', 'level', level]);
+            const selected = await runGspot(sandbox.path, ['set', 'level', level]);
             expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const project = parseToolProject(await Bun.file(join(sandbox.path, '.gspot/package.json')).text());
             for (const name of ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'])
@@ -62,10 +62,10 @@ test.each(NON_JAVASCRIPT_PROJECTS)(
             expect(await Bun.file(join(sandbox.path, '.gspot/config/eslint.config.mjs')).exists()).toBe(false);
         }
         await Bun.write(join(sandbox.path, 'run'), '#!/usr/bin/env node\nconsole.log(1);\n');
-        const discovered = await spawnGspot(sandbox.path, ['apply']);
+        const discovered = await runGspot(sandbox.path, ['apply']);
         expect(discovered.code, discovered.stdout + discovered.stderr).toBe(0);
         for (const level of ['recommended', 'all']) {
-            const applied = await spawnGspot(sandbox.path, ['set', 'level', level]);
+            const applied = await runGspot(sandbox.path, ['set', 'level', level]);
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
             const selected = await openSession(sandbox.path);
             expect(selected.scopes.flatMap(({ view }) => view.configurations)).toContain('javascript');

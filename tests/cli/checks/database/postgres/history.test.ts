@@ -1,12 +1,10 @@
 import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
-import { rejects } from 'node:assert/strict';
+import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { checkInput } from '#cli/execution/built-in.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
@@ -25,16 +23,8 @@ test('migration history reports changed committed SQL and an earlier new version
     expect(
         await migrationsFrozen(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
     ).toStrictEqual([]);
-    gitOutput(sandbox.path, [
-        '-c',
-        'user.name=Example',
-        '-c',
-        'user.email=example@example.com',
-        'commit',
-        '-m',
-        'Fixture',
-    ]);
-    writeFileSync(join(sandbox.path, PATH), ORIGINAL + 'ALTER TABLE teams ADD COLUMN name text;\n');
+    gitOutput(sandbox.path, ['commit', '-m', 'Fixture']);
+    await writeFile(join(sandbox.path, PATH), ORIGINAL + 'ALTER TABLE teams ADD COLUMN name text;\n');
     await createFileTree(sandbox.path, { 'migrations/20240101_early.sql': 'SELECT 1;\n' });
     gitOutput(sandbox.path, ['add', '.']);
     expect(
@@ -62,7 +52,7 @@ test('migration history reports changed committed SQL and an earlier new version
             message: 'A new migration sorts before 20240201_teams.sql, which is already committed.',
         },
     ]);
-    writeFileSync(join(sandbox.path, PATH), ORIGINAL);
+    await writeFile(join(sandbox.path, PATH), ORIGINAL);
     gitOutput(sandbox.path, ['mv', 'migrations/20240101_early.sql', 'migrations/20240301_later.sql']);
     expect(
         await migrationsFrozen(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
@@ -72,31 +62,28 @@ test('migration history reports changed committed SQL and an earlier new version
     ).toStrictEqual([]);
     const read = buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen');
     const branch = gitOutput(sandbox.path, ['symbolic-ref', 'HEAD']);
-    writeFileSync(join(sandbox.path, '.git', branch), 'broken');
-    await rejects(migrationsFrozen(read), { message: /Cannot read committed Git history/u });
+    await writeFile(join(sandbox.path, '.git', branch), 'broken');
+    expect(await rejection(migrationsFrozen(read))).toContain('Cannot read committed Git history');
 });
 
 test('nested scopes keep migration roots and parsed reads separate', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['postgres'], {
-            tables: '[[scope]]\npath = "apps/one"\nconfigurations = ["postgres"]\n[[scope]]\npath = "apps/two"\nconfigurations = ["postgres"]\n[scope.postgres]\nmigrations_folder = "schema"\n',
+            tables: '[scope."apps/one"]\nconfigurations = ["postgres"]\n[scope."apps/two"]\nconfigurations = ["postgres"]\n[scope."apps/two".postgres]\nmigrations_folder = "schema"\n',
         }),
         [PATH]: ORIGINAL,
         'apps/one/migrations/20240101_one.sql': 'SELECT 1;\n',
         'apps/two/schema/20240101_two.sql': 'SELECT 2;\n',
     });
     const session = await openSession(sandbox.path);
-    const check = session.scopes[0]!.selected.flatMap((manifest) => manifest.checks).find(
-        (check) => check.name === 'postgres/migration-order',
-    )!;
     const expected: Record<string, string> = {
         '': PATH,
         'apps/one': 'apps/one/migrations/20240101_one.sql',
         'apps/two': 'apps/two/schema/20240101_two.sql',
     };
     for (const selected of session.scopes) {
-        const scopeInput = checkInput(session, { scope: selected, check, files: session.repository.files });
+        const scopeInput = buildCheckInput(session, 'postgres/migration-order', { scope: selected.scope.path });
         const migrations = await migrationsOf(scopeInput);
         expect(migrations.map((migration) => migration.path)).toStrictEqual([expected[selected.scope.path]!]);
         expect(await migrationOrder(scopeInput)).toStrictEqual([]);
@@ -109,7 +96,7 @@ test('migration analysis rejects unreadable SQL and accepts its correction in a 
     expect(
         await rejection(migrationsOf(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen'))),
     ).toContain('migrations/20240201_teams.sql:1:14:');
-    writeFileSync(join(sandbox.path, PATH), ORIGINAL);
+    await writeFile(join(sandbox.path, PATH), ORIGINAL);
     const restored = await migrationsOf(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen'));
     expect(restored[0]?.statements[0]?.kind).toBe('CreateStmt');
 });
@@ -161,7 +148,7 @@ test('history reads only selected migration blobs and shares reads without mixin
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['postgres'], {
-            tables: '[postgres]\nfrozen_through = "all"\n[[scope]]\npath = "apps/api"\nconfigurations = ["postgres"]\n',
+            tables: '[postgres]\nfrozen_through = "all"\n[scope."apps/api"]\nconfigurations = ["postgres"]\n',
         }),
         'migrations/1_root.sql': 'SELECT 1;',
         'apps/api/migrations/2_api.sql': 'SELECT 2;',

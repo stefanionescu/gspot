@@ -11,8 +11,8 @@ export const POLICY = `[agent_rules]
 enabled = false
 [tools.eslint]
 restricted_imports = [{ name = "node:fs", message = "Use the storage service." }]
-[zustand]
-store_files = ["**/store.js"]
+[architecture.roles]
+stores = ["**/store.js"]
 `;
 
 /** JavaScript and TypeScript module forms supported by the default store convention. */

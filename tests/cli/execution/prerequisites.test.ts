@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -25,7 +25,7 @@ test('a missing required setting skips its check', async () => {
         {
             check: 'xcode/entitlements',
             status: 'skipped',
-            note: textContaining('tools.xcode.entitlements_allowed'),
+            note: textContaining('xcode.entitlements_allowed'),
         },
     ]);
 });
@@ -35,7 +35,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     using resources = new DisposableStack();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['site'], {
-            tables: '[site]\nbuild = "bun build.js"\n[limits.site]\nkilobytes = [{paths = ["**/*"], kb = 100}]\n',
+            tables: '[site]\nbuild_command = ["bun", "build.js"]\nmax_kilobytes = [{paths = ["**/*"], kb = 100}]\n',
             level: 'all',
         }),
         'build.js': 'console.error("Test build failure"); process.exitCode = 1;',
@@ -61,7 +61,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
             ...[...consumers].map((check) => ({ check, status: 'skipped', note: textContaining('did not build') })),
         ].toSorted((left, right) => left.check.localeCompare(right.check)),
     );
-    writeFileSync(
+    await writeFile(
         join(sandbox.path, 'build.js'),
         'import {mkdirSync, writeFileSync} from "node:fs"; mkdirSync("dist"); writeFileSync("dist/index.html", "built");',
     );
@@ -82,7 +82,7 @@ test('a check runner that throws errors that check alone, and the other checks k
     const reporter = [process.execPath, '-e', 'console.log("source.txt"); process.exitCode = 1;'];
     const entries = ['broken', 'kept'].map(
         (name) =>
-            `[[check]]\nname = "sandbox/${name}"\ncommand = ${JSON.stringify(reporter)}\npaths = ["source.txt"]\nstage = "commit"\n[check.output]\nformat = "lines"\n`,
+            `[check."sandbox/${name}"]\ncommand = ${JSON.stringify(reporter)}\npaths = ["source.txt"]\nstage = "commit"\n[check."sandbox/${name}".output]\nformat = "lines"\n`,
     );
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {

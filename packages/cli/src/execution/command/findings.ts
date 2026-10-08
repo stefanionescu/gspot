@@ -4,13 +4,13 @@ import { join, isAbsolute } from 'node:path';
 import { toolPath } from '#cli/platform/paths.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { parseOutput } from '#cli/parsers/output/parse.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
-import { FILELESS_FORMATS } from '#cli/config/execution/command.ts';
+import { DEFAULT_OUTPUT_FORMAT } from '#cli/config/parsers/output.ts';
+import type { Finding, OutputPaths } from '#cli/types/parsers/output.ts';
+import { parseOutput, outputFormats } from '#cli/parsers/output/parse.ts';
 import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
 import { hasToolError, toolOutputDetail } from '#cli/execution/command/failures.ts';
-import type { Finding, OutputSpec, OutputPaths } from '#cli/types/parsers/output.ts';
 
 import type {
     OutputCheck,
@@ -74,15 +74,6 @@ function attributeFile(parsed: Finding[], invocation: CommandInvocation, check: 
     for (const finding of parsed) if (finding.file === '') finding.file = invocation.file;
 }
 
-// Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
-function isFileNamed(output: OutputSpec | undefined): boolean {
-    if (output === undefined || ['eslint', 'knip', 'semgrep', 'typos', 'markdownlint'].includes(output.format))
-        return true;
-    if (FILELESS_FORMATS.has(output.format) || (output.file_type ?? 'path') !== 'path') return false;
-    if (output.pattern !== undefined) return output.pattern.includes('(?<file>');
-    return output.fields?.file !== undefined;
-}
-
 function isOnDisk(file: string, roots: string[]): boolean {
     if (file === '') return false;
     return roots.some(
@@ -108,7 +99,8 @@ function redactedFindings(
 }
 
 function parsedFindings(check: CheckDeclaration, result: SpawnResult, paths: OutputPaths, broken: boolean): Finding[] {
-    if (check.output?.format === 'trufflehog-json') return redactedFindings(check, result, paths, broken);
+    if (outputFormats[(check.output ?? DEFAULT_OUTPUT_FORMAT).format].withholdOutput)
+        return redactedFindings(check, result, paths, broken);
     if (broken) return [];
     return parseOutput(check, result.stdout, result.stderr, paths);
 }
@@ -129,7 +121,8 @@ function outputFailure(planned: OutputCheck, result: SpawnResult): never {
  */
 function isToolBroken(check: CheckDeclaration, result: SpawnResult, parsed: Finding[], paths: OutputPaths): boolean {
     if (result.code === 0 || (check.command?.includes(FILE_PLACEHOLDER) ?? false)) return false;
-    if (check.finding_count_pattern !== undefined || !isFileNamed(check.output)) return false;
+    const output = check.output ?? DEFAULT_OUTPUT_FORMAT;
+    if (check.finding_count_pattern !== undefined || !outputFormats[output.format].namesFiles(output)) return false;
     return parsed.every((finding) => !isOnDisk(finding.file, [paths.cwd, paths.root]));
 }
 
@@ -166,7 +159,7 @@ export function checkedFindings(planned: OutputCheck, result: SpawnResult, paths
     const broken = hasToolError(check, planned.tool, result);
     const parsed = parsedFindings(check, result, paths, broken);
     const verifyFiles =
-        planned.manifest !== undefined || check.output?.format === 'typos' || check.output?.format === 'markdownlint';
+        planned.manifest !== undefined || outputFormats[(check.output ?? DEFAULT_OUTPUT_FORMAT).format].verifyFiles;
     if (broken || (verifyFiles && isToolBroken(check, result, parsed, paths))) outputFailure(planned, result);
     return parsed;
 }

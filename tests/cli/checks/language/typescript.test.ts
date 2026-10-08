@@ -1,14 +1,15 @@
-import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { planRun } from '#cli/planning/plan.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { tsconfig } from '#cli/checks/language/typescript.ts';
-import { VALID } from '#tests/config/cli/checks/language/tsconfig-options.ts';
+import { VALID } from '#tests/config/samples/typescript.ts';
+import { checkjs, tsconfig } from '#cli/checks/language/typescript.ts';
 
 const TSCONFIG_OPTIONS_POLICY = buildPolicy(['typescript']);
 
@@ -19,7 +20,7 @@ test('malformed TypeScript configuration reports its path instead of missing opt
     expect(() => tsconfig(input)).toThrow(
         `Cannot read TypeScript configuration ${join(sandbox.path, 'tsconfig.json')}`,
     );
-    fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID);
+    await writeFile(join(sandbox.path, 'tsconfig.json'), VALID);
     expect(tsconfig(buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'))).toStrictEqual([]);
 });
 
@@ -32,7 +33,7 @@ test('a missing inherited configuration cannot be replaced by empty compiler opt
     const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
     // TypeScript prints the inherited path with forward slashes on every platform.
     expect(() => tsconfig(input)).toThrow(`Cannot read file '${toPosix(join(sandbox.path, 'missing.json'))}'`);
-    fs.writeFileSync(join(sandbox.path, 'missing.json'), VALID);
+    await writeFile(join(sandbox.path, 'missing.json'), VALID);
     expect(tsconfig(buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'))).toStrictEqual([]);
 });
 
@@ -40,7 +41,7 @@ test('a standalone scope needs no authored tsconfig but still audits an added pr
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': TSCONFIG_OPTIONS_POLICY });
     expect(tsconfig(buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'))).toStrictEqual([]);
-    fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID.replace('"strict":true', '"strict":false'));
+    await writeFile(join(sandbox.path, 'tsconfig.json'), VALID.replace('"strict":true', '"strict":false'));
     expect(tsconfig(buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'))).toStrictEqual([
         {
             check: 'typescript/tsconfig',
@@ -51,7 +52,7 @@ test('a standalone scope needs no authored tsconfig but still audits an added pr
             help: 'Enable this compiler option in the authored TypeScript configuration.',
         },
     ]);
-    fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID);
+    await writeFile(join(sandbox.path, 'tsconfig.json'), VALID);
     expect(tsconfig(buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'))).toStrictEqual([]);
 });
 
@@ -71,7 +72,7 @@ test('nested configurations inherit the configuration an ancestor package names'
     const input = buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig');
     const inherited = tsconfig(input);
     expect(inherited.filter((finding) => finding.rule === 'strict')).toStrictEqual([]);
-    fs.writeFileSync(
+    await writeFile(
         join(sandbox.path, 'apps/web/tsconfig.json'),
         '{"extends":"@example/config","compilerOptions":{"strict":false}}',
     );
@@ -103,34 +104,82 @@ test('recommended permits the two compiler options that all requires', async () 
         'tsconfig.json': JSON.stringify(options),
     });
     expect(tsconfig(buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'))).toStrictEqual([]);
-    fs.writeFileSync(join(sandbox.path, 'gspot.toml'), buildPolicy(['typescript'], { level: 'all' }));
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy(['typescript'], { level: 'all' }));
     const findings = tsconfig(buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'));
     expect(findings).toHaveLength(2);
     expect(new Set(findings.map(({ rule }) => rule))).toStrictEqual(
         new Set(['noImplicitReturns', 'noPropertyAccessFromIndexSignature']),
     );
-    fs.writeFileSync(join(sandbox.path, 'tsconfig.json'), VALID);
+    await writeFile(join(sandbox.path, 'tsconfig.json'), VALID);
     expect(tsconfig(buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig'))).toStrictEqual([]);
 });
 
-test('generated compiler flags honor rule exclusions and preserve authored flags', async () => {
+test('a scope whose project lists no JavaScript file passes with nothing to compile', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['typescript'], {
-            tables: '[[ignore]]\ncheck = "typescript/tsconfig"\nrule = "noImplicitReturns"\nreason = "Returns are checked separately."\n',
-            level: 'all',
+        'gspot.toml': buildPolicy(['javascript'], {
+            tables: '[agent_rules]\nenabled = false\n[scope."site"]\nconfigurations = ["javascript"]\n',
         }),
-        'source.ts': 'export const value = 1;',
-        'tsconfig.json': VALID,
+        'source/main.js': 'export const value = 1;\n',
+        'site/README.md': '# No script here\n',
     });
     const session = await openSession(sandbox.path);
-    const output = emitAll(session).files.find((file) => file.path === '.gspot/config/tsconfig.json');
-    expect(output).toBeDefined();
-    const parsed: unknown = JSON.parse(output!.content);
-    expect(parsed).toMatchObject({
-        extends: '../../tsconfig.json',
-        compilerOptions: { strict: true, noPropertyAccessFromIndexSignature: true },
+    const projects = emitAll(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
+    expect(projects.map(({ path }) => path)).toStrictEqual(['.gspot/config/jsconfig.json']);
+    for (const project of projects) await Bun.write(join(sandbox.path, project.path), project.content);
+    const reopened = await openSession(sandbox.path);
+    const [root] = planRun(reopened, { stage: 'push', skips: [], only: ['javascript/tsc'] });
+    // Saved scope policy can outlive its JavaScript inputs and generated compiler configuration.
+    const site = { ...root!, scope: reopened.scopes.find((entry) => entry.scope.path === 'site')!, files: [] };
+    expect(await checkjs(reopened, site)).toMatchObject({
+        check: 'javascript/tsc',
+        scope: 'site',
+        status: 'passed',
+        fileCount: 0,
+        findings: [],
     });
-    expect(parsed).not.toHaveProperty('compilerOptions.noImplicitReturns');
-    expect(fs.readFileSync(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe(VALID);
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s audits selected framework compiler options in their scope',
+    async (level) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy(['typescript'], {
+                level,
+                tables: '[scope."service"]\nconfigurations = ["nestjs"]',
+            }),
+            'tsconfig.json': VALID,
+            'source.ts': 'export const port = 8080;\n',
+            'service/tsconfig.json': '{"extends":"../tsconfig.json"}',
+            'service/source.ts': 'export const port = 3000;\n',
+        });
+        const session = await openSession(sandbox.path);
+        const input = buildCheckInput(session, 'typescript/tsconfig', {
+            scope: 'service',
+            paths: ['service/tsconfig.json', 'service/source.ts'],
+        });
+        expect(tsconfig(buildCheckInput(session, 'typescript/tsconfig'))).toStrictEqual([]);
+        expect(tsconfig(input).map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+            { file: 'service/tsconfig.json', rule: 'experimentalDecorators' },
+            { file: 'service/tsconfig.json', rule: 'emitDecoratorMetadata' },
+        ]);
+        await writeFile(
+            join(sandbox.path, 'service/tsconfig.json'),
+            '{"extends":"../tsconfig.json","compilerOptions":{"experimentalDecorators":true,"emitDecoratorMetadata":true}}',
+        );
+        expect(
+            tsconfig(
+                buildCheckInput(await openSession(sandbox.path), 'typescript/tsconfig', {
+                    scope: 'service',
+                    paths: ['service/tsconfig.json', 'service/source.ts'],
+                }),
+            ),
+        ).toStrictEqual([]);
+        const emitted = emitAll(await openSession(sandbox.path));
+        const projects = emitted.files.filter(({ path }) => path.endsWith('tsconfig.json'));
+        expect(projects.find(({ path }) => path.includes('service'))?.content).toContain(
+            '"experimentalDecorators": true',
+        );
+        expect(projects.find(({ path }) => !path.includes('service'))?.content).not.toContain('experimentalDecorators');
+    },
+);

@@ -16,9 +16,9 @@ test.each([...VERBOSITY_CASES])(
         const checks = [
             { name: 'example/findings', command: [process.execPath, 'findings.ts'], output: { format: 'lines' } },
             { name: 'example/passing', command: [process.execPath, '-e', 'process.exitCode=0;'] },
-        ].map((check) => ({ ...check, paths: ['source.txt'], stage: 'commit' }));
+        ].map(({ name, ...check }) => [name, { ...check, paths: ['source.txt'], stage: 'commit' }] as const);
         await createFileTree(sandbox.path, {
-            'gspot.toml': stringify({ configurations: [], check: checks }),
+            'gspot.toml': stringify({ configurations: [], check: Object.fromEntries(checks) }),
             'source.txt': 'before',
             'findings.ts': 'process.stdout.write(await Bun.file("findings.txt").text()); process.exitCode=1;',
             'findings.txt':

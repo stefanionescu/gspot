@@ -4,6 +4,7 @@ import { STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Policy, ScopeView } from '#cli/types/policy/settings.ts';
 
 import {
+    WORDS,
     MAX_LINE,
     GSPOT_STYLE,
     LONGER_THAN,
@@ -21,7 +22,7 @@ function renderedRule(stem: string, text: string, view: ScopeView): string {
         .replace(LONGER_THAN, () => `longer than ${String(limit)}`);
 }
 /**
- * The style and vocabulary files apply writes under the Vale styles folder.
+ * The style and accepted-word files apply writes under the Vale styles folder.
  * @param policy the repository policy.
  * @param view the root scope's merged view, for the docs limits.
  * @returns the generated files.
@@ -37,22 +38,20 @@ export function styleFiles(policy: Policy, view: ScopeView): GeneratedFile[] {
                 (stem === 'alt-text' && policy.level === 'all'
                     ? readAsset('configurations/general/prose/alt-text-all.txt')
                     : ''),
-            readOnly: true,
             kind: 'config',
         };
     });
     const shipped = readAsset(`configurations/general/prose/vocabularies/${GSPOT_STYLE}/accept.txt`)
         .trim()
         .split(/\r?\n/u);
-    const authored = view.options('prose')['vocabulary'] as string[];
-    const vocabulary = [...new Set([...shipped, ...authored])].toSorted((a, b) => a.localeCompare(b));
-    const base = `${STYLES_DIRECTORY}/config/vocabularies/${GSPOT_STYLE}`;
+    const authored = Object.keys(policy.words);
+    const words = [...new Set([...shipped, ...authored])].toSorted((a, b) => a.localeCompare(b));
+    const base = `${STYLES_DIRECTORY}/config/vocabularies/${WORDS}`;
     return [
         ...rules,
         {
             path: `${base}/accept.txt`,
-            content: `${vocabulary.join('\n')}\n`,
-            readOnly: true,
+            content: `${words.join('\n')}\n`,
             kind: 'config',
         },
     ];

@@ -12,19 +12,6 @@ export const COMMENTS = new Set(['comment', 'multiline_comment']);
 
 export const ENVIRONMENT_READ = 'ProcessInfo.processInfo.environment';
 
-export const SWIFTLINT_COMMAND = [
-    'swiftlint',
-    'lint',
-    '--strict',
-    '--quiet',
-    '--no-cache',
-    '--reporter',
-    'json',
-    '{files}',
-];
-
-export const DOC_RULE = 'doc_comment_style';
-
 export const WORKSPACE_SUFFIX = '.xcworkspace';
 
 export const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
@@ -40,3 +27,19 @@ export const DIRECTIVE = /^\/[/*]\s*(?:swiftlint:|swiftformat:|periphery:|source
 
 /** Selected source copies shared by the compiler, analyzer, Periphery, and coverage. */
 export const BUILD_SOURCE_DIRECTORY = 'source';
+
+/** Native package operations for each independent Swift consumer. */
+export const PACKAGE_COMMANDS = {
+    compile: ['build', '-v'],
+    analyze: ['build', '-v'],
+    periphery: ['build', '-v'],
+    coverage: ['test', '--enable-code-coverage'],
+};
+
+/** Native Xcode operations for each independent Swift consumer. */
+export const XCODE_COMMANDS = {
+    compile: ['build-for-testing'],
+    analyze: ['clean', 'build-for-testing'],
+    periphery: ['build-for-testing'],
+    coverage: ['test'],
+};

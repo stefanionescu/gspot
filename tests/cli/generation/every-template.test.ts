@@ -53,7 +53,7 @@ test.each(['recommended', 'all'])(
             ...PROJECT_FILES,
             'gspot.toml': `level = "${level}"\nconfigurations = ${JSON.stringify(configurations)}\n`,
         });
-        linkInstalledModules(join(sandbox.path, 'node_modules'));
+        await linkInstalledModules(join(sandbox.path, 'node_modules'));
         const session = await openSession(sandbox.path);
         const output = emitAll(session);
         const generated = output.files.filter((file) => file.kind === 'config' || file.kind === 'pointer');

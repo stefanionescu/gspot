@@ -5,12 +5,12 @@ import { findingAt } from '#cli/checks/finding.ts';
 import type { Root } from '#cli/types/platform/root.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
+import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { prepareBuild } from '#cli/checks/language/swift/cache.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
-import { buildPlan, scopeBuildFolder } from '#cli/checks/language/swift/plan.ts';
 import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/types/checks/language/swift.ts';
 import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, MACOS_PRIVATE_PATH } from '#cli/config/checks/language/swift.ts';
 
@@ -49,7 +49,7 @@ function diagnostics(input: CheckInput, output: string, levels: Set<string>, def
 function expandResponseFiles(line: string, folder: string, files: Root): string {
     if (!line.includes('swiftc ')) return line;
     return line.replaceAll(RESPONSE_FILE, (token, path: string) => {
-        const content = files.read(toPosix(relative(folder, path)));
+        const content = files.read(toPosix(relative(withoutPrivatePrefix(folder), withoutPrivatePrefix(path))));
         return content === undefined ? token : content.bytes.toString('utf8').trim().replaceAll('\n', ' ');
     });
 }
@@ -127,7 +127,7 @@ export async function swiftlintAnalyze(input: CheckInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function swiftPeriphery(input: CheckInput): Promise<Finding[]> {
-    const folder = scopeBuildFolder(input, 'periphery');
+    const { folder } = buildPlan(input, 'periphery');
     const config = join(input.root, CONFIGURATION_DIRECTORY, input.scope, 'periphery.yml');
     const argv = [
         'periphery',

@@ -1,25 +1,16 @@
-import * as fs from 'node:fs';
 import { join } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
+import { createEslint } from '#tests/harness/generated.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
 import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
-import { MANIFEST } from '#tests/config/cli/checks/general/dependencies/manifest-policy.ts';
+import { MANIFEST, REGISTRY_ALIASES } from '#tests/config/cli/checks/general/dependencies/manifest-policy.ts';
 
 const DEPENDENCIES_POLICY = buildPolicy(['dependencies']);
-
-async function input(root: string): Promise<CheckInput> {
-    const session = await openSession(root);
-    const selected = session.scopes[0]!;
-    const check = selected.selected
-        .flatMap((manifest) => manifest.checks)
-        .find((check) => check.name === 'dependencies/manifests')!;
-    return buildCheckInput(session, check.name, { scope: selected.scope.path });
-}
 
 describe('manifest policy reads', () => {
     test.each(['{', '{"dependencies":{"example":5}}'])(
@@ -27,42 +18,100 @@ describe('manifest policy reads', () => {
         async (content) => {
             await using sandbox = await testdir();
             await createFileTree(sandbox.path, { 'gspot.toml': DEPENDENCIES_POLICY, 'package.json': MANIFEST });
-            const inspected = await input(sandbox.path);
-            fs.writeFileSync(join(sandbox.path, 'package.json'), content);
+            const inspected = buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests');
+            await writeFile(join(sandbox.path, 'package.json'), content);
             expect(() => manifests(inspected)).toThrow('Cannot read package manifest package.json');
-            fs.writeFileSync(join(sandbox.path, 'package.json'), MANIFEST);
-            expect(manifests(await input(sandbox.path))).toStrictEqual([]);
+            await writeFile(join(sandbox.path, 'package.json'), MANIFEST);
+            expect(manifests(buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'))).toStrictEqual(
+                [],
+            );
         },
     );
 
     test('accepts an absent optional manifest and a valid manifest', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': DEPENDENCIES_POLICY, 'README.md': '# Example\n' });
-        expect(manifests(await input(sandbox.path))).toStrictEqual([]);
-        fs.writeFileSync(join(sandbox.path, 'package.json'), MANIFEST);
-        expect(manifests(await input(sandbox.path))).toStrictEqual([]);
+        expect(manifests(buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'))).toStrictEqual([]);
+        await writeFile(join(sandbox.path, 'package.json'), MANIFEST);
+        expect(manifests(buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'))).toStrictEqual([]);
     });
 });
 
-test.each(['npm:example@^1.2.3', 'npm:@example/library@^1.2.3', 'npm:example'])(
-    'registry alias %s requires an exact version and accepts a pinned correction',
-    async (version) => {
+test.each(['recommended', 'all'] as const)(
+    '%s checks dependency pins with ESLint and preserves scoped path ignores',
+    async (level) => {
         await using sandbox = await testdir();
         const base = parsePackageManifest(MANIFEST);
-        await createFileTree(sandbox.path, {
-            'gspot.toml': DEPENDENCIES_POLICY,
-            'package.json': JSON.stringify({ ...base, dependencies: { alias: version } }),
+        const ranged = JSON.stringify({ ...base, dependencies: { example: '^1.2.3' } });
+        const policy = buildPolicy(['javascript', 'dependencies'], {
+            level: level,
+            tables: '[scope."app"]\nconfigurations = ["javascript"]\n',
         });
-        expect(manifests(await input(sandbox.path))).toMatchObject([{ file: 'package.json', rule: 'version-range' }]);
-        fs.writeFileSync(
-            join(sandbox.path, 'package.json'),
-            JSON.stringify({
-                ...base,
-                dependencies: {
-                    alias: version.includes('@example/') ? 'npm:@example/library@1.2.3' : 'npm:example@1.2.3',
-                },
-            }),
+        await createFileTree(sandbox.path, {
+            'gspot.toml': policy,
+            'package.json': ranged,
+            'app/package.json': ranged,
+            'app/other/package.json': ranged,
+        });
+        const paths = ['package.json', 'app/package.json', 'app/other/package.json'];
+        const initial = await createEslint(sandbox.path);
+        const initialResults = await initial.lintFiles(paths);
+        expect(
+            initialResults.map(
+                ({ messages }) =>
+                    messages.filter(({ ruleId }) => ruleId === 'package-json/restrict-dependency-ranges').length,
+            ),
+        ).toStrictEqual([1, 1, 1]);
+        await Bun.write(
+            join(sandbox.path, 'gspot.toml'),
+            policy +
+                '[[ignore]]\ncheck = "javascript/eslint"\nrule = "package-json/restrict-dependency-ranges"\npaths = ["app/package.json"]\nreason = "The published package supports compatible dependency versions."\n',
         );
-        expect(manifests(await input(sandbox.path))).toStrictEqual([]);
+        await writeFile(
+            join(sandbox.path, 'package.json'),
+            JSON.stringify({ ...base, dependencies: { example: '1.2.3' } }),
+        );
+        const retained = await createEslint(sandbox.path);
+        const retainedResults = await retained.lintFiles(paths);
+        expect(
+            retainedResults.map(
+                ({ messages }) =>
+                    messages.filter(({ ruleId }) => ruleId === 'package-json/restrict-dependency-ranges').length,
+            ),
+        ).toStrictEqual([0, 0, 1]);
+        expect(manifests(buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'))).toStrictEqual([]);
     },
 );
+
+test.each(
+    REGISTRY_ALIASES.flatMap((version) => (['recommended', 'all'] as const).map((level) => ({ version, level }))),
+)('$level native dependency pin rules retain registry alias $version', async ({ version, level }) => {
+    await using sandbox = await testdir();
+    const base = parsePackageManifest(MANIFEST);
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['javascript', 'dependencies'], { level: level }),
+        'package.json': JSON.stringify({ ...base, dependencies: { alias: version, example: '^1.2.3' } }),
+    });
+    const eslint = await createEslint(sandbox.path);
+    const initial = await eslint.lintFiles(['package.json']);
+    expect(
+        initial
+            .flatMap(({ messages }) => messages)
+            .filter(({ ruleId }) => ruleId === 'package-json/restrict-dependency-ranges'),
+    ).toMatchObject([{ messageId: 'wrongRangeType' }]);
+    expect(
+        initial
+            .flatMap(({ messages }) => messages)
+            .filter(({ ruleId }) => ruleId === 'package-json/restrict-dependency-ranges'),
+    ).toHaveLength(1);
+    await writeFile(
+        join(sandbox.path, 'package.json'),
+        JSON.stringify({ ...base, dependencies: { alias: version, example: '1.2.3' } }),
+    );
+    const corrected = await eslint.lintFiles(['package.json']);
+    expect(
+        corrected
+            .flatMap(({ messages }) => messages)
+            .filter(({ ruleId }) => ruleId === 'package-json/restrict-dependency-ranges'),
+    ).toStrictEqual([]);
+});

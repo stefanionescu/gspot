@@ -1,14 +1,15 @@
 // What the owner proposes for one file: a replacement, a managed block, a merged configuration, or a retirement.
 import { isDeepStrictEqual } from 'node:util';
 import { decodeUtf8 } from '#cli/platform/text.ts';
+import { sameEntry } from '#cli/platform/root/rules.ts';
 import { planMerge } from '#cli/lifecycle/merge/plan.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Planned } from '#cli/types/lifecycle/apply.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
+import { identify, isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import { blockSpan, applyBlock } from '#cli/platform/managed-blocks.ts';
 import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
-import { isMatch, identify, isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import type { BlockSpan, BlockStyle, BlockContext } from '#cli/types/platform/managed-blocks.ts';
 
 import type {
@@ -35,8 +36,7 @@ function isPreservedReplacement(
     current: FileCopy | undefined,
 ): boolean {
     if (current === undefined) return false;
-    const installed: Identity = identify(request.next);
-    if (existing === undefined) return !isMatch(current, installed) && request.canReplace !== true;
+    if (existing === undefined) return !sameEntry(current, request.next) && request.canReplace !== true;
     return (
         isEdited(existing, current) &&
         request.kind !== 'policy' &&
@@ -53,10 +53,10 @@ function planChange(
     kind: OwnedKind,
 ): Planned & Required<Pick<Planned, 'entry'>> {
     const installed = identify(next);
-    const status = isMatch(current, installed) ? 'unchanged' : 'changed';
+    const status = sameEntry(current, next) ? 'unchanged' : 'changed';
     const isAdopted = existing === undefined && status === 'unchanged' && ADOPTED_KINDS.has(kind);
     const entry: OwnershipEntry = { path, kind, installed, ...(isAdopted ? { adopted: true } : {}) };
-    return { path, before: current, previous: existing, after: next, entry, status };
+    return { path, before: current, after: next, entry, status };
 }
 
 // The next text and record when the recorded block is still in place, or undefined when it was edited away.
@@ -98,8 +98,8 @@ function planBlock(
     planned: PlannedBlock,
 ): Planned {
     const next = { bytes: Buffer.from(planned.nextText), mode: current?.mode ?? OWNER_WRITABLE_FILE };
-    if (existing?.block !== undefined && isMatch(current, identify(next)))
-        return { path, before: current, previous: existing, status: 'unchanged' };
+    if (existing?.block !== undefined && sameEntry(current, next))
+        return { path, before: current, status: 'unchanged' };
     const plan = planChange(path, current, existing, next, 'block');
     plan.entry.block = planned.block;
     return plan;
@@ -128,15 +128,11 @@ export function proposeReplacement(log: Log, request: ReplacementRequest): Plann
     const existing = log.entryFor(path);
     log.files.validate(path, next, proposed);
     const current = getOnDisk(log, path, next, existing?.installed);
-    if (expected !== undefined && !isDeepStrictEqual(current, expected))
-        throw new Error(`${path} changed after gspot read it. Run the command again.`);
-    const installed = identify(next);
     // An edited owned file is preserved unless the caller reviewed those exact bytes and authorizes the replacement.
-    if (isPreservedReplacement(request, existing, current))
-        return { path, before: current, previous: existing, status: 'preserved' };
-    if (existing !== undefined && isMatch(current, installed) && isMatch(current, existing.installed))
-        return { path, before: current, previous: existing, status: 'unchanged' };
-    return planChange(path, current, existing, next, kind);
+    if (isPreservedReplacement(request, existing, current)) return { path, before: current, status: 'preserved' };
+    if (existing !== undefined && sameEntry(current, next) && isRecorded(current, existing.installed))
+        return { path, before: current, status: 'unchanged' };
+    return planChange(path, expected ?? current, existing, next, kind);
 }
 
 /**
@@ -157,10 +153,10 @@ export function proposeBlock(log: Log, path: string, body: string, style: BlockS
     const recorded = existing?.block;
     if (recorded !== undefined && current !== undefined) {
         const planned = planUpdate(text, span, recorded, context, body);
-        if (planned === undefined) return { path, before: current, previous: existing, status: 'preserved' };
+        if (planned === undefined) return { path, before: current, status: 'preserved' };
         return planBlock(path, current, existing, planned);
     }
-    if (isEdited(existing, current)) return { path, before: current, previous: existing, status: 'preserved' };
+    if (isEdited(existing, current)) return { path, before: current, status: 'preserved' };
     return planBlock(path, current, existing, planInsert(text, current, span, context, body));
 }
 
@@ -189,16 +185,16 @@ export function proposeMerge(
         matchesInstalled: isInstalled,
         canReplace,
     });
-    if (plan === undefined) return { path, before: current, previous: existing, status: 'preserved' };
+    if (plan === undefined) return { path, before: current, status: 'preserved' };
     if (plan.status === 'unchanged' && existing?.configuration !== undefined)
-        return { path, before: current, previous: existing, status: 'unchanged' };
+        return { path, before: current, status: 'unchanged' };
     const entry: OwnershipEntry = {
         path,
         kind: 'merge',
         installed: identify(plan.next),
         configuration: plan.configuration,
     };
-    return { path, before: current, previous: existing, after: plan.next, entry, status: plan.status };
+    return { path, before: current, after: plan.next, entry, status: plan.status };
 }
 
 /**
@@ -213,10 +209,10 @@ export function proposeRetirement(log: Log, path: string, expected: FileCopy): P
     const current = log.files.read(path);
     if (!isDeepStrictEqual(current, expected))
         throw new Error(`${path} changed after gspot read it. Run the command again.`);
-    if (current === undefined) return { path, before: current, previous: existing, status: 'unchanged' };
+    if (current === undefined) return { path, before: current, status: 'unchanged' };
     if (existing !== undefined && !isRecorded(current, existing.installed))
-        return { path, before: current, previous: existing, status: 'preserved' };
-    return { path, before: current, previous: existing, status: 'changed' };
+        return { path, before: current, status: 'preserved' };
+    return { path, before: current, status: 'changed' };
 }
 
 /**

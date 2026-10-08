@@ -4,6 +4,9 @@ export const TRIVY_FINDINGS_EXIT = 10;
 export const VALID_REPORT =
     '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}';
 
+export const MIXED_REPORT =
+    '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"},{"VulnerabilityID":"CVE-neighbor","PkgName":"neighbor"}],"Secrets":[{"RuleID":"private-key","Title":"Private key","Secret":"sensitive-native-value"}]}]}';
+
 export const CLEAN_REPORT = '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2"}';
 
 export const COMPOSE_SOURCES = [
@@ -57,4 +60,36 @@ export const INVALID_COMPOSE = [
     { name: 'malformed YAML', source: 'services: [' },
     { name: 'a non-string image', source: 'services: {app: {image: 12}}' },
     { name: 'an empty service value', source: 'services: {app: null}' },
+];
+
+export const DOCKERIGNORE_CASES = [
+    { name: 'Docker alone', policy: 'configurations = ["docker"]\n', text: '.git\n.env\n', missing: '', scope: '' },
+    {
+        name: 'JavaScript',
+        policy: 'configurations = ["docker", "javascript"]\n',
+        text: '.git\n.env\n',
+        missing: 'node_modules',
+        scope: '',
+    },
+    {
+        name: 'Python',
+        policy: 'configurations = ["docker", "python"]\n',
+        text: '.git\n.env\n',
+        missing: '.venv',
+        scope: '',
+    },
+    {
+        name: 'native wildcard entries',
+        policy: 'configurations = ["docker", "python", "javascript"]\n',
+        text: '**/.git\n**/.env*\n**/node_modules\n**/.venv\n',
+        missing: '',
+        scope: '',
+    },
+    {
+        name: 'a sibling language scope',
+        policy: 'configurations = ["docker"]\n[scope.api]\nconfigurations = ["docker", "python"]\n[scope.web]\nconfigurations = ["javascript"]\n',
+        text: '.git\n.env\n.venv\n',
+        missing: '',
+        scope: 'api',
+    },
 ];

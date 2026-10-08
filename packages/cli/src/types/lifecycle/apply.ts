@@ -8,12 +8,11 @@ export type WriteRequest = {
     generated: Generated;
     report: ApplyReport;
     retained: { prose: boolean; packages: boolean; python: boolean };
-    reviewedOriginals?: ReadonlyMap<string, FileCopy> | undefined;
+    reviewedOriginals?: ReadonlyMap<string, FileCopy | undefined> | undefined;
     conflictedOutputs?: ReadonlyMap<string, FileCopy>;
 };
 
 export type ApplyReport = {
-    preserved: string[];
     written: string[];
     unchanged: string[];
     removed: string[];
@@ -28,7 +27,6 @@ export type MergeRecord = NonNullable<OwnedFile['configuration']>;
 export type Planned = {
     path: string;
     before: FileCopy | undefined;
-    previous: OwnedFile | undefined;
     status: Outcome;
     after?: FileCopy;
     entry?: OwnedFile;

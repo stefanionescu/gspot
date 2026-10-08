@@ -1,9 +1,11 @@
 // Bound child processes by their test's remaining time and retain evidence when a step times out.
+import { spyOn, type Mock } from 'bun:test';
+import * as processes from '#cli/platform/spawn.ts';
 import { run, runBlocking } from '#cli/platform/spawn.ts';
+import { TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { TestStep } from '#tests/types/harness/command.ts';
-import { TEST_TIMEOUT_MS, NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { STEP_ARGUMENTS } from '#tests/config/harness/command.ts';
 import type { SpawnResult, AsyncSpawnOptions } from '#cli/types/platform/runtime.ts';
-import { STEP_ARGUMENTS, SLOW_SUITE_PATH, TEST_CLEANUP_MS } from '#tests/config/harness/command.ts';
 
 // Bun runs these suites serially; the preload opens and disposes one budget around each test.
 let deadline: number | undefined;
@@ -16,23 +18,21 @@ let deadline: number | undefined;
  * @returns bounded options and diagnostic context for an owned runner or signaled child.
  */
 export function prepareTestCommand(command: string[], options: AsyncSpawnOptions, step: string): TestStep {
-    const remaining =
-        deadline === undefined ? (options.timeoutMs ?? suiteTimeout()) : Math.ceil(deadline - performance.now());
+    const remaining = remainingTestTime();
     const context = `Command: ${command.join(' ')}\nWorking directory: ${options.cwd}\nStep: ${step}`;
     if (remaining <= 0)
         throw new Error(`The test budget is exhausted.\n${context}\nOutput: the command was not started.`);
-    const timeoutMs = Math.min(options.timeoutMs ?? suiteTimeout(), remaining);
+    const timeoutMs = Math.min(options.timeoutMs ?? TEST_TIMEOUT_MS, remaining);
     return { options: { ...options, timeoutMs }, context };
 }
 
 /**
- * Open one test's deadline, reserving time to dispose its resources.
- * @param duration the suite's complete test limit.
+ * Open one test's deadline.
  * @returns ownership that restores the prior deadline.
  */
-export function openTestBudget(duration: number): Disposable {
+export function openTestBudget(): Disposable {
     const previous = deadline;
-    deadline = performance.now() + duration - TEST_CLEANUP_MS;
+    deadline = performance.now() + TEST_TIMEOUT_MS;
     return {
         [Symbol.dispose]() {
             deadline = previous;
@@ -40,13 +40,9 @@ export function openTestBudget(duration: number): Disposable {
     };
 }
 
-/**
- * Determine the limit of the suite selected by the Bun command.
- * @returns one minute for CLI and plugin, fifteen minutes for native suites.
- */
-
-export function suiteTimeout(): number {
-    return SLOW_SUITE_PATH.test(Bun.argv[1] ?? '') ? NATIVE_TEST_TIMEOUT_MS : TEST_TIMEOUT_MS;
+/** Return the time left for a test or the shared limit outside a test. */
+export function remainingTestTime(): number {
+    return deadline === undefined ? TEST_TIMEOUT_MS : Math.ceil(deadline - performance.now());
 }
 
 /**
@@ -89,4 +85,17 @@ export function runTestCommandBlocking(
             `The test step timed out after ${String(prepared.options.timeoutMs)} ms.\n${prepared.context}\n${result.stdout}${result.stderr}`,
         );
     return result;
+}
+
+/**
+ * Replace one outbound command while retaining native execution for the others.
+ * @param name the executable to replace.
+ * @param result the replacement command result calculation.
+ * @returns a spy whose disposal restores native execution.
+ */
+export function fakeCommand(name: string, result: typeof run): Mock<typeof run> {
+    const nativeRun = processes.run;
+    return spyOn(processes, 'run').mockImplementation((command, options) =>
+        command[0] === name ? result(command, options) : nativeRun(command, options),
+    );
 }

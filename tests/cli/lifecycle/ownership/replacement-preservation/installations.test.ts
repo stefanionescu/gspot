@@ -2,21 +2,23 @@ import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { proposeMerge } from '#cli/lifecycle/ownership/plans.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
+import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { rmSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
+import { TASK_RESTORATION_CASES } from '#tests/config/cli/lifecycle/ownership/replacement-preservation.ts';
 
 const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
 
-test.each([false, true])(
-    'TOML task ownership restores originals while retaining unrelated edits (%s)',
-    async (edited) => {
+test.each(TASK_RESTORATION_CASES)(
+    'TOML task ownership restores original tasks with $name',
+    async ({ appended, environment, isOriginal }) => {
         await using directory = await testdir();
         const original =
             '# Authored tasks\n[tasks]\nlint = "authored lint"\n[tasks.format]\n# Keep this description\ndescription = "Format the app"\nrun = ["authored format", "authored verify"]\n';
@@ -29,21 +31,20 @@ test.each([false, true])(
                 { path: ['tasks', 'format', 'run'], value: 'gspot check --fix' },
             ];
             expect(applyPlan(log, proposeMerge(log, 'mise.toml', changes, true))).toBe('changed');
-            const installed = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
+            const installed = await readFile(join(directory.path, 'mise.toml'), 'utf8');
             expect(installed).toContain('# Authored tasks');
             expect(installed).toContain('# Keep this description');
             expect(parseToml(installed)).toMatchObject({
                 tasks: { lint: 'gspot check', format: { description: 'Format the app', run: 'gspot check --fix' } },
             });
             expect(applyPlan(log, proposeMerge(log, 'mise.toml', changes))).toBe('unchanged');
-            if (edited)
-                writeFileSync(join(directory.path, 'mise.toml'), installed + '\n[env]\nAPP_MODE = "authored"\n');
+            await writeFile(join(directory.path, 'mise.toml'), installed + appended);
             expect(applyPlan(log, proposeRestoration(log, 'mise.toml'))).toBe('changed');
-            const restored = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
+            const restored = await readFile(join(directory.path, 'mise.toml'), 'utf8');
             expect(parseToml(restored)['tasks']).toStrictEqual(parseToml(original)['tasks']);
             // An authored edit survives the restore; without one the file is byte for byte the original.
-            expect(parseToml(restored)['env']).toStrictEqual(edited ? { APP_MODE: 'authored' } : undefined);
-            expect(restored === original).toBe(!edited);
+            expect(parseToml(restored)['env']).toStrictEqual(environment);
+            expect(restored === original).toBe(isOriginal);
         }
     },
 );
@@ -95,8 +96,8 @@ test('a Python installation replaces the whole environment, runtime caches inclu
         expect(log.files.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 2\n');
         expect(log.files.read('.gspot/.venv/lib/package.pyc')?.bytes.toString()).toBe('packaged legacy bytecode');
         // Runtime caches leave with the old environment; the staged caches are never published.
-        expect(existsSync(join(directory.path, `${cache}/unowned.pyc`))).toBe(false);
-        expect(existsSync(join(directory.path, `${cache}/new.pyc`))).toBe(false);
+        expect(await pathExists(join(directory.path, `${cache}/unowned.pyc`))).toBe(false);
+        expect(await pathExists(join(directory.path, `${cache}/new.pyc`))).toBe(false);
         expect(getOwnership(directory.path)).toStrictEqual({ version: 1, files: [], installed: ['python'] });
     }
 });
@@ -105,18 +106,20 @@ describe.if(isPosix)('lifecycle ownership', () => {
         await using directory = await testdir();
         await using staged = await testdir();
         await createFileTree(staged.path, { 'package/bin/tool': 'new executable', '.bin/.keep': '', obsolete: 'old' });
-        symlinkSync('../package/bin/tool', join(staged.path, '.bin/tool'));
+        await symlink('../package/bin/tool', join(staged.path, '.bin/tool'));
         {
             using log = openOwnership(directory.path);
 
             installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
-            writeFileSync(join(directory.path, '.gspot/node_modules/obsolete'), 'hand edit');
-            rmSync(join(staged.path, 'obsolete'));
+            await writeFile(join(directory.path, '.gspot/node_modules/obsolete'), 'hand edit');
+            await rm(join(staged.path, 'obsolete'));
             installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
-            expect(readFileSync(join(directory.path, '.gspot/node_modules/.bin/tool'), 'utf8')).toBe('new executable');
-            expect(existsSync(join(directory.path, '.gspot/node_modules/obsolete'))).toBe(false);
-            expect(existsSync(join(directory.path, '.gspot/node_modules.next'))).toBe(false);
-            expect(existsSync(join(directory.path, '.gspot/node_modules.previous'))).toBe(false);
+            expect(await readFile(join(directory.path, '.gspot/node_modules/.bin/tool'), 'utf8')).toBe(
+                'new executable',
+            );
+            expect(await pathExists(join(directory.path, '.gspot/node_modules/obsolete'))).toBe(false);
+            expect(await pathExists(join(directory.path, '.gspot/node_modules.next'))).toBe(false);
+            expect(await pathExists(join(directory.path, '.gspot/node_modules.previous'))).toBe(false);
         }
     });
 });

@@ -1,3 +1,4 @@
+import { PASSING_REPORT } from '#tests/config/samples/expo.ts';
 import type { DoctorResult } from '#tests/types/cli/checks/expo.ts';
 import { REPORT, EXPECTED_ISSUES } from '#tests/config/cli/parsers/expo.ts';
 
@@ -15,7 +16,7 @@ export const DOCTOR_RESULTS: DoctorResult[] = [
             code: 0,
             missing: false,
             duration: 1,
-            stdout: '✔ Check package.json\n15/15 checks passed. No issues detected!\n',
+            stdout: PASSING_REPORT,
             stderr: '',
         },
     },

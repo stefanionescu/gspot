@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { splitParts, repeatedPart } from '#cli/checks/general/naming/words.ts';
+import { hasCase, splitParts, repeatedPart } from '#cli/checks/general/naming/words.ts';
 
 describe('splitParts', () => {
     test('splits at case boundaries, separators and digit runs; an acronym is one part', () => {
@@ -19,4 +19,10 @@ describe('splitParts', () => {
         expect(repeatedPart(['user', 'user', 'id'])).toBe('user');
         expect(repeatedPart(['a', 'b'])).toBeUndefined();
     });
+});
+
+test('an unknown case never matches an identifier or invokes an inherited object member', () => {
+    expect(hasCase('bad_name', '__proto__')).toBe(false);
+    expect(hasCase('bad_name', 'camel')).toBe(false);
+    expect(hasCase('goodName', 'camel')).toBe(true);
 });

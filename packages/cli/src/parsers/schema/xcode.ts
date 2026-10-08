@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 const itemSchema = z.object({
     isa: z.string(),
+    buildSettings: z.object({ SDKROOT: z.string().optional(), SWIFT_VERSION: z.string().optional() }).optional(),
     name: z.string().optional(),
     path: z.string().optional(),
     sourceTree: z.string().optional(),

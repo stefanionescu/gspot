@@ -3,7 +3,6 @@ import { memo } from '#cli/platform/memo.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { contentDigest } from '#cli/platform/text.ts';
-import { parseCommand } from '#cli/parsers/command.ts';
 import { scratchEntries } from '#cli/platform/scratch.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
@@ -19,12 +18,12 @@ const BUILD_MEMO = { create: () => new Map<string, Promise<SiteBuild>>() };
 
 async function runBuild(input: CheckInput, scratch: string): Promise<SiteBuild> {
     const site = input.view.options('site');
-    const outputPath = site['output'] as string;
+    const outputPath = site['build_folder'];
     assertMutationTarget(outputPath);
     const cwd = join(scratch, input.scope);
-    const command = site['build'] as string;
-    const result = await runCheckTool(input, parseCommand(command), { cwd });
-    const output = join(cwd, outputPath);
+    const command = site['build_command'];
+    const result = await runCheckTool(input, command, { cwd });
+    const output = join(scratch, outputPath);
     const built = result.code === 0 ? lstatSync(output, { throwIfNoEntry: false }) : undefined;
     if (built?.isSymbolicLink() === true)
         throw new Error(`Unsafe lifecycle destination: ${toPosix(relative(scratch, output))}`);
@@ -64,20 +63,20 @@ export function filesUnder(folder: string): string[] {
 }
 
 /**
- * Locate a built file in the original repository. Keep its project scope and output folder.
- * @param input the scope owning the build.
+ * Locate a built file in the original repository's normalized output folder.
+ * @param input the policy view owning the build.
  * @param build the build's isolated project folder.
  * @param absolute the built file's absolute path.
  * @returns a confined repository-relative path.
  */
 export function repositoryPath(
-    input: Pick<CheckInput, 'scope'>,
-    build: Pick<SiteBuild, 'cwd'>,
+    input: Pick<CheckInput, 'view'>,
+    build: Pick<SiteBuild, 'output'>,
     absolute: string,
 ): string {
-    const path = toPosix(relative(build.cwd, absolute));
+    const path = toPosix(relative(build.output, absolute));
     portableSegments(path);
-    return input.scope === '' ? path : `${input.scope}/${path}`;
+    return `${input.view.options('site')['build_folder']}/${path}`;
 }
 
 /**
@@ -126,7 +125,7 @@ export async function siteBuild(input: CheckInput): Promise<Finding[]> {
             input,
             { file: '', line: 1 },
             'build',
-            `${build.command} did not build the site: ${build.outputTail}`,
+            `${JSON.stringify(build.command)} did not build the site: ${build.outputTail}`,
         ),
     ];
 }
@@ -141,7 +140,8 @@ export async function buildReproducible(input: CheckInput): Promise<Finding[]> {
     const before = outputDigests(first.output);
     using folder = await copyIntoScratch(input);
     const second = await runBuild(input, folder.path);
-    if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.outputTail}`);
+    if (!second.isBuilt)
+        throw new Error(`The second site build failed: ${JSON.stringify(second.command)}: ${second.outputTail}`);
     const after = outputDigests(second.output);
     const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
         (path) => before.get(path) !== after.get(path),

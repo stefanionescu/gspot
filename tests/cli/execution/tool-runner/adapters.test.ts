@@ -3,13 +3,14 @@ import { test, spyOn, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { chmod, writeFile } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { waitForFile } from '#tests/harness/process.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { chmodSync, existsSync, writeFileSync } from 'node:fs';
 import { FAILING_SCRIPT, PASSING_SCRIPT } from '#tests/config/cli/execution/tool-runner/adapters.ts';
 
 const versionScript = (version: string, slow = false): string => `#!${process.execPath}
@@ -31,7 +32,7 @@ test.skipIf(!hasToolBuild('ansible-lint')).each(['timeout', 'canceled'] as const
             'deploy/site.yml': '---\n- hosts: all\n  tasks: []\n',
             '.gspot/.venv/bin/ansible-lint': versionScript('26.8.0', true),
         });
-        chmodSync(executable, 0o755);
+        await chmod(executable, 0o755);
         using timeout =
             failure === 'timeout'
                 ? spyOn(processes, 'run').mockResolvedValue({
@@ -62,10 +63,10 @@ test.skipIf(!hasToolBuild('ansible-lint')).each(['timeout', 'canceled'] as const
                 { timeout: 'ran past 1 seconds', canceled: 'canceled' }[failure],
             );
             expect(outcome.report.checks[0]!.findings).toStrictEqual([]);
-            if (failure === 'canceled') expect(existsSync(started)).toBe(true);
+            if (failure === 'canceled') expect(await pathExists(started)).toBe(true);
             if (timeout !== undefined)
                 timeout.mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
-            writeFileSync(executable, versionScript('26.8.0'));
+            await writeFile(executable, versionScript('26.8.0'));
             const corrected = await executeRun(await openSession(sandbox.path), options);
             expect(corrected.report.exitCode).toBe(0);
             expect(corrected.report.checks[0]!.status).toBe('passed');
@@ -88,16 +89,16 @@ test.skipIf(!hasToolBuild('ansible-lint'))(
             '.gspot/.venv/bin/ansible-lint': versionScript('26.8.0'),
         });
         const executable = join(sandbox.path, '.gspot/.venv/bin/ansible-lint');
-        chmodSync(executable, 0o755);
+        await chmod(executable, 0o755);
         const options = buildRunOptions({ stage: 'commit', only: ['ansible/lint'] });
         const initial = await executeRun(await openSession(sandbox.path), options);
         expect(initial.report.checks[0]!.status).toBe('passed');
-        writeFileSync(executable, versionScript('23.0.0'));
+        await writeFile(executable, versionScript('23.0.0'));
         const changed = await executeRun(await openSession(sandbox.path), options);
         expect(changed.report.exitCode).toBe(2);
         expect(changed.report.checks[0]!.status).toBe('missing');
         expect(changed.report.checks[0]!.note).toContain('23.0.0 is below 24.0.0');
-        writeFileSync(executable, versionScript('26.8.0'));
+        await writeFile(executable, versionScript('26.8.0'));
         const executed = await executeRun(await openSession(sandbox.path), options);
         expect(executed.report.exitCode).toBe(0);
     },
@@ -109,27 +110,27 @@ test.skipIf(!isPosix)('a reused session runs a replaced executable and reads its
     const executable = join(sandbox.path, 'checker');
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {
-            tables: `[[check]]\nname = "project/checker"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
+            tables: `[check."project/checker"]\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([executable])}\n`,
         }),
         'source.txt': 'input\n',
         checker: PASSING_SCRIPT,
     });
-    chmodSync(executable, 0o755);
+    await chmod(executable, 0o755);
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({ stage: 'commit', only: ['project/checker'] });
     const executed = await executeRun(session, options);
     expect(executed.report.exitCode).toBe(0);
     const repeated = await executeRun(session, options);
     expect(repeated.report.checks[0]!.status).toBe('passed');
-    writeFileSync(executable, FAILING_SCRIPT);
+    await writeFile(executable, FAILING_SCRIPT);
     const changed = await executeRun(session, options);
     expect(changed.report.exitCode).toBe(1);
     expect(changed.report.checks[0]!.status).toBe('failed');
-    chmodSync(executable, 0o644);
+    await chmod(executable, 0o644);
     const unexecutable = await executeRun(session, options);
     expect(unexecutable.report.exitCode).toBe(2);
-    chmodSync(executable, 0o755);
-    writeFileSync(executable, PASSING_SCRIPT);
+    await chmod(executable, 0o755);
+    await writeFile(executable, PASSING_SCRIPT);
     const restored = await executeRun(session, options);
     expect(restored.report.exitCode).toBe(0);
 });

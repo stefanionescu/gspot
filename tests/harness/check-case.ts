@@ -1,6 +1,6 @@
 // Run defects and corrections within the test budget, restoring source-case edits after each run.
 import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
@@ -25,12 +25,12 @@ export async function runCheckCase(
     environment: Record<string, string>,
     run: CheckCommand = spawnGspot,
 ): Promise<SpawnOutcome> {
-    const restore = applyChanges(cwd, changes);
+    const restore = await applyChanges(cwd, changes);
     const argv = ['check', '--only', changes.check, '--json'];
     try {
         return await run(cwd, argv, environment);
     } finally {
-        restore();
+        await restore();
     }
 }
 
@@ -47,12 +47,12 @@ export async function runPackageCheck(
     check: PackageCheckCase,
 ): Promise<PackageCheckOutcome> {
     const args = [...installation.command, 'check', check.path, '--only', check.only, '--json'];
-    if (check.defect !== undefined) writeFileSync(join(options.cwd, check.path), check.defect);
+    if (check.defect !== undefined) await writeFile(join(options.cwd, check.path), check.defect);
     const failed = await runTestCommand(args, options);
     const report = JSON.parse(failed.stdout) as RunReport;
     let fixed: SpawnOutcome | undefined;
     if ('fix' in check) fixed = await runTestCommand([...args, '--fix'], options);
-    else writeFileSync(join(options.cwd, check.path), check.corrected);
+    else await writeFile(join(options.cwd, check.path), check.corrected);
     const passed = await runTestCommand(args, options);
     const accepted = JSON.parse(passed.stdout) as RunReport;
     return { failed: { ...failed, report }, fixed, passed: { ...passed, report: accepted } };

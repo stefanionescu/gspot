@@ -39,7 +39,7 @@ export function refuseUnknownChecks(session: Session, only: string[] | undefined
         ...session.scopes.flatMap((scope) =>
             scope.selected.flatMap((manifest) => manifest.checks.map((check) => check.name)),
         ),
-        ...session.policyFiles.policy.checks.map((check) => check.name),
+        ...Object.values(session.policyFiles.policy.check).map((check) => check.name),
     ]);
     const unknown = only?.find((check) => !known.has(check));
     if (unknown !== undefined)

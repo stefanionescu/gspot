@@ -18,20 +18,6 @@ import type {
     ConfigurationChoices,
 } from '#cli/types/lifecycle/selection.ts';
 
-function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
-    const map = new Map<string, string[]>();
-    const list = flags ?? [];
-    for (const flag of list) {
-        const [path = '', ids = ''] = flag.split('=');
-        const items = ids
-            .split(',')
-            .map((id) => id.trim())
-            .filter((id) => id !== '');
-        map.set(path.endsWith('/') ? path.slice(0, -1) : path, items);
-    }
-    return map;
-}
-
 function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<string, string[]>): ScopeEntry[] {
     const scopes: ScopeEntry[] = [
         { ...ROOT_SCOPE, configurations: [] },
@@ -120,18 +106,18 @@ function listedConfigurations(
     manifests: Map<string, Manifest>,
     detected: Set<string>,
 ): string[] {
-    const recommended = ids.flatMap((id) => manifests.get(id)?.configuration.recommends ?? []);
+    const suggestions = ids.flatMap((id) => manifests.get(id)?.configuration.suggests ?? []);
     return [
         ...new Set([
             ...ids,
-            ...recommended.filter((id) => {
+            ...suggestions.filter((id) => {
                 const manifest = manifests.get(id);
                 if (
                     options.template?.tables.selection === 'exact' &&
                     ['language', 'framework'].includes(manifest?.configuration.kind ?? '')
                 )
                     return false;
-                // A recommendation without detection criteria does not require a source match.
+                // A suggestion without detection criteria does not require a source match.
                 const hasDetection =
                     manifest !== undefined && Object.values(manifest.detect).some((list) => list.length > 0);
                 return !hasDetection || detected.has(id);
@@ -143,7 +129,7 @@ function listedConfigurations(
 function reasonFor(id: string, sets: ConfigurationChoices): ConfigurationReason {
     if (sets.named.has(id)) return 'named';
     if (sets.chosen.has(id)) return 'detected';
-    return sets.listed.has(id) ? 'recommended' : 'required';
+    return sets.listed.has(id) ? 'suggested' : 'required';
 }
 
 /**
@@ -154,7 +140,7 @@ function reasonFor(id: string, sets: ConfigurationChoices): ConfigurationReason 
 export function selectForInit(inputs: InitInputs): InitSelection {
     const { root, repo, projectManifests, workspace, manifests, options } = inputs;
     const context: InitDetection = { manifests, files: repo.files, projectManifests, options, hasGit: repo.hasGit };
-    const scopeFlags = parseScopeFlags(options.scopes);
+    const scopeFlags = options.scopes ?? new Map<string, string[]>();
     assertKnown(options, scopeFlags, manifests);
     const scopes = initScopes(root, workspace, scopeFlags);
     const hasScopes = scopes.length > 1;

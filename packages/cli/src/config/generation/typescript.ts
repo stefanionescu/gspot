@@ -14,9 +14,6 @@ export const COMPILER_OPTIONS = {
     noPropertyAccessFromIndexSignature: true,
 };
 
-// Nest injects by the emitted types of constructor parameters, which takes both decorator options.
-export const DECORATOR_OPTIONS = { experimentalDecorators: true, emitDecoratorMetadata: true };
-
 /** JavaScript source checks preserve the author's resolution when a jsconfig is present. */
 export const JAVASCRIPT_OPTIONS = { checkJs: true, allowJs: true, strict: true, noEmit: true };
 

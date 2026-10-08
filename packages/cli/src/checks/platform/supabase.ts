@@ -107,8 +107,7 @@ function readConfiguration(input: CheckInput): SupabaseConfigurationRead | undef
  * @returns the folder paths, repository-relative
  */
 export function functionFolders(input: CheckInput): string[] {
-    const setting = input.view.options('supabase')['functions_folder'] as string;
-    const base = posix.join(input.scope, setting);
+    const base = input.view.options('supabase').functions_folder;
     const folders = input.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${base}/`) && /\/index\.tsx?$/u.test(path))
@@ -151,7 +150,7 @@ export function supabaseConfiguration(input: CheckInput): Finding[] {
 export async function storagePolicies(input: CheckInput): Promise<Finding[]> {
     const read = readConfiguration(input);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
-    if (read === undefined || 'error' in read) return []; // supabase/config reports project syntax errors.
+    if (read === undefined || 'error' in read) return []; // supabase/project-file reports project syntax errors.
     const { config } = read;
     const migrations = await migrationsOf(input);
     const policed = migrations
@@ -215,9 +214,8 @@ export async function denoCheck(input: CheckInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function typesFresh(input: CheckInput): Promise<Finding[]> {
-    const setting = input.view.options('supabase')['types_file'] as string;
-    if (setting === '') return [];
-    const path = posix.join(input.scope, setting);
+    const path = input.view.options('supabase').types_file;
+    if (path === '') return [];
     const at = { file: path, line: 1 };
     if (statSync(join(input.root, path), { throwIfNoEntry: false }) === undefined)
         return [
@@ -225,12 +223,23 @@ export async function typesFresh(input: CheckInput): Promise<Finding[]> {
                 input,
                 at,
                 'missing',
-                `Run supabase gen types typescript --local and write its output to ${setting}.`,
+                `Run supabase gen types typescript --local and write its output to ${path}.`,
             ),
         ];
-    const result = await runCheckTool(input, ['supabase', 'gen', 'types', 'typescript', '--local'], {
-        cwd: input.scopeRoot,
-    });
+    const result = await runCheckTool(
+        input,
+        [
+            'supabase',
+            'gen',
+            'types',
+            'typescript',
+            '--local',
+            ...input.view.options('supabase').schemas.flatMap((schema) => ['--schema', schema]),
+        ],
+        {
+            cwd: input.scopeRoot,
+        },
+    );
     if (result.code !== 0)
         throw new Error(
             `The supabase CLI wrote no types: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
@@ -242,20 +251,20 @@ export async function typesFresh(input: CheckInput): Promise<Finding[]> {
             input,
             at,
             'stale',
-            `The file differs from the local database types. Run supabase gen types typescript --local and write its output to ${setting}.`,
+            `The file differs from the local database types. Run supabase gen types typescript --local and write its output to ${path}.`,
         ),
     ];
 }
 
 /**
- * Reports privileged Supabase keys outside supabase.admin_key_files and the effective test paths.
+ * Reports privileged Supabase keys outside edge functions and the effective test paths.
  * @param input the check input
  * @returns the findings
  */
 export function adminKey(input: CheckInput): Finding[] {
-    const allowed = input.view.options('supabase')['admin_key_files'] as string[];
-    const tests = input.view.settings['tests'] as string[];
-    const isAllowed = pathMatcher([...allowed, ...tests]);
+    const folder = input.view.options('supabase').functions_folder;
+    const tests = input.view.test_files;
+    const isAllowed = pathMatcher([`${folder}/**`, ...tests]);
     const extensions = [
         ...extensionsTagged('javascript', 'typescript', 'vue', 'svelte', 'astro', 'swift', 'python'),
         ...ADMIN_KEY_EXTENSIONS,
@@ -263,7 +272,7 @@ export function adminKey(input: CheckInput): Finding[] {
     const files = input.files.filter(
         (file) =>
             file.kind === 'source' &&
-            !isAllowed(input.scope === '' ? file.path : file.path.slice(input.scope.length + 1)) &&
+            !isAllowed(file.path) &&
             extensions.some((extension) => file.path.endsWith(extension)),
     );
     return files.flatMap((file) =>

@@ -41,7 +41,7 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
                 stage: check.check.stage,
                 ...(check.manifest === undefined ? {} : { configuration: check.manifest.configuration.name }),
             })),
-        ignores: session.policyFiles.policy.ignores
+        ignores: session.policyFiles.policy.ignore
             .filter((entry) => entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(path))
             .map((entry) => ({
                 check: entry.check,

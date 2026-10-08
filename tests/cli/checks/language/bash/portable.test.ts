@@ -38,7 +38,7 @@ test.each(['recommended', 'all'] as const)(
             'source.sh': SIMPLE_EXECUTABLE,
         });
         commitAll(sandbox.path);
-        markExecutable(sandbox.path, 'source.sh');
+        await markExecutable(sandbox.path, 'source.sh');
         const command = ['check', '--only', 'bash/contract', '--json'];
         const clean = await runGspot(sandbox.path, command);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);

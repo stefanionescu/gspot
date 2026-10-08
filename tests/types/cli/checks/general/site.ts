@@ -1,7 +1,6 @@
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 
-/** The fixture contract owned by this behavior's tests. */
 export type SiteReportCase = {
     name: string;
     check: string;

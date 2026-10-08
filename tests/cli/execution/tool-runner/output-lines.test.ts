@@ -23,7 +23,7 @@ test('per-file failures omit only headers the selected tool declares', async () 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {
-            tables: `[[check]]\nname = "project/native"\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', HEADER_FAILURE, '{file}'])}\n`,
+            tables: `[check."project/native"]\nstage = "commit"\npaths = ["source.txt"]\ncommand = ${JSON.stringify([process.execPath, '-e', HEADER_FAILURE, '{file}'])}\n`,
         }),
         'source.txt': 'source\n',
     });

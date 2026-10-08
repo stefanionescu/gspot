@@ -1,6 +1,6 @@
 import { join, dirname } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -8,6 +8,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { VALID } from '#tests/config/cli/checks/tool/jest-execution.ts';
 import type { JestScenario } from '#tests/types/cli/checks/tool/jest.ts';
 
@@ -86,12 +87,14 @@ test.each([
         try {
             expect(await rejection(jestCoverage(input))).toContain(diagnostic);
             expect(artifacts.length).toBeGreaterThan(0);
-            expect(artifacts.every((path) => !existsSync(path))).toBe(true);
-            expect(readFileSync(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');
+            const failedArtifacts = await Promise.all(artifacts.map((path) => pathExists(path)));
+            expect(failedArtifacts.every((present) => !present)).toBe(true);
+            expect(await readFile(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');
             isBroken = false;
             expect(await jestCoverage(input)).toStrictEqual([]);
-            expect(artifacts.every((path) => !existsSync(path))).toBe(true);
-            expect(readFileSync(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');
+            const correctedArtifacts = await Promise.all(artifacts.map((path) => pathExists(path)));
+            expect(correctedArtifacts.every((present) => !present)).toBe(true);
+            expect(await readFile(join(sandbox.path, 'sample.js'), 'utf8')).toBe('const authored = true;\n');
         } finally {
             process.mockRestore();
         }

@@ -20,7 +20,3 @@ export const SKIP_REASON_ARGUMENT = new Map([
     ['ConditionTrait.disabled', 0],
     ['Testing.ConditionTrait.disabled', 0],
 ]);
-
-export const RECORDING_MODES = new Set(['true', '.all', '.missing', '.failed']);
-
-export const RECORDING_NAMES = new Set(['isRecording', 'SnapshotTesting.isRecording']);

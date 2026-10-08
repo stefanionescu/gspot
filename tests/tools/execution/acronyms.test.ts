@@ -7,20 +7,20 @@ import { openSession } from '#cli/commands/session.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { parseAlerts } from '#cli/parsers/output/reports.ts';
 
-test('native acronym checks honor emitted project vocabulary and retain unknown-word and definition coverage', async () => {
+test('native acronym checks honor emitted accepted words and retain unknown-word and definition coverage', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy(['prose'], { level: 'all' }),
         'guide.md': '# Guide\n\nUse API, URL, HTTP, JSON, SQL and CLI.\n\nUse GPU, APIZ and NQX.\n',
         'definitions.md': '# Guide\n\nGraphics Processing Unit (GPU) handles frames.\n\nUse GPU for frames.\n',
-        '.vale.ini': 'StylesPath = styles\nVocab = gspot\n[*.md]\nBasedOnStyles = gspot\n',
+        '.vale.ini': 'StylesPath = styles\nVocab = words\n[*.md]\nBasedOnStyles = gspot\n',
     });
     const before = emitAll(await openSession(directory.path));
     const acronym = before.files.find(({ path }) => path === '.gspot/config/vale/styles/gspot/acronyms.yml')!;
-    const words = before.files.find(({ path }) => path.endsWith('/vocabularies/gspot/accept.txt'))!;
+    const words = before.files.find(({ path }) => path.endsWith('/vocabularies/words/accept.txt'))!;
     await createFileTree(directory.path, {
         'styles/gspot/acronyms.yml': acronym.content,
-        'styles/config/vocabularies/gspot/accept.txt': words.content,
+        'styles/config/vocabularies/words/accept.txt': words.content,
     });
     const command = ['vale', '--config', '.vale.ini', '--output', 'JSON', '--no-exit', 'guide.md', 'definitions.md'];
     const unknown = await runTestCommand(command, { cwd: directory.path });
@@ -35,11 +35,11 @@ test('native acronym checks honor emitted project vocabulary and retain unknown-
         })),
     );
     await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['prose'], { level: 'all', tables: '[prose]\nvocabulary = ["GPU"]\n' }),
+        'gspot.toml': buildPolicy(['prose'], { level: 'all', tables: '[words]\nGPU = "The public product name."\n' }),
     });
     const after = emitAll(await openSession(directory.path));
-    const authored = after.files.find(({ path }) => path.endsWith('/vocabularies/gspot/accept.txt'))!;
-    await createFileTree(directory.path, { 'styles/config/vocabularies/gspot/accept.txt': authored.content });
+    const authored = after.files.find(({ path }) => path.endsWith('/vocabularies/words/accept.txt'))!;
+    await createFileTree(directory.path, { 'styles/config/vocabularies/words/accept.txt': authored.content });
     const named = await runTestCommand(command, { cwd: directory.path });
     expect(named.code, named.stdout + named.stderr).toBe(0);
     expect(

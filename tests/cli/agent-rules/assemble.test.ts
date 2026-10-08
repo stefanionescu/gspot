@@ -1,4 +1,5 @@
 import { test, expect, describe } from 'bun:test';
+import { textAtLevel } from '#cli/agent-rules/assemble.ts';
 import { FIRST_READ } from '#cli/config/policy/settings.ts';
 import { excludeErrors } from '#cli/policy/errors/selection.ts';
 
@@ -14,10 +15,22 @@ describe('[agent_rules] exclude', () => {
         expect(problem!.message).toContain('general/engineering/code/ACCESSIBILITY.md');
     });
 
-    test('a file every agent opens first cannot be left out, alone or through its folder', () => {
-        for (const entry of [...FIRST_READ, 'general/engineering/agent', 'general/engineering/prose']) {
+    test.each([...FIRST_READ, 'general/engineering/agent', 'general/engineering/prose'])(
+        'the required first-read entry %s cannot be left out',
+        (entry) => {
             const [problem] = excludeErrors([entry]);
             expect(problem!.message).toContain('every agent opens first');
-        }
-    });
+        },
+    );
+});
+
+test('level filtering respects fenced examples, nested sections, and the next peer heading', () => {
+    const before = '# Guide\n\n## Required\n\n```md\n## Example\n<!-- level: all -->\n```\n\n';
+    const omitted =
+        '## Convention\n<!-- level: all -->\n\nContent.\n\n### Detail\n<!-- level: all -->\n\n```md\n## Not a boundary\n```\n\n';
+    const after = '## Safety\n\nKeep this requirement.\n';
+    const text = before + omitted + after;
+    expect(textAtLevel(text, 'recommended')).toBe(before + after);
+    expect(textAtLevel(text, 'all')).toBe(text);
+    expect(textAtLevel(textAtLevel(text, 'recommended'), 'recommended')).toBe(before + after);
 });

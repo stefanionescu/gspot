@@ -1,5 +1,5 @@
 /** The i18n settings naming the message directory and base locale. */
-export const NEXT_TRANSLATIONS = '[i18n]\nlocales = {directory = "messages", base = "en"}\n';
+export const NEXT_TRANSLATIONS = '[i18n]\nmessages_folder = "messages"\nbase_locale = "en"\n';
 
 export const ROUTE =
     '// Answers the same address as the page.\n\n/**\n * Answers a request.\n * @returns the answer\n */\nexport function GET(): Response {\n    return new Response("ok");\n}\n';

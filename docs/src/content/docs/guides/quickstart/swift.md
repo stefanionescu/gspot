@@ -91,7 +91,7 @@ The check reports `force_cast` and exits nonzero. Stage the changed file and att
 
 Restore the valid source from the setup commit:
 
-```shell
+```shell title="Restore the Swift example"
 git restore --source=HEAD --staged --worktree -- Sources/orders-swift/orders_swift.swift
 mise exec -- gspot check --only swift/swiftlint
 ```

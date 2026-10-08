@@ -28,8 +28,5 @@ export const NODE_KIND_SET = new Set<string>(NODE_KINDS);
 
 export const VALUE_KINDS = new Set(['String', 'Integer', 'Float', 'Boolean', 'DateTime', 'InlineArray', 'InlineTable']);
 
-/** The most characters one line of gspot.toml holds. */
-export const POLICY_LINE_WIDTH = 120;
-
 /** Shared configuration edits use TOML 1.0 inline tables without trailing commas. */
 export const PATCH_FORMAT = { inlineTableStart: 2, bracketSpacing: false, trailingComma: false };

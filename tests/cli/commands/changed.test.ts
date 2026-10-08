@@ -9,12 +9,11 @@ import type { RunReport } from '#cli/types/execution/check.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 
 const policy = `configurations = []
-[[check]]
-name = "sandbox/paths"
+[check."sandbox/paths"]
 command = ${JSON.stringify([process.execPath, '-e', 'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;', '{files}'])}
 paths = ["api/**", "web/**"]
 stage = "commit"
-[check.output]
+[check."sandbox/paths".output]
 format = "lines"
 `;
 

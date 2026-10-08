@@ -11,16 +11,14 @@ rules = {eqeqeq = ["always"]}
 [[tools.eslint.overrides]]
 paths = ["tests/exempt.js"]
 rules = {eqeqeq = ["smart"]}
-[[scope]]
-path = "apps/web"
-[scope.tools.eslint.rules]
+[scope."apps/web"]
+[scope."apps/web".tools.eslint.rules]
 eqeqeq = ["always"]
-[[scope.tools.eslint.overrides]]
-paths = ["**/*", "!apps/web/exempt.js"]
+[[scope."apps/web".tools.eslint.overrides]]
+paths = ["**/*", "!exempt.js"]
 rules = {eqeqeq = ["smart"]}
-[[scope]]
-path = "apps/web/admin"
-[[scope.tools.eslint.overrides]]
+[scope."apps/web/admin"]
+[[scope."apps/web/admin".tools.eslint.overrides]]
 paths = ["**/*"]
 rules = {eqeqeq = ["always"]}
 `;

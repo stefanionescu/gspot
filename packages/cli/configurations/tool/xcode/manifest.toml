@@ -1,7 +1,7 @@
 [configuration]
 title = "Xcode"
 requires = ["files"]
-recommends = ["swift"]
+suggests = ["swift"]
 description = "An Xcode project: property lists that parse, build settings files, and complete string catalogs. Asset catalogs hold their images, test targets sit in a plan, sources belong to a target, and entitlements stay on a list."
 
 [detect]
@@ -24,7 +24,7 @@ example = "A non-comment line `PRODUCT_NAME App` in an `.xcconfig` file lacks an
 level = "recommended"
 stage = "commit"
 runs = "scope"
-files = {extensions = [".xcconfig"]}
+files = { extensions = [".xcconfig"] }
 summary = "Checks that every line of a build settings file is a setting, an include, or a comment."
 why = "Xcode ignores a line it cannot read, so a typo turns a setting off without a word."
 help = "Write the line as a name, an equals sign, and a value."
@@ -36,7 +36,7 @@ example = "A string catalog entry with one translated locale and an absent requi
 level = "recommended"
 stage = "commit"
 runs = "scope"
-files = {extensions = [".xcstrings"]}
+files = { extensions = [".xcstrings"] }
 summary = "Checks that every string catalog parses, and that every string has a translation for every locale the catalog uses."
 why = "A string with no translation shows its source language in the middle of a translated screen."
 help = "Add the translation, or mark the string as not translated in the catalog."
@@ -48,10 +48,22 @@ example = "A `Contents.json` image entry naming `icon.png` reports a missing ass
 level = "recommended"
 stage = "commit"
 runs = "scope"
-files = {paths = ["**/*.xcassets/**"], extensions = [".swift"]}
-summary = "Checks that every asset Contents.json parses, that every image set holds the images it names, and that some source names every asset."
-why = "An image set with no image draws nothing at run time, and an asset nobody names ships in the app for nothing."
-help = "Add the image or delete the asset. For an accepted asset selected at runtime, run gspot ignore xcode/assets --paths <glob> --reason \"<why>\"."
+files = { paths = ["**/*.xcassets/**"], extensions = [".swift"] }
+summary = "Checks that every asset Contents.json parses and that every image set holds the images it names."
+why = "An image set with no image draws nothing at run time."
+help = "Add the image or delete the asset."
+
+[[check]]
+name = "orphan-assets"
+title = "Find unused asset sets"
+example = "An asset set named only in an Xcode build setting counts as used. An asset that no source or build setting names reports an orphan-asset finding."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { paths = ["**/*.xcassets/**"], extensions = [".swift", ".storyboard", ".xib", ".plist", ".pbxproj", ".xcconfig"] }
+summary = "At level all, finds asset sets that no source or Xcode build setting names."
+why = "An asset nobody names ships in the app for nothing."
+help = "Delete the asset or name it where it is used. For an accepted asset selected at runtime, run gspot ignore xcode/orphan-assets --rule orphan-asset --paths <glob> --reason \"<why>\"."
 
 [[check]]
 name = "test-plans"
@@ -71,7 +83,7 @@ example = "A Swift source file under the project that belongs to no target repor
 level = "recommended"
 stage = "commit"
 runs = "scope"
-files = {extensions = [".swift"], paths = ["**/project.pbxproj"]}
+files = { extensions = [".swift"], paths = ["**/project.pbxproj"] }
 summary = "Compares the Swift files in the tree with the files the project names: a file in no target, and a target file that is gone."
 why = "A Swift file in no target is never compiled, so it breaks without anyone seeing it."
 help = "Add the file to a target or delete it, and remove the reference to a file that is gone."
@@ -90,15 +102,15 @@ help = "Replace the symlink with the folder it points at, or ignore the path wit
 [[check]]
 name = "entitlements"
 title = "Allow only listed entitlements"
-example = "An entitlement enabled in an `.entitlements` file but absent from `tools.xcode.entitlements_allowed` reports a policy finding. Remove an unnecessary entitlement, or explicitly allow the required entitlement in policy."
+example = "An entitlement enabled in an `.entitlements` file but absent from `xcode.entitlements_allowed` reports a policy finding. Remove an unnecessary entitlement, or explicitly allow the required entitlement in policy."
 level = "recommended"
-when = {setting = "tools.xcode.entitlements_allowed"}
+when = { setting = "xcode.entitlements_allowed" }
 stage = "commit"
 runs = "scope"
-files = {extensions = [".entitlements"]}
-summary = "Checks that every entitlement is on tools.xcode.entitlements_allowed, when the policy holds that list."
+files = { extensions = [".entitlements"] }
+summary = "Checks that every entitlement is on xcode.entitlements_allowed, when the policy holds that list."
 why = "An entitlement is a capability the system grants the app, and a new one deserves a review of its own."
-help = "Remove the entitlement, or add it to tools.xcode.entitlements_allowed."
+help = "Remove the entitlement, or add it to xcode.entitlements_allowed."
 
 [[check]]
 name = "ats"
@@ -107,35 +119,15 @@ example = "An Info.plist enabling `NSAllowsArbitraryLoads` disables transport pr
 level = "recommended"
 stage = "commit"
 runs = "scope"
-files = {extensions = [".plist"]}
+files = { extensions = [".plist"] }
 summary = "Refuses a property list that allows arbitrary loads, which turns transport security off for every host."
 why = "With arbitrary loads the app speaks plain HTTP to anyone, and one forgotten debug setting ships it."
 help = "Remove the key, and add an exception for the one host that needs it."
 
 [[setting]]
-name = "tools.xcode.project"
-type = "string"
-direction = "neutral"
-default = ""
-summary = "The Xcode project or workspace, relative to the scope; empty builds the Swift package."
-
-[[setting]]
-name = "tools.xcode.scheme"
-type = "string"
-direction = "neutral"
-default = ""
-summary = "The shared scheme the build, the analyzer, and Periphery use."
-
-[[setting]]
-name = "tools.xcode.destination"
-type = "string"
-direction = "neutral"
-default = "generic/platform=iOS Simulator"
-summary = "The xcodebuild destination."
-
-[[setting]]
-name = "tools.xcode.entitlements_allowed"
+name = "xcode.entitlements_allowed"
 type = "list"
+items = "string"
 direction = "tightening"
 default = []
 summary = "The entitlements the app may hold; empty turns the check off."

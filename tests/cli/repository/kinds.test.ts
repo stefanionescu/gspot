@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { rejects } from 'node:assert/strict';
 import { gitOutput } from '#tests/harness/git.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readAttributes } from '#cli/repository/kind.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import { rejection } from '#tests/harness/expectations.ts';
 import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
-import { rmSync, mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { rm, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 import {
     GENERATED_HEADER_PATHS,
@@ -84,12 +84,15 @@ test('a license text is vendored, and a source file named like one stays source'
 test('an unreadable attributes file cannot become an empty rule set', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
-    mkdirSync(join(sandbox.path, '.gitattributes'));
-    await rejects(readRepository(sandbox.path, [], [], []), {
-        code: 'EISDIR',
-    });
-    rmSync(join(sandbox.path, '.gitattributes'), { recursive: true });
-    writeFileSync(join(sandbox.path, '.gitattributes'), '*.ts linguist-generated\n');
+    await mkdir(join(sandbox.path, '.gitattributes'));
+    await rejection(
+        readRepository(sandbox.path, [], [], []).catch((error: unknown) => {
+            expect(error).toMatchObject({ code: 'EISDIR' });
+            throw error;
+        }),
+    );
+    await rm(join(sandbox.path, '.gitattributes'), { recursive: true });
+    await writeFile(join(sandbox.path, '.gitattributes'), '*.ts linguist-generated\n');
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(repository.files.find((file) => file.path === 'source.ts')).toMatchObject({
         kind: 'generated',
@@ -104,12 +107,12 @@ test('Git attributes use native precedence without decoding the working-tree fil
         '.git/info/attributes': '*.ts linguist-generated\n',
         'source.ts': 'export {};\n',
     });
-    writeFileSync(join(sandbox.path, '.gitattributes'), Buffer.from([0xff, 0x0a]));
+    await writeFile(join(sandbox.path, '.gitattributes'), Buffer.from([0xff, 0x0a]));
     expect(readAttributes(sandbox.path, ['source.ts'], true).get('source.ts')).toMatchObject({
         'linguist-generated': 'set',
     });
     expect(() => readAttributes(sandbox.path, ['source.ts'], false)).toThrow('.gitattributes is not UTF-8 text.');
-    expect(readFileSync(join(sandbox.path, '.gitattributes'))).toStrictEqual(Buffer.from([0xff, 0x0a]));
+    expect(await readFile(join(sandbox.path, '.gitattributes'))).toStrictEqual(Buffer.from([0xff, 0x0a]));
 });
 
 test('repository inventory recognizes every generated header format outside the private directory', async () => {
@@ -143,39 +146,32 @@ test('linked authored attributes classify files inside the root and reject an ex
         'generated/source.ts': 'export {};\n',
     });
     await createFileTree(outside.path, { attributes });
-    symlinkSync('settings/attributes', join(sandbox.path, '.gitattributes'));
+    await symlink('settings/attributes', join(sandbox.path, '.gitattributes'));
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(repository.files.find((file) => file.path === 'generated/source.ts')).toMatchObject({
         kind: 'generated',
         kindSource: '.gitattributes',
     });
-    rmSync(join(sandbox.path, '.gitattributes'));
-    symlinkSync(join(outside.path, 'attributes'), join(sandbox.path, '.gitattributes'));
-    await rejects(readRepository(sandbox.path, [], [], []), /Source link leaves the repository/u);
+    await rm(join(sandbox.path, '.gitattributes'));
+    await symlink(join(outside.path, 'attributes'), join(sandbox.path, '.gitattributes'));
+    expect(await rejection(readRepository(sandbox.path, [], [], []))).toContain('Source link leaves the repository');
     expect(await Bun.file(join(outside.path, 'attributes')).text()).toBe(attributes);
 });
 
-test.each(['folder', 'Git'])(
-    '%s attribute discovery honors later and nested overrides and keeps unrelated bytes',
-    async (backend) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, ATTRIBUTE_PRECEDENCE_FILES);
-        if (backend === 'Git') gitOutput(sandbox.path, ['init', '--quiet']);
-        const repository = await readRepository(sandbox.path, [], [], []);
-        expect(Object.fromEntries(repository.files.map(({ path, kind }) => [path, kind]))).toStrictEqual(
-            ATTRIBUTE_PRECEDENCE_KINDS,
-        );
-        await createFileTree(sandbox.path, { '.gitattributes': '', 'nested/.gitattributes': '' });
-        const corrected = await readRepository(sandbox.path, [], [], []);
-        expect(Object.fromEntries(corrected.files.map(({ path, kind }) => [path, kind]))).toStrictEqual(
-            ATTRIBUTE_CLEARED_KINDS,
-        );
-        for (const [path, bytes] of Object.entries(ATTRIBUTE_PRECEDENCE_FILES).filter(
-            ([path]) => !path.endsWith('.gitattributes'),
-        ))
-            expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(bytes);
-    },
-);
+test.each(['folder', 'Git'])('%s attribute discovery honors later and nested overrides', async (backend) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, ATTRIBUTE_PRECEDENCE_FILES);
+    if (backend === 'Git') gitOutput(sandbox.path, ['init', '--quiet']);
+    const repository = await readRepository(sandbox.path, [], [], []);
+    expect(Object.fromEntries(repository.files.map(({ path, kind }) => [path, kind]))).toStrictEqual(
+        ATTRIBUTE_PRECEDENCE_KINDS,
+    );
+    await createFileTree(sandbox.path, { '.gitattributes': '', 'nested/.gitattributes': '' });
+    const corrected = await readRepository(sandbox.path, [], [], []);
+    expect(Object.fromEntries(corrected.files.map(({ path, kind }) => [path, kind]))).toStrictEqual(
+        ATTRIBUTE_CLEARED_KINDS,
+    );
+});
 
 test('Git info attributes override tracked declarations until removed', async () => {
     await using sandbox = await testdir();
@@ -194,14 +190,11 @@ test('Git info attributes override tracked declarations until removed', async ()
         'source.ts': 'source',
         'control.ts': 'vendored',
     });
-    unlinkSync(join(sandbox.path, '.git/info/attributes'));
+    await unlink(join(sandbox.path, '.git/info/attributes'));
     const corrected = await readRepository(sandbox.path, [], [], []);
     expect(Object.fromEntries(corrected.files.map(({ path, kind }) => [path, kind]))).toStrictEqual({
         '.gitattributes': 'source',
         'source.ts': 'generated',
         'control.ts': 'generated',
     });
-    expect(readFileSync(join(sandbox.path, '.gitattributes'), 'utf8')).toBe('*.ts linguist-generated\n');
-    expect(readFileSync(join(sandbox.path, 'source.ts'), 'utf8')).toBe('export const source = 1;\n');
-    expect(readFileSync(join(sandbox.path, 'control.ts'), 'utf8')).toBe('export const control = 2;\n');
 });

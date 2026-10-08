@@ -1,7 +1,7 @@
 [configuration]
 title = "Supabase"
 requires = ["postgres"]
-recommends = ["typescript", "security"]
+suggests = ["typescript", "security"]
 description = "A Supabase project: a project file that parses, edge functions under Deno, and migrations named as the CLI names them. Every storage bucket has a policy, and privileged keys stay in their allowed files."
 
 [detect]
@@ -18,7 +18,7 @@ version = "2.6.6"
 min_version = "2.0.0"
 mise = "deno"
 brew = "deno"
-github = {name = "denoland/deno", version = "v2.6.6"}
+github = { name = "denoland/deno", version = "v2.6.6" }
 scoop = "deno"
 
 [[tool]]
@@ -35,10 +35,10 @@ target = ".gspot/config/semgrep/supabase.yml"
 tool = "semgrep"
 rule_keys = ["rules"]
 scoped = true
-when = {configuration = "security"}
+when = { configuration = "security" }
 
 [[check]]
-name = "config"
+name = "project-file"
 title = "Validate the Supabase project"
 example = "A function entry in `supabase/config.toml` naming a function absent from the repository reports a stale function configuration. Restore the function source or remove its obsolete configuration table."
 level = "recommended"
@@ -71,15 +71,15 @@ why = "A bucket with no policy is closed to everyone or, when it is public, open
 help = "Add a policy on storage.objects for the bucket in a migration."
 
 [[check]]
-name = "admin-key"
+name = "service-role-key"
 title = "Contain privileged Supabase keys"
 example = "A client source reading a Supabase secret or service-role key reports an administrative-key boundary finding. Move privileged operations and the key read to a server-only path, exposing only the required server operation to the client."
 level = "recommended"
 stage = "commit"
 runs = "scope"
-summary = "Checks that secret and service role keys are named only under supabase.admin_key_files."
+summary = "Checks that secret and service role keys are named only in edge functions and test files."
 why = "Secret and service role keys bypass row level security, so a client bundle that holds either exposes privileged database access."
-help = "Move the code to a server path, or add the path to supabase.admin_key_files when it never reaches a client."
+help = "Move the code into edge functions or tests, or record a reason with gspot ignore supabase/admin-key."
 
 [[check]]
 name = "deno-lint"
@@ -113,30 +113,32 @@ level = "recommended"
 stage = "push"
 runs = "scope"
 tool = "supabase"
+needs = ["docker"]
 summary = "Compares supabase.types_file with the types the CLI writes from the local database."
 why = "Stale types let code compile against a column the database dropped."
 help = "Run supabase gen types typescript --local and write the output to the file."
 
 [[setting]]
+name = "supabase.schemas"
+type = "list"
+items = "string"
+direction = "neutral"
+default = ["public"]
+summary = "The database schemas to include in generated types."
+
+[[setting]]
 name = "supabase.types_file"
-type = "string"
+type = "path"
 direction = "neutral"
 default = ""
 summary = "The committed database types file, relative to the scope; empty turns the comparison off."
 
 [[setting]]
 name = "supabase.functions_folder"
-type = "string"
+type = "path"
 direction = "neutral"
 default = "supabase/functions"
 summary = "The folder relative to the scope that holds one folder for each edge function."
-
-[[setting]]
-name = "supabase.admin_key_files"
-type = "list"
-direction = "loosening"
-default = ["supabase/functions/**", "supabase/tests/**", "**/*.test.*", "**/*.spec.*", "**/tests/**", "scripts/**"]
-summary = "Paths relative to the scope that may name secret or service role keys."
 
 [set]
 "tools.squawk.assume_in_transaction" = true

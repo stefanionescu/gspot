@@ -30,10 +30,8 @@ gspot set tools.jest.coverage.functions 100
 Add `--scope app` to set it for the scope `app` only. The
 [settings reference](/reference/settings/) lists every coverage setting.
 
-The JavaScript and TypeScript lint checks report focused, disabled, and invalid tests at both
-levels. When your tests import from `bun:test`, set `tools.jest.globals_module = "bun:test"`
-so the lint rules recognize them. That setting changes linting only; the coverage check still
-runs Jest.
+The Jest configuration reports focused, disabled, and invalid Jest tests at both levels.
+It reads test functions from `@jest/globals` and runs Jest for coverage.
 
 ## Vitest
 
@@ -66,9 +64,10 @@ Run `gspot add xctest`. gspot writes a `.swiftlint.yml` into each `Tests` or `*T
 that turns off `force_unwrapping`, `missing_docs`, and `no_magic_numbers` in tests, while your
 source files keep those rules. `gspot check --only swift/swiftlint` reads these nested files. When configuring an editor directly, omit `--config` from SwiftLint because that option disables nested configuration.
 
-Snapshot references follow `tools.xctest.reference_layout`, by default
-`__Snapshots__/{file}/{test}.*` beside the test file. The [xctest configuration](/reference/configurations/xctest/)
-lists the checks of Swift tests.
+The swift-snapshot-testing dependency selects its own configuration. It checks snapshot recording
+and the library's `__Snapshots__/{file}/{test}.*` references beside each test source. The
+[SnapshotTesting configuration](/reference/configurations/swift-snapshot-testing/) owns these checks;
+[xctest](/reference/configurations/xctest/) owns test reasons, sleeps, and coverage.
 
 To enable Swift coverage for a configured Xcode project and scheme:
 
@@ -77,4 +76,4 @@ gspot set tools.xctest.coverage '{"target":"Orders","percent":80}'
 gspot check --only xctest/coverage
 ```
 
-Replace `Orders` with the target named in your Xcode coverage report. The check requires macOS and selected `xcode` configuration with `tools.xcode.project` and `tools.xcode.scheme`.
+Replace `Orders` with the target named in your Xcode coverage report. The check requires macOS and selected `xcode` configuration with `swift.xcode_project` and `swift.xcode_scheme`.

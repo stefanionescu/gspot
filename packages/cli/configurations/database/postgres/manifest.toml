@@ -16,7 +16,7 @@ version = "2.64.0"
 min_version = "2.0.0"
 mise = "github:sbdchd/squawk"
 npm = "squawk-cli"
-github = {name = "sbdchd/squawk", version = "v2.64.0"}
+github = { name = "sbdchd/squawk", version = "v2.64.0" }
 
 [[tool.replace]]
 file = ".squawk.toml"
@@ -36,8 +36,8 @@ title = "Lint migrations for locking changes"
 example = "A migration adding a constraint that requires a disruptive table scan can report a migration-safety finding. Follow the reported rule to separate creation and validation or otherwise reduce the lock, then review the migration against the deployment database."
 level = "recommended"
 stage = "commit"
-command = ["squawk", "--config", "{config:squawk}", "--reporter", "json", "{files}"]
-output = {format = "json", line_base = 0, fields = {file = "file", line = "line", column = "column", rule = "rule_name", message = "message"}}
+command = ["squawk", "--config", "{tool_file:squawk}", "--reporter", "json", "{files}"]
+output = { format = "json", line_base = 0, fields = { file = "file", line = "line", column = "column", rule = "rule_name", message = "message" } }
 summary = "Reads every migration for the change that locks a table, rewrites it, or breaks the running application."
 why = "A migration that takes an exclusive lock on a large table stops the application for as long as it runs."
 help = "Follow the help squawk prints for the rule. Turn one rule off with gspot ignore postgres/squawk --rule <name> --reason \"<why>\"."
@@ -113,7 +113,7 @@ name = "migration-docs"
 title = "Document database migrations"
 example = "A migration without its required purpose header and statement sections reports documentation findings. Add a purpose-specific header and organize statements under the sections named by the diagnostic."
 level = "all"
-when = {setting = "postgres.docs"}
+when = { setting = "postgres.docs" }
 stage = "commit"
 runs = "scope"
 summary = "Checks the documented migration layout when postgres.docs asks for it: a boxed header, boxed sections, and a labeled block above each table and function."
@@ -144,6 +144,7 @@ summary = "The migrations folder relative to the scope; empty searches supabase/
 [[setting]]
 name = "postgres.client_schemas"
 type = "list"
+items = "string"
 direction = "tightening"
 default = ["public"]
 summary = "The schemas clients reach, where every table needs row level security."
@@ -158,6 +159,7 @@ summary = "Whether migrations follow the documented layout."
 [[setting]]
 name = "postgres.doc_sections"
 type = "list"
+items = "string"
 direction = "neutral"
 default = ["Schema", "Tables", "Indexes", "Functions", "Triggers", "Extensions", "Row Level Security", "Grants"]
 summary = "The section names a documented migration may box."

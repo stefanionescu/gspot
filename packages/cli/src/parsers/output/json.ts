@@ -1,5 +1,7 @@
 // Findings from a tool that prints JSON: the manifest names where the list is and which field holds what.
+import { isAbsolute } from 'node:path';
 import { valueAt } from '#cli/platform/objects.ts';
+import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type { Finding, OutputSpec, JsonFindingSpec } from '#cli/types/parsers/output.ts';
 
 function listAt(value: unknown, path: string | undefined): unknown[] {
@@ -27,25 +29,35 @@ function jsonFinding(shape: JsonFindingSpec, sources: unknown[]): Finding {
         throw new Error('The JSON report contains an invalid finding object.');
     const fields: Record<string, string | undefined> | undefined = output.fields;
     // A field may name several paths with spaces between them; the values join in that order.
-    const read = (name: string): string | undefined => {
-        const found = (fields?.[name] ?? '')
+    const values = (name: string) =>
+        (fields?.[name] ?? '')
             .split(' ')
             .filter((path) => path !== '')
+            .map((path) => sources.map((source) => valueAt(source, path.split('.'))));
+    const read = (name: string): string | undefined => {
+        const joined = values(name)
             .map(
-                (path) =>
-                    sources
-                        .map((source) => {
-                            const value = valueAt(source, path.split('.'));
-                            return typeof value === 'string' || typeof value === 'number' ? String(value) : undefined;
-                        })
+                (entries) =>
+                    entries
+                        .map((value) =>
+                            typeof value === 'string' || typeof value === 'number' ? String(value) : undefined,
+                        )
                         .find((value) => value !== undefined) ?? '',
-            );
-        const joined = found.filter((part) => part !== '').join(' ');
+            )
+            .filter((part) => part !== '')
+            .join(' ');
         return joined === '' ? undefined : joined;
     };
     const diagnostic = read('message');
     if (diagnostic === undefined) throw new Error('The JSON report contains a finding without its mapped message.');
-    const finding: Finding = { check, file: read('file') ?? '', message: diagnostic, help, fixable: false };
+    const file = read('file') ?? '';
+    const finding: Finding = {
+        check,
+        file: isAbsolute(file) ? toPosix(file) : toolPath(file),
+        message: diagnostic,
+        help,
+        fixable: values('fixable').some((entries) => entries.some((value) => value !== undefined)),
+    };
     setPosition(finding, output.line_base ?? 1, read('line'), read('column'));
     const rule = read('rule');
     if (rule !== undefined) finding.rule = rule;

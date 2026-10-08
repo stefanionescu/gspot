@@ -12,6 +12,8 @@ import type {
 
 function selectorSource(selector: EslintFileSelector): string {
     if (typeof selector === 'string') return JSON.stringify(selector);
+    if ('component' in selector)
+        return `componentMatches(${selector.component}Parser, ${JSON.stringify(selector.component)})`;
     if ('runtime' in selector) return `runtimeMatches(${String(selector.runtime.index)})`;
     return `policyMatches(${JSON.stringify(selector.scope)})`;
 }
@@ -22,7 +24,8 @@ function selectorSource(selector: EslintFileSelector): string {
  * @returns code patterns and intersections that exclude non-code files
  */
 export function eslintFilePatterns(input: EslintFileInputs): EslintFiles {
-    const { components, tests, scripts, nodeFiles } = input;
+    const { tests, scripts, nodeFiles } = input;
+    const components = input.components.map(({ pattern }) => pattern);
     const source = eslintSourcePattern('javascript', 'typescript');
     const covered = pathMatcher([source, ...components]);
     const node = eslintNodePatterns(
@@ -35,7 +38,14 @@ export function eslintFilePatterns(input: EslintFileInputs): EslintFiles {
     return {
         code,
         typescriptSource: [typescript],
-        typescript: [typescript, ...components],
+        typescript: [
+            typescript,
+            ...input.components.map(({ pattern, configuration }): EslintFiles['typescript'][number] =>
+                configuration === 'vue' || configuration === 'svelte'
+                    ? [pattern, { component: configuration }]
+                    : pattern,
+            ),
+        ],
         javascript: [javascript, ...node],
         tests: tests.flatMap((test) => code.map((pattern) => [test, pattern])),
         scripts: scripts.flatMap((script) => code.map((pattern) => [script, pattern])),

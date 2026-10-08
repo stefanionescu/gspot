@@ -4,7 +4,6 @@ import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 export const WRANGLER =
     '{\n    // The worker of the test site.\n    "name": "example",\n    "compatibility_date": "2026-01-15"\n}\n';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['cloudflare'],
     modules: false,
@@ -20,7 +19,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'cloudflare/wrangler',

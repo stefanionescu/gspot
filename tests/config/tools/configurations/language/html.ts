@@ -3,7 +3,6 @@ import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 
 export const CLEAN = `<!doctype html>\n<html lang="en">\n    <head>\n        <meta charset="utf-8" />\n        <title>{{ title }}</title>\n    </head>\n    <body>\n        <h1>{{ heading }}</h1>\n        <img src="/logo.svg" alt="{{ logo_alt }}" />\n        <script type="application/ld+json">{"@type": "Thing"}</script>\n        <script src="/app.js"></script>\n    </body>\n</html>\n`;
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['html'],
 
@@ -13,7 +12,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'html/validate',

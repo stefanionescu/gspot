@@ -11,8 +11,9 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['site', 'supabase', 'i18n'], {
-            tables: '[i18n]\nlocales = { directory = "messages", base = "en" }\n[[scope]]\npath = "apps/backend"\n',
+            tables: '[i18n]\nmessages_folder = "messages"\nbase_locale = "en"\n[scope."apps/backend"]\n[scope."apps/backend".i18n]\nmessages_folder = "messages"\n',
         }),
+        'package.json': '{"private":true,"dependencies":{"next-intl":"4.8.3"}}',
         _headers: READERS_HEADERS,
         'messages/en.json': '{"title":"Home"}',
         'messages/de.json': '{"title":"Start"}',
@@ -57,7 +58,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
 test('nested Bash safety settings merge root and scoped owners without leaking to siblings', async () => {
     await using sandbox = await testdir();
     const policy = buildPolicy(['bash'], {
-        tables: '[bash]\nsafety_owners = ["root.sh"]\n[[scope]]\npath = "app"\n[scope.bash]\nsafety_owners = ["app/cleanup.sh"]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+        tables: '[bash]\nsafety_owners = ["root.sh"]\n[reasons]\n"bash.safety_owners" = "The root script owns process cleanup."\n[scope."app"]\n[scope."app".bash]\nsafety_owners = ["cleanup.sh"]\n[scope."app".reasons]\n"bash.safety_owners" = "The application script owns process cleanup."\n[scope."app/child"]\n[scope."sibling"]\n',
     });
     const source = '#!/usr/bin/env bash\nrm -rf "$target"\n';
     await createFileTree(sandbox.path, {
@@ -86,8 +87,8 @@ test('nested Bash safety settings merge root and scoped owners without leaking t
 test.each([
     {
         configuration: 'supabase',
-        check: 'supabase/admin-key',
-        setting: '[supabase]\nadmin_key_files = ["trusted/**"]\n',
+        check: 'supabase/service-role-key',
+        setting: '[supabase]\nfunctions_folder = "trusted"\n',
         path: 'trusted/key.ts',
         source: 'const key = "SUPABASE_SERVICE_ROLE_KEY";\n',
         correction: 'export {};\n',
@@ -96,8 +97,7 @@ test.each([
     {
         configuration: 'html',
         check: 'html/literals',
-        setting:
-            '[html]\ntemplates = ["**/*.html"]\nliterals_allowed = [{paths = ["trusted/**"], reason = "Fixture copy is owned by the producer."}]\n',
+        setting: '[html]\ntemplates = ["public/**/*.html"]\n',
         path: 'trusted/page.html',
         source: '<p>Private template copy</p>\n',
         correction: '<p>{{ title }}</p>\n',

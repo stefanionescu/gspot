@@ -7,13 +7,16 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
+import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { useCacheDirectory } from '#tests/harness/environment.ts';
+import { openBuildCache } from '#cli/checks/language/swift/cache.ts';
+import { SWIFT_PACKAGE } from '#tests/config/samples/swift/source.ts';
 import { isMacos, isPosix } from '#tests/config/harness/platforms.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { buildFolder, openBuildCache } from '#cli/checks/language/swift/cache.ts';
 import { swiftBuild, swiftlintAnalyze } from '#cli/checks/language/swift/build.ts';
-import { rmSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
 test('a silent successful Swift build returns no findings', async () => {
@@ -21,11 +24,8 @@ test('a silent successful Swift build returns no findings', async () => {
     using _executables = mockPinnedExecutables(
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
+    await using _cache = await useCacheDirectory();
+    await createFileTree(sandbox.path, { 'Package.swift': SWIFT_PACKAGE, 'gspot.toml': buildPolicy(['swift']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const run = spyOn(spawn, 'run').mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
@@ -42,10 +42,7 @@ test.skipIf(!isMacos)(
         using _executables = mockPinnedExecutables(
             [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
         );
-        using resources = new DisposableStack();
-        resources.defer(() => {
-            rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-        });
+        await using _cache = await useCacheDirectory();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['swift']),
             'Main.swift': 'let value = 1\n',
@@ -76,7 +73,7 @@ test.skipIf(!isMacos)(
             run.mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
             const executed = await executeRun(corrected, options);
             expect(executed.report.exitCode).toBe(0);
-            expect(readFileSync(join(sandbox.path, 'Main.swift'), 'utf8')).toBe('let value = 1\n');
+            expect(await readFile(join(sandbox.path, 'Main.swift'), 'utf8')).toBe('let value = 1\n');
         } finally {
             run.mockRestore();
         }
@@ -88,11 +85,8 @@ test('a later Swift session reads a failed build after an earlier successful bui
     using _executables = mockPinnedExecutables(
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
+    await using _cache = await useCacheDirectory();
+    await createFileTree(sandbox.path, { 'Package.swift': SWIFT_PACKAGE, 'gspot.toml': buildPolicy(['swift']) });
     const first = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const second = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const run = spyOn(spawn, 'run')
@@ -128,20 +122,19 @@ test('canceled Swift compilation refuses to launch the compiler', async () => {
     using _executables = mockPinnedExecutables(
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
+    await using _cache = await useCacheDirectory();
+    await createFileTree(sandbox.path, { 'Package.swift': SWIFT_PACKAGE, 'gspot.toml': buildPolicy(['swift']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     input.cancelSignal = AbortSignal.abort();
+    using run = spyOn(spawn, 'run');
     expect(await rejection(swiftBuild(input))).toBe('The command was canceled.');
     const analyzer = buildPlan(input, 'analyze');
-    mkdirSync(analyzer.scratch!, { recursive: true });
+    await mkdir(analyzer.scratch!, { recursive: true });
     const state = join(analyzer.scratch!, 'state');
-    writeFileSync(state, 'retained compiler state');
+    await writeFile(state, 'retained compiler state');
     expect(await rejection(swiftlintAnalyze(input))).toBe('The command was canceled.');
-    expect(readFileSync(state, 'utf8')).toBe('retained compiler state');
+    expect(await readFile(state, 'utf8')).toBe('retained compiler state');
+    expect(run).not.toHaveBeenCalled();
 });
 
 test('Swift response files stay inside the compiler cache before log publication', async () => {
@@ -149,11 +142,9 @@ test('Swift response files stay inside the compiler cache before log publication
     using _executables = mockPinnedExecutables(
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
+    await using _cache = await useCacheDirectory();
     await createFileTree(sandbox.path, {
+        'Package.swift': SWIFT_PACKAGE,
         'gspot.toml': buildPolicy(['swift']),
         'external-response': 'external bytes must not enter a compiler log',
     });
@@ -169,13 +160,13 @@ test('Swift response files stay inside the compiler cache before log publication
     });
     try {
         await rejection(swiftBuild(input));
-        expect(existsSync(plan.log)).toBe(false);
+        expect(await pathExists(plan.log)).toBe(false);
         const response = join(plan.folder, 'sources');
-        writeFileSync(response, 'Sources/Main.swift\nSources/Owner.swift\n');
+        await writeFile(response, 'Sources/Main.swift\nSources/Owner.swift\n');
         run.mockResolvedValue({ code: 0, stdout: `swiftc @${response}`, stderr: '', missing: false, duration: 1 });
         expect(await swiftBuild(corrected)).toStrictEqual([]);
-        expect(readFileSync(plan.log, 'utf8')).toContain('swiftc Sources/Main.swift Sources/Owner.swift');
-        expect(readFileSync(join(sandbox.path, 'external-response'), 'utf8')).toBe(
+        expect(await readFile(plan.log, 'utf8')).toContain('swiftc Sources/Main.swift Sources/Owner.swift');
+        expect(await readFile(join(sandbox.path, 'external-response'), 'utf8')).toBe(
             'external bytes must not enter a compiler log',
         );
     } finally {
@@ -185,43 +176,40 @@ test('Swift response files stay inside the compiler cache before log publication
 
 test('a failed Swift source preparation releases its build claim before a later writer', async () => {
     await using sandbox = await testdir();
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
+    await using _cache = await useCacheDirectory();
     await createFileTree(sandbox.path, {
+        'Package.swift': SWIFT_PACKAGE,
         'gspot.toml': buildPolicy(['swift']),
         'Main.swift': 'let value = 1\n',
     });
     const session = await openSession(sandbox.path);
     const input = buildCheckInput(session, 'swift/build');
     const plan = buildPlan(input);
-    rmSync(join(sandbox.path, 'Main.swift'));
+    await rm(join(sandbox.path, 'Main.swift'));
     using run = spyOn(spawn, 'run');
     expect(await rejection(swiftBuild(input))).toContain('ENOENT');
     expect(run).not.toHaveBeenCalled();
-    expect(existsSync(join(plan.folder, 'build.lock'))).toBe(false);
+    expect(await pathExists(join(plan.folder, 'build.lock'))).toBe(false);
     {
         using next = openBuildCache(plan.folder);
         expect(next.read('build.lock')).toBeDefined();
     }
-    expect(existsSync(join(plan.folder, 'build.lock'))).toBe(false);
+    expect(await pathExists(join(plan.folder, 'build.lock'))).toBe(false);
 });
 
 test.skipIf(!isPosix)(
     'Swift compiler diagnostics normalize macOS private prefixes in authored source paths',
     async () => {
         await using sandbox = await testdir();
-        using resources = new DisposableStack();
-        resources.defer(() => {
-            rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-        });
+        await using _cache = await useCacheDirectory();
         await createFileTree(sandbox.path, {
+            'Package.swift': SWIFT_PACKAGE,
             'gspot.toml': buildPolicy(['swift']),
             'Main.swift': 'let value = 1\n',
         });
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'swift/build');
+        using resources = new DisposableStack();
         resources.use(mockPinnedExecutables([...session.manifests.values()].flatMap((manifest) => manifest.tools)));
         resources.use(
             spyOn(spawn, 'run').mockImplementation(() => {
@@ -245,22 +233,23 @@ test.each(['default', 'platform=macOS', ''])(
     'Xcode build plans retain destination %s for every build purpose',
     async (destination) => {
         await using sandbox = await testdir();
-        const declared = destination === 'default' ? '' : `destination = ${JSON.stringify(destination)}\n`;
+        const declared = destination === 'default' ? '' : `xcode_destination = ${JSON.stringify(destination)}\n`;
         await createFileTree(sandbox.path, {
+            'Package.swift': SWIFT_PACKAGE,
             'gspot.toml': buildPolicy(['swift', 'xcode'], {
-                tables: `[tools.xcode]\nproject = "App.xcodeproj"\nscheme = "App"\n${declared}`,
+                tables: `[swift]\nxcode_project = "App.xcodeproj"\nxcode_scheme = "App"\n${declared}`,
             }),
         });
         const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         const expected =
             destination === 'default'
-                ? (configurationManifests()
-                      .get('xcode')!
-                      .settings.find(({ name }) => name === 'tools.xcode.destination')!.default as string)
+                ? configurationManifests()
+                      .get('swift')!
+                      .settings.find(({ name }) => name === 'swift.xcode_destination')!.default
                 : destination;
         for (const purpose of ['compile', 'analyze', 'coverage'] as const) {
             const { argv } = buildPlan(input, purpose);
-            expect(argv[argv.indexOf('-destination') + 1]).toStrictEqual(expected);
+            expect(expected).toBe(argv[argv.indexOf('-destination') + 1]);
             expect(argv[argv.indexOf('-scheme') + 1]).toBe('App');
             expect(argv).toContain('App.xcodeproj');
         }

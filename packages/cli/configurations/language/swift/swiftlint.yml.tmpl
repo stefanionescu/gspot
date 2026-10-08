@@ -81,7 +81,7 @@ const OPT_IN = [
     'discouraged_optional_boolean',
     'discouraged_optional_collection',
 ];
-const ANALYZER = ['capture_variable', 'typesafe_array_init', 'unused_import', 'unused_declaration'];
+const ANALYZER = ['capture_variable', 'typesafe_array_init', 'unused_import'];
 const pair = (count) => ({ warning: count, error: count });
 const off = [
     ...rulesOff('swift/swiftlint'),
@@ -133,8 +133,8 @@ const options = {
     function_body_length: pair(limit('function_lines', 'swift')),
     cyclomatic_complexity: pair(limit('cyclomatic_complexity', 'swift')),
     closure_body_length: pair(settings['limits.swift.closure_lines']),
-    identifier_name: { min_length: 1, max_length: settings['naming.swift.max_chars'] ?? 40 },
-    type_name: { min_length: 1, max_length: settings['naming.swift.max_chars'] ?? 40 },
+    identifier_name: { min_length: 1, max_length: settings['naming.swift.max_chars'] },
+    type_name: { min_length: 1, max_length: settings['naming.swift.max_chars'] },
     nesting: { type_level: pair(1), function_level: pair(2) },
     missing_docs: { error: ['open', 'public'] },
     unused_import: { always_keep_imports: settings['tools.swiftlint.keep_imports'] },
@@ -155,20 +155,7 @@ const document = {
     ],
     opt_in_rules: OPT_IN.filter((rule) => !offSet.has(rule)),
     analyzer_rules: ANALYZER.filter((rule) => !offSet.has(rule)),
-    ...(isAll
-        ? {
-              custom_rules: {
-                  doc_comment_style: {
-                      name: 'Line Documentation Comments',
-                      regex: '(?m)^(?![ \\t]*///)[^\\r\\n]*?(/\\*\\*)',
-                      capture_group: 1,
-                      match_kinds: ['doccomment'],
-                      message: 'Use /// documentation comments instead of /** */ blocks.',
-                      severity: 'error',
-                  },
-              },
-          }
-        : {}),
+
 };
 recordRules(document);
 %><%~ yaml(document).trimEnd()

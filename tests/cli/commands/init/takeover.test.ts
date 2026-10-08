@@ -1,18 +1,21 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
+import { stat, writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { existsSync, writeFileSync } from 'node:fs';
 import { prepare } from '#cli/commands/init/prepare.ts';
+import { parseTemplate } from '#cli/policy/templates.ts';
 import { writeSetup } from '#cli/commands/init/write.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
-import { rejection } from '#tests/harness/expectations.ts';
+import { identify } from '#cli/lifecycle/ownership/log.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
-import { templateSchema } from '#cli/policy/schema/templates.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
+import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
+import { rejection, containing } from '#tests/harness/expectations.ts';
 import { INVALID_CSS, TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
 import { INACTIVE_CONFIGURATIONS } from '#tests/config/cli/generation/commitlint.ts';
 
-test('initialization previews only the managed package field and rejects a later authored edit before any write', async () => {
+test('initialization refuses publication of a shared package field edited after preview', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': TAKEOVER_PACKAGE, 'source.css': INVALID_CSS });
     const options = buildInitOptions(sandbox.path, { configurations: ['css'] });
@@ -26,14 +29,26 @@ test('initialization previews only the managed package field and rejects a later
         prepared.plan.retained.some((entry) => entry.path === 'package.json' && entry.note.includes('stylelint')),
     ).toBe(false);
     expect(await Bun.file(join(sandbox.path, 'package.json')).text()).toBe(TAKEOVER_PACKAGE);
+    const before = await stat(join(sandbox.path, 'package.json'));
     const edited = TAKEOVER_PACKAGE.replace('native-project', 'edited-project');
-    writeFileSync(join(sandbox.path, 'package.json'), edited);
+    await writeFile(join(sandbox.path, 'package.json'), edited);
     expect(await rejection(writeSetup(sandbox.path, options, prepared))).toContain(
-        'Configuration changed after init read it: package.json. Run gspot init again.',
+        'Lifecycle destination changed during the operation: package.json',
     );
     expect(await Bun.file(join(sandbox.path, 'package.json')).text()).toBe(edited);
-    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.gspot'))).toBe(false);
+    const after = await stat(join(sandbox.path, 'package.json'));
+    expect(after.mode & 0o777).toBe(before.mode & 0o777);
+    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(prepared.policyText);
+    const journal = ownershipSchema.parse(
+        JSON.parse(await Bun.file(join(sandbox.path, '.gspot/state/ownership.json')).text()),
+    );
+    expect(journal.pending).toContainEqual(
+        containing({
+            path: 'package.json',
+            before: identify({ bytes: Buffer.from(TAKEOVER_PACKAGE), mode: before.mode & 0o777 }),
+        }),
+    );
+    expect(await pathExists(join(sandbox.path, '.gspot/version'))).toBe(false);
 });
 
 test('initialization does not overwrite a shared file created after its absent-file preview', async () => {
@@ -46,13 +61,22 @@ test('initialization does not overwrite a shared file created after its absent-f
         note: 'managed install.minimumReleaseAge fields; other content stays',
     });
     const authored = '[install]\nexact = true\n';
-    writeFileSync(join(sandbox.path, 'bunfig.toml'), authored);
+    await writeFile(join(sandbox.path, 'bunfig.toml'), authored);
+    const before = await stat(join(sandbox.path, 'bunfig.toml'));
     expect(await rejection(writeSetup(sandbox.path, options, prepared))).toContain(
-        'Configuration changed after init read it: bunfig.toml. Run gspot init again.',
+        'Lifecycle destination changed during the operation: bunfig.toml',
     );
     expect(await Bun.file(join(sandbox.path, 'bunfig.toml')).text()).toBe(authored);
-    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.gspot'))).toBe(false);
+    const after = await stat(join(sandbox.path, 'bunfig.toml'));
+    expect(after.mode & 0o777).toBe(before.mode & 0o777);
+    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(prepared.policyText);
+    const journal = ownershipSchema.parse(
+        JSON.parse(await Bun.file(join(sandbox.path, '.gspot/state/ownership.json')).text()),
+    );
+    const pending = journal.pending?.find((entry) => entry.path === 'bunfig.toml');
+    expect(pending).toBeDefined();
+    expect(pending).not.toHaveProperty('before');
+    expect(await pathExists(join(sandbox.path, '.gspot/version'))).toBe(false);
 });
 
 test('recommended initialization keeps authored configurations of inactive strict checks', async () => {
@@ -61,11 +85,10 @@ test('recommended initialization keeps authored configurations of inactive stric
     commitAll(sandbox.path);
     const options = buildInitOptions(sandbox.path, {
         configurations: ['none'],
-        template: {
-            source: 'level.toml',
-            digest: 'fixture',
-            tables: templateSchema.parse({ template: 'coverage', selection: 'detect', level: 'recommended' }),
-        },
+        template: parseTemplate(
+            'template = "coverage"\nselection = "detect"\nlevel = "recommended"\n',
+            'coverage.template.toml',
+        ),
     });
     const prepared = await prepare(sandbox.path, options);
     expect(prepared.plan.remove).toStrictEqual([]);

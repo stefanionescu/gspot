@@ -15,4 +15,4 @@ export const HOOK_RUNNERS = {
     npm: { command: 'npm exec --no -- gspot', acquisition: 'Install Node.js and npm, then run: npm install.' },
     pnpm: { command: 'pnpm exec gspot', acquisition: 'Install pnpm, then run: pnpm install.' },
     yarn: { command: 'yarn exec gspot', acquisition: 'Install Yarn, then run: yarn install.' },
-} satisfies Record<NonNullable<Policy['run_with']> | 'gspot', HookRunner>;
+} satisfies Record<NonNullable<Policy['runner']> | 'gspot', HookRunner>;

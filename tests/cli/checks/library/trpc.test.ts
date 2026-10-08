@@ -1,113 +1,72 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
+import { createEslint } from '#tests/harness/generated.ts';
 
-test.each([
-    'import { router } from "./private/router.js";',
-    'import {\n router\n} from "./private/router.js";',
-    'export { router } from "./private/router.js";',
-    'const router = require("./private/router.js");',
-    'const router = import("./private/router.js");',
-    'import { router } from "#private/router";',
-])('tRPC resolves the configured server boundary for %s and permits type-only imports', async (statement) => {
-    await using sandbox = await testdir();
-    const policy = buildPolicy(['trpc'], { tables: '[trpc]\nserver_files = ["private/**"]\n' });
-    const source = `// A comment mentioning import from private is not an edge.\n${statement}\n`;
-    await createFileTree(sandbox.path, {
-        'gspot.toml': policy,
-        'package.json': '{"imports":{"#private/*":"./private/*.ts"}}',
-        'private/router.ts': 'export const router = {};\n',
-        'client.ts': source,
-        'server-public/unrelated.ts': 'export const publicValue = 1;\n',
-        'public.ts': 'import {publicValue} from "./server-public/unrelated.js";\n',
-    });
-    const command = ['check', '--only', 'trpc/boundaries', '--json'];
-    const failed = await runGspot(sandbox.path, command);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    const findings = (JSON.parse(failed.stdout) as RunReport).checks.flatMap((entry) => entry.findings);
-    expect(findings).toMatchObject([{ file: 'client.ts', line: 2, rule: 'server-import' }]);
-    expect(findings).toHaveLength(1);
-    await Bun.write(
-        `${sandbox.path}/client.ts`,
-        'import type { router } from "./private/router.js";\nimport { type router as Router } from "./private/router.js";\n',
-    );
-    const corrected = await runGspot(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
-    expect(await Bun.file(`${sandbox.path}/public.ts`).text()).toBe(
-        'import {publicValue} from "./server-public/unrelated.js";\n',
-    );
-});
+import {
+    TRPC_FILES,
+    TRPC_TYPES,
+    TRPC_LEVELS,
+    TRPC_IMPORTS,
+    TRPC_MODULES,
+    TRPC_FAILURES,
+} from '#tests/config/cli/checks/library/trpc.ts';
 
-test('tRPC architecture boundaries retain source locations, scope isolation, and failed reads', async () => {
+test.each(TRPC_LEVELS)('the generated native tRPC rule composes server value boundaries at %s', async (level) => {
     await using sandbox = await testdir();
-    const policy = buildPolicy(['trpc'], {
-        tables: '[architecture]\nmodules = [{name = "server", paths = ["private/**"]}]\n[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n',
+    const policy = buildPolicy(['trpc', 'typescript'], {
+        level,
+        tables: `${TRPC_MODULES}[scope.app]\n[scope.app.architecture]\nmodules = [{name = "server", paths = ["private/**"], may_import = ["server"]}]\n[scope."app/child"]\n[scope."app/child".architecture]\nmodules = [{name = "server", paths = ["private/**"], may_import = ["server"]}]\n[scope.flat]\n[scope.flat.architecture]\nmodules = [{name = "server", paths = ["router.ts"], may_import = ["server"]}]\n`,
     });
-    const source = '// Router boundary\nimport { router } from "./private/router.js";\n';
-    await createFileTree(sandbox.path, {
+    const files = {
+        ...TRPC_FILES,
         'gspot.toml': policy,
-        'private/router.ts': 'export const router = {};\n',
-        'client.ts': 'import { value } from "./server/public.js";\n',
-        'server/public.ts': 'export const value = 1;\n',
-        'app/private/router.ts': 'export const router = {};\n',
-        'app/client.ts': 'import type { router } from "./private/router.js";\n',
-        'app/child/private/router.ts': 'export const router = {};\n',
-        'app/child/client.ts': source,
-    });
-    const command = ['check', '--only', 'trpc/boundaries', '--json'];
-    const failed = await runGspot(sandbox.path, command);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(
-        (JSON.parse(failed.stdout) as RunReport).checks.map((entry) => ({
-            scope: entry.scope,
-            findings: entry.findings.map(({ file, line }) => ({ file, line })),
-        })),
-    ).toStrictEqual([
-        { scope: '', findings: [] },
-        { scope: 'app', findings: [] },
-        { scope: 'app/child', findings: [{ file: 'app/child/client.ts', line: 2 }] },
+        ...Object.fromEntries(
+            TRPC_IMPORTS.map(({ source }, index) => [`form${String(index)}.ts`, `// Router boundary\n${source}\n`]),
+        ),
+    };
+    await createFileTree(sandbox.path, files);
+    const eslint = await createEslint(sandbox.path);
+    const paths = [
+        'public.ts',
+        'form-value.js',
+        'flat/client.ts',
+        'comment.ts',
+        'app/api/trpc/route.ts',
+        'client/blocked.ts',
+        'client/check.test.ts',
+        'client/storage.test.ts',
+        'app/client.ts',
+        'app/child/client.ts',
+        ...TRPC_IMPORTS.map((_, index) => `form${String(index)}.ts`),
+    ];
+    const results = await eslint.lintFiles(paths);
+    const expected = new Map([
+        ...Object.entries(TRPC_FAILURES),
+        ...TRPC_IMPORTS.map(({ line }, index): [string, number] => [`form${String(index)}.ts`, line]),
     ]);
-    await Bun.write(`${sandbox.path}/app/child/client.ts`, 'import { broken from "./private/router.js";\n');
-    const malformed = await runGspot(sandbox.path, command);
-    expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
-    expect(malformed.stdout).toContain('Cannot parse imports in app/child/client.ts');
-    await Bun.write(`${sandbox.path}/app/child/client.ts`, 'import type { router } from "./private/router.js";\n');
-    const corrected = await runGspot(sandbox.path, command);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
-    expect(await Bun.file(`${sandbox.path}/server/public.ts`).text()).toBe('export const value = 1;\n');
-});
-
-test.each(['', 'apps/web'])(
-    'tRPC permits HTTP adapter value imports in scope %s and rejects clients',
-    async (scope) => {
-        await using sandbox = await testdir();
-        const prefix = scope === '' ? '' : `${scope}/`;
-        const policy = buildPolicy(['trpc'], { tables: scope === '' ? '' : `[[scope]]\npath = "${scope}"\n` });
-        const adapter = 'import { router } from "../../../server/router.js";\nexport const handler = router;\n';
-        const files = {
-            [`${prefix}server/router.ts`]: 'export const router = {};\n',
-            [`${prefix}app/api/trpc/route.ts`]: adapter,
-            [`${prefix}client.ts`]: 'import { router } from "./server/router.js";\n',
-            [`${prefix}public.ts`]: 'export const title = "Public";\n',
-        };
-        await createFileTree(sandbox.path, { 'gspot.toml': policy, ...files });
-        const command = ['check', '--only', 'trpc/boundaries', '--json'];
-        const failed = await runGspot(sandbox.path, command);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    for (const result of results) {
+        const file = result.filePath.slice(sandbox.path.length + 1).replaceAll('\\', '/');
+        const findings = result.messages.filter(({ ruleId, fatal }) => ruleId === 'boundaries/dependencies' || fatal);
+        const line = expected.get(file);
         expect(
-            (JSON.parse(failed.stdout) as RunReport).checks
-                .flatMap((check) => check.findings)
-                .map(({ file, line, rule }) => ({ file, line, rule })),
-        ).toStrictEqual([{ file: `${prefix}client.ts`, line: 1, rule: 'server-import' }]);
-        await Bun.write(`${sandbox.path}/${prefix}client.ts`, 'import type { router } from "./server/router.js";\n');
-        const corrected = await runGspot(sandbox.path, command);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(await Bun.file(`${sandbox.path}/${prefix}app/api/trpc/route.ts`).text()).toBe(adapter);
-        expect(await Bun.file(`${sandbox.path}/${prefix}public.ts`).text()).toBe('export const title = "Public";\n');
-        expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
-    },
-);
+            findings.map(({ ruleId, line }) => ({ ruleId, line })),
+            `${level} ${file}`,
+        ).toStrictEqual(line === undefined ? [] : [{ ruleId: 'boundaries/dependencies', line }]);
+    }
+    for (const file of TRPC_IMPORTS.map((_, index) => `form${String(index)}.ts`)) {
+        const corrected = await eslint.lintText(TRPC_TYPES, { filePath: file });
+        expect(
+            corrected.flatMap(({ messages }) =>
+                messages.filter(({ ruleId, fatal }) => ruleId === 'boundaries/dependencies' || fatal),
+            ),
+        ).toStrictEqual([]);
+    }
+    const malformed = await eslint.lintText('import { broken from "./private/router.js";\n', {
+        filePath: 'form0.ts',
+    });
+    expect(malformed.flatMap(({ messages }) => messages.filter(({ fatal }) => fatal))).toMatchObject([{ fatal: true }]);
+    for (const [file, source] of Object.entries(files))
+        expect(await Bun.file(join(sandbox.path, file)).text()).toBe(source);
+});

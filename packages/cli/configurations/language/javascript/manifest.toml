@@ -1,10 +1,13 @@
+ignored_folders = ["node_modules/"]
+dockerignore = ["node_modules"]
+
 # Where a dead-code scan starts when no framework names its own entries.
-entry = ["src/main.{ts,js}", "src/index.{ts,js}", "src/server.{ts,js}", "scripts/**/*.{ts,js,mjs}", "**/*.{test,spec}.{ts,tsx,js}", "tests/**/*.{ts,js}"]
+entry = ["src/main.{ts,js}", "src/index.{ts,js}", "**/*.{test,spec}.{ts,tsx,js}"]
 
 [configuration]
 title = "JavaScript"
 requires = ["structure"]
-recommends = ["naming", "format"]
+suggests = ["naming", "format"]
 description = "ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code."
 
 [detect]
@@ -18,17 +21,15 @@ eslint_plugins = true
 
 [[tool]]
 name = "eslint"
-refused_options = [{paths = ["rules", "overrides", "extends"], message = "ESLint rule selection comes from level recommended or all. Use tools.eslint.rules and tools.eslint.overrides for native options, or gspot ignore javascript/eslint --rule <rule> --reason <why> to accept a finding."}]
+refused_options = [{ paths = ["rules", "overrides", "extends"], message = "ESLint rule selection comes from level recommended or all. Use tools.eslint.rules and tools.eslint.overrides for native options, or gspot ignore javascript/eslint --rule <rule> --reason <why> to accept a finding." }]
 rule_url = "https://eslint.org/docs/latest/rules/{rule}"
 crash_pattern = "^(?:Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:)"
 diagnostic_header_pattern = "^(?:Oops!|ESLint: )"
-suppression = {marker = "^(?:/\\*\\s*eslint-disable(?:-next-line|-line)?|//\\s*eslint-disable-(?:next-)?line)(?=\\s|$)", reason = " -- (?<reason>\\S.*)"}
+suppression = { marker = "^(?:/\\*\\s*eslint-disable(?:-next-line|-line)?|//\\s*eslint-disable-(?:next-)?line)(?=\\s|$)", reason = " -- (?<reason>\\S.*)" }
 version = "9.39.5"
 npm = "eslint"
 min_version = "9.38.0"
 
-[[tool.replace]]
-file = ".whitelizard"
 
 [[tool.replace]]
 file = "eslint.config.js"
@@ -142,6 +143,12 @@ version = "4.8.0"
 npm = "@eslint-community/eslint-plugin-eslint-comments"
 
 [[tool]]
+name = "eslint-import-resolver-typescript"
+kind = "library"
+version = "4.4.5"
+npm = "eslint-import-resolver-typescript"
+
+[[tool]]
 name = "eslint-plugin-boundaries"
 kind = "library"
 version = "7.2.0"
@@ -199,7 +206,7 @@ file = "knip.config.ts"
 
 [[tool]]
 name = "tsc"
-suppression = {marker = "@ts-(?:ignore|expect-error|nocheck)\\b", reason = "@ts-(?:ignore|expect-error|nocheck):?\\s+(?<reason>\\S.*)"}
+suppression = { marker = "@ts-(?:ignore|expect-error|nocheck)\\b", reason = "@ts-(?:ignore|expect-error|nocheck):?\\s+(?<reason>\\S.*)" }
 system = true
 version = "5.9.3"
 npm = "typescript"
@@ -216,14 +223,14 @@ template = "semgrep/javascript.yml.tmpl"
 target = ".gspot/config/semgrep/javascript.yml"
 tool = "semgrep"
 rule_keys = ["rules"]
-when = {configuration = "security"}
+when = { configuration = "security" }
 scoped = true
 
 [[config]]
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 rule_keys = ["rules"]
-stub_file = {path = "eslint.config.mjs", body = "export { default } from {target_module};"}
+stub_file = { path = "eslint.config.mjs", body = "export { default } from {target_module};" }
 
 [[config]]
 target = ".gspot/config/jsconfig.json"
@@ -244,11 +251,11 @@ example = "The declaration `const unused = 1;` reports no-unused-vars. Delete th
 level = "recommended"
 stage = "commit"
 runs = "files"
-command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
-fix = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{tool_file:eslint}", "--format", "json", "{files}"]
+fix = ["eslint", "--fix", "--config", "{tool_file:eslint}", "{files}"]
 exit_codes = [1]
-files = {extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.json"], tags = ["shebang:node"], eslint_plugins = true}
-output = {format = "eslint"}
+files = { extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.json"], tags = ["shebang:node"], eslint_plugins = true }
+output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message", fixable = "fix" } }
 summary = "Runs the shipped ESLint rules on JavaScript, TypeScript, component files, and package.json."
 why = "ESLint catches mistakes and dead code the runtime accepts: unused code, unsafe patterns, functions that only forward."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> links the rule documentation."
@@ -262,8 +269,8 @@ stage = "push"
 runs = "scope"
 cwd = "scope"
 tool = "tsc"
-files = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
-output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
+files = { extensions = [".js", ".mjs", ".cjs", ".jsx"] }
+output = { format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$" }
 summary = "Type-checks plain JavaScript through its JSDoc comments."
 why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
 help = "Add or fix the JSDoc type that the error names."
@@ -275,19 +282,12 @@ example = "An exported declaration that no selected entry point uses reports an 
 level = "recommended"
 stage = "push"
 runs = "scope"
-command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "json", "{workspace:--workspace}"]
+command = ["knip", "--config", "{tool_file:knip}", "--no-progress", "--reporter", "json", "{workspace:--workspace}"]
 cwd = "root"
-output = {format = "knip"}
+output = { format = "knip" }
 summary = "Finds files, exports, and dependencies nothing uses."
 why = "Dead code is read, maintained, and shipped for nobody."
 help = "Delete what knip names, or add a knip entry point with gspot set tools.knip.entry if the file is loaded in a way knip cannot see."
-
-[[setting]]
-name = "tools.eslint.component_languages"
-type = "list"
-direction = "neutral"
-default = []
-summary = "The languages a component script block declares; empty means plain JavaScript."
 
 [[setting]]
 name = "tools.eslint.rules"
@@ -307,14 +307,15 @@ summary = "Lint rule options for selected paths, in order. A scope's overrides a
 name = "tools.eslint.import_extensions"
 type = "table"
 direction = "neutral"
-default = {"**/*" = "js"}
-summary = "The import suffix style per file class: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
+default = { "**/*" = "js" }
+summary = "The import suffix for each path pattern: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
 
 [[setting]]
-name = "tools.eslint.script_files"
+name = "architecture.roles.scripts"
 type = "list"
+items = "path"
 direction = "neutral"
-default = ["scripts/**", "**/*.config.{js,mjs,cjs,ts}", ".mise/tasks/**"]
+default = ["scripts/**", "**/*.config.{js,mjs,cjs,ts}"]
 summary = "Globs for script files: they may print to the console and call process.exit."
 
 [[setting]]
@@ -333,6 +334,7 @@ summary = "Override the Node version checked by the n plugin. When unset, the pl
 [[setting]]
 name = "tools.eslint.restricted_imports"
 type = "list"
+items = { name = "string", message = "string" }
 direction = "tightening"
 default = []
 summary = "Imports this repository refuses, each with a name, and a message."
@@ -340,27 +342,21 @@ summary = "Imports this repository refuses, each with a name, and a message."
 [[setting]]
 name = "tools.knip.entry"
 type = "list"
+items = "path"
 direction = "neutral"
 default = []
 summary = "Entry points knip starts from beyond the ones the framework configuration declares."
 
 [[setting]]
-name = "tools.knip.exclude"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Files knip leaves out, each with a reason."
-
-[[setting]]
 name = "tools.knip.ignore_dependencies"
-type = "list"
+type = "table"
 direction = "loosening"
-default = []
+default = {}
 summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses. A name that looks like a regular expression matches as one; an entry with workspace applies to that package.json workspace alone."
 
 [agent_rules]
-"NODE.md" = {runtimes = ["node"]}
-"BUN.md" = {filenames = ["bun.lock", "bun.lockb", "bunfig.toml"]}
+"NODE.md" = { runtimes = ["node"] }
+"BUN.md" = { filenames = ["bun.lock", "bun.lockb", "bunfig.toml"] }
 
 [required_eslint_rules]
 js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "import-x/exports-last"]

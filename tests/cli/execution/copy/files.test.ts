@@ -5,9 +5,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/files.ts';
 import { prepareTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
-import { mkdirSync, existsSync, readdirSync, symlinkSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { mkdir, readdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 test('dependency copies let concurrent native process output drain', async () => {
     await using repository = await testdir();
@@ -40,7 +41,7 @@ test('dependency copies let concurrent native process output drain', async () =>
     try {
         expect(await producer.exited).toBe(0);
         expect(Buffer.from(await output).equals(Buffer.alloc(8 * 1024 * 1024, 97))).toBe(true);
-        expect(readdirSync(join(copy.path, 'node_modules/example'))).toHaveLength(2048);
+        expect(await readdir(join(copy.path, 'node_modules/example'))).toHaveLength(2048);
     } finally {
         producer.kill();
         await closed;
@@ -62,10 +63,10 @@ test('preview copies workspace dependencies and preserves executable links witho
         'node_modules/tool/lib/value.cjs': 'module.exports = "tool works";',
     });
     await createFileTree(external.path, { 'value.js': 'external original' });
-    mkdirSync(join(repository.path, 'node_modules/.bin'));
-    symlinkSync('../tool/bin/tool.js', join(repository.path, 'node_modules/.bin/tool'));
-    symlinkSync('../packages/core', join(repository.path, 'node_modules/core'));
-    symlinkSync(external.path, join(repository.path, 'node_modules/external'));
+    await mkdir(join(repository.path, 'node_modules/.bin'));
+    await symlink('../tool/bin/tool.js', join(repository.path, 'node_modules/.bin/tool'));
+    await symlink('../packages/core', join(repository.path, 'node_modules/core'));
+    await symlink(external.path, join(repository.path, 'node_modules/external'));
     const session = await openSession(repository.path);
     using copy = await copyIntoScratch(
         projectCopyInputs(
@@ -78,10 +79,10 @@ test('preview copies workspace dependencies and preserves executable links witho
     const result = runTestCommandBlocking(['node', 'node_modules/.bin/tool'], { cwd: scratch });
     expect(result.code, result.stderr).toBe(0);
     expect(result.stdout.trim()).toBe('tool works');
-    writeFileSync(join(scratch, 'node_modules/core/value.js'), 'preview edit');
-    writeFileSync(join(scratch, 'node_modules/external/value.js'), 'external preview edit');
-    expect(readFileSync(join(repository.path, 'packages/core/value.js'), 'utf8')).toBe('export default "original";');
-    expect(readFileSync(join(external.path, 'value.js'), 'utf8')).toBe('external original');
+    await writeFile(join(scratch, 'node_modules/core/value.js'), 'preview edit');
+    await writeFile(join(scratch, 'node_modules/external/value.js'), 'external preview edit');
+    expect(await readFile(join(repository.path, 'packages/core/value.js'), 'utf8')).toBe('export default "original";');
+    expect(await readFile(join(external.path, 'value.js'), 'utf8')).toBe('external original');
 });
 
 test('a workspace member that is no scope brings its own dependency store into the copy', async () => {
@@ -94,14 +95,14 @@ test('a workspace member that is no scope brings its own dependency store into t
         '.gspot/package.json': '{"private":true}',
         '.gspot/node_modules/prettier/package.json': '{"name":"prettier"}',
     });
-    mkdirSync(join(repository.path, 'tests/node_modules'));
-    symlinkSync('../../node_modules/.bun/vue@3/node_modules/vue', join(repository.path, 'tests/node_modules/vue'));
+    await mkdir(join(repository.path, 'tests/node_modules'));
+    await symlink('../../node_modules/.bun/vue@3/node_modules/vue', join(repository.path, 'tests/node_modules/vue'));
     const paths = ['package.json', 'tests/package.json', 'tests/app.js', '.gspot/package.json'];
     using copy = await copyIntoScratch(projectCopyInputs(repository.path, paths, ['']));
     const scratch = copy.path;
-    expect(readFileSync(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
+    expect(await readFile(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
     // The private tools of gspot run in place and stay out of the copy.
-    expect(existsSync(join(scratch, '.gspot/node_modules'))).toBe(false);
+    expect(await pathExists(join(scratch, '.gspot/node_modules'))).toBe(false);
 });
 
 test('a link into another linked tree points at the copy of that tree, whatever order the folder lists them in', async () => {
@@ -112,14 +113,14 @@ test('a link into another linked tree points at the copy of that tree, whatever 
         'next@16/node_modules/helpers/package.json': '{"name":"helpers"}',
     });
     await createFileTree(repository.path, { 'package.json': '{"private":true}' });
-    mkdirSync(join(repository.path, 'node_modules'));
-    symlinkSync(join(store.path, 'next@16/node_modules/next'), join(repository.path, 'node_modules/a-next'), 'dir');
-    symlinkSync(store.path, join(repository.path, 'node_modules/z-store'), 'dir');
+    await mkdir(join(repository.path, 'node_modules'));
+    await symlink(join(store.path, 'next@16/node_modules/next'), join(repository.path, 'node_modules/a-next'), 'dir');
+    await symlink(store.path, join(repository.path, 'node_modules/z-store'), 'dir');
     using copy = await copyIntoScratch(projectCopyInputs(repository.path, ['package.json'], ['']));
     const scratch = copy.path;
-    const copied = realpathSync(join(scratch, 'node_modules/a-next'));
-    expect(copied.startsWith(realpathSync(join(scratch, 'node_modules/z-store')))).toBe(true);
-    expect(existsSync(join(copied, '../helpers/package.json'))).toBe(true);
+    const copied = await realpath(join(scratch, 'node_modules/a-next'));
+    expect(copied.startsWith(await realpath(join(scratch, 'node_modules/z-store')))).toBe(true);
+    expect(await pathExists(join(copied, '../helpers/package.json'))).toBe(true);
 });
 
 test('a dependency link that points at nothing refuses the copy', async () => {
@@ -128,9 +129,9 @@ test('a dependency link that points at nothing refuses the copy', async () => {
         'package.json': '{"private":true}',
         'node_modules/.bin/tool': '#!/bin/sh\n',
     });
-    symlinkSync('../missing/bin/gspot', join(repository.path, 'node_modules/.bin/gspot'));
+    await symlink('../missing/bin/gspot', join(repository.path, 'node_modules/.bin/gspot'));
     await rejects(copyIntoScratch(projectCopyInputs(repository.path, ['package.json'], [''])), { code: 'ENOENT' });
-    expect(readFileSync(join(repository.path, 'node_modules/.bin/tool'), 'utf8')).toBe('#!/bin/sh\n');
+    expect(await readFile(join(repository.path, 'node_modules/.bin/tool'), 'utf8')).toBe('#!/bin/sh\n');
 });
 
 test('a source snapshot retains selected binary/config inputs and excludes sibling files', async () => {
@@ -150,10 +151,10 @@ test('a source snapshot retains selected binary/config inputs and excludes sibli
         ),
     );
     const scratch = copy.path;
-    expect(existsSync(join(scratch, 'apps/web/fixture.bin'))).toBe(true);
-    expect(existsSync(join(scratch, 'apps/web/jest.config.json'))).toBe(true);
-    expect(existsSync(join(scratch, 'unrelated/private.txt'))).toBe(false);
-    expect(existsSync(join(scratch, 'README.md'))).toBe(false);
+    expect(await pathExists(join(scratch, 'apps/web/fixture.bin'))).toBe(true);
+    expect(await pathExists(join(scratch, 'apps/web/jest.config.json'))).toBe(true);
+    expect(await pathExists(join(scratch, 'unrelated/private.txt'))).toBe(false);
+    expect(await pathExists(join(scratch, 'README.md'))).toBe(false);
 });
 
 test.each([false, true])(
@@ -170,14 +171,14 @@ test.each([false, true])(
         const session = await openSession(repository.path);
         const input = buildCheckInput(session, 'javascript/tsc', { paths: ['selected.js'] });
         using copy = await copyIntoScratch(input, extra ? ['document.json'] : undefined);
-        expect(readFileSync(join(copy.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
-        expect(readFileSync(join(copy.path, 'node_modules/tool/value.js'), 'utf8')).toBe(
+        expect(await readFile(join(copy.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
+        expect(await readFile(join(copy.path, 'node_modules/tool/value.js'), 'utf8')).toBe(
             'export const dependency = 4;',
         );
-        expect(existsSync(join(copy.path, 'unselected.js'))).toBe(false);
-        expect(existsSync(join(copy.path, 'document.json'))).toBe(extra);
-        if (extra) expect(readFileSync(join(copy.path, 'document.json'), 'utf8')).toBe('{"value":3}');
-        writeFileSync(join(copy.path, 'selected.js'), 'changed in private copy');
-        expect(readFileSync(join(repository.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
+        expect(await pathExists(join(copy.path, 'unselected.js'))).toBe(false);
+        expect(await pathExists(join(copy.path, 'document.json'))).toBe(extra);
+        if (extra) expect(await readFile(join(copy.path, 'document.json'), 'utf8')).toBe('{"value":3}');
+        await writeFile(join(copy.path, 'selected.js'), 'changed in private copy');
+        expect(await readFile(join(repository.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
     },
 );

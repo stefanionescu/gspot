@@ -1,7 +1,7 @@
 import { noClientEnv } from '#plugin/rules/no-client-env.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
-import example from '#tests/config/plugin/rules/no-client-env.json';
 import type { ClientEnvOptions } from '#plugin/types/environment.ts';
+import { EXAMPLE } from '#tests/config/plugin/rules/no-client-env.ts';
 import { ENVIRONMENT_GLOBALS } from '#tests/config/plugin/environment.ts';
 
 createRuleTester('/repo', { globals: ENVIRONMENT_GLOBALS }).run<
@@ -9,7 +9,7 @@ createRuleTester('/repo', { globals: ENVIRONMENT_GLOBALS }).run<
     [Partial<ClientEnvOptions[0]>]
 >('no-client-env', noClientEnv, {
     valid: [
-        example.corrected,
+        EXAMPLE.corrected,
         "'use client';\nconst url = process.env.NEXT_PUBLIC_URL;",
         "'use client';\nconst mode = process.env.NODE_ENV;",
         "'use client';\nconst { NODE_ENV } = process.env;",
@@ -24,7 +24,7 @@ createRuleTester('/repo', { globals: ENVIRONMENT_GLOBALS }).run<
         },
     ],
     invalid: [
-        { code: example.broken, errors: [{ messageId: 'private', line: 2, column: 25 }] },
+        { code: EXAMPLE.broken, errors: [{ messageId: 'private', line: 2, column: 25 }] },
         { code: "'use client';\nconst key = process.env.SECRET;", errors: [{ messageId: 'private' }] },
         {
             code: "'use client';\nconst host = process; const key = host.env.SECRET;",

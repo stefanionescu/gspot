@@ -8,7 +8,6 @@ export const SQL_CLEAN =
 export const PSQL =
     "\\set team 'core'\nSELECT id FROM user_accounts WHERE display_name = :'team' AND id = :account_id;\n";
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['sql', 'naming'],
     modules: false,
@@ -21,7 +20,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'sql/sqlfluff',

@@ -7,13 +7,13 @@ export const PROJECTS = [
     {
         name: 'root JavaScript',
         scope: '',
-        policy: 'configurations = ["svelte"]\n[[scope]]\npath = "app"\n',
+        policy: 'configurations = ["svelte"]\n[scope."app"]\n',
         target: undefined,
     },
     {
         name: 'scoped TypeScript',
         scope: 'app',
-        policy: 'configurations = ["svelte", "typescript"]\n[[scope]]\npath = "app"\n',
+        policy: 'configurations = ["svelte", "typescript"]\n[scope."app"]\n',
         target: '.gspot/config/app/tsconfig.json',
     },
 ];

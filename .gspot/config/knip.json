@@ -1,11 +1,22 @@
 {
     "$schema": "https://unpkg.com/knip@6/schema.json",
-    "ignore": [".gspot/**", "eslint.config.{js,mjs,cjs}"],
+    "ignore": [
+        ".gspot/**",
+        "eslint.config.{js,mjs,cjs}",
+        "prettier.config.mjs",
+        "docs/prettier.config.mjs",
+        "docs/worker-configuration.d.ts",
+        "packages/cli/prettier.config.mjs",
+        "packages/eslint-plugin/prettier.config.mjs",
+        "tests/prettier.config.mjs",
+        "tests/next-env.d.ts"
+    ],
     "ignoreDependencies": [
         "@gspothq/cli",
         "@astrojs/check",
         "@commitlint/cli",
         "@darraghor/eslint-plugin-nestjs-typed",
+        "@eslint-community/eslint-plugin-eslint-comments",
         "@eslint/js",
         "@gspothq/eslint-plugin",
         "@next/eslint-plugin-next",
@@ -50,8 +61,8 @@
         "v8r",
         "wrangler",
         "@socketsecurity/bun-security-scanner",
-        "^tree-sitter-",
-        "^@fontsource-variable/"
+        "^@fontsource-variable/",
+        "^tree-sitter-"
     ],
     "ignoreBinaries": [
         "actionlint",
@@ -83,6 +94,7 @@
         "trufflehog",
         "tsc",
         "typos",
+        "uv",
         "v8r",
         "vale",
         "wrangler",
@@ -97,12 +109,10 @@
                 "packages/eslint-plugin/src/plugin.ts",
                 "docs/src/content/reference/collection.ts",
                 "docs/src/route-metadata.ts",
+                "scripts/setting-values.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
-                "src/server.{ts,js}",
-                "scripts/**/*.{ts,js,mjs}",
                 "**/*.{test,spec}.{ts,tsx,js}",
-                "tests/**/*.{ts,js}",
                 ".markdownlint-cli2.mjs"
             ]
         },
@@ -112,34 +122,20 @@
                 "src/route-metadata.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
-                "src/server.{ts,js}",
-                "scripts/**/*.{ts,js,mjs}",
                 "**/*.{test,spec}.{ts,tsx,js}",
-                "tests/**/*.{ts,js}",
                 ".markdownlint-cli2.mjs"
             ],
             "ignoreDependencies": ["satteri"]
         },
         "packages/cli": {
-            "entry": [
-                "src/main.{ts,js}",
-                "src/index.{ts,js}",
-                "src/server.{ts,js}",
-                "scripts/**/*.{ts,js,mjs}",
-                "**/*.{test,spec}.{ts,tsx,js}",
-                "tests/**/*.{ts,js}",
-                ".markdownlint-cli2.mjs"
-            ]
+            "entry": ["src/main.{ts,js}", "src/index.{ts,js}", "**/*.{test,spec}.{ts,tsx,js}", ".markdownlint-cli2.mjs"]
         },
         "packages/eslint-plugin": {
             "entry": [
                 "src/plugin.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
-                "src/server.{ts,js}",
-                "scripts/**/*.{ts,js,mjs}",
                 "**/*.{test,spec}.{ts,tsx,js}",
-                "tests/**/*.{ts,js}",
                 ".markdownlint-cli2.mjs"
             ]
         },
@@ -147,10 +143,7 @@
             "entry": [
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
-                "src/server.{ts,js}",
-                "scripts/**/*.{ts,js,mjs}",
                 "**/*.{test,spec}.{ts,tsx,js}",
-                "tests/**/*.{ts,js}",
                 ".markdownlint-cli2.mjs"
             ],
             "ignoreDependencies": ["^.+$"]

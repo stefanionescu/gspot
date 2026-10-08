@@ -1,18 +1,18 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { mkdirSync, symlinkSync } from 'node:fs';
 import { readPolicy } from '#cli/policy/read.ts';
+import { mkdir, symlink } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { usePlatform } from '#tests/harness/platforms.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { useEnvironment } from '#tests/harness/environment.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
@@ -30,32 +30,26 @@ test.each([...OPERATING_SYSTEMS])(
     async ({ node: platform }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy([], { tables: 'run_with = "mise"\n' }),
+            'gspot.toml': buildPolicy([], { tables: 'runner = "mise"\n' }),
         });
-        const descriptor = Object.getOwnPropertyDescriptor(process, 'platform')!;
-        const current = environmentVariables();
-        const previous = { PATH: current['PATH'], MISE_DATA_DIR: current['MISE_DATA_DIR'] };
-        try {
-            setEnvironmentVariable('PATH', join(sandbox.path, 'empty-bin'));
-            setEnvironmentVariable('MISE_DATA_DIR', join(sandbox.path, 'mise'));
-            Object.defineProperty(process, 'platform', { value: platform });
-            const tool = toolPin(configurationManifests().values(), 'xmllint');
-            const hint = installerHint(tool, platform);
-            expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
-                name: 'xmllint',
-                state: 'missing',
-                hint,
-            });
-            const context = {
-                root: sandbox.path,
-                inspections: new Map(),
-                policyFiles: readPolicy(sandbox.path),
-            };
-            expect(inspectTool(context, tool)).toMatchObject({ name: 'xmllint', state: 'missing', hint });
-        } finally {
-            Object.defineProperty(process, 'platform', descriptor);
-            for (const [name, value] of Object.entries(previous)) setEnvironmentVariable(name, value);
-        }
+        using _environment = useEnvironment({
+            PATH: join(sandbox.path, 'empty-bin'),
+            MISE_DATA_DIR: join(sandbox.path, 'mise'),
+        });
+        using _host = usePlatform(platform);
+        const tool = toolPin(configurationManifests().values(), 'xmllint');
+        const hint = installerHint(tool, platform);
+        expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
+            name: 'xmllint',
+            state: 'missing',
+            hint,
+        });
+        const context = {
+            root: sandbox.path,
+            inspections: new Map(),
+            policyFiles: readPolicy(sandbox.path),
+        };
+        expect(inspectTool(context, tool)).toMatchObject({ name: 'xmllint', state: 'missing', hint });
     },
 );
 
@@ -63,13 +57,13 @@ test('doctor and a missing XML check report the host installation prerequisite',
     await using sandbox = await testdir();
     const root = join(sandbox.path, 'project');
     const binaries = join(sandbox.path, 'binaries');
-    mkdirSync(binaries);
+    await mkdir(binaries);
     for (const name of ['git', 'node']) {
         const executable = Bun.which(name);
         expect(executable, `${name} is required for CLI metadata inspection.`).not.toBeNull();
         const windowsName = `${name}.exe`;
         const filename = process.platform === 'win32' ? windowsName : name;
-        symlinkSync(executable!, join(binaries, filename));
+        await symlink(executable!, join(binaries, filename));
     }
     await createFileTree(root, {
         'gspot.toml': buildPolicy([]),

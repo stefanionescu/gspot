@@ -1,6 +1,5 @@
 import { posix } from 'node:path';
 import { memo } from '#cli/platform/memo.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parseSqlFile } from '#cli/parsers/sql/statements.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
@@ -10,7 +9,7 @@ import { MIGRATION_DOWN, MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/confi
 const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() };
 
 function folderOf(input: CheckInput, paths: string[]): string | undefined {
-    const setting = input.view.options('postgres')['migrations_folder'] as string;
+    const setting = input.view.options('postgres')['migrations_folder'];
     const prefix = input.scope === '' ? '' : `${input.scope}/`;
     if (setting !== '') return `${prefix}${setting.replace(/\/$/u, '')}`;
     return MIGRATION_FOLDERS.map((folder) => `${prefix}${folder}`).find((folder) =>
@@ -46,9 +45,7 @@ async function readMigrations(input: CheckInput, paths: string[]): Promise<Migra
  * @returns the repository-relative migration paths
  */
 export function migrationPaths(input: CheckInput): string[] {
-    const paths = input.files
-        .filter((file) => scopeOf(file.path, input.scopeEntries).path === input.scope)
-        .map((file) => file.path);
+    const paths = input.files.map((file) => file.path);
     const folder = folderOf(input, paths);
     return folder === undefined
         ? []

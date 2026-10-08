@@ -10,10 +10,10 @@ import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { cp, mkdir, symlink, readFile } from 'node:fs/promises';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
 import { installedModules } from '#tests/harness/environment.ts';
-import { cpSync, mkdirSync, symlinkSync, readFileSync } from 'node:fs';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 
@@ -33,12 +33,12 @@ test.skipIf(!isPosix).each(['recommended', 'all'] as const)(
             'package.json': '{"private":true,"type":"module"}\n',
             'source.js': COMPILER_SOURCE,
         });
-        cpSync(join(installedModules, 'typescript'), join(sandbox.path, '.gspot/node_modules/typescript'), {
+        await cp(join(installedModules, 'typescript'), join(sandbox.path, '.gspot/node_modules/typescript'), {
             recursive: true,
             dereference: true,
         });
-        mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
-        symlinkSync('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
+        await mkdir(join(sandbox.path, '.gspot/node_modules/.bin'));
+        await symlink('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
         const session = await openSession(sandbox.path);
         using log = openOwnership(sandbox.path);
         writeOutputs(session, log);
@@ -88,21 +88,21 @@ test.skipIf(!isPosix)(
         });
         const work = join(sandbox.path, 'work');
         const snapshot = join(sandbox.path, 'snapshot');
-        cpSync(join(installedModules, 'typescript'), join(work, '.gspot/node_modules/typescript'), {
+        await cp(join(installedModules, 'typescript'), join(work, '.gspot/node_modules/typescript'), {
             recursive: true,
             dereference: true,
         });
-        mkdirSync(join(work, '.gspot/node_modules/.bin'));
-        symlinkSync('../typescript/bin/tsc', join(work, '.gspot/node_modules/.bin/tsc'));
-        cpSync(join(installedModules, 'typescript'), join(work, 'node_modules/typescript'), {
+        await mkdir(join(work, '.gspot/node_modules/.bin'));
+        await symlink('../typescript/bin/tsc', join(work, '.gspot/node_modules/.bin/tsc'));
+        await cp(join(installedModules, 'typescript'), join(work, 'node_modules/typescript'), {
             recursive: true,
             dereference: true,
         });
-        mkdirSync(join(work, 'node_modules/.bin'));
-        symlinkSync('../typescript/bin/tsc', join(work, 'node_modules/.bin/tsc'));
+        await mkdir(join(work, 'node_modules/.bin'));
+        await symlink('../typescript/bin/tsc', join(work, 'node_modules/.bin/tsc'));
         const compiler = toolPin(configurationManifests().values(), 'tsc');
         const projectPath = join(work, 'node_modules/typescript/package.json');
-        const project = parsePackageManifest(readFileSync(projectPath, 'utf8'), projectPath);
+        const project = parsePackageManifest(await readFile(projectPath, 'utf8'), projectPath);
         expect(
             inspectTool({ root: work, inspections: new Map(), getPendingInstallations: () => ['npm'] }, compiler),
         ).toMatchObject({ state: 'host', found: project.version, path: join(work, 'node_modules/.bin/tsc') });
@@ -185,7 +185,7 @@ test.each(['javascript', 'typescript'])(
         const ending = language === 'javascript' ? 'js' : 'ts';
         const paths = COMPILER_DIRECTIVES.map((directive) => `${directive}.${ending}`);
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy([language], { tables: 'require_reasons = true\n' }),
+            'gspot.toml': buildPolicy([language]),
             ...Object.fromEntries(
                 COMPILER_DIRECTIVES.map((directive, index) => [
                     paths[index]!,
@@ -229,12 +229,12 @@ test.skipIf(!isPosix)(
     'cached private compiler inspections respect installation transitions and unrelated Python work',
     async () => {
         await using sandbox = await testdir();
-        cpSync(join(installedModules, 'typescript'), join(sandbox.path, '.gspot/node_modules/typescript'), {
+        await cp(join(installedModules, 'typescript'), join(sandbox.path, '.gspot/node_modules/typescript'), {
             recursive: true,
             dereference: true,
         });
-        mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
-        symlinkSync('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
+        await mkdir(join(sandbox.path, '.gspot/node_modules/.bin'));
+        await symlink('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
         const compiler = toolPin(configurationManifests().values(), 'tsc');
         let pending: string[] = [];
         const search = { root: sandbox.path, inspections: new Map(), getPendingInstallations: () => pending };

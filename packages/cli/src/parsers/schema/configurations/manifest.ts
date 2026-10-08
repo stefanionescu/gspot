@@ -2,13 +2,13 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import { outputSchema } from '#cli/parsers/schema/output.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
-import { namingRuleSchema } from '#cli/parsers/schema/naming.ts';
 import { fileKindSchema } from '#cli/parsers/schema/inventory.ts';
 import { SENTENCE_MIN_CHARS } from '#cli/config/configurations.ts';
+import { namingOverrideSchema } from '#cli/parsers/schema/naming.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
 import { toolSchema, versionFloorSchema } from '#cli/parsers/schema/configurations/tool.ts';
 import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
-import { levelSchema, operatingSystemSchema, settingValidationSchema } from '#cli/parsers/schema/settings.ts';
+import { levelSchema, operatingSystemSchema, settingValueDeclarationSchema } from '#cli/parsers/schema/settings.ts';
 
 const stringList = z.array(z.string()).default([]);
 
@@ -24,23 +24,6 @@ const filesSchema = z.strictObject({
     eslint_plugins: z.boolean().default(false),
     kinds: z.array(fileKindSchema).default(['source']),
 });
-
-const pointerSchema = z
-    .strictObject({
-        path: z.string(),
-        directories: z.array(z.string().min(1)).min(1).optional(),
-        body: z.string().optional(),
-        template: z.string().optional(),
-    })
-    .refine(
-        (pointer) => pointer.template === undefined || pointer.body === undefined,
-        'A template pointer cannot also specify a body.',
-    )
-    .refine(
-        (pointer) =>
-            pointer.directories === undefined || (pointer.body !== undefined && pointer.template === undefined),
-        'Directory pointers require a body without a template.',
-    );
 
 // An all-level syntax selector a fragment adds to the one no-restricted-syntax rule: everywhere, in the named files, or everywhere except the paths a setting allows.
 const selectorSchema = z.strictObject({
@@ -63,6 +46,24 @@ const conditionSchema = z.strictObject({
     tags: z.array(z.string().min(1)).min(1),
     runtimes: z.array(z.enum(JAVASCRIPT_RUNTIMES)).min(1),
 });
+
+const pointerSchema = z
+    .strictObject({
+        path: z.string(),
+        when: conditionSchema.pick({ configuration: true }).optional(),
+        directories: z.array(z.string().min(1)).min(1).optional(),
+        body: z.string().optional(),
+        template: z.string().optional(),
+    })
+    .refine(
+        (pointer) => pointer.template === undefined || pointer.body === undefined,
+        'A template pointer cannot also specify a body.',
+    )
+    .refine(
+        (pointer) =>
+            pointer.directories === undefined || (pointer.body !== undefined && pointer.template === undefined),
+        'Directory pointers require a body without a template.',
+    );
 
 const configSchema = z
     .strictObject({
@@ -122,7 +123,10 @@ const checkFields = z.strictObject({
     fix: commandSchema.optional(),
     exit_codes: findingExitCodesSchema.optional(),
     replaces: z.string().optional(),
-    when: conditionSchema.pick({ configuration: true, setting: true, git: true }).partial().optional(),
+    when: conditionSchema
+        .pick({ configuration: true, setting: true, git: true, dependencies: true })
+        .partial()
+        .optional(),
     limit: z.string().optional(),
     finding_count_pattern: z.string().optional(),
     crash_pattern: z.string().optional(),
@@ -163,27 +167,28 @@ const checkSchema = checkFields.transform(({ tool, ...check }) => {
     };
 });
 
-// A path-scoped naming rule a configuration ships, in the shape gspot.toml writes under [[naming.paths]].
-const manifestNamingRule = namingRuleSchema.extend({ reason: z.string().min(1) });
+// A path-scoped naming rule a configuration ships, in the shape gspot.toml writes under [[naming.overrides]].
+const manifestNamingOverride = namingOverrideSchema.extend({ reason: z.string().min(1) });
 
-const settingSchema = z.strictObject({
-    validation: settingValidationSchema.prefault({}),
-    name: z.string(),
-    type: z.enum(['number', 'string', 'boolean', 'list', 'table']),
-    direction: z.enum(['ceiling', 'floor', 'loosening', 'tightening', 'neutral', 'rule-options']),
-    // Native disabled-rule values representable in TOML; absent for settings that do not enable rules.
-    off_values: z
-        .array(z.union([z.string(), z.number(), z.boolean()]))
-        .min(1)
-        .optional(),
-    default: z.unknown().optional(),
-    default_all: z.unknown().optional(),
-    // An entry whose reason equals this identity field already explains the intended spelling.
-    reason_identity: z.string().min(1).optional(),
-    summary: sentence,
-    languages: z.array(z.string()).optional(),
-    categories: z.array(z.string()).optional(),
-});
+const settingSchema = settingValueDeclarationSchema
+    .extend({
+        name: z.string(),
+        direction: z.enum(['ceiling', 'floor', 'loosening', 'tightening', 'neutral', 'rule-options']),
+        // Native disabled-rule values representable in TOML; absent for settings that do not enable rules.
+        off_values: z
+            .array(z.union([z.string(), z.number(), z.boolean()]))
+            .min(1)
+            .optional(),
+        // An entry whose reason equals this identity field already explains the intended spelling.
+        reason_identity: z.string().min(1).optional(),
+        summary: sentence,
+        languages: z.array(z.string()).optional(),
+        categories: z.array(z.string()).optional(),
+    })
+    .superRefine((setting, context) => {
+        if (setting.items !== undefined && setting.type !== 'list')
+            context.addIssue({ code: 'custom', path: ['items'], message: 'Only a list setting declares items.' });
+    });
 
 // An ignored path: .gspot, then one or more names, and at most a trailing slash; no . or .. segment.
 function isIgnoredPath(path: string): boolean {
@@ -212,6 +217,10 @@ const detectionSchema = z
 // The shape of a configuration manifest.toml after validation.
 export const manifestSchema = z
     .strictObject({
+        compiler_options: z.record(z.string().min(1), z.boolean()).default({}),
+        ignored_folders: z.array(z.string().min(1)).default([]),
+        dockerignore: z.array(z.string().min(1)).default([]),
+        generated: z.array(z.string().min(1)).default([]),
         ignored: z.array(z.string().refine(isIgnoredPath, 'Ignored paths must stay inside .gspot.')).default([]),
         configuration: z.strictObject({
             name: z.string().regex(/^[a-z0-9-]+$/),
@@ -219,7 +228,7 @@ export const manifestSchema = z
             title: z.string(),
             requires: stringList,
             borrowed_checks: z.array(z.string().min(1)).default([]),
-            recommends: stringList,
+            suggests: stringList,
             always_selected: z.boolean().default(false),
             // A configuration whose checks all read git is not proposed in a folder with no .git.
             when: conditionSchema.pick({ git: true }).optional(),
@@ -235,7 +244,7 @@ export const manifestSchema = z
         set: z.record(z.string().min(1), z.unknown()).default({}),
         set_all: z.record(z.string().min(1), z.unknown()).default({}),
         // The naming rules of the framework or platform, merged after the shipped policy and before the repository's own.
-        naming: z.strictObject({ paths: z.array(manifestNamingRule).default([]) }).optional(),
+        naming: z.strictObject({ overrides: z.array(manifestNamingOverride).default([]) }).optional(),
         // Files a dead-code scan starts from, relative to the scope, for the code this configuration knows.
         entry: stringList,
         // The files of the configuration's rules folder that install only when their condition holds, by file name. Every other

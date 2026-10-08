@@ -4,16 +4,15 @@ import { parse } from 'smol-toml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
+import { pythonProjectCommand } from '#cli/tools/python/uv.ts';
 import { readText, readSource } from '#cli/platform/source.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
-import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { deptrySchema } from '#cli/parsers/schema/python/dependencies.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 
@@ -35,7 +34,7 @@ export async function deptry(session: ToolSession, planned: PlannedCheck): Promi
     if (text === undefined) throw new GspotError('skip', 'This scope has no pyproject.toml for deptry to read.');
     const exclusions: string[] = deptrySchema.parse(parse(text)).tool.deptry.extend_exclude;
     return await runCheckCommand(session, planned, {
-        command: [
+        command: pythonProjectCommand(planned.scope, join(session.root, planned.scope.scope.path), [
             'deptry',
             '.',
             '--no-ansi',
@@ -43,27 +42,25 @@ export async function deptry(session: ToolSession, planned: PlannedCheck): Promi
                 '--extend-exclude',
                 pattern,
             ]),
-        ],
+        ]),
     });
 }
 
 /**
- * pyproject.toml owns every dependency: no hand-kept requirements file, and no pip install outside the allowed paths.
+ * pyproject.toml owns every dependency: no hand-kept requirements file, and no unmanaged pip install.
  * @param input the check input
  * @returns the findings
  */
 export function pipInstalls(input: CheckInput): Finding[] {
     if (
-        !['uv.lock', 'poetry.lock', 'pdm.lock'].some(
-            (name) => statSync(join(input.root, input.scope, name), { throwIfNoEntry: false }) !== undefined,
+        !LOCKFILES.some(
+            ({ client, file }) =>
+                ['uv', 'poetry', 'pdm'].includes(client) &&
+                statSync(join(input.root, input.scope, file), { throwIfNoEntry: false }) !== undefined,
         )
     )
         throw new GspotError('skip', 'Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');
-    const allowed = (input.view.options('tools.pip')['installs_allowed'] as PathAllowance[] | undefined) ?? [];
-    const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
-    const files = input.files.filter(
-        (file) => file.kind === 'source' && scopeOf(file.path, input.scopeEntries).path === input.scope,
-    );
+    const files = input.files.filter((file) => file.kind === 'source');
     const requirements = files
         .filter((file) => REQUIREMENTS_FILE.test(file.path))
         .map((file) =>
@@ -75,7 +72,7 @@ export function pipInstalls(input: CheckInput): Finding[] {
             ),
         );
     const installs = files
-        .filter((file) => !isAllowed(file.path) && INSTALL_EXTENSIONS.some((ending) => file.path.endsWith(ending)))
+        .filter((file) => INSTALL_EXTENSIONS.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
             readSource(input.root, file.path, input.reads)
                 .toString('utf8')

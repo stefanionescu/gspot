@@ -18,8 +18,13 @@ import { targetInScope } from '#cli/configurations/declarations.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
 import { everyTable, policyValue } from '#cli/policy/settings/lookup.ts';
-import { reportSchema, allowlistSchema, pythonReportSchema } from '#cli/parsers/schema/licenses.ts';
 
+import {
+    reportSchema,
+    allowlistSchema,
+    pythonReportSchema,
+    generatedAllowlistSchema,
+} from '#cli/parsers/schema/licenses.ts';
 import type {
     LicenseScanner,
     LicensedPackage,
@@ -52,7 +57,8 @@ function readAllowlist(input: CheckInput): LicenseAllowlist {
     const content = files.read(targetInScope(input.scope, target));
     if (content === undefined)
         throw new Error('License configuration is missing. Run gspot apply before checking licenses.');
-    const configuration: LicenseAllowlist = allowlistSchema.parse(JSON.parse(content.bytes.toString('utf8')));
+    const { allowed, exceptions } = generatedAllowlistSchema.parse(JSON.parse(content.bytes.toString('utf8')));
+    const configuration: LicenseAllowlist = { allowed, exceptions };
     const tool = input.view.options('licenses');
     if (
         !isDeepStrictEqual(configuration, {
@@ -156,7 +162,9 @@ export async function licensesPackages(input: CheckInput): Promise<Finding[]> {
     const { inventories, skipped } = await scanLicenses(input);
     const findings = inventories.flatMap(({ manifest, packages, packageKey, configuration }) => {
         const allow = new Set(configuration.allowed);
-        const exceptions = new Map(configuration.exceptions.map((entry) => [packageKey(entry.package), entry]));
+        const exceptions = new Map(
+            Object.entries(configuration.exceptions).map(([name, entry]) => [packageKey(name), entry]),
+        );
         return packages.flatMap(({ name, license }) => {
             const exception = exceptions.get(packageKey(name));
             if (exception === undefined && isAllowed(license, allow)) return [];
@@ -172,18 +180,19 @@ export async function licensesPackages(input: CheckInput): Promise<Finding[]> {
         const exceptions = allowlistSchema.shape.exceptions.parse(authored.value);
         const projects = inventories.filter(({ manifest }) => isInScope(manifest, scope));
         const where = scope === '' ? '' : ` in ${scope}`;
-        return exceptions
-            .filter((exception) => {
+        return Object.keys(exceptions)
+            .filter((name) => {
                 for (const { packages, packageKey } of projects)
-                    if (packages.some(({ name }) => packageKey(name) === packageKey(exception.package))) return false;
+                    if (packages.some(({ name: installedName }) => packageKey(installedName) === packageKey(name)))
+                        return false;
                 return true;
             })
-            .map((exception) =>
+            .map((name) =>
                 findingAt(
                     input,
                     { file: POLICY_FILE, line: 1 },
                     'stale-exception',
-                    `${exception.package} is absent from the installed project dependencies${where}. Remove the exception or correct its exact version.`,
+                    `${name} is absent from the installed project dependencies${where}. Remove the exception or correct its exact version.`,
                 ),
             );
     });

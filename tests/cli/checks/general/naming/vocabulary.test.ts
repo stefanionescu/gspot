@@ -1,7 +1,7 @@
 // Shared vocabulary and exact category declarations preserve neighboring findings through public commands.
 import { join } from 'node:path';
-import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { rename } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -90,7 +90,7 @@ test('all shipped groups apply and exact allowances leave adjacent banned names 
     ]);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
-        policy + '[naming]\nallowed = [{name = "oldValue", reason = "The public interface fixes this exact name."}]\n',
+        policy + '[naming]\nallowed = {oldValue = "The public interface fixes this exact name."}\n',
     );
     const narrowed = await runGspot(sandbox.path, command);
     expect(narrowed.code, narrowed.stdout + narrowed.stderr).toBe(1);
@@ -134,7 +134,7 @@ test('hidden folders preserve filename checks without needing a list of tool dir
     expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: '.archive/bad_name.ts', line: 1, column: 1, rule: 'case' },
     ]);
-    renameSync(join(sandbox.path, '.archive/bad_name.ts'), join(sandbox.path, '.archive/bad-name.ts'));
+    await rename(join(sandbox.path, '.archive/bad_name.ts'), join(sandbox.path, '.archive/bad-name.ts'));
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
@@ -175,7 +175,7 @@ test('an advanced guide receives the ordinary vocabulary rule', async () => {
     expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'ADVANCED.md', line: 1, column: 1, rule: 'banned-term' },
     ]);
-    renameSync(join(sandbox.path, 'ADVANCED.md'), join(sandbox.path, 'guide.md'));
+    await rename(join(sandbox.path, 'ADVANCED.md'), join(sandbox.path, 'guide.md'));
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);

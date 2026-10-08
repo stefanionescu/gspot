@@ -3,10 +3,58 @@ import type { RuntimeSchemaCase } from '#tests/types/cli/docs/schema.ts';
 /** Naming declarations validate identically in runtime and published schemas. */
 export const NAMING_SCHEMA_CASES: RuntimeSchemaCase[] = [
     {
+        name: 'allowed exact names with reasons',
+        input: {
+            configurations: ['naming'],
+            naming: { allowed: { 'external-name': 'The external protocol fixes this exact name.' } },
+        },
+        valid: true,
+    },
+    {
+        name: 'an allowed name list from the former format',
+        input: {
+            configurations: ['naming'],
+            naming: { allowed: [{ name: 'externalName', reason: 'The external protocol fixes this exact name.' }] },
+        },
+        valid: false,
+        diagnostic: 'gspot.toml: naming.allowed:',
+    },
+    {
+        name: 'the former separate file allowance',
+        input: { configurations: ['naming'], naming: { fixed_keys: [{ file: 'source.ts', names: ['externalName'] }] } },
+        valid: false,
+        diagnostic: 'gspot.toml: naming.fixed_keys:',
+    },
+    {
+        name: 'the former naming path list',
+        input: {
+            configurations: ['naming'],
+            naming: { paths: [{ paths: ['source.ts'], names: ['externalName'], skip: true }] },
+        },
+        valid: false,
+        diagnostic: 'gspot.toml: naming.paths:',
+    },
+    {
+        name: 'a path-selected allowed name',
+        input: {
+            configurations: ['naming'],
+            naming: {
+                overrides: [
+                    {
+                        paths: ['source.ts'],
+                        allowed: ['externalName'],
+                        reason: 'The external protocol fixes this exact name.',
+                    },
+                ],
+            },
+        },
+        valid: true,
+    },
+    {
         name: 'reserved identifier categories',
         input: {
             configurations: ['naming'],
-            naming: { reserved: [{ term: 'record', uses: ['properties', 'directories'] }] },
+            naming: { reserved: { record: ['properties', 'directories'] } },
         },
         valid: true,
     },
@@ -14,29 +62,29 @@ export const NAMING_SCHEMA_CASES: RuntimeSchemaCase[] = [
         name: 'free-text reserved use',
         input: {
             configurations: ['naming'],
-            naming: { reserved: [{ term: 'record', uses: ['API client message field'] }] },
+            naming: { reserved: { record: ['API client message field'] } },
         },
         valid: false,
-        diagnostic: 'gspot.toml: naming.reserved.0.uses.0:',
+        diagnostic: 'gspot.toml: naming.reserved.record.0:',
     },
     {
         name: 'an inherited-object reserved use',
-        input: { configurations: ['naming'], naming: { reserved: [{ term: 'record', uses: ['constructor'] }] } },
+        input: { configurations: ['naming'], naming: { reserved: { record: ['constructor'] } } },
         valid: false,
-        diagnostic: 'gspot.toml: naming.reserved.0.uses.0:',
+        diagnostic: 'gspot.toml: naming.reserved.record.0:',
     },
     {
         name: 'an empty reserved use list',
-        input: { configurations: ['naming'], naming: { reserved: [{ term: 'record', uses: [] }] } },
+        input: { configurations: ['naming'], naming: { reserved: { record: [] } } },
         valid: false,
-        diagnostic: 'gspot.toml: naming.reserved.0.uses:',
+        diagnostic: 'gspot.toml: naming.reserved.record:',
     },
     {
         name: 'repeated words in an exact external name',
         input: {
             configurations: ['naming'],
             naming: {
-                paths: [
+                overrides: [
                     {
                         paths: ['source.ts'],
                         names: ['userUser'],
@@ -52,10 +100,10 @@ export const NAMING_SCHEMA_CASES: RuntimeSchemaCase[] = [
         name: 'the obsolete repeated word key',
         input: {
             configurations: ['naming'],
-            naming: { paths: [{ paths: ['source.ts'], allow_duplicate_words: true }] },
+            naming: { overrides: [{ paths: ['source.ts'], allow_duplicate_words: true }] },
         },
         valid: false,
-        diagnostic: 'gspot.toml: `allow_duplicate_words` is not a setting gspot knows under [naming.paths.0].',
+        diagnostic: 'gspot.toml: `allow_duplicate_words` is not a setting gspot knows under [naming.overrides.0].',
     },
     {
         name: 'the obsolete naming rule table',
@@ -67,16 +115,16 @@ export const NAMING_SCHEMA_CASES: RuntimeSchemaCase[] = [
         name: 'the obsolete naming prefix key',
         input: {
             configurations: ['naming'],
-            naming: { paths: [{ paths: ['source.ts'], structural_prefix: '^test_' }] },
+            naming: { overrides: [{ paths: ['source.ts'], structural_prefix: '^test_' }] },
         },
         valid: false,
-        diagnostic: 'gspot.toml: `structural_prefix` is not a setting gspot knows under [naming.paths.0].',
+        diagnostic: 'gspot.toml: `structural_prefix` is not a setting gspot knows under [naming.overrides.0].',
     },
     {
         name: 'the obsolete naming exclusion key',
-        input: { configurations: ['naming'], naming: { paths: [{ paths: ['source.ts'], exclude: true }] } },
+        input: { configurations: ['naming'], naming: { overrides: [{ paths: ['source.ts'], exclude: true }] } },
         valid: false,
-        diagnostic: 'gspot.toml: `exclude` is not a setting gspot knows under [naming.paths.0].',
+        diagnostic: 'gspot.toml: `exclude` is not a setting gspot knows under [naming.overrides.0].',
     },
     {
         name: 'a former exact-name exception list',

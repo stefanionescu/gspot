@@ -36,6 +36,23 @@ export type EslintBlock = {
     rules?: Record<string, unknown>;
 };
 
+/** Native file selectors used by the composed architecture and tRPC policies. */
+export type EslintBoundaryFile = {
+    path?: string | string[];
+    categories?: string | { anyOf?: string[]; noneOf?: string[] };
+    isUnknown?: boolean;
+};
+
+/** Native dependency effects preserve authored architecture policies before the tRPC value restriction. */
+export type EslintBoundaryPolicy = {
+    from?: { file: EslintBoundaryFile | EslintBoundaryFile[] };
+    allow?: { to: { file: EslintBoundaryFile } };
+    disallow?: { to: { file: EslintBoundaryFile }; dependency: { kind: 'value' } };
+};
+
+/** Native dependency selectors classify declaration and per-specifier type imports. */
+export type EslintDependencyNode = { selector: string; kind: 'type' | 'value'; name: string };
+
 /** Repository policy, resolved scopes, and authored Node paths used by native ESLint generation. */
 export type EslintContext = {
     root: string;
@@ -63,7 +80,7 @@ export type EslintConfiguration = {
     scopeBlocks: EslintBlock[];
     ignoredPaths: string[];
     restrictedImports: unknown[];
-    verbatim: { reason: unknown; entries: Record<string, unknown> } | undefined;
+    verbatim: { reason: string | undefined; entries: Record<string, unknown> } | undefined;
 };
 
 /** Rules authored for one repository scope. */
@@ -79,6 +96,7 @@ export type EslintRuntimeBlock = PathExpressions & {
 /** A function selector retains the exact declarations that generate it. */
 export type EslintFileSelector =
     | string
+    | { component: 'vue' | 'svelte' }
     | { runtime: { declarations: EslintRuntimeBlock[]; index: number } }
     | { scope: { scope: string; includes: string[]; excludes: string[]; flags: string } };
 
@@ -97,13 +115,18 @@ export type EslintModule = {
 };
 
 /** Selected component patterns, detected Node files, and authored test or script patterns. */
-export type EslintFileInputs = { components: string[]; tests: string[]; scripts: string[]; nodeFiles: string[] };
+export type EslintFileInputs = {
+    components: { pattern: string; configuration: string }[];
+    tests: string[];
+    scripts: string[];
+    nodeFiles: string[];
+};
 
 /** Shared file patterns for code, type-aware parsing, and test or script intersections. */
 export type EslintFiles = {
     code: string[];
     typescriptSource: string[];
-    typescript: string[];
+    typescript: (EslintFileSelector | EslintFileSelector[])[];
     javascript: string[];
     tests: string[][];
     scripts: string[][];

@@ -1,28 +1,28 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { symlinkSync, readFileSync } from 'node:fs';
+import { symlink, readFile } from 'node:fs/promises';
 import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
 
 test.each([
     {
         name: 'a missing ignore reason',
-        text: 'require_reasons = true\n[[ignore]]\ncheck = "bash/syntax"\n',
+        text: '[[ignore]]\ncheck = "bash/syntax"\n',
         where: 'ignore.0.reason',
         before: '',
         after: 'reason = "The native shell is checked by the project command."\n',
     },
     {
         name: 'a grouped limit reason',
-        text: 'require_reasons = true\n[limits.python]\nfile_lines = {value = 300, reason = "N/A"}\n',
-        where: 'limits.python.file_lines.reason',
+        text: '[limits.python]\nfile_lines = 300\n[reasons]\n"limits.python.file_lines" = "N/A"\n',
+        where: 'reasons.limits.python.file_lines',
         before: 'N/A',
         after: 'The generated route table is reviewed as one file.',
     },
     {
         name: 'a scoped disabled rule',
-        text: '[[scope]]\npath = "api"\n[scope.tools.eslint.rules]\n"no-console" = "off"\n',
-        where: 'scope.0.tools.eslint.rules.no-console',
+        text: '[scope."api"]\n[scope."api".tools.eslint.rules]\n"no-console" = "off"\n',
+        where: 'scope.api.tools.eslint.rules.no-console',
         before: '"off"',
         after: '[]',
     },
@@ -45,32 +45,32 @@ test.each([
     },
     {
         name: 'a quoted key',
-        text: '"require_reasons" = "wrong"\n',
-        where: 'require_reasons',
+        text: '[hooks]\n"enabled" = "wrong"\n',
+        where: 'hooks.enabled',
         correction: ['"wrong"', 'true'],
     },
     {
         name: 'an inline table value',
-        text: 'tools = { jest = { coverage = { lines = "wrong" } } }\n',
-        where: 'tools.jest.coverage.lines',
+        text: 'coverage = { lines = "wrong" }\n',
+        where: 'coverage.lines',
         correction: ['"wrong"', '90'],
     },
     {
         name: 'a repeated scope table',
-        text: '[[scope]]\npath = "api"\n[[scope]]\npath = "web"\n[scope.tools.jest.coverage]\nlines = "wrong"\n',
-        where: 'scope.1.tools.jest.coverage.lines',
+        text: '[scope."api"]\n[scope."web"]\n[scope."web".coverage]\nlines = "wrong"\n',
+        where: 'scope.web.coverage.lines',
         correction: ['"wrong"', '90'],
     },
     {
         name: 'an unknown nested key',
-        text: '[[scope]]\npath = "api"\nkitz = []\n',
-        where: '`kitz` is not a setting gspot knows under [scope.0]',
+        text: '[scope."api"]\nkitz = []\n',
+        where: '`kitz` is not a setting gspot knows under [scope.api]',
         correction: ['kitz', 'configurations'],
     },
     {
         name: 'a nested array of tables under a second scope',
-        text: '[[scope]]\npath = "api"\n[[scope.tools.eslint.overrides]]\npaths = ["src"]\nrules = {eqeqeq = ["always"]}\n[[scope]]\npath = "web"\n[[scope.tools.eslint.overrides]]\npaths = []\nrules = {eqeqeq = ["always"]}\n',
-        where: 'scope.1.tools.eslint.overrides.0.paths',
+        text: '[scope."api"]\n[[scope."api".tools.eslint.overrides]]\npaths = ["src"]\nrules = {eqeqeq = ["always"]}\n[scope."web"]\n[[scope."web".tools.eslint.overrides]]\npaths = []\nrules = {eqeqeq = ["always"]}\n',
+        where: 'scope.web.tools.eslint.overrides.0.paths',
         correction: ['paths = []', 'paths = ["src"]'],
     },
 ])(
@@ -102,11 +102,11 @@ test.each(['linked', 'linked/nested'])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'project/.keep': '', 'outside/nested/sentinel': 'unchanged' });
         const root = join(sandbox.path, 'project');
-        symlinkSync('../outside', join(root, 'linked'));
-        const found = policyProblems(`${buildPolicy(['bash'])}[[scope]]\npath = "${path}"\n`, root);
+        await symlink('../outside', join(root, 'linked'));
+        const found = policyProblems(`${buildPolicy(['bash'])}[scope."${path}"]\n`, root);
         expect(found).toHaveLength(1);
         expect(found[0]).toContain('Unsafe lifecycle');
-        expect(readFileSync(join(sandbox.path, 'outside/nested/sentinel'), 'utf8')).toBe('unchanged');
+        expect(await readFile(join(sandbox.path, 'outside/nested/sentinel'), 'utf8')).toBe('unchanged');
     },
 );
 

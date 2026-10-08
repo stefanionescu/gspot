@@ -6,55 +6,56 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
+import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { buildFolder } from '#cli/checks/language/swift/cache.ts';
+import { useCacheDirectory } from '#tests/harness/environment.ts';
+import { SWIFT_PACKAGE } from '#tests/config/samples/swift/source.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { swiftBuild, swiftPeriphery } from '#cli/checks/language/swift/build.ts';
-import { rmSync, statSync, mkdirSync, existsSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('Swift build side effects stay in the source copy and do not become later inputs', async () => {
     await using sandbox = await testdir();
     using _executables = mockPinnedExecutables(
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
+    await using _cache = await useCacheDirectory();
     await createFileTree(sandbox.path, {
+        'Package.swift': SWIFT_PACKAGE,
         'gspot.toml': buildPolicy(['swift']),
         'Sources/Value.swift': 'let value = 1\n',
     });
     const original = join(sandbox.path, 'Sources/Value.swift');
     const initial = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const next = buildCheckInput(await openSession(sandbox.path), 'swift/build');
-    const mode = statSync(original).mode;
-    let scratch = '';
-    const run = spyOn(spawn, 'run').mockImplementation((_argv, options) => {
+    const { mode } = await stat(original);
+    const sources: string[] = [];
+    const artifacts: boolean[][] = [];
+    using run = spyOn(spawn, 'run').mockImplementation(async (_argv, options) => {
         const cwd = options.cwd;
-        expect(cwd).not.toBe(sandbox.path);
-        expect(readFileSync(join(cwd, 'Sources/Value.swift'), 'utf8')).toBe('let value = 1\n');
-        expect(existsSync(join(cwd, 'Generated'))).toBe(false);
-        expect(existsSync(join(cwd, 'Package.resolved'))).toBe(false);
-        mkdirSync(join(cwd, 'Generated'));
-        symlinkSync('Generated', join(cwd, 'generated-link'), 'dir');
-        writeFileSync(join(cwd, 'Generated/side-effect'), 'generated');
-        writeFileSync(join(cwd, 'Package.resolved'), 'generated resolution');
-        writeFileSync(join(cwd, 'Sources/Value.swift'), 'modified by build');
-        scratch = cwd;
-        return Promise.resolve({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
+        sources.push(await readFile(join(cwd, 'Sources/Value.swift'), 'utf8'));
+        artifacts.push([await pathExists(join(cwd, 'Generated')), await pathExists(join(cwd, 'Package.resolved'))]);
+        await mkdir(join(cwd, 'Generated'));
+        await symlink('Generated', join(cwd, 'generated-link'), 'dir');
+        await writeFile(join(cwd, 'Generated/side-effect'), 'generated');
+        await writeFile(join(cwd, 'Package.resolved'), 'generated resolution');
+        await writeFile(join(cwd, 'Sources/Value.swift'), 'modified by build');
+        return { code: 0, stdout: '', stderr: '', missing: false, duration: 1 };
     });
-    try {
-        expect(await swiftBuild(initial)).toStrictEqual([]);
-        expect(await swiftBuild(next)).toStrictEqual([]);
-        expect(scratch).not.toBe('');
-        expect(readFileSync(original, 'utf8')).toBe('let value = 1\n');
-        expect(statSync(original).mode).toBe(mode);
-        expect(existsSync(join(sandbox.path, 'Package.resolved'))).toBe(false);
-        expect(existsSync(join(sandbox.path, 'Generated'))).toBe(false);
-    } finally {
-        run.mockRestore();
-    }
+    expect(await swiftBuild(initial)).toStrictEqual([]);
+    expect(await swiftBuild(next)).toStrictEqual([]);
+    expect(sources).toStrictEqual(['let value = 1\n', 'let value = 1\n']);
+    expect(artifacts).toStrictEqual([
+        [false, false],
+        [false, false],
+    ]);
+    for (const [, options] of run.mock.calls) expect(options.cwd).not.toBe(sandbox.path);
+    expect(await readFile(original, 'utf8')).toBe('let value = 1\n');
+    const current = await stat(original);
+    expect(current.mode).toBe(mode);
+    expect(await pathExists(join(sandbox.path, 'Package.resolved'))).toBe(false);
+    expect(await pathExists(join(sandbox.path, 'Generated'))).toBe(false);
 });
 
 test('Periphery build side effects stay in its source copy and findings name original source paths', async () => {
@@ -62,35 +63,31 @@ test('Periphery build side effects stay in its source copy and findings name ori
     using _executables = mockPinnedExecutables(
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
+    await using _cache = await useCacheDirectory();
     await createFileTree(sandbox.path, {
+        'Package.swift': SWIFT_PACKAGE,
         'gspot.toml': buildPolicy(['swift']),
         'Main.swift': 'let unused = 1\n',
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'swift/periphery');
-    const run = spyOn(spawn, 'run').mockImplementation((_argv, options) => {
+    const sources: string[] = [];
+    using run = spyOn(spawn, 'run').mockImplementation(async (_argv, options) => {
         const { cwd } = options;
-        expect(cwd).not.toBe(sandbox.path);
-        expect(readFileSync(join(cwd, 'Main.swift'), 'utf8')).toBe('let unused = 1\n');
-        writeFileSync(join(cwd, 'Package.resolved'), 'generated by the build');
-        return Promise.resolve({
+        sources.push(await readFile(join(cwd, 'Main.swift'), 'utf8'));
+        await writeFile(join(cwd, 'Package.resolved'), 'generated by the build');
+        return {
             code: 1,
             stdout: `${cwd}/Main.swift:1:5: warning: Property unused is unused`,
             stderr: '',
             missing: false,
             duration: 1,
-        });
+        };
     });
-    try {
-        expect(await swiftPeriphery(input)).toMatchObject([{ file: 'Main.swift', line: 1, column: 5, rule: 'unused' }]);
-        expect(existsSync(join(sandbox.path, 'Package.resolved'))).toBe(false);
-        expect(readFileSync(join(sandbox.path, 'Main.swift'), 'utf8')).toBe('let unused = 1\n');
-    } finally {
-        run.mockRestore();
-    }
+    expect(await swiftPeriphery(input)).toMatchObject([{ file: 'Main.swift', line: 1, column: 5, rule: 'unused' }]);
+    expect(sources).toStrictEqual(['let unused = 1\n']);
+    expect(run.mock.calls[0]?.[1].cwd).not.toBe(sandbox.path);
+    expect(await pathExists(join(sandbox.path, 'Package.resolved'))).toBe(false);
+    expect(await readFile(join(sandbox.path, 'Main.swift'), 'utf8')).toBe('let unused = 1\n');
 });
 
 test('concurrent Swift compilation and Periphery retain separate source and artifact directories', async () => {
@@ -98,11 +95,8 @@ test('concurrent Swift compilation and Periphery retain separate source and arti
     using _executables = mockPinnedExecutables(
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
+    await using _cache = await useCacheDirectory();
+    await createFileTree(sandbox.path, { 'Package.swift': SWIFT_PACKAGE, 'gspot.toml': buildPolicy(['swift']) });
     const compile = buildCheckInput(await openSession(sandbox.path), 'swift/build');
     const periphery = buildCheckInput(await openSession(sandbox.path), 'swift/periphery');
     const started = Promise.withResolvers<undefined>();
@@ -117,6 +111,14 @@ test('concurrent Swift compilation and Periphery retain separate source and arti
     try {
         expect(await Promise.all([swiftBuild(compile), swiftPeriphery(periphery)])).toStrictEqual([[], []]);
         expect(new Set(directories).size).toBe(2);
+        const compilePlan = buildPlan(compile);
+        const peripheryPlan = buildPlan(periphery, 'periphery');
+        expect(compilePlan.folder).not.toBe(peripheryPlan.folder);
+        const compileScratch = compilePlan.argv[compilePlan.argv.indexOf('--scratch-path') + 1];
+        const peripheryScratch = peripheryPlan.argv[peripheryPlan.argv.indexOf('--scratch-path') + 1];
+        expect(compileScratch).toBeDefined();
+        expect(peripheryScratch).toBeDefined();
+        expect(compileScratch).not.toBe(peripheryScratch);
     } finally {
         started.resolve();
         run.mockRestore();
@@ -130,36 +132,33 @@ test.each(['../External.xcodeproj', 'C:External.xcodeproj'])(
         using _executables = mockPinnedExecutables(
             [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
         );
-        using resources = new DisposableStack();
-        resources.defer(() => {
-            rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-        });
+        await using _cache = await useCacheDirectory();
         await createFileTree(sandbox.path, {
+            'Package.swift': SWIFT_PACKAGE,
             'gspot.toml': buildPolicy(['swift', 'xcode'], {
-                tables: `[tools.xcode]\nproject = ${JSON.stringify(project)}\nscheme = "Example"\n`,
+                tables: `[swift]\nxcode_project = ${JSON.stringify(project)}\nxcode_scheme = "Example"\n`,
             }),
         });
-        const input = buildCheckInput(await openSession(sandbox.path), 'swift/build');
-        writeFileSync(
+        using run = spyOn(spawn, 'run');
+        const refused = await rejection(openSession(sandbox.path));
+        expect(refused).toContain(
+            'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
+        );
+        expect(run).not.toHaveBeenCalled();
+        await writeFile(
             join(sandbox.path, 'gspot.toml'),
             buildPolicy(['swift', 'xcode'], {
-                tables: '[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\n',
+                tables: '[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n',
             }),
         );
         const corrected = buildCheckInput(await openSession(sandbox.path), 'swift/build');
-        const run = spyOn(spawn, 'run').mockResolvedValue({
+        run.mockResolvedValue({
             code: 0,
             stdout: '',
             stderr: '',
             missing: false,
             duration: 1,
         });
-        try {
-            expect(await rejection(swiftBuild(input))).toContain('Unsafe lifecycle path');
-            expect(run).not.toHaveBeenCalled();
-            expect(await swiftBuild(corrected)).toStrictEqual([]);
-        } finally {
-            run.mockRestore();
-        }
+        expect(await swiftBuild(corrected)).toStrictEqual([]);
     },
 );

@@ -13,7 +13,7 @@ describe('the managed block', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([]) });
         const session = await openSession(sandbox.path);
-        const { agentRules: rules, level } = session.policyFiles.policy;
+        const { agent_rules: rules, level } = session.policyFiles.policy;
         const selected = everyManifest(session.scopes);
         const block = managedBlock({
             rules,
@@ -34,7 +34,7 @@ describe('the managed block', () => {
             }),
         });
         const session = await openSession(sandbox.path);
-        const { agentRules: rules, level } = session.policyFiles.policy;
+        const { agent_rules: rules, level } = session.policyFiles.policy;
         const selected = everyManifest(session.scopes);
         const block = managedBlock({
             rules,

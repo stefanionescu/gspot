@@ -1,54 +1,72 @@
 // Saves a reusable policy template.
-import { resolve, relative } from 'node:path';
 import { readPolicy } from '#cli/policy/read.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
 import { printResult } from '#cli/terminal/messages.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
+import { canonicalPath } from '#cli/platform/root/reads.ts';
 import type { Program } from '#cli/types/commands/program.ts';
+import { readIndexEntries } from '#cli/repository/tracked.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { assertMutationTarget } from '#cli/platform/root/rules.ts';
+import { dirname, resolve, basename, relative } from 'node:path';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { parseTemplate, exportTemplate } from '#cli/policy/templates.ts';
+import type { ExportJson, ExportOptions } from '#cli/types/commands/export.ts';
 
 /**
  * Writes a template from the policy of this repository.
- * @param cwd the directory the command runs in
- * @param file the file to write, relative to cwd
- * @returns the command result, with what was left out
+ * @param options the export destination and preview choice.
+ * @param options.cwd the directory the command runs in
+ * @param options.file the destination path, relative to cwd
+ * @param options.isDryRun whether to preview without writing
+ * @returns the command result, with what was left out.
  */
-export function exportCommand(cwd: string, file: string): CommandResult {
+export async function exportCommand(options: ExportOptions): Promise<CommandResult<ExportJson>> {
+    const { cwd, file, isDryRun } = options;
     const root = findRoot(cwd);
     const policyFile = readPolicy(root);
     const saved = exportTemplate(policyFile.text, file);
-    const path = toPosix(relative(root, resolve(cwd, file)));
-    assertMutationTarget(path);
-    // Refuse a template that cannot parse back before writing its destination.
-    parseTemplate(saved.text, file);
+    const template = parseTemplate(saved.text, file);
+    const parent = canonicalPath(dirname(resolve(cwd, file)));
+    using destination = openRoot(parent);
+    const name = basename(file);
+    const path = toPosix(relative(root, resolve(parent, name)));
     using log = openOwnership(root);
-    if (log.files.read(POLICY_FILE)?.bytes.toString('utf8') !== policyFile.text)
-        throw new GspotError('policy', ['The policy changed while the template was prepared. Retry the export.']);
-    const owned = log.state.files.find((entry) => entry.path === path);
-    if (owned !== undefined && owned.kind !== 'export')
+    if (path === POLICY_FILE || log.state.files.some((entry) => entry.path === path))
         throw new GspotError('policy', [`Template export cannot replace managed ${path}. Choose another destination.`]);
-    const onDisk = log.files.read(path);
-    const plan = proposeReplacement(log, {
-        path,
-        next: { bytes: Buffer.from(saved.text), mode: onDisk?.mode ?? OWNER_WRITABLE_FILE },
-        kind: 'export',
+    const index = await readIndexEntries(root);
+    const tracked = new Set(index.map((entry) => entry.path));
+    const checks = template.tables.check === undefined ? [] : Object.entries(template.tables.check);
+    const warnings = checks.flatMap(([check, entry]) => {
+        const [executable] = entry.command;
+        return executable !== undefined && (executable.startsWith('./') || tracked.has(executable))
+            ? [`check.${JSON.stringify(check)} uses ${executable}; add that file in the destination repository.`]
+            : [];
     });
-    applyPlans(log, [plan]);
-    const lines = [`wrote ${file}`, ...saved.leftOut.map((entry) => `left out  ${entry}`)];
-    return { text: `${lines.join('\n')}\n`, json: { file, leftOut: saved.leftOut }, exitCode: 0 };
+    const previous = destination.read(name);
+    const json: ExportJson = { file, leftOut: saved.leftOut, warnings, text: saved.text };
+    let preview = saved.text;
+    let action = 'would write';
+    if (!isDryRun) {
+        destination.write(
+            name,
+            { bytes: Buffer.from(saved.text), mode: previous === undefined ? OWNER_WRITABLE_FILE : previous.mode },
+            previous,
+        );
+        delete json.text;
+        preview = '';
+        action = 'wrote';
+    }
+    const lines = [`${action} ${file}`, ...saved.leftOut.map((entry) => `left out  ${entry}`), ...warnings];
+    return { text: `${lines.join('\n')}\n${preview}`, json, exitCode: 0 };
 }
 
 /**
  * Registers export.
- * @param program the commander program
+ * @param program the commander program.
  */
 export function registerExport(program: Program): void {
     program
@@ -56,15 +74,16 @@ export function registerExport(program: Program): void {
         .argument('<file>', 'Destination path for the reusable template')
         .summary('Export a template')
         .description(
-            'Write the policy to a template other repositories can start from. Settings that name a path stay out, and export lists them. gspot.toml does not change.',
+            'Write the policy to a template other repositories can start from. Every authored entry is copied except scopes, which export lists. Add any local command files in the destination repository. gspot.toml does not change.',
         )
         .addHelpText(
             'after',
             '\nExit codes:\n- 0: the template was written.\n- 2: the input was invalid, or export could not finish.\n\nExample:\ngspot export team.gspot.template.toml',
         )
-        .action((file, _flags, command) => {
+        .option('--dry-run', 'Print the template without writing its destination')
+        .action(async (file, flags, command) => {
             const global = command.optsWithGlobals();
             const cwd = resolve(global.C ?? process.cwd());
-            printResult(exportCommand(cwd, file));
+            printResult(await exportCommand({ cwd, file, isDryRun: flags.dryRun === true }));
         });
 }

@@ -2,6 +2,8 @@
 import { test, spyOn, expect } from 'bun:test';
 import { getTemplate } from '#cli/policy/templates.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { TEMPLATE } from '#tests/config/cli/policy/templates-sources.ts';
 import { RAW_HOST, TEMPLATE_FILE } from '#cli/config/policy/templates.ts';
 
@@ -27,4 +29,20 @@ test('a template address over plain http is refused before any request', async (
     // eslint-disable-next-line unicorn/prefer-https -- reason: The test hands the reader the plain http address it refuses.
     expect(await rejection(getTemplate('http://example.com/house.template.toml', '.'))).toContain('https, not http');
     expect(fetched).not.toHaveBeenCalled();
+});
+
+test('private GitHub templates receive environment credentials without sending them to other hosts', async () => {
+    const previous = environmentVariables()['GITHUB_TOKEN'];
+    using fetched = spyOn(globalThis, 'fetch')
+        .mockResolvedValueOnce(new Response(TEMPLATE))
+        .mockResolvedValueOnce(new Response(TEMPLATE));
+    setEnvironmentVariable('GITHUB_TOKEN', 'fixture-github-token');
+    try {
+        await getTemplate('github:acme/policies', '.');
+        await getTemplate('https://example.com/house.template.toml', '.');
+        expect(fetched.mock.calls[0]?.[1]?.headers).toStrictEqual({ Authorization: 'Bearer fixture-github-token' });
+        expect(fetched.mock.calls[1]?.[1]?.headers).toStrictEqual({});
+    } finally {
+        setEnvironmentVariable('GITHUB_TOKEN', previous);
+    }
 });

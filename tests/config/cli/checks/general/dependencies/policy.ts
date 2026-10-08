@@ -23,7 +23,6 @@ export const FOREIGN_PNPM =
 export const FOREIGN_YARN =
     'a@1.0.0:\n  version "1.0.0"\n  resolved "https://registry.example.test/a/-/a-1.0.0.tgz#0a1b"\n';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['dependencies'],
     modules: false,
@@ -31,7 +30,6 @@ export const REPOSITORY: RepositoryScenario = {
     files: { 'package.json': CLEAN },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'dependencies/bun-release-age',

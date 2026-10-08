@@ -61,7 +61,7 @@ test('pin validation rejects malformed registry metadata before compatibility ch
 
 test('npm packing metadata accepts local archives and rejects missing or escaping output names', () => {
     expect(npmPackSchema.parse([{ filename: 'package-1.0.0.tgz' }])[0].filename).toBe('package-1.0.0.tgz');
-    expect(() => npmPackSchema.parse([])).toThrow();
-    expect(() => npmPackSchema.parse([{ filename: '../outside.tgz' }])).toThrow();
-    expect(() => npmPackSchema.parse([{ filename: String.raw`folder\outside.tgz` }])).toThrow();
+    expect(() => npmPackSchema.parse([])).toThrow('Invalid input: expected object, received undefined');
+    for (const filename of ['../outside.tgz', String.raw`folder\outside.tgz`])
+        expect(() => npmPackSchema.parse([{ filename }])).toThrow('Invalid string: must match pattern');
 });

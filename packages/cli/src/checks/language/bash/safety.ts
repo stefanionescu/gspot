@@ -10,7 +10,7 @@ import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config/checks/langua
  * @returns the findings
  */
 export const safety: BuiltInCheck = async (input) => {
-    const owners = input.view.settings['bash.safety_owners'] as string[];
+    const owners = input.view.options('bash').safety_owners;
     const isOwner = pathMatcher(owners);
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>

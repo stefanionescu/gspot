@@ -24,7 +24,6 @@ export const CONTROLLER =
 export const NESTJS_MODULE =
     "// The greeting feature.\nimport { Module } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\nimport { GreetingController } from './greeting.controller.js';\n\n/** Wires the greeting feature together. */\n@Module({ controllers: [GreetingController], providers: [GreetingService] })\nexport class GreetingModule {}\n";
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'nestjs'],
     dependencies: NESTJS_DEPENDENCIES,
@@ -36,14 +35,10 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-export const MISMATCHED =
-    "// The routes that greet.\nimport { Get, Param, Controller } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\n\n/** Answers greeting requests. */\n@Controller('greetings')\nexport class GreetingController {\n    /**\n     * Takes the service that builds greetings.\n     * @param greetings the service\n     */\n    constructor(private readonly greetings: GreetingService) {}\n\n    /**\n     * Greets the person the route names.\n     * @param name the person\n     * @returns the greeting\n     */\n    @Get(':id')\n    greet(@Param('name') name: string): string {\n        return this.greetings.greet(name);\n    }\n}\n";
-
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'javascript/eslint',
-        files: { 'src/greeting.controller.ts': MISMATCHED },
+        files: {},
         expected: {
             file: 'src/greeting.controller.ts',
             rule: '@darraghor/nestjs-typed/param-decorator-name-matches-route-param',

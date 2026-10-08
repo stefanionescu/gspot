@@ -9,7 +9,6 @@
 /.markdownlint-cli2.mjs text eol=lf
 /.mise/conf.d/gspot-tools.toml text eol=lf
 /.prettierignore text eol=lf
-/.prettierrc.json text eol=lf
 /.semgrepignore text eol=lf
 /docs/.markdownlint-cli2.mjs text eol=lf
 /docs/.semgrepignore text eol=lf
@@ -19,6 +18,7 @@
 /packages/cli/.semgrepignore text eol=lf
 /packages/eslint-plugin/.markdownlint-cli2.mjs text eol=lf
 /packages/eslint-plugin/.semgrepignore text eol=lf
+/prettier.config.mjs text eol=lf
 /tests/.semgrepignore text eol=lf
 /tests/pyrightconfig.json text eol=lf
 /tests/ruff.toml text eol=lf

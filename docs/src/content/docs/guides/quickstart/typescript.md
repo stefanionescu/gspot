@@ -136,7 +136,7 @@ commit hook rejects the forwarding helper. Read [Requirements](/guides/requireme
 
 ## Commit what an agent wrote
 
-1. Add the two files an agent wrote: a helper in `src/utils.ts`, and receipt lines that call it.
+1. Add the two files an agent wrote: a forwarding module and receipt lines that call it.
 
     ```typescript title="src/utils.ts"
     import { calculateTotal } from './orders.js';
@@ -198,7 +198,7 @@ commit hook rejects the forwarding helper. Read [Requirements](/guides/requireme
 
 1. Delete the helper, and call `calculateTotal` directly:
 
-    ```bash
+    ```bash title="Delete the forwarding module"
     rm src/utils.ts
     ```
 

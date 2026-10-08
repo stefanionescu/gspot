@@ -1,4 +1,4 @@
-import { COMMITLINT_PACKAGE } from '#tests/config/tools/generation/takeover.ts';
+import { COMMITLINT_PACKAGE } from '#tests/config/samples/commitlint.ts';
 
 /** Repository-wide commit policy includes nested authored packages and leaves absent fields alone. */
 export const COMMITLINT_PROJECT = {
@@ -18,5 +18,4 @@ export const INACTIVE_CONFIGURATIONS = {
 };
 
 /** Scoped projects share the repository-wide commit policy. */
-export const COMMITLINT_SCOPES =
-    '[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[agent_rules]\nenabled = false\n';
+export const COMMITLINT_SCOPES = '[scope."app"]\n[scope."app/child"]\n[agent_rules]\nenabled = false\n';

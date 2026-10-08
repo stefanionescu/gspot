@@ -15,7 +15,7 @@ When agent rules are enabled, initialization and apply move authored text from `
 
 Apart from this move, gspot changes only its managed blocks in instruction files. Authored content outside the blocks stays in place. To add an additional supported instruction file:
 
-```shell
+```shell title="Additional instruction file"
 gspot set agent_rules.instruction_files .github/copilot-instructions.md
 ```
 

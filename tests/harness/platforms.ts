@@ -3,9 +3,10 @@ import { join, dirname } from 'node:path';
 import { missingBuild } from '#cli/planning/skips.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { hostPlatform } from '#cli/platform/environment.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
+import { mkdir, readdir, symlink, realpath } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { testModules, installedModules } from '#tests/harness/environment.ts';
-import { mkdirSync, existsSync, readdirSync, symlinkSync, realpathSync } from 'node:fs';
 
 /**
  * Whether the pinned tool has a build for this machine.
@@ -36,21 +37,44 @@ export function getKeptMode(mode: number): number {
  * beside the packages it resolves, and so does the .bin folder of the test packages.
  * @param target the node_modules directory to create
  */
-export function linkInstalledModules(target: string): void {
+export async function linkInstalledModules(target: string): Promise<void> {
     const kind = process.platform === 'win32' ? 'junction' : 'dir';
-    const packages = [testModules, installedModules].flatMap((store) =>
-        readdirSync(store)
-            .filter((entry) => !entry.startsWith('.'))
-            .flatMap((entry) =>
-                entry.startsWith('@') ? readdirSync(join(store, entry)).map((child) => join(entry, child)) : [entry],
-            )
-            .map((name) => [store, name] as const),
+    const packages = await Promise.all(
+        [testModules, installedModules].map(async (store) => {
+            const entries = await readdir(store);
+            const names = await Promise.all(
+                entries
+                    .filter((entry) => !entry.startsWith('.'))
+                    .map(async (entry) => {
+                        if (!entry.startsWith('@')) return [entry];
+                        const children = await readdir(join(store, entry));
+                        return children.map((child) => join(entry, child));
+                    }),
+            );
+            return names.flat().map((name) => [store, name] as const);
+        }),
     );
-    const links = [[installedModules, '.bun'] as const, [testModules, '.bin'] as const, ...packages];
+    const links = [[installedModules, '.bun'] as const, [testModules, '.bin'] as const, ...packages.flat()];
     for (const [store, name] of links) {
         const destination = join(target, name);
-        if (existsSync(destination)) continue;
-        mkdirSync(dirname(destination), { recursive: true });
-        symlinkSync(realpathSync(join(store, name)), destination, kind);
+        if (await pathExists(destination)) continue;
+        await mkdir(dirname(destination), { recursive: true });
+        const original = await realpath(join(store, name));
+        await symlink(original, destination, kind);
     }
+}
+
+/**
+ * Restore the complete platform descriptor after a simulated host test.
+ * @param name the host platform to simulate
+ * @returns the restoration resource
+ */
+export function usePlatform(name: NodeJS.Platform): Disposable {
+    const descriptor = Object.getOwnPropertyDescriptor(process, 'platform')!;
+    Object.defineProperty(process, 'platform', { value: name });
+    return {
+        [Symbol.dispose]() {
+            Object.defineProperty(process, 'platform', descriptor);
+        },
+    };
 }

@@ -9,7 +9,7 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { reportSchema, coverageSchema, thresholdsSchema } from '#cli/parsers/schema/jest.ts';
+import { reportSchema, coverageSchema } from '#cli/parsers/schema/jest.ts';
 import type { Suite, JestRun, TestReport, JestSettings } from '#cli/types/checks/tool/jest.ts';
 
 import {
@@ -48,7 +48,7 @@ function coverageFindings(run: JestRun, settings: JestSettings): Finding[] {
         throw new Error('Jest produced no coverage summary. Enable coverage for the selected project.');
     const covered = coverageSchema.parse(JSON.parse(readFileSync(path, 'utf8'))).total;
     return COVERAGE_DIMENSIONS.flatMap((name) => {
-        const floor = settings.coverage[name];
+        const floor = settings[name];
         if (covered[name].pct >= floor) return [];
         return [
             findingAt(
@@ -64,7 +64,7 @@ function coverageFindings(run: JestRun, settings: JestSettings): Finding[] {
 // Runs Jest over the copied sources and reads its reports into findings.
 async function runJest(run: JestRun, settings: JestSettings): Promise<Finding[]> {
     const { input, source, work } = run;
-    const thresholds = Object.fromEntries(COVERAGE_DIMENSIONS.map((name) => [name, settings.coverage[name]]));
+    const thresholds = Object.fromEntries(COVERAGE_DIMENSIONS.map((name) => [name, settings[name]]));
     const command = [
         'jest',
         '--coverage',
@@ -120,7 +120,7 @@ async function runJest(run: JestRun, settings: JestSettings): Promise<Finding[]>
  * @returns the findings
  */
 export async function jestCoverage(input: CheckInput): Promise<Finding[]> {
-    const settings = thresholdsSchema.parse(input.view.options('tools.jest'));
+    const settings = input.view.options('coverage');
     using work = scratchFolder('gspot-jest-');
     using source = await copyIntoScratch(input);
     return await runJest({ input, source: source.path, work: work.path }, settings);

@@ -3,13 +3,13 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
-import { COMMITLINT_PACKAGE } from '#tests/config/tools/generation/takeover.ts';
+import { COMMITLINT_PACKAGE } from '#tests/config/samples/commitlint.ts';
 import { COMMITLINT_SCOPES, COMMITLINT_PROJECT } from '#tests/config/cli/generation/commitlint.ts';
 
 test('repository commit fields preserve unrelated package content and restore it at recommended', async () => {
@@ -40,12 +40,12 @@ test('repository commit fields preserve unrelated package content and restore it
         writeOutputs(session, log, undefined, generated);
         expect(log.entryFor('app/package.json')?.configuration?.format).toBe('json');
     }
-    expect(readFileSync(join(sandbox.path, 'plain/package.json'), 'utf8')).toBe('{"private":true}\n');
+    expect(await readFile(join(sandbox.path, 'plain/package.json'), 'utf8')).toBe('{"private":true}\n');
     session = await openSession(sandbox.path);
     expect(getSuggestions(session).unowned.filter((row) => row.path.endsWith('package.json'))).toStrictEqual([]);
-    const installed = readFileSync(join(sandbox.path, 'app/package.json'), 'utf8');
-    writeFileSync(join(sandbox.path, 'app/package.json'), installed.replace('native-project', 'edited-project'));
-    writeFileSync(
+    const installed = await readFile(join(sandbox.path, 'app/package.json'), 'utf8');
+    await writeFile(join(sandbox.path, 'app/package.json'), installed.replace('native-project', 'edited-project'));
+    await writeFile(
         join(sandbox.path, 'gspot.toml'),
         buildPolicy([], { level: 'recommended', tables: '[agent_rules]\nenabled = false\n' }),
     );
@@ -57,8 +57,8 @@ test('repository commit fields preserve unrelated package content and restore it
         expect(log.entryFor('package.json')).toBeUndefined();
         expect(log.entryFor('app/package.json')).toBeUndefined();
     }
-    expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe(COMMITLINT_PACKAGE);
-    expect(readFileSync(join(sandbox.path, 'app/package.json'), 'utf8')).toBe(
+    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(COMMITLINT_PACKAGE);
+    expect(await readFile(join(sandbox.path, 'app/package.json'), 'utf8')).toBe(
         COMMITLINT_PACKAGE.replace('native-project', 'edited-project'),
     );
     expect(
@@ -83,5 +83,5 @@ test('a folder without Git keeps authored commit policy and reports its actual p
     expect(getSuggestions(session).unowned.filter((row) => row.note.includes('commitlint'))).toStrictEqual([
         { path: 'package.json', note: 'commitlint requires a Git repository', command: 'git init' },
     ]);
-    expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe(COMMITLINT_PACKAGE);
+    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(COMMITLINT_PACKAGE);
 });

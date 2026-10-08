@@ -1,13 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
+import { rm, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { checkInput } from '#cli/execution/built-in.ts';
-import { rmSync, existsSync, readFileSync } from 'node:fs';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { lockfileFresh } from '#cli/checks/general/dependencies/lockfile/fresh.ts';
 
 test.each([
@@ -42,8 +43,8 @@ test.each([
         },
     );
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    rmSync(join(directory.path, 'node_modules'), { recursive: true, force: true });
-    const lockfile = readFileSync(join(directory.path, lockfileName));
+    await rm(join(directory.path, 'node_modules'), { recursive: true, force: true });
+    const lockfile = await readFile(join(directory.path, lockfileName));
     const changed = JSON.stringify({ private: true, dependencies: { other: 'file:./other' } });
     await Bun.write(join(directory.path, 'package.json'), changed);
     const session = await openSession(directory.path);
@@ -54,10 +55,10 @@ test.each([
     });
     const input = checkInput(session, planned!);
     expect(await lockfileFresh(input)).toContainEqual(containing({ rule: 'stale' }));
-    expect(readFileSync(join(directory.path, lockfileName))).toStrictEqual(lockfile);
-    expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(changed);
+    expect(await readFile(join(directory.path, lockfileName))).toStrictEqual(lockfile);
+    expect(await readFile(join(directory.path, 'package.json'), 'utf8')).toBe(changed);
     await Bun.write(join(directory.path, 'package.json'), manifest);
     expect(await lockfileFresh(input)).toStrictEqual([]);
-    expect(readFileSync(join(directory.path, lockfileName))).toStrictEqual(lockfile);
-    expect(existsSync(join(directory.path, 'node_modules'))).toBe(false);
+    expect(await readFile(join(directory.path, lockfileName))).toStrictEqual(lockfile);
+    expect(await pathExists(join(directory.path, 'node_modules'))).toBe(false);
 });

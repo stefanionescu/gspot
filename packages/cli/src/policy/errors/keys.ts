@@ -1,18 +1,19 @@
+import type { z } from 'zod';
 import { isRecord } from '#cli/platform/objects.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import { TOOL_KEY_DEPTH } from '#cli/config/policy/settings.ts';
 import { namingCategorySchema } from '#cli/policy/schema/fields.ts';
-import { settingValueSchema } from '#cli/parsers/schema/settings.ts';
 import { similar, codeList, quoteArgument } from '#cli/platform/text.ts';
-import { isLoosening, isReasonAccepted, reasonDiagnostic } from '#cli/policy/errors/reasons.ts';
+import { settingValueSchemas } from '#cli/policy/schema/setting-values.ts';
 import { tablesFor, everyTable, policyValue, declarationFor } from '#cli/policy/settings/lookup.ts';
+import { isLoosening, isReasonOwed, isReasonAccepted, reasonDiagnostic } from '#cli/policy/errors/reasons.ts';
 
 import type {
     Policy,
-    Reasoned,
     NamingTable,
     KnownSettings,
     PolicyProblem,
+    AuthoredSetting,
     DeclarationMatch,
 } from '#cli/types/policy/settings.ts';
 
@@ -27,7 +28,7 @@ function quotedTableDiagnostic(key: string, item: unknown): string | undefined {
 
 function looseningDiagnostic(
     key: string,
-    written: Reasoned<unknown>,
+    written: AuthoredSetting,
     shipped: unknown,
     scope: string | undefined,
 ): string {
@@ -40,18 +41,16 @@ function looseningDiagnostic(
 // The problems of a written list: bad items, and loosening entries that carry no reason when reasons are required.
 function listProblems(
     key: string,
-    written: Reasoned<unknown>,
+    written: AuthoredSetting,
     match: DeclarationMatch,
-    requireReasons: boolean,
     shipped: unknown,
 ): PolicyProblem[] {
     if (!Array.isArray(written.value)) return [];
-    const items = written.value as unknown[];
+    const items: unknown[] = written.value;
     const quoted = items.flatMap((item, index): PolicyProblem[] => {
         const diagnostic = quotedTableDiagnostic(key, item);
         return diagnostic === undefined ? [] : [{ path: [...key.split('.'), index], message: diagnostic }];
     });
-    if (!requireReasons) return quoted;
     const reasons = items
         .flatMap((item, index) => (isRecord(item) ? [{ item, index }] : []))
         .filter(({ item }) => item['reason'] !== undefined || match.declaration.direction === 'loosening')
@@ -77,7 +76,7 @@ function listProblems(
         match.declaration.reason_identity === undefined &&
         isLoosening(match.declaration, written.value, shipped);
     const diagnostic = written.reason !== undefined || needsReason ? reasonDiagnostic(key, written.reason) : undefined;
-    const listReason = diagnostic === undefined ? [] : [{ path: [...key.split('.'), 'reason'], message: diagnostic }];
+    const listReason = diagnostic === undefined ? [] : [{ path: ['reasons', key], message: diagnostic }];
     return [...quoted, ...reasons, ...listReason];
 }
 
@@ -85,16 +84,16 @@ function listProblems(
 function scalarProblems(
     surface: KnownSettings,
     key: string,
-    written: Reasoned<unknown>,
+    written: AuthoredSetting,
     match: DeclarationMatch,
     scope: string | undefined,
 ): PolicyProblem[] {
     if (written.reason !== undefined) {
         const diagnostic = reasonDiagnostic(key, written.reason);
-        if (diagnostic !== undefined) return [{ path: [...key.split('.'), 'reason'], message: diagnostic }];
+        if (diagnostic !== undefined) return [{ path: ['reasons', key], message: diagnostic }];
     }
     const shipped = surface.defaults.get(match.declaration.name)?.value;
-    if (!isLoosening(match.declaration, written.value, shipped) || isReasonAccepted(written.reason)) return [];
+    if (!isReasonOwed(match.declaration, shipped, written.value) || isReasonAccepted(written.reason)) return [];
     const problem = looseningDiagnostic(key, written, shipped, scope);
     return [{ path: key.split('.'), message: problem }];
 }
@@ -104,23 +103,26 @@ function keyProblems(
     table: Partial<Policy>,
     scope: string | undefined,
     key: string,
-    requireReasons: boolean,
 ): PolicyProblem[] {
     const match = declarationFor(surface, key);
     if (!match) return [{ path: key.split('.'), message: unknownSettingDiagnostic(surface, key) }];
     const written = policyValue(table, key);
     if (!written) return [];
-    const validated = settingValueSchema(match.declaration).safeParse(written.value);
-    if (!validated.success)
-        return [
-            {
-                path: key.split('.'),
-                message: `The setting ${key}: ${validated.error.issues.map((issue) => issue.message).join('; ')}`,
-            },
-        ];
+    if (key.startsWith('limits.')) {
+        const schema = new Map<string, z.ZodType>(Object.entries(settingValueSchemas)).get(match.declaration.name);
+        if (schema === undefined) throw new Error(`No compiled schema owns ${match.declaration.name}.`);
+        const validated = schema.safeParse(written.value);
+        if (!validated.success)
+            return [
+                {
+                    path: key.split('.'),
+                    message: `The setting ${key}: ${validated.error.issues.map((issue) => issue.message).join('; ')}`,
+                },
+            ];
+    }
     if (match.declaration.type === 'list')
-        return listProblems(key, written, match, requireReasons, surface.defaults.get(match.declaration.name)?.value);
-    return requireReasons ? scalarProblems(surface, key, written, match, scope) : [];
+        return listProblems(key, written, match, surface.defaults.get(match.declaration.name)?.value);
+    return scalarProblems(surface, key, written, match, scope);
 }
 
 function extraDuplicateProblems(surface: KnownSettings, table: Partial<Policy>): PolicyProblem[] {
@@ -129,7 +131,7 @@ function extraDuplicateProblems(surface: KnownSettings, table: Partial<Policy>):
     for (const [tool, toolTable] of Object.entries(tools)) {
         const { verbatim = {} } = toolTable;
         for (const key of Object.keys(verbatim)) {
-            if (key !== 'reason' && surface.declarations.has(`tools.${tool}.${key}`))
+            if (surface.declarations.has(`tools.${tool}.${key}`))
                 problems.push({
                     path: ['tools', tool, 'verbatim', key],
                     message: `\`${key}\` under [tools.${tool}.verbatim] already has a declared setting. Move it up to \`tools.${tool}.${key}\` and remove it from verbatim.`,
@@ -148,10 +150,10 @@ function unsettledConflicts(
     const problems: PolicyProblem[] = [];
     const surfaces = [
         { settings: surface, scope: undefined, path: ['configurations'] as KeyPath },
-        ...policy.scopes.map((scope, index) => ({
-            settings: scopeSurfaces.get(scope.path) ?? surface,
-            scope: scope.path,
-            path: ['scope', index, 'configurations'] as KeyPath,
+        ...Object.keys(policy.scope).map((scope) => ({
+            settings: scopeSurfaces.get(scope) ?? surface,
+            scope,
+            path: ['scope', scope, 'configurations'] as KeyPath,
         })),
     ];
     for (const { settings, scope, path } of surfaces) {
@@ -279,9 +281,7 @@ export function validateAgainstSurface(
             problems: active.problems,
         };
         const found = [
-            ...writtenKeys(table, settings).flatMap((key) =>
-                keyProblems(settings, table, scope, key, policy.require_reasons),
-            ),
+            ...writtenKeys(table, settings).flatMap((key) => keyProblems(settings, table, scope, key)),
             ...extraDuplicateProblems(settings, table),
         ];
         problems.push(...found.map((problem) => ({ ...problem, path: [...path, ...problem.path] })));

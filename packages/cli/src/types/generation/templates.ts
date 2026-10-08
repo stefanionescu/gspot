@@ -1,8 +1,11 @@
+import type { relative } from 'node:path/posix';
+import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import type { EditorconfigOverride } from '#cli/types/generation/formatting.ts';
 import type { EslintPresets, EslintAllRules } from '#cli/types/parsers/eslint.ts';
-import type { Policy, ScopeView, PolicyScope, ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { Policy, ScopeView, ScopeSelection } from '#cli/types/policy/settings.ts';
 
 import type {
     EslintFiles,
@@ -15,8 +18,7 @@ import type {
 
 /** Effective scope policy and declared project facts available to generated assets. */
 export type ScopeTemplateInputs = {
-    policy: Policy;
-    scopes: ScopeSelection[];
+    session: Session;
     selection: ScopeSelection;
     manifests: Manifest[];
     projects: ProjectManifest[];
@@ -34,6 +36,12 @@ export type TemplateInputs = {
     eslintRuleSettings: (blocks: EslintSettingsBlock[]) => { rules: Record<string, unknown[]> };
     eslintErrorRules: (rules: Record<string, unknown>) => Record<string, unknown>;
     targetPath?: string;
+    /** The project's native environment name when its scope contains that directory. */
+    pythonVenv: string | undefined;
+    /** The scope source path relative to its native Python configuration. */
+    pythonScopePath: string;
+    /** Configuration-relative Python paths from the source inventory and ignores. */
+    pythonExcludes: (check: string) => string[];
     scopeIgnorePatterns: (patterns: string[], scope: string) => string[];
     javascriptConfig: (targetPath: string) => Record<string, unknown>;
     prettierConfig: (targetPath: string) => Record<string, unknown>;
@@ -52,8 +60,11 @@ export type TemplateInputs = {
         formats: [string, string][];
     };
     version: string;
+    /** Compiler version authored in this scope’s native Swift project. */
+    swiftVersion: () => string | undefined;
     scope: string;
-    scopes: PolicyScope[];
+    relative: typeof relative;
+    scopes: Pick<ScopeEntry, 'path' | 'configurations'>[];
     /** Dependencies declared by the nearest npm project that contains this scope. */
     scopeDependencies: string[];
     configurationScopes: (configuration: string) => {
@@ -61,12 +72,14 @@ export type TemplateInputs = {
         settings: Record<string, unknown>;
         dependencies: string[];
         verbatim: ScopeView['verbatim'];
-        /** The first harness folder of the scope, relative to it, when the policy names one. */
+        /** The first repository-relative harness folder of the scope, when the policy names one. */
         harness: string | undefined;
     }[];
+    ignoredPaths: string[];
     configurations: string[];
     policy: Policy;
     format: ScopeView['format'];
+    roles: ScopeView['roles'];
     settings: Record<string, unknown>;
     fragments: string;
     /** Separately rendered fragments for targets that consume structured configuration. */
@@ -74,7 +87,7 @@ export type TemplateInputs = {
     fragmentImports: string;
     fragmentFiles: string[];
     fragmentSelectors: SelectorGroup[];
-    options: (name: string) => Record<string, unknown>;
+    options: ScopeView['options'];
     entryFiles: (scope: string) => string[];
     limit: (key: string, language?: string) => number | undefined;
     rulesOff: (check: string) => string[];

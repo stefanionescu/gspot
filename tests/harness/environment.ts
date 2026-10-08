@@ -1,7 +1,10 @@
 // Isolate installed consumers from this checkout and restore test-owned environment changes.
+import { spyOn } from 'bun:test';
+import { testdir } from 'testdirs';
+import * as environment from '#cli/platform/environment.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { MODULE_DIRECTORIES } from '#tests/config/harness/modules.ts';
+import { MODULE_DIRECTORIES } from '#tests/config/harness/environment.ts';
 import { sep, join, resolve, relative, delimiter, isAbsolute } from 'node:path';
 
 const inherited = environmentVariables();
@@ -35,4 +38,30 @@ export const consumerEnvironment: Record<string, string | undefined> = {
 export function setEnvironmentVariable(name: string, value: string | undefined): void {
     if (value === undefined) Reflect.deleteProperty(process.env, name);
     else process.env[name] = value;
+}
+
+/**
+ * Restore test-owned variables when the test scope ends, including after failures.
+ * @param variables values to set or clear for this scope
+ * @returns the restoration resource
+ */
+export function useEnvironment(variables: Record<string, string | undefined>): Disposable {
+    const previous = Object.fromEntries(Object.keys(variables).map((name) => [name, process.env[name]]));
+    for (const [name, value] of Object.entries(variables)) setEnvironmentVariable(name, value);
+    return {
+        [Symbol.dispose]() {
+            for (const [name, value] of Object.entries(previous)) setEnvironmentVariable(name, value);
+        },
+    };
+}
+
+/**
+ * Keep compiler state in a test-owned folder and restore the cache boundary when the test ends.
+ * @returns the disposable temporary directory and boundary spy
+ */
+export async function useCacheDirectory(): Promise<AsyncDisposableStack> {
+    await using resources = new AsyncDisposableStack();
+    const cache = resources.use(await testdir());
+    resources.use(spyOn(environment, 'cacheDirectory').mockReturnValue(cache.path));
+    return resources.move();
 }

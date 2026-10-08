@@ -1,7 +1,7 @@
 [configuration]
 title = "Vue"
 requires = ["javascript"]
-recommends = ["typescript", "css"]
+suggests = ["typescript", "css"]
 description = "ESLint checks Vue templates, scripts, and accessibility. Attribute spelling, component names, declarations, ordering, and default props wait for level all. HTML injection checks run at both levels, and Testing Library rules follow the selected level."
 
 [detect]
@@ -14,7 +14,7 @@ kinds = ["source"]
 
 [[tool]]
 name = "eslint-plugin-vue"
-eslint = {extensions = [".vue"]}
+eslint = { extensions = [".vue"] }
 kind = "library"
 version = "10.11.0"
 npm = "eslint-plugin-vue"
@@ -59,7 +59,7 @@ fragment = true
 scoped = true
 
 [[check]]
-name = "tsc"
+name = "vue-tsc"
 title = "Check Vue types"
 example = "A component script containing `const count: number = 'one';` reports an incompatible assignment. Correct it to `const count: number = 1;` when the contract requires a number."
 level = "recommended"
@@ -68,12 +68,15 @@ runs = "scope"
 cwd = "scope"
 tool = "vue-tsc"
 replaces = "typescript/tsc"
-when = {configuration = "typescript"}
-files = {extensions = [".vue"]}
-output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
+when = { configuration = "typescript" }
+files = { extensions = [".vue"] }
+output = { format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$" }
 summary = "Type-checks every Vue component and TypeScript file of the scope with the strict compiler options."
 why = "The TypeScript compiler cannot read a component file, so a type error inside one ships unless the Vue checker reads it."
 help = "Read the first error vue-tsc prints and fix that file; later errors are often the same mistake."
 
 [required_eslint_rules]
 vue = ["vue/no-v-html", "vue/require-v-for-key", "vue/no-mutating-props", "vue/no-use-v-if-with-v-for"]
+
+[set]
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }

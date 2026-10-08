@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { prepare } from '#cli/commands/init/prepare.ts';
+import { parseTemplate } from '#cli/policy/templates.ts';
 import { writeSetup } from '#cli/commands/init/write.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { templateSchema } from '#cli/policy/schema/templates.ts';
 import { SYNCPACK_TAKEOVERS } from '#tests/config/tools/generation/takeover.ts';
 
 test.each(SYNCPACK_TAKEOVERS)(
@@ -26,11 +26,7 @@ test.each(SYNCPACK_TAKEOVERS)(
         expect(before.code, before.stdout + before.stderr).toBe(0);
         const options = buildInitOptions(sandbox.path, {
             configurations: ['none'],
-            template: {
-                source: 'level.toml',
-                digest: 'fixture',
-                tables: templateSchema.parse({ template: 'coverage', selection: 'detect', level: 'all' }),
-            },
+            template: parseTemplate('template = "coverage"\nselection = "detect"\nlevel = "all"\n', 'level.toml'),
         });
         const prepared = await prepare(sandbox.path, options);
         expect(prepared.plan.remove).toContainEqual({

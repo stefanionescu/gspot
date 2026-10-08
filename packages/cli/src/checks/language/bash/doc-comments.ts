@@ -2,8 +2,15 @@ import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
-import { WORD, VAGUE_WORDS, BASH_DOC_SECTIONS, SHELLCHECK_DIRECTIVE } from '#cli/config/checks/language/bash.ts';
+import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+
+import {
+    WORD,
+    VAGUE_WORDS,
+    ENTRY_FUNCTIONS,
+    BASH_DOC_SECTIONS,
+    SHELLCHECK_DIRECTIVE,
+} from '#cli/config/checks/language/bash.ts';
 
 function blockAbove(lines: string[], start: number): string[] {
     const block: string[] = [];
@@ -27,22 +34,18 @@ function isMeaningful(name: string, summary: string): boolean {
     return words.some((word) => !nameWords.has(word));
 }
 
-function docProblem(
-    entry: ScriptFunction,
-    block: string[],
-    separator: string,
-): Required<Pick<Finding, 'rule' | 'message'>> | undefined {
+function docProblem(entry: ScriptFunction, block: string[]): Required<Pick<Finding, 'rule' | 'message'>> | undefined {
     const first = block[0];
     if (first === undefined)
         return {
             rule: 'missing-comment',
-            message: `${entry.name} has no comment above it; write "# ${entry.name}${separator}what it does".`,
+            message: `${entry.name} has no comment above it; write "# ${entry.name}: what it does".`,
         };
-    const head = `# ${entry.name}${separator}`;
+    const head = `# ${entry.name}: `;
     if (!first.startsWith(head) || first.length <= head.length)
         return {
             rule: 'summary-line',
-            message: `The comment above ${entry.name} does not open with "# ${entry.name}${separator}...".`,
+            message: `The comment above ${entry.name} does not open with "# ${entry.name}: ...".`,
         };
     if (!isMeaningful(entry.name, first.slice(head.length)))
         return { rule: 'vague-summary', message: `The summary of ${entry.name} says nothing beyond its name.` };
@@ -61,14 +64,11 @@ function docProblem(
  * @returns the findings
  */
 export const docComments: BuiltInCheck = async (input) => {
-    const style = input.view.settings['bash.doc_style'];
-    const separator = style === 'dash' ? ' - ' : ': ';
-    const entries = entryFunctions(input);
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) => {
         return file.functions.flatMap((entry) => {
-            if (entries.has(entry.name)) return [];
-            const found = docProblem(entry, blockAbove(file.lines, entry.start), separator);
+            if (ENTRY_FUNCTIONS.includes(entry.name)) return [];
+            const found = docProblem(entry, blockAbove(file.lines, entry.start));
             return found === undefined
                 ? []
                 : [findingAt(input, { file: file.path, line: entry.start }, found.rule, found.message)];

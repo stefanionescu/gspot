@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readTree } from '#tests/harness/preservation.ts';
+import { chmod, readFile, writeFile } from 'node:fs/promises';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { POLICY, SET_CONFLICT_POLICIES, SET_ARGUMENT_CONFLICTS } from '#tests/config/cli/commands/set.ts';
 
 test.each(
@@ -17,7 +17,7 @@ test.each(
     async ({ argv, message: diagnostic, policy }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': policy, 'control.txt': 'preserve this source\n' });
-        const before = readTree(sandbox.path);
+        const before = await readTree(sandbox.path);
         for (const command of [argv, ['--json', ...argv], [...argv, '--json']]) {
             const result = await runGspot(sandbox.path, command);
             expect(result.code, result.stdout + result.stderr).toBe(2);
@@ -32,13 +32,13 @@ test.each(
                 expect(result.stderr).toContain(diagnostic);
                 expect(result.stderr).not.toContain('valid TOML');
             }
-            expect(readTree(sandbox.path)).toStrictEqual(before);
+            expect(await readTree(sandbox.path)).toStrictEqual(before);
         }
     },
 );
 
 test.each([
-    ['a scope-only key without --scope', ['set', 'bash.boundary_roots', 'scripts'], '--scope api'],
+    ['a scope-only key without --scope', ['set', 'bash.safety_owners', 'scripts'], '--scope api'],
     [
         'a tool rule turned off',
         ['set', 'tools.markdownlint.rules', '{"MD013": false}'],
@@ -57,24 +57,28 @@ test.each([
         'api/entry.sh': 'echo api\n',
         'web/index.md': '# Web\n',
     });
-    const before = readTree(sandbox.path);
+    const before = await readTree(sandbox.path);
     const refused = await runGspot(sandbox.path, argv);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect(refused.stdout).toBe('');
     expect(refused.stderr).toContain(expected);
-    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(POLICY);
-    expect(readTree(sandbox.path)).toStrictEqual(before);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(POLICY);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
     const structured = await runGspot(sandbox.path, [...argv, '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(2);
     expect(structured.stderr).toBe('');
     const failure = JSON.parse(structured.stdout) as CommandFailureJson;
     expect(failure.error).toBe('policy');
     expect(failure.message).toContain(expected);
-    expect(readTree(sandbox.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test.each([
-    ['set', ['set', 'limits.bash.file_lines', '200'], '[limits.bash]\nfile_lines = 200'],
+    [
+        'set',
+        ['set', 'limits.bash.file_lines', '200', '--reason', 'Generated scripts need this limit.'],
+        '[limits.bash]\nfile_lines = 200',
+    ],
     [
         'ignore',
         ['ignore', 'bash/shellcheck', '--paths', 'entry.sh', '--reason', 'Generated from its template.'],
@@ -89,10 +93,10 @@ test.each([
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const generated = join(sandbox.path, '.gspot/config/shellcheckrc');
-    chmodSync(generated, 0o644);
-    writeFileSync(generated, `${readFileSync(generated, 'utf8')}# Edited.\n`);
+    await chmod(generated, 0o644);
+    await writeFile(generated, `${await readFile(generated, 'utf8')}# Edited.\n`);
     const stopped = await runGspot(sandbox.path, argv);
     expect(stopped.code, stopped.stdout + stopped.stderr).toBe(2);
     expect(stopped.stdout).toContain('gspot.toml keeps this change');
-    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(written);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(written);
 });

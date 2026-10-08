@@ -61,7 +61,7 @@ The check reports the unfinished syntax and exits nonzero. Stage the invalid fil
 
 Restore the valid source from the setup commit:
 
-```shell
+```shell title="Restore the Python example"
 git restore --source=HEAD --staged --worktree -- src/orders_python/__init__.py
 mise exec -- gspot check --only python/ruff
 ```

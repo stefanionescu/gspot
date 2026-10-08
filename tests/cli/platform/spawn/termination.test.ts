@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { readFile } from 'node:fs/promises';
 import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import * as childProcess from 'node:child_process';
@@ -9,8 +9,14 @@ import { waitForExit } from '#tests/harness/process.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 import { run, runBinary, runStream } from '#cli/platform/spawn.ts';
+import type { AsyncSpawnOptions } from '#cli/types/platform/runtime.ts';
 
-const captures = { text: run, binary: runBinary };
+const captures = {
+    text: (command: string[], options: AsyncSpawnOptions) =>
+        run(command, prepareTestCommand(command, options, 'text capture').options),
+    binary: (command: string[], options: AsyncSpawnOptions) =>
+        runBinary(command, prepareTestCommand(command, options, 'binary capture').options),
+};
 
 // What the supervisor leaves on a child it stopped: a signal on a POSIX host, an exit code on Windows.
 function terminated(child: childProcess.ChildProcess | undefined): boolean {
@@ -26,7 +32,6 @@ test.each(['text', 'binary'] as const)('a failed %s stream read terminates the o
     try {
         const running = captures[capture]([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
             cwd: sandbox.path,
-            timeoutMs: 3000,
         });
         const launched = children.mock.results[0];
         if (launched?.type === 'return') {
@@ -46,9 +51,9 @@ test.each(['text', 'binary'] as const)('a failed %s stream read terminates the o
     }
 });
 
-test('binary capture preserves invalid UTF-8 and classifies cancellation and deadlines', async () => {
+test('binary capture preserves invalid UTF-8 bytes and diagnostic output', async () => {
     await using sandbox = await testdir();
-    const result = await runBinary(
+    const result = await captures.binary(
         [
             process.execPath,
             '-e',
@@ -59,21 +64,6 @@ test('binary capture preserves invalid UTF-8 and classifies cancellation and dea
     expect([...result.stdout]).toStrictEqual([0, 255, 128, 10]);
     expect(result.stderr).toBe('diagnostic\n');
     expect(result.code).toBe(0);
-    const canceled = await runBinary([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
-        cwd: sandbox.path,
-        timeoutMs: 5000,
-        cancelSignal: AbortSignal.timeout(100),
-    });
-    expect(canceled.isCanceled).toBe(true);
-    expect(canceled.isTimedOut).toBe(false);
-    expect(canceled.code).not.toBe(0);
-    const timedOut = await runBinary([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
-        cwd: sandbox.path,
-        timeoutMs: 100,
-    });
-    expect(timedOut.isTimedOut).toBe(true);
-    expect(timedOut.isCanceled).toBe(false);
-    expect(timedOut.code).not.toBe(0);
 });
 
 test.each([
@@ -88,13 +78,13 @@ test.each([
         const parent = `Bun.spawn([process.execPath, "-e", ${JSON.stringify(descendant)}], {stdout:"inherit", stderr:"inherit"}); await Bun.sleep(10000);`;
         const result = await captures[capture]([process.execPath, '-e', parent], {
             cwd: sandbox.path,
-            timeoutMs: termination === 'timeout' ? 1500 : 5000,
+            ...(termination === 'timeout' ? { timeoutMs: 1500 } : {}),
             ...(termination === 'canceled' ? { cancelSignal: AbortSignal.timeout(1500) } : {}),
         });
         expect(Buffer.from(result.stdout).toString('utf8')).toContain('descendant-ready');
         expect(result.isTimedOut).toBe(termination === 'timeout');
         expect(result.isCanceled).toBe(termination === 'canceled');
-        const pid = Number(readFileSync(marker, 'utf8'));
+        const pid = Number(await readFile(marker, 'utf8'));
         expect(pid).toBeGreaterThan(0);
         await waitForExit(pid);
     },
@@ -106,7 +96,7 @@ test('a CLI exit terminates its ready asynchronous process group', async () => {
     const sourceUrl = pathToFileURL(join(root, 'packages/cli/src/platform/spawn.ts')).href;
     const script = `import {run} from ${JSON.stringify(sourceUrl)}; void run([process.execPath,"-e",${JSON.stringify(descendant)}],{cwd:process.cwd(),onStdout(chunk){process.stdout.write(chunk);process.exit(19);}});`;
     const command = [process.execPath, '-e', script];
-    const prepared = prepareTestCommand(command, { cwd: sandbox.path, timeoutMs: 5000 }, 'CLI process-group exit');
+    const prepared = prepareTestCommand(command, { cwd: sandbox.path }, 'CLI process-group exit');
     const child = Bun.spawn(command, {
         cwd: sandbox.path,
         stdout: 'pipe',
@@ -138,20 +128,21 @@ test('live output arrives before completion while capture retains output and fai
     const release = join(sandbox.path, 'release');
     const child = `console.log('ready'); console.error('diagnostic'); while (!(await Bun.file(${JSON.stringify(release)}).exists())) await Bun.sleep(10); process.exitCode = 7;`;
     let completed = false;
-    const running = run([process.execPath, '-e', child], {
-        cwd: sandbox.path,
-        timeoutMs: 5000,
-        onStdout: (chunk) => {
-            stdout.push(chunk);
-            ready.resolve();
-        },
-        onStderr: (chunk) => {
-            stderr.push(chunk);
-        },
-    }).then((result) => {
-        completed = true;
-        return result;
-    });
+    const running = captures
+        .text([process.execPath, '-e', child], {
+            cwd: sandbox.path,
+            onStdout: (chunk) => {
+                stdout.push(chunk);
+                ready.resolve();
+            },
+            onStderr: (chunk) => {
+                stderr.push(chunk);
+            },
+        })
+        .then((result) => {
+            completed = true;
+            return result;
+        });
     try {
         await Promise.race([
             ready.promise,
@@ -180,13 +171,12 @@ test.each(['text', 'binary'] as const)(
         const parent = `const child = Bun.spawn([process.execPath, '-e', ${JSON.stringify(descendant)}], {stdout:'pipe', stderr:'inherit'}); for await (const chunk of child.stdout) { process.stdout.write(chunk); process.exit(7); }`;
         const result = await captures[capture]([process.execPath, '-e', parent], {
             cwd: sandbox.path,
-            timeoutMs: 3000,
         });
         expect(result.code).toBe(7);
         expect(Buffer.from(result.stdout).toString('utf8')).toContain('ready');
         expect(result.isTimedOut).toBe(false);
         expect(result.isCanceled).toBe(false);
-        const pid = Number(readFileSync(marker, 'utf8'));
+        const pid = Number(await readFile(marker, 'utf8'));
         expect(pid).toBeGreaterThan(0);
         await waitForExit(pid);
     },
@@ -205,9 +195,8 @@ test.skipIf(process.platform === 'win32')(
         const platform = process.platform;
         Object.defineProperty(process, 'platform', { value: 'darwin' });
         try {
-            const result = await run([process.execPath, '-e', 'process.exit(0)'], {
+            const result = await captures.text([process.execPath, '-e', 'process.exit(0)'], {
                 cwd: sandbox.path,
-                timeoutMs: 3000,
             });
             expect(result.code, result.stderr).toBe(0);
             expect(result.isErrored).toBe(false);

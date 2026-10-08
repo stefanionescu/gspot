@@ -14,6 +14,7 @@ import type { PlannedCheck } from '#cli/types/planning.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { reproduceLine } from '#cli/execution/reproduce.ts';
+import { activeIgnores } from '#cli/policy/settings/view.ts';
 import { readIndexEntries } from '#cli/repository/tracked.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
@@ -54,7 +55,8 @@ function planExecutables(session: ToolSession, options: RunOptions): Executable[
 
 // Rereads the repository after fixers changed it, so the run that follows sees the corrected files.
 async function refreshAfterFixes(session: ToolSession, opened: ToolSession): Promise<void> {
-    const { declarations, scopes, exclude } = session.policyFiles.policy;
+    const { declarations, scope, exclude } = session.policyFiles.policy;
+    const scopes = Object.entries(scope).map(([path, entry]) => ({ path, configurations: entry.configurations }));
     session.reads = createReadCache(session.root);
     session.repository = await readRepository(session.root, declarations, scopes, exclude, session.reads);
     opened.repository = session.repository;
@@ -126,8 +128,7 @@ function dropIgnoredFindings(
 
 // Filters a result through the ignores and attaches the line that reproduces a failure.
 function settleResult(pass: Pass, check: PlannedCheck, result: CheckResult): void {
-    const { ignores } = pass.session.policyFiles.policy;
-    if (RAN_STATUSES.has(result.status)) dropIgnoredFindings(check, result, ignores, pass.uses);
+    if (RAN_STATUSES.has(result.status)) dropIgnoredFindings(check, result, [...pass.uses.keys()], pass.uses);
     if (FAILED_STATUSES.has(result.status))
         result.reproduce = reproduceLine(result.check, result.scope, {
             ...(pass.options.messageFile === undefined ? {} : { messageFile: pass.options.messageFile }),
@@ -168,7 +169,7 @@ async function replanAfterFixes(
     const fixes = await applyFixers(
         session,
         executables.map(({ check }) => check),
-        { isDryRun: options.isDryRun },
+        { isDryRun: options.isDryRun, checks: options.checks },
     );
     if (options.isDryRun) return { executables, fixes };
     await refreshAfterFixes(session, opened);
@@ -211,14 +212,14 @@ export async function executeRun(opened: ToolSession, options: RunOptions): Prom
     const started = new Date();
     const { executables, fixes } = await replanAfterFixes(session, opened, options);
     const planned = executables.map(({ check }) => check);
-    const { ignores } = session.policyFiles.policy;
+    const ignore = activeIgnores(session.policyFiles.policy);
     const pass: Pass = {
         session,
         options,
         staged: options.staged ? new Set(options.staged) : undefined,
-        uses: new Map(ignores.map((entry) => [entry, { entry, matched: 0 }])),
+        uses: new Map(ignore.map((entry) => [entry, { entry, matched: 0 }])),
     };
-    const active = executables.filter(({ check }) => isActive(check));
+    const active = executables.filter(({ check }) => isActive(check) || check.skip?.cause === 'ignore');
     const ran = await runChecks(pass, active);
     const policyResult = options.stage === 'message' ? undefined : policyProblemsResult(session);
     if (policyResult !== undefined) {

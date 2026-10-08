@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
-import { unlinkSync, symlinkSync } from 'node:fs';
 import { testdir, createFileTree } from 'testdirs';
+import { unlink, symlink } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { rejection } from '#tests/harness/expectations.ts';
@@ -12,7 +12,7 @@ import { substitute, commandConfigurations } from '#cli/execution/command/placeh
 test('nested configuration inputs stop at the declared scope and reject ancestors linked outside the repository', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['swift'], { tables: '[[scope]]\npath = "app"\n' }),
+        'gspot.toml': buildPolicy(['swift'], { tables: '[scope."app"]\n' }),
         '.swiftlint.yml': 'disabled_rules: []\n',
         'app/.swiftlint.yml': 'disabled_rules: []\n',
         'app/Sources/.swiftlint.yml': 'disabled_rules: []\n',
@@ -30,12 +30,12 @@ test('nested configuration inputs stop at the declared scope and reject ancestor
     ]);
     await using outside = await testdir();
     await createFileTree(outside.path, { '.swiftlint.yml': 'disabled_rules: []\n' });
-    symlinkSync(join(outside.path, '.swiftlint.yml'), join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
+    await symlink(join(outside.path, '.swiftlint.yml'), join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
     expect(() => commandConfigurations(session, planned)).toThrow(
         'Source link leaves the repository: app/Sources/Feature/.swiftlint.yml',
     );
-    unlinkSync(join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
-    symlinkSync('../.swiftlint.yml', join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
+    await unlink(join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
+    await symlink('../.swiftlint.yml', join(sandbox.path, 'app/Sources/Feature/.swiftlint.yml'));
     expect(commandConfigurations(session, planned)).toStrictEqual([
         '.gspot/config/app/swiftlint.yml',
         'app/.swiftlint.yml',
@@ -77,7 +77,7 @@ test('command execution reads linked authored configs and preserves strict manag
         'settings/swiftlint.yml': 'disabled_rules: []\n',
         '.gspot/config/swiftlint.yml': 'disabled_rules: []\n',
     });
-    symlinkSync('settings/swiftlint.yml', join(sandbox.path, '.swiftlint.yml'));
+    await symlink('settings/swiftlint.yml', join(sandbox.path, '.swiftlint.yml'));
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'commit', skips: [], only: ['swift/swiftlint'] })[0]!;
     planned.check = {
@@ -89,8 +89,8 @@ test('command execution reads linked authored configs and preserves strict manag
     const result = await runCheckCommand(session, planned);
     expect(result.status, result.note).toBe('passed');
     expect(result.findings).toStrictEqual([]);
-    unlinkSync(join(sandbox.path, '.gspot/config/swiftlint.yml'));
-    symlinkSync('../../settings/swiftlint.yml', join(sandbox.path, '.gspot/config/swiftlint.yml'));
+    await unlink(join(sandbox.path, '.gspot/config/swiftlint.yml'));
+    await symlink('../../settings/swiftlint.yml', join(sandbox.path, '.gspot/config/swiftlint.yml'));
     expect(await rejection(runCheckCommand(session, planned))).toContain('private regular file');
     expect(await Bun.file(join(sandbox.path, 'settings/swiftlint.yml')).text()).toBe('disabled_rules: []\n');
 });

@@ -4,11 +4,9 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { REPOSITORY, SWAGGER_DEPENDENCY } from '#tests/config/tools/configurations/framework/nestjs.ts';
 
@@ -61,13 +59,8 @@ describe('the nestjs configuration', () => {
     const resources = new AsyncDisposableStack();
     let testRepository: OwnedTestRepository;
     beforeAll(async () => {
-        const budget = openTestBudget(suiteTimeout());
-        try {
-            testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
-        } finally {
-            budget[Symbol.dispose]();
-        }
-    }, suiteTimeout());
+        testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+    });
     afterAll(async () => {
         await resources.disposeAsync();
     });
@@ -75,18 +68,13 @@ describe('the nestjs configuration', () => {
     test.each(['recommended', 'all'] as const)(
         '%s enforces Swagger contracts only when the project declares Swagger',
         (level) => swaggerContracts(testRepository, level),
-        NATIVE_TEST_TIMEOUT_MS,
     );
 
-    test(
-        'the lint, type, and compiler option checks accept the clean Nest module',
-        async () => {
-            const { root, environment } = testRepository;
-            for (const id of ['javascript/eslint', 'typescript/tsc', 'typescript/tsconfig']) {
-                const clean = await spawnGspot(root, ['check', '--only', id], environment);
-                expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
-            }
-        },
-        NATIVE_TEST_TIMEOUT_MS,
-    );
+    test('the lint, type, and compiler option checks accept the clean Nest module', async () => {
+        const { root, environment } = testRepository;
+        for (const id of ['javascript/eslint', 'typescript/tsc', 'typescript/tsconfig']) {
+            const clean = await spawnGspot(root, ['check', '--only', id], environment);
+            expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+        }
+    });
 });

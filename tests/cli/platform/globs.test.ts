@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { globPaths } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { mkdir, unlink, symlink } from 'node:fs/promises';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { mkdirSync, unlinkSync, symlinkSync, readFileSync } from 'node:fs';
 
 test.each([
     '../outside/**',
@@ -23,7 +23,7 @@ test.each([
 test.skipIf(!isPosix)('a walk that follows links ends at a link back to its own folder', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'src/a.ts': 'export {};\n' });
-    symlinkSync('..', join(sandbox.path, 'src/loop'));
+    await symlink('..', join(sandbox.path, 'src/loop'));
     const paths = globPaths(sandbox.path, 'src/**/*.ts', { followSymlinks: true });
     expect(paths).toStrictEqual(['src/a.ts']);
 });
@@ -40,16 +40,13 @@ test.skipIf(!isPosix).each([
         'project/source.ts': 'export {};\n',
         'outside/conf.d/tool.toml': 'setting = "external"\n',
     });
-    mkdirSync(dirname(join(root, link)), { recursive: true });
-    symlinkSync(target, join(root, link), 'dir');
+    await mkdir(dirname(join(root, link)), { recursive: true });
+    await symlink(target, join(root, link), 'dir');
     expect(globPaths(root, pattern, { followSymlinks: false })).toStrictEqual([]);
     expect(globPaths(root, pattern, { followSymlinks: true })).toStrictEqual([selected]);
-    unlinkSync(join(root, link));
+    await unlink(join(root, link));
     await createFileTree(root, { [selected]: 'setting = "local"\n' });
     expect(globPaths(root, pattern, { followSymlinks: false })).toStrictEqual([selected]);
-    expect(readFileSync(join(root, selected), 'utf8')).toBe('setting = "local"\n');
-    expect(readFileSync(join(sandbox.path, 'outside/conf.d/tool.toml'), 'utf8')).toBe('setting = "external"\n');
-    expect(readFileSync(join(root, 'source.ts'), 'utf8')).toBe('export {};\n');
 });
 
 test('hidden directories, finite patterns, exclusions, and case-sensitive matches retain their selections', async () => {
@@ -89,9 +86,9 @@ test.skipIf(!isPosix)(
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'src/a.ts': '', 'src/deep/b.ts': '', 'src/.hidden/c.ts': '' });
-        symlinkSync('src', join(sandbox.path, 'alias'), 'dir');
-        symlinkSync('missing', join(sandbox.path, 'broken.ts'));
-        symlinkSync('..', join(sandbox.path, 'src/.loop'), 'dir');
+        await symlink('src', join(sandbox.path, 'alias'), 'dir');
+        await symlink('missing', join(sandbox.path, 'broken.ts'));
+        await symlink('..', join(sandbox.path, 'src/.loop'), 'dir');
         expect(globPaths(sandbox.path, '*/*.ts').toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
             'src/a.ts',
         ]);

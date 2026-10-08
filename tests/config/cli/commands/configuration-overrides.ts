@@ -2,15 +2,14 @@
 export const AUTHORED_OVERRIDES = `configurations = ["css", "react"]
 [agent_rules]
 enabled = false
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = ["python"]
 `;
 
 /** Minimal script sources for detection changes. */
 export const SCRIPT_SOURCE = 'echo example\n';
 
-/** Root and scope initialization overrides with literal authored source fixtures. */
+/** Root and scope initialization overrides with literal authored source samples. */
 export const INITIAL_OVERRIDES = [
     {
         name: 'root',
@@ -35,7 +34,6 @@ export const DETECT_TEMPLATE = 'template = "example"\nselection = "detect"\nconf
 export const AUTHORED_SCRIPT_SCOPE = `configurations = []
 [agent_rules]
 enabled = false
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = ["bash"]
 `;

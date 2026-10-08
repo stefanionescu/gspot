@@ -15,7 +15,7 @@ kinds = ["source"]
 [[tool]]
 name = "markdownlint-cli2"
 rule_url = "https://github.com/DavidAnson/markdownlint/blob/main/doc/{rule}.md"
-suppression = {marker = "\\bmarkdownlint-disable(?:-line|-next-line|-file)?\\b", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:--!?>)?$"}
+suppression = { marker = "\\bmarkdownlint-disable(?:-line|-next-line|-file)?\\b", reason = " -- (?<reason>\\S(?:[\\s\\S]*?\\S)?)\\s*(?:--!?>)?$" }
 version = "0.23.3"
 npm = "markdownlint-cli2"
 mise = "npm:markdownlint-cli2"
@@ -57,7 +57,7 @@ rule_keys = [""]
 target = ".gspot/config/markdownlint-cli2.mjs"
 tool = "markdownlint-cli2"
 scoped = true
-stub_file = {path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};"}
+stub_file = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};", when = { configuration = "javascript" } }
 
 [[check]]
 name = "markdownlint"
@@ -68,10 +68,10 @@ path_prefix = ":"
 level = "recommended"
 stage = "commit"
 runs = "files"
-command = ["markdownlint-cli2", "--no-globs", "--config", "{config:markdownlint-cli2}", "{files}"]
-fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config:markdownlint-cli2}", "{files}"]
+command = ["markdownlint-cli2", "--no-globs", "--config", "{tool_file:markdownlint-cli2}", "{files}"]
+fix = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{tool_file:markdownlint-cli2}", "{files}"]
 exit_codes = [1]
-output = {format = "markdownlint"}
+output = { format = "markdownlint" }
 summary = "Checks every Markdown file against markdownlint with the shipped rule set."
 why = "Markdown that lints the same everywhere renders the same everywhere."
 help = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."

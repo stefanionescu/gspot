@@ -3,8 +3,8 @@ import type { GrammarName } from '#cli/types/parsers/source.ts';
 import type { OwnedSyntaxTree } from '#tests/types/harness/syntax.ts';
 
 /**
- * Parse fixture source and release its tree when the caller leaves its scope.
- * @param language the grammar used by this fixture
+ * Parse sample source and release its tree when the caller leaves its scope.
+ * @param language the grammar used by this sample
  * @param source the exact source text
  * @returns the tree owned by the caller
  */

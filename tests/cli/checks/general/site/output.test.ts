@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
@@ -10,12 +10,12 @@ import * as toolRunner from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { cachedBuild } from '#cli/checks/general/site/build.ts';
 import { SITE_POLICY, SITE_BUILD_SCRIPT } from '#tests/config/samples/site.ts';
-import { purgecss, brokenLinks, htmlValidate } from '#cli/checks/general/site/output.ts';
+import { purgecss, linkinator, htmlValidate } from '#cli/checks/general/site/output.ts';
 
 test.each([
     {
         name: 'links',
-        analyze: (input: CheckInput) => brokenLinks(input, false),
+        analyze: (input: CheckInput) => linkinator(input, false),
         check: 'site/linkinator',
         body: '<a href="/missing.html">Missing</a>',
         finding: {
@@ -61,21 +61,20 @@ test.each([
         'gspot.toml': SITE_POLICY,
         '.gspot/config/html-validate-built.json': '{"extends":["html-validate:recommended"]}',
     });
-    writeFileSync(
+    await writeFile(
         join(build.output, 'index.html'),
         `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${body}</body></html>`,
     );
-    writeFileSync(join(build.output, 'style.css'), '.unused { color: red; }');
+    await writeFile(join(build.output, 'style.css'), '.unused { color: red; }');
     const command = spyOn(toolRunner, 'runCheckTool').mockImplementation(async (_input, argv, options) =>
         processes.run([join(testModules, '.bin', argv[0]!), ...argv.slice(1)], {
             ...options,
-            timeoutMs: 10_000,
         }),
     );
     try {
         const findings = await analyze(request);
         expect(findings).toMatchObject([finding]);
-        writeFileSync(
+        await writeFile(
             join(build.output, 'index.html'),
             `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p class="unused">Example</p></body></html>`,
         );

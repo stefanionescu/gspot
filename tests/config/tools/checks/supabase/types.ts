@@ -1,11 +1,9 @@
 export const NESTED_POLICY = `configurations = []
-[[scope]]
-path = "apps/api"
+[scope."apps/api"]
 configurations = ["supabase"]
 [scope.supabase]
 types_file = "database.ts"
-[[scope]]
-path = "apps/web"
+[scope."apps/web"]
 configurations = ["supabase"]
 [scope.supabase]
 types_file = "database.ts"

@@ -26,20 +26,16 @@ describe('parseManifest check declarations', () => {
         },
     );
 
-    test.each([
-        { name: 'an empty command', execution: 'command = []', message: 'check.0.command' },
-        {
-            name: 'the removed engine field',
-            execution: 'command = ["x"]\nengine = "integrity"',
-            message: 'Unrecognized key: "engine"',
+    test.each([{ name: 'an empty command', execution: 'command = []', message: 'check.0.command' }])(
+        'manifest loading rejects $name at its declared field',
+        ({ execution, message: diagnostic }) => {
+            expect(() =>
+                parseConfigurationManifest('example', {
+                    tables: `[[check]]\nname = "parse"\n${CHECK_FIELDS}${execution}\n`,
+                }),
+            ).toThrow(diagnostic);
         },
-    ])('manifest loading rejects $name at its declared field', ({ execution, message: diagnostic }) => {
-        expect(() =>
-            parseConfigurationManifest('example', {
-                tables: `[[check]]\nname = "parse"\n${CHECK_FIELDS}${execution}\n`,
-            }),
-        ).toThrow(diagnostic);
-    });
+    );
 
     test('a generated configuration needs a reader in its manifest or the configuration it requires', () => {
         const tables = '[[config]]\ntemplate = "x.yml.tmpl"\ntarget = ".gspot/config/semgrep/x.yml"\n';

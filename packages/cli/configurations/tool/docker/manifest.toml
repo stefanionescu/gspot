@@ -15,7 +15,7 @@ name = "hadolint"
 version = "2.14.0"
 mise = "hadolint"
 brew = "hadolint"
-github = {name = "hadolint/hadolint", version = "v2.14.0"}
+github = { name = "hadolint/hadolint", version = "v2.14.0" }
 scoop = "hadolint"
 
 [[tool.replace]]
@@ -29,7 +29,7 @@ name = "trivy"
 version = "0.69.3"
 mise = "trivy"
 brew = "trivy"
-github = {name = "aquasecurity/trivy", version = "v0.69.3"}
+github = { name = "aquasecurity/trivy", version = "v0.69.3" }
 
 [[tool.replace]]
 file = "trivy.yaml"
@@ -69,9 +69,9 @@ title = "Lint Dockerfiles"
 example = "The instruction `FROM node:latest` reports DL3007 because the tag changes over time. Select a reviewed, explicit version tag or digest and rerun."
 level = "recommended"
 stage = "commit"
-command = ["hadolint", "--no-color", "--config", "{config:hadolint}", "{files}"]
-files = {paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile"]}
-output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$"}
+command = ["hadolint", "--no-color", "--config", "{tool_file:hadolint}", "{files}"]
+files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile"] }
+output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$" }
 summary = "Lints every Dockerfile, and runs ShellCheck over its RUN lines."
 why = "An unpinned base image or a cache left in a layer makes a build nobody can repeat and an image larger than it needs to be."
 help = "Change the instruction the way the rule says. Turn one rule off with gspot ignore docker/hadolint --rule <id> --reason \"<why>\"."
@@ -85,8 +85,8 @@ stage = "push"
 needs = ["docker"]
 tool = "docker"
 command = ["docker", "compose", "-f", "{file}", "config", "--quiet", "--no-env-resolution"]
-files = {paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]}
-output = {format = "lines"}
+files = { paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"] }
+output = { format = "lines" }
 summary = "Asks Docker Compose to parse every Compose file, which needs no running daemon."
 why = "A Compose file that is valid YAML can still name a key Compose refuses, and the first person to learn that is deploying."
 help = "Read the message Compose prints; it names the key and the service."
@@ -110,13 +110,13 @@ level = "recommended"
 stage = "push"
 runs = "scope"
 run_in_copy = true
-command = ["trivy", "config", "--quiet", "--skip-check-update", "--config", "{config:trivy}", "--ignorefile", "{config:trivyignore}", "--exit-code", "10", "--format", "template", "--template", "@{config:trivy-findings}", "{root}"]
+command = ["trivy", "config", "--quiet", "--skip-check-update", "--config", "{tool_file:trivy}", "--ignorefile", "{tool_file:trivyignore}", "--exit-code", "10", "--format", "template", "--template", "@{tool_file:trivy-findings}", "{root}"]
 tool = "trivy"
 exit_codes = [10]
-output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<rule>[^:]+):(?<message>.*)$"}
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<rule>[^:]+):(?<message>.*)$" }
 summary = "Scans Dockerfiles and Compose files for misconfiguration: a root user, a missing health check, an exposed secret."
 why = "A container that runs as root turns any bug in the service into control of the container."
-help = "Change the file the way the message says. Accept one id with a reason under tools.trivy.ignore."
+help = "Change the file the way the message says. Accept one advisory with gspot ignore docker/trivy-config --rule <id> --reason \"...\"."
 
 [[check]]
 name = "trivy-image"
@@ -129,11 +129,12 @@ needs = ["docker"]
 tool = "trivy"
 summary = "Scans every image a Compose file names for known vulnerabilities in its packages."
 why = "A base image carries hundreds of packages, and their advisories arrive after the image was chosen."
-help = "Move to a newer tag of the image. Accept one advisory with a reason under tools.trivy.ignore."
+help = "Move to a newer tag of the image. Accept one advisory with gspot ignore docker/trivy-image --rule <id> --reason \"...\"."
 
 [[setting]]
 name = "tools.hadolint.trusted_registries"
 type = "list"
+items = "string"
 direction = "tightening"
 default = []
 summary = "The registries a base image may come from; empty allows any."
@@ -144,10 +145,3 @@ type = "string"
 direction = "neutral"
 default = "HIGH,CRITICAL"
 summary = "The severities Trivy reports, as a comma-separated list."
-
-[[setting]]
-name = "tools.trivy.ignore"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Trivy ids accepted: the id and the reason."

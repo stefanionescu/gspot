@@ -1,47 +1,35 @@
 // Test repository for the site configuration: a small site with a build script, broken one way for each check.
 import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import { install } from '#tests/harness/install.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { initRepository } from '#tests/harness/install.ts';
+import { runTestCommand } from '#tests/harness/command.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { COMMAND, REPOSITORY } from '#tests/config/tools/configurations/general/site.ts';
-import { suiteTimeout, openTestBudget, runTestCommand } from '#tests/harness/command.ts';
 
 describe('the site configuration', () => {
     const resources = new AsyncDisposableStack();
     let testRepository: OwnedTestRepository;
     beforeAll(async () => {
-        const budget = openTestBudget(suiteTimeout());
-        try {
-            testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
-        } finally {
-            budget[Symbol.dispose]();
-        }
-    }, suiteTimeout());
+        testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+    });
     afterAll(async () => {
         await resources.disposeAsync();
     });
 
-    test(
-        'the default check inspects the built site without selecting external links',
-        async () => {
-            const { root, environment } = testRepository;
-            const checked = await spawnGspot(root, ['check', '--json'], environment, {
-                timeoutMs: NATIVE_TEST_TIMEOUT_MS,
-            });
-            expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-            const report = JSON.parse(checked.stdout) as RunReport;
-            expect(report.checks.map(({ check }) => check)).not.toContain('site/linkinator-external');
-            expect(report.checks).toContainEqual(containing({ check: 'site/build', status: 'passed' }));
-        },
-        NATIVE_TEST_TIMEOUT_MS,
-    );
+    test('the default check inspects the built site without selecting external links', async () => {
+        const { root, environment } = testRepository;
+        const checked = await spawnGspot(root, ['check', '--json'], environment);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+        const report = JSON.parse(checked.stdout) as RunReport;
+        expect(report.checks.map(({ check }) => check)).not.toContain('site/linkinator-external');
+        expect(report.checks).toContainEqual(containing({ check: 'site/build', status: 'passed' }));
+    });
 });
 
 // Recommended savings thresholds and strict optimization both accept corrected bytes.
@@ -104,22 +92,18 @@ async function expectSvgSelection(root: string, svg: string): Promise<void> {
     ]);
 }
 
-test(
-    'native SVG optimization enforces both level thresholds and explicit file selection',
-    async () => {
-        await using sandbox = await testdir();
-        const root = sandbox.path;
-        await createFileTree(root, {
-            'icon.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path d="M0 0h8v8H0z"/></svg>\n',
-        });
-        await install(root, buildInitArguments(['site']), {});
-        const native = await runTestCommand(
-            [join(root, '.gspot/node_modules/.bin/svgo'), '--input', 'icon.svg', '--output', '-'],
-            { cwd: root },
-        );
-        expect(native.code, native.stdout + native.stderr).toBe(0);
-        await expectSvgThresholds(root, native.stdout);
-        await expectSvgSelection(root, native.stdout);
-    },
-    NATIVE_TEST_TIMEOUT_MS,
-);
+test('native SVG optimization enforces both level thresholds and explicit file selection', async () => {
+    await using sandbox = await testdir();
+    const root = sandbox.path;
+    await createFileTree(root, {
+        'icon.svg': '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><path d="M0 0h8v8H0z"/></svg>\n',
+    });
+    await initRepository(root, buildInitArguments(['site']), {});
+    const native = await runTestCommand(
+        [join(root, '.gspot/node_modules/.bin/svgo'), '--input', 'icon.svg', '--output', '-'],
+        { cwd: root },
+    );
+    expect(native.code, native.stdout + native.stderr).toBe(0);
+    await expectSvgThresholds(root, native.stdout);
+    await expectSvgSelection(root, native.stdout);
+});

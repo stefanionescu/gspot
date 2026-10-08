@@ -39,7 +39,7 @@ export type FileKind = z.infer<typeof fileKindSchema>;
 
 /** A generated or vendored file entry of gspot.toml, with its kind. */
 export type FileDeclaration =
-    | (z.infer<typeof generatedSchema> & { kind: 'generated' })
+    | (z.infer<typeof generatedSchema> & { kind: 'generated'; configuration?: string })
     | (z.infer<typeof vendoredSchema> & { kind: 'vendored' });
 
 export type Verdict = { kind: FileKind; source: string; producedBy?: string };

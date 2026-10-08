@@ -12,7 +12,7 @@ test('Next.js route rules resolve two project roots and disable route lookup in 
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['javascript'], {
             level: 'all',
-            tables: '[[scope]]\npath = "apps/first"\nconfigurations = ["nextjs"]\n[[scope]]\npath = "apps/second"\nconfigurations = ["nextjs"]\n[[scope]]\npath = "apps/empty"\nconfigurations = ["nextjs"]\n',
+            tables: '[scope."apps/first"]\nconfigurations = ["nextjs"]\n[scope."apps/second"]\nconfigurations = ["nextjs"]\n[scope."apps/empty"]\nconfigurations = ["nextjs"]\n',
         }),
         'package.json': '{"private":true,"type":"module"}\n',
         'apps/first/pages/about.jsx': 'export default function About() { return <p>About</p>; }\n',

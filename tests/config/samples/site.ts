@@ -20,7 +20,7 @@ writeFileSync('dist/index.html', hadOutput ? 'second' : 'first');
 `;
 
 /** Policy selecting the all-level site build checks. */
-export const SITE_POLICY = 'level = "all"\nconfigurations = ["site"]\n[site]\nbuild = "bun build.js"\n';
+export const SITE_POLICY = 'level = "all"\nconfigurations = ["site"]\n[site]\nbuild_command = ["bun", "build.js"]\n';
 
 export const STATIC_SITE_FILES = {
     '.gitignore': 'node_modules\ndist\n',

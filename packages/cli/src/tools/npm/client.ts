@@ -1,4 +1,4 @@
-// Select the declared package manager and resolve its exact version when npm tools require it.
+// Select the declared package manager and resolve its version requirement when npm tools require it.
 import semver from 'semver';
 import { join, dirname } from 'node:path';
 import { detectPackageManager } from 'nypm';
@@ -15,22 +15,14 @@ import {
     packageManifestSchema,
     packageInstallerSchema,
     packageInstallerIdentitySchema,
+    packageInstallerDeclarationSchema,
 } from '#cli/parsers/schema/packages.ts';
 
-// The manager from one authored file, with one validated read and an actionable exact-version error.
-function authoredInstaller(root: string, path: string): PackageInstallerIdentity | undefined {
-    const manifest = readPackageManifest(root, path);
-    if (manifest === undefined) return undefined;
-    const declared = declaredPackageInstaller(manifest);
-    if (declared === undefined) return undefined;
-    if (declared.version === undefined) return packageInstallerIdentitySchema.parse({ name: declared.name });
-    return exactInstaller(declared.name, declared.version);
-}
-
 // The first package manager a candidate manifest declares, reading each manifest that exists on the way.
-async function detectedInstaller(root: string, candidates: string[]): Promise<PackageInstallerIdentity | undefined> {
+async function detectedInstaller(root: string, candidates: string[]) {
     for (const path of candidates) {
-        const declared = authoredInstaller(root, path);
+        const manifest = readPackageManifest(root, path);
+        const declared = manifest === undefined ? undefined : declaredPackageInstaller(manifest);
         if (declared !== undefined) return declared;
         const detected = await detectPackageManager(join(root, dirname(path)), {
             ignoreArgv: true,
@@ -38,18 +30,9 @@ async function detectedInstaller(root: string, candidates: string[]): Promise<Pa
             includeParentDirs: false,
         });
         if (detected !== undefined)
-            return packageInstallerIdentitySchema.parse({ name: detected.name, version: detected.version });
+            return packageInstallerDeclarationSchema.parse({ name: detected.name, version: detected.version });
     }
     return undefined;
-}
-
-// The declared manager at its version, refusing a range, which the tool project cannot pin.
-function exactInstaller(name: string, version: string): PackageInstaller {
-    if (semver.valid(version) === null)
-        throw new GspotError('installation', [
-            `The tool project needs an exact ${name} version, such as ${name}@1.2.3, and package.json declares ${version}. Write an exact packageManager version.`,
-        ]);
-    return packageInstallerSchema.parse({ name, version });
 }
 
 // The manager the tool project recorded, or undefined when the file does not parse, as when a merge left its markers.
@@ -62,8 +45,7 @@ function recordedInstaller(bytes: Buffer): PackageInstaller | undefined {
     }
     const parsed = packageManifestSchema.safeParse(held);
     if (!parsed.success || parsed.data.packageManager === undefined) return undefined;
-    const declaration = parsed.data.packageManager;
-    return parsePackageInstaller(declaration);
+    return parsePackageInstaller(parsed.data.packageManager);
 }
 
 /**
@@ -82,12 +64,15 @@ export async function selectPackageInstaller(root: string, trackedPaths: string[
             .toSorted((left, right) => left.localeCompare(right))
             .slice(0, 1),
     ];
-    const detected = await detectedInstaller(root, candidates);
-    const { name, version } = detected ?? {
-        name: 'npm',
-        version: undefined,
-    };
-    if (version !== undefined) return exactInstaller(name, version);
+    const { name, version } = (await detectedInstaller(root, candidates)) ?? { name: 'npm', version: undefined };
+    if (version !== undefined) {
+        if (semver.valid(version) === null)
+            throw new GspotError(
+                'installation',
+                `The tool project needs an exact ${name} version, such as ${name}@1.2.3, and package.json declares ${version}. Write an exact packageManager version.`,
+            );
+        return packageInstallerSchema.parse({ name, version });
+    }
     const current = files.read(TOOL_PACKAGE_PROJECT);
     const recorded = current === undefined ? undefined : recordedInstaller(current.bytes);
     if (recorded?.name === name) return recorded;
@@ -98,7 +83,7 @@ export async function selectPackageInstaller(root: string, trackedPaths: string[
  * Resolve an undeclared package manager version only when generating or installing a tool project.
  * @param root the repository root
  * @param installer the declared or detected package manager identity
- * @returns the exact name and version used by the tool project
+ * @returns the name and version requirement used by the tool project
  */
 export function inspectPackageInstaller(root: string, installer: PackageInstallerIdentity): PackageInstaller {
     const { name, version } = installer;

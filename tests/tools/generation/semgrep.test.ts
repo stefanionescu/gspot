@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
@@ -69,7 +69,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
             sibling: FRAMEWORK_FILES['source.js'],
             policy: appliedPolicy,
         });
-        expect(appliedPolicy).toContain('[scope.tools.semgrep]');
+        expect(appliedPolicy).toMatch(/\[\[ignore\]\][\s\S]*app\/\*\*\/ignored\.js/);
         const invalidRule = join(sandbox.path, '.gspot/config/app/semgrep/broken.yml');
         await Bun.write(invalidRule, 'rules: [');
         const invalid = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
@@ -112,7 +112,7 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
     expect(all.code, all.stdout + all.stderr).toBe(1);
     expect(findingRows(JSON.parse(all.stdout) as RunReport)).toStrictEqual([
         { file: 'Value.swift', line: 1, rule: 'gspot.swift.keychain-accessible-always' },
-        { file: 'Value.swift', line: 3, rule: 'gspot.swift.weak-hash-algorithm' },
+        { file: 'Value.swift', line: 2, rule: 'gspot.swift.weak-hash-algorithm' },
         { file: 'script.sh', line: 2, rule: 'gspot.bash.curl-pipe-shell' },
         { file: 'script.sh', line: 3, rule: 'gspot.bash.eval' },
         { file: 'script.sh', line: 4, rule: 'gspot.bash.curl-pipe-shell' },
@@ -191,7 +191,7 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
         ).toStrictEqual(generated.map((file) => file.content));
         const validated = await runTestCommand(
             ['semgrep', 'scan', '--validate', '--config', '.gspot/config/semgrep', '--metrics=off'],
-            { cwd: sandbox.path, env: environment, timeoutMs: 60_000 },
+            { cwd: sandbox.path, env: environment },
         );
         expect(validated.code, validated.stdout + validated.stderr).toBe(0);
     },
@@ -253,10 +253,8 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const findings = findingRows(JSON.parse(failed.stdout) as RunReport);
         expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
-            PLATFORM_SOURCE_FINDINGS.map((finding) =>
-                level === 'all' && finding.rule === 'gspot.javascript.no-interpolated-exec'
-                    ? { ...finding, rule: 'gspot.javascript.no-child-process-exec' }
-                    : finding,
+            PLATFORM_SOURCE_FINDINGS.filter(
+                (finding) => level !== 'all' || finding.rule !== 'gspot.javascript.no-interpolated-exec',
             ),
         );
         for (const [path, source] of Object.entries(PLATFORM_SOURCE_CORRECTIONS))
@@ -302,7 +300,9 @@ test.skipIf(!hasToolBuild('semgrep'))(
             { check: 'security/semgrep', status: 'passed', findings: [] },
         ]);
         expect(
-            Object.keys(BEARER_FILES).map((path) => [path, readFileSync(join(sandbox.path, path), 'utf8')]),
+            await Promise.all(
+                Object.keys(BEARER_FILES).map(async (path) => [path, await readFile(join(sandbox.path, path), 'utf8')]),
+            ),
         ).toStrictEqual(Object.entries(BEARER_FILES));
     },
 );

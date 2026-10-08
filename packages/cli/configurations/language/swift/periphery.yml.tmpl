@@ -1,4 +1,4 @@
-<% const project = settings['tools.xcode.project'] ?? ''; const scheme = settings['tools.xcode.scheme'] ?? ''; if (project !== '') { -%>
+<% const { xcode_project, xcode_scheme: scheme } = options('swift'); const project = xcode_project === '' ? '' : relative(scope, xcode_project); if (project !== '') { -%>
 project: <%= json(project, 0) %>
 <% } if (scheme !== '') { -%>
 schemes:

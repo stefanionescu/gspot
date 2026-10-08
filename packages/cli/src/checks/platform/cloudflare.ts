@@ -1,6 +1,5 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
@@ -12,12 +11,7 @@ import { COMPATIBILITY_DATE } from '#cli/config/checks/platform/cloudflare.ts';
 import { parseWrangler, headerProblems, redirectProblems } from '#cli/parsers/cloudflare.ts';
 
 function scopePathsNamed(input: CheckInput, name: string): string[] {
-    return input.files
-        .map((file) => file.path)
-        .filter(
-            (path) =>
-                scopeOf(path, input.scopeEntries).path === input.scope && (path === name || path.endsWith(`/${name}`)),
-        );
+    return input.files.map((file) => file.path).filter((path) => path === name || path.endsWith(`/${name}`));
 }
 
 // Compares a copied types file with the output of wrangler in the same isolated directory.

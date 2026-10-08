@@ -1,6 +1,6 @@
 import { sep, join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { readFile } from 'node:fs/promises';
 import { normalizePath } from '#plugin/files.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
@@ -13,7 +13,7 @@ describe('plugin file paths', () => {
         const path = join(sandbox.path, 'source % café.ts');
         const normalized = normalizePath(pathToFileURL(path).href);
         expect(normalized).toBe(path.split(sep).join('/'));
-        expect(readFileSync(normalized, 'utf8')).toBe(content);
+        expect(await readFile(normalized, 'utf8')).toBe(content);
     });
 });
 

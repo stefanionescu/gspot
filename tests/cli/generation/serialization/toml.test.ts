@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
 import { parse, stringify } from 'smol-toml';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -11,6 +11,7 @@ import { buildInitOptions } from '#tests/harness/init.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { emitPolicy, parseExpiryDate } from '#cli/policy/file.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import { rejection, containingAll } from '#tests/harness/expectations.ts';
 
@@ -22,7 +23,8 @@ test('typos output preserves quoted keys and paths without creating settings', a
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             configurations: ['spelling'],
-            tools: { typos: { words: words.map((word) => ({ word, reason })), exclude: [{ paths, reason }] } },
+            words: Object.fromEntries(words.map((word) => [word, reason])),
+            ignore: [{ check: 'spelling/typos', paths, reason }],
         }),
     });
     const session = await openSession(sandbox.path);
@@ -55,7 +57,7 @@ test('a quoted word from a template reaches typos.toml through init', async () =
             template: 'house',
             selection: 'exact',
             configurations: ['spelling'],
-            tools: { typos: { words: [{ word, reason: 'An upstream name with # and "quotes".' }] } },
+            words: { [word]: 'An upstream name with # and "quotes".' },
         }),
     });
     const plan = await initCommand(
@@ -71,7 +73,7 @@ test('a quoted word from a template reaches typos.toml through init', async () =
     expect(plan.exitCode).toBe(0);
     const policy = plan.json['policy'];
     if (typeof policy !== 'string') throw new Error('The initialization plan has no policy text.');
-    writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
+    await writeFile(join(sandbox.path, 'gspot.toml'), policy);
     const session = await openSession(sandbox.path);
     const output = emitAll(session);
     const target = output.files.find((file) => file.path === '.gspot/config/typos.toml');
@@ -86,17 +88,17 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     const option = 'custom."option"';
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({
+        'gspot.toml': emitPolicy('', {
             configurations: ['secrets', 'dependencies', 'files', 'docs', 'python'],
             format: { indent_style: 'tab' },
             tools: {
-                gitleaks: { allowed: [{ description: text, paths: [path], patterns: [text], reason }] },
-                taplo: { formatting: { [option]: text, column_width: 88 } },
-                lychee: { exclude_urls: [{ patterns: [text], reason }] },
+                taplo: { verbatim: { [option]: text, column_width: 88 } },
             },
+            links: { allowed_urls: [text] },
+            reasons: { 'tools.taplo.verbatim': reason, 'links.allowed_urls': reason },
             ignore: [
                 { check: 'python/ruff', rule: 'F401', paths: [path], reason },
-                { check: 'dependencies/osv', rule: text, reason, until: '2099-09-20' },
+                { check: 'dependencies/osv', rule: text, reason, until: parseExpiryDate('2099-09-20') },
                 { check: 'dependencies/osv', rule: 'GHSA-path-specific', paths: [path], reason },
             ],
         }),
@@ -110,10 +112,6 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     const parsed = new Map(
         output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parse(file.content)]),
     );
-    expect(parsed.get('.gspot/config/gitleaks.toml')).toStrictEqual({
-        extend: { useDefault: true },
-        allowlists: [{ description: text, paths: [path], regexes: [text] }],
-    });
     expect(parsed.get('.gspot/config/osv-scanner.toml')).toMatchObject({
         IgnoredVulns: [{ id: text, reason, ignoreUntil: new Date('2099-09-20T00:00:00.000Z') }],
     });
@@ -143,6 +141,6 @@ test('an OSV expiry cannot inject another TOML table', async () => {
 });
 
 test('Mise pins the CLI through the npm backend', async () => {
-    const text = await emitFile(buildPolicy([], { tables: 'run_with = "mise"\n' }), MISE_CONFIG_PATH);
+    const text = await emitFile(buildPolicy([], { tables: 'runner = "mise"\n' }), MISE_CONFIG_PATH);
     expect(parse(text)['tools']).toMatchObject({ [GSPOT_MISE_TOOL]: packageManifest.version });
 });

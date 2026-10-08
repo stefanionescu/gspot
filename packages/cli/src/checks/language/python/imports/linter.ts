@@ -6,6 +6,7 @@ import { readText } from '#cli/platform/source.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { pythonProjectCommand } from '#cli/tools/python/uv.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { getIniSection } from '#cli/parsers/tool/configuration.ts';
@@ -37,9 +38,16 @@ function contractConfiguration(input: CheckInput): string | undefined {
 export async function importLinter(input: CheckInput): Promise<Finding[]> {
     const configuration = contractConfiguration(input);
     if (configuration === undefined) throw new GspotError('skip', 'This scope has no import-linter configuration.');
-    const result = await runCheckTool(input, ['lint-imports', '--config', basename(configuration), '--no-cache'], {
-        cwd: input.scopeRoot,
-    });
+    const result = await runCheckTool(
+        input,
+        pythonProjectCommand(input.selection, input.scopeRoot, [
+            'lint-imports',
+            '--config',
+            basename(configuration),
+            '--no-cache',
+        ]),
+        { cwd: input.scopeRoot },
+    );
     const lines = stripVTControlCharacters(result.stdout).split('\n');
     const broken = lines.flatMap((line) => {
         const name = BROKEN_CONTRACT.exec(line.trim())?.groups?.['name'];

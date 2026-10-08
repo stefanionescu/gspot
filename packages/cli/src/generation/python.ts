@@ -1,9 +1,15 @@
+import { statSync } from 'node:fs';
 import { stringify } from 'smol-toml';
+import { join, posix } from 'node:path';
+import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { PYTHON_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';
-import { TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
+import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
+import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import { pythonPins, pythonConstraints } from '#cli/configurations/pins.ts';
+import { TOOL_PYTHON_PROJECT, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 /**
  * Keep Python lint dependencies in a tool project owned by gspot.
@@ -26,8 +32,45 @@ export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
                     },
                 },
             }),
-            readOnly: true,
             kind: 'config',
         },
     ];
+}
+
+/**
+ * Resolve native Python configuration paths for both type and lint tools.
+ * @param session the repository and policy
+ * @param selection the scope being rendered
+ * @returns the scope's environment and configuration-relative exclusions
+ */
+export function pythonInputs(
+    session: Session,
+    selection: ScopeSelection,
+): Pick<TemplateInputs, 'pythonVenv' | 'pythonScopePath' | 'pythonExcludes' | 'ruffRules'> {
+    const { root } = session;
+    const { policy } = session.policyFiles;
+    const base = posix.relative(posix.join(CONFIGURATION_DIRECTORY, selection.scope.path), '.');
+    const exclusions = generatedIgnores(
+        policy.declarations.flatMap(({ paths }) => paths),
+        policy.exclude,
+    );
+    return {
+        ruffRules: selection.selected.flatMap((manifest) => [
+            ...manifest.ruff_rules.recommended,
+            ...(policy.level === 'all' ? manifest.ruff_rules.all : []),
+        ]),
+        pythonScopePath: posix.join(base, selection.scope.path),
+        pythonVenv:
+            statSync(join(root, selection.scope.path, '.venv'), { throwIfNoEntry: false })?.isDirectory() === true
+                ? '.venv'
+                : undefined,
+        pythonExcludes: (check: string) =>
+            [
+                ...exclusions,
+                ...selection.view
+                    .ignoresFor(check)
+                    .filter((entry) => entry.rule === undefined)
+                    .flatMap((entry) => entry.paths ?? []),
+            ].map((path) => `${base}/${path}`),
+    };
 }

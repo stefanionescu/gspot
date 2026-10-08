@@ -2,8 +2,8 @@
 import { testdir } from 'testdirs';
 import { stringify } from 'smol-toml';
 import { writeFileSync } from 'node:fs';
-import { join, delimiter } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
+import { join, resolve, delimiter } from 'node:path';
 import { misePins } from '#cli/configurations/pins.ts';
 import { CLI_PINS } from '#cli/config/configurations.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
@@ -11,7 +11,6 @@ import { buildToolsPath } from '#tests/harness/install.ts';
 import { ARGUMENT_START } from '#automation/config/paths.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import pluginManifest from '#plugin-package' with { type: 'json' };
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -143,13 +142,13 @@ if (suite !== undefined && options.length === 1 && options[0] === '--help') {
                 : [
                       process.execPath,
                       'test',
-                      '--timeout',
-                      String(NATIVE_TEST_TIMEOUT_MS),
                       ...flags,
-                      ...(paths.length === 0 ? [`./${suite}`] : paths),
+                      ...(paths.length === 0
+                          ? [join(workspaceRoot, 'tests', suite)]
+                          : paths.map((path) => resolve(workspaceRoot, 'tests', path))),
                   ];
         const result = await execute(command, {
-            cwd: suite === undefined ? workspaceRoot : join(workspaceRoot, 'tests'),
+            cwd: workspaceRoot,
             env,
             onStdout: (chunk) => {
                 process.stdout.write(chunk);

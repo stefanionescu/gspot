@@ -1,7 +1,9 @@
 import semver from 'semver';
 import { compact } from '#cli/platform/objects.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { UV_INSTALLER, MISE_BACKENDS } from '#cli/config/configurations.ts';
+import { MISE_BACKENDS } from '#cli/config/configurations.ts';
+import { manifestError } from '#cli/configurations/problems.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
 import type {
@@ -198,6 +200,19 @@ export function misePin(tool: ToolPin): InstallerPin | undefined {
 }
 
 /**
+ * The bundled Python bootstrap pin, including its required installer version.
+ * @returns the declared uv mise pin
+ */
+export function pythonInstallerPin(): MisePin {
+    const tool = configurationManifests()
+        .get('python')
+        ?.tools.find((entry) => entry.name === 'uv');
+    const pin = tool === undefined ? undefined : pinOf(tool);
+    if (pin === undefined) throw manifestError('python', ['tool uv requires a pinned mise installer version.']);
+    return pin;
+}
+
+/**
  * Select tools that mise installs. Omit tools in npm and Python tool projects.
  * @param manifests the selected manifests.
  * @returns pins installed by mise.
@@ -205,6 +220,6 @@ export function misePin(tool: ToolPin): InstallerPin | undefined {
 export function misePins(manifests: Manifest[]): MisePin[] {
     const tools = collectPins(manifests);
     const pins = tools.flatMap((tool) => pinOf(tool) ?? []);
-    if (pythonPins(manifests).length > 0) pins.push(UV_INSTALLER);
+    if (pythonPins(manifests).length > 0 && !tools.some((tool) => tool.name === 'uv')) pins.push(pythonInstallerPin());
     return pins;
 }

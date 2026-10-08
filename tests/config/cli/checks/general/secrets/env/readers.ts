@@ -1,39 +1,54 @@
 export const READER_FILES = {
-    '.env.example': 'KNOWN=example\n',
+    'config/example.env': 'export KNOWN=example\n# ignored\n',
     'source.ts':
-        'Bun.env.KNOWN; Bun.env.MISSING; Bun.env["MISSING"];\nconfig.$env("CUSTOM");\n$readEnv("DOLLAR");\notherconfig.$env("UNDECLARED");\n',
-    'reader.py': 'read_env("PYTHON"); read_env("PYTHON");\n',
+        'Bun.env.KNOWN; Bun.env.MISSING; process.env["MISSING"];\nconfig.$env("CUSTOM");\n$readEnv("DOLLAR");\notherconfig.$env("UNDECLARED"); process.env.MISSING;\n',
+    'reader.py':
+        'read_env("PYTHON"); read_env("PYTHON"); os.environ["MISSING"]; os.getenv("OTHER");\nos.environ.get("OTHER");\n',
     'notes.txt': 'Bun.env.TEXT; $readEnv("TEXT");\n',
 };
 
-export const READER_TABLES = '[env]\nreader_functions = ["config.$env", "$readEnv", "read_env"]\n';
+export const READER_TABLES =
+    '[secrets]\nenv_examples = ["config/example.env"]\nreader_functions = ["config.$env", "$readEnv", "read_env"]\n';
 
-export const READER_TEMPLATE = 'KNOWN=example\nMISSING=example\nCUSTOM=example\nDOLLAR=example\nPYTHON=example\n';
+export const READER_TEMPLATE =
+    'KNOWN=example\nMISSING=example\nCUSTOM=example\nDOLLAR=example\nPYTHON=example\nOTHER=example\n';
 
 export const READER_FINDINGS = [
     {
         file: 'reader.py',
         line: 1,
         rule: 'missing-key',
-        message: 'PYTHON is read here and appears in no environment template.',
+        message: 'MISSING is read here and appears in no example environment file.',
+    },
+    {
+        file: 'reader.py',
+        line: 1,
+        rule: 'missing-key',
+        message: 'OTHER is read here and appears in no example environment file.',
+    },
+    {
+        file: 'reader.py',
+        line: 1,
+        rule: 'missing-key',
+        message: 'PYTHON is read here and appears in no example environment file.',
     },
     {
         file: 'source.ts',
         line: 1,
         rule: 'missing-key',
-        message: 'MISSING is read here and appears in no environment template.',
+        message: 'MISSING is read here and appears in no example environment file.',
     },
     {
         file: 'source.ts',
         line: 2,
         rule: 'missing-key',
-        message: 'CUSTOM is read here and appears in no environment template.',
+        message: 'CUSTOM is read here and appears in no example environment file.',
     },
     {
         file: 'source.ts',
         line: 3,
         rule: 'missing-key',
-        message: 'DOLLAR is read here and appears in no environment template.',
+        message: 'DOLLAR is read here and appears in no example environment file.',
     },
 ];
 
@@ -47,7 +62,7 @@ export const PROJECT_READER_FILES = {
 };
 
 export const PROJECT_READER_TABLES =
-    '[env]\nreader_functions = ["root_env"]\n[[scope]]\npath = "app"\n[scope.env]\ntemplates = ["project.env"]\nreader_functions = ["config.$env", "$readEnv"]\n[[scope]]\npath = "sibling"\n';
+    '[secrets]\nreader_functions = ["root_env"]\n[scope."app"]\n[scope."app".secrets]\nenv_examples = ["project.env"]\nreader_functions = ["config.$env", "$readEnv"]\n[scope."sibling"]\n[scope."sibling".secrets]\nenv_examples = [".env.example"]\n';
 
 export const PROJECT_READER_CORRECTIONS = {
     '.env.example': 'APP_MISSING=example\nROOT_MISSING=example\n',

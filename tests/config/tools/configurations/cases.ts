@@ -12,8 +12,8 @@ import * as toolOpenapi from '#tests/config/tools/configurations/tool/openapi.ts
 import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.ts';
 import * as generalFiles from '#tests/config/tools/configurations/general/files.ts';
 import * as languageHtml from '#tests/config/tools/configurations/language/html.ts';
+import type { BashBoundary, ConfigurationScenario } from '#tests/types/tools/cases.ts';
 import * as languagePython from '#tests/config/tools/configurations/language/python.ts';
-import type { ConfigurationScenario } from '#tests/types/tools/configurations/cases.ts';
 import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
 import * as frameworkNextjs from '#tests/config/tools/configurations/framework/nextjs.ts';
 import * as frameworkSvelte from '#tests/config/tools/configurations/framework/svelte.ts';
@@ -68,3 +68,12 @@ export const SCENARIOS: ConfigurationScenario[] = [
     { name: 'the svelte configuration', repository: frameworkSvelte.REPOSITORY, cases: frameworkSvelte.CASES },
     { name: 'the vue configuration', repository: frameworkVue.REPOSITORY, cases: frameworkVue.CASES },
 ];
+
+/** Source locations for the generated Bash size defects. */
+export const BASH_LOCATIONS = [
+    { file: 'scripts/long.sh', rule: 'file-lines', line: 1 },
+    { file: 'scripts/tall.sh', rule: 'function-lines', line: 9 },
+    { file: 'scripts/branchy.sh', rule: 'branches', line: 9 },
+    { file: 'scripts/deep.sh', rule: 'nesting', line: 9 },
+    { file: 'scripts/mutable.sh', rule: 'assignments', line: 9 },
+] as const satisfies readonly BashBoundary['expected'][];

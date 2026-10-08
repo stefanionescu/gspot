@@ -107,7 +107,7 @@ export async function exportsAtBottom(input: CheckInput): Promise<Finding[]> {
  * @returns the findings for that check
  */
 export async function packageExports(input: CheckInput): Promise<Finding[]> {
-    const ceiling = input.view.limit('package_exports', 'python');
+    const ceiling = input.view.limit('index_exports');
     if (ceiling === undefined) return [];
     using parsed = await visitParsed(input, readPython, disposePython);
     const { modules } = parsed.value;

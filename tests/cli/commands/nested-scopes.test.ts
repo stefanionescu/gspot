@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -20,10 +20,6 @@ test('nested scopes inherit parent configurations and settings and check each fi
     const settings = await runGspot(directory.path, ['list', 'settings', '--json']);
     expect(settings.code, settings.stdout + settings.stderr).toBe(0);
     const rows = (JSON.parse(settings.stdout) as SettingsListJson).settings;
-    expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'limits.file_lines')).toMatchObject({
-        value: 200,
-        source: '[[scope]] api',
-    });
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'format.indent_width')?.value).toBe(2);
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'limits.function_lines')?.value).toBe(30);
     const checked = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
@@ -37,8 +33,8 @@ test('nested scopes inherit parent configurations and settings and check each fi
     ]);
     expect(new Set(checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(new Set(['api/entry.sh']));
     expect(new Set(checks[1]?.findings.map((finding) => finding.file))).toStrictEqual(new Set(['api/worker/entry.sh']));
-    writeFileSync(join(directory.path, 'api/entry.sh'), 'echo example\n');
-    writeFileSync(join(directory.path, 'api/worker/entry.sh'), 'echo example\n');
+    await writeFile(join(directory.path, 'api/entry.sh'), 'echo example\n');
+    await writeFile(join(directory.path, 'api/worker/entry.sh'), 'echo example\n');
     const corrected = await runGspot(directory.path, [
         'check',
         '--only',

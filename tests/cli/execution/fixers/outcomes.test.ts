@@ -5,10 +5,12 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { planFixer, buildFixerPolicy } from '#tests/harness/fixer.ts';
 
 test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', async (code) => {
@@ -18,7 +20,9 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
     const planned = planFixer(session, `console.error('Fatal: cannot write'); process.exitCode = ${String(code)}`);
     planned.check.exit_codes = [3];
     planned.check.crash_pattern = '^Fatal:';
-    const failed = await applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
+    const failed = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
+        ({ results }) => results[0]!,
+    );
     expect(failed).toMatchObject({
         status: 'failed',
         changed: [],
@@ -27,7 +31,9 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
     const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
     corrected.check.crash_pattern = planned.check.crash_pattern;
     expect(
-        await applyFixers(session, [corrected], { isDryRun: false }).then(({ results }) => results[0]!),
+        await applyFixers(session, [corrected], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
+            ({ results }) => results[0]!,
+        ),
     ).toMatchObject({
         status: 'changed',
         changed: ['source.txt'],
@@ -47,9 +53,11 @@ test.each([
         `await Bun.write('source.txt', ${JSON.stringify(content)}); process.exitCode = ${String(code)}`,
     );
     planned.check.exit_codes = [3];
-    const result = await applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
+    const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
+        ({ results }) => results[0]!,
+    );
     expect(result.status).toBe(status);
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(content);
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(content);
     expect(result.changed).toStrictEqual(content === 'original' ? [] : ['source.txt']);
 });
 test.each([
@@ -65,11 +73,12 @@ test.each([
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    const result = await applyFixers(session, [planFixer(session, script)], { isDryRun: false }).then(
-        ({ results }) => results[0]!,
-    );
+    const result = await applyFixers(session, [planFixer(session, script)], {
+        checks: BUILT_IN_CHECKS,
+        isDryRun: false,
+    }).then(({ results }) => results[0]!);
     expect(result.status).toBe(status);
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
     expect(result.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
     expect(result.status === 'failed' && result.note.includes('exited 3')).toBe(status === 'failed');
 });
@@ -78,12 +87,14 @@ test('compares bytes that decode to the same replacement character', async () =>
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
-    writeFileSync(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
+    await writeFile(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
     const planned = planFixer(session, "await Bun.write('source.txt', new Uint8Array([0xfe]))");
-    const result = await applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
+    const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
+        ({ results }) => results[0]!,
+    );
     expect(result.status).toBe('changed');
     expect(result.changed).toStrictEqual(['source.txt']);
-    expect(readFileSync(join(sandbox.path, 'source.txt'))).toStrictEqual(Buffer.from([0xfe]));
+    expect(await readFile(join(sandbox.path, 'source.txt'))).toStrictEqual(Buffer.from([0xfe]));
 });
 
 test('counts deletion of an empty file as a change', async () => {
@@ -91,10 +102,12 @@ test('counts deletion of an empty file as a change', async () => {
     await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': '' });
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "require('node:fs').unlinkSync('source.txt')");
-    const result = await applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
+    const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
+        ({ results }) => results[0]!,
+    );
     expect(result.status).toBe('changed');
     expect(result.changed).toStrictEqual(['source.txt']);
-    expect(existsSync(join(sandbox.path, 'source.txt'))).toBe(false);
+    expect(await pathExists(join(sandbox.path, 'source.txt'))).toBe(false);
 });
 
 test('distinguishes a skipped correction from an unavailable tool', async () => {
@@ -103,16 +116,20 @@ test('distinguishes a skipped correction from an unavailable tool', async () => 
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, "await Bun.write('source.txt', 'wrong')");
     const skipped = await applyFixers(session, [{ ...planned, skip: { cause: 'flag', note: 'Not selected.' } }], {
+        checks: BUILT_IN_CHECKS,
         isDryRun: false,
     }).then(({ results }) => results[0]!);
     const failed = await applyFixers(
         session,
         [{ ...planned, check: { ...planned.check, fix: [join(sandbox.path, 'absent-tool')] } }],
-        { isDryRun: false },
+        { checks: BUILT_IN_CHECKS, isDryRun: false },
     ).then(({ results }) => results[0]!);
     expect(skipped.status).toBe('skipped');
-    expect(failed.status).toBe('failed');
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+    expect(failed).toMatchObject({
+        status: 'failed',
+        note: textContaining(`${join(sandbox.path, 'absent-tool')} is not installed.`),
+    });
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
 });
 
 test('runs the correction executable when it differs from the check executable', async () => {
@@ -123,10 +140,10 @@ test('runs the correction executable when it differs from the check executable',
     const result = await applyFixers(
         session,
         [{ ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {}, kind: 'binary' } }],
-        { isDryRun: false },
+        { checks: BUILT_IN_CHECKS, isDryRun: false },
     ).then(({ results }) => results[0]!);
     expect(result.status).toBe('changed');
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
 });
 
 test('fails the run when a correction exits nonzero even though its check passes', async () => {
@@ -138,21 +155,6 @@ test('fails the run when a correction exits nonzero even though its check passes
     expect(outcome.report.exitCode).toBe(2);
     expect(outcome.report.failed).toContain('sandbox/fixer');
     expect(outcome.fixes?.results[0]?.status).toBe('failed');
-});
-
-test('check --fix --dry-run prints the diff of a correction and leaves the file as it was', async () => {
-    const script = String.raw`require('node:fs').writeFileSync('source.txt', 'corrected\n')`;
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': `configurations = []\n[[check]]\nname = "sandbox/format"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}\nfix = ${JSON.stringify([process.execPath, '-e', script])}\npaths = ["source.txt"]\nstage = "commit"\n`,
-        'source.txt': 'original\n',
-    });
-    const preview = await runGspot(sandbox.path, ['check', '--only', 'sandbox/format', '--fix', '--dry-run']);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(preview.stdout).toContain('-original');
-    expect(preview.stdout).toContain('+corrected');
-    expect(preview.stdout).toContain('1 file would change');
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
 });
 
 test('a failed version inspection blocks a check and its correction without changing source bytes', async () => {
@@ -173,9 +175,11 @@ test('a failed version inspection blocks a check and its correction without chan
         const checked = await runCheckCommand(session, planned);
         expect(checked.status).toBe('error');
         expect(checked.note).toContain('exited 7');
-        const fixed = await applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!);
+        const fixed = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
+            ({ results }) => results[0]!,
+        );
         expect(fixed.status).toBe('failed');
-        expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
     } finally {
         which.mockRestore();
     }

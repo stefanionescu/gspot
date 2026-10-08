@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { openSession } from '#cli/commands/session.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import type { RunOptions } from '#cli/types/execution/check.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -42,7 +42,7 @@ test.each([
         .get(entry.configuration)!
         .checks.find((check) => check.name === `${entry.configuration}/${entry.tool}`)!;
     const executable = join(
-        dirname(Bun.resolveSync(`${entry.tool}/package.json`, import.meta.dir)),
+        dirname(await Bun.resolve(`${entry.tool}/package.json`, import.meta.dir)),
         'bin',
         entry.executable,
     );
@@ -50,9 +50,8 @@ test.each([
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             configurations: [],
-            check: [
-                {
-                    name: 'project/native',
+            check: {
+                'project/native': {
                     command: [...command, ...entry.formatter, '{files}'],
                     fix: [...command, '--fix', '{files}'],
                     exit_codes: check.exit_codes!,
@@ -60,24 +59,24 @@ test.each([
                     paths: [entry.path],
                     stage: 'commit',
                 },
-            ],
+            },
         }),
         [entry.config]: entry.nativeConfiguration,
         [entry.path]: entry.defect,
     });
-    const source = readFileSync(join(sandbox.path, entry.path), 'utf8');
-    writeFileSync(join(sandbox.path, entry.config), entry.invalidConfiguration);
+    const source = await readFile(join(sandbox.path, entry.path), 'utf8');
+    await writeFile(join(sandbox.path, entry.config), entry.invalidConfiguration);
     const invalid = await executeRun(await openSession(sandbox.path), buildRunOptions({ only: ['project/native'] }));
     expect(invalid.report.exitCode).toBe(2);
     expect(invalid.report.checks).toMatchObject([{ status: 'error', findings: [] }]);
-    expect(readFileSync(join(sandbox.path, entry.path), 'utf8')).toBe(source);
-    writeFileSync(join(sandbox.path, entry.config), entry.nativeConfiguration);
+    expect(await readFile(join(sandbox.path, entry.path), 'utf8')).toBe(source);
+    await writeFile(join(sandbox.path, entry.config), entry.nativeConfiguration);
     const session = await openSession(sandbox.path);
     const options: RunOptions = buildRunOptions({ fix: true, only: ['project/native'] });
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
     expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [entry.path] }]);
-    expect(readFileSync(join(sandbox.path, entry.path), 'utf8')).toBe(entry.partial);
+    expect(await readFile(join(sandbox.path, entry.path), 'utf8')).toBe(entry.partial);
     await Bun.write(join(sandbox.path, entry.path), entry.corrected);
     const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode, JSON.stringify(corrected)).toBe(0);

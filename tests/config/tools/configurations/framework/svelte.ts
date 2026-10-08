@@ -13,7 +13,6 @@ export const PRODUCT =
 export const CARD =
     '<p class="card">card</p>\n\n<style>\n    :global(.card) {\n        color: #ggg;\n    }\n</style>\n';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'svelte', 'css', 'format'],
     tsconfig: COMPONENT_TSCONFIG,
@@ -24,7 +23,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'css/stylelint',
@@ -47,7 +45,7 @@ export const CASES: FindingCase[] = [
         },
     },
     {
-        check: 'svelte/check',
+        check: 'svelte/svelte-check',
         files: { 'src/Product.svelte': PRODUCT },
         expected: { file: 'src/Product.svelte', rule: 'a11y_missing_attribute', line: 5 },
         corrected: {
@@ -58,7 +56,7 @@ export const CASES: FindingCase[] = [
         },
     },
     {
-        check: 'svelte/check',
+        check: 'svelte/svelte-check',
         files: { 'src/Count.svelte': COUNT },
         expected: { file: 'src/Count.svelte', rule: 'TS2322', line: 2 },
         corrected: {

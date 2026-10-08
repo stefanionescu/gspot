@@ -1,7 +1,7 @@
 // Full-tree policy checks read the pushed revision's unchanged files.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
@@ -18,7 +18,7 @@ test('full-tree pre-push policy checks unchanged files in the pushed object', as
     commitAll(sandbox.path);
     const base = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     await Bun.write(join(sandbox.path, 'changed.sh'), 'echo changed\n');
-    writeFileSync(
+    await writeFile(
         join(sandbox.path, 'gspot.toml'),
         buildPolicy(['bash'], { tables: '[hooks]\n[agent_rules]\nenabled = false\n' }),
     );

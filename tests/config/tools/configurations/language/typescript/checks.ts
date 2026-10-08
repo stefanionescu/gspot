@@ -1,20 +1,19 @@
+import { TYPO } from '#tests/config/samples/spelling.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/config/samples/typescript.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 
 import {
-    TYPO,
     TOTAL,
     WRONG,
     RECEIPT,
-    PLAIN_JS,
-    MISSPELLED,
+    DOUBLE_JS,
     CHECK_SCRIPT,
     ORDERS_TYPES,
     TOTALS_TYPES,
+    MISSPELLED_FILE,
 } from '#tests/config/tools/configurations/language/typescript/source.ts';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['typescript'],
     modules: false,
@@ -32,8 +31,7 @@ export const REPOSITORY: RepositoryScenario = {
         'types/totals.ts': TOTALS_TYPES,
         'src/orders/total.ts': TOTAL,
         'src/orders/receipt.ts': RECEIPT,
-        'src/orders/double.js':
-            '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice(3);\n',
+        'src/orders/double.js': DOUBLE_JS,
         'src/main.ts': CHECK_SCRIPT,
     },
 };
@@ -100,12 +98,12 @@ export const CASES: FindingCase[] = [
     },
     {
         check: 'spelling/typos',
-        files: { 'src/orders/typo.ts': TYPO },
+        files: { 'src/orders/typo.ts': MISSPELLED_FILE },
         expected: {
             file: 'src/orders/typo.ts',
             line: 1,
             column: 4,
-            message: `\`${MISSPELLED}\` should be \`The\``,
+            message: `\`${TYPO.the}\` should be \`the\``,
         },
         corrected: {
             files: {
@@ -115,12 +113,11 @@ export const CASES: FindingCase[] = [
     },
     {
         check: 'javascript/tsc',
-        files: { 'src/orders/double.js': PLAIN_JS },
+        files: { 'src/orders/double.js': DOUBLE_JS },
         expected: { file: 'src/orders/double.js', rule: 'TS2345', line: 13, column: 28 },
         corrected: {
             files: {
-                'src/orders/double.js':
-                    '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice(3);\n',
+                'src/orders/double.js': DOUBLE_JS,
             },
         },
     },

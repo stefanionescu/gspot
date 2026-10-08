@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
-import { gitOutput } from '#tests/harness/git.ts';
 import { executeRun } from '#cli/execution/run.ts';
+import { mkdir, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import type { Session } from '#cli/types/planning.ts';
 import { applyFixers } from '#cli/execution/fixers.ts';
@@ -11,15 +11,17 @@ import { openSession } from '#cli/commands/session.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { mkdirSync, existsSync, readFileSync } from 'node:fs';
+import { pathExists } from '#tests/harness/preservation.ts';
+import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
+import { BASE_CHECK } from '#tests/config/cli/execution/command/findings.ts';
 import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
-import { NESTED_POLICY, PROJECT_OPTIONS } from '#tests/config/cli/execution/impact.ts';
+import { NESTED_POLICY, PROJECT_OPTIONS, PROJECT_PATH_IGNORES } from '#tests/config/cli/execution/impact.ts';
 
 test('command checks retain nested inputs and report their defects once at the root', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': `${NESTED_POLICY}\n[[check]]\nname = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\npaths = ["**/*.sh"]\nstage = "push"\n`,
+        'gspot.toml': `${NESTED_POLICY}\n[check."project/syntax"]\ncommand = ["bash", "-n", "{files}"]\npaths = ["**/*.sh"]\nstage = "push"\n`,
         'api/source.sh': 'if then\n',
         'web/source.sh': 'echo sibling\n',
     });
@@ -45,9 +47,8 @@ test('command checks retain nested inputs and report their defects once at the r
 function projectChecks(session: Session): void {
     const manifest = session.manifests.get('typescript')!;
     const check: CheckDeclaration = {
+        ...BASE_CHECK,
         name: 'sandbox/project',
-        level: 'recommended',
-        stage: 'commit',
         runs: 'scope',
         summary: 'Reports the test project finding.',
         why: 'Changed files trigger the complete project check.',
@@ -74,20 +75,10 @@ test.each([
         'api/source.ts': 'export {};\n',
         'web/kept.ts': 'export {};\n',
     });
-    gitOutput(sandbox.path, ['init']);
-    gitOutput(sandbox.path, ['add', '.']);
-    gitOutput(sandbox.path, [
-        '-c',
-        'user.name=RepositorySetup',
-        '-c',
-        'user.email=sandbox@example.com',
-        'commit',
-        '-qm',
-        'RepositorySetup',
-    ]);
+    commitAll(sandbox.path);
     if (operation === 'delete') gitOutput(sandbox.path, ['rm', 'api/source.ts']);
     else gitOutput(sandbox.path, ['mv', 'api/source.ts', 'web/source.ts']);
-    mkdirSync(join(sandbox.path, 'api'), { recursive: true });
+    await mkdir(join(sandbox.path, 'api'), { recursive: true });
     const session = await openSession(sandbox.path);
     projectChecks(session);
     const revision =
@@ -111,12 +102,12 @@ test.each([
     expect(
         outcome.report.checks.every((check) => check.findings.some((finding) => finding.message === 'Project finding')),
     ).toBe(true);
-    const preview = await applyFixers(session, [api], { isDryRun: true });
+    const preview = await applyFixers(session, [api], { checks: BUILT_IN_CHECKS, isDryRun: true });
     expect(preview.changed).toStrictEqual(['api/source.ts']);
-    expect(existsSync(join(sandbox.path, 'api/source.ts'))).toBe(false);
-    const applied = await applyFixers(session, [api], { isDryRun: false });
+    expect(await pathExists(join(sandbox.path, 'api/source.ts'))).toBe(false);
+    const applied = await applyFixers(session, [api], { checks: BUILT_IN_CHECKS, isDryRun: false });
     expect(applied.changed).toStrictEqual(['api/source.ts']);
-    expect(readFileSync(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
+    expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
 });
 
 test('a positional file trigger preserves project-wide input and findings', async () => {
@@ -153,10 +144,8 @@ test('a check with no command and no built-in check refuses the complete plan be
     const session = await openSession(sandbox.path);
     const selected = session.scopes[0]!.selected.find(({ configuration }) => configuration.name === 'typescript')!;
     const definition = {
+        ...BASE_CHECK,
         name: 'sandbox/command',
-        level: 'recommended',
-        stage: 'commit',
-        runs: 'files',
         summary: 'Inspect the source file.',
         why: 'The input must be valid.',
         help: 'Correct the source file.',
@@ -169,11 +158,12 @@ test('a check with no command and no built-in check refuses the complete plan be
         ...definition,
         name: 'sandbox/unknown',
     };
+    delete invalid.command;
     session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
     expect(await rejection(executeRun(session, buildRunOptions({ stage: 'commit' })))).toContain(
         'The check sandbox/unknown names no command, and gspot has no built-in check by that name.',
     );
-    expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
+    expect(await pathExists(join(sandbox.path, 'started.txt'))).toBe(false);
 });
 
 test('a project check without its own inputs is inactive even when its scope contains another language', async () => {
@@ -209,7 +199,7 @@ test('a deleted file from another language does not trigger a TypeScript project
 test('a deleted child-scope input triggers only the child project', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': NESTED_POLICY + '\n[[scope]]\npath = "api/nested"\nconfigurations = []\n',
+        'gspot.toml': NESTED_POLICY + '\n[scope."api/nested"]\nconfigurations = []\n',
         'api/kept.ts': 'export {};\n',
         'api/nested/README.md': '# Nested\n',
         'web/kept.ts': 'export {};\n',
@@ -224,3 +214,23 @@ test('a deleted child-scope input triggers only the child project', async () => 
     ).toStrictEqual([['api/nested', ['api/nested/removed.ts']]]);
     expect(planned.find((check) => check.scope.scope.path === 'api')?.files).toStrictEqual([]);
 });
+
+test.each(PROJECT_PATH_IGNORES)(
+    '$name preserves project input selection',
+    async ({ changed, present, check, rule, files }) => {
+        await using sandbox = await testdir();
+        const ruleField = rule === undefined ? '' : `rule = "${rule}"\n`;
+        await createFileTree(sandbox.path, {
+            'gspot.toml':
+                NESTED_POLICY +
+                `\n[[ignore]]\ncheck = "${check}"\n${ruleField}paths = ["api/ignored.ts"]\nreason = "This input is evaluated by its owning pipeline."\n`,
+            'api/kept.ts': 'export {};\n',
+            ...(present ? { 'api/ignored.ts': 'export {};\n' } : {}),
+        });
+        const session = await openSession(sandbox.path);
+        projectChecks(session);
+        const planned = planRun(session, { ...PROJECT_OPTIONS, changed });
+        expect(planned.flatMap((entry) => entry.files.map((file) => file.path))).toStrictEqual(files);
+        expect(planned.flatMap((entry) => entry.triggerPaths)).toStrictEqual([]);
+    },
+);

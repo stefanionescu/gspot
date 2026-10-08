@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/session.ts';
@@ -12,7 +12,6 @@ import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { preparePythonInstallation } from '#tests/harness/python-installation.ts';
 
 // A Windows virtual environment has launchers and no interpreter links; the install tests stay POSIX-only.
@@ -34,9 +33,9 @@ test.skipIf(!isPosix)(
         // Public apply already generated the Ruff configuration before tool installation.
         commitAll(repository.path);
         // The index holds a second defect beside the committed one; the working tree has the correction.
-        writeFileSync(join(repository.path, 'source.py'), 'import os\nimport sys\n');
+        await writeFile(join(repository.path, 'source.py'), 'import os\nimport sys\n');
         gitOutput(repository.path, ['add', 'source.py']);
-        writeFileSync(join(repository.path, 'source.py'), 'VALUE = 1\n');
+        await writeFile(join(repository.path, 'source.py'), 'VALUE = 1\n');
         const command = ['check', '--only', 'python/ruff', '--json'];
         const staged = await spawnGspot(repository.path, [...command, '--staged']);
         expect(staged.code, staged.stdout + staged.stderr).toBe(1);
@@ -57,5 +56,4 @@ test.skipIf(!isPosix)(
             { check: 'python/ruff', status: 'passed' },
         ]);
     },
-    NATIVE_TEST_TIMEOUT_MS,
 );

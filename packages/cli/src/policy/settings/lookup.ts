@@ -1,32 +1,27 @@
-import { isReasoned } from '#cli/policy/schema/fields.ts';
+import { settingPaths } from '#cli/policy/paths.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import { compact, valueAt, isRecord } from '#cli/platform/objects.ts';
-import type { SettingDeclaration } from '#cli/types/configurations.ts';
+import { limitTableSchema } from '#cli/policy/schema/fields.ts';
+import { rootSettingSchemas } from '#cli/policy/schema/policy.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
-import { CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/policy/settings.ts';
+import { settingNamespaceSchemas } from '#cli/policy/schema/namespaces.ts';
+import type { Manifest, SettingDeclaration } from '#cli/types/configurations.ts';
+import { compact, valueAt, isRecord, createTable } from '#cli/platform/objects.ts';
+import { activeSettingNamespacesSchema } from '#cli/policy/schema/active-settings.ts';
+import { TOOL_KEY_DEPTH, CATEGORY_KEY_PARTS, LANGUAGE_GROUP_TABLES } from '#cli/config/policy/settings.ts';
 
 import type {
     Policy,
-    Reasoned,
     PolicyTable,
     SettingState,
     KnownSettings,
     PolicyLocation,
     ScopeSelection,
+    AuthoredSetting,
     ResolvedSetting,
     DeclarationMatch,
-    NamingLanguageTable,
+    ResolvedSettings,
     ArchitectureDeclaration,
 } from '#cli/types/policy/settings.ts';
-
-function plain(value: unknown): Reasoned<unknown> {
-    if (!isReasoned(value)) return { value };
-    return value.reason === undefined ? { value: value.value } : { value: value.value, reason: value.reason };
-}
-
-function plainIfPresent(value: unknown): Reasoned<unknown> | undefined {
-    return value === undefined ? undefined : plain(value);
-}
 
 function languageDeclaration(
     surface: KnownSettings,
@@ -68,31 +63,6 @@ function categoryDeclaration(
     return isCovered ? { declaration: base, language, category } : undefined;
 }
 
-function limitValue(policy: Partial<Policy>, rest: string[]): Reasoned<unknown> | undefined {
-    const [first, second] = rest;
-    if (first === undefined) return undefined;
-    const entry = second === undefined ? policy.limits?.root[first] : policy.limits?.groups[first]?.[second];
-    return plainIfPresent(entry);
-}
-
-function languageValue(
-    language: NamingLanguageTable,
-    slot: string,
-    categorySlot: string | undefined,
-): Reasoned<unknown> | undefined {
-    if (categorySlot === undefined) return plainIfPresent(valueAt(language, [slot]));
-    return plainIfPresent(valueAt(language.categories[slot], [categorySlot]));
-}
-
-function namingValue(policy: Partial<Policy>, rest: string[]): Reasoned<unknown> | undefined {
-    const naming = policy.naming;
-    const [languageName, slot, categorySlot] = rest;
-    if (!naming || languageName === undefined) return undefined;
-    if (slot === undefined) return plainIfPresent(valueAt(naming, [languageName]));
-    const language = naming.languages[languageName];
-    return language ? languageValue(language, slot, categorySlot) : undefined;
-}
-
 function applyLayer(
     declaration: SettingDeclaration,
     key: string,
@@ -105,7 +75,13 @@ function applyLayer(
         const found = policyValue(layer.table, candidate);
         if (!found) continue;
         result = {
-            value: mergeValue(declaration, result.value, found.value),
+            value: mergeValue(
+                declaration,
+                result.value,
+                valueAt(layer.table.configurationSettings, candidate.split('.')) ??
+                    valueAt(layer.table, candidate.split('.')) ??
+                    found.value,
+            ),
             source: candidate === key ? layer.name : `${layer.name} (${candidate})`,
             reason: found.reason,
         };
@@ -113,29 +89,26 @@ function applyLayer(
     return result;
 }
 
-// The declarations of one kind, without the kind field each carries.
-function declarationsOf(policy: Partial<Policy>, kind: string): unknown {
-    return policy.declarations?.filter((entry) => entry.kind === kind).map(({ kind: _kind, ...entry }) => entry);
-}
-
-// The keys that live at the top of the policy, read from their normalized fields.
-const ROOT_SETTING_READERS: Record<string, (policy: Partial<Policy>) => unknown> = {
-    generated: (policy) => declarationsOf(policy, 'generated'),
-    vendored: (policy) => declarationsOf(policy, 'vendored'),
-};
-
 /**
- * A list appends, dropping repeated scalar items; a per-rule table merges by rule; any other value takes the later one.
+ * Ordered command arguments replace intact; other lists append, per-rule tables merge, and scalars replace.
  * @param declaration the setting
  * @param current the value so far
  * @param found the value the next layer writes
  * @returns the merged value
  */
 export function mergeValue(declaration: SettingDeclaration, current: unknown, found: unknown): unknown {
-    if (declaration.type === 'list' && Array.isArray(current) && Array.isArray(found))
-        return [...new Set([...(current as unknown[]), ...(found as unknown[])])];
+    if (
+        declaration.name !== 'architecture.modules' &&
+        !declaration.name.endsWith('_command') &&
+        Array.isArray(current) &&
+        Array.isArray(found)
+    ) {
+        const previous: unknown[] = current;
+        const next: unknown[] = found;
+        return [...new Set([...previous, ...next])];
+    }
     if (declaration.type === 'table' && declaration.direction === 'rule-options')
-        return { ...(isRecord(current) ? current : {}), ...(isRecord(found) ? found : {}) };
+        return Object.fromEntries([current, found].filter(isRecord).flatMap((table) => Object.entries(table)));
     return found;
 }
 
@@ -147,9 +120,9 @@ export function mergeValue(declaration: SettingDeclaration, current: unknown, fo
 export function everyTable(policy: Policy): PolicyLocation[] {
     return [
         { table: policy, path: [] },
-        ...policy.scopes.flatMap<PolicyLocation>((scope, index) => {
-            const table = policy.scopeTables[scope.path];
-            return table === undefined ? [] : [{ table, scope: scope.path, path: ['scope', index] }];
+        ...Object.keys(policy.scope).flatMap<PolicyLocation>((scope) => {
+            const table = policy.scopeTables[scope];
+            return table === undefined ? [] : [{ table, scope, path: ['scope', scope] }];
         }),
     ];
 }
@@ -167,21 +140,32 @@ export function tablesFor(policy: Policy, scope: string | undefined): PolicyTabl
         .map(({ table, scope: path = '' }) => ({
             table,
             path,
-            name: path === '' ? POLICY_FILE : `[[scope]] ${path}`,
+            name: path === '' ? POLICY_FILE : `[scope.${JSON.stringify(path)}]`,
         }));
 }
 
 /**
- * Explicit module contracts in the resolved scopes, without inheriting a parent's modules.
- * @param policy the validated root and scoped architecture tables
+ * Effective module contracts in each selected scope, preserving authored path origins.
  * @param scopes the resolved configuration selections
  * @returns declarations consumed by native architecture rules and their tool requirements
  */
-export function declaredArchitectures(policy: Policy, scopes: ScopeSelection[]): ArchitectureDeclaration[] {
+export function declaredArchitectures(scopes: ScopeSelection[]): ArchitectureDeclaration[] {
     return scopes.flatMap((selection) => {
-        const path = selection.scope.path;
-        const architecture = path === '' ? policy.architecture : policy.scopeTables[path]?.architecture;
-        return architecture === undefined || architecture.modules.length === 0 ? [] : [{ selection, architecture }];
+        const architecture = selection.view.values.architecture;
+        return architecture === undefined || architecture.modules.length === 0
+            ? []
+            : [
+                  {
+                      selection,
+                      architecture: {
+                          modules: architecture.modules.map((module) => ({
+                              ...module,
+                              may_import: module.may_import ?? [],
+                          })),
+                          roles: selection.view.roles,
+                      },
+                  },
+              ];
     });
 }
 
@@ -206,15 +190,27 @@ export function declarationFor(surface: KnownSettings, key: string): Declaration
  * @param key the dotted key
  * @returns the value with its reason, or undefined when the key is not written
  */
-export function policyValue(policy: Partial<Policy>, key: string): Reasoned<unknown> | undefined {
-    const [table, ...rest] = key.split('.');
-    const topLevel = ROOT_SETTING_READERS[key];
-    if (topLevel !== undefined) return plainIfPresent(topLevel(policy));
-    if (table === 'limits') return limitValue(policy, rest);
-    if (table === 'naming') return namingValue(policy, rest);
-    if (table === undefined) return undefined;
-    const tables: Record<string, unknown> = { agent_rules: policy.agentRules, ...policy.configurationSettings };
-    return plainIfPresent(valueAt(tables[table] ?? valueAt(policy, [table]), rest));
+export function policyValue(policy: Partial<Policy>, key: string): AuthoredSetting | undefined {
+    const value: unknown = valueAt(policy.authored, key.split('.'));
+    return value === undefined ? undefined : compact({ value, reason: policy.reasons?.[key] });
+}
+
+/**
+ * Resolve an authored language or category key after its broader declaration.
+ * @param match the setting's native declaration and authored selector
+ * @param key the authored dotted key
+ * @returns candidate keys from the broadest declaration to the selected field
+ */
+export function settingCandidates(match: DeclarationMatch, key: string): string[] {
+    return match.language === undefined
+        ? [key]
+        : [
+              match.declaration.name,
+              ...(match.category === undefined
+                  ? []
+                  : [`naming.${match.language}.${key.slice(key.lastIndexOf('.') + 1)}`]),
+              key,
+          ];
 }
 
 /**
@@ -238,20 +234,11 @@ export function settingValue(
     const shipped = surface.defaults.get(declaration.name);
     const layers = tablesFor(policy, scope);
     const start: SettingState = {
-        value: shipped?.value,
+        value: settingPaths(declaration.name, shipped?.value, scope ?? ''),
         source: shipped ? `configuration ${shipped.configuration}` : 'unset',
         reason: undefined,
     };
-    const candidates =
-        match.language === undefined
-            ? [key]
-            : [
-                  declaration.name,
-                  ...(match.category === undefined
-                      ? []
-                      : [`naming.${match.language}.${key.slice(key.lastIndexOf('.') + 1)}`]),
-                  key,
-              ];
+    const candidates = settingCandidates(match, key);
     let current = start;
     for (const layer of layers) current = applyLayer(declaration, key, current, layer, candidates);
     const { value, source, reason } = current;
@@ -281,34 +268,96 @@ export function listSettings(surface: KnownSettings, policy: Policy, scope?: str
 }
 
 /**
+ * Resolve the selected surface once into validated namespace values and numeric limits.
+ * @param surface the selected declarations and defaults
+ * @param policy the authored repository policy
+ * @param selected the selected configurations
+ * @param scope the selected scope path
+ * @returns typed execution values without adding defaults to authored tables
+ */
+export function effectiveSettings(
+    surface: KnownSettings,
+    policy: Policy,
+    selected: Manifest[],
+    scope: string,
+): ResolvedSettings {
+    const resolved = listSettings(surface, policy, scope);
+    const settings = Object.fromEntries(resolved.map((row) => [row.key, row.value]));
+    const namespaces: Record<string, unknown> = {};
+    const rows = resolved
+        .map((row) => {
+            const segments = row.key.split('.');
+            const depth = segments[0] === 'tools' ? TOOL_KEY_DEPTH : 1;
+            return { row, path: segments.slice(depth, -1), name: segments.slice(0, depth).join('.') };
+        })
+        .filter(({ name }) => Object.hasOwn(settingNamespaceSchemas, name));
+    for (const { row, path, name } of rows) {
+        const holder = createTable(namespaces, row.value === undefined ? [name] : [name, ...path]);
+        const key = row.key.slice(row.key.lastIndexOf('.') + 1);
+        if (holder === undefined) throw new Error(`The setting ${row.key} runs through a non-table value.`);
+        if (row.value !== undefined) holder[key] = row.value;
+    }
+    const declarations = [...surface.declarations.values()].filter(
+        (entry) => entry.name.startsWith('limits.') && entry.type === 'number',
+    );
+    const keys = [...new Set(declarations.map((entry) => entry.name.slice(entry.name.lastIndexOf('.') + 1)))];
+    const languages = [
+        ...new Set([
+            '',
+            ...selected.map((manifest) => manifest.configuration.name),
+            ...declarations.flatMap((entry) => entry.name.split('.').slice(1, -1)),
+            ...tablesFor(policy, scope).flatMap(({ table }) =>
+                table.limits === undefined ? [] : Object.keys(table.limits.groups),
+            ),
+        ]),
+    ];
+    const limits = limitTableSchema.parse(
+        Object.fromEntries(
+            keys.flatMap((key) =>
+                languages
+                    .map((language) => [
+                        `${language}.${key}`,
+                        settingValue(
+                            surface,
+                            policy,
+                            language === '' ? `limits.${key}` : `limits.${language}.${key}`,
+                            scope,
+                        )?.value,
+                    ])
+                    .filter(([, value]) => value !== undefined),
+            ),
+        ),
+    );
+    return {
+        settings,
+        values: activeSettingNamespacesSchema.parse(namespaces),
+        limits,
+        test_files: rootSettingSchemas.test_files.unwrap().parse(settings['test_files']),
+    };
+}
+
+/**
  * Reads the paths assigned to one architecture role.
  * @param roles the authored role paths
  * @param role the role name
  * @returns the paths, or an empty list when the role is absent
  */
-export function rolePaths(roles: Policy['architecture']['roles'], role: string): string[] {
+export function rolePaths(
+    roles: Policy['architecture']['roles'],
+    role: keyof Policy['architecture']['roles'],
+): string[] {
     const value = roles[role];
     return value === undefined ? [] : [value].flat();
 }
 
 /**
- * The test harness folders of one scope, which architecture.roles.test_support names: the scope's own, else the root's.
+ * The test harness folders of one scope, which architecture.roles.test_harness names: the scope's own, else the root's.
  * @param policy the policy
  * @param scope the scope path, empty for the root
- * @returns the folders relative to the scope root, none when the policy names no harness
+ * @returns repository-relative folders, none when the policy names no harness
  */
 export function harnessFolders(policy: Policy, scope: string): string[] {
     const nested = policy.scopeTables[scope]?.architecture?.roles;
-    const roles = nested?.['test_support'] === undefined ? policy.architecture.roles : nested;
-    return rolePaths(roles, 'test_support').map((folder) => folder.replace(/\/(?:\*\*)?$/u, ''));
-}
-
-/**
- * The test-support folders relative to the repository root.
- * @param policy the authored role settings
- * @param scope the scope owning the folders
- * @returns the scope-prefixed harness folders
- */
-export function repositoryHarnessFolders(policy: Policy, scope: string): string[] {
-    return harnessFolders(policy, scope).map((folder) => [scope, folder].filter(Boolean).join('/'));
+    const roles = nested?.['test_harness'] === undefined ? policy.architecture.roles : nested;
+    return rolePaths(roles, 'test_harness').map((folder) => folder.replace(/\/(?:\*\*)?$/u, ''));
 }

@@ -1,11 +1,8 @@
 [configuration]
 title = "FastAPI"
 requires = ["python", "openapi"]
-recommends = ["security"]
+suggests = ["security"]
 description = "Checks FastAPI route declarations with Ruff. Adds Semgrep request-handling rules when security is selected and requires the OpenAPI configuration."
-
-[set]
-"structure.python.singletons_allowed" = [{names = ["app", "router"], reason = "FastAPI applications and routers are composed at import time."}]
 
 [detect]
 dependencies = ["fastapi"]
@@ -16,7 +13,7 @@ target = ".gspot/config/semgrep/fastapi.yml"
 tool = "semgrep"
 rule_keys = ["rules"]
 scoped = true
-when = {configuration = "security"}
+when = { configuration = "security" }
 
 [ruff_rules]
 recommended = ["FAST001", "FAST002", "FAST003"]

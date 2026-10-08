@@ -35,7 +35,6 @@ export const NATIVE_FILES = {
 
 export const NATIVE_EXPECTED = [
     { rule: 'expo/no-env-var-destructuring', file: 'src/address.ts', line: 3 },
-    { rule: 'no-restricted-syntax', file: 'src/Rows.tsx', line: 8 },
     { rule: 'no-restricted-syntax', file: 'src/session.ts', line: 9 },
     { rule: '@react-native/no-deep-imports', file: 'src/frame.ts', line: 3 },
     { rule: 'react-native/no-raw-text', file: 'src/Label.tsx', line: 8 },

@@ -1,18 +1,21 @@
 import executables from 'which';
 import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { planRun } from '#cli/planning/plan.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { commitAll } from '#tests/harness/git.ts';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
-import { nextBuild, nextTypes } from '#cli/checks/framework/nextjs.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
+import { nextBuild, nextjsTsc } from '#cli/checks/framework/nextjs.ts';
+import { stat, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import type { NextjsCommands } from '#tests/types/cli/checks/framework/nextjs.ts';
-import { statSync, chmodSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 /**
  * Replace executable lookup and both process runners until disposal. Simulate generated files and diagnostics.
@@ -25,6 +28,7 @@ function mockNextjsCommands(check: string): NextjsCommands {
         stderr: check === 'nextjs/build' ? 'Error: Page is invalid\n' : '',
     };
     const directories: string[] = [];
+    const commands: string[][] = [];
     // What the mocked commands were asked and saw, asserted once the check has run.
     const routesSeen: string[] = [];
     const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
@@ -39,27 +43,30 @@ function mockNextjsCommands(check: string): NextjsCommands {
             stderr: '',
         };
     });
-    const run = spyOn(processes, 'run').mockImplementation((command, options) => {
+    const run = spyOn(processes, 'run').mockImplementation(async (command, options) => {
         const cwd = options.cwd;
         directories.push(cwd);
-        const isBad = readFileSync(join(cwd, 'src/page.ts'), 'utf8').includes('bad');
+        commands.push([...command]);
+        const page = await readFile(join(cwd, 'src/page.ts'), 'utf8');
+        const isBad = page.includes('bad');
         if (['typegen', 'build'].includes(command[1] ?? '')) {
-            writeFileSync(join(cwd, 'tsconfig.json'), '{}\n');
-            writeFileSync(join(cwd, 'next-env.d.ts'), '// Generated\n');
-            mkdirSync(join(cwd, '.next/types'), { recursive: true });
-            writeFileSync(join(cwd, '.next/types/routes.d.ts'), '// Generated routes\n');
-        } else routesSeen.push(readFileSync(join(cwd, '.next/types/routes.d.ts'), 'utf8'));
+            await writeFile(join(cwd, 'tsconfig.json'), '{}\n');
+            await writeFile(join(cwd, 'next-env.d.ts'), '// Generated\n');
+            await mkdir(join(cwd, '.next/types'), { recursive: true });
+            await writeFile(join(cwd, '.next/types/routes.d.ts'), '// Generated routes\n');
+        } else routesSeen.push(await readFile(join(cwd, '.next/types/routes.d.ts'), 'utf8'));
         const failed = isBad && command[1] !== 'typegen';
-        return Promise.resolve({
+        return {
             code: failed ? 1 : 0,
             missing: false,
             duration: 1,
             ...(failed ? failureOutput : { stdout: '', stderr: '' }),
-        });
+        };
     });
     return {
         directories,
         routesSeen,
+        commands,
         [Symbol.dispose]() {
             inspection.mockRestore();
             locate.mockRestore();
@@ -72,15 +79,23 @@ for (const scope of ['', 'apps/web'])
     for (const check of ['nextjs/tsc', 'nextjs/build'])
         test(`Next.js output preservation in ${scope || 'root'}: ${check} reports a defect, accepts its correction, and preserves source output`, async () => {
             await using directory = await testdir();
-            const input = await prepareNextjsBuild(directory.path, scope, check);
+            const session = await prepareNextjsBuild(directory.path, scope);
+            const input = buildCheckInput(session, check, { scope });
+            const planned = planRun(session, { stage: 'push', skips: [], only: [check] }).find(
+                (entry) => entry.scope.scope.path === scope,
+            )!;
             const untracked = join(directory.path, join(scope, '.next/local-cache.bin'));
             const config = join(directory.path, join(scope, 'tsconfig.json'));
-            const original = readFileSync(config);
-            const mode = statSync(config).mode;
+            const original = await readFile(config);
+            const { mode } = await stat(config);
             using read = mockNextjsCommands(check);
-            const { directories, routesSeen } = read;
-            const execute = check === 'nextjs/tsc' ? nextTypes : nextBuild;
-            const found = await execute(input);
+            const { directories, routesSeen, commands } = read;
+            const execute = async () => {
+                if (check === 'nextjs/build') return nextBuild(input);
+                const result = await nextjsTsc(session, planned);
+                return result.findings;
+            };
+            const found = await execute();
             expect(found).toHaveLength(1);
             expect(found[0]).toMatchObject({
                 check,
@@ -90,21 +105,29 @@ for (const scope of ['', 'apps/web'])
             expect(found[0]!.message).toBe(
                 check === 'nextjs/tsc' ? 'Type mismatch' : 'next build failed: Error: Page is invalid',
             );
-            writeFileSync(join(directory.path, join(scope, 'src/page.ts')), 'corrected input\n');
-            expect(await execute(input)).toStrictEqual([]);
+            await writeFile(join(directory.path, join(scope, 'src/page.ts')), 'corrected input\n');
+            expect(await execute()).toStrictEqual([]);
+            if (check === 'nextjs/build')
+                expect(commands.map((command) => command.slice(1))).toContainEqual([
+                    'build',
+                    scope === '' ? '--webpack' : '--turbopack',
+                ]);
             expect(directories).not.toContain(join(directory.path, scope));
             expect(routesSeen.every((text) => text === '// Generated routes\n')).toBe(true);
-            expect(directories.every((cwd) => !existsSync(cwd))).toBe(true);
-            expect(readFileSync(config)).toStrictEqual(original);
-            expect(statSync(config).mode).toBe(mode);
-            expect(readFileSync(untracked)).toStrictEqual(Buffer.from([0, 255, 1, 2]));
-            expect(readFileSync(join(directory.path, join(scope, 'next-env.d.ts')), 'utf8')).toBe(
+            expect(await Promise.all(directories.map((cwd) => pathExists(cwd)))).toStrictEqual(
+                directories.map(() => false),
+            );
+            expect(await readFile(config)).toStrictEqual(original);
+            const current = await stat(config);
+            expect(current.mode).toBe(mode);
+            expect(await readFile(untracked)).toStrictEqual(Buffer.from([0, 255, 1, 2]));
+            expect(await readFile(join(directory.path, join(scope, 'next-env.d.ts')), 'utf8')).toBe(
                 '// Authored type declaration\n',
             );
-            expect(readFileSync(join(directory.path, join(scope, '.next/types/routes.d.ts')), 'utf8')).toBe(
+            expect(await readFile(join(directory.path, join(scope, '.next/types/routes.d.ts')), 'utf8')).toBe(
                 '// Retained route types\n',
             );
-            expect(readFileSync(join(directory.path, 'unrelated/private.txt'), 'utf8')).toBe(
+            expect(await readFile(join(directory.path, 'unrelated/private.txt'), 'utf8')).toBe(
                 'Preserve unrelated scope\n',
             );
         });
@@ -119,8 +142,7 @@ test('failed type generation cleans the isolated copy without restoring over sou
         'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
     });
     const session = await openSession(directory.path);
-    const check = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === 'nextjs/tsc')!;
-    const input: CheckInput = buildCheckInput(session, check.name);
+    const planned = planRun(session, { stage: 'push', skips: [], only: ['nextjs/tsc'] })[0]!;
     let scratch = '';
     const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     const runBlocking = processes.runBlocking;
@@ -128,24 +150,24 @@ test('failed type generation cleans the isolated copy without restoring over sou
         if (basename(command[0] ?? '') !== 'next') return runBlocking(command, options);
         return { code: 0, missing: false, duration: 1, stdout: 'Next.js v16.3.5', stderr: '' };
     });
-    const run = spyOn(processes, 'run').mockImplementation((_command, options) => {
+    const run = spyOn(processes, 'run').mockImplementation(async (_command, options) => {
         scratch = options.cwd;
-        writeFileSync(join(scratch, 'tsconfig.json'), 'partial generator output\n');
-        writeFileSync(join(directory.path, 'tsconfig.json'), 'Concurrent developer edit\n');
-        return Promise.resolve({
+        await writeFile(join(scratch, 'tsconfig.json'), 'partial generator output\n');
+        await writeFile(join(directory.path, 'tsconfig.json'), 'Concurrent developer edit\n');
+        return {
             code: 1,
             missing: false,
             duration: 1,
             stdout: '',
             stderr: `Error: ${diagnostic}`,
-        });
+        };
     });
     try {
-        expect(await rejection(nextTypes(input))).toContain(diagnostic);
+        expect(await rejection(nextjsTsc(session, planned))).toContain(diagnostic);
         expect(scratch).not.toBe('');
-        expect(existsSync(scratch)).toBe(false);
-        expect(readFileSync(join(directory.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
-        expect(existsSync(join(directory.path, 'next-env.d.ts'))).toBe(false);
+        expect(await pathExists(scratch)).toBe(false);
+        expect(await readFile(join(directory.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
+        expect(await pathExists(join(directory.path, 'next-env.d.ts'))).toBe(false);
     } finally {
         inspection.mockRestore();
         locate.mockRestore();
@@ -159,14 +181,19 @@ test('failed type generation cleans the isolated copy without restoring over sou
  * Prepare tracked and untracked output for disposable Next.js build checks.
  * @param root the sandbox root
  * @param scope the selected project path
- * @param checkId the Next.js check to plan
- * @returns the check input with repository reads
+ * @returns the repository session with native generated configurations
  */
-async function prepareNextjsBuild(root: string, scope: string, checkId: string): Promise<CheckInput> {
-    const scopeTable = scope === '' ? '' : `[[scope]]\npath = "${scope}"\n`;
+async function prepareNextjsBuild(root: string, scope: string): Promise<ToolSession> {
+    const scopeTable = scope === '' ? '' : `[scope."${scope}"]\n`;
     await createFileTree(root, {
         'gspot.toml': buildPolicy(['nextjs'], { tables: scopeTable }),
-        [join(scope, 'package.json')]: '{"private":true,"dependencies":{"next":"16.3.5"}}\n',
+        [join(scope, 'package.json')]: JSON.stringify({
+            private: true,
+            dependencies: { next: '16.3.5' },
+            scripts: {
+                build: `NODE_ENV=production next build ${scope === '' ? '--webpack' : '--turbopack'} && echo done`,
+            },
+        }),
         [join(scope, 'tsconfig.json')]: '{"compilerOptions":{"strict":true}}\n',
         [join(scope, 'next-env.d.ts')]: '// Authored type declaration\n',
         [join(scope, '.next/types/routes.d.ts')]: '// Retained route types\n',
@@ -174,11 +201,11 @@ async function prepareNextjsBuild(root: string, scope: string, checkId: string):
         'node_modules/.bin/next': '#!/usr/bin/env node\nconsole.log("Next.js v16.3.5");\n',
         'unrelated/private.txt': 'Preserve unrelated scope\n',
     });
+    const applied = await runGspot(root, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     commitAll(root);
-    writeFileSync(join(root, join(scope, '.next/local-cache.bin')), Buffer.from([0, 255, 1, 2]));
+    await writeFile(join(root, join(scope, '.next/local-cache.bin')), Buffer.from([0, 255, 1, 2]));
     const session = await openSession(root);
-    const check = session.manifests.get('nextjs')!.checks.find((entry) => entry.name === checkId)!;
-    const input: CheckInput = buildCheckInput(session, check.name, { scope: scope });
-    chmodSync(join(root, join(scope, 'tsconfig.json')), 0o640);
-    return input;
+    await chmod(join(root, join(scope, 'tsconfig.json')), 0o640);
+    return session;
 }

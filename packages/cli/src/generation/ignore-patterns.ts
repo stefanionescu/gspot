@@ -1,5 +1,7 @@
 import picomatch from 'picomatch';
+import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 
 // Expand alternatives before splitting paths because a brace branch can contain a directory separator.
 function expandAlternatives(pattern: string): string[] {
@@ -96,4 +98,26 @@ export function scopeIgnorePatterns(patterns: string[], scope: string): string[]
  */
 export function generatedIgnores(declarationPaths: string[], exclusions: string[]): string[] {
     return ['**/node_modules/**', `${DOT_GSPOT}/**`, ...exclusions, ...declarationPaths];
+}
+
+/**
+ * The selected language folders and native lockfiles excluded by repository-wide tools.
+ * @param scopes the actual selected manifests and their scope origins
+ * @returns unique repository-relative ignore paths
+ */
+export function selectedIgnorePaths(scopes: ScopeSelection[]): string[] {
+    return [
+        ...new Set(
+            scopes.flatMap(({ scope, selected }) => {
+                const names = new Set(selected.map((manifest) => manifest.configuration.name));
+                const paths = [
+                    ...selected.flatMap((manifest) => manifest.ignored_folders),
+                    ...LOCKFILES.filter(
+                        (lockfile) => 'configuration' in lockfile && names.has(lockfile.configuration),
+                    ).map(({ file }) => file),
+                ];
+                return paths.map((path) => (scope.path === '' ? path : `${scope.path}/${path}`));
+            }),
+        ),
+    ];
 }

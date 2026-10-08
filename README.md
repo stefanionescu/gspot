@@ -44,7 +44,7 @@ Read the initialization plan before accepting it. `--no-install` writes setup wi
 
 ## What it catches
 
-An agent adds `src/utils.ts` to a TypeScript project at level `all`. The file only forwards to `calculateTotal`, and a new `src/receipt.ts` imports it.
+An agent adds this forwarding module to a TypeScript project at level `all`. A receipt module imports it.
 
 ```typescript title="src/utils.ts"
 import { calculateTotal } from './orders.js';

@@ -1,4 +1,3 @@
-import { join } from 'node:path';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { markExecutable } from '#tests/harness/git.ts';
 import { containing } from '#tests/harness/expectations.ts';
@@ -10,7 +9,6 @@ import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { CaseChanges } from '#tests/types/harness/preservation.ts';
 import type { FindingScenario } from '#tests/types/cli/checks/cases.ts';
 import { BASH_CASES, TOOL_CHECKS } from '#tests/config/samples/bash.ts';
-import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
 import * as siteOutput from '#tests/config/cli/checks/general/site/output.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import * as xctestSource from '#tests/config/cli/checks/tool/xctest/source.ts';
@@ -22,17 +20,11 @@ import * as dependencyPolicy from '#tests/config/cli/checks/general/dependencies
 import * as structureFindings from '#tests/config/cli/checks/general/structure/findings.ts';
 import * as cloudflareConfiguration from '#tests/config/cli/checks/platform/cloudflare/configuration.ts';
 
-// What a check accepts beside the clean scripts: a guarded settings file, a boundary header, the environment owner.
+// What a check accepts beside the clean scripts: a guarded settings file and the environment owner.
 const CORRECTIONS: Record<string, (repository: Pick<CaseChanges, 'files'>) => Record<string, string>> = {
     'bash/guards': () => ({
         'scripts/settings.sh':
             '#!/usr/bin/env bash\n[[ -n ${SETTINGS_READY:-} ]] && return 0\nreadonly SETTINGS_READY=1\nreadonly PORT=8080\n',
-    }),
-    'bash/boundaries': () => ({
-        'deploy/step.sh': bashStructure.CLEAN.replace(
-            '#!/usr/bin/env bash',
-            '#!/usr/bin/env bash\n# Boundary: Owns deployment steps and their explicit input values.',
-        ),
     }),
     'bash/env-owner': (repository) => ({ 'scripts/environment.sh': repository.files['scripts/environment.sh']! }),
 };
@@ -42,13 +34,7 @@ for (const scenario of [
     { name: 'the dependencies configuration', repository: dependencyPolicy.REPOSITORY, cases: dependencyPolicy.CASES },
     {
         name: 'the structure configuration',
-        repository: {
-            ...structureFindings.REPOSITORY,
-            prepare: async (root) => {
-                const policy = join(root, 'gspot.toml');
-                await Bun.write(policy, `${await Bun.file(policy).text()}require_reasons = true\n`);
-            },
-        },
+        repository: structureFindings.REPOSITORY,
         cases: structureFindings.CASES,
     },
     {
@@ -83,8 +69,8 @@ for (const scenario of [
         name: 'the built-in bash checks',
         repository: {
             ...bashStructure.REPOSITORY,
-            prepare: (root) => {
-                markExecutable(root, 'scripts/build.sh');
+            prepare: async (root) => {
+                await markExecutable(root, 'scripts/build.sh');
             },
             corrected: (entry) => ({
                 files: {
@@ -102,34 +88,23 @@ for (const scenario of [
         const resources = new AsyncDisposableStack();
         let repository: OwnedTestRepository;
         beforeAll(async () => {
-            const budget = openTestBudget(suiteTimeout());
-            try {
-                repository = resources.use(await createTestRepository(scenario.repository, runGspot));
-            } finally {
-                budget[Symbol.dispose]();
-            }
-        }, suiteTimeout());
+            repository = resources.use(await createTestRepository(scenario.repository, runGspot));
+        });
         afterAll(async () => {
             await resources.disposeAsync();
         });
         for (const entry of scenario.cases) {
             const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
-            test(
-                `${entry.check} reports ${where} and accepts the correction`,
-                async () => {
-                    const { failed, passed } = await runFindingCase(repository, entry, scenario.repository);
-                    expect(failed.code, `${entry.check}: ${failed.stdout}${failed.stderr}`).toBe(1);
-                    expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
-                    expect(failed.report.checks[0]?.findings).toContainEqual(
-                        containing({ check: entry.check, ...entry.expected }),
-                    );
-                    expect(passed.code, `${entry.check} corrected: ${passed.stdout}${passed.stderr}`).toBe(0);
-                    expect(passed.report.checks).toMatchObject([
-                        { check: entry.check, status: 'passed', findings: [] },
-                    ]);
-                },
-                suiteTimeout(),
-            );
+            test(`${entry.check} reports ${where} and accepts the correction`, async () => {
+                const { failed, passed } = await runFindingCase(repository, entry, scenario.repository);
+                expect(failed.code, `${entry.check}: ${failed.stdout}${failed.stderr}`).toBe(1);
+                expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+                expect(failed.report.checks[0]?.findings).toContainEqual(
+                    containing({ check: entry.check, ...entry.expected }),
+                );
+                expect(passed.code, `${entry.check} corrected: ${passed.stdout}${passed.stderr}`).toBe(0);
+                expect(passed.report.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
+            });
         }
     });
 }

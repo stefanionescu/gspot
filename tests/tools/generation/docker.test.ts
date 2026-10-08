@@ -13,7 +13,7 @@ test('Docker configuration scans isolate deepest scopes and retain scoped adviso
         'FROM node:22.11.0-bookworm-slim\nWORKDIR /app\nUSER root\nHEALTHCHECK CMD ["node", "--version"]\nCMD ["node", "index.js"]\n';
     const paths = ['Dockerfile', 'app/Dockerfile', 'app/child/Dockerfile', 'sibling/Dockerfile'];
     const policy = buildPolicy(['docker'], {
-        tables: '[[scope]]\npath = "app"\n[scope.tools.trivy]\nignore = [{ id = "DS-0002", reason = "This test exercises inherited advisory exceptions." }]\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+        tables: '[scope."app"]\n[scope."app/child"]\n[scope."sibling"]\n[[ignore]]\ncheck = "docker/trivy-config"\nrule = "DS-0002"\npaths = ["app/**"]\nreason = "This test exercises scoped advisory exceptions."\n',
     });
     await createFileTree(sandbox.path, {
         'gspot.toml': policy,

@@ -1,7 +1,9 @@
+import { TYPO } from '#tests/config/samples/spelling.ts';
+
 // The entry may import the orders, and the orders only each other.
 
 export const ARCHITECTURE =
-    '[[architecture.modules]]\nname = "entry"\npaths = ["src/main.ts"]\n[[architecture.modules]]\nname = "orders"\npaths = ["src/orders/**"]\n[[architecture.imports_allowed]]\nfrom = "entry"\nto = ["entry", "orders"]\n[[architecture.imports_allowed]]\nfrom = "orders"\nto = ["orders"]\n';
+    '[[architecture.modules]]\nname = "entry"\npaths = ["src/main.ts"]\nmay_import = ["entry", "orders"]\n[[architecture.modules]]\nname = "orders"\npaths = ["src/orders/**"]\nmay_import = ["orders"]\n';
 
 export const CHECK_SCRIPT = `// The receipt of one order.
 import { wrong } from './orders/double.js';
@@ -50,10 +52,7 @@ export const receiptOptions: Intl.NumberFormatOptions = { style: 'currency', cur
 export const WRONG =
     "// A wrong type.\n\n/** A count that is not a number. */\nexport const count: number = 'three';\n";
 
-// Built from two halves, so the spelling fixer of this repository never corrects the test typo.
-export const MISSPELLED = 'Te' + 'h';
+export const MISSPELLED_FILE = `// ${TYPO.the} order of things.\n\n/** A value. */\nexport const orderCount = 1;\n`;
 
-export const TYPO = `// ${MISSPELLED} order of things.\n\n/** A value. */\nexport const orderCount = 1;\n`;
-
-export const PLAIN_JS =
-    '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice("x");\n';
+export const DOUBLE_JS =
+    '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice(3);\n';

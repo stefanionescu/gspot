@@ -5,14 +5,14 @@ import type { RuntimeSchemaCase } from '#tests/types/cli/docs/schema.ts';
 export const POLICY_FIELD_SCHEMA_CASES: RuntimeSchemaCase[] = [
     {
         name: 'the runner setting with its current name',
-        input: { run_with: 'mise' },
+        input: { runner: 'mise' },
         valid: true,
     },
     {
         name: 'the obsolete runner setting',
-        input: { runner: 'mise' },
+        input: { run_with: 'mise' },
         valid: false,
-        diagnostic: '`runner` is not a setting gspot knows under the top level',
+        diagnostic: '`run_with` is not a setting gspot knows under the top level',
     },
     {
         name: 'current hook and CI file selection names',
@@ -44,14 +44,14 @@ export const POLICY_FIELD_SCHEMA_CASES: RuntimeSchemaCase[] = [
     },
     {
         name: 'the current finding count pattern name',
-        input: { check: [{ ...SCHEMA_CHECK, finding_count_pattern: 'FAILED' }] },
+        input: { check: { 'project/lint': { ...SCHEMA_CHECK, finding_count_pattern: 'FAILED' } } },
         valid: true,
     },
     {
         name: 'the obsolete finding count pattern name',
-        input: { check: [{ ...SCHEMA_CHECK, count_pattern: 'FAILED' }] },
+        input: { check: { 'project/lint': { ...SCHEMA_CHECK, count_pattern: 'FAILED' } } },
         valid: false,
-        diagnostic: '`count_pattern` is not a setting gspot knows under [check.0]',
+        diagnostic: '`count_pattern` is not a setting gspot knows under [check.project/lint]',
     },
     {
         name: 'current agent rule installation fields',
@@ -59,7 +59,7 @@ export const POLICY_FIELD_SCHEMA_CASES: RuntimeSchemaCase[] = [
             agent_rules: {
                 enabled: false,
                 folder: 'rules',
-                project_folder: 'project-rules',
+                own_rules_folder: 'project-rules',
                 instruction_files: ['INSTRUCTIONS.md'],
             },
         },

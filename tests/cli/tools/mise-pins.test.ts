@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { duplicateMisePins } from '#cli/tools/mise.ts';
-import { unlinkSync, symlinkSync, writeFileSync } from 'node:fs';
+import { unlink, symlink, writeFile } from 'node:fs/promises';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
 import { DECLARED_TOOLS, DUPLICATE_CASES, MISE_DECLARATIONS } from '#tests/config/cli/tools/mise-pins.ts';
 
@@ -28,7 +28,7 @@ test('duplicate pins exclude unconsumed tools and accept mise backend prefixes',
     expect(duplicateMisePins(sandbox.path, manifests, 'none')).toStrictEqual([
         { tool: 'ruff', version: '0.16.8', gspotFile: '.gspot/pyproject.toml' },
     ]);
-    writeFileSync(join(sandbox.path, 'mise.toml'), '[settings]\n');
+    await writeFile(join(sandbox.path, 'mise.toml'), '[settings]\n');
     expect(duplicateMisePins(sandbox.path, manifests, 'mise')).toStrictEqual([]);
 });
 
@@ -36,8 +36,10 @@ test('a missing mise file has no duplicate pins and malformed authored TOML fail
     await using sandbox = await testdir();
     const manifests = [{ ...parseConfigurationManifest('tools'), tools: DECLARED_TOOLS }];
     expect(duplicateMisePins(sandbox.path, manifests, 'mise')).toStrictEqual([]);
-    writeFileSync(join(sandbox.path, 'mise.toml'), '[tools\n');
-    expect(() => duplicateMisePins(sandbox.path, manifests, 'mise')).toThrow();
+    await writeFile(join(sandbox.path, 'mise.toml'), '[tools\n');
+    expect(() => duplicateMisePins(sandbox.path, manifests, 'mise')).toThrow(
+        'Invalid TOML document: illegal character in key',
+    );
 });
 
 test('duplicate pins read a linked authored mise document inside the repository and refuse external links', async () => {
@@ -46,11 +48,11 @@ test('duplicate pins read a linked authored mise document inside the repository 
     await createFileTree(sandbox.path, { 'settings/mise.toml': MISE_DECLARATIONS });
     await createFileTree(outside.path, { 'mise.toml': MISE_DECLARATIONS });
     const manifests = [{ ...parseConfigurationManifest('tools'), tools: DECLARED_TOOLS }];
-    symlinkSync('settings/mise.toml', join(sandbox.path, 'mise.toml'));
+    await symlink('settings/mise.toml', join(sandbox.path, 'mise.toml'));
     const duplicates = duplicateMisePins(sandbox.path, manifests, 'mise');
     expect(duplicates.map((pin) => pin.tool)).toStrictEqual(['eslint', 'ruff', 'vale', 'uv']);
-    unlinkSync(join(sandbox.path, 'mise.toml'));
-    symlinkSync(join(outside.path, 'mise.toml'), join(sandbox.path, 'mise.toml'));
+    await unlink(join(sandbox.path, 'mise.toml'));
+    await symlink(join(outside.path, 'mise.toml'), join(sandbox.path, 'mise.toml'));
     expect(() => duplicateMisePins(sandbox.path, manifests, 'mise')).toThrow('Source link leaves the repository');
     expect(await Bun.file(join(outside.path, 'mise.toml')).text()).toBe(MISE_DECLARATIONS);
 });

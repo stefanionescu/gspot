@@ -9,17 +9,17 @@ export const EDITORCONFIG_INPUTS = {
     Dockerfile: 'FROM scratch\n',
 };
 
-export const FORMAT_POLICY = 'configurations = ["format"]\nrun_with = "mise"\n[agent_rules]\nenabled = false\n';
+export const FORMAT_POLICY = 'configurations = ["format"]\nrunner = "mise"\n[agent_rules]\nenabled = false\n';
 
-export const PRETTIER_EXCLUSIONS = '\n[tools.prettier]\nexclude = ["**/*.json"]\n';
+export const PRETTIER_PATH_IGNORE =
+    '\n[[ignore]]\ncheck = "format/prettier"\npaths = ["**/*.json"]\nreason = "These files retain generated formatting."\n';
 
 export const AUTHORED_IGNORE_CHECK = `
 configurations = []
 [agent_rules]
 enabled = false
 
-[[check]]
-name = "custom/native-ignore"
+[check."custom/native-ignore"]
 command = ["bash", "-c", "true"]
 stage = "commit"
 ignore_file = "project.ignore"

@@ -38,7 +38,7 @@ configuration list. To override a language or framework, run `gspot add <configu
 dependencies change. It keeps manual language and framework additions and removals at the root
 and in scopes, including choices from `init --configurations`, `--scope-configurations`, and
 edits to authored configuration lists. A manual removal stays removed when its detection
-source disappears and returns. These overrides select project configurations; `recommended`
+source disappears and returns. Removed choices are visible in `removed_configurations`. These overrides select project configurations; `recommended`
 and `all` control check coverage.
 
 Initialization detects `react-native` from React Native dependencies and `expo` from Expo
@@ -110,10 +110,10 @@ More ways to write a setting:
 - For a list, `--replace` replaces the list authored at that scope, and `--remove` removes items from it. Inherited lists and shipped defaults still apply.
 
 With `require_reasons = true`, adding formatter exclusions, sitemap exclusions, registry
-hosts, or project vocabulary needs a reason. `set` saves a list of strings in a table with `value` and `reason`.
-Appending or removing items preserves that saved form. Replacing an exception list with an
-empty list tightens the policy and needs no reason. Turning `docs.license` off also needs a
-reason; turning the license-file requirement back on does not.
+hosts, or project vocabulary needs a reason. Values stay in their concern tables; `[reasons]`
+records reasons by setting name. List edits preserve the reason. Replacing an exception list
+with an empty list tightens the policy and needs no reason. Turning `docs.require_license`
+off needs a reason; turning it back on does not.
 
 Lockfile downloads use `registry.npmjs.org` and `registry.yarnpkg.com` by default. Add another
 reviewed host with `gspot set dependencies.registry_hosts <HOST> --reason "<WHY>"`.
@@ -150,7 +150,7 @@ Next.js sources retain Node.js by default because server components can use its 
 
 Use `tools.eslint.runtimes` to declare another runtime for a file selector:
 
-```toml
+```toml title="Runtime choices in gspot.toml"
 [tools.eslint.runtimes]
 "src/client/**" = "browser"
 "src/workers/**" = "worker"

@@ -3,6 +3,7 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import { HISTORY_CHECKS } from '#cli/config/planning.ts';
 import { hostPlatform } from '#cli/platform/environment.ts';
+import { readManifests } from '#cli/repository/manifests.ts';
 import { isOutsideChildren } from '#cli/repository/selectors.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
@@ -47,7 +48,7 @@ function entriesFor(session: Session, scope: ScopeSelection): PlanEntry[] {
     );
     if (!isRoot) return entries;
     const referenced = referencedEntries(session, entries);
-    const own = session.policyFiles.policy.checks.map((entry) => ({ check: entry }));
+    const own = Object.values(session.policyFiles.policy.check).map((entry) => ({ check: entry }));
     return [...entries, ...referenced, ...own];
 }
 
@@ -81,6 +82,7 @@ function planOne(context: PlanInputs, entry: PlanEntry, isRootCheck: boolean): P
         { platform, arch: process.arch },
         session.repository.hasGit,
         session.policyFiles.policy,
+        context.projects,
     );
     return restrictIgnoredPaths(session, skip === undefined ? planned : { ...planned, skip });
 }
@@ -126,6 +128,12 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const wholeSeen = new Set<string>();
     const platform = hostPlatform();
     const narrow = narrowSet(options);
+    const needsDependencies = session.scopes.some((scope) =>
+        entriesFor(session, scope).some(
+            ({ check }) => isWanted(check, options) && check.when?.dependencies !== undefined,
+        ),
+    );
+    const projects = needsDependencies ? readManifests(session.root, session.repository.files) : [];
     return session.scopes.map((scope) => {
         const context: PlanInputs = {
             session,
@@ -134,6 +142,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
             platform,
             narrow,
             children: childScopes(session, scope),
+            projects,
         };
         return planScope(context, wholeSeen);
     });

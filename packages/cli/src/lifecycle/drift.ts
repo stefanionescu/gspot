@@ -19,8 +19,8 @@ import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { RETAINED_KINDS, RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
 
 function isStrayCandidate(path: string, policy: Policy): boolean {
-    if (path.startsWith(`${policy.agentRules.folder}/`) && !policy.agentRules.enabled) return false;
-    if (path.startsWith(`${HOOKS_DIRECTORY}/`) && policy.hooks === undefined) return false;
+    if (path.startsWith(`${policy.agent_rules.folder}/`) && !policy.agent_rules.enabled) return false;
+    if (path.startsWith(`${HOOKS_DIRECTORY}/`) && policy.hooks?.enabled !== true) return false;
     return !RETAINED_PATHS.has(path);
 }
 

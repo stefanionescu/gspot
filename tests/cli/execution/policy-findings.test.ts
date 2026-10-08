@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
@@ -36,7 +36,7 @@ test('a wrong entry in gspot.toml is a finding of gspot/policy, and the other ch
         },
     ]);
     expect(broken.report.failed).toContain('gspot/policy');
-    writeFileSync(join(sandbox.path, 'gspot.toml'), CORRECTED);
+    await writeFile(join(sandbox.path, 'gspot.toml'), CORRECTED);
     const corrected = await executeRun(await openSession(sandbox.path), {
         ...POLICY_FINDINGS_OPTIONS,
         checks: BUILT_IN_CHECKS,

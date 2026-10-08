@@ -6,7 +6,6 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { ParsedSource } from '#cli/types/parsers/source.ts';
 import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
-import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import type { MarkupAttribute } from '#cli/types/checks/language/html.ts';
 
 import {
@@ -192,11 +191,9 @@ export async function literals(input: CheckInput): Promise<Finding[]> {
     const tool = input.view.options('html');
     const templates = (tool['templates'] as string[] | undefined) ?? [];
     if (templates.length === 0) return [];
-    const excluded = ((tool['literals_allowed'] as PathAllowance[] | undefined) ?? []).flatMap((entry) => entry.paths);
     const isTemplate = pathMatcher(templates);
-    const isExcluded = pathMatcher(excluded);
     const files = input.files
-        .filter((file) => isTemplate(file.path) && !isExcluded(file.path))
+        .filter((file) => isTemplate(file.path))
         .map((file) => ({ path: file.path, grammar: 'html' as const }));
     const findings: Finding[] = [];
     await visitParsedSources({ ...input, files }, (source) => findings.push(...literalFindings(input, source)));

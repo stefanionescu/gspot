@@ -4,7 +4,6 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
@@ -42,11 +41,12 @@ test.each(SOURCE_CORRECTIONS)(
 test('check inputs expose selected files and reserve the repository inventory for once-only checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['jest', 'docs'], { tables: '[[scope]]\npath = "apps/web"\n' }),
+        'gspot.toml': buildPolicy(['jest', 'docs'], { tables: '[scope."apps/web"]\n[scope."apps/web/nested"]\n' }),
         'README.md': '# Repository\n',
         'apps/web/value.test.js': 'test("value", () => expect(1).toBe(1));\n',
         'apps/web/fixture.bin': new Uint8Array([0, 255, 0]),
         'apps/web/jest.config.json': '{"testEnvironment":"node"}',
+        'apps/web/nested/private.txt': 'Nested scope input\n',
         'unrelated/private.txt': 'Sibling input\n',
     });
     const session = await openSession(sandbox.path);
@@ -74,7 +74,6 @@ test('check inputs expose selected files and reserve the repository inventory fo
         buildRunOptions({
             only: ['jest/coverage'],
             checks: {
-                ...BUILT_IN_CHECKS,
                 'jest/coverage': {
                     run: runBuiltInCheck(() => Promise.resolve({ findings: [], files: ['unrelated/private.txt'] })),
                 },
@@ -89,7 +88,6 @@ test('check inputs expose selected files and reserve the repository inventory fo
         buildRunOptions({
             only: ['jest/coverage'],
             checks: {
-                ...BUILT_IN_CHECKS,
                 'jest/coverage': {
                     run: runBuiltInCheck(() => Promise.resolve({ findings: [], files: ['apps/web/value.test.js'] })),
                 },
@@ -106,14 +104,14 @@ test.skipIf(!isPosix)('built-in checks read edited SQL source when a session is 
     const path = 'app/café\nquery.sql';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['sql'], {
-            tables: '[tools.sqlfluff]\ndialect = "postgres"\n[[scope]]\npath = "app"\n',
+            tables: '[tools.sqlfluff]\ndialect = "postgres"\n[scope."app"]\n',
             level: 'all',
         }),
         [path]: 'select 1;\n',
     });
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({
-        only: ['sql/trivial-functions', 'sql/file-lines'],
+        only: ['sql/trivial-functions', 'structure/file-lines'],
         isDryRun: true,
     });
     const clean = await executeRun(session, options);
@@ -123,7 +121,7 @@ test.skipIf(!isPosix)('built-in checks read edited SQL source when a session is 
             .filter((check) => check.scope === 'app')
             .map((check) => check.check)
             .toSorted((left, right) => left.localeCompare(right)),
-    ).toStrictEqual(['sql/file-lines', 'sql/trivial-functions']);
+    ).toStrictEqual(['sql/trivial-functions', 'structure/file-lines']);
     await Bun.write(join(sandbox.path, path), 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n');
     const defect = await executeRun(session, options);
     expect(defect.report.exitCode).toBe(1);

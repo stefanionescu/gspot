@@ -1,14 +1,15 @@
 import { namingLists } from '#cli/parsers/schema/naming.ts';
-import { policySchema } from '#cli/policy/schema/policy.ts';
-import { compact, isRecord } from '#cli/platform/objects.ts';
-import { isReasoned, namingCategorySchema } from '#cli/policy/schema/fields.ts';
-import { configurationSettingSchemas } from '#cli/policy/schema/configurations.ts';
+import { trimTrailingSlashes } from '#cli/platform/paths.ts';
+import { compact, valueAt, isRecord } from '#cli/platform/objects.ts';
+import { prefixScopePath, scopePolicyPaths } from '#cli/policy/paths.ts';
+import { configurationSettingSchemas } from '#cli/policy/schema/namespaces.ts';
+import { defaultValue, namingCategorySchema } from '#cli/policy/schema/fields.ts';
+import { policySchema, policyTableValuesSchema } from '#cli/policy/schema/policy.ts';
 
 import type {
     Limits,
     Policy,
     RawScope,
-    Reasoned,
     RawLimits,
     RawNaming,
     RawPolicy,
@@ -17,15 +18,11 @@ import type {
     NamingLanguageTable,
 } from '#cli/types/policy/settings.ts';
 
-function normalizeCategory(raw: Record<string, unknown>): NamingTable {
-    const table: NamingTable = {};
-    if (raw['max_chars'] !== undefined) table.max_chars = toReasoned(raw['max_chars'] as number);
-    if (raw['max_words'] !== undefined) table.max_words = toReasoned(raw['max_words'] as number);
-    if (raw['case'] !== undefined) table.case = toReasoned(raw['case'] as string[]);
-    return table;
+function normalizeCategory(raw: NamingTable): NamingTable {
+    return compact({ max_chars: raw.max_chars, max_words: raw.max_words, case: raw.case });
 }
 
-function normalizeLanguage(table: Record<string, unknown>): NamingLanguageTable {
+function normalizeLanguage(table: RawNaming[string]): NamingLanguageTable {
     const language: NamingLanguageTable = { ...normalizeCategory(table), categories: {} };
     for (const [inner, entry] of Object.entries(table))
         if (!Object.hasOwn(namingCategorySchema.shape, inner) && isRecord(entry))
@@ -33,50 +30,39 @@ function normalizeLanguage(table: Record<string, unknown>): NamingLanguageTable 
     return language;
 }
 
-function normalizeScopeTables(raw: RawScope): Partial<Policy> {
+function normalizeScopeTables(authored: RawScope, path: string): Partial<Policy> {
+    const raw = scopePolicyPaths(authored, path);
     // The tables a scope holds as written.
     const table: Partial<Policy> = compact({
+        authored,
         configurationSettings: configurationTables(raw),
-        tools: raw.tools as Policy['tools'] | undefined,
-        tests: raw.tests,
+        reasons: raw.reasons,
+        tools: raw.tools && compact(raw.tools),
+        test_files: raw.test_files,
         tool_timeout_seconds: raw.tool_timeout_seconds,
     });
     if (raw.limits) table.limits = normalizeLimits(raw.limits);
     if (raw.naming) table.naming = normalizeNaming(raw.naming);
-    if (raw.architecture) table.architecture = normalizeArchitecture(raw.architecture);
-    if (raw.structure) table.structure = raw.structure;
+    if (raw.architecture) table.architecture = normalizeArchitecture(raw.architecture, path);
+    if (raw.structure)
+        table.structure = {
+            reexports: defaultValue(policySchema.shape.structure.unwrap().shape.reexports, raw.structure.reexports),
+        };
     if (raw.format) table.format = compact(raw.format);
     return table;
 }
 
 function configurationTables(raw: object): Record<string, Record<string, unknown>> {
-    const tables = new Map<string, unknown>(Object.entries(raw));
     return Object.fromEntries(
         Object.keys(configurationSettingSchemas).flatMap((name) => {
-            const value = tables.get(name);
+            const value = valueAt(raw, [name]);
             return isRecord(value) ? [[name, value]] : [];
         }),
     );
 }
 
-function trimTrailingSlashes(path: string): string {
-    let end = path.length;
-    while (end > 0 && path[end - 1] === '/') end -= 1;
-    return path.slice(0, end);
-}
-
 /**
- * Wraps a bare value or a { value, reason } table into the reasoned form.
- * @param value the value as written
- * @returns the value with its reason when it had one
- */
-function toReasoned<T>(value: T | Required<Reasoned<T>>): Reasoned<T> {
-    if (isReasoned(value)) return value;
-    return { value: value };
-}
-
-/**
- * Splits [limits] into root limits and groups, every value reasoned.
+ * Splits [limits] into plain root limits and per-language groups.
  * @param raw the table as written, if any
  * @returns the limits
  */
@@ -84,13 +70,11 @@ function normalizeLimits(raw: RawLimits = {}): Limits {
     const limits: Limits = { root: {}, groups: {} };
     const entries = Object.entries(raw);
     for (const [key, value] of entries) {
-        if (!isRecord(value) || isReasoned(value)) {
-            limits.root[key] = toReasoned(value as number | Required<Reasoned<number>>);
+        if (typeof value === 'number') {
+            limits.root[key] = value;
             continue;
         }
-        limits.groups[key] = Object.fromEntries(
-            Object.entries(value).map(([inner, entry]) => [inner, toReasoned(entry as number | unknown[])]),
-        );
+        limits.groups[key] = compact(value);
     }
     return limits;
 }
@@ -104,47 +88,72 @@ function normalizeNaming(raw: RawNaming = {}): NamingSettings {
     const lists = namingLists.parse(raw);
     const naming: NamingSettings = {
         ...lists,
-        paths: lists.paths.map((entry) => compact(entry)),
+        overrides: lists.overrides.map((entry) => compact(entry)),
         languages: {},
     };
-    const entries = Object.entries(raw);
-    for (const [key, value] of entries)
-        if (!Object.hasOwn(namingLists.shape, key) && isRecord(value)) naming.languages[key] = normalizeLanguage(value);
+    for (const key of Object.keys(raw)) {
+        const value = raw[key];
+        if (!Object.hasOwn(namingLists.shape, key) && value !== undefined)
+            naming.languages[key] = normalizeLanguage(value);
+    }
     return naming;
 }
 
 /**
  * Fills the architecture table's lists and keeps its optional keys only when written.
  * @param raw the table as written, if any
+ * @param scope the scope owning path selectors; module identities remain unchanged
  * @returns the architecture configuration
  */
-function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['architecture'] {
-    const filled = policySchema.shape.architecture.unwrap().prefault({}).parse(raw);
-    return compact({ ...filled, imports_allowed: filled.imports_allowed.map((entry) => compact(entry)) });
+function normalizeArchitecture(raw: RawPolicy['architecture'], scope = ''): Policy['architecture'] {
+    const fields = policySchema.shape.architecture.unwrap().shape;
+    const modules = defaultValue(fields.modules, raw?.modules);
+    const names = new Set(modules.map((module) => module.name));
+    const roles = defaultValue(fields.roles, raw?.roles);
+    return {
+        modules: modules.map((module) => compact({ ...module, may_import: module.may_import ?? [] })),
+        roles: defaultValue(
+            fields.roles,
+            Object.fromEntries(
+                Object.entries(compact(roles)).map(([role, value]) => {
+                    const paths = [value]
+                        .flat()
+                        .map((entry) => (names.has(entry) ? entry : prefixScopePath(entry, scope)));
+                    return [role, typeof value === 'string' ? paths[0] : paths];
+                }),
+            ),
+        ),
+    };
 }
 
-function normalizeChecks(checks: RawPolicy['check']): Policy['checks'] {
-    return (checks ?? []).map((entry) => {
-        const { paths, ...definition } = compact({ ...entry, output: entry.output && compact(entry.output) });
-        return {
-            ...definition,
-            level: 'recommended',
-            runs: 'files',
-            summary: entry.summary ?? `Runs the repository's own check ${entry.name}.`,
-            why: 'The repository declared this command in gspot.toml as part of its gate.',
-            help: entry.help ?? 'Read the command output; the repository owns this check.',
-            files: {
-                extensions: [],
-                filenames: [],
-                tags: [],
-                paths,
-                languages: false,
-                prettier_plugins: false,
-                eslint_plugins: false,
-                kinds: ['source', 'generated'],
-            },
-        };
-    });
+function normalizeChecks(checks: RawPolicy['check']): Policy['check'] {
+    return Object.fromEntries(
+        Object.entries({ ...checks }).map(([name, entry]) => {
+            const { paths, ...definition } = compact({ ...entry, output: entry.output && compact(entry.output) });
+            return [
+                name,
+                {
+                    ...definition,
+                    name,
+                    level: 'recommended',
+                    runs: 'files',
+                    summary: entry.summary ?? `Runs the repository's own check ${name}.`,
+                    why: 'The repository declared this command in gspot.toml as part of its gate.',
+                    help: entry.help ?? 'Read the command output; the repository owns this check.',
+                    files: {
+                        extensions: [],
+                        filenames: [],
+                        tags: [],
+                        paths,
+                        languages: false,
+                        prettier_plugins: false,
+                        eslint_plugins: false,
+                        kinds: ['source', 'generated'],
+                    },
+                },
+            ];
+        }),
+    );
 }
 
 /**
@@ -153,41 +162,60 @@ function normalizeChecks(checks: RawPolicy['check']): Policy['checks'] {
  * @returns the policy
  */
 export function buildPolicy(raw: RawPolicy): Policy {
+    const tables = policyTableValuesSchema.parse({
+        agent_rules: defaultValue(policySchema.shape.agent_rules, raw.agent_rules),
+        hooks: raw.hooks,
+        ci: raw.ci,
+    });
     const scopeTables: Record<string, Partial<Policy>> = {};
-    const scopes = raw.scope ?? [];
-    for (const scope of scopes) scopeTables[trimTrailingSlashes(scope.path)] = normalizeScopeTables(scope);
+    const scopes = Object.entries({ ...raw.scope });
+    for (const [path, scope] of scopes)
+        scopeTables[trimTrailingSlashes(path)] = normalizeScopeTables(scope, trimTrailingSlashes(path));
     return {
-        level: raw.level,
-        require_reasons: raw.require_reasons,
-        exclude: raw.exclude,
+        authored: raw,
+        level: defaultValue(policySchema.shape.level, raw.level),
+        reasons: { ...raw.reasons },
+        exclude: defaultValue(policySchema.shape.exclude, raw.exclude),
         configurations: raw.configurations ?? [],
         configurationSettings: configurationTables(raw),
-        scopes: scopes.map((scope) => ({
-            path: trimTrailingSlashes(scope.path),
-            configurations: scope.configurations ?? [],
-        })),
+        scope: Object.fromEntries(
+            scopes.map(([path, scope]) => [
+                trimTrailingSlashes(path),
+                {
+                    configurations: scope.configurations ?? [],
+                    removed_configurations: scope.removed_configurations ?? [],
+                },
+            ]),
+        ),
+        removed_configurations: defaultValue(policySchema.shape.removed_configurations, raw.removed_configurations),
         limits: normalizeLimits(raw.limits),
         naming: normalizeNaming(raw.naming),
         architecture: normalizeArchitecture(raw.architecture),
-        structure: policySchema.shape.structure.unwrap().prefault({}).parse(raw.structure),
+        structure: {
+            reexports: defaultValue(policySchema.shape.structure.unwrap().shape.reexports, raw.structure?.reexports),
+        },
         format: compact({ ...raw.format }),
-        prose: policySchema.shape.prose.unwrap().prefault({}).parse(raw.prose),
-        tools: { ...raw.tools } as Policy['tools'],
-        tests: raw.tests,
-        ignores: (raw.ignore ?? []).map((entry) => compact(entry)),
+        words: defaultValue(policySchema.shape.words, raw.words),
+        tools: compact({ ...raw.tools }),
+        test_files: defaultValue(policySchema.shape.test_files, raw.test_files),
+        ignore: (raw.ignore ?? []).map((entry) => compact(entry)),
         declarations: [
-            ...raw.generated.map((entry) => ({ ...entry, kind: 'generated' as const })),
-            ...raw.vendored.map((entry) => ({ ...entry, kind: 'vendored' as const })),
+            ...defaultValue(policySchema.shape.generated, raw.generated).map((entry) => ({
+                ...entry,
+                kind: 'generated' as const,
+            })),
+            ...defaultValue(policySchema.shape.vendored, raw.vendored).map((entry) => ({
+                ...entry,
+                kind: 'vendored' as const,
+            })),
         ],
-        checks: normalizeChecks(raw.check),
+        check: normalizeChecks(raw.check),
 
         ...compact({
-            hooks: raw.hooks,
-            ci: raw.ci,
-            run_with: raw.run_with,
+            runner: raw.runner,
             tool_timeout_seconds: raw.tool_timeout_seconds,
         }),
-        agentRules: compact(raw.agent_rules),
+        ...tables,
         scopeTables,
     };
 }

@@ -1,9 +1,6 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/config/samples/swift.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
-
-export const SPACED =
-    'import Foundation\n\n/// Builds the greeting for a person.\npublic func   greeting(for name: String) -> String {\n    let person = name.trimmingCharacters(in: .whitespacesAndNewlines)\n    if person.isEmpty {\n        return "hello"\n    }\n    return "hello \\(person)"\n}\n';
+import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
 
 export const CASES: FindingCase[] = [
     // SwiftLint has no Windows build.
@@ -15,12 +12,11 @@ export const CASES: FindingCase[] = [
     },
     {
         check: 'swift/swiftformat',
-        files: { 'Sources/App/Greeting.swift': SPACED },
+        files: {},
         expected: { file: 'Sources/App/Greeting.swift', rule: 'consecutiveSpaces', line: 4 },
     },
 ];
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['swift', 'naming'],
     modules: false,

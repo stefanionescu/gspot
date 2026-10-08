@@ -10,41 +10,73 @@ import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
 import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/tool/xcode.ts';
 import { stringsFileSchema, assetContentsSchema } from '#cli/parsers/schema/xcode.ts';
 
-function setName(path: string): string {
+function assetSetName(path: string): string {
     const folder = path.slice(0, path.lastIndexOf('/'));
     const name = posix.basename(folder);
     return name.slice(0, name.lastIndexOf('.'));
 }
 
-function imageFindings(input: CheckInput, path: string): Finding[] {
-    const read = parseJsonDocument(readSource(input.root, path, input.reads).toString('utf8'), assetContentsSchema);
-    const at = { file: path, line: 1 };
-    if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
-    if (!path.endsWith(IMAGE_SET)) return [];
-    const contents = read.data;
-    const names = (contents.images ?? []).flatMap((image) => (image.filename === undefined ? [] : [image.filename]));
-    if (names.length === 0) return [findingAt(input, at, 'empty-set', 'This image set names no image file.')];
-    const folder = path.slice(0, path.lastIndexOf('/'));
-    return names
-        .filter((name) => statSync(join(input.root, folder, name), { throwIfNoEntry: false }) === undefined)
-        .map((name) => findingAt(input, at, 'missing-image', `The image ${name} is not in the set.`));
+/**
+ * The findings of every asset catalog: each Contents.json parses, each image set holds its images.
+ * @param input the check input
+ * @returns the findings
+ */
+export function contentsFindings(input: CheckInput): Finding[] {
+    return trackedByExtension(input, ['Contents.json'])
+        .filter((path) => path.includes('.xcassets/'))
+        .flatMap((path) => {
+            const read = parseJsonDocument(
+                readSource(input.root, path, input.reads).toString('utf8'),
+                assetContentsSchema,
+            );
+            const at = { file: path, line: 1 };
+            if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];
+            if (!path.endsWith(IMAGE_SET)) return [];
+            const contents = read.data;
+            const names = (contents.images ?? []).flatMap((image) =>
+                image.filename === undefined ? [] : [image.filename],
+            );
+            if (names.length === 0) return [findingAt(input, at, 'empty-set', 'This image set names no image file.')];
+            const folder = path.slice(0, path.lastIndexOf('/'));
+            return names
+                .filter((name) => statSync(join(input.root, folder, name), { throwIfNoEntry: false }) === undefined)
+                .map((name) => findingAt(input, at, 'missing-image', `The image ${name} is not in the set.`));
+        });
 }
 
-function orphanFindings(input: CheckInput, sets: string[]): Finding[] {
-    if (input.policyFiles.policy.level !== 'all') return [];
-    const swift = trackedByExtension(input, ['.swift', '.storyboard', '.xib', '.plist']).map((path) =>
-        readSource(input.root, path, input.reads).toString('utf8'),
-    );
-    return sets
+/**
+ * Report asset sets that no source or Xcode build setting names.
+ * @param input the check input
+ * @returns the findings
+ */
+export function orphanAssets(input: CheckInput): Finding[] {
+    const sourceTexts = trackedByExtension(input, [
+        '.swift',
+        '.storyboard',
+        '.xib',
+        '.plist',
+        'project.pbxproj',
+        '.xcconfig',
+    ]).map((path) => readSource(input.root, path, input.reads).toString('utf8'));
+    return trackedByExtension(input, ['Contents.json'])
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
         .filter((path) => {
-            const name = setName(path);
-            return swift.every(
-                (text) => !text.includes(`"${name}"`) && !text.includes(`.${camelCase(name.split(NOT_WORD))}`),
+            const name = assetSetName(path);
+            const assignment = new RegExp(String.raw`=\s*${RegExp.escape(name)}\s*(?:;|$)`, 'mu');
+            return sourceTexts.every(
+                (text) =>
+                    !text.includes(`"${name}"`) &&
+                    !text.includes(`.${camelCase(name.split(NOT_WORD))}`) &&
+                    !assignment.test(text),
             );
         })
         .map((path) =>
-            findingAt(input, { file: path, line: 1 }, 'orphan-asset', `No source names the asset ${setName(path)}.`),
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                'orphan-asset',
+                `No source names the asset ${assetSetName(path)}.`,
+            ),
         );
 }
 
@@ -74,14 +106,4 @@ export function xcstrings(input: CheckInput): Finding[] {
             ];
         });
     });
-}
-
-/**
- * The findings of every asset catalog: each Contents.json parses, each image set holds its images, and code names each asset.
- * @param input the check input
- * @returns the findings
- */
-export function xcodeAssets(input: CheckInput): Finding[] {
-    const contents = trackedByExtension(input, ['Contents.json']).filter((path) => path.includes('.xcassets/'));
-    return [...contents.flatMap((path) => imageFindings(input, path)), ...orphanFindings(input, contents)];
 }

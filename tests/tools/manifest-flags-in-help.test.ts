@@ -15,10 +15,8 @@ import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { pythonToolProject } from '#cli/tools/python/project.ts';
 import { toolProjectPackage } from '#cli/configurations/pins.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { FlagCommand } from '#tests/types/tools/manifest-flags-in-help.ts';
-import { HELP_TIMEOUT_MS } from '#tests/config/tools/manifest-flags-in-help.ts';
 import { installToolProject, prepareToolProjects } from '#cli/tools/project.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
 
@@ -58,7 +56,6 @@ async function helpText(executable: string, subcommands: string[], flags: string
         [[], ...groups.map((group) => [group])].map((verbatim) =>
             runTestCommand([executable, ...subcommands, '--help', ...verbatim], {
                 cwd: sandbox.path,
-                timeoutMs: HELP_TIMEOUT_MS,
             }),
         ),
     );
@@ -100,9 +97,18 @@ beforeAll(async () => {
         ...manifest,
         tools: manifest.tools.filter((tool) => names.has(tool.name)),
     }));
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([], { tables: 'run_with = "mise"\n' }) });
+    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([], { tables: 'runner = "mise"\n' }) });
     privateContext.policyFiles = readPolicy(sandbox.path);
-    const files = [...pythonProject(selected), ...npmProject(selected, { name: 'bun', version: Bun.version }, 'mise')];
+    const files = [
+        ...pythonProject(selected),
+        ...npmProject({
+            root: sandbox.path,
+            scopes: [],
+            manifests: selected,
+            installer: { name: 'bun', version: Bun.version },
+            runner: 'mise',
+        }),
+    ];
     {
         using log = openOwnership(sandbox.path);
         await prepareToolProjects(
@@ -141,7 +147,7 @@ beforeAll(async () => {
             { root: sandbox.path, tools: supported.map(({ tool }) => tool) },
         );
     }
-}, NATIVE_TEST_TIMEOUT_MS);
+});
 
 // On the Windows runner the version inspection times out before the help runs, so these run on POSIX systems.
 for (const command of distinct) {
@@ -166,6 +172,5 @@ for (const command of distinct) {
             });
             expect(missing, `${title}: ${text.slice(0, 400)}`).toStrictEqual([]);
         },
-        HELP_TIMEOUT_MS,
     );
 }

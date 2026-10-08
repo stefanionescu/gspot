@@ -3,7 +3,6 @@ import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 import { ROUTE, MANIFEST, NEXT_TRANSLATIONS } from '#tests/config/cli/checks/nextjs.ts';
 import { NEXT_PAGE, NEXT_LAYOUT, NEXT_CONFIG_FILE } from '#tests/config/samples/nextjs.ts';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['nextjs', 'i18n'],
     modules: false,
@@ -18,7 +17,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'nextjs/route-segments',
@@ -27,7 +25,7 @@ export const CASES: FindingCase[] = [
         corrected: { files: { 'app/api/route.ts': ROUTE } },
     },
     {
-        check: 'nextjs/config',
+        check: 'nextjs/next-config',
         files: {
             'next.config.mjs':
                 '// The framework configuration.\nconst config = { eslint: { ignoreDuringBuilds: true } };\n\nexport default config;\n',
@@ -35,8 +33,10 @@ export const CASES: FindingCase[] = [
         expected: { file: 'next.config.mjs', rule: 'checks-off', line: 2 },
     },
     {
-        check: 'nextjs/version-pairs',
+        check: 'react/version-pairs',
         files: {
+            'node_modules/react/package.json': '{"name":"react","version":"19.1.1"}\n',
+            'node_modules/react-dom/package.json': '{"name":"react-dom","version":"18.3.1"}\n',
             'package.json':
                 '{"name":"example","version":"1.0.0","private":true,"type":"module","dependencies":{"next":"16.3.5","next-intl":"4.3.9","react":"19.1.1","react-dom":"18.3.1"}}\n',
         },

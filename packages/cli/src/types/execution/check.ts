@@ -10,10 +10,20 @@ import type { PlanOptions, StageFilter, PlannedCheck } from '#cli/types/planning
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { ScopeView, PolicyFile, IgnoreEntry, ScopeSelection } from '#cli/types/policy/settings.ts';
 
-export type SuppressionComment = { file: string; line: number; form: string; reason?: string; forbidden: boolean };
+export type SuppressionComment = {
+    file: string;
+    line: number;
+    form: string;
+    reasonForm: string;
+    reason?: string;
+    forbidden: boolean;
+};
 
 /** Checks by ID, each running through the same session and planned-check callback. */
-export type BuiltInChecks = Record<string, { run: Executable['run'] }>;
+export type BuiltInChecks = Record<string, { run: Executable['run']; fix?: BuiltInFix }>;
+
+/** A native correction publishes through the same repository or disposable-copy boundary as command fixes. */
+export type BuiltInFix = (planned: PlannedCheck, root: string) => FixResult | Promise<FixResult>;
 
 export type FixResult = { check: string; changed: string[] } & (
     | { status: 'changed' | 'unchanged' | 'skipped' }
@@ -84,6 +94,7 @@ export type CheckInput = {
     scope: string;
     view: ScopeView;
     check: CheckDeclaration;
+    /** Planner-selected files; scope checks exclude every nested scope. */
     files: TrackedFile[];
     staged?: Set<string>;
 };
@@ -135,4 +146,4 @@ export type ReplannedFixResult = { executables: Executable[]; fixes: FixReport |
 export type IgnoredFindings = { kept: Finding[]; uses: IgnoreUse[] };
 
 /** A preview fixes a disposable copy and reports differences. */
-export type FixOptions = { isDryRun: boolean };
+export type FixOptions = { isDryRun: boolean; checks: BuiltInChecks };

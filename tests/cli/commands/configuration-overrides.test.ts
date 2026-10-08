@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { rmSync, writeFileSync } from 'node:fs';
 import { readPolicy } from '#cli/policy/read.ts';
+import { rm, writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -21,10 +21,10 @@ test('authored language overrides survive root and scope reconciliation without 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': AUTHORED_OVERRIDES, 'api/README.md': '# API\n' });
     commitAll(sandbox.path);
-    const before = readTree(sandbox.path);
+    const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(readTree(sandbox.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(
@@ -33,11 +33,11 @@ test('authored language overrides survive root and scope reconciliation without 
     const policy = readPolicy(sandbox.path).policy;
     expect(policy.configurations).toContain('css');
     expect(policy.configurations).toContain('react');
-    expect(policy.scopes.find((scope) => scope.path === 'api')?.configurations).toContain('python');
-    const stable = readTree(sandbox.path);
+    expect(policy.scope['api']?.configurations).toContain('python');
+    const stable = await readTree(sandbox.path);
     const repeated = await runGspot(sandbox.path, ['apply']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect(readTree(sandbox.path)).toStrictEqual(stable);
+    expect(await readTree(sandbox.path)).toStrictEqual(stable);
 });
 
 test.each(INITIAL_OVERRIDES)(
@@ -48,13 +48,11 @@ test.each(INITIAL_OVERRIDES)(
         commitAll(sandbox.path);
         const initialized = await runGspot(sandbox.path, ['init', '--yes', ...argv, ...QUIET_INIT]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        rmSync(join(sandbox.path, source));
+        await rm(join(sandbox.path, source));
         const applied = await runGspot(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const policy = readPolicy(sandbox.path).policy;
-        expect(
-            scope === '' ? policy.configurations : policy.scopes.find((entry) => entry.path === scope)?.configurations,
-        ).toContain('bash');
+        expect(scope === '' ? policy.configurations : policy.scope[scope]?.configurations).toContain('bash');
     },
 );
 
@@ -66,30 +64,28 @@ test('a manual removal survives loss and return of detection evidence', async ()
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const policy = readPolicy(sandbox.path).policy;
     expect(policy.configurations).toContain('bash');
-    const path = join(sandbox.path, 'gspot.toml');
-    const authored = await Bun.file(path).text();
-    writeFileSync(path, authored.replace('"bash",', ''));
+    const removed = await runGspot(sandbox.path, ['remove', 'bash']);
+    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+    expect(readPolicy(sandbox.path).policy.removed_configurations).toContain('bash');
     for (const hasSource of [true, false, true]) {
-        if (hasSource) writeFileSync(join(sandbox.path, 'run.sh'), SCRIPT_SOURCE);
-        else rmSync(join(sandbox.path, 'run.sh'));
+        await (hasSource ? writeFile(join(sandbox.path, 'run.sh'), SCRIPT_SOURCE) : rm(join(sandbox.path, 'run.sh')));
         const result = await runGspot(sandbox.path, ['apply']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(readPolicy(sandbox.path).policy.configurations).not.toContain('bash');
     }
 });
 
-test('automatically selected languages disappear with their last source and return when it returns', async () => {
+test('authored language choices remain when source evidence disappears and returns', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'run.sh': SCRIPT_SOURCE });
     commitAll(sandbox.path);
     const initialized = await runGspot(sandbox.path, ['init', '--yes', ...QUIET_INIT]);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     for (const hasSource of [false, true]) {
-        if (hasSource) writeFileSync(join(sandbox.path, 'run.sh'), SCRIPT_SOURCE);
-        else rmSync(join(sandbox.path, 'run.sh'));
+        await (hasSource ? writeFile(join(sandbox.path, 'run.sh'), SCRIPT_SOURCE) : rm(join(sandbox.path, 'run.sh')));
         const result = await runGspot(sandbox.path, ['apply']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(readPolicy(sandbox.path).policy.configurations.includes('bash')).toBe(hasSource);
+        expect(readPolicy(sandbox.path).policy.configurations).toContain('bash');
     }
 });
 
@@ -101,7 +97,7 @@ test('adding an already detected language keeps it selected after its source dis
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const added = await runGspot(sandbox.path, ['add', 'bash']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
-    rmSync(join(sandbox.path, 'run.sh'));
+    await rm(join(sandbox.path, 'run.sh'));
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(readPolicy(sandbox.path).policy.configurations).toContain('bash');
@@ -118,9 +114,7 @@ test('removing an authored scope language before the first apply keeps the detec
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(readPolicy(sandbox.path).policy.scopes.find((scope) => scope.path === 'api')?.configurations).not.toContain(
-        'bash',
-    );
+    expect(readPolicy(sandbox.path).policy.scope['api']?.configurations).not.toContain('bash');
 });
 
 test('a detect template keeps its named language while other configurations follow detection', async () => {
@@ -129,13 +123,13 @@ test('a detect template keeps its named language while other configurations foll
     commitAll(sandbox.path);
     const initialized = await runGspot(sandbox.path, ['init', '--yes', '--from', 'team.template.toml', ...QUIET_INIT]);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    rmSync(join(sandbox.path, 'run.sh'));
+    await rm(join(sandbox.path, 'run.sh'));
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(readPolicy(sandbox.path).policy.configurations).toContain('bash');
 });
 
-test('an automatic scope retains detection history while absent and drops a language missing after its return', async () => {
+test('an authored scope keeps its language choice while absent and after its source disappears', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'api/package.json': '{"private":true}\n',
@@ -144,16 +138,27 @@ test('an automatic scope retains detection history while absent and drops a lang
     commitAll(sandbox.path);
     const initialized = await runGspot(sandbox.path, ['init', '--yes', ...QUIET_INIT]);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-    expect(readPolicy(sandbox.path).policy.scopes.find((scope) => scope.path === 'api')?.configurations).toContain(
-        'bash',
-    );
-    rmSync(join(sandbox.path, 'api'), { recursive: true });
+    expect(readPolicy(sandbox.path).policy.scope['api']?.configurations).toContain('bash');
+    await rm(join(sandbox.path, 'api'), { recursive: true });
     const absent = await runGspot(sandbox.path, ['apply']);
     expect(absent.code, absent.stdout + absent.stderr).toBe(0);
     await createFileTree(sandbox.path, { 'api/package.json': '{"private":true}\n' });
     const returned = await runGspot(sandbox.path, ['apply']);
     expect(returned.code, returned.stdout + returned.stderr).toBe(0);
-    expect(readPolicy(sandbox.path).policy.scopes.find((scope) => scope.path === 'api')?.configurations).not.toContain(
-        'bash',
-    );
+    expect(readPolicy(sandbox.path).policy.scope['api']?.configurations).toContain('bash');
+});
+
+test('policy application writes no hidden choices and refuses the retired history field', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': AUTHORED_SCRIPT_SCOPE });
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const statePath = join(sandbox.path, '.gspot/state/ownership.json');
+    expect(JSON.parse(await Bun.file(statePath).text())).not.toHaveProperty('selections');
+    await Bun.write(statePath, '{"version":1,"files":[],"selections":{}}\n');
+    const before = await readTree(sandbox.path);
+    const refused = await runGspot(sandbox.path, ['apply']);
+    expect(refused.code).toBe(2);
+    expect(refused.stderr).toContain('selections');
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

@@ -2,16 +2,14 @@
 // type checking to the Next.js check, and the i18n rules.
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { rmSync, writeFileSync } from 'node:fs';
+import { rm, writeFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { installedModules } from '#tests/harness/environment.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { NEXT_PAGE, NEXT_LAYOUT } from '#tests/config/samples/nextjs.ts';
-import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
 import { COUNT, REPOSITORY, BUILD_FAILURE } from '#tests/config/tools/configurations/framework/nextjs.ts';
 import type { TestRepository, RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 
@@ -22,7 +20,7 @@ async function checked(repository: TestRepository, checks: string[], code: numbe
         repository.root,
         ['check', '--only', ...checks, '--json'],
         repository.environment,
-        { timeoutMs: NATIVE_TEST_TIMEOUT_MS },
+        {},
     );
     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(code);
     return JSON.parse(outcome.stdout) as RunReport;
@@ -44,7 +42,7 @@ async function delegation(repository: TestRepository): Promise<void> {
 async function skippedReplacement(repository: TestRepository): Promise<void> {
     const path = join(repository.root, 'app/count.ts');
     const checks = ['typescript/tsc', 'nextjs/tsc', '--skip', 'nextjs/tsc'];
-    writeFileSync(path, COUNT);
+    await writeFile(path, COUNT);
     try {
         const failed = await checked(repository, checks, 1);
         expect(failed.checks.find(({ check }) => check === 'typescript/tsc')).toMatchObject({
@@ -52,10 +50,10 @@ async function skippedReplacement(repository: TestRepository): Promise<void> {
             findings: [{ check: 'typescript/tsc', file: 'app/count.ts', rule: 'TS2322', line: 4 }],
         });
         expect(failed.skips.some(({ check, cause }) => check === 'nextjs/tsc' && cause === 'flag')).toBe(true);
-        writeFileSync(path, COUNT.replace('"three"', '3'));
+        await writeFile(path, COUNT.replace('"three"', '3'));
         await checked(repository, checks, 0);
     } finally {
-        rmSync(path);
+        await rm(path);
     }
 }
 
@@ -115,38 +113,17 @@ const repository: RepositoryScenario = {
 const resources = new AsyncDisposableStack();
 let testRepository: OwnedTestRepository;
 beforeAll(async () => {
-    const budget = openTestBudget(suiteTimeout());
-    try {
-        testRepository = resources.use(await createTestRepository(repository, spawnGspot));
-        const configured = await spawnGspot(
-            testRepository.root,
-            ['set', 'tools.next.build_flags', '--', '--webpack'],
-            testRepository.environment,
-        );
-        expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-    } finally {
-        budget[Symbol.dispose]();
-    }
-}, suiteTimeout());
+    testRepository = resources.use(await createTestRepository(repository, spawnGspot));
+});
 afterAll(async () => {
     await resources.disposeAsync();
 });
 
 describe('the nextjs configuration', () => {
-    test(
-        'type checking delegates to the Next.js check only when it runs',
-        () => delegation(testRepository),
-        NATIVE_TEST_TIMEOUT_MS,
-    );
-    test(
-        'the TypeScript check finds defects when the Next.js check is skipped',
-        () => skippedReplacement(testRepository),
-        NATIVE_TEST_TIMEOUT_MS,
-    );
-    test(
-        'all builds the app without an enabling flag and recommended omits the build',
-        () => buildLevels(testRepository),
-        NATIVE_TEST_TIMEOUT_MS,
-    );
-    test('the i18n rules reject literal markup', () => literalMarkup(testRepository), NATIVE_TEST_TIMEOUT_MS);
+    test('type checking delegates to the Next.js check only when it runs', () => delegation(testRepository));
+    test('the TypeScript check finds defects when the Next.js check is skipped', () =>
+        skippedReplacement(testRepository));
+    test('all builds the app without an enabling flag and recommended omits the build', () =>
+        buildLevels(testRepository));
+    test('the i18n rules reject literal markup', () => literalMarkup(testRepository));
 });

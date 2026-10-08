@@ -18,8 +18,7 @@ export const STANDALONE_TYPESCRIPT_FILES = {
     '.gspot/node_modules/@types/private/index.d.ts': 'export {};\ndeclare global { const privateValue: number; }\n',
 };
 
-export const STANDALONE_TYPESCRIPT_TABLES = `[[scope]]
-path = "app"
+export const STANDALONE_TYPESCRIPT_TABLES = `[scope."app"]
 configurations = ["typescript"]
 [[generated]]
 paths = ["app/emitted/**"]

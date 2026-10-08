@@ -11,23 +11,24 @@ proposes a scope for each folder with a tracked project file, such as `package.j
 
 This policy has a root with no configurations and two scopes:
 
-```toml
+```toml title="Two project scopes"
 configurations = []
 
-[[scope]]
-path = "api"
+[scope.api]
 configurations = ["typescript", "express", "vitest"]
 
-[scope.limits]
+[scope.api.limits]
 function_lines = 80
 
-[[scope]]
-path = "ios"
+[scope.api.reasons]
+"limits.function_lines" = "The API parser is one state machine."
+
+[scope.ios]
 configurations = ["swift", "xcode"]
 ```
 
-Write `[[scope]]` once for each scope. A table such as `[scope.limits]` belongs to the scope
-above it, so the limit in this example applies to `api` only.
+Use the project path as the key under `[scope]`. Nested tables belong to that project;
+`[scope.api.limits]` changes the API limit only. Quote a key that contains slashes.
 
 After you change the scopes, apply the policy, install the tools, and check one project:
 
@@ -45,7 +46,7 @@ name one file.
 
 To see the scope and the checks of a file, run `gspot explain` with the path. Start the path
 with `./` when it also names a configuration or a check: `gspot explain bash` explains the configuration, and
-`gspot explain ./bash` explains the file.
+a path prefixed with `./` explains the file.
 
 When a tool needs its own configuration per scope, gspot writes it under
 `.gspot/config/<path>/`.
@@ -57,7 +58,7 @@ gspot set limits.function_lines 80 --scope api --reason "The parser is one state
 ```
 
 Root settings apply to every scope. A setting in a scope replaces the root value for that scope
-and the scopes inside it. Paths in scope settings are relative to the repository root. Settings that name a project file can instead be relative to the scope; their reference descriptions identify that case.
+and the scopes inside it. Authored paths are relative to the scope that declares them. Inherited paths keep their original scope.
 
 A list setting adds up: a scope gets the values of its configurations, the root, and every scope that contains it, without repeats. A single-value setting takes the nearest value. If two selected configurations give
 different defaults for the same setting, gspot names both configurations. To decide, set the value at the
@@ -69,7 +70,7 @@ Checks that read project files look inside the scope only. A parent scope does n
 
 ## TypeScript app and Python API
 
-Given `apps/web/package.json` and `services/api/pyproject.toml`, initialize with explicit scope choices:
+Given an npm project under `apps/web` and a Python project under `services/api`, initialize with explicit scope choices:
 
 ```shell
 gspot init --scope-configurations apps/web=typescript,nextjs services/api=python,fastapi

@@ -11,7 +11,6 @@ import type { DuplicateMisePin } from '#cli/types/tools/install.ts';
 import { npmPins, misePins, pythonPins } from '#cli/configurations/pins.ts';
 import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 import type { InitPlan, Planning, InitAnswers, InitFileRow } from '#cli/types/commands/init.ts';
-import { CI_SETUP, HOOKS_ROW, COLUMN_GAP, REASON_WIDTH, CONFIGURATION_WIDTH } from '#cli/config/commands/init.ts';
 
 import {
     DOT_GSPOT,
@@ -20,6 +19,14 @@ import {
     TOOL_PYTHON_PROJECT,
     TOOL_PACKAGE_PROJECT,
 } from '#cli/config/platform/locations.ts';
+import {
+    CI_SETUP,
+    HOOKS_ROW,
+    COLUMN_GAP,
+    REASON_WIDTH,
+    ATTRIBUTES_ROW,
+    CONFIGURATION_WIDTH,
+} from '#cli/config/commands/init.ts';
 
 function runnerRows(answers: InitAnswers, everySelected: Manifest[]): InitPlan['change'] {
     const count = Object.keys(npmPins(everySelected, answers.runner)).length;
@@ -136,12 +143,7 @@ export function buildInitPlan(
             .map((evidence) => evidence.configuration)
             .filter((id) => !selection.selectedIds.has(id)),
     };
-    const agents = policy.agentRules.enabled ? [...new Set(['AGENTS.md', ...policy.agentRules.instruction_files])] : [];
-    const submodules = getSubmodulePaths(planning.index);
-    const change = [
-        { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
-        ...runnerRows(answers, requirements),
-    ];
+    const change = [ATTRIBUTES_ROW, ...runnerRows(answers, requirements)];
     if (hasGit) {
         change.unshift({ path: '.gitignore', note: 'one managed block' });
         if (answers.hooks) change.push(HOOKS_ROW);
@@ -162,19 +164,22 @@ export function buildInitPlan(
                 .map((config) => config.stub_file?.path)
                 .filter((path) => path !== undefined)
                 .map((path) => ({ path, note: 'pointer' })),
-            ...agentRows(agents, policy.agentRules.folder),
+            ...agentRows(
+                policy.agent_rules.enabled ? [...new Set(['AGENTS.md', ...policy.agent_rules.instruction_files])] : [],
+                policy.agent_rules.folder,
+            ),
             ...ciRows(answers.ci),
         ],
         remove: [
             ...replaced.removed,
-            ...(policy.agentRules.enabled && tooling.agentFiles.includes('CLAUDE.md')
+            ...(policy.agent_rules.enabled && tooling.agentFiles.includes('CLAUDE.md')
                 ? [{ path: 'CLAUDE.md', note: 'its own text moves to the end of AGENTS.md' }]
                 : []),
         ],
         unread: replaced.unread,
         retained: [
             ...replaced.retained,
-            ...submodules.map((path) => ({ path, note: 'submodule; contents are not read' })),
+            ...getSubmodulePaths(planning.index).map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...retainedCiRows(answers.ci, tooling.ci, getLintJobs(root, tooling.ci)),
         ],
         change: [...change, ...replaced.changed],

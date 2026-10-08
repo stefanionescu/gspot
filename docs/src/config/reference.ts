@@ -4,7 +4,7 @@ const ESLINT_POLICY_OPTIONS = `gspot translates policy settings into plugin rule
 | --- | --- | --- |
 | \`architecture.roles.env\` | \`env-owner\` | \`owners\` |
 | \`tools.eslint.import_extensions\` | \`import-extensions\` | \`style\` |
-| \`limits.barrel_reexports\` | \`max-barrel-reexports\` | \`max\` |
+| \`limits.index_exports\` | \`max-barrel-reexports\` | \`max\` |
 | \`structure.reexports = "index-only"\` | \`no-reexports\` and \`no-trivial-files\` | \`allowIndex: true\` |
 
 Environment ownership and barrel limits apply at level \`all\`. Barrel limits apply when index re-exports are allowed. See the [standalone plugin reference](/reference/plugin/) for the rule options.

@@ -1,18 +1,15 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { knownSettings } from '#cli/policy/settings/known.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
+import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
+import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
 import { singletons } from '#cli/checks/language/python/singletons.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python/source.ts';
 
-test('a module-level instance is a singleton unless its name is allowed', async () => {
+test('a module-level instance is a singleton until its composition file has a policy ignore', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildPolicy(['python'], { level: 'all' }),
         'example/shared.py': `${PYTHON_MODULE_HEADER}class Store:\n    """Holds things."""\n\n\nstore = Store()\n`,
@@ -25,36 +22,46 @@ test('a module-level instance is a singleton unless its name is allowed', async 
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['python'], {
             level: 'all',
-            tables: '[structure.python]\nsingletons_allowed = [{ names = ["store"], reason = "The framework requires one application object." }]\n',
+            tables: '[[ignore]]\ncheck = "python/singletons"\npaths = ["example/shared.py"]\nreason = "The framework requires one application object."\n',
         }),
     );
-    expect(await singletons(buildCheckInput(await openSession(sandbox.path), 'python/singletons'))).toStrictEqual([]);
+    const ignored = await runGspot(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
+    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+    expect((JSON.parse(ignored.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });
 
-test('FastAPI owns its application and router allowances without exempting general Python names', async () => {
+test('FastAPI composition objects use the same explicit file ignores as other Python singletons', async () => {
     await using sandbox = await testdir({
-        'gspot.toml': buildPolicy(['python'], { level: 'all' }),
+        'gspot.toml': buildPolicy(['fastapi'], { level: 'all' }),
         'api.py': 'app = FastAPI()\nrouter = APIRouter()\nsettings = Settings()\n',
+        'outside.py': 'settings = Settings()\n',
     });
-    const manifests = configurationManifests();
-    const python = knownSettings(selectConfigurations(['python'], manifests), 'all');
-    const framework = knownSettings(selectConfigurations(['fastapi'], manifests), 'all');
-    expect(framework.defaults.get('structure.python.singletons_allowed')!.value).toMatchObject([
-        { names: ['app', 'router'] },
+    const native = await singletons(buildCheckInput(await openSession(sandbox.path), 'python/singletons'));
+    expect(native.map(({ file, line }) => ({ file, line }))).toStrictEqual([
+        { file: 'api.py', line: 1 },
+        { file: 'api.py', line: 2 },
+        { file: 'api.py', line: 3 },
+        { file: 'outside.py', line: 1 },
     ]);
-    expect(python.defaults.get('structure.python.singletons_allowed')!.value).toStrictEqual([]);
-    const pythonFindings = await singletons(buildCheckInput(await openSession(sandbox.path), 'python/singletons'));
-    expect(pythonFindings.map(({ line }) => line)).toStrictEqual([1, 2, 3]);
-    await Bun.write(`${sandbox.path}/gspot.toml`, buildPolicy(['fastapi'], { level: 'all' }));
-    const frameworkFindings = await singletons(buildCheckInput(await openSession(sandbox.path), 'python/singletons'));
-    expect(frameworkFindings.map(({ line }) => line)).toStrictEqual([3]);
+    await Bun.write(
+        `${sandbox.path}/gspot.toml`,
+        buildPolicy(['fastapi'], {
+            level: 'all',
+            tables: '[[ignore]]\ncheck = "python/singletons"\npaths = ["api.py"]\nreason = "FastAPI composes its application and routers in this module."\n',
+        }),
+    );
+    const result = await runGspot(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect((JSON.parse(result.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
+        { file: 'outside.py', line: 1, rule: 'singleton' },
+    ]);
 });
 
-test('singleton allowances match both names and repository paths, including excluded files and nested scopes', async () => {
+test('singleton file ignores preserve unaccepted files in root and nested scopes', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildPolicy(['python'], {
             level: 'all',
-            tables: '[structure.python]\nsingletons_allowed = [{ names = ["store"], paths = ["example/**", "!example/restricted.py"], reason = "Only the public example modules share their store." }]\n[[scope]]\npath = "app"\nconfigurations = ["python"]\n[scope.structure.python]\nsingletons_allowed = [{ names = ["store"], paths = ["app/allowed.py"], reason = "Only the application composition module shares its store." }]\n',
+            tables: '[scope."app"]\nconfigurations = ["python"]\n[[ignore]]\ncheck = "python/singletons"\npaths = ["example/allowed.py", "app/allowed.py"]\nreason = "These modules own the application composition objects."\n',
         }),
         'example/allowed.py': 'store = Store()\nother = Store()\n',
         'example/restricted.py': 'store = Store()\n',
@@ -62,59 +69,28 @@ test('singleton allowances match both names and repository paths, including excl
         'app/allowed.py': 'store = Store()\n',
         'app/restricted.py': 'store = Store()\n',
     });
-    const session = await openSession(sandbox.path);
-    const findings = [
-        ...(await singletons(
-            buildCheckInput(session, 'python/singletons', {
-                paths: ['example/allowed.py', 'example/restricted.py', 'outside.py'],
-            }),
-        )),
-        ...(await singletons(
-            buildCheckInput(session, 'python/singletons', {
-                scope: 'app',
-                paths: ['app/allowed.py', 'app/restricted.py'],
-            }),
-        )),
-    ];
+    const result = await spawnGspot(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(
-        findings
+        (JSON.parse(result.stdout) as RunReport).checks
+            .flatMap(({ findings }) => findings)
             .map(({ file, line }) => ({ file, line }))
             .toSorted((left, right) => left.file.localeCompare(right.file)),
     ).toStrictEqual([
         { file: 'app/restricted.py', line: 1 },
-        { file: 'example/allowed.py', line: 2 },
         { file: 'example/restricted.py', line: 1 },
         { file: 'outside.py', line: 1 },
     ]);
-    const applied = await spawnGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const failed = await spawnGspot(sandbox.path, ['check', '--only', 'python/singletons', '--json']);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(
-        (JSON.parse(failed.stdout) as RunReport).checks
-            .flatMap((check) => check.findings)
-            .map(({ file, line }) => ({ file, line }))
-            .toSorted((left, right) => left.file.localeCompare(right.file)),
-    ).toStrictEqual(
-        findings
-            .map(({ file, line }) => ({ file, line }))
-            .toSorted((left, right) => left.file.localeCompare(right.file)),
-    );
 });
 
-test.each([
-    '{ names = "store", reason = "The framework requires a shared object." }',
-    '{ names = [], reason = "The framework requires a shared object." }',
-    '{ names = ["store"], paths = "example/**", reason = "The framework requires a shared object." }',
-    '{ names = ["store"], paths = [], reason = "The framework requires a shared object." }',
-])('invalid singleton allowances fail while reading policy: %s', async (entry) => {
+test('the removed singleton allowance setting is refused while preserving source bytes', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildPolicy(['python'], {
             level: 'all',
-            tables: `[structure.python]\nsingletons_allowed = [${entry}]\n`,
+            tables: '[structure.python]\nsingletons_allowed = [{ names = ["store"], reason = "The framework requires a shared object." }]\n',
         }),
         'example.py': 'store = Store()\n',
     });
-    expect(await rejection(openSession(sandbox.path))).toContain('singletons_allowed');
+    expect(await rejection(openSession(sandbox.path))).toContain('python');
     expect(await Bun.file(`${sandbox.path}/example.py`).text()).toBe('store = Store()\n');
 });

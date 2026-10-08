@@ -1,7 +1,9 @@
+generated = ["next-env.d.ts"]
+
 [configuration]
 title = "Next.js"
 requires = ["typescript", "react"]
-recommends = ["css", "i18n"]
+suggests = ["css"]
 description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, and the configuration turns no build check off."
 
 [detect]
@@ -20,7 +22,7 @@ version_command = ["--version"]
 [[tool]]
 name = "@next/eslint-plugin-next"
 kind = "library"
-version = "16.3.6"
+version = "16.3.8"
 npm = "@next/eslint-plugin-next"
 
 [[config]]
@@ -49,7 +51,7 @@ tool = "next"
 title = "Build the Next.js app"
 example = "A Next.js page importing a nonexistent component fails the project build. Restore the component or correct the import path and rerun the configured build."
 level = "all"
-files = {paths = ["**/app/**", "**/pages/**"]}
+files = { paths = ["**/app/**", "**/pages/**"] }
 stage = "push"
 runs = "scope"
 needs = ["build"]
@@ -69,7 +71,7 @@ why = "One address is served by one file, and the framework refuses the build wh
 help = "Move the route handler into a segment of its own, such as an api folder."
 
 [[check]]
-name = "config"
+name = "next-config"
 title = "Check Next.js configuration"
 example = "Setting `typescript.ignoreBuildErrors` to `true` in Next.js configuration reports a disabled type gate. Remove the switch and correct the type errors before building."
 level = "recommended"
@@ -82,29 +84,21 @@ help = "Remove the switch, and read the secret on the server."
 [[check]]
 name = "version-pairs"
 title = "Keep paired packages on one version"
-example = "Different declared versions of `react` and `react-dom` report an alignment finding. Select the same compatible version for both and update the lockfile with the package manager."
+example = "Different installed versions of `next` and its lint package report an alignment finding. Install the same version of both and update the lockfile with the package manager."
 level = "recommended"
 stage = "commit"
 runs = "once"
-summary = "Checks that packages that ship together sit on one version: the framework with its lint package, and react with react-dom."
+summary = "Checks that Next.js and its lint packages use the same installed version."
 why = "A lint package a version behind flags what the framework allows and allows what it removed."
 help = "Move both packages to the same version."
 
-[[setting]]
-name = "tools.next.build_flags"
-type = "list"
-direction = "neutral"
-default = []
-summary = "The flags next build runs with, such as --webpack for an app that does not build with Turbopack."
-
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["**/app/**", "**/pages/**"]
 categories = ["files"]
-names = ["page", "layout", "loading", "error", "global-error", "not-found", "route", "template", "default", "middleware", "instrumentation", "proxy", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
-skip = true
+allowed = ["page", "layout", "loading", "error", "global-error", "not-found", "route", "template", "default", "middleware", "instrumentation", "proxy", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
 reason = "Next.js names these files."
 
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["**"]
 languages = ["typescript", "javascript"]
 categories = ["functions", "methods"]
@@ -122,16 +116,15 @@ reason = "Next.js discovers route files by name, so each file can hold one expor
 [[eslint_rules_off]]
 rules = ["gspot/no-reexports"]
 files = ["**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}"]
-when = {setting = "structure.reexports", value = "index-only"}
+when = { setting = "structure.reexports", value = "index-only" }
 reason = "Next.js route files act as framework entry points when the project permits entry-point re-exports."
 
 [set]
-"tools.eslint.import_extensions" = {"**/*" = "extensionless"}
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
 
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["**"]
 languages = ["typescript", "javascript"]
 categories = ["functions", "methods", "variables"]
-names = ["getStaticProps", "getServerSideProps", "generateMetadata", "generateStaticParams", "generateViewport"]
-skip = true
+allowed = ["getStaticProps", "getServerSideProps", "generateMetadata", "generateStaticParams", "generateViewport"]
 reason = "Next.js discovers these data and metadata exports by name."

@@ -10,9 +10,10 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { typesFresh } from '#cli/checks/platform/cloudflare.ts';
-import { statSync, chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import type { WorkerTypesProject } from '#tests/types/cli/checks/platform/cloudflare.ts';
 
 import {
@@ -27,7 +28,7 @@ async function applyChanges(scope: string, bindings: string): Promise<WorkerType
         'gspot.toml':
             scope === ''
                 ? buildPolicy(['cloudflare'])
-                : buildPolicy([], { tables: `[[scope]]\npath = "${scope}"\nconfigurations = ["cloudflare"]\n` }),
+                : buildPolicy([], { tables: `[scope."${scope}"]\nconfigurations = ["cloudflare"]\n` }),
         [join(scope, 'package.json')]: '{"private":true}\n',
         [join(scope, 'worker-configuration.d.ts')]: '// Committed types\n',
         [join(scope, 'bindings.txt')]: bindings,
@@ -36,33 +37,33 @@ async function applyChanges(scope: string, bindings: string): Promise<WorkerType
     commitAll(directory.path);
     const target = join(directory.path, join(scope, 'worker-configuration.d.ts'));
     const edited = '// Developer types\n';
-    writeFileSync(target, edited);
-    chmodSync(target, 0o640);
+    await writeFile(target, edited);
+    await chmod(target, 0o640);
     const session = await openSession(directory.path);
-    const check = session.manifests.get('cloudflare')!.checks.find((entry) => entry.name === 'cloudflare/types-fresh')!;
-    const input = buildCheckInput(session, check.name, { scope: scope });
+    const input = buildCheckInput(session, 'cloudflare/types-fresh', { scope });
     const locate = spyOn(tools, 'inspectTool').mockReturnValue({
         name: 'wrangler',
         state: 'host',
         path: process.execPath,
     });
+    const { mode } = await stat(target);
     return {
         directory,
         path: (name: string) => join(scope, name),
         target,
         edited,
-        mode: statSync(target).mode,
-        check,
+        mode,
         input,
         locate,
     };
 }
 
 // The developer's edit, its mode, and the absence of generator side effects, whatever the generator did.
-function expectPreserved({ directory, path, target, edited, mode }: WorkerTypesProject): void {
-    expect(readFileSync(target, 'utf8')).toBe(edited);
-    expect(statSync(target).mode).toBe(mode);
-    expect(existsSync(join(directory.path, path('generated-note.txt')))).toBe(false);
+async function expectPreserved({ directory, path, target, edited, mode }: WorkerTypesProject): Promise<void> {
+    expect(await readFile(target, 'utf8')).toBe(edited);
+    const current = await stat(target);
+    expect(current.mode).toBe(mode);
+    expect(await pathExists(join(directory.path, path('generated-note.txt')))).toBe(false);
 }
 
 test.each(CLOUDFLARE_TYPES_SCOPES)(
@@ -72,8 +73,8 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         await using directory = testRepository.directory;
         try {
             expect(await rejection(typesFresh(testRepository.input))).toContain('Types generation failed');
-            expectPreserved(testRepository);
-            expect(readFileSync(join(directory.path, testRepository.path('bindings.txt')), 'utf8')).toBe('failure');
+            await expectPreserved(testRepository);
+            expect(await readFile(join(directory.path, testRepository.path('bindings.txt')), 'utf8')).toBe('failure');
         } finally {
             testRepository.locate.mockRestore();
         }
@@ -88,7 +89,7 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         try {
             expect(await typesFresh(testRepository.input)).toStrictEqual([
                 {
-                    check: testRepository.check.name,
+                    check: testRepository.input.check.name,
                     file: toPosix(testRepository.path('worker-configuration.d.ts')),
                     line: 1,
                     rule: 'stale',
@@ -96,9 +97,9 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
                     fixable: false,
                 },
             ]);
-            writeFileSync(join(directory.path, testRepository.path('bindings.txt')), testRepository.edited);
+            await writeFile(join(directory.path, testRepository.path('bindings.txt')), testRepository.edited);
             expect(await typesFresh(testRepository.input)).toStrictEqual([]);
-            expectPreserved(testRepository);
+            await expectPreserved(testRepository);
         } finally {
             testRepository.locate.mockRestore();
         }
@@ -110,7 +111,7 @@ test('custom Worker type files retain the configured interface and child scope',
     const source = 'interface CloudflareEnv {}\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {
-            tables: '[[scope]]\npath = "workers/api"\nconfigurations = ["cloudflare"]\n[scope.cloudflare]\ntypes_file = "cloudflare-env.d.ts"\ntypes_interface = "CloudflareEnv"\n',
+            tables: '[scope."workers/api"]\nconfigurations = ["cloudflare"]\n[scope."workers/api".cloudflare]\ntypes_file = "cloudflare-env.d.ts"\ntypes_interface = "CloudflareEnv"\n',
         }),
         'workers/api/cloudflare-env.d.ts': source,
     });
@@ -131,6 +132,6 @@ test('custom Worker type files retain the configured interface and child scope',
     ).toStrictEqual([]);
     expect(directories).toHaveLength(1);
     expect(directories[0]).not.toBe(join(sandbox.path, 'workers/api'));
-    expect(existsSync(directories[0]!)).toBe(false);
-    expect(readFileSync(join(sandbox.path, 'workers/api/cloudflare-env.d.ts'), 'utf8')).toBe(source);
+    expect(await pathExists(directories[0]!)).toBe(false);
+    expect(await readFile(join(sandbox.path, 'workers/api/cloudflare-env.d.ts'), 'utf8')).toBe(source);
 });

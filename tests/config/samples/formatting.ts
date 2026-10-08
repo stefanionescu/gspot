@@ -1,7 +1,7 @@
 // The formatter overrides of a test repository and what each file resolves to.
 /** A policy with formatter overrides at the root, for a path, and in nested scopes. */
 export const FORMAT_OVERRIDES_POLICY = `level = "all"
-configurations = ["format"]
+configurations = ["format", "javascript"]
 [agent_rules]
 enabled = false
 [format]
@@ -12,18 +12,14 @@ semicolons = false
 paths = ["tests"]
 quotes = "single"
 semicolons = true
-[[scope]]
-path = "apps/web"
-[scope.format]
+[scope."apps/web".format]
 indent_width = 4
-[[scope.format.overrides]]
-paths = ["**/*", "!apps/web/exempt.js"]
+[[scope."apps/web".format.overrides]]
+paths = ["**/*", "!exempt.js"]
 quotes = "single"
-[[scope]]
-path = "apps/web/admin"
-[scope.format]
+[scope."apps/web/admin".format]
 indent_width = 8
-[[scope.format.overrides]]
+[[scope."apps/web/admin".format.overrides]]
 paths = ["**/*"]
 quotes = "double"
 semicolons = true

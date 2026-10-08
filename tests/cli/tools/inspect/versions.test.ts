@@ -6,8 +6,8 @@ import { inspectTool } from '#cli/tools/inspect.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { chmod, mkdir, symlink } from 'node:fs/promises';
 import type { ToolPin } from '#cli/types/configurations.ts';
-import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -19,16 +19,12 @@ test.each([
     ['console.error("3.8.1");', 'ok', undefined],
 ] as const)('a version process classifies %s as %s', async (script, state, note) => {
     await using sandbox = await testdir();
-    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
-    try {
-        const tool = { ...buildBinaryPin('version-teller', '3.8.1'), version_command: ['-e', script] };
-        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
-        expect(inspection.state).toBe(state);
-        // A usable tool reports the version it printed; any other state explains itself in the note.
-        expect(note === undefined ? inspection.found : inspection.note).toContain(note ?? '3.8.1');
-    } finally {
-        which.mockRestore();
-    }
+    using _which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
+    const tool = { ...buildBinaryPin('version-teller', '3.8.1'), version_command: ['-e', script] };
+    const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+    expect(inspection.state).toBe(state);
+    // A usable tool reports the version it printed; any other state explains itself in the note.
+    expect(note === undefined ? inspection.found : inspection.note).toContain(note ?? '3.8.1');
 });
 
 test('an npm package version does not hide a failed executable', async () => {
@@ -37,9 +33,9 @@ test('an npm package version does not hide a failed executable', async () => {
         '.gspot/node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
         '.gspot/node_modules/teller/run.sh': '#!/bin/sh\necho 5.0.1\nexit 7\n',
     });
-    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
-    mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
-    symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
+    await chmod(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
+    await mkdir(join(sandbox.path, '.gspot/node_modules/.bin'));
+    await symlink('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
     const inspection = inspectTool(
         { root: sandbox.path, inspections: new Map() },
         buildBinaryPin('teller', '5.0.1', 'teller'),
@@ -50,23 +46,19 @@ test('an npm package version does not hide a failed executable', async () => {
 
 test('a manifest can declare its help command status without accepting other failed inspections', async () => {
     await using sandbox = await testdir();
-    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
-    try {
-        const tool = {
-            ...buildBinaryPin('version-help', '3.8.1'),
-            version_command: ['-e', 'console.log("version-help 3.8.1"); process.exitCode = 2;'],
-            version_exit_code: 2,
-        };
-        const context = { root: sandbox.path, inspections: new Map() };
-        const inspection = inspectTool(context, tool);
-        expect(inspection.state).toBe('ok');
-        expect(inspection.found).toBe('3.8.1');
-        const failed = inspectTool(context, { ...tool, version_exit_code: 0 });
-        expect(failed.state).toBe('error');
-        expect(failed.note).toContain('exited 2');
-    } finally {
-        which.mockRestore();
-    }
+    using _which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
+    const tool = {
+        ...buildBinaryPin('version-help', '3.8.1'),
+        version_command: ['-e', 'console.log("version-help 3.8.1"); process.exitCode = 2;'],
+        version_exit_code: 2,
+    };
+    const context = { root: sandbox.path, inspections: new Map() };
+    const inspection = inspectTool(context, tool);
+    expect(inspection.state).toBe('ok');
+    expect(inspection.found).toBe('3.8.1');
+    const failed = inspectTool(context, { ...tool, version_exit_code: 0 });
+    expect(failed.state).toBe('error');
+    expect(failed.note).toContain('exited 2');
 });
 
 test('tool reads distinguish pins and refresh private libraries in the next session', async () => {
@@ -94,19 +86,15 @@ test('a command shares version reads and the next session inspections again', as
         'inspection.ts':
             'const file = Bun.file("calls.txt"); const calls = await file.exists() ? Number(await file.text()) : 0; await Bun.write("calls.txt", String(calls + 1)); console.log("3.8.1");',
     });
-    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
-    try {
-        const pin = { ...buildBinaryPin('version-teller', '3.8.1'), version_command: ['inspection.ts'] };
-        const session = await openSession(sandbox.path);
-        expect(inspectTool(session, pin).state).toBe('ok');
-        expect(inspectTool(session, pin).state).toBe('ok');
-        expect(await Bun.file(join(sandbox.path, 'calls.txt')).text()).toBe('1');
-        const next = await openSession(sandbox.path);
-        expect(inspectTool(next, pin).state).toBe('ok');
-        expect(await Bun.file(join(sandbox.path, 'calls.txt')).text()).toBe('2');
-    } finally {
-        which.mockRestore();
-    }
+    using _which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
+    const pin = { ...buildBinaryPin('version-teller', '3.8.1'), version_command: ['inspection.ts'] };
+    const session = await openSession(sandbox.path);
+    expect(inspectTool(session, pin).state).toBe('ok');
+    expect(inspectTool(session, pin).state).toBe('ok');
+    expect(await Bun.file(join(sandbox.path, 'calls.txt')).text()).toBe('1');
+    const next = await openSession(sandbox.path);
+    expect(inspectTool(next, pin).state).toBe('ok');
+    expect(await Bun.file(join(sandbox.path, 'calls.txt')).text()).toBe('2');
 });
 
 test.each([
@@ -114,22 +102,18 @@ test.each([
     ['5.2.0', 'host'],
 ] as const)('a host bash that prints %s is %s against the 4.4 floor', async (version, state) => {
     await using sandbox = await testdir();
-    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
-    try {
-        const tool: ToolPin = {
-            name: 'bash',
-            kind: 'binary',
-            system: true,
-            min_version: '4.4',
-            installers: {},
-            version_command: ['-e', `console.log("GNU bash, version ${version}(1)-release")`],
-            version_pattern: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
-        };
-        const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
-        expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });
-    } finally {
-        which.mockRestore();
-    }
+    using _which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
+    const tool: ToolPin = {
+        name: 'bash',
+        kind: 'binary',
+        system: true,
+        min_version: '4.4',
+        installers: {},
+        version_command: ['-e', `console.log("GNU bash, version ${version}(1)-release")`],
+        version_pattern: String.raw`version (\d+\.\d+(?:\.\d+)?)`,
+    };
+    const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
+    expect(inspection).toMatchObject({ state, found: version, floor: '4.4' });
 });
 
 test('an npm tool behind a shim file takes the version of its package', async () => {
@@ -143,7 +127,7 @@ test('an npm tool behind a shim file takes the version of its package', async ()
         '.gspot/node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
         ...binEntry,
     });
-    for (const path of Object.keys(binEntry)) chmodSync(join(sandbox.path, path), EXECUTABLE_FILE);
+    for (const path of Object.keys(binEntry)) await chmod(join(sandbox.path, path), EXECUTABLE_FILE);
     const inspection = inspectTool(
         { root: sandbox.path, inspections: new Map() },
         buildBinaryPin('teller', '5.0.1', 'teller'),
@@ -162,22 +146,18 @@ function belowFloor(floor: string): string {
 
 test.each(['gitleaks', 'next'])('the shipped %s pin inspects versions below and at its floor', async (name) => {
     await using sandbox = await testdir();
-    const which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
-    try {
-        const pin = toolPin(configurationManifests().values(), name);
-        const floor = pin.min_version!;
-        const available = pin.system === true ? 'host' : 'ok';
-        for (const version of [belowFloor(floor), floor]) {
-            const printed = name === 'next' ? `Next.js v${version}` : version;
-            const tool = { ...pin, version_command: ['-e', `console.log(${JSON.stringify(printed)});`] };
-            expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
-                state: version === floor ? available : 'outdated',
-                found: version,
-                floor,
-            });
-        }
-    } finally {
-        which.mockRestore();
+    using _which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
+    const pin = toolPin(configurationManifests().values(), name);
+    const floor = pin.min_version!;
+    const available = pin.system === true ? 'host' : 'ok';
+    for (const version of [belowFloor(floor), floor]) {
+        const printed = name === 'next' ? `Next.js v${version}` : version;
+        const tool = { ...pin, version_command: ['-e', `console.log(${JSON.stringify(printed)});`] };
+        expect(inspectTool({ root: sandbox.path, inspections: new Map() }, tool)).toMatchObject({
+            state: version === floor ? available : 'outdated',
+            found: version,
+            floor,
+        });
     }
 });
 

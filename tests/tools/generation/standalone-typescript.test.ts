@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { cp, mkdir, symlink } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { getTsconfig } from '#cli/parsers/tsconfig.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { cpSync, mkdirSync, symlinkSync } from 'node:fs';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
@@ -27,12 +27,12 @@ test.skipIf(!isPosix).each(['recommended', 'all'] as const)(
             ...STANDALONE_TYPESCRIPT_FILES,
             'gspot.toml': buildPolicy(['typescript'], { level, tables: STANDALONE_TYPESCRIPT_TABLES }),
         });
-        cpSync(join(installedModules, 'typescript'), join(sandbox.path, '.gspot/node_modules/typescript'), {
+        await cp(join(installedModules, 'typescript'), join(sandbox.path, '.gspot/node_modules/typescript'), {
             recursive: true,
             dereference: true,
         });
-        mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
-        symlinkSync('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
+        await mkdir(join(sandbox.path, '.gspot/node_modules/.bin'));
+        await symlink('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
         const session = await openSession(sandbox.path);
         using log = openOwnership(sandbox.path);
         writeOutputs(session, log);

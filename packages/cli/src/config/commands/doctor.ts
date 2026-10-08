@@ -8,7 +8,7 @@ export const VERSION_GAP = 4;
 
 export const SUGGESTION_SECTIONS: SuggestionSection[] = [
     { key: 'detected', title: 'detected, not selected' },
-    { key: 'recommended', title: 'recommended, not selected' },
+    { key: 'suggested', title: 'suggested, not selected' },
     { key: 'unowned', title: 'configuration not owned' },
     { key: 'authored', title: 'existing lint jobs' },
 ];

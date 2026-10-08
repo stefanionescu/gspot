@@ -39,7 +39,7 @@ gspot check --only javascript/eslint typescript/tsc
 
 To check some files or folders, name them before the flags, or after `--`:
 
-```bash
+```bash title="Check selected files"
 gspot check src/app.ts docs
 ```
 

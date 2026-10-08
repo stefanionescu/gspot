@@ -1,6 +1,6 @@
 import type { JsconfigCase } from '#tests/types/tools/generation/jsconfig.ts';
 
-const SCOPE_TABLE = '[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n';
+const SCOPE_TABLE = '[scope."app"]\nconfigurations = ["javascript"]\n';
 const FORMAT_SOURCE = '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n';
 const PRIVATE_DIAGNOSTIC = {
     file: 'source.js',

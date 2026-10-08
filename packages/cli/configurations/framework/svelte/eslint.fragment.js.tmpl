@@ -1,5 +1,8 @@
-<% const presets = eslintPresets('svelte'); const scriptLanguages = settings['tools.eslint.component_languages']; const typed = scriptLanguages.includes('ts'); for (const [index, { parser, ...block }] of presets.recommended.blocks.entries()) { %>
+<% const presets = eslintPresets('svelte'); const typed = configurations.includes('typescript'); for (const [index, { parser, ...block }] of presets.recommended.blocks.entries()) { %>
 <%~ eslintModule.block({ ...block, ...(block.rules === undefined ? {} : { rules: eslintErrorRules(block.rules) }) }, `...sveltePlugin.configs.recommended[${index}]`) %>,
 <% } %>
-<%~ eslintModule.block({ files: ['**/*.svelte', '**/*.svelte.js', '**/*.svelte.ts'], rules: { 'svelte/no-at-html-tags': 'error', 'svelte/require-each-key': 'error', 'svelte/no-target-blank': 'error', 'svelte/button-has-type': 'error', 'svelte/no-reactive-reassign': 'error', ...(isAll ? { 'svelte/block-lang': ['error', { script: typed ? scriptLanguages : [null, 'js'] }], 'svelte/no-useless-mustaches': 'error', 'svelte/prefer-const': 'error' } : {}) } }, `languageOptions: { parser: svelteParser, parserOptions: { ${typed ? 'parser: tseslint.parser,' : ''} extraFileExtensions: ['.svelte'] } }`) %>,
+<%~ eslintModule.block({ files: ['**/*.svelte', '**/*.svelte.js', '**/*.svelte.ts'], rules: { 'svelte/no-at-html-tags': 'error', 'svelte/require-each-key': 'error', 'svelte/no-target-blank': 'error', 'svelte/button-has-type': 'error', 'svelte/no-reactive-reassign': 'error', ...(isAll ? { 'svelte/no-useless-mustaches': 'error', 'svelte/prefer-const': 'error' } : {}) } }, `languageOptions: { parser: svelteParser, parserOptions: { ${typed ? 'parser: { ts: tseslint.parser, typescript: tseslint.parser },' : ''} extraFileExtensions: ['.svelte'] } }`) %>,
+<% if (scopeDependencies.some((name) => name.startsWith('@testing-library/'))) { %>
 <%~ eslintModule.block({ files: eslintFiles.tests, rules: eslintErrorRules(presets.testing.blocks[0].rules) }, "plugins: { 'testing-library': testingLibrary }") %>,
+
+<% } %>

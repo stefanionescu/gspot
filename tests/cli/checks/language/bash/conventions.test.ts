@@ -1,28 +1,37 @@
-// The Bash conventions a project names itself: none applies until the policy names it.
+// Shipped Bash defaults report unused functions and unnamed SSH heredocs without hiding other findings.
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { ONLY, RULES, SCRIPT } from '#tests/config/cli/checks/bash-conventions.ts';
+import { commitAll, markExecutable } from '#tests/harness/git.ts';
+import { ONLY, SCRIPT } from '#tests/config/cli/checks/language/bash/conventions.ts';
 
-async function rules(policy: string): Promise<string[]> {
+test('shipped entry and SSH defaults report every defect and accept the declared call and heredoc', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['bash'], { tables: policy, level: 'all' }),
+        'gspot.toml': buildPolicy(['bash'], { level: 'all' }),
         'deploy.sh': SCRIPT,
     });
-    const run = await executeRun(await openSession(sandbox.path), buildRunOptions({ only: ONLY }));
-    return run.report.checks
-        .flatMap(({ findings }) => findings.map(({ rule }) => rule ?? ''))
-        .filter((rule) => RULES.has(rule))
-        .toSorted((left, right) => left.localeCompare(right));
-}
-
-test('remote functions, entry functions, and the runtime header apply only once the policy names them', async () => {
-    expect(await rules('')).toStrictEqual(['never-called']);
-    expect(
-        await rules('[bash]\nremote_functions = ["run_remote"]\nentry_functions = ["run_step"]\nplatforms = "Linux"\n'),
-    ).toStrictEqual(['header', 'runtime-header', 'unnamed-block']);
+    commitAll(sandbox.path);
+    await markExecutable(sandbox.path, 'deploy.sh');
+    const options = buildRunOptions({ only: ONLY });
+    const run = await executeRun(await openSession(sandbox.path), options);
+    expect(run.report.exitCode).toBe(1);
+    const findings = run.report.checks.flatMap(({ findings }) => findings);
+    expect(findings).toMatchObject([
+        { check: 'bash/unused-functions', file: 'deploy.sh', line: 9, rule: 'never-called' },
+        { check: 'bash/ssh-blocks', file: 'deploy.sh', line: 13, rule: 'undocumented-block' },
+    ]);
+    expect(findings).toHaveLength(2);
+    const corrected = SCRIPT.replace('    echo "$1"', () => '    run_step "$1"').replace(
+        'ssh "$1"',
+        () => '# restart_remote: restarts the remote service.\nssh "$1"',
+    );
+    await Bun.write(join(sandbox.path, 'deploy.sh'), corrected);
+    const accepted = await executeRun(await openSession(sandbox.path), options);
+    expect(accepted.report.exitCode).toBe(0);
+    expect(accepted.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
 });

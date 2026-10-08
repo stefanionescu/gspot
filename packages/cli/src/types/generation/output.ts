@@ -19,7 +19,6 @@ export type GeneratedFile = {
     ruleData?: CapturedRules;
     path: string;
     content: string;
-    readOnly: boolean;
     executable?: boolean;
     read?: FileCopy;
     kind: 'lock' | 'config' | 'pointer' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';

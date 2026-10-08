@@ -2,13 +2,12 @@ import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/config/samples/components.ts';
 
-/** The consumer version installed only in native Vue fixture repositories. */
+/** The consumer version installed only in native Vue sandboxes. */
 export const VUE_VERSION = '3.5.22';
 
 export const VUE_CLEAN =
     '<script setup lang="ts">\ndefineProps<{ name: string }>();\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     modules: false,
     configurations: ['typescript', 'vue', 'css'],
@@ -21,7 +20,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'javascript/eslint',
@@ -78,7 +76,7 @@ export const CASES: FindingCase[] = [
         },
     },
     {
-        check: 'vue/tsc',
+        check: 'vue/vue-tsc',
         files: {
             'src/Count.vue':
                 '<script setup lang="ts">\nconst count: number = \'one\';\n</script>\n\n<template>\n    <p>{{ count }}</p>\n</template>\n',

@@ -4,6 +4,7 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readAsset } from '#cli/platform/assets.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { containing } from '#tests/harness/expectations.ts';
@@ -60,7 +61,7 @@ test('framework runtimes and authored overrides stay within their project scopes
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'configurations = ["javascript"]\n[[scope]]\npath = "native"\nconfigurations = ["react-native"]\n[scope.tools.eslint.runtimes]\n"src/browser.js" = "browser"\n"scripts/worker.js" = "worker"\n[[scope]]\npath = "web"\nconfigurations = ["react"]\n[[scope]]\npath = "native/server"\nconfigurations = ["javascript"]\n[scope.tools.eslint.runtimes]\n"**/*" = "node"\n',
+            'configurations = ["javascript"]\n[scope."native"]\nconfigurations = ["react-native"]\n[scope."native".tools.eslint.runtimes]\n"src/browser.js" = "browser"\n"scripts/worker.js" = "worker"\n[scope."web"]\nconfigurations = ["react"]\n[scope."native/server"]\nconfigurations = ["javascript"]\n[scope."native/server".tools.eslint.runtimes]\n"**/*" = "node"\n',
         'server.js': 'export const value = 1;\n',
         'native/src/source.js': 'export const value = 1;\n',
         'native/src/browser.js': 'export const value = 1;\n',
@@ -146,4 +147,55 @@ test.each(INVALID_RUNTIMES)('invalid runtime %s identifies the authored setting'
     const text = stringify({ configurations: ['javascript'], tools: { eslint: { runtimes: { '**/*.js': runtime } } } });
     expect(() => parseStrictPolicy(text)).toThrow('tools.eslint.runtimes.**/*.js');
     expect(() => parseStrictPolicy(text)).toThrow('Invalid option');
+});
+
+test('root runtime choices reach active descendants without adding an inactive namespace to sibling scopes', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `configurations = []
+[tools.eslint.runtimes]
+"**/browser.js" = "browser"
+[scope."api"]
+configurations = ["javascript"]
+[scope."api/deep"]
+[scope."api/deep".tools.eslint.runtimes]
+"**/*" = "worker"
+[scope."notes"]
+configurations = ["markdown"]
+`,
+        'api/browser.js': 'window.alert("ready");',
+        'api/server.js': 'export const value = 1;',
+        'api/deep/browser.js': 'postMessage("ready");',
+        'notes/README.md': '# Notes\n',
+    });
+    const session = await openSession(sandbox.path);
+    const views = new Map(session.scopes.map((selection) => [selection.scope.path, selection.view]));
+    expect(views.get('')!.values['tools.eslint']).toBeUndefined();
+    expect(views.get('notes')!.values['tools.eslint']).toBeUndefined();
+    expect(views.get('api')!.options('tools.eslint').runtimes).toStrictEqual({ '**/browser.js': 'browser' });
+    expect(session.policyFiles.policy.authored.tools!.eslint!.runtimes).toStrictEqual({ '**/browser.js': 'browser' });
+    expect(session.policyFiles.policy.authored.tools!.eslint).not.toHaveProperty('rules');
+    const eslint = await createEslint(sandbox.path);
+    const browser = (await eslint.calculateConfigForFile('api/browser.js')) as RuntimeConfiguration;
+    const server = (await eslint.calculateConfigForFile('api/server.js')) as RuntimeConfiguration;
+    const worker = (await eslint.calculateConfigForFile('api/deep/browser.js')) as RuntimeConfiguration;
+    expect(browser.languageOptions.globals['window']).toBeDefined();
+    expect(browser.languageOptions.globals['Buffer']).toBeUndefined();
+    expect(server.languageOptions.globals['Buffer']).toBeDefined();
+    expect(worker.languageOptions.globals['postMessage']).toBeDefined();
+    expect(worker.languageOptions.globals['window']).toBeUndefined();
+});
+
+test.each(['mise', 'npm'] as const)('Mise task defaults follow the selected runner: %s', async (runner) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `runner = "${runner}"\nconfigurations = ["javascript", "react"]\n[scope.web]\nconfigurations = ["javascript", "react"]\n`,
+        '.mise/tasks/build.js': 'process.exit(0);\n',
+        'web/.mise/tasks/build.js': 'process.exit(0);\n',
+    });
+    const eslint = await createEslint(sandbox.path);
+    for (const file of ['.mise/tasks/build.js', 'web/.mise/tasks/build.js']) {
+        const resolved = (await eslint.calculateConfigForFile(file)) as RuntimeConfiguration;
+        expect(resolved.languageOptions.globals['process'], file).toBe(runner === 'mise' ? false : undefined);
+    }
 });

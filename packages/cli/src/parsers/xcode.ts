@@ -10,6 +10,8 @@ import type {
     ProjectToken,
     XcodeProject,
     ProjectSources,
+    ProjectMetadata,
+    ProjectBuildSettings,
 } from '#cli/types/parsers/xcode.ts';
 
 // The index past the quoted text that opens before from, where a backslash escapes the next character, or `-1`.
@@ -204,6 +206,14 @@ function targetFolders(project: XcodeProject, id: string, target: ProjectEntry):
     });
 }
 
+// Validate project metadata without requiring source paths or a main group.
+function readProject(text: string): ProjectMetadata {
+    const project = pbxprojSchema.parse(parse(text));
+    const root = project.objects[project.rootObject];
+    if (root?.isa !== 'PBXProject') throw new Error('The Xcode project has no project root.');
+    return { objects: project.objects, root };
+}
+
 /**
  * Resolve the Swift sources and synchronized folders that belong to project targets.
  * @param text the project file text
@@ -239,9 +249,8 @@ export function readPbxproj(text: string, directory: string): ProjectSources {
  * @returns the names of the test targets
  */
 export function testTargets(text: string): string[] {
-    const project = pbxprojSchema.parse(parse(text));
-    const root = project.objects[project.rootObject];
-    if (root?.isa !== 'PBXProject') throw new Error('The Xcode project has no project root.');
+    const project = readProject(text);
+    const root = project.root;
     return (root.targets ?? []).flatMap((id) => {
         const target = project.objects[id];
         if (target === undefined) throw new Error(`The Xcode project references an unknown target: ${id}.`);
@@ -249,4 +258,18 @@ export function testTargets(text: string): string[] {
         if (target.name === undefined) throw new Error('An Xcode test target has no name.');
         return [target.name];
     });
+}
+
+/**
+ * Read native compiler and SDK settings without resolving project source paths.
+ * @param text the authored project file
+ * @returns the first declared SDK and Swift version
+ */
+export function projectBuildSettings(text: string): ProjectBuildSettings {
+    const project = readProject(text);
+    const settings = Object.values(project.objects).flatMap((entry) => entry.buildSettings ?? []);
+    return {
+        sdkRoot: settings.find((entry) => entry.SDKROOT !== undefined)?.SDKROOT,
+        swiftVersion: settings.find((entry) => entry.SWIFT_VERSION !== undefined)?.SWIFT_VERSION,
+    };
 }

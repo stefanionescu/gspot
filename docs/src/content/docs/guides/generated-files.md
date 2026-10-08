@@ -8,20 +8,20 @@ run `gspot apply` to write them again.
 
 ## What gspot writes
 
-| Path                                                    | What it holds                                                                              |
-| ------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `.gspot/config/`                                        | The configuration of every tool. A scope gets its own folder under it.                     |
-| `.gspot/rules/`                                         | The rules for coding agents.                                                               |
-| `.gspot/package.json` and lockfile                      | The npm tools gspot installs, at pinned versions.                                          |
-| `.gspot/pyproject.toml` and lockfile                    | The Python tools gspot installs, at pinned versions.                                       |
-| `.gspot/version`                                        | The gspot version of the repository.                                                       |
-| Files at the repository root                            | Pointers for editors and tools that look for their configuration at the root.              |
-| Managed blocks                                          | Blocks in `.gitignore`, `.gitattributes`, and `AGENTS.md`. The rest of each file is yours. |
-| `.gspot/hooks/`                                         | The three Git hook scripts.                                                                |
-| `.mise/conf.d/gspot-tools.toml`                         | The mise pins, when mise is selected.                                                      |
-| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml` | The selected CI job.                                                                       |
-| `.swiftlint.yml` inside test folders                    | Swift test overrides, when applicable.                                                     |
-| Keys in shared files                                    | Install settings in files such as `bunfig.toml`. The other keys stay yours.                |
+| Path                                 | What it holds                                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `.gspot/config/`                     | The configuration of every tool. A scope gets its own folder under it.                     |
+| `.gspot/rules/`                      | The rules for coding agents.                                                               |
+| `.gspot/package.json` and lockfile   | The npm tools gspot installs, at pinned versions.                                          |
+| `.gspot/pyproject.toml` and lockfile | The Python tools gspot installs, at pinned versions.                                       |
+| `.gspot/version`                     | The gspot version of the repository.                                                       |
+| Files at the repository root         | Pointers for editors and tools that look for their configuration at the root.              |
+| Managed blocks                       | Blocks in `.gitignore`, `.gitattributes`, and `AGENTS.md`. The rest of each file is yours. |
+| `.gspot/hooks/`                      | The three Git hook scripts.                                                                |
+| `.mise/conf.d/gspot-tools.toml`      | The mise pins, when mise is selected.                                                      |
+| GitHub or GitLab workflow            | The selected CI job.                                                                       |
+| `.swiftlint.yml` inside test folders | Swift test overrides, when applicable.                                                     |
+| Keys in shared files                 | Install settings in files such as `bunfig.toml`. The other keys stay yours.                |
 
 The root files are `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`,
 `.stylelintrc.json`, `.editorconfig`, `.semgrepignore`, `pyrightconfig.json`, and

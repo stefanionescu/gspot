@@ -72,14 +72,14 @@ function scopeLines(key: string, declaration: SettingDeclaration, entry: Setting
     const { scope, shipped, effective } = entry;
     const { value, source = 'unset', reason } = effective === undefined ? {} : effective;
     const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
-    const isReasoned = ['ceiling', 'floor', 'loosening'].includes(declaration.direction);
+    const requiresReason = ['ceiling', 'floor', 'loosening'].includes(declaration.direction);
     return [
         '',
         `Scope: ${scope === '' ? 'root' : scope}`,
         `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
         `Current value: ${JSON.stringify(value)} (from ${source})`,
         ...(reason === undefined ? [] : [`Reason on record: ${reason}`]),
-        `Change it: gspot set ${quoteArgument(key)} <value>${target}${isReasoned ? ' --reason "..."' : ''}`,
+        `Change it: gspot set ${quoteArgument(key)} <value>${target}${requiresReason ? ' --reason "..."' : ''}`,
         `Back to the default: gspot set ${quoteArgument(key)} --default${target}`,
     ];
 }
@@ -133,7 +133,7 @@ function buildSubjectSuggestion(subject: string, candidates: string[]): string {
 }
 
 function buildUnknownSubjectDiagnostic(session: ToolSession | undefined, subject: string): string {
-    const checks = knownChecks(session?.policyFiles.policy.checks ?? []);
+    const checks = knownChecks(session === undefined ? [] : Object.values(session.policyFiles.policy.check));
     if (subject.includes('/')) {
         return `There is no check called \`${subject}\`.${buildSubjectSuggestion(subject, checks)}`;
     }

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
 import { pathKey } from '#cli/platform/paths.ts';
-import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { INSTALLATION_KINDS } from '#cli/config/configurations.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { BLOCK_STYLES } from '#cli/config/platform/managed-blocks.ts';
@@ -9,7 +8,6 @@ import { ruleSettingsSchema } from '#cli/parsers/schema/tool-rule.ts';
 import { OWNED_KINDS, MERGED_CONFIGURATION_FORMATS } from '#cli/config/lifecycle/ownership.ts';
 
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
-const modeSchema = z.number().int().min(0).max(MODE_BITS);
 const pathSchema = z.string().superRefine((path, context) => {
     try {
         assertMutationTarget(path);
@@ -25,7 +23,6 @@ const configurationFieldSchema = z.strictObject({
 });
 const identitySchema = z.strictObject({
     hash: hashSchema,
-    mode: modeSchema,
     isLink: z.literal(true).optional(),
 });
 const configurationFieldsSchema = z.array(configurationFieldSchema).superRefine((fields, context) => {
@@ -74,17 +71,6 @@ export const ownershipSchema = z
         files: z.array(fileSchema),
         // Rule values from the last apply that completed every managed write.
         rules: z.record(pathSchema, ruleSettingsSchema).optional(),
-        // Language and framework overrides against the last applied selection, by scope.
-        selections: z
-            .record(
-                z.union([z.literal(''), pathSchema]),
-                z.strictObject({
-                    configurations: z.array(z.string()),
-                    added: z.array(z.string()),
-                    removed: z.array(z.string()),
-                }),
-            )
-            .optional(),
         installing: z.array(z.enum(INSTALLATION_KINDS)).optional(),
         // The tool-project folders gspot installed whole, by kind.
         installed: z.array(z.enum(INSTALLATION_KINDS)).optional(),

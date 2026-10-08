@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
@@ -15,9 +15,8 @@ test('completion callbacks publish filtered results before the remaining check f
         'gspot.toml': stringify({
             configurations: [],
             ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The fixture verifies filtered progress.' }],
-            check: [
-                {
-                    name: 'project/fast',
+            check: {
+                'project/fast': {
                     paths: ['source.sh'],
                     stage: 'commit',
                     command: [
@@ -27,8 +26,7 @@ test('completion callbacks publish filtered results before the remaining check f
                     ],
                     output: { format: 'regex', pattern: '^(?<file>[^:]+):(?<rule>[^:]+):(?<message>.*)$' },
                 },
-                {
-                    name: 'project/waiting',
+                'project/waiting': {
                     paths: ['source.sh'],
                     stage: 'commit',
                     command: [
@@ -37,21 +35,26 @@ test('completion callbacks publish filtered results before the remaining check f
                         'for (let attempt = 0; attempt < 100; attempt++) { if (await Bun.file("completed").exists()) process.exit(0); await Bun.sleep(10); } process.exit(1);',
                     ],
                 },
-            ],
+            },
         }),
     });
     const completed: CheckResult[] = [];
-    const result = await executeRun(
+    const ready = Promise.withResolvers<undefined>();
+    const running = executeRun(
         await openSession(sandbox.path),
         buildRunOptions({
             isDryRun: true,
             only: ['project/fast', 'project/waiting'],
             onResult: (entry) => {
                 completed.push(entry);
-                if (entry.check === 'project/fast') writeFileSync(join(sandbox.path, 'completed'), 'ready');
+                if (entry.check === 'project/fast') ready.resolve(undefined);
             },
         }),
     );
+    const [result] = await Promise.all([
+        running,
+        Promise.race([ready.promise, running]).then(() => writeFile(join(sandbox.path, 'completed'), 'ready')),
+    ]);
     expect(result.report.exitCode).toBe(0);
     expect(completed.map((entry) => entry.check)).toStrictEqual(['project/fast', 'project/waiting']);
     expect(completed[0]).toMatchObject({ status: 'passed', findings: [] });

@@ -161,7 +161,7 @@ function getRuleSummary(session: ToolSession | undefined, tool: string, rule: st
  * @returns the explanation, or undefined when no check has the name
  */
 export function explainCheck(session: ToolSession | undefined, checkName: string): Explanation | undefined {
-    const declared = session?.policyFiles.policy.checks.find((entry) => entry.name === checkName);
+    const declared = session?.policyFiles.policy.check[checkName];
     const found: Found | undefined =
         allChecks(configurationManifests().values()).get(checkName) ??
         (declared === undefined ? undefined : { check: declared, configuration: undefined });

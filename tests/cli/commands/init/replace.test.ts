@@ -1,33 +1,27 @@
 // Replace at init: the plan names hand-written hooks, the files of the selected tools, and the lint folder, and keeps
 // a shared file that holds other tools' sections.
+import * as fs from 'node:fs';
 import { join, posix } from 'node:path';
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { git, commitAll } from '#tests/harness/git.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
+import { TYPO } from '#tests/config/samples/spelling.ts';
 import { writeSetup } from '#cli/commands/init/write.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { PYPROJECT } from '#tests/config/samples/python.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
-import { PYPROJECT } from '#tests/config/samples/python/source.ts';
-import { rejection, textContaining } from '#tests/harness/expectations.ts';
+import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { buildInitOptions, buildInitArguments } from '#tests/harness/init.ts';
+import { rejection, containingAll, textContaining } from '#tests/harness/expectations.ts';
+import { rm, stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 import { PLAN_INIT, PYPROJECT_TAKEOVERS } from '#tests/config/cli/commands/init/replace.ts';
-
-import {
-    rmSync,
-    statSync,
-    chmodSync,
-    existsSync,
-    symlinkSync,
-    readFileSync,
-    readlinkSync,
-    writeFileSync,
-} from 'node:fs';
 
 test.each(['', 'hooks', '.husky'])(
     'dry-run distinguishes source hooks from configured hooks at %s',
@@ -48,8 +42,8 @@ test.each(['', 'hooks', '.husky'])(
             hooksPath === '' ? /^hooks\s+none$/ : new RegExp(String.raw`^hooks\s.*${hooksPath}/.*pre-commit`),
         );
         expect(hooks.split('(hand-written)')).toHaveLength(hooksPath === '' ? 1 : 2);
-        expect(readFileSync(join(sandbox.path, 'hooks/use-thing.ts'), 'utf8')).toContain('useThing');
-        expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
+        expect(await readFile(join(sandbox.path, 'hooks/use-thing.ts'), 'utf8')).toContain('useThing');
+        expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
     },
 );
 
@@ -69,16 +63,14 @@ test('the init plan replaces the files of the selected tools and lists the lint 
         'README.md': '# test\n',
         'quality/lint.sh': CLEAN_BASH_SCRIPT,
     });
-    git(sandbox.path, ['init', '-q']);
-    git(sandbox.path, ['add', '-A']);
-    git(sandbox.path, ['commit', '-qm', 'init']);
+    commitAll(sandbox.path);
     const preview = await runGspot(sandbox.path, [...PLAN_INIT, '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan!;
     for (const path of Object.keys(originals))
         expect(plan.remove).toContainEqual({ path, note: textContaining('replaced by the generated') });
     expect(plan.noLongerRuns).toContainEqual({ path: 'quality/', note: textContaining('lint scripts') });
-    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
+    expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
 });
 
 test.each(['setup.cfg', 'tox.ini'])(
@@ -87,7 +79,7 @@ test.each(['setup.cfg', 'tox.ini'])(
         await using sandbox = await testdir();
         const original = '[flake8]\nignore = E501\n\n[sqlfluff]\nexclude_rules = LT01, RF01\n';
         await createFileTree(sandbox.path, { [path]: original, 'query.sql': 'SELECT 1;\n' });
-        chmodSync(join(sandbox.path, path), 0o640);
+        await chmod(join(sandbox.path, path), 0o640);
         const initialized = await runGspot(sandbox.path, [
             'init',
             '--yes',
@@ -97,7 +89,7 @@ test.each(['setup.cfg', 'tox.ini'])(
             ...QUIET_INIT,
         ]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        expect(readPolicy(sandbox.path).policy.ignores).toStrictEqual([]);
+        expect(readPolicy(sandbox.path).policy.ignore).toStrictEqual([]);
         expect((JSON.parse(initialized.stdout) as InitJson).plan!.remove.some((entry) => entry.path === path)).toBe(
             false,
         );
@@ -105,8 +97,9 @@ test.each(['setup.cfg', 'tox.ini'])(
             path,
             note: textContaining('Delete the section when ready'),
         });
-        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
-        expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(getKeptMode(0o640));
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
+        const attributes = await stat(join(sandbox.path, path));
+        expect(attributes.mode & 0o777).toBe(getKeptMode(0o640));
     },
 );
 
@@ -123,7 +116,7 @@ test('an ignore file inside a scope is replaced at init, and the scoped check ru
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
     expect(policy).not.toContain('templates');
-    expect(existsSync(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
+    expect(await pathExists(join(sandbox.path, 'db/.sqlfluffignore'))).toBe(false);
     const selected = await runGspot(sandbox.path, ['set', 'level', 'all']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const dialect = await runGspot(sandbox.path, ['set', 'tools.sqlfluff.dialect', 'postgres', '--scope', 'db']);
@@ -138,33 +131,29 @@ test('an ignore file inside a scope is replaced at init, and the scoped check ru
 test.each([
     [
         'changes',
-        (path: string) => {
-            writeFileSync(path, 'disable=SC2034\n');
+        async (path: string) => {
+            await writeFile(path, 'disable=SC2034\n');
         },
     ],
-    [
-        'vanishes',
-        (path: string) => {
-            rmSync(path);
-        },
-    ],
-])('a file init takes over that %s after the plan stops init before it writes', async (_, change) => {
+    ['vanishes', rm],
+])('initialization refuses removal of a replaced file that %s after preview', async (kind, change) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
     commitAll(sandbox.path);
     const options = buildInitOptions(sandbox.path, {
         configurations: ['bash'],
-        hooks: false,
-        ci: 'none',
-        runner: 'none',
-        rules: false,
     });
     const prepared = await prepare(sandbox.path, options);
     expect(prepared.removed.map((entry) => entry.path)).toContain('.shellcheckrc');
-    change(join(sandbox.path, '.shellcheckrc'));
-    expect(await rejection(writeSetup(sandbox.path, options, prepared))).toContain('Run gspot init again');
-    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-    expect(existsSync(join(sandbox.path, '.gspot'))).toBe(false);
+    await change(join(sandbox.path, '.shellcheckrc'));
+    expect(await rejection(writeSetup(sandbox.path, options, prepared))).toBe(
+        '.shellcheckrc changed after gspot read it. Run the command again.',
+    );
+    if (kind === 'changes')
+        expect(await readFile(join(sandbox.path, '.shellcheckrc'), 'utf8')).toBe('disable=SC2034\n');
+    else expect(await pathExists(join(sandbox.path, '.shellcheckrc'))).toBe(false);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(prepared.policyText);
+    expect(await pathExists(join(sandbox.path, '.gspot/version'))).toBe(true);
 });
 
 test.each([true, false])(
@@ -174,8 +163,8 @@ test.each([true, false])(
         const original = '[flake8]\nignore = E501\n\n[sqlfluff]\nexclude_rules = LT01\n';
         await createFileTree(sandbox.path, { 'settings/shared.cfg': original, 'query.sql': 'SELECT 1;\n' });
         const target = join(sandbox.path, 'settings/shared.cfg');
-        chmodSync(target, 0o640);
-        symlinkSync('settings/shared.cfg', join(sandbox.path, 'setup.cfg'));
+        await chmod(target, 0o640);
+        await symlink('settings/shared.cfg', join(sandbox.path, 'setup.cfg'));
         const initialized = await runGspot(sandbox.path, [
             ...buildInitArguments(['sql']),
             '--json',
@@ -188,11 +177,12 @@ test.each([true, false])(
             note: textContaining('Delete the section when ready'),
         });
         expect(plan.remove.some((entry) => entry.path === 'setup.cfg')).toBe(false);
-        expect(readlinkSync(join(sandbox.path, 'setup.cfg'))).toBe('settings/shared.cfg');
-        expect(readFileSync(target, 'utf8')).toBe(original);
-        expect(statSync(target).mode & 0o777).toBe(getKeptMode(0o640));
-        expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(!isDryRun);
-        expect(existsSync(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(!isDryRun);
+        expect(await readlink(join(sandbox.path, 'setup.cfg'))).toBe('settings/shared.cfg');
+        expect(await readFile(target, 'utf8')).toBe(original);
+        const attributes = await stat(target);
+        expect(attributes.mode & 0o777).toBe(getKeptMode(0o640));
+        expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(!isDryRun);
+        expect(await pathExists(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(!isDryRun);
     },
 );
 
@@ -204,10 +194,6 @@ test('initialization preserves a retained shared configuration edited after its 
     });
     const options = buildInitOptions(sandbox.path, {
         configurations: ['sql'],
-        hooks: false,
-        ci: 'none',
-        runner: 'none',
-        rules: false,
     });
     const prepared = await prepare(sandbox.path, options);
     expect(prepared.plan.retained).toContainEqual({
@@ -215,45 +201,109 @@ test('initialization preserves a retained shared configuration edited after its 
         note: textContaining('Delete the section when ready'),
     });
     const edited = '[sqlfluff]\nexclude_rules = LT01, RF01\n[flake8]\nignore = E501\n';
-    writeFileSync(join(sandbox.path, 'setup.cfg'), edited);
+    await writeFile(join(sandbox.path, 'setup.cfg'), edited);
     const initialized = await writeSetup(sandbox.path, options, prepared);
     expect(initialized.exitCode).toBe(0);
-    expect(readFileSync(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    expect(existsSync(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(true);
+    expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
+    expect(await pathExists(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(true);
 });
 
-test.each(PYPROJECT_TAKEOVERS)(
-    'initialization identifies retained $table settings in root and nested Python project files',
-    async ({ configuration, table, text, source, generated }) => {
-        for (const scope of ['', 'app']) {
-            await using sandbox = await testdir();
-            const path = posix.join(scope, 'pyproject.toml');
-            const original = PYPROJECT + '[tool.unrelated]\nkeep = true\n\n' + text;
-            await createFileTree(sandbox.path, {
-                [path]: original,
-                [join(scope, source.file)]: source.text,
-            });
-            chmodSync(join(sandbox.path, path), 0o640);
-            const args =
-                scope === ''
-                    ? buildInitArguments([configuration])
-                    : [...buildInitArguments(['none']), '--scope-configurations', `${scope}=${configuration}`];
-            const preview = await runGspot(sandbox.path, [...args, '--dry-run', '--json']);
-            expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-            expect((JSON.parse(preview.stdout) as InitJson).plan!.retained).toContainEqual({
-                path,
-                note: textContaining(table),
-            });
-            expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
-            const initialized = await runGspot(sandbox.path, [...args, '--json']);
-            expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-            expect((JSON.parse(initialized.stdout) as InitJson).plan!.retained).toContainEqual({
-                path,
-                note: textContaining('Delete the section when ready'),
-            });
-            expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
-            expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(getKeptMode(0o640));
-            expect(existsSync(join(sandbox.path, generated.folder, scope, generated.file))).toBe(true);
-        }
+test.each(PYPROJECT_TAKEOVERS.flatMap((row) => ['', 'app'].map((scope) => ({ ...row, scope }))))(
+    'initialization identifies retained $table settings in Python project scope "$scope"',
+    async ({ configuration, table, text, source, generated, scope }) => {
+        await using sandbox = await testdir();
+        const path = posix.join(scope, 'pyproject.toml');
+        const original = PYPROJECT + '[tool.unrelated]\nkeep = true\n\n' + text;
+        await createFileTree(sandbox.path, {
+            [path]: original,
+            [join(scope, source.file)]: source.text,
+        });
+        await chmod(join(sandbox.path, path), 0o640);
+        const args =
+            scope === ''
+                ? buildInitArguments([configuration])
+                : [...buildInitArguments(['none']), '--scope-configurations', `${scope}=${configuration}`];
+        const preview = await runGspot(sandbox.path, [...args, '--dry-run', '--json']);
+        expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+        expect((JSON.parse(preview.stdout) as InitJson).plan!.retained).toContainEqual({
+            path,
+            note: textContaining(table),
+        });
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
+        const initialized = await runGspot(sandbox.path, [...args, '--json']);
+        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+        expect((JSON.parse(initialized.stdout) as InitJson).plan!.retained).toContainEqual({
+            path,
+            note: textContaining('Delete the section when ready'),
+        });
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(original);
+        const attributes = await stat(join(sandbox.path, path));
+        expect(attributes.mode & 0o777).toBe(getKeptMode(0o640));
+        expect(await pathExists(join(sandbox.path, generated.folder, scope, generated.file))).toBe(true);
     },
 );
+
+test('init replaces a nested spelling configuration and deletes the original', async () => {
+    await using directory = await testdir();
+    const original = `[default]\nlocale = "en-gb"\n[default.extend-words]\n${TYPO.the} = "${TYPO.the}"\n`;
+    await createFileTree(directory.path, {
+        'nested/typos.toml': original,
+        'nested/sample.txt': `${TYPO.color} ${TYPO.the}\n`,
+    });
+    const options = buildInitOptions(directory.path, {
+        isDryRun: true,
+        configurations: ['spelling'],
+    });
+    const preview = await initCommand(options);
+    expect(preview.exitCode).toBe(0);
+    expect(preview.json).toMatchObject({
+        plan: {
+            remove: containingAll([
+                { path: 'nested/typos.toml', note: 'replaced by the generated typos configuration' },
+            ]),
+        },
+    });
+    expect(await readFile(join(directory.path, 'nested/typos.toml'), 'utf8')).toBe(original);
+    expect(await pathExists(join(directory.path, 'gspot.toml'))).toBe(false);
+    const installed = await initCommand({ ...options, isDryRun: false });
+    expect(installed.exitCode).toBe(0);
+    expect(await pathExists(join(directory.path, '.gitignore'))).toBe(false);
+    expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).not.toContain('en-gb');
+    expect(await pathExists(join(directory.path, 'nested/typos.toml'))).toBe(false);
+});
+
+test('init reports each submodule once without reading its contents', async () => {
+    await using directory = await testdir();
+    await using outside = await testdir();
+    await createFileTree(directory.path, { 'README.md': 'Repository\n' });
+    await createFileTree(outside.path, { 'package.json': '{' });
+    commitAll(directory.path);
+    const commitId = gitOutput(directory.path, ['rev-parse', 'HEAD']);
+    gitOutput(directory.path, ['update-index', '--add', '--cacheinfo', `160000,${commitId},external project`]);
+    await symlink(outside.path, join(directory.path, 'external project'), 'dir');
+    const result = await initCommand(
+        buildInitOptions(directory.path, {
+            isDryRun: true,
+            configurations: ['none'],
+        }),
+    );
+    expect(result.exitCode).toBe(0);
+    expect(result.json).toMatchObject({
+        plan: { retained: [{ path: 'external project', note: 'submodule; contents are not read' }] },
+    });
+    expect(await readFile(join(outside.path, 'package.json'), 'utf8')).toBe('{');
+    expect(await pathExists(join(directory.path, 'gspot.toml'))).toBe(false);
+});
+
+test('failed initialization preserves the previous pin when generated publication fails', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { '.gspot/version': '0.0.1\n' });
+    const rename = fs.renameSync;
+    using _publication = spyOn(fs, 'renameSync').mockImplementation((source, target) => {
+        if (String(target) === join(directory.path, '.gitattributes')) throw new Error('Generated write denied');
+        rename(source, target);
+    });
+    const options = buildInitOptions(directory.path, { configurations: ['none'] });
+    expect(await rejection(initCommand(options))).toContain('Generated write denied');
+    expect(await readFile(join(directory.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
+});

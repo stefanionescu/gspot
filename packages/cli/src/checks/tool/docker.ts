@@ -2,7 +2,6 @@ import { parse } from 'yaml';
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
@@ -12,7 +11,7 @@ import type { ComposeProject } from '#cli/types/parsers/docker.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { composeSchema, imageReportSchema } from '#cli/parsers/schema/docker.ts';
-import { TRIVY_EXIT, COMPOSE_FILES, SHOWN_FINDINGS, DOCKERIGNORE_ENTRIES } from '#cli/config/checks/tool/docker.ts';
+import { TRIVY_EXIT, COMPOSE_FILES, DOCKERIGNORE_ENTRIES } from '#cli/config/checks/tool/docker.ts';
 
 // Interpolated image names require Compose environment resolution and are not literal scan targets.
 function composeImages(input: CheckInput, path: string): Set<string> {
@@ -32,7 +31,7 @@ function composeImages(input: CheckInput, path: string): Set<string> {
 }
 
 // Native exit status and parsed findings must agree before a scan can count as clean.
-async function scanImage(input: CheckInput, image: string): Promise<string[]> {
+async function scanImage(input: CheckInput, image: string, path: string): Promise<Finding[]> {
     const result = await runCheckTool(
         input,
         [
@@ -56,15 +55,22 @@ async function scanImage(input: CheckInput, image: string): Promise<string[]> {
         throw new Error(`Trivy could not scan ${image}: ${detail}`);
     }
     const report = imageReportSchema.parse(JSON.parse(result.stdout));
-    const messages = (report.Results ?? []).flatMap((entry) => [
-        ...(entry.Vulnerabilities ?? []).map(
-            (vulnerability) => `${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
+    const findings = (report.Results ?? []).flatMap((entry) => [
+        ...(entry.Vulnerabilities ?? []).map((vulnerability) =>
+            findingAt(
+                input,
+                { file: path, line: 1 },
+                vulnerability.VulnerabilityID,
+                `${image}: ${vulnerability.VulnerabilityID} (${vulnerability.PkgName})`,
+            ),
         ),
-        ...(entry.Secrets ?? []).map((secret) => `${secret.RuleID}: ${secret.Title}`),
+        ...(entry.Secrets ?? []).map((secret) =>
+            findingAt(input, { file: path, line: 1 }, secret.RuleID, `${image}: ${secret.RuleID}: ${secret.Title}`),
+        ),
     ]);
-    if ((result.code === TRIVY_EXIT) !== messages.length > 0)
+    if ((result.code === TRIVY_EXIT) !== findings.length > 0)
         throw new Error(`Trivy returned an inconsistent image report for ${image}.`);
-    return messages;
+    return findings;
 }
 
 /**
@@ -91,9 +97,10 @@ export function dockerignore(input: CheckInput): Finding[] {
             ];
         const text = readSource(input.root, path, input.reads).toString('utf8');
         const lines = new Set(text.split('\n').map((line) => line.trim().replaceAll(/^\/|\/$/gu, '')));
-        const missing = DOCKERIGNORE_ENTRIES.filter((entry) =>
-            [entry, `**/${entry}`, `${entry}*`, `**/${entry}*`].every((form) => !lines.has(form)),
-        );
+        const missing = [
+            ...DOCKERIGNORE_ENTRIES,
+            ...input.selection.selected.flatMap((manifest) => manifest.dockerignore),
+        ].filter((entry) => [entry, `**/${entry}`, `${entry}*`, `**/${entry}*`].every((form) => !lines.has(form)));
         if (missing.length === 0) return [];
         return [
             findingAt(
@@ -116,19 +123,9 @@ export async function trivyImage(input: CheckInput): Promise<Finding[]> {
     const isCompose = pathMatcher(COMPOSE_FILES);
     const findings: Finding[] = [];
     for (const file of input.files) {
-        if (!isCompose(file.path) || scopeOf(file.path, input.scopeEntries).path !== input.scope) continue;
-        for (const image of composeImages(input, file.path)) {
-            const messages = await scanImage(input, image);
-            if (messages.length === 0) continue;
-            findings.push(
-                findingAt(
-                    input,
-                    { file: file.path, line: 1 },
-                    'vulnerability',
-                    `${image}: ${messages.slice(0, SHOWN_FINDINGS).join(' | ')}`,
-                ),
-            );
-        }
+        if (!isCompose(file.path)) continue;
+        for (const image of composeImages(input, file.path))
+            findings.push(...(await scanImage(input, image, file.path)));
     }
     return findings;
 }

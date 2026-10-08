@@ -91,8 +91,8 @@ function buildDoctorReport(session: ToolSession, pinned: string | undefined): Do
         hooks: hooks.text,
         ci,
         rules: {
-            files: policy.agentRules.enabled
-                ? selectRuleFiles(policy.agentRules, everyManifest(session.scopes), session.repository, policy.level)
+            files: policy.agent_rules.enabled
+                ? selectRuleFiles(policy.agent_rules, everyManifest(session.scopes), session.repository, policy.level)
                       .length
                 : 0,
         },

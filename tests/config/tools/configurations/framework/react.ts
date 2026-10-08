@@ -18,7 +18,6 @@ export const COUNTER =
 export const RAW_NATIVE_TEXT =
     '// A test component.\n\n/**\n * Draws a label.\n * @returns the label\n */\nexport function Label(): unknown {\n    return <View>label</View>;\n}\n';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'react-dom'],
     tsconfig: WEB_TSCONFIG,
@@ -26,7 +25,6 @@ export const REPOSITORY: RepositoryScenario = {
     files: { 'src/Greeting.tsx': CLEAN_COMPONENT },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'javascript/eslint',
@@ -41,7 +39,6 @@ export const CASES: FindingCase[] = [
     },
 ];
 
-/** Authored inputs and configuration selection for this scenario. */
 export const EXPO_REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'expo'],
     tsconfig: NATIVE_TSCONFIG,
@@ -49,7 +46,6 @@ export const EXPO_REPOSITORY: RepositoryScenario = {
     files: { 'src/answer.ts': COMPONENT_SOURCE },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const EXPO_CASES: FindingCase[] = [
     {
         check: 'javascript/eslint',
@@ -61,7 +57,6 @@ export const EXPO_CASES: FindingCase[] = [
     },
 ];
 
-/** Authored inputs and configuration selection for this scenario. */
 export const NATIVE_REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'react-native'],
     tsconfig: NATIVE_TSCONFIG,
@@ -69,7 +64,6 @@ export const NATIVE_REPOSITORY: RepositoryScenario = {
     files: { 'src/answer.ts': COMPONENT_SOURCE },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const NATIVE_CASES: FindingCase[] = [
     {
         check: 'javascript/eslint',

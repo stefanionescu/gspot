@@ -1,6 +1,7 @@
 [configuration]
 title = "Static Site"
-requires = ["html", "css", "javascript"]
+requires = ["html"]
+suggests = ["css", "javascript"]
 description = "A site built to a folder and served as files: the build, its output, its links, its weight, its sitemap, and its headers."
 
 [detect]
@@ -47,7 +48,7 @@ runs = "scope"
 needs = ["build"]
 summary = "Runs the build command of the site and fails when it fails or writes no output folder."
 why = "Every other output check reads what the build wrote, so a broken build hides all of them."
-help = "Run the build command by hand and fix what it prints. Name the command under site.build."
+help = "Run the build command by hand and fix what it prints. Name the command under site.build_command."
 
 [[check]]
 name = "build-reproducible"
@@ -118,11 +119,11 @@ name = "size"
 title = "Check site size limits"
 example = "A built page larger than its configured byte ceiling reports its measured size. Remove unused assets or reduce the page payload, rebuild, and rerun to verify it fits the ceiling."
 level = "recommended"
-when = {setting = "limits.site.kilobytes"}
+when = { setting = "site.max_kilobytes" }
 stage = "push"
 runs = "scope"
 needs = ["build"]
-summary = "Sums the compressed weight of the output paths each ceiling in limits.site.kilobytes names."
+summary = "Sums the compressed weight of the output paths each ceiling in site.max_kilobytes names."
 why = "Weight arrives a kilobyte at a time, and only a ceiling notices."
 help = "Remove what the page does not need, or raise the ceiling with a reason."
 
@@ -145,7 +146,7 @@ example = "An image in the output directory that no built page or stylesheet ref
 level = "recommended"
 stage = "push"
 runs = "scope"
-files = {paths = ["**/*"], kinds = ["source", "binary"]}
+files = { paths = ["**/*"], kinds = ["source", "binary"] }
 summary = "Finds files under an assets folder that no page, stylesheet, or script names."
 why = "An asset nobody references ships with every deploy and is kept by everyone who fears deleting it."
 help = "Delete the file."
@@ -158,7 +159,7 @@ example = "An SVG containing removable editor metadata differs from optimized ou
 level = "recommended"
 stage = "commit"
 runs = "files"
-files = {extensions = [".svg"]}
+files = { extensions = [".svg"] }
 fix = ["svgo", "--quiet", "{files}"]
 summary = "Reports SVG byte reductions above tools.svgo.min_saving_percent, which defaults to 10 at level `recommended` and 0 at level `all`."
 why = "An SVG straight from an editor carries metadata and precision a browser never needs."
@@ -193,25 +194,27 @@ direction = "ceiling"
 default = 10
 default_all = 0
 summary = "Report an SVG when optimization saves more than this percentage of its UTF-8 bytes."
-validation = {minimum = 0, maximum = 100}
+validation = { minimum = 0, maximum = 100 }
 
 [[setting]]
-name = "site.build"
-type = "string"
+name = "site.build_command"
+type = "list"
+items = "string"
 direction = "neutral"
-default = "npm run build"
+default = ["npm", "run", "build"]
 summary = "The command that builds the site."
 
 [[setting]]
-name = "site.output"
-type = "string"
+name = "site.build_folder"
+type = "path"
 direction = "neutral"
 default = "dist"
 summary = "The folder the build writes."
 
 [[setting]]
-name = "limits.site.kilobytes"
+name = "site.max_kilobytes"
 type = "list"
+items = { paths = { type = "list", items = "string" }, kb = { type = "number", validation = { minimum = 0, integer = true } } }
 direction = "tightening"
 default = []
 summary = "Weight ceilings: the output paths, and the most kilobytes they may weigh compressed."
@@ -219,20 +222,14 @@ summary = "Weight ceilings: the output paths, and the most kilobytes they may we
 [[setting]]
 name = "site.sitemap_exclude"
 type = "list"
+items = "string"
 direction = "loosening"
 default = ["404.html"]
 summary = "Built pages the sitemap leaves out on purpose."
 
 [[setting]]
 name = "tools.purgecss.safelist"
-type = "list"
+type = "table"
 direction = "loosening"
-default = []
+default = {}
 summary = "Class names a script adds at run time: the names and the reason."
-
-[[setting]]
-name = "tools.linkinator.exclude_urls"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Links the crawl leaves out: a pattern and the reason."

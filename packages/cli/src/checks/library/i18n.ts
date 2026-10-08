@@ -4,7 +4,6 @@ import { readSource } from '#cli/platform/source.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import type { LocaleSettings } from '#cli/types/checks/library/i18n.ts';
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
@@ -38,10 +37,8 @@ function translationProblem(text: string): string | undefined {
  * @returns the findings
  */
 export function locales(input: CheckInput): Finding[] {
-    const setting = input.view.options('i18n')['locales'] as LocaleSettings | undefined;
-    if (setting?.directory === undefined) return [];
-    const directory = posix.join(input.scope, setting.directory);
-    const base = setting.base ?? 'en';
+    const { messages_folder: directory, base_locale: base } = input.view.options('i18n');
+    if (directory === undefined) return [];
     const files = input.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${directory}/`) && path.endsWith('.json'));

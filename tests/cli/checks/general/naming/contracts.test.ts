@@ -6,30 +6,52 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
-import { settingValue } from '#cli/policy/settings/lookup.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { allChecks } from '#cli/configurations/declarations.ts';
+import type { KnownSettings } from '#cli/types/policy/settings.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import { nameProblems } from '#cli/checks/general/naming/problems.ts';
+import { nameFindings } from '#cli/checks/general/naming/findings.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/policy.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { settingValue, declarationFor } from '#cli/policy/settings/lookup.ts';
 
 import {
     NAME_WORDS,
     DOMAIN_SOURCE,
     SCOPE_CEILINGS,
     TECHNICAL_NAMES,
-    LANGUAGE_CEILINGS,
+    NAMING_LANGUAGES,
     NAMING_CATEGORIES,
     NATIVE_NAME_CATEGORIES,
 } from '#tests/config/cli/checks/naming.ts';
+
+const owned = allChecks(configurationManifests().values()).get('naming/identifiers');
+if (owned === undefined) throw new Error('The naming/identifiers declaration is missing.');
+const check = owned.check;
+
+function namingCeiling(settings: KnownSettings, key: string): number {
+    const declaration = declarationFor(settings, key)?.declaration;
+    const value = declaration === undefined ? undefined : settings.defaults.get(declaration.name)?.value;
+    if (typeof value !== 'number') throw new Error(`The naming ceiling ${key} has no numeric default.`);
+    return value;
+}
+
+function defaultNamingContext() {
+    const selected = selectConfigurations(['naming'], configurationManifests());
+    const settings = knownSettings(selected);
+    const policy = parseStrictPolicy(buildPolicy(['naming']));
+    return { settings, effective: effectivePolicy(settings, policy, '', selected) };
+}
 
 test.each(['recommended', 'all'] as const)('each language owns its effective ceilings at %s', (level) => {
     const selected = selectConfigurations(['naming'], configurationManifests());
     const settings = knownSettings(selected, level);
     const policy = parseStrictPolicy(buildPolicy(['naming'], { level }));
     const effective = effectivePolicy(settings, policy, '', selected);
-    for (const { language, characters, words } of LANGUAGE_CEILINGS) {
+    for (const language of NAMING_LANGUAGES) {
+        const characters = namingCeiling(settings, `naming.${language}.max_chars`);
+        const words = namingCeiling(settings, `naming.${language}.max_words`);
         for (const category of ['files', 'functions', 'parameters', 'variables']) {
             expect(settingValue(settings, policy, `naming.${language}.${category}.max_chars`)?.value).toBe(characters);
             expect(settingValue(settings, policy, `naming.${language}.${category}.max_words`)?.value).toBe(words);
@@ -45,8 +67,8 @@ test('category ceilings inherit root and scope language settings while explicit 
         buildPolicy(['naming'], {
             tables:
                 '[naming.swift]\nmax_chars = 38\nmax_words = 4\n[naming.swift.functions]\nmax_chars = 37\n' +
-                '[[scope]]\npath = "app"\n[scope.naming.swift]\nmax_chars = 36\nmax_words = 3\n' +
-                '[scope.naming.swift.functions]\nmax_chars = 35\n[[scope]]\npath = "sibling"\n',
+                '[scope."app"]\n[scope."app".naming.swift]\nmax_chars = 36\nmax_words = 3\n' +
+                '[scope."app".naming.swift.functions]\nmax_chars = 35\n[scope."sibling"]\n',
         }),
     );
     for (const { scope, characters, functions, words } of SCOPE_CEILINGS) {
@@ -62,49 +84,41 @@ test('category ceilings inherit root and scope language settings while explicit 
     }
 });
 
-test.each([...LANGUAGE_CEILINGS])(
-    '$language accepts its exact ceilings and reports the next character or word',
-    ({ language, characters, words }) => {
-        const selected = selectConfigurations(['naming'], configurationManifests());
-        const settings = knownSettings(selected);
-        const policy = parseStrictPolicy(buildPolicy(['naming']));
-        const effective = effectivePolicy(settings, policy, '', selected);
-        const context = { policy: effective, isTestFile: false, isReactFile: false };
-        const category = language === 'swift' ? 'functions' : 'variables';
-        const declaration: Identifier = {
-            file: 'source',
-            language,
-            category,
-            kind: category,
-            name: 'z'.repeat(characters),
-            line: 1,
-            column: 1,
-        };
-        expect(nameProblems(declaration, context)).toStrictEqual([]);
-        expect(
-            nameProblems({ ...declaration, name: 'z'.repeat(characters + 1) }, context).map(({ rule }) => rule),
-        ).toStrictEqual(['length']);
-        const separator = ['python', 'bash', 'sql'].includes(language) ? '_' : '';
-        const parts = NAME_WORDS.map((word, index) =>
-            separator === '' && index > 0 ? word.slice(0, 1).toUpperCase() + word.slice(1) : word,
-        );
-        expect(nameProblems({ ...declaration, name: parts.slice(0, words).join(separator) }, context)).toStrictEqual(
-            [],
-        );
-        expect(
-            nameProblems({ ...declaration, name: parts.slice(0, words + 1).join(separator) }, context).map(
-                ({ rule }) => rule,
-            ),
-        ).toStrictEqual(['words']);
-    },
-);
+test.each([...NAMING_LANGUAGES])('%s accepts its exact ceilings and reports the next character or word', (language) => {
+    const { settings, effective } = defaultNamingContext();
+    const characters = namingCeiling(settings, `naming.${language}.max_chars`);
+    const words = namingCeiling(settings, `naming.${language}.max_words`);
+    const context = { check, policy: effective, isTestFile: false, isReactFile: false };
+    const category = language === 'swift' ? 'functions' : 'variables';
+    const declaration: Identifier = {
+        file: 'source',
+        language,
+        category,
+        kind: category,
+        name: 'z'.repeat(characters),
+        line: 1,
+        column: 1,
+    };
+    expect(nameFindings(declaration, context)).toStrictEqual([]);
+    expect(
+        nameFindings({ ...declaration, name: 'z'.repeat(characters + 1) }, context).map(({ rule }) => rule),
+    ).toStrictEqual(['length']);
+    const separator = ['python', 'bash', 'sql'].includes(language) ? '_' : '';
+    const parts = NAME_WORDS.map((word, index) =>
+        separator === '' && index > 0 ? word.slice(0, 1).toUpperCase() + word.slice(1) : word,
+    );
+    expect(nameFindings({ ...declaration, name: parts.slice(0, words).join(separator) }, context)).toStrictEqual([]);
+    expect(
+        nameFindings({ ...declaration, name: parts.slice(0, words + 1).join(separator) }, context).map(
+            ({ rule }) => rule,
+        ),
+    ).toStrictEqual(['words']);
+});
 
 test('technical digit words remain words in every identifier category without exempting other checks', () => {
-    const selected = selectConfigurations(['naming'], configurationManifests());
-    const settings = knownSettings(selected);
-    const policy = parseStrictPolicy(buildPolicy(['naming']));
-    const effective = effectivePolicy(settings, policy, '', selected);
+    const { effective } = defaultNamingContext();
     const context = {
+        check,
         policy: { ...effective, limitsFor: () => ({ caseNames: [], maxChars: 35, maxWords: 4 }) },
         isReactFile: false,
         isTestFile: false,
@@ -120,7 +134,7 @@ test('technical digit words remain words in every identifier category without ex
                 line: 1,
                 column: 1,
             };
-            expect(nameProblems(identifier, context)).toStrictEqual([]);
+            expect(nameFindings(identifier, context)).toStrictEqual([]);
         }
     }
     const declaration: Identifier = {
@@ -132,14 +146,14 @@ test('technical digit words remain words in every identifier category without ex
         line: 1,
         column: 1,
     };
-    expect(nameProblems(declaration, context).map(({ rule }) => rule)).toStrictEqual(['duplicate-words']);
+    expect(nameFindings(declaration, context).map(({ rule }) => rule)).toStrictEqual(['duplicate-words']);
     expect(
-        nameProblems({ ...declaration, name: 'base64FirstSecondThirdFourth' }, context).map(({ rule }) => rule),
+        nameFindings({ ...declaration, name: 'base64FirstSecondThirdFourth' }, context).map(({ rule }) => rule),
     ).toStrictEqual(['words']);
-    expect(nameProblems({ ...declaration, name: 'base64Helper' }, context).map(({ rule }) => rule)).toStrictEqual([
+    expect(nameFindings({ ...declaration, name: 'base64Helper' }, context).map(({ rule }) => rule)).toStrictEqual([
         'banned-term',
     ]);
-    expect(nameProblems({ ...declaration, name: 'user2' }, context).map(({ rule }) => rule)).toStrictEqual(['digits']);
+    expect(nameFindings({ ...declaration, name: 'user2' }, context).map(({ rule }) => rule)).toStrictEqual(['digits']);
 });
 
 test('public checks accept ordinary domain terms and numeric words in JavaScript and TypeScript', async () => {
@@ -167,18 +181,21 @@ test('public checks accept ordinary domain terms and numeric words in JavaScript
 });
 
 test('public explanations report Swift and SQL category defaults and scoped overrides', async () => {
+    const settings = knownSettings(selectConfigurations(['naming'], configurationManifests()));
+    const swift = namingCeiling(settings, 'naming.swift.functions.max_chars');
+    const sql = namingCeiling(settings, 'naming.sql.files.max_words');
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['naming'], {
             level: 'all',
-            tables: '[[scope]]\npath = "app"\n[scope.naming.swift]\nmax_chars = 38\n',
+            tables: `[scope."app"]\n[scope."app".naming.swift]\nmax_chars = ${(swift - 2).toString()}\n`,
         }),
         'entry.sh': 'echo example\n',
         'app/entry.sh': 'echo example\n',
     });
     for (const [key, shipped, child] of [
-        ['naming.swift.functions.max_chars', 40, 38],
-        ['naming.sql.files.max_words', 7, 7],
+        ['naming.swift.functions.max_chars', swift, swift - 2],
+        ['naming.sql.files.max_words', sql, sql],
     ] as const) {
         const explained = await runGspot(sandbox.path, ['explain', key, '--json']);
         expect(explained.code, explained.stdout + explained.stderr).toBe(0);
@@ -200,11 +217,11 @@ test.each(NATIVE_NAME_CATEGORIES)(
         const policy = parseStrictPolicy(
             buildPolicy(['naming'], {
                 level: 'all',
-                tables: '[[naming.paths]]\npaths = ["source"]\ncase = ["upper-snake"]\nreason = "The authored interface selects this case."\n',
+                tables: '[[naming.overrides]]\npaths = ["source"]\ncase = ["upper-snake"]\nreason = "The authored interface selects this case."\n',
             }),
         );
         const effective = effectivePolicy(settings, policy, '', selected);
-        const context = { policy: effective, isTestFile: false, isReactFile: false };
+        const context = { check, policy: effective, isTestFile: false, isReactFile: false };
         const identifier: Identifier = {
             file: 'source',
             language,
@@ -214,10 +231,10 @@ test.each(NATIVE_NAME_CATEGORIES)(
             line: 1,
             column: 1,
         };
-        expect(nameProblems(identifier, context).map(({ rule }) => rule)).toStrictEqual(
+        expect(nameFindings(identifier, context).map(({ rule }) => rule)).toStrictEqual(
             native ? [] : ['case', 'length'],
         );
-        expect(nameProblems({ ...identifier, name: NAME_WORDS.join('_') }, context).map(({ rule }) => rule)).toContain(
+        expect(nameFindings({ ...identifier, name: NAME_WORDS.join('_') }, context).map(({ rule }) => rule)).toContain(
             'words',
         );
     },

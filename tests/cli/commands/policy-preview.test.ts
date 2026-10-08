@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
-import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { chmod } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readTree } from '#tests/harness/preservation.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { PolicyPreviewJson } from '#cli/types/commands/policy-edit.ts';
+import type { PolicyPreviewJson } from '#cli/types/commands/save-policy.ts';
 
 import {
     PREVIEW_POLICY,
@@ -26,7 +26,7 @@ test.each(POLICY_PREVIEW_CASES)(
             'api/source.sh': 'echo api\n',
             'control.txt': 'preserve this source\n',
         });
-        const before = readTree(sandbox.path);
+        const before = await readTree(sandbox.path);
         const preview = await runGspot(sandbox.path, [...argv, '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         expect(preview.stderr).toBe('');
@@ -35,13 +35,13 @@ test.each(POLICY_PREVIEW_CASES)(
         const proposed = parse(report.policy);
         expect(proposed).toMatchObject(expected);
         for (const key of absent) expect(proposed).not.toHaveProperty(key);
-        expect(readTree(sandbox.path)).toStrictEqual(before);
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
         const human = await runGspot(sandbox.path, [...argv, '--dry-run']);
         expect(human.code, human.stdout + human.stderr).toBe(0);
         expect(human.stderr).toBe('');
         expect(human.stdout).toContain(argv[1]);
         expect(human.stdout).toContain('(dry run: gspot.toml not written)');
-        expect(readTree(sandbox.path)).toStrictEqual(before);
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
         const published = await runGspot(sandbox.path, [...argv]);
         expect(published.code, published.stdout + published.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(report.policy);
@@ -60,32 +60,37 @@ test.each(POLICY_PREVIEW_UNCHANGED)('$name previews and repeats without applying
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const generated = join(sandbox.path, '.gspot/config/shellcheckrc');
-    chmodSync(generated, 0o644);
+    await chmod(generated, 0o644);
     await Bun.write(generated, `${await Bun.file(generated).text()}# Preserve this authored edit.\n`);
     const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-    const before = readTree(sandbox.path);
+    const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, [...argv, '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(JSON.parse(preview.stdout) as PolicyPreviewJson).toStrictEqual({ policy, dryRun: true });
-    expect(readTree(sandbox.path)).toStrictEqual(before);
+    expect(JSON.parse(preview.stdout) as PolicyPreviewJson).toStrictEqual({
+        changed: false,
+        policy,
+        diff: '',
+        dryRun: true,
+    });
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
     const repeated = await runGspot(sandbox.path, [...argv, '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect(JSON.parse(repeated.stdout) as { changed: boolean }).toStrictEqual({ changed: false });
-    expect(readTree(sandbox.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('a policy preview leaves an active writer claim and existing files untouched', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': PREVIEW_POLICY, 'api/source.sh': 'echo api\n' });
     using log = openOwnership(sandbox.path);
-    const before = readTree(sandbox.path);
+    const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, ['set', 'limits.bash.file_lines', '100', '--dry-run', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stderr).toBe('');
     expect(parse((JSON.parse(result.stdout) as PolicyPreviewJson).policy)).toMatchObject({
         limits: { bash: { file_lines: 100 } },
     });
-    expect(readTree(sandbox.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
     expect(log.files.read('gspot.toml')?.bytes.toString()).toBe(PREVIEW_POLICY);
 });
 
@@ -98,14 +103,14 @@ test.each(POLICY_PREVIEW_REFUSALS)(
             'api/source.sh': 'echo api\n',
             'control.txt': 'preserve this source\n',
         });
-        const before = readTree(sandbox.path);
+        const before = await readTree(sandbox.path);
         for (const output of [[], ['--json']]) {
             const published = await runGspot(sandbox.path, [...argv, ...output]);
             expect(published.code, published.stdout + published.stderr).toBe(2);
-            expect(readTree(sandbox.path)).toStrictEqual(before);
+            expect(await readTree(sandbox.path)).toStrictEqual(before);
             const preview = await runGspot(sandbox.path, [...argv, '--dry-run', ...output]);
             expect(preview).toStrictEqual(published);
-            expect(readTree(sandbox.path)).toStrictEqual(before);
+            expect(await readTree(sandbox.path)).toStrictEqual(before);
         }
     },
 );

@@ -1,31 +1,20 @@
 // Applying plans: each batch is logged before a byte moves, so an interruption can be recovered.
 import { posix } from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
 import { pathKey } from '#cli/platform/paths.ts';
+import { sameEntry } from '#cli/platform/root/rules.ts';
+import { identify } from '#cli/lifecycle/ownership/log.ts';
 import type { Proposed } from '#cli/types/platform/root.ts';
 import type { Planned } from '#cli/types/lifecycle/apply.ts';
-import { getOnDisk } from '#cli/lifecycle/ownership/plans.ts';
-import { isMatch, identify } from '#cli/lifecycle/ownership/log.ts';
 import type { Log, Outcome } from '#cli/types/lifecycle/ownership.ts';
 
-// Refuses a plan whose file or record changed after it was made.
-function assertPlanCurrent(log: Log, plan: Planned, proposed: Proposed): void {
-    const { path, before, previous, after } = plan;
-    const existing = log.entryFor(path);
-    if (after !== undefined) log.files.validate(path, after, proposed);
-    const found = getOnDisk(log, path, before, after);
-    if (!isDeepStrictEqual(existing, previous) || !isDeepStrictEqual(found, before))
-        throw new Error(`File changed after its plan: ${path}`);
-}
-
-// Refuses a batch that repeats a destination or holds a plan whose file changed.
-function assertPlansCurrent(log: Log, plans: Planned[], proposed: Proposed): void {
+// Validates destination paths and refuses a batch that repeats a destination.
+function validatePlans(log: Log, plans: Planned[], proposed: Proposed): void {
     const destinations = new Set<string>();
     for (const plan of plans) {
         const key = pathKey(plan.path);
         if (destinations.has(key)) throw new Error(`Duplicate plan destination: ${plan.path}`);
         destinations.add(key);
-        assertPlanCurrent(log, plan, proposed);
+        if (plan.after !== undefined) log.files.validate(plan.path, plan.after, proposed);
     }
 }
 
@@ -56,7 +45,7 @@ function writeBatch(log: Log, prepared: Planned[]): void {
                 log.files.remove(path, before);
                 removeEmptyFolders(log, path);
             }
-        } else if (!isMatch(before, identify(after))) log.files.write(path, after, before);
+        } else if (!sameEntry(before, after)) log.files.write(path, after, before);
     }
     log.finish();
 }
@@ -74,7 +63,7 @@ export function applyPlans(log: Log, plans: Planned[]): Outcome[] {
             status === 'preserved' || (status === 'unchanged' && after === undefined) ? before : after,
         ]),
     );
-    assertPlansCurrent(log, plans, proposed);
+    validatePlans(log, plans, proposed);
     const conflict = plans.find((plan) => plan.status === 'preserved');
     if (conflict !== undefined)
         throw new Error(

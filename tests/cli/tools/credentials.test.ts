@@ -1,7 +1,6 @@
 import { test, expect } from 'bun:test';
+import { useEnvironment } from '#tests/harness/environment.ts';
 import { INSTALL_OUTPUT_LIMIT } from '#cli/config/tools/install.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { registryPasswords, installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
 import { LEAKED_LOCKFILES, REGISTRY_PASSWORDS, CREDENTIAL_DIAGNOSTICS } from '#tests/config/cli/tools/credentials.ts';
 
@@ -13,13 +12,9 @@ test.each([...LEAKED_LOCKFILES])(
     'a generated lockfile containing %s fails with the installation owner error',
     (lockfile) => {
         const failure = new Error('Existing files were preserved.');
-        let thrown: unknown;
-        try {
+        expect(() => {
             assertCredentialFreeLockfile(lockfile, ['synthetic/password+with spaces'], failure);
-        } catch (error) {
-            thrown = error;
-        }
-        expect(thrown).toBe(failure);
+        }).toThrow(failure);
     },
 );
 
@@ -54,16 +49,11 @@ test('installation diagnostics redact known raw, URL-encoded, and base64 credent
 });
 
 test('installation diagnostics redact inherited authentication and distinguish absent output', () => {
-    const original = environmentVariables()['GSPOT_TEST_DIAGNOSTIC_TOKEN'];
-    setEnvironmentVariable('GSPOT_TEST_DIAGNOSTIC_TOKEN', 'synthetic-inherited-diagnostic-token');
-    try {
-        expect(installationDiagnostics({ stdout: 'synthetic-inherited-diagnostic-token', stderr: '' }, [])).toBe(
-            '[redacted]',
-        );
-        expect(installationDiagnostics({ stdout: '  ', stderr: '\n' }, [])).toBe(
-            'The package manager provided no diagnostics.',
-        );
-    } finally {
-        setEnvironmentVariable('GSPOT_TEST_DIAGNOSTIC_TOKEN', original);
-    }
+    using _environment = useEnvironment({ GSPOT_TEST_DIAGNOSTIC_TOKEN: 'synthetic-inherited-diagnostic-token' });
+    expect(installationDiagnostics({ stdout: 'synthetic-inherited-diagnostic-token', stderr: '' }, [])).toBe(
+        '[redacted]',
+    );
+    expect(installationDiagnostics({ stdout: '  ', stderr: '\n' }, [])).toBe(
+        'The package manager provided no diagnostics.',
+    );
 });

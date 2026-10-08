@@ -20,6 +20,15 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
+ * Identify nonempty arrays of parsed tables for native section layout.
+ * @param value a parsed value
+ * @returns whether each array item is a plain table
+ */
+export function isRecordArray(value: unknown): value is Record<string, unknown>[] {
+    return Array.isArray(value) && value.length > 0 && value.every(isRecord);
+}
+
+/**
  * The value at a key path inside a parsed object.
  * @param value the parsed object
  * @param keys the keys, outermost first
@@ -47,4 +56,24 @@ export function normalizeTables(value: unknown): unknown {
     );
     Object.setPrototypeOf(table, null);
     return table;
+}
+
+/**
+ * Creates the missing tables along a dotted path.
+ * @param raw the parsed document.
+ * @param path the table names from the root down.
+ * @returns the table at the end of the path, or undefined when the path is missing or runs through a value.
+ */
+export function createTable(raw: Record<string, unknown>, path: string[]): Record<string, unknown> | undefined {
+    let current = raw;
+    for (const part of path) {
+        let next = current[part];
+        if (next === undefined) {
+            next = {};
+            current[part] = next;
+        }
+        if (!isRecord(next)) return undefined;
+        current = next;
+    }
+    return current;
 }

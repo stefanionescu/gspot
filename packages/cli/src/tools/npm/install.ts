@@ -1,4 +1,5 @@
 // Resolve and install npm tool projects without writing credentials to lockfiles.
+import semver from 'semver';
 import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/platform/errors.ts';
@@ -12,10 +13,10 @@ import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseVersionOutput } from '#cli/parsers/tool/version.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
-import { isYarnBerry, packageLockfile } from '#cli/parsers/packages.ts';
 import { sourcePath, canonicalPath } from '#cli/platform/root/reads.ts';
 import type { PackageRun, PackageExecution } from '#cli/types/tools/npm.ts';
 import { stripBunRegistryUrls, stripYarnRegistryUrls } from '#cli/tools/npm/lockfiles.ts';
+import { isYarnBerry, packageLockfile, getPackageInstallerMajor } from '#cli/parsers/packages.ts';
 
 import {
     registryPasswords,
@@ -66,13 +67,12 @@ function writeNpmrc(work: string, env: Record<string, string>): void {
 }
 
 // Declared and recorded versions are metadata; verify the executable in this scratch project before native work.
-async function assertPackageInstallerVersion(execution: PackageExecution): Promise<void> {
-    const { installer, work, env } = execution;
-    const version = await runTool([installer.name, '--version'], { cwd: work, env });
-    if (version.code !== 0 || version.stdout.trim() !== installer.version)
+function assertPackageInstallerVersion(installer: PackageInstaller, version: PackageRun['result']): void {
+    const requirement = `${String(getPackageInstallerMajor(installer))}.x`;
+    if (version.code !== 0 || !semver.satisfies(version.stdout.trim(), requirement, { includePrerelease: true }))
         throw new GspotError(
             'tool',
-            `The tool project requires ${installer.name}@${installer.version}. Install that package manager version first.`,
+            `The tool project requires ${installer.name}@${requirement}. Install that package manager version first.`,
         );
 }
 
@@ -87,13 +87,11 @@ async function runPackageInstaller(
     const credentials = credentialsOf(env);
     writeNpmrc(work, env);
     env['npm_config_userconfig'] = join(work, '.npmrc');
-    if (isYarnBerry(installer)) {
-        delete env['YARN_REGISTRY'];
-        await assertPackageInstallerVersion(execution);
-        credentials.push(...(await yarnSettings(root, work, env)));
-    } else {
-        await assertPackageInstallerVersion(execution);
-    }
+    const berry = isYarnBerry(installer);
+    if (berry) delete env['YARN_REGISTRY'];
+    const version = await runTool([installer.name, '--version'], { cwd: work, env });
+    assertPackageInstallerVersion(installer, version);
+    if (berry) credentials.push(...(await yarnSettings(root, work, env)));
     const result = await runTool(argv, { cwd: work, env });
     return { execution, credentials, result };
 }
@@ -156,7 +154,7 @@ async function assertNativeVersion(work: string, executable: string, tool: ToolP
  * Resolve the tool project's lockfile in an isolated directory before writing generated files.
  * @param root the repository whose connection settings apply
  * @param work the isolated tool project
- * @param installer the package manager and exact version declared by the project
+ * @param installer the package manager and major version required by the project
  */
 export async function preparePackageLockfile(root: string, work: string, installer: PackageInstaller): Promise<void> {
     const { execution, credentials, result } = await runPackageInstaller(
@@ -178,7 +176,7 @@ export async function preparePackageLockfile(root: string, work: string, install
  * Install the recorded tool lockfile immutably in an isolated directory.
  * @param root the repository whose connection settings apply
  * @param work the isolated tool project and recorded lockfile
- * @param installer the package manager and exact version declared by the project
+ * @param installer the package manager and major version required by the project
  */
 export async function installPackageLockfile(root: string, work: string, installer: PackageInstaller): Promise<void> {
     const { execution, credentials, result } = await runPackageInstaller(root, work, installer, installArgv(installer));

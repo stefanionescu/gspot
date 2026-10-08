@@ -1,4 +1,4 @@
-/** The license choice is authored explicitly in every scanning fixture. */
+/** The license choice is authored explicitly in every scanning sandbox. */
 export const LICENSE_SETTINGS = '[licenses]\nallowed = ["MIT"]\n';
 
 /** Version commands run through the real executable boundary using the declared pin. */
@@ -22,13 +22,13 @@ export const NPM_SCANNERS = {
 export const SCANNER_FAILURES = [
     { name: 'malformed JSON', stdout: '{', code: 0, diagnostic: 'JSON' },
     { name: 'empty installed report', stdout: '[]', code: 0, diagnostic: 'The license scan found no packages' },
-    { name: 'scanner failure', stdout: '[]', code: 1, diagnostic: 'fixture diagnostic' },
+    { name: 'scanner failure', stdout: '[]', code: 1, diagnostic: 'sample diagnostic' },
 ];
 
 export const CONFIGURATION_FAILURES = [
     { name: 'missing', content: undefined, diagnostic: 'License configuration is missing' },
     { name: 'malformed', content: '{', diagnostic: 'JSON' },
-    { name: 'stale', content: '{"allowed":[],"exceptions":[]}', diagnostic: 'differs from the selected policy' },
+    { name: 'stale', content: '{"allowed":[],"exceptions":{}}', diagnostic: 'differs from the selected policy' },
 ];
 
 /** Exact exceptions must match both the package version and its reported license. */

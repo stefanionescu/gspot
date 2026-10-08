@@ -11,7 +11,7 @@ test.each(['recommended', 'all'] as const)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['javascript'], {
-                tables: '[[scope]]\npath = "app"\nconfigurations = ["react", "drizzle"]\n',
+                tables: '[scope."app"]\nconfigurations = ["react", "drizzle"]\n',
                 level: level,
             }),
             'package.json': '{"private":true,"type":"module"}',

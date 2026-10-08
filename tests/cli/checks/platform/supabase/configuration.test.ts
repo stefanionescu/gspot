@@ -2,15 +2,13 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { renameSync, writeFileSync } from 'node:fs';
+import { rename, writeFile } from 'node:fs/promises';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { ToolSession } from '#cli/types/tools/session.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
 
 import {
     denoLint,
@@ -20,16 +18,11 @@ import {
     supabaseConfiguration,
 } from '#cli/checks/platform/supabase.ts';
 
-function input(session: ToolSession, scope: string, name: string): CheckInput {
-    const check = session.manifests.get('supabase')!.checks.find((check) => check.name === name)!;
-    return buildCheckInput(session, check.name, { scope: scope });
-}
-
 test('Supabase configurations and function discovery stay within nested project scopes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['supabase'], {
-            tables: '[[scope]]\npath = "apps/api"\nconfigurations = ["supabase"]\n[scope.supabase]\nfunctions_folder = "edge"\n',
+            tables: '[scope."apps/api"]\nconfigurations = ["supabase"]\n[scope."apps/api".supabase]\nfunctions_folder = "edge"\n',
         }),
         'supabase/config.toml': '[functions.missing]\nverify_jwt = true\n',
         'supabase/functions/root/index.ts': 'export {};\n',
@@ -38,16 +31,18 @@ test('Supabase configurations and function discovery stay within nested project 
         'apps/api/edge/_shared/index.ts': 'export {};\n',
     });
     const session = await openSession(sandbox.path);
-    const root = input(session, '', 'supabase/config');
-    const nested = input(session, 'apps/api', 'supabase/config');
+    const root = buildCheckInput(session, 'supabase/project-file');
+    const nested = buildCheckInput(session, 'supabase/project-file', { scope: 'apps/api' });
     expect(functionFolders(root)).toStrictEqual(['supabase/functions/root']);
     expect(functionFolders(nested)).toStrictEqual(['apps/api/edge/hello']);
     expect(supabaseConfiguration(root)).toMatchObject([{ file: 'supabase/config.toml', line: 1, rule: 'function' }]);
     expect(supabaseConfiguration(nested)).toStrictEqual([]);
-    writeFileSync(join(sandbox.path, 'supabase/config.toml'), '[functions.root]\nverify_jwt = true\n');
-    expect(supabaseConfiguration(input(await openSession(sandbox.path), '', 'supabase/config'))).toStrictEqual([]);
-    writeFileSync(join(sandbox.path, 'apps/api/supabase/config.toml'), '[broken');
-    const broken = input(await openSession(sandbox.path), 'apps/api', 'supabase/config');
+    await writeFile(join(sandbox.path, 'supabase/config.toml'), '[functions.root]\nverify_jwt = true\n');
+    expect(
+        supabaseConfiguration(buildCheckInput(await openSession(sandbox.path), 'supabase/project-file')),
+    ).toStrictEqual([]);
+    await writeFile(join(sandbox.path, 'apps/api/supabase/config.toml'), '[broken');
+    const broken = buildCheckInput(await openSession(sandbox.path), 'supabase/project-file', { scope: 'apps/api' });
     expect(supabaseConfiguration(broken)).toMatchObject([
         { file: 'apps/api/supabase/config.toml', line: 1, rule: 'syntax' },
     ]);
@@ -58,26 +53,28 @@ test('Supabase migration names are checked without parsing SQL or reading anothe
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['supabase'], {
-            tables: '[[scope]]\npath = "apps/api"\nconfigurations = ["supabase"]\n',
+            tables: '[scope."apps/api"]\nconfigurations = ["supabase"]\n',
         }),
         'supabase/migrations/20261005000000_valid.sql': 'CREATE TABLE ;',
         'apps/api/supabase/migrations/bad.sql': 'invalid SQL;',
     });
     const session = await openSession(sandbox.path);
-    expect(migrationNames(input(session, '', 'supabase/migration-names'))).toStrictEqual([]);
-    expect(migrationNames(input(session, 'apps/api', 'supabase/migration-names'))).toMatchObject([
+    expect(migrationNames(buildCheckInput(session, 'supabase/migration-names'))).toStrictEqual([]);
+    expect(migrationNames(buildCheckInput(session, 'supabase/migration-names', { scope: 'apps/api' }))).toMatchObject([
         {
             file: 'apps/api/supabase/migrations/bad.sql',
             rule: 'migration-name',
             message: 'Name the migration <14-digit timestamp>_<snake_case>.sql.',
         },
     ]);
-    renameSync(
+    await rename(
         join(sandbox.path, 'apps/api/supabase/migrations/bad.sql'),
         join(sandbox.path, 'apps/api/supabase/migrations/20261005000001_valid.sql'),
     );
     expect(
-        migrationNames(input(await openSession(sandbox.path), 'apps/api', 'supabase/migration-names')),
+        migrationNames(
+            buildCheckInput(await openSession(sandbox.path), 'supabase/migration-names', { scope: 'apps/api' }),
+        ),
     ).toStrictEqual([]);
 });
 
@@ -102,7 +99,7 @@ test.each([1, 2])(
                 duration: 1,
             }),
         );
-        expect(await rejection(denoLint(input(session, '', 'supabase/deno-lint')))).toBe(
+        expect(await rejection(denoLint(buildCheckInput(session, 'supabase/deno-lint')))).toBe(
             'The project configuration is invalid.',
         );
         expect(await Bun.file(join(sandbox.path, 'supabase/functions/greet/deno.json')).text()).toBe('{');

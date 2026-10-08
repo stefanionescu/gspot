@@ -15,7 +15,7 @@ import { linkInstalledModules } from '#tests/harness/platforms.ts';
  * @returns ESLint reading the generated configuration
  */
 export async function createEslint(root: string): Promise<ESLint> {
-    linkInstalledModules(join(root, 'node_modules'));
+    await linkInstalledModules(join(root, 'node_modules'));
     const session = await openSession(root);
     using log = openOwnership(root);
     writeOutputs(session, log);

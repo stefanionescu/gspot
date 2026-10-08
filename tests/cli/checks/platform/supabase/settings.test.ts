@@ -1,7 +1,7 @@
 // The built-in Supabase checks on a test project, run in-process: each fires on its defect and accepts the correction.
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -16,7 +16,7 @@ import {
 test('service role keys use effective test paths while adjacent client files still fail', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': TEST_PATH_POLICY, ...TEST_PATH_FILES });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'supabase/admin-key', '--json']);
+    const result = await runGspot(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))).toStrictEqual([
@@ -27,7 +27,7 @@ test('service role keys use effective test paths while adjacent client files sti
 
 test('service role keys are refused in component and module clients while allowed server files remain untouched', async () => {
     await using sandbox = await testdir();
-    const policy = buildPolicy(['supabase'], { tables: '[supabase]\nadmin_key_files = ["server/**"]\n' });
+    const policy = buildPolicy(['supabase'], { tables: '[supabase]\nfunctions_folder = "server"\n' });
     const sources = {
         'client.vue': '<script setup>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
         'client.svelte': '<script>const key = process.env.SUPABASE_SERVICE_ROLE_KEY;</script>\n',
@@ -39,7 +39,7 @@ test('service role keys are refused in component and module clients while allowe
         'notes.txt': 'SUPABASE_SERVICE_ROLE_KEY\n',
     };
     await createFileTree(sandbox.path, { 'gspot.toml': policy, ...sources });
-    const result = await runGspot(sandbox.path, ['check', '--only', 'supabase/admin-key', '--json']);
+    const result = await runGspot(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual([
@@ -51,18 +51,18 @@ test('service role keys are refused in component and module clients while allowe
         'client.vue',
     ]);
     for (const [path, text] of Object.entries(sources)) {
-        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(text);
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
         if (path.startsWith('client.'))
             await Bun.write(
                 join(sandbox.path, path),
                 text.replaceAll('SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY'),
             );
     }
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'supabase/admin-key', '--json']);
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'supabase/service-role-key', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks[0]?.findings).toStrictEqual([]);
-    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
-    expect(readFileSync(join(sandbox.path, 'server/allowed.ts'), 'utf8')).toBe(sources['server/allowed.ts']);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
+    expect(await readFile(join(sandbox.path, 'server/allowed.ts'), 'utf8')).toBe(sources['server/allowed.ts']);
 });
 
 test.each(SECRET_KEY_READS)(
@@ -70,7 +70,7 @@ test.each(SECRET_KEY_READS)(
     async (read) => {
         await using sandbox = await testdir();
         const policy = buildPolicy(['supabase'], {
-            tables: 'tests = ["qa/**"]\n[supabase]\nadmin_key_files = ["server/**"]\n[[scope]]\npath = "apps/web"\n',
+            tables: 'test_files = ["qa/**"]\n[supabase]\nfunctions_folder = "server"\n[scope."apps/web".supabase]\nfunctions_folder = "server"\n',
         });
         const source = `export const key = ${read};\n`;
         const allowed = {
@@ -85,7 +85,7 @@ test.each(SECRET_KEY_READS)(
             ...allowed,
             ...Object.fromEntries(clients.map((path) => [path, source])),
         });
-        const command = ['check', '--only', 'supabase/admin-key', '--json'];
+        const command = ['check', '--only', 'supabase/service-role-key', '--json'];
         const failed = await runGspot(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect(

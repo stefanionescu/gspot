@@ -49,7 +49,9 @@ createRuleTester().run<keyof typeof importDirection.meta.messages, ImportDirecti
             {
                 code: "import { a } from '../src/turn/public';",
                 filename: '/repo/api/tests/unit/a.test.ts',
-                options: [{ roles: ROLES, aliases: ALIASES, scope: 'api' }],
+                options: [
+                    { roles: { tests: ['api/tests/**'], runtime: ['api/src/**'] }, aliases: ALIASES, scope: 'api' },
+                ],
             },
             // With no roles named, no file has a role, so no import has a direction to break.
             {
@@ -59,6 +61,12 @@ createRuleTester().run<keyof typeof importDirection.meta.messages, ImportDirecti
             },
         ],
         invalid: [
+            {
+                code: 'import { value } from "../src/value.js";',
+                filename: '/repo/api/types/a.ts',
+                options: [{ roles: { types: ['api/types/**'], runtime: ['api/src/**'] }, scope: 'api' }],
+                errors: [{ messageId: 'typesToRuntime', data: { source: '../src/value.js', target: 'src/value.js' } }],
+            },
             {
                 code: 'import { value } from "../src/value.js";',
                 filename: '/repo/types/partial.ts',

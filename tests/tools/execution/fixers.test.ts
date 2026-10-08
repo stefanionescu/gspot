@@ -1,35 +1,32 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { join, dirname } from 'node:path';
+import { chmod, readFile } from 'node:fs/promises';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
-import { environmentExecutable } from '#cli/platform/paths.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import { PARTIAL_FIX_CASES } from '#tests/config/tools/fixers.ts';
 import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
-import { chmodSync, mkdirSync, copyFileSync, readFileSync } from 'node:fs';
-import { PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
+import { sharePythonTools } from '#tests/harness/python-installation.ts';
 import { toolPin, toolName, toolProjectPackage } from '#cli/configurations/pins.ts';
+import { PARTIAL_FIX_CASES, SHFMT_FORMATTED_SCRIPT } from '#tests/config/tools/fixers.ts';
 
-// Generate the selected configuration and copy only its suite-installed Python entry point when it is private.
+// Generate the selected configuration and copy the complete suite-owned Python environment when it is private.
 async function prepareFixer(root: string, checkId: string): Promise<void> {
     const session = await openSession(root);
-    using log = openOwnership(root);
-    writeOutputs(session, log);
+    {
+        using log = openOwnership(root);
+        writeOutputs(session, log);
+    }
     const manifests = session.scopes[0]!.selected;
     const check = manifests.flatMap((manifest) => manifest.checks).find((entry) => entry.name === checkId)!;
     const tool = toolPin(manifests, toolName(check)!);
     const executable = Bun.which(tool.name, { PATH: buildToolsPath([tool.name]) });
     if (executable === null) throw new Error(`The native fixer test requires ${tool.name}.`);
-    if (toolProjectPackage(tool, session.policyFiles.policy.run_with)?.kind === 'python') {
-        const destination = environmentExecutable(join(root, PYTHON_ENVIRONMENT_DIRECTORY), tool.name);
-        mkdirSync(dirname(destination), { recursive: true });
-        copyFileSync(executable, destination);
-    }
+    if (toolProjectPackage(tool, session.policyFiles.policy.runner)?.kind === 'python') await sharePythonTools(root);
 }
 
 // Root ignores the read-only permission bits that provoke the write failure.
@@ -46,16 +43,16 @@ test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
         });
         await prepareFixer(sandbox.path, 'sql/sqlfluff');
         const options = buildRunOptions({ only: ['sql/sqlfluff'], fix: true });
-        chmodSync(join(sandbox.path, 'source'), 0o500);
+        await chmod(join(sandbox.path, 'source'), 0o500);
         try {
             const failed = await executeRun(await openSession(sandbox.path), options);
             expect(failed.report.exitCode).toBe(2);
             expect(failed.fixes?.results).toMatchObject([
                 { check: 'sql/sqlfluff', status: 'failed', changed: [], note: textContaining('PermissionError') },
             ]);
-            expect(readFileSync(join(sandbox.path, 'source/sample.sql'), 'utf8')).toBe('select  * from foo;\n');
+            expect(await readFile(join(sandbox.path, 'source/sample.sql'), 'utf8')).toBe('select  * from foo;\n');
         } finally {
-            chmodSync(join(sandbox.path, 'source'), 0o700);
+            await chmod(join(sandbox.path, 'source'), 0o700);
         }
     },
 );
@@ -65,7 +62,7 @@ test.each(PARTIAL_FIX_CASES)(
     async ({ configuration, check, path, tables, defect, partial, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy([configuration], { level: 'all', tables: `run_with = "mise"\n${tables}` }),
+            'gspot.toml': buildPolicy([configuration], { level: 'all', tables: `runner = "mise"\n${tables}` }),
             '.gitignore': '.gspot/\n',
             [path]: defect,
         });
@@ -74,7 +71,7 @@ test.each(PARTIAL_FIX_CASES)(
         const failed = await executeRun(await openSession(sandbox.path), options);
         expect(failed.report.exitCode, JSON.stringify({ report: failed.report, fixes: failed.fixes })).toBe(1);
         expect(failed.fixes?.results).toMatchObject([{ check, status: 'changed', changed: [path] }]);
-        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(partial);
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(partial);
         const repeated = await executeRun(await openSession(sandbox.path), options);
         expect(repeated.report.exitCode).toBe(1);
         expect(repeated.fixes?.results).toMatchObject([{ check, status: 'unchanged', changed: [] }]);
@@ -99,7 +96,7 @@ test('shfmt reports and fixes ordinary shell formatting', async () => {
     expect(defect.report.exitCode, JSON.stringify(defect.report)).toBe(1);
     const correction = await executeRun(await openSession(sandbox.path), { ...options, fix: true });
     expect(correction.report.exitCode, JSON.stringify(correction.report)).toBe(0);
-    expect(await Bun.file(join(sandbox.path, 'example.sh')).text()).not.toBe(source);
+    expect(await Bun.file(join(sandbox.path, 'example.sh')).text()).toBe(SHFMT_FORMATTED_SCRIPT);
     const verified = await executeRun(await openSession(sandbox.path), options);
     expect(verified.report.exitCode, JSON.stringify(verified.report)).toBe(0);
 });

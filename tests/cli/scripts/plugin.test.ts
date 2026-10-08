@@ -1,11 +1,12 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
+import { rm, chmod, readFile } from 'node:fs/promises';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { rmSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 import type { PackageArchiveMarker } from '#tests/types/harness/process.ts';
 import { STALLED_PACKAGE_PACKING } from '#tests/config/cli/scripts/plugin.ts';
 import { waitForExit, waitForFile, captureChild } from '#tests/harness/process.ts';
@@ -20,7 +21,7 @@ test.skipIf(!isPosix).each([
         const marker = join(directory.path, 'packing.json');
         const native = join(directory.path, 'npm');
         await createFileTree(directory.path, { npm: STALLED_PACKAGE_PACKING });
-        chmodSync(native, 0o755);
+        await chmod(native, 0o755);
         const command = [process.execPath, join(root, 'scripts/plugin.ts'), '--help'];
         const prepared = prepareTestCommand(
             command,
@@ -31,7 +32,6 @@ test.skipIf(!isPosix).each([
                     GSPOT_PACKAGE_MARKER: marker,
                     PATH: `${directory.path}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
                 },
-                timeoutMs: 30_000,
             },
             'workspace packing cancellation',
         );
@@ -47,17 +47,17 @@ test.skipIf(!isPosix).each([
         let owned: PackageArchiveMarker | undefined;
         try {
             expect(await waitForFile(marker)).toBe(true);
-            owned = JSON.parse(readFileSync(marker, 'utf8')) as PackageArchiveMarker;
+            owned = JSON.parse(await readFile(marker, 'utf8')) as PackageArchiveMarker;
             child.kill(signal);
             expect(await child.exited, `${prepared.context}\n${await capture.errors}`).toBe(code);
             expect(await capture.errors).not.toContain('Package packing failed');
-            expect(existsSync(owned.work)).toBe(false);
+            expect(await pathExists(owned.work)).toBe(false);
         } finally {
             if (child.exitCode === null) child.kill('SIGTERM');
             await child.exited;
             if (owned !== undefined) {
                 await waitForExit(owned.pid);
-                rmSync(owned.work, { recursive: true, force: true });
+                await rm(owned.work, { recursive: true, force: true });
             }
         }
     },

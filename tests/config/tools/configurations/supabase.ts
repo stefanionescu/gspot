@@ -10,7 +10,6 @@ CREATE POLICY avatars_read ON storage.objects FOR SELECT USING (bucket_id = 'ava
 
 export const GREET = 'Deno.serve(() => new Response("hello"));\n';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['supabase'],
     modules: false,
@@ -23,7 +22,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'supabase/deno-lint',

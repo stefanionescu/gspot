@@ -1,13 +1,14 @@
-// Build fixture policy and report public validation failures.
+// Build sandbox policy and report public validation failures.
 import { GspotError } from '#cli/platform/errors.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import type { PolicyOptions } from '#tests/types/harness/policy.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 /**
  * Build policy with explicit configuration choices and authored TOML tables.
- * @param configurations the built-in setups selected by the fixture
- * @param options the level and tables, when the fixture changes the public defaults
- * @returns the fixture's gspot.toml bytes
+ * @param configurations the built-in setups selected by the sandbox
+ * @param options the level and tables, when the sandbox changes the public defaults
+ * @returns the sandbox's gspot.toml bytes
  */
 export function buildPolicy(configurations: string[], options: PolicyOptions = {}): string {
     const selected = configurations.map((configuration) => JSON.stringify(configuration)).join(', ');
@@ -29,4 +30,14 @@ export function policyProblems(text: string, root?: string): string[] {
         if (error instanceof GspotError && error.code === 'policy') return error.problems;
         throw error;
     }
+}
+
+/** Return the general configurations every repository selects without detection conditions. */
+export function alwaysSelectedConfigurations(): string[] {
+    return [...configurationManifests().values()]
+        .filter(
+            ({ configuration }) =>
+                configuration.kind === 'general' && configuration.always_selected && configuration.when === undefined,
+        )
+        .map(({ configuration }) => configuration.name);
 }

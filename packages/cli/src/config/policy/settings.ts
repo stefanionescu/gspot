@@ -36,6 +36,9 @@ export const TOOL_DEADLINE = {
 /** A tool setting key is tools.<tool>.<slot>: two segments before the slot. */
 export const TOOL_KEY_DEPTH = 2;
 
+/** A scoped setting starts after scope and its literal authored map key. */
+export const SCOPE_KEY_DEPTH = 2;
+
 // A problem on one of these fields belongs to the entry or key that holds the field, and reading drops that owner.
 export const FIELD_PROBLEMS = new Set(['reason', 'paths', 'path', 'basePath', 'module', 'group']);
 
@@ -55,8 +58,6 @@ export const INDENT_MAX = 8;
 export const PRINT_WIDTH_MIN = 40;
 
 export const PRINT_WIDTH_MAX = 400;
-
-export const STRUCTURED_POLICY_TABLES = new Set(['limits', 'naming', 'format', 'structure', 'architecture', 'prose']);
 
 /** Where a test file lives: in a test folder, or named for a test runner. */
 export const DEFAULT_TEST_PATTERNS = [

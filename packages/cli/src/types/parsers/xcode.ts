@@ -7,6 +7,8 @@ export type Plist = string | Plist[] | { [key: string]: Plist };
 
 export type ProjectEntry = z.infer<typeof pbxprojSchema>['objects'][string];
 
+export type ProjectMetadata = { objects: Record<string, ProjectEntry>; root: ProjectEntry };
+
 export type XcodeProject = {
     objects: Record<string, ProjectEntry>;
     root: ProjectRoot;
@@ -23,3 +25,6 @@ export type PlistToken = { text: string; quoted: boolean; at: number };
 export type ProjectToken = { token: PlistToken; end: number };
 /** Source membership and synchronized folder exclusions read from project targets. */
 export type ProjectSources = { sources: Set<string>; folders: Folder[] };
+
+/** Native compiler and SDK choices authored in Xcode build configurations. */
+export type ProjectBuildSettings = { sdkRoot: string | undefined; swiftVersion: string | undefined };

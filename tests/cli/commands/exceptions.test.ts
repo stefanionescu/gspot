@@ -1,4 +1,4 @@
-// Saved list exceptions survive previews, append, removal, replacement, and inherited settings.
+// Saved exceptions survive previews, append, removal, replacement, and inherited settings.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
@@ -9,7 +9,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import type { SettingsListJson } from '#cli/types/commands/list.ts';
-import type { PolicyPreviewJson } from '#cli/types/commands/policy-edit.ts';
+import type { PolicyPreviewJson } from '#cli/types/commands/save-policy.ts';
 
 import {
     ROOT_PROJECT,
@@ -20,24 +20,26 @@ import {
 
 test.each(PRIMITIVE_EXCEPTIONS)(
     '$key saves reasons through previews and list mutations',
-    async ({ key, value, second }) => {
+    async ({ key, value, second, defaults }) => {
         await using sandbox = await testdir();
-        const policy = buildPolicy(['typescript', 'site'], { level: 'all', tables: ROOT_PROJECT });
         await createFileTree(sandbox.path, {
-            'gspot.toml': policy,
+            'gspot.toml': buildPolicy(['typescript', 'site'], { level: 'all', tables: ROOT_PROJECT }),
             'entry.ts': 'export const entry = 1;\n',
             'app/entry.ts': 'export const entry = 1;\n',
             'sibling/entry.ts': 'export const entry = 1;\n',
         });
-        const before = readTree(sandbox.path);
-        const refused = await runGspot(sandbox.path, ['set', key, value]);
+        const before = await readTree(sandbox.path);
+        const list = Array.isArray(defaults);
+        const acceptedValues = (words: string[]) =>
+            list ? words : Object.fromEntries(words.map((word) => [word, EXCEPTION_REASON]));
+        const refused = await runGspot(sandbox.path, ['set', key, list ? value : JSON.stringify({ [value]: 'TBD' })]);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(refused.stderr).toContain(`gspot set ${key} needs a reason`);
-        expect(readTree(sandbox.path)).toStrictEqual(before);
+        expect(refused.stderr).toContain(`needs a reason`);
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
         const preview = await runGspot(sandbox.path, [
             'set',
             key,
-            value,
+            list ? value : JSON.stringify({ [value]: EXCEPTION_REASON }),
             '--replace',
             '--reason',
             EXCEPTION_REASON,
@@ -47,39 +49,42 @@ test.each(PRIMITIVE_EXCEPTIONS)(
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         const proposed = JSON.parse(preview.stdout) as PolicyPreviewJson;
         expect(proposed.dryRun).toBe(true);
-        expect(valueAt(parseToml(proposed.policy), key.split('.'))).toStrictEqual({
-            value: [value],
-            reason: EXCEPTION_REASON,
-        });
-        expect(readTree(sandbox.path)).toStrictEqual(before);
-        for (const argv of [
-            ['set', key, value, '--replace', '--reason', EXCEPTION_REASON],
-            ['set', key, second, '--reason', EXCEPTION_REASON],
-            ['set', key, value, '--remove'],
-        ]) {
+        expect(valueAt(parseToml(proposed.policy), key.split('.'))).toStrictEqual(acceptedValues([value]));
+        if (list) expect(valueAt(parseToml(proposed.policy), ['reasons', key])).toBe(EXCEPTION_REASON);
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
+        for (const argv of list
+            ? [
+                  ['set', key, value, '--replace', '--reason', EXCEPTION_REASON],
+                  ['set', key, second, '--reason', EXCEPTION_REASON],
+                  ['set', key, value, '--remove'],
+              ]
+            : [
+                  ['set', key, JSON.stringify({ [value]: EXCEPTION_REASON })],
+                  ['set', key, JSON.stringify({ [value]: EXCEPTION_REASON, [second]: EXCEPTION_REASON })],
+                  ['set', key, JSON.stringify({ [second]: EXCEPTION_REASON })],
+              ]) {
             const changed = await runGspot(sandbox.path, argv);
             expect(changed.code, changed.stdout + changed.stderr).toBe(0);
         }
         const text = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
         const raw = parseToml(text);
-        const saved = valueAt(raw, key.split('.'));
-        expect(saved).toStrictEqual({ value: [second], reason: EXCEPTION_REASON });
+        expect(valueAt(raw, key.split('.'))).toStrictEqual(acceptedValues([second]));
+        if (list) expect(raw['reasons']).toMatchObject({ [key]: EXCEPTION_REASON });
         await Bun.write(join(sandbox.path, 'gspot.toml'), text.replace(EXCEPTION_REASON, 'N/A'));
-        const invalidTree = readTree(sandbox.path);
+        const invalidTree = await readTree(sandbox.path);
         const invalid = await runGspot(sandbox.path, ['apply', '--dry-run']);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
         expect(invalid.stderr).toContain(key);
         expect(invalid.stderr).toContain('needs a reason that says something');
-        expect(readTree(sandbox.path)).toStrictEqual(invalidTree);
-        await Bun.write(join(sandbox.path, 'gspot.toml'), text);
+        expect(await readTree(sandbox.path)).toStrictEqual(invalidTree);
     },
 );
 
-test.each(PRIMITIVE_EXCEPTIONS)(
+test.each(PRIMITIVE_EXCEPTIONS.filter((entry) => entry.key !== 'words'))(
     '$key child replacement preserves root and sibling reasons and restores inheritance',
     async ({ key, value, second, defaults }) => {
         await using sandbox = await testdir();
-        const authored = `${key} = { value = ${JSON.stringify([second])}, reason = ${JSON.stringify(EXCEPTION_REASON)} }\n`;
+        const authored = `${key} = ${JSON.stringify([second])}\n[reasons]\n${JSON.stringify(key)} = ${JSON.stringify(EXCEPTION_REASON)}\n`;
         const policy = buildPolicy(['typescript', 'site'], {
             level: 'all',
             tables: ROOT_PROJECT.replace('[agent_rules]', authored + '[agent_rules]'),
@@ -90,13 +95,13 @@ test.each(PRIMITIVE_EXCEPTIONS)(
             'app/entry.ts': 'export const entry = 1;\n',
             'sibling/entry.ts': 'export const entry = 1;\n',
         });
+        const settingValues = (report: SettingsListJson) =>
+            report.settings
+                .filter((row) => row.key === key)
+                .map(({ scope, value: effective }) => ({ scope, value: effective }));
         const listed = await runGspot(sandbox.path, ['list', 'settings', '--json']);
         expect(listed.code, listed.stdout + listed.stderr).toBe(0);
-        expect(
-            (JSON.parse(listed.stdout) as SettingsListJson).settings
-                .filter((row) => row.key === key)
-                .map(({ scope, value: effective }) => ({ scope, value: effective })),
-        ).toStrictEqual([
+        expect(settingValues(JSON.parse(listed.stdout) as SettingsListJson)).toStrictEqual([
             { scope: '', value: [...defaults, second] },
             { scope: 'app', value: [...defaults, second] },
             { scope: 'sibling', value: [...defaults, second] },
@@ -114,11 +119,7 @@ test.each(PRIMITIVE_EXCEPTIONS)(
         expect(child.code, child.stdout + child.stderr).toBe(0);
         const childValues = await runGspot(sandbox.path, ['list', 'settings', '--json']);
         expect(childValues.code, childValues.stdout + childValues.stderr).toBe(0);
-        expect(
-            (JSON.parse(childValues.stdout) as SettingsListJson).settings
-                .filter((row) => row.key === key)
-                .map(({ scope, value: effective }) => ({ scope, value: effective })),
-        ).toStrictEqual([
+        expect(settingValues(JSON.parse(childValues.stdout) as SettingsListJson)).toStrictEqual([
             { scope: '', value: [...defaults, second] },
             { scope: 'app', value: [...defaults, second, value] },
             { scope: 'sibling', value: [...defaults, second] },
@@ -135,7 +136,8 @@ test.each(PRIMITIVE_EXCEPTIONS)(
             )?.value,
         ).toStrictEqual([...defaults, second]);
         const saved = parseToml(await Bun.file(join(sandbox.path, 'gspot.toml')).text());
-        expect(valueAt(saved, key.split('.'))).toStrictEqual({ value: [second], reason: EXCEPTION_REASON });
+        expect(valueAt(saved, key.split('.'))).toStrictEqual([second]);
+        expect(saved['reasons']).toMatchObject({ [key]: EXCEPTION_REASON });
     },
 );
 
@@ -148,19 +150,28 @@ test('license presence needs a reason only when its declared requirement is weak
         'app/README.md': '# App\n',
         'sibling/README.md': '# Sibling\n',
     });
-    const before = readTree(sandbox.path);
-    const refused = await runGspot(sandbox.path, ['set', 'docs.license', 'false']);
+    const before = await readTree(sandbox.path);
+    const refused = await runGspot(sandbox.path, ['set', 'docs.require_license', 'false']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stderr).toContain('gspot set docs.license needs a reason');
-    expect(readTree(sandbox.path)).toStrictEqual(before);
-    const changed = await runGspot(sandbox.path, ['set', 'docs.license', 'false', '--reason', EXCEPTION_REASON]);
+    expect(refused.stderr).toContain('gspot set docs.require_license false --reason');
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const changed = await runGspot(sandbox.path, [
+        'set',
+        'docs.require_license',
+        'false',
+        '--reason',
+        EXCEPTION_REASON,
+    ]);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     expect(parseToml(await Bun.file(join(sandbox.path, 'gspot.toml')).text())['docs']).toMatchObject({
-        license: { value: false, reason: EXCEPTION_REASON },
+        require_license: false,
+    });
+    expect(parseToml(await Bun.file(join(sandbox.path, 'gspot.toml')).text())['reasons']).toMatchObject({
+        'docs.require_license': EXCEPTION_REASON,
     });
     const relaxed = await runGspot(sandbox.path, ['check', '--only', 'docs/readme-present', '--json']);
     expect(relaxed.code, relaxed.stdout + relaxed.stderr).toBe(0);
-    const tightened = await runGspot(sandbox.path, ['set', 'docs.license', 'true']);
+    const tightened = await runGspot(sandbox.path, ['set', 'docs.require_license', 'true']);
     expect(tightened.code, tightened.stdout + tightened.stderr).toBe(0);
     const missing = await runGspot(sandbox.path, ['check', '--only', 'docs/readme-present', '--json']);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
@@ -176,7 +187,7 @@ test('Git download hosts require a reviewed allowance while HTTPS remains mandat
     const lockfile = structuredClone(HOST_LOCKFILE);
     lockfile.packages['node_modules/third'].resolved = insecureDownload.href;
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { tables: 'require_reasons = true\n[agent_rules]\nenabled = false\n' }),
+        'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
         'package-lock.json': JSON.stringify(lockfile, null, 2),
     });
     const command = ['check', '--only', 'dependencies/lockfile-hosts', '--json'];

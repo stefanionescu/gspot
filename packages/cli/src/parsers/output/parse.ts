@@ -6,14 +6,10 @@ import { stripVTControlCharacters } from 'node:util';
 import { parseJson } from '#cli/parsers/output/json.ts';
 import { knipFindings } from '#cli/parsers/output/knip.ts';
 import { toPosix, toolPath } from '#cli/platform/paths.ts';
+import { sarifFindings } from '#cli/parsers/output/sarif.ts';
 import { semgrepFindings } from '#cli/parsers/output/semgrep.ts';
+import { typosFindings, trufflehogFindings, markdownlintFindings } from '#cli/parsers/output/reports.ts';
 
-import {
-    typosFindings,
-    eslintFindings,
-    trufflehogFindings,
-    markdownlintFindings,
-} from '#cli/parsers/output/reports.ts';
 import type {
     Finding,
     Parsing,
@@ -21,6 +17,7 @@ import type {
     OutputPaths,
     RegexParser,
     ParsingCheck,
+    OutputDescriptor,
 } from '#cli/types/parsers/output.ts';
 import {
     DEFAULT_PATTERN,
@@ -127,26 +124,6 @@ function jsonFindings(parsing: Parsing, output: OutputSpec): Finding[] {
     }
 }
 
-// The reader of each output format a manifest can declare.
-const FORMAT_READERS: Record<OutputSpec['format'], (parsing: Parsing, output: OutputSpec) => Finding[]> = {
-    none: () => [],
-    json: jsonFindings,
-    'trufflehog-json': ({ check, stdout }) => trufflehogFindings(check.name, stdout, check.help),
-    typos: ({ check, stdout, root, cwd }) => typosFindings(check.name, stdout, check.help, root, cwd),
-    markdownlint: ({ check, stdout, root, cwd }) => markdownlintFindings(check.name, stdout, check.help, root, cwd),
-    knip: ({ check, stdout }) => knipFindings(check.name, stdout, check.help),
-    eslint: ({ check, stdout }) => eslintFindings(check.name, stdout, check.help),
-    semgrep: ({ check, stdout }) => semgrepFindings(check.name, stdout, check.help),
-    lines: ({ check, text }) =>
-        text
-            .split('\n')
-            .map((line) => line.trim())
-            .filter((line) => line !== '')
-            .map((line) => ({ check: check.name, file: '', message: line, help: check.help, fixable: false })),
-    regex: ({ check, text }, output) => parseRegex(check.name, output, text, check.help),
-    grouped: ({ check, text }, output) => parseGrouped(check.name, output, text, check.help),
-};
-
 function relativeTo(root: string, file: string): string {
     const prefix = `${root}/`;
     if (file.startsWith(prefix)) return file.slice(prefix.length);
@@ -162,6 +139,91 @@ function relativeTo(root: string, file: string): string {
     }
 }
 
+/** Native parsing and execution contracts, declared once for each supported output format. */
+export const outputFormats: Record<OutputSpec['format'], OutputDescriptor> = {
+    none: {
+        read: () => [],
+        namesFiles: () => false,
+        verifyFiles: false,
+        withholdOutput: false,
+    },
+    json: {
+        read: jsonFindings,
+        namesFiles: (output) => (output.file_type ?? 'path') === 'path' && output.fields?.file !== undefined,
+        verifyFiles: false,
+        withholdOutput: false,
+    },
+    sarif: {
+        read: ({ check, stdout, root }) => {
+            try {
+                return sarifFindings(JSON.parse(stdout), check.name, check.help, root);
+            } catch (error) {
+                throw new GspotError('output', 'The tool returned an invalid SARIF report.', { cause: error });
+            }
+        },
+        namesFiles: () => true,
+        verifyFiles: false,
+        withholdOutput: false,
+    },
+    'trufflehog-json': {
+        read: ({ check, stdout }) => trufflehogFindings(check.name, stdout, check.help),
+        namesFiles: () => false,
+        verifyFiles: false,
+        withholdOutput: true,
+    },
+    typos: {
+        read: ({ check, stdout, root, cwd }) => typosFindings(check.name, stdout, check.help, root, cwd),
+        namesFiles: () => true,
+        verifyFiles: true,
+        withholdOutput: false,
+    },
+    markdownlint: {
+        read: ({ check, stdout, root, cwd }) => markdownlintFindings(check.name, stdout, check.help, root, cwd),
+        namesFiles: () => true,
+        verifyFiles: true,
+        withholdOutput: false,
+    },
+    knip: {
+        read: ({ check, stdout }) => knipFindings(check.name, stdout, check.help),
+        namesFiles: () => true,
+        verifyFiles: false,
+        withholdOutput: false,
+    },
+    semgrep: {
+        read: ({ check, stdout }) => semgrepFindings(check.name, stdout, check.help),
+        namesFiles: () => true,
+        verifyFiles: false,
+        withholdOutput: false,
+    },
+    lines: {
+        read: ({ check, text }) =>
+            text
+                .split('\n')
+                .map((line) => line.trim())
+                .filter((line) => line !== '')
+                .map((line) => ({ check: check.name, file: '', message: line, help: check.help, fixable: false })),
+        namesFiles: () => false,
+        verifyFiles: false,
+        withholdOutput: false,
+    },
+    regex: {
+        read: ({ check, text }, output) => parseRegex(check.name, output, text, check.help),
+        namesFiles: (output) =>
+            (output.file_type ?? 'path') === 'path' &&
+            (output.pattern === undefined ? output.fields?.file !== undefined : output.pattern.includes('(?<file>')),
+        verifyFiles: false,
+        withholdOutput: false,
+    },
+    grouped: {
+        read: ({ check, text }, output) => parseGrouped(check.name, output, text, check.help),
+        namesFiles: (output) =>
+            (output.file_type ?? 'path') === 'path' &&
+            (output.pattern === undefined ? output.fields?.file !== undefined : output.pattern.includes('(?<file>')),
+        verifyFiles: false,
+        withholdOutput: false,
+    },
+};
+
 /**
  * The findings a tool's output holds, with every path relative to the root.
  * @param check the check.
@@ -176,7 +238,7 @@ export function parseOutput(check: ParsingCheck, stdout: string, stderr: string,
     const output = check.output ?? DEFAULT_OUTPUT_FORMAT;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
     const text = stripVTControlCharacters(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
-    return FORMAT_READERS[output.format]({ check, stdout, text, root, cwd }, output).map((finding) => ({
+    return outputFormats[output.format].read({ check, stdout, text, root, cwd }, output).map((finding) => ({
         ...finding,
         fixable: check.fix !== undefined && finding.fixable,
         file: relativeTo(nativeRoot, toPosix(finding.file)),

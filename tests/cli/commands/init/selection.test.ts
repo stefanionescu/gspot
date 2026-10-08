@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -11,7 +11,7 @@ import { readTree } from '#tests/harness/preservation.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
-import type { RawPolicy } from '#cli/types/policy/settings.ts';
+import { policySchema } from '#cli/policy/schema/policy.ts';
 import { COMPONENT, SELECTION_INIT } from '#tests/config/cli/commands/init/selection.ts';
 
 test('accepting defaults leaves the detected initialization plan unchanged', async () => {
@@ -23,7 +23,7 @@ test('accepting defaults leaves the detected initialization plan unchanged', asy
         'api/source.py': 'PORT = 8080\n',
     });
     commitAll(sandbox.path);
-    const before = readTree(sandbox.path);
+    const before = await readTree(sandbox.path);
     const argv = ['init', '--dry-run', ...QUIET_INIT];
     const selected = await runGspot(sandbox.path, argv);
     const accepted = await runGspot(sandbox.path, [...argv, '--yes']);
@@ -37,14 +37,14 @@ test('accepting defaults leaves the detected initialization plan unchanged', asy
     expect(selected.stdout.slice(selected.stdout.indexOf('\nconfigurations\n'))).toBe(
         accepted.stdout.slice(accepted.stdout.indexOf('\nconfigurations\n')),
     );
-    expect(readTree(sandbox.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 test('initialization identifies a scope flag without attributing it to an absent policy', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'jobs/run.sh': 'echo example\n' });
     commitAll(sandbox.path);
-    const before = readTree(sandbox.path);
+    const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, [
         'init',
         '--yes',
@@ -56,7 +56,7 @@ test('initialization identifies a scope flag without attributing it to an absent
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toMatch(/^scopes\s+jobs\s+from --scope-configurations$/mu);
     expect(result.stdout).not.toContain('from gspot.toml');
-    expect(readTree(sandbox.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
 async function selected(root: string): Promise<string[]> {
@@ -90,13 +90,11 @@ test('init selects a recommended language only when the repository holds its fil
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).exists()).toBe(false);
 });
 
-test('init proposes a scope for every folder that holds a project file, with no --scope-configurations flag', async () => {
+test('init proposes a project scope without --scope-configurations and sets lint-only packages aside', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'package.json': '{"name":"app","private":true,"type":"module"}\n',
         'supabase/config.toml': 'project_id = "example"\n',
-        'api/package.json': '{"name":"api","private":true,"type":"module","dependencies":{"express":"5.1.0"}}\n',
-        'api/src/server.js': 'export const port = 3000;\n',
         'ios/Package.swift':
             '// swift-tools-version:6.0\nimport PackageDescription\nlet package = Package(name: "App")\n',
         'ios/Sources/App/App.swift': 'let answer = 42\n',
@@ -106,35 +104,32 @@ test('init proposes a scope for every folder that holds a project file, with no 
     const result = await runGspot(sandbox.path, [...SELECTION_INIT, ...QUIET_INIT]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;
-    const proposed = parse(output.policy) as RawPolicy;
-    expect(proposed.scope?.map((scope) => scope.path)).toStrictEqual(['api', 'ios']);
-    expect(proposed.scope?.find((scope) => scope.path === 'ios')?.configurations).toContain('swift');
+    const proposed = policySchema.parse(parse(output.policy));
+    expect(Object.keys(proposed.scope!)).toStrictEqual(['ios']);
+    expect(proposed.scope?.['ios']?.configurations).toContain('swift');
     expect(output.plan.noLongerRuns.map((entry) => entry.path)).toStrictEqual(['tools/lint/package.json']);
 });
 
 test.each([
     { dependency: false, named: false, isSelected: false },
-    { dependency: true, named: false, isSelected: true },
+    { dependency: true, named: false, isSelected: false },
     { dependency: false, named: true, isSelected: true },
-])(
-    'Next.js selects locale checking according to dependencies and explicit choices: %j',
-    async ({ dependency, named, isSelected }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'package.json': JSON.stringify({
-                name: 'translated-app',
-                private: true,
-                dependencies: { next: '16.3.5', ...(dependency ? { 'next-intl': '4.3.9' } : {}) },
-            }),
-            'app/page.tsx': 'export default function Page() { return "home"; }\n',
-        });
-        const configurations = ['--configurations', 'nextjs', ...(named ? ['i18n'] : [])];
-        const result = await runGspot(sandbox.path, [...SELECTION_INIT, ...configurations, ...QUIET_INIT]);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-        expect(plan.configurations.some(({ configuration }) => configuration === 'i18n')).toBe(isSelected);
-    },
-);
+])('Explicit Next.js choices override locale dependency detection: %j', async ({ dependency, named, isSelected }) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': JSON.stringify({
+            name: 'translated-app',
+            private: true,
+            dependencies: { next: '16.3.5', ...(dependency ? { 'next-intl': '4.3.9' } : {}) },
+        }),
+        'app/page.tsx': 'export default function Page() { return "home"; }\n',
+    });
+    const configurations = ['--configurations', 'nextjs', ...(named ? ['i18n'] : [])];
+    const result = await runGspot(sandbox.path, [...SELECTION_INIT, ...configurations, ...QUIET_INIT]);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    expect(plan.configurations.some(({ configuration }) => configuration === 'i18n')).toBe(isSelected);
+});
 
 test('init proposes workspace scopes without a lockfile and preserves files after resolver failure', async () => {
     await using sandbox = await testdir();
@@ -148,18 +143,18 @@ test('init proposes workspace scopes without a lockfile and preserves files afte
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const plan = JSON.parse(proposed.stdout) as Required<Pick<InitJson, 'policy'>>;
     const policy = parseStrictPolicy(plan.policy);
-    expect(policy.scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
-    writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
-    const before = readTree(sandbox.path);
+    expect(Object.keys(policy.scope)).toStrictEqual(['packages/api']);
+    await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
+    const before = await readTree(sandbox.path);
     const refused = await runGspot(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(readTree(sandbox.path)).toStrictEqual(before);
-    writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
     const corrected = await runGspot(sandbox.path, [...command, '--dry-run', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(
-        parseStrictPolicy((JSON.parse(corrected.stdout) as InitJson).policy!).scopes.map((scope) => scope.path),
-    ).toStrictEqual(['packages/api']);
+    expect(Object.keys(parseStrictPolicy((JSON.parse(corrected.stdout) as InitJson).policy!).scope)).toStrictEqual([
+        'packages/api',
+    ]);
 });
 
 test('init previews only applicable tool projects and duplicate pins for the selected runner', async () => {

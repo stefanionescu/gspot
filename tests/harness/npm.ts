@@ -11,27 +11,21 @@ import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { stat, mkdir, readFile, writeFile } from 'node:fs/promises';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
-import { statSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { RUNNER_POLICY, NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
 import type { PackageInputs, PackageProject, PackageProjectOptions } from '#tests/types/harness/npm.ts';
-
-import {
-    AUTHORED_FILES,
-    VERSION_TIMEOUT_MS,
-    EDITORCONFIG_PACKAGE,
-    EXCLUDED_PACKAGE_CHECKS,
-} from '#tests/config/harness/npm.ts';
+import { AUTHORED_FILES, EDITORCONFIG_PACKAGE, EXCLUDED_PACKAGE_CHECKS } from '#tests/config/harness/npm.ts';
 
 async function writePackageProject(
     options: PackageProjectOptions,
 ): Promise<Pick<PackageProject, 'rootPackage' | 'yarnConfiguration' | 'version'>> {
     const { root, artifacts, registry, installer, projectPath, runner } = options;
-    const version = await runTestCommand([installer, '--version'], { cwd: artifacts, timeoutMs: VERSION_TIMEOUT_MS });
-    if (version.code !== 0) throw new Error(`Package manager fixture failed: ${version.stdout}${version.stderr}`);
+    const version = await runTestCommand([installer, '--version'], { cwd: artifacts });
+    if (version.code !== 0) throw new Error(`Package installer version failed: ${version.stdout}${version.stderr}`);
     const rootPackage = JSON.stringify({
         private: true,
         packageManager: `${installer}@${version.stdout.trim()}`,
@@ -57,31 +51,32 @@ async function writePackageProject(
         installer === 'yarn' && Number(version.stdout.trim().split('.', 1)[0]) >= 2
             ? `npmRegistryServer: "${registry.url}"\nnpmAuthToken: "${PACKAGE_REGISTRY_TOKEN}"\nnpmAlwaysAuth: true\nunsafeHttpWhitelist: ["127.0.0.1"]\n`
             : undefined;
-    if (yarnConfiguration !== undefined) writeFileSync(join(root, '.yarnrc.yml'), yarnConfiguration, { mode: 0o600 });
+    if (yarnConfiguration !== undefined) await writeFile(join(root, '.yarnrc.yml'), yarnConfiguration, { mode: 0o600 });
     const initialized = await runTestCommand(['git', 'init', '--quiet'], { cwd: root });
     if (initialized.code !== 0) throw new Error(`Package project Git setup failed: ${initialized.stderr}`);
     return { rootPackage, yarnConfiguration, version: version.stdout.trim() };
 }
 
-// Apply the fixture's generated inputs before the test's actual installation transaction.
+// Apply the sandbox's generated inputs before the test's actual installation transaction.
 async function prepareToolProject(root: string): Promise<void> {
     const result = await spawnGspot(root, ['apply', '--json']);
-    if (result.code !== 0) throw new Error(`Package fixture apply failed: ${result.stdout}${result.stderr}`);
+    if (result.code !== 0) throw new Error(`Package sandbox apply failed: ${result.stdout}${result.stderr}`);
     const preserved = (JSON.parse(result.stdout) as ApplyReport).notes.filter((note) => note.startsWith('preserved'));
-    if (preserved.length > 0) throw new Error(`Package fixture preserved conflicting inputs: ${preserved.join('\n')}`);
+    if (preserved.length > 0) throw new Error(`Package sandbox preserved conflicting inputs: ${preserved.join('\n')}`);
 }
 
 /** Captures the generated manifest, lockfile, and ownership bytes before an installation journey. */
-export function readPackageInputs(root: string, installer: PackageInstaller['name']): PackageInputs {
+export async function readPackageInputs(root: string, installer: PackageInstaller['name']): Promise<PackageInputs> {
     const lockfilePath = join(root, '.gspot', packageLockfile(installer));
     const ownershipPath = join(root, '.gspot/state/ownership.json');
+    const attributes = await stat(lockfilePath);
     return {
-        manifest: readFileSync(join(root, '.gspot/package.json')),
+        manifest: await readFile(join(root, '.gspot/package.json')),
         lockfilePath,
-        lockfile: readFileSync(lockfilePath),
-        mode: statSync(lockfilePath).mode,
+        lockfile: await readFile(lockfilePath),
+        mode: attributes.mode,
         ownershipPath,
-        ownership: readFileSync(ownershipPath),
+        ownership: await readFile(ownershipPath),
     };
 }
 
@@ -96,7 +91,7 @@ export async function createPackageProject(
         const directory = resources.use(await testdir());
         const root = join(directory.path, 'repository');
         const artifacts = join(directory.path, 'artifacts');
-        mkdirSync(artifacts);
+        await mkdir(artifacts);
         const registry = resources.use(
             await createPackageRegistry(artifacts, {
                 declarations: [

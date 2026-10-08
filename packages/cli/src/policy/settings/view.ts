@@ -1,47 +1,8 @@
 import { coversScope } from '#cli/repository/selectors.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { ISO_DATE_LENGTH } from '#cli/config/policy/settings.ts';
-import { tablesFor, listSettings, settingValue } from '#cli/policy/settings/lookup.ts';
-
-import type {
-    Policy,
-    ScopeView,
-    IgnoreEntry,
-    KnownSettings,
-    FormatSettings,
-    ScopeSelection,
-} from '#cli/types/policy/settings.ts';
-
-function settingSlots(settings: Record<string, unknown>, name: string): Record<string, unknown> {
-    const prefix = `${name}.`;
-    const merged: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(settings)) {
-        if (!key.startsWith(prefix)) continue;
-        const segments = key.slice(prefix.length).split('.');
-        let table = merged;
-        for (const [index, segment] of segments.entries()) {
-            if (index === segments.length - 1) {
-                table[segment] = value;
-                continue;
-            }
-            table[segment] ??= {};
-            table = table[segment] as Record<string, unknown>;
-        }
-    }
-    return merged;
-}
-
-function optionSlots(
-    settings: Record<string, unknown>,
-    tables: Record<string, unknown>[],
-    name: string,
-): Record<string, unknown> {
-    const merged = settingSlots(settings, name);
-    for (const table of tables)
-        for (const [slot, value] of Object.entries(table))
-            if (slot !== 'verbatim' && merged[slot] === undefined) merged[slot] = value;
-    return merged;
-}
+import { tablesFor, effectiveSettings } from '#cli/policy/settings/lookup.ts';
+import type { Policy, ScopeView, IgnoreEntry, KnownSettings, ScopeSelection } from '#cli/types/policy/settings.ts';
 
 /**
  * Select saved ignores whose expiry date has not arrived.
@@ -50,7 +11,7 @@ function optionSlots(
  */
 export function activeIgnores(policy: Policy): IgnoreEntry[] {
     const today = new Date().toISOString().slice(0, ISO_DATE_LENGTH);
-    return policy.ignores.filter((entry) => entry.until === undefined || today < entry.until);
+    return policy.ignore.filter((entry) => entry.until === undefined || today < entry.until.toISOString());
 }
 
 /**
@@ -62,34 +23,23 @@ export function activeIgnores(policy: Policy): IgnoreEntry[] {
  * @returns the view the templates read
  */
 export function scopeView(surface: KnownSettings, policy: Policy, selected: Manifest[], scope: string): ScopeView {
-    const settings: Record<string, unknown> = {};
-    for (const row of listSettings(surface, policy, scope)) {
-        settings[row.key] = row.value;
-    }
+    const { settings, values, limits, test_files: testFiles } = effectiveSettings(surface, policy, selected, scope);
     const ignores = activeIgnores(policy);
-    const format = settingSlots(settings, 'format') as FormatSettings;
+    const format = values.format;
+    if (format === undefined) throw new Error('The selected scope has no format settings.');
     return {
         configurations: selected.map((manifest) => manifest.configuration.name),
+        test_files: testFiles,
         settings,
+        values,
+        roles: { ...values.architecture?.roles, tests: values.architecture?.roles?.tests ?? testFiles },
         format,
-        limit: (key, language) => {
-            const perLanguage =
-                language === undefined
-                    ? undefined
-                    : settingValue(surface, policy, `limits.${language}.${key}`, scope)?.value;
-            return (perLanguage ?? settingValue(surface, policy, `limits.${key}`, scope)?.value) as number | undefined;
+        limit: (key, language) => limits[`${language ?? ''}.${key}`] ?? limits[`.${key}`],
+        options: (name) => {
+            const value = values[name];
+            if (value === undefined) throw new Error(`The selected scope has no ${name} settings.`);
+            return value;
         },
-        options: (name) =>
-            optionSlots(
-                settings,
-                tablesFor(policy, scope).flatMap(({ table }) => {
-                    const options = name.startsWith('tools.')
-                        ? table.tools?.[name.slice('tools.'.length)]
-                        : table.configurationSettings?.[name];
-                    return options === undefined ? [] : [options];
-                }),
-                name,
-            ),
         ignoresFor: (check: string): IgnoreEntry[] => ignores.filter((entry) => entry.check === check),
         rulesOff: (check) =>
             ignores
@@ -104,8 +54,7 @@ export function scopeView(surface: KnownSettings, policy: Policy, selected: Mani
                 .map(({ table }) => table.tools?.[name]?.['verbatim'])
                 .filter((value): value is Record<string, unknown> => typeof value === 'object');
             if (found.length === 0) return undefined;
-            const options = Object.assign({}, ...found) as Record<string, unknown>;
-            return Object.fromEntries(Object.entries(options).filter(([key]) => key !== 'reason'));
+            return Object.fromEntries(found.flatMap((value) => Object.entries(value)));
         },
     };
 }

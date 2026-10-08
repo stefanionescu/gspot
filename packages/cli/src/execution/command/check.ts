@@ -6,6 +6,7 @@ import { join, dirname, delimiter } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { outputFormats } from '#cli/parsers/output/parse.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
@@ -16,6 +17,7 @@ import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { ExecutionFailure } from '#cli/types/tools/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { toolPin, checkToolPin } from '#cli/configurations/pins.ts';
+import { DEFAULT_OUTPUT_FORMAT } from '#cli/config/parsers/output.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform/runtime.ts';
@@ -68,8 +70,13 @@ function finishResult(
     argv: string[],
     started: number,
 ): CheckResult {
+    const output = check.output ?? DEFAULT_OUTPUT_FORMAT;
+    const descriptor = outputFormats[output.format];
     const isEveryFindingKept =
-        state.isFailed || check.finding_count_pattern !== undefined || check.output?.format === 'trufflehog-json';
+        state.isFailed ||
+        check.finding_count_pattern !== undefined ||
+        descriptor.withholdOutput ||
+        descriptor.namesFiles(output);
     // Successful tools can print fileless progress; failed runs and counting checks must retain that output.
     const findings = isEveryFindingKept
         ? state.findings

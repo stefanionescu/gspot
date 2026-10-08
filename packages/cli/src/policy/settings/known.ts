@@ -1,14 +1,11 @@
 // Settings and defaults declared by gspot and selected configurations. Framework, platform, library, and database
 // configurations override an earlier scalar default; other scalar disagreements are reported as conflicts.
 import { isDeepStrictEqual } from 'node:util';
-import { isRecord } from '#cli/platform/objects.ts';
 import { mergeValue } from '#cli/policy/settings/lookup.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { TOOL_DEADLINE, OVERRIDING_KINDS } from '#cli/config/policy/settings.ts';
+import type { KnownSettings, SettingDefault } from '#cli/types/policy/settings.ts';
+import { rootSettingSchemas, tableSettingSchemas } from '#cli/policy/schema/policy.ts';
 import type { Level, Manifest, SettingDeclaration } from '#cli/types/configurations.ts';
-import type { TomlTable, KnownSettings, SettingDefault } from '#cli/types/policy/settings.ts';
-import { policySchema, rootSettingSchemas, tableSettingSchemas } from '#cli/policy/schema/policy.ts';
 
 // Whether another configuration's scalar default disagrees with this one, and this one may not override it.
 function isScalarConflict(previous: SettingDefault, manifest: Manifest, declaration: SettingDeclaration): boolean {
@@ -58,6 +55,7 @@ function addOverride(surface: KnownSettings, manifest: Manifest, name: string, v
 // The kind of a setting from the shape of its default.
 function typeOf(value: unknown): SettingDeclaration['type'] {
     if (Array.isArray(value)) return 'list';
+    if (typeof value === 'object' && value !== null) return 'table';
     if (typeof value === 'number') return 'number';
     return typeof value === 'boolean' ? 'boolean' : 'string';
 }
@@ -65,7 +63,7 @@ function typeOf(value: unknown): SettingDeclaration['type'] {
 const rootDeclarations: SettingDeclaration[] = [
     TOOL_DEADLINE,
     ...Object.entries({ ...rootSettingSchemas, ...tableSettingSchemas }).map<SettingDeclaration>(([name, schema]) => {
-        const value = schema.parse(undefined);
+        const value = schema.parse(schema.meta()?.['default']);
         return {
             name,
             validation: {},
@@ -91,19 +89,4 @@ export function knownSettings(selected: Manifest[], level: Level = 'recommended'
     }
     for (const manifest of selected) addManifest(surface, manifest, level);
     return surface;
-}
-
-/**
- * Resolves policy indentation from authored format values and the format configuration's defaults.
- * @param raw the parsed policy table
- * @returns the indentation of one nested TOML item
- */
-export function policyIndent(raw: TomlTable): string {
-    const format = isRecord(raw['format']) ? raw['format'] : {};
-    const defaults = knownSettings(selectConfigurations(['format'], configurationManifests())).defaults;
-    const style = format['indent_style'] ?? defaults.get('format.indent_style')?.value;
-    if (style === 'tab') return '\t';
-    const width = format['indent_width'] ?? defaults.get('format.indent_width')?.value;
-    const validated = policySchema.shape.format.unwrap().shape.indent_width.unwrap().parse(width);
-    return ' '.repeat(validated);
 }

@@ -22,8 +22,6 @@ export const TOOL_PACKAGE_PROJECT = '.gspot/package.json';
 
 export const YARN_SETTINGS = '.gspot/.yarnrc.yml';
 
-export const GITLEAKS_BASELINE = '.gspot/gitleaks-baseline.json';
-
 /** The folder gspot writes for a repository; every path below sits inside it. */
 export const DOT_GSPOT = '.gspot';
 

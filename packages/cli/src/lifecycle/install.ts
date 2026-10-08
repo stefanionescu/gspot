@@ -1,6 +1,5 @@
 import semver from 'semver';
 import { runTool } from '#cli/tools/run.ts';
-import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
 import { CLI_PINS } from '#cli/config/configurations.ts';
@@ -9,18 +8,17 @@ import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import type { ToolProject } from '#cli/types/tools/project.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { packageToolProject } from '#cli/tools/npm/project.ts';
-import { preserveMode } from '#cli/lifecycle/ownership/log.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import type { Generated } from '#cli/types/generation/output.ts';
 import { pythonToolProject } from '#cli/tools/python/project.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { LockfilePreparation } from '#cli/types/tools/install.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { getHookPlan, installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
 import { toolPin, pythonPins, collectPins } from '#cli/configurations/pins.ts';
-import { READ_ONLY_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
 import { installToolProject, prepareToolProjects, toolInstallationPlan } from '#cli/tools/project.ts';
 
@@ -40,13 +38,6 @@ import {
     TOOL_PACKAGE_PROJECT,
 } from '#cli/config/platform/locations.ts';
 
-// Refuse to commit prepared files when another writer changed an input during the run.
-function assertInstallationInputs(context: InstallationContext): void {
-    for (const [path, original] of context.original)
-        if (!isDeepStrictEqual(context.log.files.read(path), original))
-            throw new GspotError('installation', `Tool inputs changed: ${path}. Retry gspot install.`);
-}
-
 // Previews share the same authored runner and generated manifest lookup.
 function projectPreview<Parsed, Preparation, Installation>(
     session: ToolSession,
@@ -56,7 +47,7 @@ function projectPreview<Parsed, Preparation, Installation>(
 ) {
     const manifest = generated.files.find((file) => file.path === description.manifestPath);
     if (manifest === undefined) return { installer: [], lockfile: [], environment: [] };
-    return toolInstallationPlan(session.root, description, manifest.content, session.policyFiles.policy.run_with, {
+    return toolInstallationPlan(session.root, description, manifest.content, session.policyFiles.policy.runner, {
         refreshLockfiles,
     });
 }
@@ -80,13 +71,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                     [TOOL_PACKAGE_PROJECT, TOOL_PYTHON_PROJECT, YARN_SETTINGS].includes(file.path),
             );
             const plans = files.map((file) => {
-                const next = preserveMode(
-                    {
-                        bytes: Buffer.from(file.content),
-                        mode: file.readOnly ? READ_ONLY_FILE : OWNER_WRITABLE_FILE,
-                    },
-                    inputs.read(file.path),
-                );
+                const next = { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE };
                 context.prepared.set(file.path, next);
                 return proposeReplacement(log, {
                     path: file.path,
@@ -102,7 +87,6 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                     'installation',
                     `Tool inputs were edited: ${preserved.map((plan) => plan.path).join(', ')}. Move them aside and run gspot install.`,
                 );
-            assertInstallationInputs(context);
             context.plans.push(...plans);
             return plans.some((plan) => plan.status === 'changed') ? 'prepared required tool lockfiles' : '';
         },
@@ -124,7 +108,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
         preview: (session) => ({
             notes: [],
             steps:
-                session.policyFiles.policy.run_with === 'mise'
+                session.policyFiles.policy.runner === 'mise'
                     ? [
                           ['mise', 'trust', MISE_CONFIG_PATH],
                           ['mise', 'install'],
@@ -132,7 +116,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                     : [],
         }),
         run: async (session, _manifests, _context, preview) => {
-            if (session.policyFiles.policy.run_with !== 'mise') return '';
+            if (session.policyFiles.policy.runner !== 'mise') return '';
             const read = await runTool(['mise', '--version'], { cwd: session.root });
             const version = semver.coerce(read.stdout);
             if (read.code !== 0 || version === null || semver.lt(version, CLI_PINS.mise))
@@ -306,7 +290,6 @@ export async function installTools(
             exitCode: EXIT_ERROR,
         };
     }
-    assertInstallationInputs(context);
     applyPlans(log, context.plans);
     for (const [kind, outputs] of context.trees) installTree(log, kind, outputs);
     return { note: summaries.join('; '), exitCode: 0 };

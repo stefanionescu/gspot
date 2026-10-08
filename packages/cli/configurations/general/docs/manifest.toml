@@ -13,7 +13,7 @@ version = "0.24.2"
 mise = "lychee"
 brew = "lychee"
 cargo = "lychee"
-github = {name = "lycheeverse/lychee", version = "lychee-v0.24.2"}
+github = { name = "lycheeverse/lychee", version = "lychee-v0.24.2" }
 
 [[tool.replace]]
 file = "lychee.toml"
@@ -33,8 +33,8 @@ example = "The Markdown link `[Setup](missing.md)` reports a missing local targe
 level = "recommended"
 stage = "commit"
 runs = "files"
-command = ["lychee", "--config", "{config:lychee}", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
-output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
+command = ["lychee", "--config", "{tool_file:lychee}", "--offline", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
+output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 summary = "Checks that local documentation links reach existing files and valid anchor or text fragments."
 why = "A dead link inside the repository is a promise the docs broke without anyone noticing."
 help = "Point the link at the file or heading that exists, or delete it."
@@ -47,11 +47,11 @@ level = "recommended"
 stage = "manual"
 runs = "files"
 needs = ["network"]
-command = ["lychee", "--config", "{config:lychee}", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
-output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
+command = ["lychee", "--config", "{tool_file:lychee}", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
+output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 summary = "Checks every external link over the network."
 why = "An external link rots on its own schedule; this run says which ones did."
-help = "Update or remove the link, or exclude the URL pattern with a reason under tools.lychee.exclude_urls."
+help = "Update or remove the link, or exclude the URL pattern with a reason under links.allowed_urls."
 
 [[check]]
 name = "headings"
@@ -72,7 +72,7 @@ level = "recommended"
 stage = "commit"
 summary = "Checks that documented paths name tracked files and mise, npm, pnpm, yarn, and bun run commands name tasks or scripts in their project."
 why = "A path in the docs that nothing tracks sends the reader to a file that is gone."
-help = "Fix the path or the task name, or add the path with a reason under docs.exclude."
+help = "Fix the path or the task name. Give an example code block a title= attribute."
 
 [[check]]
 name = "readme-present"
@@ -95,28 +95,15 @@ why = "A README with the right shape answers what this is and how to start befor
 help = "Add the missing section or paragraph. For an accepted exception, run gspot ignore docs/readme-shape --paths <glob> --reason \"<why>\"."
 
 [[setting]]
-name = "tools.lychee.exclude"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Files the link checks skip, each with a reason: the pages of a site whose links resolve only once it is built."
-
-[[setting]]
-name = "docs.exclude"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Paths the stale-paths check skips, each with a reason."
-
-[[setting]]
 name = "docs.banned_headings"
 type = "list"
+items = "string"
 direction = "tightening"
 default = []
 summary = "Headings this repository bans beyond the shipped list."
 
 [[setting]]
-name = "docs.license"
+name = "docs.require_license"
 type = "boolean"
 direction = "floor"
 default = true
@@ -130,8 +117,9 @@ default = 6
 summary = "How many H2 headings a README may have before it needs a Contents list."
 
 [[setting]]
-name = "tools.lychee.exclude_urls"
+name = "links.allowed_urls"
 type = "list"
+items = "string"
 direction = "loosening"
 default = []
 summary = "URL patterns lychee skips, each with a reason."

@@ -6,9 +6,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { INIT } from '#tests/config/cli/commands/agents.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { currentBlock } from '#cli/platform/managed-blocks.ts';
-import { rmSync, statSync, chmodSync, existsSync, symlinkSync, readFileSync } from 'node:fs';
+import { rm, stat, chmod, symlink, readFile } from 'node:fs/promises';
 
 test('agent instructions reach AGENTS.md and configured files, and other agent files stay as written', async () => {
     await using sandbox = await testdir();
@@ -20,40 +21,43 @@ test('agent instructions reach AGENTS.md and configured files, and other agent f
         '.cursor/.keep': '',
     });
     const gemini = join(sandbox.path, 'GEMINI.md');
-    chmodSync(gemini, 0o600);
-    const mode = statSync(gemini).mode;
+    await chmod(gemini, 0o600);
+    const { mode } = await stat(gemini);
     const selected = await runGspot(sandbox.path, ['set', 'agent_rules.instruction_files', 'TEAM.md']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const instructions = currentBlock(readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8'), {
+    const instructions = currentBlock(await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8'), {
         path: 'AGENTS.md',
         style: 'markdown',
     });
     expect(instructions).toContain('agent/WORKING.md');
     expect(
-        currentBlock(readFileSync(join(sandbox.path, 'TEAM.md'), 'utf8'), { path: 'TEAM.md', style: 'markdown' }),
+        currentBlock(await readFile(join(sandbox.path, 'TEAM.md'), 'utf8'), { path: 'TEAM.md', style: 'markdown' }),
     ).toBe(instructions);
-    expect(readFileSync(gemini, 'utf8')).toBe(original);
-    expect(statSync(gemini).mode).toBe(mode);
-    expect(readFileSync(join(sandbox.path, '.github/copilot-instructions.md'), 'utf8')).toBe(
+    expect(await readFile(gemini, 'utf8')).toBe(original);
+    const currentGemini = await stat(gemini);
+    expect(currentGemini.mode).toBe(mode);
+    expect(await readFile(join(sandbox.path, '.github/copilot-instructions.md'), 'utf8')).toBe(
         '# Copilot instructions\n',
     );
     for (const path of ['CLAUDE.md', '.cursor/rules/gspot.mdc'])
-        expect(existsSync(join(sandbox.path, path)), path).toBe(false);
-    const modified = statSync(join(sandbox.path, 'AGENTS.md')).mtimeMs;
+        expect(await pathExists(join(sandbox.path, path)), path).toBe(false);
+    const attributes = await stat(join(sandbox.path, 'AGENTS.md'));
+    const modified = attributes.mtimeMs;
     const again = await runGspot(sandbox.path, ['apply']);
     expect(again.code, again.stdout + again.stderr).toBe(0);
-    expect(statSync(join(sandbox.path, 'AGENTS.md')).mtimeMs).toBe(modified);
+    const current = await stat(join(sandbox.path, 'AGENTS.md'));
+    expect(current.mtimeMs).toBe(modified);
 });
 
 test('an agent destination outside the repository is refused', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([]) });
-    const before = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
+    const before = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
     const refused = await runGspot(sandbox.path, ['set', 'agent_rules.instruction_files', '../outside.md']);
     expect(refused.code).toBe(2);
-    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(before);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(before);
 });
 
 test('init deletes CLAUDE.md and moves its text to the end of AGENTS.md', async () => {
@@ -68,14 +72,14 @@ test('init deletes CLAUDE.md and moves its text to the end of AGENTS.md', async 
     expect(plan.write.map((entry) => entry.path)).toContain('AGENTS.md');
     expect(plan.write.map((entry) => entry.path)).not.toContain('GEMINI.md');
     expect(plan.remove).toContainEqual({ path: 'CLAUDE.md', note: 'its own text moves to the end of AGENTS.md' });
-    expect(readFileSync(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe('# Claude notes\n\nRun the tests.\n');
+    expect(await readFile(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe('# Claude notes\n\nRun the tests.\n');
     const installed = await runGspot(sandbox.path, INIT);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
-    const agents = readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8');
+    expect(await pathExists(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
+    const agents = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
     expect(currentBlock(agents, { path: 'AGENTS.md', style: 'markdown' })).toContain('WORKING.md');
     expect(agents).toEndWith('<<< -->\n\n## Other instructions\n\n# Claude notes\n\nRun the tests.\n');
-    expect(readFileSync(join(sandbox.path, 'GEMINI.md'), 'utf8')).toBe('# Keep this\n');
+    expect(await readFile(join(sandbox.path, 'GEMINI.md'), 'utf8')).toBe('# Keep this\n');
 });
 
 test('disabled agent rules preserve authored instructions during init, preview, and later apply', async () => {
@@ -88,15 +92,15 @@ test('disabled agent rules preserve authored instructions during init, preview, 
     const { plan } = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.write.map(({ path }) => path)).not.toContain('AGENTS.md');
     expect(plan.remove.map(({ path }) => path)).not.toContain('CLAUDE.md');
-    expect(readFileSync(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe(authored);
+    expect(await readFile(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe(authored);
     const installed = await runGspot(sandbox.path, args);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(readFileSync(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe(authored);
-    expect(existsSync(join(sandbox.path, 'AGENTS.md'))).toBe(false);
+    expect(await readFile(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe(authored);
+    expect(await pathExists(join(sandbox.path, 'AGENTS.md'))).toBe(false);
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(readFileSync(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe(authored);
-    expect(existsSync(join(sandbox.path, 'AGENTS.md'))).toBe(false);
+    expect(await readFile(join(sandbox.path, 'CLAUDE.md'), 'utf8')).toBe(authored);
+    expect(await pathExists(join(sandbox.path, 'AGENTS.md'))).toBe(false);
 });
 
 test('apply moves an installed CLAUDE.md once and drops the copy of the block', async () => {
@@ -104,24 +108,26 @@ test('apply moves an installed CLAUDE.md once and drops the copy of the block', 
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([]), 'CLAUDE.md': '# Claude notes\n' });
     const first = await runGspot(sandbox.path, ['apply']);
     expect(first.code, first.stdout + first.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
-    const moved = readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8');
+    expect(await pathExists(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
+    const moved = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
     // A `CLAUDE.md` that holds the block and text `AGENTS.md` already has goes without a second copy.
     await createFileTree(sandbox.path, { 'CLAUDE.md': moved });
     const second = await runGspot(sandbox.path, ['apply']);
     expect(second.code, second.stdout + second.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
-    expect(readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8')).toBe(moved);
+    expect(await pathExists(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
+    const current = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
+    expect(current).toBe(moved);
     expect(moved.match(/## Other instructions/gu)).toHaveLength(1);
 });
 
 test.skipIf(!isPosix)('init deletes a CLAUDE.md link and moves nothing', async () => {
     await using sandbox = await testdir();
-    symlinkSync('AGENTS.md', join(sandbox.path, 'CLAUDE.md'));
+    await symlink('AGENTS.md', join(sandbox.path, 'CLAUDE.md'));
     const installed = await runGspot(sandbox.path, INIT);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    expect(existsSync(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
-    expect(readFileSync(join(sandbox.path, 'AGENTS.md'), 'utf8')).not.toContain('## Other instructions');
+    expect(await pathExists(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
+    const instructions = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
+    expect(instructions).not.toContain('## Other instructions');
 });
 
 test('generated attributes preserve LF through autocrlf checkout', async () => {
@@ -134,7 +140,7 @@ test('generated attributes preserve LF through autocrlf checkout', async () => {
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const path = '.gspot/rules/general/engineering/agent/WORKING.md';
-    const bytes = readFileSync(join(sandbox.path, path));
+    const bytes = await readFile(join(sandbox.path, path));
     expect(git(sandbox.path, ['add', '--', '.gitattributes', path]).code).toBe(0);
     const attributes = git(sandbox.path, ['check-attr', 'text', 'eol', 'linguist-generated', '--', path]);
     expect(attributes.code, attributes.stderr).toBe(0);
@@ -143,8 +149,9 @@ test('generated attributes preserve LF through autocrlf checkout', async () => {
         `${path}: eol: lf`,
         `${path}: linguist-generated: set`,
     ]);
-    rmSync(join(sandbox.path, path));
+    await rm(join(sandbox.path, path));
     const checked = git(sandbox.path, ['-c', 'core.autocrlf=true', 'checkout-index', '--force', '--', path]);
     expect(checked.code, checked.stderr).toBe(0);
-    expect(readFileSync(join(sandbox.path, path))).toStrictEqual(bytes);
+    const checkedBytes = await readFile(join(sandbox.path, path));
+    expect(checkedBytes).toStrictEqual(bytes);
 });

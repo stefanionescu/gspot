@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { namingRuleSchema, shippedNamingSchema } from '#cli/parsers/schema/naming.ts';
+import type { shippedNamingSchema, namingOverrideSchema } from '#cli/parsers/schema/naming.ts';
 
 /** The validated built-in naming policy. */
 export type NamingTerms = z.infer<typeof shippedNamingSchema>;
@@ -8,7 +8,7 @@ export type NamingTerms = z.infer<typeof shippedNamingSchema>;
 export type NamingLanguage = NamingTerms['languages'][string];
 
 /** One path-specific naming rule in policy or shipped configuration data. */
-export type NamingTermRule = z.infer<typeof namingRuleSchema>;
+export type NamingOverride = z.infer<typeof namingOverrideSchema>;
 
 /** One identifier an extractor found. */
 export type Identifier = {

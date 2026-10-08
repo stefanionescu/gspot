@@ -7,9 +7,9 @@ export const CASES: FindingCase[] = [
     {
         check: 'site/size',
         files: {},
-        policy: '[limits.site]\nkilobytes = [{paths = ["**/*.html"], kb = 0}]\n',
+        policy: '[site]\nmax_kilobytes = [{paths = ["**/*.html"], kb = 0}]\n',
         expected: { file: 'gspot.toml', rule: 'size', line: 1 },
-        corrected: { files: {}, policy: '[limits.site]\nkilobytes = [{paths = ["**/*.html"], kb = 10}]\n' },
+        corrected: { files: {}, policy: '[site]\nmax_kilobytes = [{paths = ["**/*.html"], kb = 10}]\n' },
     },
     {
         check: 'site/sitemap',

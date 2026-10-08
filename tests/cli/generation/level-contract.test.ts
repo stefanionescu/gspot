@@ -14,6 +14,7 @@ import type { RuffConfiguration } from '#tests/types/generation/configuration-fi
 import {
     RUFF_PREVIEW_RULES,
     ESLINT_REJECTED_SELECTIONS,
+    UNSUPPORTED_PYTHON_OPTIONS,
     MARKDOWNLINT_REJECTED_SELECTIONS,
 } from '#tests/config/cli/generation/level-contract.ts';
 
@@ -21,14 +22,14 @@ test('a scope resolves its own tool settings over the root defaults', async () =
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python', 'pytest'], {
-            tables: '[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.pytest.coverage]\nlines = 91\n[scope.tools.ruff]\ndocstring_convention = "numpy"\n',
+            tables: '[scope."app"]\nconfigurations = []\n[scope."app".coverage]\nlines = 91\n[scope."app".tools.ruff]\ndocstring_convention = "numpy"\n',
             level: 'all',
         }),
         'app/main.py': 'value = 1\n',
     });
     const session = await openSession(sandbox.path);
     const nested = session.scopes.find((scope) => scope.scope.path === 'app')!;
-    expect(nested.view.settings['tools.pytest.coverage.lines']).toBe(91);
+    expect(nested.view.settings['coverage.lines']).toBe(91);
     expect(nested.view.settings['tools.ruff.docstring_convention']).toBe('numpy');
 });
 
@@ -65,55 +66,30 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
         expect(JSON.parse(types)).toHaveProperty(rule, 'none');
 });
 
-test('experimental activation is refused before generation', () => {
-    for (const settings of [
-        '[tools.ruff.verbatim]\npreview = true\nreason = "Project preference"',
-        '[tools.ruff.verbatim.lint]\npreview = true\nreason = "Project preference"',
-        '[tools.ruff.verbatim.format]\npreview = true\nreason = "Project preference"',
-    ]) {
-        const text = buildPolicy(['python'], { tables: settings, level: 'all' });
-        expect(() => {
-            parseStrictPolicy(text);
-        }).toThrow('preview');
-    }
-});
-
-test.each(['recommended', 'all'] as const)(
-    '%s preserves stable native options and refuses experiments in every scope',
-    (level) => {
-        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
-            const table = scope === '' ? 'tools' : 'scope.tools';
-            const settings = `${scope}[${table}.basedpyright.verbatim]\nenableExperimentalFeatures = false\nreason = "Project preference"`;
-            expect(() => parseStrictPolicy(buildPolicy(['python'], { level, tables: settings }))).not.toThrow();
-            expect(() =>
-                parseStrictPolicy(buildPolicy(['python'], { level, tables: settings.replace('false', 'true') })),
-            ).toThrow('experimental Basedpyright');
-        }
-    },
-);
-
-test.each(['recommended', 'all'] as const)('%s refuses native rule selection as another coverage choice', (level) => {
-    for (const section of ['tools.ruff.verbatim', 'tools.ruff.verbatim.lint'])
-        for (const key of ['select', 'extend-select']) {
-            const text = buildPolicy(['python'], {
+test.each(['recommended', 'all'] as const)('%s refuses unsupported Python verbatim options in every scope', (level) => {
+    for (const scope of ['', 'app']) {
+        const prefix = scope === '' ? '' : `scope.${scope}.`;
+        for (const { tool, options, diagnostic } of UNSUPPORTED_PYTHON_OPTIONS) {
+            const source = buildPolicy(['python'], {
                 level,
-                tables: `[${section}]\n${key} = ["N802"]\nreason = "Project preference"`,
+                tables: `[${prefix}tools.${tool}.verbatim]\n${options}\n`,
             });
-            expect(() => parseStrictPolicy(text)).toThrow('Ruff rule selection comes from level recommended or all');
+            expect(() => parseStrictPolicy(source)).toThrow(diagnostic.replace('[tools', `[${prefix}tools`));
         }
+    }
 });
 
 test.each(['recommended', 'all'] as const)(
     '%s keeps ShellCheck rule selection with its coverage level and ignores',
     (level) => {
-        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
-            const table = scope === '' ? 'tools' : 'scope.tools';
+        for (const scope of ['', '[scope."app"]\n']) {
+            const table = scope === '' ? 'tools' : 'scope.app.tools';
             for (const option of ['enable = "all"', 'disable = "SC2086"'])
                 expect(() =>
                     parseStrictPolicy(
                         buildPolicy(['bash'], {
                             level,
-                            tables: `${scope}[${table}.shellcheck.verbatim]\n${option}\nreason = "Project preference"`,
+                            tables: `${scope}[${table}.shellcheck.verbatim]\n${option}`,
                         }),
                     ),
                 ).toThrow('ShellCheck rule selection');
@@ -144,8 +120,8 @@ test('switching levels restores generated defaults and agent instructions', asyn
 test.each(['recommended', 'all'] as const)(
     '%s refuses authored ESLint coverage choices in root and scoped native options',
     (level) => {
-        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
-            const table = scope === '' ? 'tools' : 'scope.tools';
+        for (const scope of ['', '[scope."app"]\n']) {
+            const table = scope === '' ? 'tools' : 'scope.app.tools';
             for (const selection of ESLINT_REJECTED_SELECTIONS) {
                 const tables = `${scope}[${table}.eslint.rules]\neqeqeq = ${selection}\n`;
                 expect(() => parseStrictPolicy(buildPolicy(['javascript'], { level, tables }))).toThrow(
@@ -153,7 +129,7 @@ test.each(['recommended', 'all'] as const)(
                 );
             }
             for (const key of ['rules', 'overrides', 'extends']) {
-                const tables = `${scope}[${table}.eslint.verbatim]\n${key} = []\nreason = "Project preference"\n`;
+                const tables = `${scope}[${table}.eslint.verbatim]\n${key} = []\n`;
                 expect(() => parseStrictPolicy(buildPolicy(['javascript'], { level, tables }))).toThrow(
                     'ESLint rule selection',
                 );
@@ -165,8 +141,8 @@ test.each(['recommended', 'all'] as const)(
 test.each(['recommended', 'all'] as const)(
     '%s refuses authored Markdown coverage choices in root and scoped settings',
     (level) => {
-        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
-            const table = scope === '' ? 'tools' : 'scope.tools';
+        for (const scope of ['', '[scope."app"]\n']) {
+            const table = scope === '' ? 'tools' : 'scope.app.tools';
             for (const selection of MARKDOWNLINT_REJECTED_SELECTIONS)
                 expect(() =>
                     parseStrictPolicy(
@@ -180,7 +156,7 @@ test.each(['recommended', 'all'] as const)(
                 parseStrictPolicy(
                     buildPolicy(['markdown'], {
                         level,
-                        tables: `${scope}[${table}.markdownlint.verbatim]\ndefault = true\nreason = "Project preference"\n`,
+                        tables: `${scope}[${table}.markdownlint.verbatim]\ndefault = true\n`,
                     }),
                 ),
             ).toThrow('verbatim');
@@ -191,8 +167,8 @@ test.each(['recommended', 'all'] as const)(
 test.each(['recommended', 'all'] as const)(
     '%s refuses authored Stylelint warning severity in root and scoped native options',
     (level) => {
-        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
-            const table = scope === '' ? 'tools' : 'scope.tools';
+        for (const scope of ['', '[scope."app"]\n']) {
+            const table = scope === '' ? 'tools' : 'scope.app.tools';
             const tables = `${scope}[${table}.stylelint.rules]\ncolor-hex-length = ["short", { severity = "warning" }]\n`;
             expect(() => parseStrictPolicy(buildPolicy(['css'], { level, tables }))).toThrow(
                 'Stylelint rule selection',

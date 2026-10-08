@@ -67,8 +67,8 @@ test.each(SUPPRESSION_CASES)(
         const policy = buildPolicy(['javascript'], { level, tables: `require_reasons = ${String(requireReasons)}\n` });
         await createFileTree(sandbox.path, { ...SUPPRESSION_PROJECT, 'gspot.toml': policy });
         const eslint = await createEslint(sandbox.path);
-        const resolved = (await eslint.calculateConfigForFile(join(sandbox.path, 'unused.js'))) as Linter.Config;
-        expect(resolved.plugins?.['@eslint-community/eslint-comments']).toBe(
+        const computed = (await eslint.calculateConfigForFile(join(sandbox.path, 'unused.js'))) as Linter.Config;
+        expect(computed.plugins?.['@eslint-community/eslint-comments']).toBe(
             requireReasons ? eslintComments : undefined,
         );
         const packages = toolProjectSchema.parse(await Bun.file(join(sandbox.path, '.gspot/package.json')).json());

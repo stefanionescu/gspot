@@ -3,10 +3,10 @@ import { readSource } from '#cli/platform/source.ts';
 import { parseBashScript } from '#cli/parsers/bash.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
+import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
 import { isToolProjectPath } from '#cli/repository/selectors.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { ScriptFile, ScriptIndex } from '#cli/types/checks/language/bash.ts';
-import { SCRIPT_TAG, ENTRY_FUNCTIONS } from '#cli/config/checks/language/bash.ts';
 
 const SCRIPT_MEMO = { create: () => new Map<string, Promise<ScriptIndex>>() };
 
@@ -51,15 +51,6 @@ export function getScriptIndex(input: CheckInput): Promise<ScriptIndex> {
         perScope.set(key, index);
     }
     return index;
-}
-
-/**
- * Read the language entry functions and the project's additions once per caller.
- * @param input the validated scope settings
- * @returns functions exempt from file-local conventions
- */
-export function entryFunctions(input: CheckInput): Set<string> {
-    return new Set([...ENTRY_FUNCTIONS, ...(input.view.settings['bash.entry_functions'] as string[])]);
 }
 
 /**

@@ -1,17 +1,18 @@
 // Child processes of the tests: waiting for one to leave, and the source paths a child imports beside its mocks.
 import { join } from 'node:path';
-import { existsSync } from 'node:fs';
+import { pathExists } from '#tests/harness/preservation.ts';
+import { remainingTestTime } from '#tests/harness/command.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
+import { EXIT_POLL_MS, READY_POLL_MS } from '#tests/config/harness/process.ts';
 import type { CapturedChild, CapturedProcess } from '#tests/types/harness/process.ts';
-import { EXIT_POLL_MS, READY_POLL_MS, EXIT_TIMEOUT_MS, READY_TIMEOUT_MS } from '#tests/config/harness/process.ts';
 
 /**
- * Wait up to three seconds for a child to exit, then kill it and throw if it remains alive.
+ * Wait within the remaining test time, then kill a child that remains alive.
  * @param pid the owned child process ID
  */
 export async function waitForExit(pid: number): Promise<void> {
     if (!Number.isSafeInteger(pid) || pid <= 0) throw new Error(`Invalid child PID: ${String(pid)}.`);
-    const deadline = performance.now() + EXIT_TIMEOUT_MS;
+    const deadline = performance.now() + remainingTestTime();
     while (performance.now() < deadline) {
         try {
             process.kill(pid, 0);
@@ -37,9 +38,9 @@ export function getCliSourcePath(path: string): string {
 
 /** Polls a child-written readiness marker until its bounded startup deadline. */
 export async function waitForFile(path: string): Promise<boolean> {
-    const deadline = performance.now() + READY_TIMEOUT_MS;
-    while (!existsSync(path) && performance.now() < deadline) await Bun.sleep(READY_POLL_MS);
-    return existsSync(path);
+    const deadline = performance.now() + remainingTestTime();
+    while (!(await pathExists(path)) && performance.now() < deadline) await Bun.sleep(READY_POLL_MS);
+    return await pathExists(path);
 }
 
 /** Drains a child's output and guarantees termination when a scenario leaves its scope. */

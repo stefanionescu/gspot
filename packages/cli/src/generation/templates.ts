@@ -1,21 +1,23 @@
 // Render configuration assets with the effective settings and inputs of their scope.
 import { Eta } from 'eta';
+import { relative } from 'node:path/posix';
 import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { pythonInputs } from '#cli/generation/python.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 import { collectPins } from '#cli/configurations/pins.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
 import { buildJsconfig } from '#cli/generation/jsconfig.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { packageWorkspaces } from '#cli/repository/scopes.ts';
+import { readSwiftVersion } from '#cli/parsers/swift/source.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
 import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
 import { eslintInputs } from '#cli/generation/eslint/configuration.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
-import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
 import { styleRules, proseFormats } from '#cli/generation/vale-styles.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
@@ -23,6 +25,7 @@ import { readManifests, getProjectDependencies } from '#cli/repository/manifests
 import { tablesFor, policyValue, harnessFolders } from '#cli/policy/settings/lookup.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting.ts';
 import type { TemplateInputs, ScopeTemplateInputs } from '#cli/types/generation/templates.ts';
+import { scopeIgnorePatterns, selectedIgnorePaths } from '#cli/generation/ignore-patterns.ts';
 
 import {
     ETA_OPTIONS,
@@ -52,7 +55,9 @@ function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): st
 }
 
 function scopeInputs(input: ScopeTemplateInputs) {
-    const { policy, scopes, selection, manifests, projects } = input;
+    const { session, selection, manifests, projects } = input;
+    const { scopes } = session;
+    const { policy } = session.policyFiles;
     const { view } = selection;
     const tools = collectPins(manifests);
     const names = tools.filter((tool) => tool.kind !== 'library').map((tool) => tool.name);
@@ -71,8 +76,10 @@ function scopeInputs(input: ScopeTemplateInputs) {
         });
     const formatting = { policy, format: view.format, verbatim: view.verbatim('prettier'), plugins };
     return {
+        ...pythonInputs(session, selection),
         prettierConfig: (targetPath: string) => prettierConfiguration({ ...formatting, targetPath }),
         scope: selection.scope.path,
+        relative,
         scopeDependencies: Object.keys(getProjectDependencies(projects, selection.scope.path)),
         scopes: scopes
             .filter((entry) => entry.scope.path !== '')
@@ -91,13 +98,11 @@ function scopeInputs(input: ScopeTemplateInputs) {
                     verbatim: entry.view.verbatim,
                     harness: harnessFolders(policy, entry.scope.path)[0],
                 })),
+        ignoredPaths: selectedIgnorePaths(scopes),
         configurations: view.configurations,
-        ruffRules: selection.selected.flatMap((manifest) => [
-            ...manifest.ruff_rules.recommended,
-            ...(policy.level === 'all' ? manifest.ruff_rules.all : []),
-        ]),
         policy: policy,
         format: view.format,
+        roles: view.roles,
         settings: view.settings,
         options: view.options,
         entryFiles: (scope: string) => entryFiles(policy, scopes, scope),
@@ -125,7 +130,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
     const { policy } = session.policyFiles;
     const sourceFiles = session.repository.files;
     const { view } = selection;
-    const compilerOptions = Object.entries(requiredTsconfigOptions(policy.level, view.configurations)).filter(
+    const compilerOptions = Object.entries(requiredTsconfigOptions(policy.level, selection.selected)).filter(
         ([option]) => !view.rulesOff('typescript/tsconfig').includes(option),
     );
     const compilerContext = {
@@ -135,19 +140,18 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
         scopeEntries: scopes.map((entry) => entry.scope),
         scope: selection.scope.path,
     };
-    const files = (extension: string): string[] =>
-        sourceFiles.filter((file) => file.path.endsWith(extension) && file.kind === 'source').map((file) => file.path);
     return {
-        ...scopeInputs({ policy, scopes, selection, manifests, projects: readManifests(root, sourceFiles) }),
+        ...scopeInputs({ session, selection, manifests, projects: readManifests(root, sourceFiles) }),
         ...eslintInputs(session, selection),
         javascriptConfig: (target) =>
             buildJsconfig({
                 ...compilerContext,
                 declarationPaths: policy.declarations.flatMap((entry) => entry.paths),
-                importStyles: view.options('tools.eslint')['import_extensions'] as Record<string, string>,
+                importStyles: view.options('tools.eslint')['import_extensions'],
                 target,
             }),
         scopeIgnorePatterns,
+        swiftVersion: () => readSwiftVersion(compilerContext, view.options('swift').xcode_project),
         editorconfigOverrides: () => editorconfigOverrides(policy),
         isAll: policy.level === 'all',
         typescriptConfig: (target) =>
@@ -177,7 +181,8 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
         yaml: stringifyYaml,
         tomlDate: TomlDate,
         packageWorkspaces: () => packageWorkspaces(root),
-        files,
+        files: (extension) =>
+            sourceFiles.flatMap((file) => (file.path.endsWith(extension) && file.kind === 'source' ? [file.path] : [])),
     };
 }
 

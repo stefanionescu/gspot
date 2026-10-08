@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import * as inspect from '#cli/tools/inspect.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
@@ -40,7 +40,7 @@ test('doctor identifies unowned generated-directory files that apply preserves',
         suggestions: { unowned: [containing({ path: '.gspot/authored.json' })] },
     });
     expect(result.text).toContain('.gspot/authored.json');
-    expect(readFileSync(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
+    expect(await readFile(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
 });
 
 test('doctor excludes private tool manifests from language detection and detects an authored Python project', async () => {
@@ -56,14 +56,14 @@ test('doctor excludes private tool manifests from language detection and detects
     expect(detected).not.toContain('python');
     expect(detected).not.toContain('react');
     expect(detected).not.toContain('files');
-    writeFileSync(join(sandbox.path, 'pyproject.toml'), python);
+    await writeFile(join(sandbox.path, 'pyproject.toml'), python);
     const authored = await doctorCommand(sandbox.path);
     expect(authored.json).toMatchObject({
         suggestions: {
             detected: containingAll([containing({ configuration: 'python', evidence: 'pyproject.toml' })]),
         },
     });
-    expect(readFileSync(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);
+    expect(await readFile(join(sandbox.path, '.gspot/pyproject.toml'), 'utf8')).toBe(python);
 });
 
 test('doctor reports a new Python file after setup with the command that adds its configuration', async () => {
@@ -76,7 +76,7 @@ test('doctor reports a new Python file after setup with the command that adds it
         using log = openOwnership(sandbox.path);
         writeOutputs(await openSession(sandbox.path), log);
     }
-    writeFileSync(join(sandbox.path, 'service.py'), 'print("hello")\n');
+    await writeFile(join(sandbox.path, 'service.py'), 'print("hello")\n');
     const result = await doctorCommand(sandbox.path);
     const { suggestions } = result.json as DoctorReport;
     expect(suggestions.detected).toContainEqual(containing({ configuration: 'python', command: 'gspot add python' }));
@@ -136,7 +136,7 @@ test('doctor detects installed test frameworks instead of recommending a differe
     });
     const currentResult = await doctorCommand(sandbox.path);
     const current = currentResult.json as DoctorReport;
-    expect(current.suggestions.recommended.map((row) => row.configuration)).not.toContain('vitest');
+    expect(current.suggestions.suggested.map((row) => row.configuration)).not.toContain('vitest');
     expect(current.suggestions.detected.map((row) => row.configuration)).toContain('jest');
     await Bun.write(
         join(sandbox.path, 'package.json'),

@@ -1,17 +1,18 @@
 export const KEY = 'custom"key\\name\ncafé';
 export const VALUE = 'yes: # quoted "value"';
-export const PROJECT = 'ios/App: # café.xcodeproj';
+export const PROJECT = 'ios/App # café.xcodeproj';
 export const SCHEME = 'null';
 export const REGISTRIES = ['null', 'registry.example.com:5000'];
 
 export const SERIALIZATION_POLICY = {
     configurations: ['typescript', 'format', 'markdown', 'files', 'docker', 'swift', 'xcode'],
+    reasons: { 'tools.prettier.verbatim': 'An upstream option.', 'tools.knip.verbatim': 'An upstream option.' },
+    swift: { xcode_project: PROJECT, xcode_scheme: SCHEME },
     tools: {
-        prettier: { verbatim: { reason: 'An upstream option.', [KEY]: VALUE } },
-        knip: { verbatim: { reason: 'An upstream option.', [KEY]: VALUE } },
+        prettier: { verbatim: { [KEY]: VALUE } },
+        knip: { verbatim: { [KEY]: VALUE } },
         markdownlint: { rules: { MD044: { names: [KEY, VALUE] } } },
         yamllint: { rules: { truthy: { 'allowed-values': ['yes', 'no'] }, indentation: { spaces: 'consistent' } } },
-        xcode: { project: PROJECT, scheme: SCHEME },
         hadolint: { trusted_registries: REGISTRIES },
     },
 };

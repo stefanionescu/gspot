@@ -47,8 +47,5 @@ export type SchemaState = Pick<Schema, 'tables' | 'secured'> & {
 
 export type Location = { migration: Migration; statement: SqlStatementView; table: string };
 
-/** One layout problem of a documented migration. */
-export type DocProblem = { line: number; rule: string; text: string };
-
 /** The documentation section and displayed name of a PostgreSQL statement kind. */
 export type MigrationStatement = { section: string; words: string };

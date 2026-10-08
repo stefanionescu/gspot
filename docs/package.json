@@ -18,5 +18,8 @@
     "description": "Documentation site for the gspot CLI.",
     "devDependencies": {
         "wrangler": "4.141.0"
+    },
+    "engines": {
+        "node": ">=24.2.0"
     }
 }

@@ -2,6 +2,7 @@
 export const LOCKFILES = [
     {
         file: 'bun.lock',
+        configuration: 'javascript',
         client: 'bun',
         runner: true,
         toolProject: true,
@@ -9,9 +10,10 @@ export const LOCKFILES = [
         snapshot: true,
         frozen: ['bun', 'install', '--frozen-lockfile', '--dry-run'],
     },
-    { file: 'bun.lockb', client: 'bun', runner: true },
+    { file: 'bun.lockb', configuration: 'javascript', client: 'bun', runner: true },
     {
         file: 'pnpm-lock.yaml',
+        configuration: 'javascript',
         client: 'pnpm',
         runner: true,
         toolProject: true,
@@ -21,6 +23,7 @@ export const LOCKFILES = [
     },
     {
         file: 'yarn.lock',
+        configuration: 'javascript',
         client: 'yarn',
         runner: true,
         toolProject: true,
@@ -30,6 +33,7 @@ export const LOCKFILES = [
     },
     {
         file: 'package-lock.json',
+        configuration: 'javascript',
         client: 'npm',
         runner: true,
         toolProject: true,
@@ -37,13 +41,20 @@ export const LOCKFILES = [
         snapshot: true,
         frozen: ['npm', 'ci', '--dry-run', '--ignore-scripts'],
     },
-    { file: 'npm-shrinkwrap.json', client: 'npm' },
-    { file: 'uv.lock', client: 'uv', parsed: true, snapshot: true, frozen: ['uv', 'lock', '--check'] },
-    { file: 'poetry.lock', client: 'poetry', parsed: true },
-    { file: 'pdm.lock', client: 'pdm', parsed: true },
+    { file: 'npm-shrinkwrap.json', configuration: 'javascript', client: 'npm' },
+    {
+        file: 'uv.lock',
+        configuration: 'python',
+        client: 'uv',
+        parsed: true,
+        snapshot: true,
+        frozen: ['uv', 'lock', '--check'],
+    },
+    { file: 'poetry.lock', configuration: 'python', client: 'poetry', parsed: true },
+    { file: 'pdm.lock', configuration: 'python', client: 'pdm', parsed: true },
     { file: 'Cargo.lock', client: 'cargo' },
     { file: 'go.sum', client: 'go' },
     { file: 'Gemfile.lock', client: 'bundler' },
-    { file: 'Package.resolved', client: 'swift', snapshot: true },
+    { file: 'Package.resolved', configuration: 'swift', client: 'swift', snapshot: true },
     { file: 'Podfile.lock', client: 'cocoapods' },
 ] as const;

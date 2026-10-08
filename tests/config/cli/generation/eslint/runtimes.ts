@@ -38,7 +38,7 @@ export const FRAMEWORK_RUNTIME_CASES = [
 
 /** Authored values that must fail validation before a render template runs. */
 export const INVALID_RUNTIMES = [
-    'browesr',
+    'desktop',
     'serviceworker',
     'node }; globalThis.injected = true; //',
     'node"\n/* café */',

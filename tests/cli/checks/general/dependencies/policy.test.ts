@@ -8,7 +8,6 @@ import type { RunReport } from '#cli/types/execution/check.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { INVALID, REPOSITORY } from '#tests/config/cli/checks/general/dependencies/policy.ts';
 
@@ -16,13 +15,8 @@ describe('the dependencies configuration', () => {
     const resources = new AsyncDisposableStack();
     let testRepository: OwnedTestRepository;
     beforeAll(async () => {
-        const budget = openTestBudget(suiteTimeout());
-        try {
-            testRepository = resources.use(await createTestRepository(REPOSITORY, runGspot));
-        } finally {
-            budget[Symbol.dispose]();
-        }
-    }, suiteTimeout());
+        testRepository = resources.use(await createTestRepository(REPOSITORY, runGspot));
+    });
     afterAll(async () => {
         await resources.disposeAsync();
     });
@@ -65,7 +59,7 @@ test('Bun release-age policy reads each project scope and keeps findings inside 
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], {
             level: 'all',
-            tables: '[[scope]]\npath = "apps/first"\nconfigurations = ["dependencies"]\n[[scope]]\npath = "apps/second"\nconfigurations = ["dependencies"]\n[scope.dependencies]\nmin_release_age_days = 14\n',
+            tables: '[scope."apps/first"]\nconfigurations = ["dependencies"]\n[scope."apps/second"]\nconfigurations = ["dependencies"]\n[scope."apps/second".dependencies]\nmin_release_age_days = 14\n',
         }),
         'apps/first/bun.lock': '{}\n',
         'apps/first/bunfig.toml': '[install]\nminimumReleaseAge = 604800\n',

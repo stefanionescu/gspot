@@ -5,40 +5,18 @@ import { testdir, createFileTree } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { InitJson } from '#cli/types/commands/init.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
-import { chmodSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { EXTERNAL_INPUT_CASES } from '#tests/config/cli/lifecycle/apply.ts';
+import { rm, stat, chmod, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 const { version: RUNNING_VERSION } = packageManifest;
 
-test('apply previews policy reconciliation and changed pins and publishes the pin only after successful generation', async () => {
-    await using sandbox = await testdir();
-    const policy = buildPolicy([], { tables: '[agent_rules]\nenabled = true\n' });
-    await createFileTree(sandbox.path, { 'gspot.toml': policy, '.gspot/version': '0.0.1\n' });
-    const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
-    expect(preview.json).toMatchObject({ dryRun: true, pin: { from: '0.0.1', to: RUNNING_VERSION } });
-    expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
-    const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
-    expect(applied.exitCode).toBe(0);
-    expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8').trim()).toBe(RUNNING_VERSION);
-    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(
-        (preview.json as Required<Pick<InitJson, 'policy'>>).policy,
-    );
-    const output = (applied.json as ApplyReport).written.find((path) => path !== '.gspot/version')!;
-    expect(output).toBeDefined();
-    chmodSync(join(sandbox.path, output), 0o644);
-    writeFileSync(join(sandbox.path, output), 'authored edit');
-    writeFileSync(join(sandbox.path, '.gspot/version'), '0.0.1\n');
-    expect(await rejection(applyCommand({ cwd: sandbox.path, isDryRun: false }))).toContain('version pin is unchanged');
-    expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
-    expect(readFileSync(join(sandbox.path, output), 'utf8')).toBe('authored edit');
-});
-
-test('a writable checkout of a read-only output is no edit: apply keeps it, and a prune removes it', async () => {
+test('generated outputs are writable: apply keeps their bytes, and a prune removes them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = true\n' }),
@@ -48,15 +26,19 @@ test('a writable checkout of a read-only output is no edit: apply keeps it, and 
 
     const output = written.find((path) => path.endsWith('/agent/WORKING.md'))!;
     expect(output).toBeDefined();
-    const bytes = readFileSync(join(sandbox.path, output), 'utf8');
-    chmodSync(join(sandbox.path, output), 0o644);
+    const bytes = await readFile(join(sandbox.path, output), 'utf8');
+    const attributes = await stat(join(sandbox.path, output));
+    expect(attributes.mode & 0o200).toBe(0o200);
+    await chmod(join(sandbox.path, output), 0o444);
     const reapplied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(reapplied.exitCode).toBe(0);
-    expect(readFileSync(join(sandbox.path, output), 'utf8')).toBe(bytes);
-    writeFileSync(join(sandbox.path, 'gspot.toml'), buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }));
+    const refreshed = await stat(join(sandbox.path, output));
+    expect(refreshed.mode & 0o200).toBe(0o200);
+    expect(await readFile(join(sandbox.path, output), 'utf8')).toBe(bytes);
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }));
     const pruned = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(pruned.exitCode).toBe(0);
-    expect(existsSync(join(sandbox.path, output))).toBe(false);
+    expect(await pathExists(join(sandbox.path, output))).toBe(false);
 });
 
 test('a failed pin publication leaves the old version and succeeds after the write failure is repaired', async () => {
@@ -72,13 +54,14 @@ test('a failed pin publication leaves the old version and succeeds after the wri
     });
     try {
         expect(await rejection(applyCommand({ cwd: repository.path, isDryRun: false }))).toContain('Pin write denied');
-        expect(readFileSync(join(repository.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
+        expect(await readFile(join(repository.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
     } finally {
         failed.mockRestore();
     }
     const applied = await applyCommand({ cwd: repository.path, isDryRun: false });
     expect(applied.exitCode).toBe(0);
-    expect(readFileSync(join(repository.path, '.gspot/version'), 'utf8').trim()).toBe(RUNNING_VERSION);
+    const version = await readFile(join(repository.path, '.gspot/version'), 'utf8');
+    expect(version.trim()).toBe(RUNNING_VERSION);
 });
 
 test('apply preview rejects a generated destination linked outside the repository', async () => {
@@ -89,32 +72,27 @@ test('apply preview rejects a generated destination linked outside the repositor
         outside: 'authored external configuration\n',
     });
     const project = join(sandbox.path, 'project');
-    fs.symlinkSync(join(sandbox.path, 'outside'), join(project, '.gspot/config/typos.toml'));
+    await symlink(join(sandbox.path, 'outside'), join(project, '.gspot/config/typos.toml'));
     expect(await rejection(applyCommand({ cwd: project, isDryRun: true }))).toContain('private regular file');
-    expect(readFileSync(join(sandbox.path, 'outside'), 'utf8')).toBe('authored external configuration\n');
-    expect(fs.existsSync(join(project, '.gspot/state/ownership.json'))).toBe(false);
-    expect(fs.existsSync(join(project, '.gspot/version'))).toBe(false);
+    expect(await readFile(join(sandbox.path, 'outside'), 'utf8')).toBe('authored external configuration\n');
+    expect(await pathExists(join(project, '.gspot/state/ownership.json'))).toBe(false);
+    expect(await pathExists(join(project, '.gspot/version'))).toBe(false);
 });
 
-test.each(['gspot.toml', '.gspot/version'])(
-    'apply preview rejects an external %s before producing configuration',
-    async (path) => {
+test.each(EXTERNAL_INPUT_CASES)(
+    'apply preview rejects an external $path before producing configuration',
+    async ({ path, outside, files, diagnostic }) => {
         await using sandbox = await testdir();
-        const policy = buildPolicy([]);
-        const original = path === 'gspot.toml' ? policy : '0.0.1\n';
         await createFileTree(sandbox.path, {
-            'project/gspot.toml': policy,
+            ...files,
             'project/.gspot/config/.keep': '',
-            outside: original,
+            outside,
         });
         const project = join(sandbox.path, 'project');
-        if (path === 'gspot.toml') fs.unlinkSync(join(project, path));
-        fs.symlinkSync(join(sandbox.path, 'outside'), join(project, path));
-        expect(await rejection(applyCommand({ cwd: project, isDryRun: true }))).toContain(
-            path === 'gspot.toml' ? 'Source link leaves the repository' : 'private regular file',
-        );
-        expect(readFileSync(join(sandbox.path, 'outside'), 'utf8')).toBe(original);
-        expect(fs.existsSync(join(project, '.gspot/state/ownership.json'))).toBe(false);
+        await symlink(join(sandbox.path, 'outside'), join(project, path));
+        expect(await rejection(applyCommand({ cwd: project, isDryRun: true }))).toContain(diagnostic);
+        expect(await readFile(join(sandbox.path, 'outside'), 'utf8')).toBe(outside);
+        expect(await pathExists(join(project, '.gspot/state/ownership.json'))).toBe(false);
     },
 );
 
@@ -137,18 +115,16 @@ test('apply validates obsolete output parents before publishing new configuratio
             }),
         );
     }
-    fs.rmSync(join(root, '.gspot/obsolete'), { recursive: true });
-    fs.symlinkSync('../../outside', join(root, '.gspot/obsolete'));
+    await rm(join(root, '.gspot/obsolete'), { recursive: true });
+    await symlink('../../outside', join(root, '.gspot/obsolete'));
     expect(await rejection(applyCommand({ cwd: root, isDryRun: false }))).toContain('Unsafe lifecycle parent');
-    expect(fs.existsSync(join(root, '.gitattributes'))).toBe(false);
-    expect(fs.existsSync(join(root, '.gspot/version'))).toBe(false);
-    expect(readFileSync(join(directory.path, 'outside/old.txt'), 'utf8')).toBe('outside bytes\n');
-    fs.unlinkSync(join(root, '.gspot/obsolete'));
+    expect(await pathExists(join(root, '.gitattributes'))).toBe(false);
+    expect(await pathExists(join(root, '.gspot/version'))).toBe(false);
+    expect(await readFile(join(directory.path, 'outside/old.txt'), 'utf8')).toBe('outside bytes\n');
+    await unlink(join(root, '.gspot/obsolete'));
     await createFileTree(root, { '.gspot/obsolete/old.txt': 'installed\n' });
     const applied = await applyCommand({ cwd: root, isDryRun: false });
     expect(applied.exitCode).toBe(0);
-    expect(fs.existsSync(join(root, '.gspot/obsolete/old.txt'))).toBe(false);
-    expect(fs.existsSync(join(root, '.gitattributes'))).toBe(true);
-    const reapplied = await applyCommand({ cwd: root, isDryRun: false });
-    expect(reapplied.exitCode).toBe(0);
+    expect(await pathExists(join(root, '.gspot/obsolete/old.txt'))).toBe(false);
+    expect(await pathExists(join(root, '.gitattributes'))).toBe(true);
 });

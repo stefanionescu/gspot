@@ -4,10 +4,9 @@ configurations = ["javascript"]
 enabled = false
 [tools.knip]
 entry = ["src/main.js"]
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = ["javascript"]
-[scope.tools.knip]
+[scope."api".tools.knip]
 entry = ["src/main.js"]
 `;
 

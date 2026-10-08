@@ -1,6 +1,9 @@
-<% const root = ['..', '..', ...scope.split('/').filter((part) => part !== '').map(() => '..')].join('/'); const project = scope === '' ? root : `${root}/${scope}`; -%>
 {
     "typeCheckingMode": "off",
+<% if (pythonVenv !== undefined) { -%>
+    "venvPath": <%~ json(pythonScopePath) %>,
+    "venv": <%~ json(pythonVenv) %>,
+<% } -%>
     "enableExperimentalFeatures": false,
     "strictListInference": true,
     "strictSetInference": true,
@@ -103,7 +106,7 @@
     "reportInvalidAbstractMethod": "error",
     "reportSelfClsDefault": "error",
     "reportEmptyAbstractUsage": "error",
-    "include": [<%~ json(project) %>],
-    "extraPaths": [<%~ json(project) %>],
-    "exclude": <%~ json([".venv", "__pycache__", "node_modules", ".gspot", "build", "dist"].map((name) => `${project}/**/${name}`).concat((settings['tools.basedpyright.exclude'] ?? []).flatMap((entry) => (entry.paths ?? []).map((path) => `${root}/${path}`)))) %>
+    "include": [<%~ json(pythonScopePath) %>],
+    "extraPaths": [<%~ json(pythonScopePath) %>],
+    "exclude": <%~ json(pythonExcludes('python/basedpyright')) %>
 }

@@ -1,9 +1,4 @@
-import type { Node } from 'web-tree-sitter';
 import type { Root } from '#cli/types/platform/root.ts';
-import type { SwiftSource } from '#cli/types/parsers/swift.ts';
-
-/** Source comments whose inline documentation positions need native findings restored. */
-export type InlineDocumentation = { source: SwiftSource; comments: Node[]; inline: Node[] };
 
 /** The build of one Swift scope. */
 export type SwiftBuildPlan = {

@@ -14,9 +14,6 @@ export const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
 
 export const DEFAULT_OUTPUT_FORMAT: OutputSpec = { format: 'regex', pattern: DEFAULT_PATTERN };
 
-export const ESLINT_WARN = 1;
-export const ESLINT_ERROR = 2;
-
 /** Semgrep's native source parsing diagnostic exit code. */
 export const SEMGREP_PARSE_EXIT = 3;
 

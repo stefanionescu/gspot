@@ -6,8 +6,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { getTsconfig } from '#cli/parsers/tsconfig.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { aliasesFor } from '#cli/repository/aliases.ts';
+import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import { ALIAS_INPUTS, ALIAS_PROJECT } from '#tests/config/cli/repository/aliases.ts';
 
 test.each(ALIAS_INPUTS)('alias reads report malformed $path', async ({ path, diagnostic }) => {
@@ -22,7 +22,7 @@ test.each(ALIAS_INPUTS)(
     async ({ path, valid }) => {
         await using sandbox = await testdir();
         await using outside = await testdir({ [path]: valid });
-        symlinkSync(join(outside.path, path), join(sandbox.path, path));
+        await symlink(join(outside.path, path), join(sandbox.path, path));
         expect(() => aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toThrow(
             'Source link leaves the repository',
         );
@@ -51,8 +51,8 @@ test('alias reads follow an extends into a linked node_modules package', async (
         'tsconfig.json': '{"extends":"./node_modules/shared-config/tsconfig.json"}',
     });
     await createFileTree(dependency.path, { 'tsconfig.json': '{"compilerOptions":{"strict":true}}' });
-    mkdirSync(join(sandbox.path, 'node_modules'));
-    symlinkSync(dependency.path, join(sandbox.path, 'node_modules/shared-config'), 'dir');
+    await mkdir(join(sandbox.path, 'node_modules'));
+    await symlink(dependency.path, join(sandbox.path, 'node_modules/shared-config'), 'dir');
     expect(aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({});
 });
 
@@ -70,7 +70,7 @@ test('inherited aliases resolve from the configuration that declares them', asyn
     expect(aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({
         '@app/': 'src/',
     });
-    writeFileSync(
+    await writeFile(
         join(sandbox.path, 'configs/tsconfig.json'),
         '{"compilerOptions":{"baseUrl":"../app","paths":{"@app/*":["src/*"]}}}',
     );
@@ -84,7 +84,7 @@ test('generated compiler configurations extend their authored alias owners', asy
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['typescript'], {
             level: 'all',
-            tables: '[[scope]]\npath = "web"\nconfigurations = ["typescript"]\n',
+            tables: '[scope."web"]\nconfigurations = ["typescript"]\n',
         }),
         'web/tsconfig.json': ALIAS_PROJECT['web/tsconfig.json'],
         'web/source.ts': 'export const count = 1;\n',
@@ -108,8 +108,8 @@ test('alias discovery accepts linked authored manifests and inherited compiler c
         'settings/compiler.json': '{"extends":"./settings/base.json"}',
         'settings/base.json': '{"compilerOptions":{"paths":{"#compiler/*":["../app/*"]}}}',
     });
-    symlinkSync('settings/manifest.json', join(sandbox.path, 'package.json'));
-    symlinkSync('settings/compiler.json', join(sandbox.path, 'tsconfig.json'));
+    await symlink('settings/manifest.json', join(sandbox.path, 'package.json'));
+    await symlink('settings/compiler.json', join(sandbox.path, 'tsconfig.json'));
     expect(aliasesFor(sandbox.path, '', { root: sandbox.path, sources: new Map(), memo: new Map() })).toStrictEqual({
         '#package/': 'src/',
         '#compiler/': 'app/',
@@ -136,11 +136,11 @@ test('compiler configuration reads share one run snapshot and isolate roots and 
     expect(getTsconfig(first.path, path, reads)).toBe(initial);
     expect(getTsconfig(second.path, join(second.path, 'tsconfig.json'), reads)?.options.strict).toBe(false);
     expect(() => getTsconfig(second.path, path, reads)).toThrow('Unsafe lifecycle path');
-    writeFileSync(join(first.path, 'base.json'), '{"compilerOptions":{"strict":false}}');
+    await writeFile(join(first.path, 'base.json'), '{"compilerOptions":{"strict":false}}');
     expect(getTsconfig(first.path, path, reads)).toBe(initial);
     const next: ReadCache = { root: first.path, sources: new Map(), memo: new Map() };
     expect(getTsconfig(first.path, path, next)?.options.strict).toBe(false);
-    writeFileSync(join(first.path, 'base.json'), '{');
+    await writeFile(join(first.path, 'base.json'), '{');
     const invalid: ReadCache = { root: first.path, sources: new Map(), memo: new Map() };
     expect(() => getTsconfig(first.path, path, invalid)).toThrow('Cannot read TypeScript configuration');
 });

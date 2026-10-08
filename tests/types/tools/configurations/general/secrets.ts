@@ -1,4 +1,4 @@
-/** The PATH of the pinned tools used by a secrets fixture. */
+/** The PATH of the pinned tools used by a secrets sandbox. */
 export type SecretEnvironment = { PATH: string };
 
 /** Independent clean and leaked commits whose final trees contain no test files. */

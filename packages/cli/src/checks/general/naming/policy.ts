@@ -7,19 +7,19 @@ import { CATEGORY_PARENTS } from '#cli/config/checks/general/naming.ts';
 import { tablesFor, settingValue } from '#cli/policy/settings/lookup.ts';
 import type { Policy, KnownSettings, NamingSettings } from '#cli/types/policy/settings.ts';
 import type { Term, PathRule, CategoryLimits, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
-import type { Identifier, NamingTerms, NamingLanguage, NamingTermRule } from '#cli/types/parsers/naming.ts';
+import type { Identifier, NamingTerms, NamingLanguage, NamingOverride } from '#cli/types/parsers/naming.ts';
 
 function toSet(names: string[] | undefined): Set<string> | undefined {
     return names === undefined || names.length === 0 ? undefined : new Set(names);
 }
 
-function compileRule(rule: NamingTermRule, source: string): PathRule {
+function compileRule(rule: NamingOverride, source: string): PathRule {
     return {
         matches: pathMatcher(rule.paths),
         languages: toSet(rule.languages),
         categories: toSet(rule.categories),
         names: toSet(rule.names),
-        excludes: rule.skip === true,
+        allowed: toSet(rule.allowed),
         isDigitsAllowed: rule.allow_digits === true,
         isRepeatAllowed: rule.allow_repeated_words === true,
         structuralPrefix: rule.ignored_prefix === undefined ? undefined : new RegExp(rule.ignored_prefix, 'u'),
@@ -30,7 +30,8 @@ function compileRule(rule: NamingTermRule, source: string): PathRule {
 
 function reservedTerms(shipped: NamingTerms, naming: NamingSettings): Map<string, string[]> {
     const reserved = new Map<string, string[]>();
-    for (const entry of [...shipped.reserved, ...naming.reserved]) reserved.set(entry.term.toLowerCase(), entry.uses);
+    for (const [term, categories] of Object.entries({ ...shipped.reserved, ...naming.reserved }))
+        reserved.set(term.toLowerCase(), categories);
     return reserved;
 }
 
@@ -93,10 +94,13 @@ export function effectivePolicy(
     const naming: NamingSettings = {
         ...policy.naming,
         banned: [...new Set(tables.flatMap((table) => table?.banned ?? []))],
-        allowed: tables.flatMap((table) => table?.allowed ?? []),
-        reserved: tables.flatMap((table) => table?.reserved ?? []),
-        fixed_keys: tables.flatMap((table) => table?.fixed_keys ?? []),
-        paths: tables.flatMap((table) => table?.paths ?? []),
+        allowed: Object.fromEntries(
+            tables.flatMap((table) => (table === undefined ? [] : Object.entries(table.allowed))),
+        ),
+        reserved: Object.fromEntries(
+            tables.flatMap((table) => (table === undefined ? [] : Object.entries(table.reserved))),
+        ),
+        overrides: tables.flatMap((table) => table?.overrides ?? []),
     };
     const terms = [
         ...Object.entries(shipped.groups).flatMap(([group, { terms }]) =>
@@ -106,22 +110,21 @@ export function effectivePolicy(
     ];
     // The shipped rules first, then what the selected configurations know about their own files, then the repository's.
     const rules = [
-        ...shipped.paths.map((rule, index) => compileRule(rule, `shipped rule ${String(index + 1)}`)),
+        ...shipped.overrides.map((rule, index) => compileRule(rule, `shipped rule ${String(index + 1)}`)),
         ...manifests.flatMap((manifest) =>
-            (manifest.naming?.paths ?? []).map((rule) =>
+            (manifest.naming?.overrides ?? []).map((rule) =>
                 compileRule(compact(rule), `the ${manifest.configuration.name} configuration`),
             ),
         ),
-        ...naming.paths.map((rule, index) => compileRule(rule, `[[naming.paths]] entry ${String(index + 1)}`)),
+        ...naming.overrides.map((rule, index) => compileRule(rule, `[[naming.overrides]] entry ${String(index + 1)}`)),
     ];
     return {
         terms,
         reserved: reservedTerms(shipped, naming),
         allowed: new Map([
             ...shipped.allowed.map((name) => [name, undefined] as const),
-            ...naming.allowed.map((entry) => [entry.name, entry.reason] as const),
+            ...Object.entries(naming.allowed),
         ]),
-        fixedKeys: new Map(naming.fixed_keys.map((entry) => [entry.file, new Set(entry.names)])),
         rules,
         limitsFor: buildLimitsFor(shipped, surface, policy, scope),
         isDigitsAllowed: shipped.allow_digits,

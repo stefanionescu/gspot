@@ -36,12 +36,12 @@ export function xcconfig(input: CheckInput): Finding[] {
 }
 
 /**
- * One finding for each entitlement outside tools.xcode.entitlements_allowed. The planner requires a configured list.
+ * One finding for each entitlement outside xcode.entitlements_allowed. The planner requires a configured list.
  * @param input the check input
  * @returns the findings
  */
 export function entitlements(input: CheckInput): Finding[] {
-    const allowed = new Set(input.view.options('tools.xcode')['entitlements_allowed'] as string[] | undefined);
+    const allowed = new Set(input.view.options('xcode').entitlements_allowed);
     return trackedByExtension(input, ['.entitlements']).flatMap((path) => {
         const text = readSource(input.root, path, input.reads).toString('utf8');
         return text

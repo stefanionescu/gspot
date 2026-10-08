@@ -5,6 +5,7 @@ import { statSync, readdirSync } from 'node:fs';
 import { toString } from 'mdast-util-to-string';
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/source.ts';
+import { isGlob } from '#cli/repository/selectors.ts';
 import { parseMiseTasks } from '#cli/parsers/mise.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { Finding } from '#cli/types/parsers/output.ts';
@@ -13,8 +14,6 @@ import { runnerSchema } from '#cli/parsers/schema/settings.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { globPaths, expandPaths } from '#cli/platform/paths.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
-import type { PathAllowance } from '#cli/types/policy/settings.ts';
-import { isGlob, pathMatcher } from '#cli/repository/selectors.ts';
 import { scopeOf, scopeAncestors } from '#cli/repository/scopes.ts';
 import { MISE_FILES, LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import type { PathIndex, TaskSources } from '#cli/types/checks/general/docs.ts';
@@ -45,9 +44,9 @@ function knownPaths(input: CheckInput): Set<string> {
                 .map((line) => posix.join(posix.dirname(file.path), line.replace(/^\//u, '').replace(/\/$/u, ''))),
         );
     for (const path of expandPaths(ignored)) known.add(path);
-    // A check id is written like a path, and a document that names supabase/config means the check, not a file.
+    // A check id is written like a path, and a document that names supabase/project-file means the check, not a file.
     for (const manifest of input.manifests.values()) for (const check of manifest.checks) known.add(check.name);
-    for (const check of input.policyFiles.policy.checks) known.add(check.name);
+    for (const check of Object.values(input.policyFiles.policy.check)) known.add(check.name);
     return known;
 }
 
@@ -73,7 +72,7 @@ function packageScripts(input: CheckInput, file: string): string[] | undefined {
 function isMissing(token: string, file: string, index: PathIndex): boolean {
     const clean = cleanPathToken(token);
     const relative = posix.normalize(posix.join(posix.dirname(file), clean));
-    if (index.isException(clean) || index.known.has(relative)) return false;
+    if (index.known.has(relative)) return false;
     if (token.startsWith('./') || token.startsWith('../')) return true;
     const first = clean.split('/', 1)[0] ?? '';
     return (index.known.has(first) || FILE_EXTENSION.test(clean)) && !index.known.has(clean);
@@ -164,15 +163,11 @@ function taskSources(input: CheckInput, scope: string): TaskSources {
  * @returns the findings
  */
 export function stalePaths(input: CheckInput): Finding[] {
-    const exceptions = (input.view.options('docs')['exclude'] as PathAllowance[] | undefined) ?? [];
-    const isException = pathMatcher(exceptions.flatMap((entry) => entry.paths));
-    const files = input.files.filter(
-        (file) => file.kind === 'source' && file.path.endsWith('.md') && !isException(file.path),
-    );
+    const files = input.files.filter((file) => file.kind === 'source' && file.path.endsWith('.md'));
     const known = knownPaths(input);
     const projects = Map.groupBy(files, (file) => scopeOf(file.path, input.scopeEntries).path);
     return [...projects].flatMap(([scope, sources]) => {
-        const index: PathIndex = { known, tasks: taskSources(input, scope), isException };
+        const index: PathIndex = { known, tasks: taskSources(input, scope) };
         return sources.flatMap((file) =>
             proseLines(readSource(input.root, file.path, input.reads).toString('utf8')).flatMap((prose) =>
                 lineFindings(input, file.path, prose, index),
@@ -187,7 +182,7 @@ export function stalePaths(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export function readmePresent(input: CheckInput): Finding[] {
-    const isLicenseRequired = input.view.options('docs')['license'] !== false;
+    const isLicenseRequired = input.view.options('docs').require_license;
     const findings: Finding[] = [];
     const readme = input.scope === '' ? 'README.md' : `${input.scope}/README.md`;
     if (statSync(join(input.root, readme), { throwIfNoEntry: false }) === undefined)
@@ -250,7 +245,7 @@ export function readmeShape(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export function headings(input: CheckInput): Finding[] {
-    const verbatim = (input.view.options('docs')['banned_headings'] as string[] | undefined) ?? [];
+    const verbatim = input.view.options('docs').banned_headings;
     const banned = new Set([...BANNED_HEADINGS, ...verbatim.map((heading) => heading.toLowerCase())]);
     const findings: Finding[] = [];
     for (const file of input.files) {

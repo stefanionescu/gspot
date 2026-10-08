@@ -1,0 +1,100 @@
+import { join } from 'node:path';
+import { readSource } from '#cli/platform/source.ts';
+import { toolPin } from '#cli/configurations/pins.ts';
+import { scratchFolder } from '#cli/platform/scratch.ts';
+import type { Finding } from '#cli/types/parsers/output.ts';
+import { sarifFindings } from '#cli/parsers/output/sarif.ts';
+import { copyIntoScratch } from '#cli/execution/copy/files.ts';
+import { runCheckTool } from '#cli/execution/command/check.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
+import { CODEQL } from '#cli/config/checks/general/security.ts';
+import { assertMutationTarget } from '#cli/platform/root/rules.ts';
+import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
+import { toolOutputDetail } from '#cli/execution/command/failures.ts';
+import type { CodeqlAnalysis, CodeqlLanguage } from '#cli/types/checks/general/security.ts';
+
+async function runCodeql(input: CheckInput, argv: string[], cwd: string): Promise<string> {
+    const result = await runCheckTool(input, [CODEQL, ...argv], { cwd });
+    if (result.code !== 0)
+        throw new Error(
+            `${CODEQL} ${argv[0] ?? ''} ${argv[1] ?? ''} failed: ${toolOutputDetail(result, 'The tool printed no diagnostic.')}`,
+        );
+    return result.stdout;
+}
+
+async function analyzeLanguage(
+    input: CheckInput,
+    { language, version }: CodeqlLanguage,
+    { suite, work, source }: CodeqlAnalysis,
+): Promise<Finding[]> {
+    const database = join(work, language);
+    const output = join(work, `${language}.sarif`);
+    await runCodeql(
+        input,
+        ['database', 'create', database, `--language=${language}`, '--source-root', source, '--overwrite'],
+        source,
+    );
+    const queries = `codeql/${language}-queries@${version}:codeql-suites/${language}-${suite}.qls`;
+    await runCodeql(
+        input,
+        ['database', 'analyze', database, queries, '--download', '--format=sarif-latest', `--output=${output}`],
+        source,
+    );
+    return sarifFindings(
+        JSON.parse(readSource(work, `${language}.sarif`).toString('utf8')),
+        input.check.name,
+        input.check.help,
+        source,
+    ).map((finding) => ({ ...finding, rule: finding.rule ?? CODEQL }));
+}
+
+/**
+ * Runs CodeQL for every language in tools.codeql.languages and returns its findings.
+ * @param input the check input
+ * @returns the findings
+ */
+export async function codeql(input: CheckInput): Promise<Finding[]> {
+    const tool = input.view.options(`tools.${CODEQL}`);
+    const languages = (tool['languages'] as string[] | undefined) ?? [];
+    const suite = tool['suite'];
+    for (const language of languages) {
+        assertMutationTarget(language);
+        assertMutationTarget(`${language}.sarif`);
+    }
+    if (languages.length === 0) return [];
+    const metadata = codeqlLanguagesSchema.parse(
+        JSON.parse(
+            await runCodeql(
+                input,
+                ['resolve', 'languages', '--format=betterjson', '--filter-to-languages-with-queries'],
+                input.root,
+            ),
+        ),
+    );
+    const packs = toolPin(input.manifests.values(), CODEQL).query_packs;
+    const selected = [...new Set(languages.map((language) => metadata.aliases[language] ?? language))].map(
+        (language) => {
+            const version = packs?.[language];
+            if (version === undefined) throw new Error(`No CodeQL query pack is pinned for ${language}.`);
+            if (metadata.extractors[language]?.length !== 1)
+                throw new Error(`CodeQL has no single extractor for ${language}.`);
+            return { language, version };
+        },
+    );
+    using workFolder = scratchFolder('gspot-codeql-');
+    const work = workFolder.path;
+    using sourceFolder = await copyIntoScratch(input);
+    const source = sourceFolder.path;
+    const findings: Finding[] = [];
+    for (const language of selected) {
+        try {
+            findings.push(...(await analyzeLanguage(input, language, { suite, work, source })));
+        } catch (error) {
+            throw new Error(
+                `CodeQL analysis of ${language.language} failed: ${error instanceof Error ? error.message : String(error)}`,
+                { cause: error },
+            );
+        }
+    }
+    return findings;
+}

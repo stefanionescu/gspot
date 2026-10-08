@@ -2,11 +2,12 @@ import { executeRun } from '#cli/execution/run.ts';
 import { join, toNamespacedPath } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { chmod, writeFile } from 'node:fs/promises';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { chmodSync, existsSync, writeFileSync } from 'node:fs';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { cloneFindings } from '#cli/checks/general/duplication.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -26,7 +27,7 @@ async function prepareDuplicationProject(root: string): Promise<void> {
             version: pin.version,
         }),
     });
-    chmodSync(join(root, scanner.path), 0o755);
+    await chmod(join(root, scanner.path), 0o755);
     const applied = await runGspot(root, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 }
@@ -40,17 +41,17 @@ test.each(EXECUTION_FAILURES)(
         const directories: string[] = [];
         using resources = new DisposableStack();
         resources.use(
-            spyOn(processes, 'run').mockImplementation((command) => {
+            spyOn(processes, 'run').mockImplementation(async (command) => {
                 const output = command[command.indexOf('--output') + 1]!;
                 directories.push(output);
-                writeFileSync(join(output, 'jscpd-report.json'), JSON.stringify(report));
-                return Promise.resolve({
+                await writeFile(join(output, 'jscpd-report.json'), JSON.stringify(report));
+                return {
                     ...flags,
                     stdout: '',
                     stderr: 'Native scan failed.',
                     missing: false,
                     duration: 1,
-                });
+                };
             }),
         );
         const failed = await executeRun(session, buildRunOptions({ only: ['duplication/jscpd'] }));
@@ -58,7 +59,7 @@ test.each(EXECUTION_FAILURES)(
         expect(failed.report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'error', findings: [] }]);
         expect(failed.report.checks[0]!.note).toContain(diagnostic);
         expect(directories.length).toBeGreaterThan(0);
-        for (const path of directories) expect(existsSync(path)).toBe(false);
+        for (const path of directories) expect(await pathExists(path)).toBe(false);
     },
 );
 
@@ -84,7 +85,7 @@ test.each([1, 0])('duplication preserves stdout diagnostics when exit %i produce
     expect(failed.report.checks[0]!.note).toBe(
         `The duplication/jscpd check failed: The jscpd command ${code === 0 ? 'wrote no report' : 'failed'}: The scanner could not write its report.`,
     );
-    for (const path of directories) expect(existsSync(path)).toBe(false);
+    for (const path of directories) expect(await pathExists(path)).toBe(false);
     expect(await Bun.file(join(session.root, 'sample.sh')).text()).toBe('echo example\n');
 });
 
@@ -95,18 +96,18 @@ test('duplication accepts a clean report and removes the temporary report direct
     const directories: string[] = [];
     using resources = new DisposableStack();
     resources.use(
-        spyOn(processes, 'run').mockImplementation((command) => {
+        spyOn(processes, 'run').mockImplementation(async (command) => {
             const output = command[command.indexOf('--output') + 1]!;
             directories.push(output);
-            writeFileSync(join(output, 'jscpd-report.json'), JSON.stringify(VALID_REPORT));
-            return Promise.resolve({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
+            await writeFile(join(output, 'jscpd-report.json'), JSON.stringify(VALID_REPORT));
+            return { code: 0, stdout: '', stderr: '', missing: false, duration: 1 };
         }),
     );
     const result = await executeRun(session, buildRunOptions({ only: ['duplication/jscpd'] }));
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks).toMatchObject([{ check: 'duplication/jscpd', status: 'passed', findings: [] }]);
     expect(directories.length).toBeGreaterThan(0);
-    for (const path of directories) expect(existsSync(path)).toBe(false);
+    for (const path of directories) expect(await pathExists(path)).toBe(false);
 });
 
 describe('clone findings', () => {

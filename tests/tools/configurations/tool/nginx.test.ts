@@ -8,14 +8,13 @@ import { git, commitAll } from '#tests/harness/git.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { install, buildToolsPath } from '#tests/harness/install.ts';
+import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { CLEAN, FORGED, SERVER, NGINX_INIT } from '#tests/config/tools/configurations/tool/nginx.ts';
 
 // The root names an image that cannot exist, so only the scope's own image lets the container test run.
 const NGINX_POLICY = buildPolicy(['nginx'], {
-    tables: '[tools.nginx]\nimage = "nginx:1.29.3-alpine@"\n[[scope]]\npath = "proxy"\nconfigurations = []\n[scope.tools.nginx]\nimage = "nginx:1.29.3-alpine"\n',
+    tables: '[tools.nginx]\nimage = "nginx:1.29.3-alpine@"\n[scope."proxy"]\nconfigurations = []\n[scope.tools.nginx]\nimage = "nginx:1.29.3-alpine"\n',
     level: 'all',
 });
 
@@ -63,49 +62,44 @@ test.skipIf(!hasLinuxDocker())(
         expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
         expect(await Bun.file(join(sandbox.path, 'proxy/conf.d/server.conf')).text()).toBe(SERVER);
     },
-    NATIVE_TEST_TIMEOUT_MS,
 );
 
 describe('the nginx configuration', () => {
-    test(
-        'gixy finds the forged proxy target, and the container test waits for push',
-        async () => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'proxy/nginx.conf': CLEAN });
-            commitAll(sandbox.path);
-            const environment = { PATH: buildToolsPath(['gixy', 'typos', 'ec']) };
-            await install(sandbox.path, NGINX_INIT, environment, { level: 'all' });
-            const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
-            expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-            const outcome = await runCheckCase(
-                sandbox.path,
-                { check: 'nginx/gixy', files: { 'proxy/nginx.conf': FORGED } },
-                environment,
-            );
-            const failed = JSON.parse(outcome.stdout) as RunReport;
-            // Gixy has no Windows build, so the check is skipped there and the run passes.
-            const isWindows = process.platform === 'win32';
-            const forged = containing({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 });
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
-            expect(failed.checks).toMatchObject([
-                isWindows
-                    ? { check: 'nginx/gixy', status: 'skipped' }
-                    : { check: 'nginx/gixy', status: 'failed', findings: [forged] },
-            ]);
-            const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy', '--json'], environment);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-                { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'passed', findings: [] },
-            ]);
-            expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-            const command = ['check', '--hook', 'pre-commit', '--only', 'nginx/gixy', 'nginx/test', '--json'];
-            const checked = await spawnGspot(sandbox.path, command, environment);
-            expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-            const atCommit = JSON.parse(checked.stdout) as RunReport;
-            const ids = atCommit.checks.map((check) => check.check);
-            expect(ids).toContain('nginx/gixy');
-            expect(ids).not.toContain('nginx/test');
-        },
-        NATIVE_TEST_TIMEOUT_MS,
-    );
+    test('gixy finds the forged proxy target, and the container test waits for push', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'proxy/nginx.conf': CLEAN });
+        commitAll(sandbox.path);
+        const environment = { PATH: buildToolsPath(['gixy', 'typos', 'ec']) };
+        await initRepository(sandbox.path, NGINX_INIT, environment, { level: 'all' });
+        const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
+        expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+        const outcome = await runCheckCase(
+            sandbox.path,
+            { check: 'nginx/gixy', files: { 'proxy/nginx.conf': FORGED } },
+            environment,
+        );
+        const failed = JSON.parse(outcome.stdout) as RunReport;
+        // Gixy has no Windows build, so the check is skipped there and the run passes.
+        const isWindows = process.platform === 'win32';
+        const forged = containing({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 });
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
+        expect(failed.checks).toMatchObject([
+            isWindows
+                ? { check: 'nginx/gixy', status: 'skipped' }
+                : { check: 'nginx/gixy', status: 'failed', findings: [forged] },
+        ]);
+        const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy', '--json'], environment);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
+            { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'passed', findings: [] },
+        ]);
+        expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
+        const command = ['check', '--hook', 'pre-commit', '--only', 'nginx/gixy', 'nginx/test', '--json'];
+        const checked = await spawnGspot(sandbox.path, command, environment);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+        const atCommit = JSON.parse(checked.stdout) as RunReport;
+        const ids = atCommit.checks.map((check) => check.check);
+        expect(ids).toContain('nginx/gixy');
+        expect(ids).not.toContain('nginx/test');
+    });
 });

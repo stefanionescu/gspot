@@ -53,3 +53,20 @@ export const PREFACE = `${SCHEMA_LINE}
 # gspot set, ignore, add, remove. Run gspot explain <anything> for what it means.
 
 `;
+
+/** The shared attributes row in every initialization plan. */
+export const ATTRIBUTES_ROW = {
+    path: '.gitattributes',
+    note: 'managed generated-file classification and LF line endings',
+};
+
+/** Native SDK roots select the corresponding xcodebuild platform at initialization. */
+export const XCODE_DESTINATIONS = new Map<string | undefined, string>([
+    ['iphoneos', 'generic/platform=iOS Simulator'],
+    ['iphonesimulator', 'generic/platform=iOS Simulator'],
+    ['macosx', 'platform=macOS'],
+    ['watchos', 'generic/platform=watchOS Simulator'],
+    ['watchsimulator', 'generic/platform=watchOS Simulator'],
+    ['xros', 'generic/platform=visionOS Simulator'],
+    ['xrsimulator', 'generic/platform=visionOS Simulator'],
+]);

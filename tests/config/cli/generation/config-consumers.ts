@@ -6,11 +6,9 @@ export const NESTED_PYTHON_POLICY = `configurations = []
 check = "python/basedpyright"
 paths = ["linted/**"]
 reason = "This project uses Ruff without a type checker."
-[[scope]]
-path = "linted"
+[scope."linted"]
 configurations = ["python"]
-[[scope]]
-path = "typed"
+[scope."typed"]
 configurations = ["python"]
 [agent_rules]
 enabled = false
@@ -18,7 +16,7 @@ enabled = false
 
 /** SwiftFormat remains active after both other external Swift checks are ignored. */
 export const SWIFT_FORMAT_POLICY = `configurations = ["swift"]
-run_with = "mise"
+runner = "mise"
 [[ignore]]
 check = "swift/swiftlint"
 reason = "SwiftFormat owns this fixture's formatting."
@@ -71,14 +69,11 @@ export const STYLELINT_CONSUMERS: StylelintConsumerCase[] = [
 ];
 
 /** Each scope owns its component dialect and nearest declared Tailwind dependency. */
-export const STYLELINT_SCOPE_TABLES = `[[scope]]
-path = "vue"
+export const STYLELINT_SCOPE_TABLES = `[scope."vue"]
 configurations = ["css", "vue"]
-[[scope]]
-path = "svelte"
+[scope."svelte"]
 configurations = ["css", "svelte"]
-[[scope]]
-path = "mixed"
+[scope."mixed"]
 configurations = ["css", "vue", "svelte"]
 [agent_rules]
 enabled = false

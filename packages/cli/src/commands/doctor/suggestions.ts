@@ -17,14 +17,14 @@ import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/doctor.ts';
 
-function recommendedConfigurations(session: Session, selected: Set<string>): Suggestions['recommended'] {
-    const rows = new Map<string, Suggestions['recommended'][number]>();
+function suggestedConfigurations(session: Session, selected: Set<string>): Suggestions['suggested'] {
+    const rows = new Map<string, Suggestions['suggested'][number]>();
     for (const manifest of everyManifest(session.scopes))
-        for (const id of manifest.configuration.recommends)
+        for (const id of manifest.configuration.suggests)
             if (!selected.has(id) && !rows.has(id))
                 rows.set(id, {
                     configuration: id,
-                    evidence: `recommended by ${manifest.configuration.name}`,
+                    evidence: `suggested by ${manifest.configuration.name}`,
                     command: `gspot add ${id}`,
                 });
     return rows.values().toArray();
@@ -100,7 +100,7 @@ function getUnownedOutputs(session: Session): SuggestionRow[] {
 /**
  * Setup suggestions for a repository session.
  * @param session the session
- * @returns detected and recommended configurations, unowned config files, authored lint jobs, and duplicate pins
+ * @returns detected and suggested configurations, unowned config files, authored lint jobs, and duplicate pins
  */
 export function getSuggestions(session: Session): Suggestions {
     const projectManifests = readManifests(session.root, session.repository.files);
@@ -116,7 +116,7 @@ export function getSuggestions(session: Session): Suggestions {
             session.manifests,
             everyManifest(session.scopes),
         ),
-        recommended: recommendedConfigurations(session, selected),
+        suggested: suggestedConfigurations(session, selected),
         unowned: [...unownedConfigs(session, tooling, tools, generated), ...getUnownedOutputs(session)],
         authored: [
             ...getLintJobs(
@@ -127,7 +127,7 @@ export function getSuggestions(session: Session): Suggestions {
         duplicateMisePins: duplicateMisePins(
             session.root,
             applicableManifests(session),
-            session.policyFiles.policy.run_with,
+            session.policyFiles.policy.runner,
         ).map((pin) => ({
             tool: pin.tool,
             version: pin.version,

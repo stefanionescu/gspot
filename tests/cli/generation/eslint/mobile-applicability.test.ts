@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
 import { configuredChecks } from '#cli/planning/plan.ts';
@@ -60,7 +60,7 @@ test('native text component options preserve raw-text findings and ordinary Text
                 })),
         ),
     ).toStrictEqual([{ file: 'src/Raw.jsx', line: 1 }]);
-    writeFileSync(join(sandbox.path, 'src/Raw.jsx'), 'export const Raw = () => <Text>label</Text>;\n');
+    await writeFile(join(sandbox.path, 'src/Raw.jsx'), 'export const Raw = () => <Text>label</Text>;\n');
     const corrected = await eslint.lintFiles(['src/Raw.jsx']);
     expect(
         corrected.flatMap((result) =>

@@ -3,646 +3,457 @@
 # Run gspot apply after changing policy. Use gspot explain <name> to inspect a setting.
 
 level = "all"
-configurations = [
-    "spelling",
-    "typescript",
-    "prose",
-    "commits",
-    "actions",
-    "naming",
-    "docs",
-    "secrets",
-    "dependencies",
-    "licenses",
-    "duplication",
-    "security",
-    "engineering",
-    "files",
-    "markdown",
-    "format",
-    "gspot",
-    "structure",
-    "javascript",
-]
-run_with = "mise"
-dependencies.scanner = "@socketsecurity/bun-security-scanner"
-licenses.allowed = [
-    "MIT",
-    "ISC",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "Apache-2.0",
-    "0BSD",
-    "CC0-1.0",
-    "CC-BY-3.0",
-    "CC-BY-4.0",
-    "Unlicense",
-    "BlueOak-1.0.0",
-    "Python-2.0",
-]
-naming.banned = [
-    "catalog",
-    "catalogue",
-    "corpus",
-    "render",
-    "sync",
-    "synchronize",
-    "materialize",
-    "coerce",
-    "scoped",
-    "bind",
-    "load",
-    "loaded",
-    "loader",
-    "loaders",
-    "loading",
-    "fetch",
-    "resolve",
-    "resolving",
-    "resolution",
-    "probe",
-    "probes",
-    "probed",
-    "probing",
-    "fixture",
-    "fixtures",
-    "shell",
-]
-tools.taplo = {formatting = {value = {compact_inline_tables = true}, reason = "This repository keeps its authored compact inline TOML tables."}}
+configurations = ["spelling", "typescript", "prose", "commits", "actions", "naming", "docs", "secrets", "dependencies", "licenses", "duplication", "security", "engineering", "files", "markdown", "format", "gspot", "structure", "javascript"]
+runner = "mise"
 
-[[scope]]
-path = "docs"
+[scope.docs]
 configurations = ["css", "astro", "javascript", "zod", "cloudflare"]
 
-[[scope]]
-path = "packages/cli"
+[scope."packages/cli"]
 configurations = ["javascript", "zod"]
 
-[[scope]]
-path = "packages/eslint-plugin"
+[scope."packages/eslint-plugin"]
 configurations = ["javascript"]
 
-[[scope]]
-path = "tests"
-configurations = [
-    "astro",
-    "javascript",
-    "jest",
-    "nestjs",
-    "nextjs",
-    "react",
-    "svelte",
-    "vitest",
-    "react-dom",
-    "python",
-]
+[scope.tests]
+configurations = ["astro", "javascript", "jest", "nestjs", "nextjs", "react", "svelte", "vitest", "react-dom", "python"]
 
 [hooks]
+enabled = true
 
-[[docs.exclude]]
-paths = ["packages/cli/configurations/*/*/rules/**"]
-reason = "Shipped agent rules describe consumer projects. Their file paths are examples for those projects."
+[naming]
+banned = ["catalog", "catalogue", "corpus", "render", "sync", "synchronize", "materialize", "coerce", "scoped", "bind", "load", "loaded", "loader", "loaders", "loading", "fetch", "resolve", "resolving", "resolution", "probe", "probes", "probed", "probing", "fixture", "fixtures", "shell"]
 
-[[docs.exclude]]
-paths = [
-    ".github/workflows/gspot.yml",
-    ".github/copilot-instructions.md",
-    ".gitlab/ci/gspot.yml",
-    "Tests/orders-swiftTests/orders_swiftTests.swift",
-    "src/orders.ts",
-    "src/discounts.ts",
-    "src/utils.ts",
-    "src/receipt.ts",
-    "./orders.js",
-    "./utils.js",
-    "scripts/check-notes.mjs",
-    "notes/deploy.txt",
-    "bash",
-    "src/app.ts",
-    "apps/web/package.json",
-    "services/api/pyproject.toml",
-    "src/service-worker.js",
-    "src/orders_python/__init__.py",
-    "Sources/orders-swift/orders_swift.swift",
-    "../team.gspot.template.toml",
-]
-reason = "The guides identify these exact paths as consumer examples, generated outputs, or test arguments relative to tests/. Build owners and the referenced scenarios define the output and command paths. Remove a path when its example or output contract is removed."
+[[naming.overrides]]
+allowed = ["may_import", "tool_timeout_seconds", "agent_rules", "test_files", "removed_configurations"]
+paths = ["packages/cli/src/types/policy/settings.ts"]
+reason = "These declarations use the exact public TOML policy keys."
 
-[[tools.lychee.exclude]]
-paths = ["docs/src/content/docs/**"]
-reason = "The site links are root-relative and resolve once Starlight builds it; its build validates them."
-[[tools.typos.exclude]]
-paths = [
-    "tests/config/harness/spelling.ts",
-    "tests/config/cli/execution/parse-output/formats.ts",
-    "tests/config/cli/generation/eslint/runtimes.ts",
-]
-reason = "The spelling tests use deliberate misspellings; every other test file stays checked."
-
-[[tools.typos.exclude]]
-paths = [
-    "packages/cli/configurations/general/prose/styles/gspot/us-english.yml",
-]
-reason = "The Vale substitution list names the British spellings it corrects."
-
-[[tools.typos.words]]
-word = "udid"
-reason = "Apple's device identifier API name."
-
-[[tools.typos.words]]
-word = "axe"
-reason = "The axe-core accessibility package name."
-
-[[tools.typos.words]]
-word = "capitalisation"
-reason = "SQLFluff names its rule group capitalisation; the SQL template and its tests quote it."
-
-[[tools.typos.words]]
-word = "IIFEs"
-reason = "ESLint's max-lines-per-function option and the unicorn rule description spell the plural so."
-
-[[tools.typos.words]]
-word = "LICENCE"
-reason = "The British license filename is required by repository license regression cases."
-
-[[naming.fixed_keys]]
-file = "packages/cli/src/types/policy/settings.ts"
-names = ["imports_allowed", "tool_timeout_seconds", "run_with", "require_reasons"]
-reason = "Public gspot.toml keys, and the keys of the naming policy gspot ships."
-
-[[naming.fixed_keys]]
-file = "packages/cli/src/types/repository/revisions.ts"
-names = ["object"]
+[[naming.overrides]]
+allowed = ["object"]
+paths = ["packages/cli/src/types/repository/revisions.ts"]
 reason = "The pre-push JSON report names Git object identities with this key."
 
-[[naming.fixed_keys]]
-file = "packages/cli/src/types/commands/check.ts"
-names = ["object"]
+[[naming.overrides]]
+allowed = ["object"]
+paths = ["packages/cli/src/types/commands/check.ts"]
 reason = "The pre-push JSON report names Git object identities with this key."
 
-[[naming.fixed_keys]]
-file = "packages/cli/src/types/commands/program.ts"
-names = ["C"]
+[[naming.overrides]]
+allowed = ["C"]
+paths = ["packages/cli/src/types/commands/program.ts"]
 reason = "Commander names the value of the -C flag after its letter, which Git uses for the same flag."
 
-[[naming.fixed_keys]]
-file = "packages/cli/src/types/checks/language/sql.ts"
-names = ["DefElem", "List", "String", "FunctionParameter"]
+[[naming.overrides]]
+allowed = ["DefElem", "List", "String", "FunctionParameter"]
+paths = ["packages/cli/src/types/checks/language/sql.ts"]
 reason = "libpg-query AST tags spell these keys."
 
-[[naming.fixed_keys]]
-file = "packages/cli/src/parsers/schema/xcode.ts"
-names = ["shouldTranslate"]
+[[naming.overrides]]
+allowed = ["shouldTranslate"]
+paths = ["packages/cli/src/parsers/schema/xcode.ts"]
 reason = "Xcode string files spell this key."
 
-[[naming.fixed_keys]]
-file = "packages/cli/src/types/parsers/sql.ts"
-names = [
-    "lengthBytesUTF8",
-    "stringToUTF8",
-    "UTF8ToString",
-    "_malloc",
-    "_free",
-    "_wasm_parse_query_raw",
-    "_wasm_parse_plpgsql",
-    "_wasm_free_string",
-    "_wasm_free_parse_result",
-    "stmt_location",
-    "stmt_len",
-]
+[[naming.overrides]]
+allowed = ["lengthBytesUTF8", "stringToUTF8", "UTF8ToString", "_malloc", "_free", "_wasm_parse_query_raw", "_wasm_parse_plpgsql", "_wasm_free_string", "_wasm_free_parse_result", "stmt_location", "stmt_len"]
+paths = ["packages/cli/src/types/parsers/sql.ts"]
 reason = "Emscripten and libpg-query export these members."
 
-[[naming.fixed_keys]]
-file = "packages/cli/src/checks/language/sql.ts"
-names = ["FunctionParameter"]
+[[naming.overrides]]
+allowed = ["FunctionParameter"]
+paths = ["packages/cli/src/checks/language/sql.ts"]
 reason = "The libpg-query AST tag for a function parameter."
 
-[[naming.fixed_keys]]
-file = "docs/src/content/docs/404.md"
-names = ["404"]
+[[naming.overrides]]
+allowed = ["404"]
+paths = ["docs/src/content/docs/404.md"]
 reason = "Starlight routes the HTTP 404 page by this filename."
 
-[[naming.fixed_keys]]
-file = "tests/cli/generation/formatting.test.ts"
-names = ["MD007"]
+[[naming.overrides]]
+allowed = ["MD007"]
+paths = ["tests/cli/generation/formatting.test.ts"]
 reason = "The markdownlint rule name."
 
-[[naming.fixed_keys]]
-file = "tests/tools/generation/parameter-limits.test.ts"
-names = ["rule_id"]
+[[naming.overrides]]
+allowed = ["rule_id"]
+paths = ["tests/tools/generation/parameter-limits.test.ts"]
 reason = "The SwiftLint JSON diagnostic key."
 
-[[naming.fixed_keys]]
-file = "tests/cli/generation/selection.test.ts"
-names = ["allowed", "exceptions"]
+[[naming.overrides]]
+allowed = ["allowed", "exceptions"]
+paths = ["tests/cli/generation/selection.test.ts"]
 reason = "The license scanner policy keys."
 
-[[naming.fixed_keys]]
-file = "tests/cli/commands/ci.test.ts"
-names = ["with"]
+[[naming.overrides]]
+allowed = ["with"]
+paths = ["tests/cli/commands/ci.test.ts"]
 reason = "The GitHub Actions inputs key."
+
+[[naming.overrides]]
+allowed = ["MD007", "customSyntax"]
+paths = ["tests/types/generation/configuration-files.ts"]
+reason = "Markdownlint names its indentation rule MD007. Stylelint names its parser option customSyntax. These native configuration keys retain their exact API spelling."
+
+[[naming.overrides]]
+allowed = ["with"]
+paths = ["tests/types/generation/workflow.ts"]
+reason = "GitHub Actions uses with as the key for action inputs."
+
+[[naming.overrides]]
+allowed = ["rule_id"]
+paths = ["tests/types/tools/generation/parameter-limits.ts"]
+reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
+
+[[naming.overrides]]
+allowed = ["swift-snapshot-testing", "swift-snapshot-testing.test"]
+paths = ["tests/cli/checks/library/swift-snapshot-testing.test.ts", "tests/config/cli/checks/library/swift-snapshot-testing.ts", "packages/cli/src/checks/library/swift-snapshot-testing.ts", "packages/cli/src/config/checks/swift-snapshot-testing.ts"]
+reason = "These files test the swift-snapshot-testing library configuration and use its exact public name."
+
+[[naming.overrides]]
+allowed = ["removed_configurations"]
+paths = ["packages/cli/src/types/configurations.ts"]
+reason = "This selection contract uses the public TOML key for manual configuration removals."
+
+[naming.allowed]
+HelpersBesideTestsOptions = "This type describes the options of the published ESLint rule no-helpers-beside-tests."
+no-helpers-beside-tests = "This filename identifies the published ESLint rule no-helpers-beside-tests."
+"no-helpers-beside-tests.test" = "This test filename identifies its published ESLint rule no-helpers-beside-tests."
+noHelpersBesideTests = "This binding owns the published ESLint rule no-helpers-beside-tests."
 
 # A CLI layer imports itself and the layers named in its imports_allowed entry. Its config and types files belong to the same layer.
 [[architecture.modules]]
+may_import = ["main", "commands", "platform"]
 name = "main"
 paths = ["packages/cli/src/main.ts"]
 
 [[architecture.modules]]
+may_import = ["planning", "commands", "checks", "terminal", "execution", "lifecycle", "generation", "tools", "policy", "agent-rules", "configurations", "repository", "parsers", "platform"]
 name = "commands"
-paths = [
-    "packages/cli/src/commands/**",
-    "packages/cli/src/config/commands/**",
-    "packages/cli/src/types/commands/**",
-]
+paths = ["packages/cli/src/commands/**", "packages/cli/src/config/commands/**", "packages/cli/src/types/commands/**"]
 
 [[architecture.modules]]
+may_import = ["planning", "checks", "execution", "lifecycle", "generation", "tools", "policy", "configurations", "repository", "parsers", "platform"]
 name = "checks"
-paths = [
-    "packages/cli/src/checks/**",
-    "packages/cli/src/config/checks/**",
-    "packages/cli/src/types/checks/**",
-]
+paths = ["packages/cli/src/checks/**", "packages/cli/src/config/checks/**", "packages/cli/src/types/checks/**"]
 
 [[architecture.modules]]
+may_import = ["terminal", "execution", "parsers", "platform"]
 name = "terminal"
-paths = [
-    "packages/cli/src/terminal/**",
-    "packages/cli/src/config/terminal.ts",
-    "packages/cli/src/types/terminal.ts",
-]
+paths = ["packages/cli/src/terminal/**", "packages/cli/src/config/terminal.ts", "packages/cli/src/types/terminal.ts"]
 
 [[architecture.modules]]
+may_import = ["planning", "execution", "lifecycle", "tools", "policy", "configurations", "repository", "parsers", "platform"]
 name = "execution"
-paths = [
-    "packages/cli/src/execution/**",
-    "packages/cli/src/config/execution/**",
-    "packages/cli/src/types/execution/**",
-]
+paths = ["packages/cli/src/execution/**", "packages/cli/src/config/execution/**", "packages/cli/src/types/execution/**"]
 
 [[architecture.modules]]
+may_import = ["planning", "parsers", "lifecycle", "generation", "tools", "policy", "configurations", "repository", "platform"]
 name = "lifecycle"
-paths = [
-    "packages/cli/src/lifecycle/**",
-    "packages/cli/src/config/lifecycle/**",
-    "packages/cli/src/types/lifecycle/**",
-]
+paths = ["packages/cli/src/lifecycle/**", "packages/cli/src/config/lifecycle/**", "packages/cli/src/types/lifecycle/**"]
 
 [[architecture.modules]]
+may_import = ["planning", "parsers", "generation", "policy", "agent-rules", "configurations", "repository", "platform"]
 name = "generation"
-paths = [
-    "packages/cli/src/generation/**",
-    "packages/cli/src/config/generation/**",
-    "packages/cli/src/types/generation/**",
-]
+paths = ["packages/cli/src/generation/**", "packages/cli/src/config/generation/**", "packages/cli/src/types/generation/**"]
 
 [[architecture.modules]]
+may_import = ["planning", "policy", "repository", "configurations", "parsers", "platform"]
 name = "planning"
-paths = [
-    "packages/cli/src/planning/**",
-    "packages/cli/src/config/planning.ts",
-    "packages/cli/src/types/planning.ts",
-]
+paths = ["packages/cli/src/planning/**", "packages/cli/src/config/planning.ts", "packages/cli/src/types/planning.ts"]
 
 [[architecture.modules]]
+may_import = ["planning", "parsers", "generation", "tools", "policy", "configurations", "repository", "platform"]
 name = "tools"
-paths = [
-    "packages/cli/src/tools/**",
-    "packages/cli/src/config/tools/!(vale).ts",
-    "packages/cli/src/types/tools/**",
-]
+paths = ["packages/cli/src/tools/**", "packages/cli/src/config/tools/!(vale).ts", "packages/cli/src/types/tools/**"]
+reason = "Tool installation prepares generated lockfiles and consumes the generated-file contract owned by generation."
 
 [[architecture.modules]]
+may_import = ["parsers", "policy", "configurations", "repository", "platform"]
 name = "policy"
-paths = [
-    "packages/cli/src/policy/**",
-    "packages/cli/src/config/policy/**",
-    "packages/cli/src/types/policy/**",
-]
+paths = ["packages/cli/src/policy/**", "packages/cli/src/config/policy/**", "packages/cli/src/types/policy/**"]
 
 [[architecture.modules]]
+may_import = ["agent-rules", "policy", "parsers", "configurations", "repository", "platform"]
 name = "agent-rules"
-paths = [
-    "packages/cli/src/agent-rules/**",
-    "packages/cli/src/config/agent-rules.ts",
-    "packages/cli/src/types/agent-rules.ts",
-]
+paths = ["packages/cli/src/agent-rules/**", "packages/cli/src/config/agent-rules.ts", "packages/cli/src/types/agent-rules.ts"]
 
 [[architecture.modules]]
+may_import = ["parsers", "configurations", "repository", "platform"]
 name = "configurations"
-paths = [
-    "packages/cli/src/configurations/**",
-    "packages/cli/src/parsers/schema/configurations/**",
-    "packages/cli/src/config/configurations.ts",
-    "packages/cli/src/config/tools/vale.ts",
-    "packages/cli/src/types/configurations.ts",
-]
+paths = ["packages/cli/src/configurations/**", "packages/cli/src/parsers/schema/configurations/**", "packages/cli/src/config/configurations.ts", "packages/cli/src/config/tools/vale.ts", "packages/cli/src/types/configurations.ts"]
 
 [[architecture.modules]]
+may_import = ["repository", "parsers", "platform"]
 name = "repository"
-paths = [
-    "packages/cli/src/repository/**",
-    "packages/cli/src/config/repository/**",
-    "packages/cli/src/types/repository/**",
-]
+paths = ["packages/cli/src/repository/**", "packages/cli/src/config/repository/**", "packages/cli/src/types/repository/**"]
 
 [[architecture.modules]]
+may_import = ["parsers", "configurations", "platform"]
 name = "parsers"
-paths = [
-    "packages/cli/src/parsers/*.ts",
-    "packages/cli/src/parsers/naming/**",
-    "packages/cli/src/parsers/output/**",
-    "packages/cli/src/parsers/sql/**",
-    "packages/cli/src/parsers/toml/**",
-    "packages/cli/src/parsers/tool/**",
-    "packages/cli/src/parsers/schema/*.ts",
-    "packages/cli/src/parsers/schema/python/**",
-    "packages/cli/src/config/parsers/**",
-    "packages/cli/src/types/parsers/**",
-]
+paths = ["packages/cli/src/parsers/*.ts", "packages/cli/src/parsers/naming/**", "packages/cli/src/parsers/output/**", "packages/cli/src/parsers/sql/**", "packages/cli/src/parsers/toml/**", "packages/cli/src/parsers/tool/**", "packages/cli/src/parsers/schema/*.ts", "packages/cli/src/parsers/schema/python/**", "packages/cli/src/config/parsers/**", "packages/cli/src/types/parsers/**", "packages/cli/src/parsers/swift/**"]
+reason = "Tool-output parsing consumes validated configuration declarations to interpret native versions without copying the tool metadata contract."
 
 [[architecture.modules]]
+may_import = ["platform"]
 name = "platform"
-paths = [
-    "packages/cli/src/platform/**",
-    "packages/cli/src/config/platform/**",
-    "packages/cli/src/types/platform/**",
-]
+paths = ["packages/cli/src/platform/**", "packages/cli/src/config/platform/**", "packages/cli/src/types/platform/**"]
 
 # The ESLint plugin is one more element, which neither imports the CLI nor is imported by it.
 [[architecture.modules]]
+may_import = ["plugin"]
 name = "plugin"
 paths = ["packages/eslint-plugin/src/**", "packages/eslint-plugin/build.ts"]
 
-[[architecture.imports_allowed]]
-from = "main"
-to = ["main", "commands", "platform"]
-
-[[architecture.imports_allowed]]
-from = "commands"
-to = [
-    "planning",
-    "commands",
-    "checks",
-    "terminal",
-    "execution",
-    "lifecycle",
-    "generation",
-    "tools",
-    "policy",
-    "agent-rules",
-    "configurations",
-    "repository",
-    "parsers",
-    "platform",
-]
-
-[[architecture.imports_allowed]]
-from = "checks"
-to = [
-    "planning",
-    "checks",
-    "execution",
-    "lifecycle",
-    "generation",
-    "tools",
-    "policy",
-    "configurations",
-    "repository",
-    "parsers",
-    "platform",
-]
-
-[[architecture.imports_allowed]]
-from = "terminal"
-to = ["terminal", "execution", "parsers", "platform"]
-
-[[architecture.imports_allowed]]
-from = "execution"
-to = [
-    "planning",
-    "execution",
-    "lifecycle",
-    "tools",
-    "policy",
-    "configurations",
-    "repository",
-    "parsers",
-    "platform",
-]
-
-[[architecture.imports_allowed]]
-from = "lifecycle"
-to = [
-    "planning",
-    "parsers",
-    "lifecycle",
-    "generation",
-    "tools",
-    "policy",
-    "configurations",
-    "repository",
-    "platform",
-]
-
-[[architecture.imports_allowed]]
-from = "generation"
-to = [
-    "planning",
-    "parsers",
-    "generation",
-    "policy",
-    "agent-rules",
-    "configurations",
-    "repository",
-    "platform",
-]
-
-[[architecture.imports_allowed]]
-from = "planning"
-to = ["planning", "policy", "repository", "configurations", "parsers", "platform"]
-
-[[architecture.imports_allowed]]
-from = "tools"
-to = [
-    "planning",
-    "parsers",
-    "generation",
-    "tools",
-    "policy",
-    "configurations",
-    "repository",
-    "platform",
-]
-
-reason = "Tool installation prepares generated lockfiles and consumes the generated-file contract owned by generation."
-
-[[architecture.imports_allowed]]
-from = "policy"
-to = ["parsers", "policy", "configurations", "repository", "platform"]
-
-[[architecture.imports_allowed]]
-from = "agent-rules"
-to = ["agent-rules", "policy", "parsers", "configurations", "repository", "platform"]
-
-[[architecture.imports_allowed]]
-from = "configurations"
-to = ["parsers", "configurations", "repository", "platform"]
-
-[[architecture.imports_allowed]]
-from = "repository"
-to = ["repository", "parsers", "platform"]
-
-[[architecture.imports_allowed]]
-from = "parsers"
-to = ["parsers", "configurations", "platform"]
-reason = "Tool-output parsing consumes validated configuration declarations to interpret native versions without copying the tool metadata contract."
-
-[[architecture.imports_allowed]]
-from = "platform"
-to = ["platform"]
-
-[[architecture.imports_allowed]]
-from = "plugin"
-to = ["plugin"]
-
 [architecture.roles]
-tests = [
-    "tests/cli/**",
-    "tests/plugin/**",
-    "tests/tools/**",
-    "tests/packages/**",
-    "**/*.test.*",
-]
-types = ["packages/*/src/types/**", "tests/types/**", "scripts/types/**", "docs/src/types/**"]
 config = ["packages/*/src/config/**", "tests/config/**", "scripts/config/**", "docs/src/config/**"]
-test_support = "tests/harness"
+env = ["packages/cli/src/platform/environment.ts", "tests/harness/environment.ts"]
 runtime = ["src/**", "packages/*/src/**"]
-env = [
-    "packages/cli/src/platform/environment.ts",
-    "tests/harness/environment.ts",
-]
+scripts = ["scripts/**", "packages/*/scripts/**", "docs/src/content/reference/**"]
+test_harness = "tests/harness"
+tests = ["tests/cli/**", "tests/plugin/**", "tests/tools/**", "tests/packages/**", "**/*.test.*"]
+types = ["packages/*/src/types/**", "tests/types/**", "scripts/types/**", "docs/src/types/**"]
 
-[tools.eslint]
-import_extensions = {"**/*" = "ts"}
-script_files = [
-    "scripts/**",
-    "packages/*/scripts/**",
-    "docs/src/content/reference/**",
-]
-node_version = ">=24.2.0"
+[dependencies]
+scanner = "@socketsecurity/bun-security-scanner"
+
+[licenses]
+allowed = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
+
+[licenses.exceptions."@csstools/selector-specificity@5.0.0"]
+license = "MIT-0"
+reason = "The CSS tooling dependency uses the MIT No Attribution license; its installed package retains the license text."
+
+[licenses.exceptions."@fontsource-variable/geist-mono@5.3.0"]
+license = "OFL-1.1"
+reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist-mono.txt."
+
+[licenses.exceptions."@fontsource-variable/geist@5.3.0"]
+license = "OFL-1.1"
+reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist.txt."
+
+[licenses.exceptions."axe-core@4.13.0"]
+license = "MPL-2.0"
+reason = "The JSX accessibility lint plugin requires this unmodified development dependency. Its installed LICENSE identifies MPL-2.0; it is not included in the gspot package."
+
+[licenses.exceptions."eslint-plugin-sonarjs@4.2.0"]
+license = "LGPL-3.0-only"
+reason = "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the gspot package."
+
+[licenses.exceptions."lightningcss@1.33.0"]
+license = "MPL-2.0"
+reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."
+
+[words]
+ABC = "Accepted spelling from this repository's previous prose vocabulary."
+ACME = "Accepted spelling from this repository's previous prose vocabulary."
+AES = "Accepted spelling from this repository's previous prose vocabulary."
+ANN = "Accepted spelling from this repository's previous prose vocabulary."
+ANSI = "Accepted spelling from this repository's previous prose vocabulary."
+AOT = "Accepted spelling from this repository's previous prose vocabulary."
+ARG = "Accepted spelling from this repository's previous prose vocabulary."
+ARIA = "Accepted spelling from this repository's previous prose vocabulary."
+ASCII = "Accepted spelling from this repository's previous prose vocabulary."
+ASD = "Accepted spelling from this repository's previous prose vocabulary."
+AST = "Accepted spelling from this repository's previous prose vocabulary."
+ATS = "Accepted spelling from this repository's previous prose vocabulary."
+AWQ = "Accepted spelling from this repository's previous prose vocabulary."
+axe = "The axe-core accessibility package name."
+BASH = "Accepted spelling from this repository's previous prose vocabulary."
+BCP = "Accepted spelling from this repository's previous prose vocabulary."
+BEM = "Accepted spelling from this repository's previous prose vocabulary."
+BOM = "Accepted spelling from this repository's previous prose vocabulary."
+BSD = "Accepted spelling from this repository's previous prose vocabulary."
+BSL = "Accepted spelling from this repository's previous prose vocabulary."
+capitalisation = "SQLFluff names its rule group capitalisation; the SQL template and its tests quote it."
+CDN = "Accepted spelling from this repository's previous prose vocabulary."
+CDPATH = "Accepted spelling from this repository's previous prose vocabulary."
+CJS = "Accepted spelling from this repository's previous prose vocabulary."
+CORS = "Accepted spelling from this repository's previous prose vocabulary."
+CPU = "Accepted spelling from this repository's previous prose vocabulary."
+CRLF = "Accepted spelling from this repository's previous prose vocabulary."
+CRUD = "Accepted spelling from this repository's previous prose vocabulary."
+CSP = "Accepted spelling from this repository's previous prose vocabulary."
+CSRF = "Accepted spelling from this repository's previous prose vocabulary."
+CSV = "Accepted spelling from this repository's previous prose vocabulary."
+CTE = "Accepted spelling from this repository's previous prose vocabulary."
+CUDA = "Accepted spelling from this repository's previous prose vocabulary."
+DDL = "Accepted spelling from this repository's previous prose vocabulary."
+DEBUG = "Accepted spelling from this repository's previous prose vocabulary."
+DELETE = "Accepted spelling from this repository's previous prose vocabulary."
+DNS = "Accepted spelling from this repository's previous prose vocabulary."
+DOM = "Accepted spelling from this repository's previous prose vocabulary."
+DTO = "Accepted spelling from this repository's previous prose vocabulary."
+ENV = "Accepted spelling from this repository's previous prose vocabulary."
+EOF = "Accepted spelling from this repository's previous prose vocabulary."
+EOL = "Accepted spelling from this repository's previous prose vocabulary."
+ERR = "Accepted spelling from this repository's previous prose vocabulary."
+ESM = "Accepted spelling from this repository's previous prose vocabulary."
+EXIT = "Accepted spelling from this repository's previous prose vocabulary."
+FAST = "Accepted spelling from this repository's previous prose vocabulary."
+GET = "Accepted spelling from this repository's previous prose vocabulary."
+GIF = "Accepted spelling from this repository's previous prose vocabulary."
+GNU = "Accepted spelling from this repository's previous prose vocabulary."
+GPU = "Accepted spelling from this repository's previous prose vocabulary."
+GRDB = "Accepted spelling from this repository's previous prose vocabulary."
+GUID = "Accepted spelling from this repository's previous prose vocabulary."
+HEAD = "Accepted spelling from this repository's previous prose vocabulary."
+HMAC = "Accepted spelling from this repository's previous prose vocabulary."
+HOME = "Accepted spelling from this repository's previous prose vocabulary."
+HSTS = "Accepted spelling from this repository's previous prose vocabulary."
+HTTPS = "Accepted spelling from this repository's previous prose vocabulary."
+Husky = "Accepted spelling from this repository's previous prose vocabulary."
+ICU = "Accepted spelling from this repository's previous prose vocabulary."
+IDE = "Accepted spelling from this repository's previous prose vocabulary."
+IFS = "Accepted spelling from this repository's previous prose vocabulary."
+IIFEs = "ESLint's max-lines-per-function option and the unicorn rule description spell the plural so."
+IME = "Accepted spelling from this repository's previous prose vocabulary."
+INI = "Accepted spelling from this repository's previous prose vocabulary."
+INT = "Accepted spelling from this repository's previous prose vocabulary."
+ISC = "Accepted spelling from this repository's previous prose vocabulary."
+ISO = "Accepted spelling from this repository's previous prose vocabulary."
+JIT = "Accepted spelling from this repository's previous prose vocabulary."
+JPEG = "Accepted spelling from this repository's previous prose vocabulary."
+JSONB = "Accepted spelling from this repository's previous prose vocabulary."
+JSONC = "Accepted spelling from this repository's previous prose vocabulary."
+JSONL = "Accepted spelling from this repository's previous prose vocabulary."
+JSPB = "Accepted spelling from this repository's previous prose vocabulary."
+JSX = "Accepted spelling from this repository's previous prose vocabulary."
+JWT = "Accepted spelling from this repository's previous prose vocabulary."
+Lefthook = "Accepted spelling from this repository's previous prose vocabulary."
+LFS = "Accepted spelling from this repository's previous prose vocabulary."
+LICENCE = "The British license filename is required by repository license regression cases."
+LLM = "Accepted spelling from this repository's previous prose vocabulary."
+LTS = "Accepted spelling from this repository's previous prose vocabulary."
+MARK = "Accepted spelling from this repository's previous prose vocabulary."
+MIME = "Accepted spelling from this repository's previous prose vocabulary."
+MIT = "Accepted spelling from this repository's previous prose vocabulary."
+MVC = "Accepted spelling from this repository's previous prose vocabulary."
+MVP = "Accepted spelling from this repository's previous prose vocabulary."
+MVVM = "Accepted spelling from this repository's previous prose vocabulary."
+NAME = "Accepted spelling from this repository's previous prose vocabulary."
+NOTE = "Accepted spelling from this repository's previous prose vocabulary."
+NPM = "Accepted spelling from this repository's previous prose vocabulary."
+NUL = "Accepted spelling from this repository's previous prose vocabulary."
+NVIDIA = "Accepted spelling from this repository's previous prose vocabulary."
+OCSP = "Accepted spelling from this repository's previous prose vocabulary."
+OIDC = "Accepted spelling from this repository's previous prose vocabulary."
+ORM = "Accepted spelling from this repository's previous prose vocabulary."
+OTP = "Accepted spelling from this repository's previous prose vocabulary."
+OWASP = "Accepted spelling from this repository's previous prose vocabulary."
+PATCH = "Accepted spelling from this repository's previous prose vocabulary."
+PATH = "Accepted spelling from this repository's previous prose vocabulary."
+PEP = "Accepted spelling from this repository's previous prose vocabulary."
+PID = "Accepted spelling from this repository's previous prose vocabulary."
+PII = "Accepted spelling from this repository's previous prose vocabulary."
+PLR = "Accepted spelling from this repository's previous prose vocabulary."
+PNG = "Accepted spelling from this repository's previous prose vocabulary."
+POSIX = "Accepted spelling from this repository's previous prose vocabulary."
+POST = "Accepted spelling from this repository's previous prose vocabulary."
+PUT = "Accepted spelling from this repository's previous prose vocabulary."
+PWA = "Accepted spelling from this repository's previous prose vocabulary."
+PWD = "Accepted spelling from this repository's previous prose vocabulary."
+PYPI = "Accepted spelling from this repository's previous prose vocabulary."
+RAM = "Accepted spelling from this repository's previous prose vocabulary."
+README = "Accepted spelling from this repository's previous prose vocabulary."
+RETURN = "Accepted spelling from this repository's previous prose vocabulary."
+RFC = "Accepted spelling from this repository's previous prose vocabulary."
+RGB = "Accepted spelling from this repository's previous prose vocabulary."
+RLS = "Accepted spelling from this repository's previous prose vocabulary."
+RPC = "Accepted spelling from this repository's previous prose vocabulary."
+RSA = "Accepted spelling from this repository's previous prose vocabulary."
+RSC = "Accepted spelling from this repository's previous prose vocabulary."
+RTL = "Accepted spelling from this repository's previous prose vocabulary."
+RUN = "Accepted spelling from this repository's previous prose vocabulary."
+SAST = "Accepted spelling from this repository's previous prose vocabulary."
+SCSS = "Accepted spelling from this repository's previous prose vocabulary."
+SDK = "Accepted spelling from this repository's previous prose vocabulary."
+SEO = "Accepted spelling from this repository's previous prose vocabulary."
+SGID = "Accepted spelling from this repository's previous prose vocabulary."
+SHA = "Accepted spelling from this repository's previous prose vocabulary."
+SHELL = "Accepted spelling from this repository's previous prose vocabulary."
+SIM = "Accepted spelling from this repository's previous prose vocabulary."
+SPDX = "Accepted spelling from this repository's previous prose vocabulary."
+SSE = "Accepted spelling from this repository's previous prose vocabulary."
+SSH = "Accepted spelling from this repository's previous prose vocabulary."
+SSR = "Accepted spelling from this repository's previous prose vocabulary."
+SSRF = "Accepted spelling from this repository's previous prose vocabulary."
+STDERR = "Accepted spelling from this repository's previous prose vocabulary."
+STDIN = "Accepted spelling from this repository's previous prose vocabulary."
+STDOUT = "Accepted spelling from this repository's previous prose vocabulary."
+SUID = "Accepted spelling from this repository's previous prose vocabulary."
+SVG = "Accepted spelling from this repository's previous prose vocabulary."
+SWC = "Accepted spelling from this repository's previous prose vocabulary."
+TCA = "Accepted spelling from this repository's previous prose vocabulary."
+TCP = "Accepted spelling from this repository's previous prose vocabulary."
+TERM = "Accepted spelling from this repository's previous prose vocabulary."
+TIP = "Accepted spelling from this repository's previous prose vocabulary."
+TLS = "Accepted spelling from this repository's previous prose vocabulary."
+TODO = "Accepted spelling from this repository's previous prose vocabulary."
+TRT = "Accepted spelling from this repository's previous prose vocabulary."
+TRY = "Accepted spelling from this repository's previous prose vocabulary."
+TSX = "Accepted spelling from this repository's previous prose vocabulary."
+TTY = "Accepted spelling from this repository's previous prose vocabulary."
+Turborepo = "Accepted spelling from this repository's previous prose vocabulary."
+udid = "Apple's device identifier API name."
+UDP = "Accepted spelling from this repository's previous prose vocabulary."
+UTC = "Accepted spelling from this repository's previous prose vocabulary."
+UTF = "Accepted spelling from this repository's previous prose vocabulary."
+UUID = "Accepted spelling from this repository's previous prose vocabulary."
+VIP = "Accepted spelling from this repository's previous prose vocabulary."
+VIPER = "Accepted spelling from this repository's previous prose vocabulary."
+WASM = "Accepted spelling from this repository's previous prose vocabulary."
+WCAG = "Accepted spelling from this repository's previous prose vocabulary."
+WSL = "Accepted spelling from this repository's previous prose vocabulary."
+XML = "Accepted spelling from this repository's previous prose vocabulary."
+
+[tools.codeql]
+languages = ["javascript-typescript", "actions"]
 
 [tools.commitlint]
 scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
 
-[[ignore]]
-check = "dependencies/osv"
-rule = "GHSA-vfj7-8cjw-p6xm"
-reason = "braces 3.0.3 is the newest release, and no release fixes it. micromatch pulls it into the development tools of this workspace, which expand only the patterns this repository writes."
-until = "2026-10-17"
-
-[[ignore]]
-check = "dependencies/osv"
-rule = "GHSA-ch52-4w7c-c8xp"
-reason = "http-cache-semantics 4.2.0 is the newest release, and no release fixes it. Astro and the npm fetch client use it in the development tools; the static docs build shares no cached response between users."
-until = "2026-10-17"
+[tools.eslint.import_extensions]
+"**/*" = "ts"
 
 [tools.knip]
-entry = [
-    "packages/eslint-plugin/src/plugin.ts",
-    "docs/src/content/reference/collection.ts",
-    "docs/src/route-metadata.ts",
-]
+entry = ["packages/eslint-plugin/src/plugin.ts", "docs/src/content/reference/collection.ts", "docs/src/route-metadata.ts", "scripts/setting-values.ts"]
 
-[[tools.knip.ignore_dependencies]]
-name = "^.+$"
-workspace = "tests"
+[tools.knip.ignore_dependencies]
+"^@fontsource-variable/" = "The site imports the fonts from docs/src/theme.css, outside the TypeScript import graph."
+"^tree-sitter-" = "The build copies the grammar WASM files from these packages by path; nothing imports them."
+
+[tools.knip.ignore_dependencies."^.+$"]
 reason = "Every package the tests workspace lists is installed into a test repository, which knip cannot see."
+workspace = "tests"
 
-[[tools.knip.ignore_dependencies]]
-name = "^tree-sitter-"
-reason = "The build copies the grammar WASM files from these packages by path; nothing imports them."
+[tools.knip.ignore_dependencies.satteri]
+reason = "Astro prerender externalizes this native Markdown loader in astro.config.ts. A direct dependency keeps Bun’s package lookup at the installed loader origin; the site build verifies native resolution."
+workspace = "docs"
 
-[[tools.knip.ignore_dependencies]]
-name = "^@fontsource-variable/"
-reason = "The site imports the fonts from docs/src/theme.css, outside the TypeScript import graph."
+[[ignore]]
+check = "actions/zizmor"
+paths = [".github/workflows/ci.yml", ".github/workflows/release.yml"]
+reason = "The repository diagram requires the supported ./ reference form. These jobs check out the repository before calling their own actions; the dedicated $/ spelling is a preference rather than a missing security contract here."
+rule = "self-repository"
+
+[[ignore]]
+check = "dependencies/osv"
+reason = "http-cache-semantics 4.2.0 is the newest release, and no release fixes it. Astro and the npm fetch client use it in the development tools; the static docs build shares no cached response between users."
+rule = "GHSA-ch52-4w7c-c8xp"
+until = 2026-10-17
+
+[[ignore]]
+check = "dependencies/osv"
+reason = "braces 3.0.3 is the newest release, and no release fixes it. micromatch pulls it into the development tools of this workspace, which expand only the patterns this repository writes."
+rule = "GHSA-vfj7-8cjw-p6xm"
+until = 2026-10-17
+
+[[ignore]]
+check = "docs/lychee"
+paths = ["docs/src/content/docs/**"]
+reason = "The site links are root-relative and resolve once Starlight builds it; its build validates them."
 
 # The shipped agent rules are this repository's product.
-
-[[structure.folder_names_allowed]]
-paths = [
-    "tests/tools/configurations/language/bash",
-    "tests/tools/configurations/language/swift",
-    "tests/cli/checks/language/python",
-    "tests/cli/checks/language/swift",
-    "tests/cli/checks/language/bash",
-    "tests/cli/checks/language/javascript",
-    "tests/config/cli/checks/language/bash",
-    "tests/config/cli/checks/language/swift",
-    "tests/config/cli/checks/language/python",
-    "tests/config/tools/configurations/language/bash",
-    "tests/config/tools/configurations/language/typescript",
-    "tests/config/tools/configurations/language/swift",
-    "packages/cli/src/checks/language/bash",
-    "packages/cli/src/checks/language/javascript",
-    "packages/cli/src/checks/language/python",
-    "packages/cli/src/parsers/schema/python",
-    "packages/cli/src/tools/python",
-    "tests/cli/tools/python",
-    "tests/config/cli/tools/python",
-    "tests/config/samples/python",
-    "packages/cli/src/checks/language/swift",
-]
-reason = "Each directory belongs to a named language configuration or its tests. The TypeScript files implement or test that configuration."
-
-[[structure.lone_files_allowed]]
-paths = ["docs/src/pages/schema"]
-reason = "Astro maps this directory to the published /schema/gspot.schema.json endpoint; moving the route changes the public schema URL."
-
-[[structure.prefix_collisions_allowed]]
-paths = ["packages/eslint-plugin/src/rules/**", "tests/plugin/rules/**", "tests/config/plugin/rules/**"]
-reason = "ESLint rule ids are the file names, and the ids share their first word by convention."
-
-[[structure.prefix_collisions_allowed]]
-paths = ["docs/src"]
-reason = "Astro fixes the name of the content configuration file beside the content folder."
-
-[[structure.prefix_collisions_allowed]]
-paths = [
-    "packages/cli/configurations/language/html",
-    "packages/cli/configurations/language/markdown",
-    "packages/cli/configurations/tool/docker",
-]
-reason = "A configuration template takes the name of the file it writes, and a tool names its own configuration files."
-[[licenses.exceptions]]
-package = "axe-core@4.13.0"
-license = "MPL-2.0"
-reason = "The JSX accessibility lint plugin requires this unmodified development dependency. Its installed LICENSE identifies MPL-2.0; it is not included in the gspot package."
-
-[[licenses.exceptions]]
-package = "@csstools/selector-specificity@5.0.0"
-license = "MIT-0"
-reason = "The CSS tooling dependency uses the MIT No Attribution license; its installed package retains the license text."
-
-[[licenses.exceptions]]
-package = "@fontsource-variable/geist@5.3.0"
-license = "OFL-1.1"
-reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist.txt."
-
-[[licenses.exceptions]]
-package = "@fontsource-variable/geist-mono@5.3.0"
-license = "OFL-1.1"
-reason = "The documentation distributes this unmodified font and copies its license into the built site under licenses/geist-mono.txt."
-
-[[licenses.exceptions]]
-package = "eslint-plugin-sonarjs@4.2.0"
-license = "LGPL-3.0-only"
-reason = "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the gspot package."
-
-[[licenses.exceptions]]
-package = "lightningcss@1.33.0"
-license = "MPL-2.0"
-reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."
-
 
 [[ignore]]
 check = "docs/stale-paths"
@@ -650,200 +461,21 @@ paths = ["FINDINGS.md", "findings/**"]
 reason = "FINDINGS.md and findings/ record an audit, and they name files and folders the cleanup deletes and moves."
 
 [[ignore]]
+check = "docs/stale-paths"
+paths = ["packages/cli/configurations/*/*/rules/**"]
+reason = "Shipped agent rules describe consumer projects. Their file paths are examples for those projects."
+
+[[ignore]]
 check = "javascript/eslint"
-rule = "package-json/require-exports"
+paths = ["packages/cli/src/**", "scripts/**"]
+reason = "These command implementations and repository scripts use synchronous filesystem operations to prepare and publish local files before they return."
+rule = "n/no-sync"
+
+[[ignore]]
+check = "javascript/eslint"
 paths = ["packages/cli/package.json"]
 reason = "The gspot package exposes a command through bin and has no importable module API. Remove this exception if the package gains a module API."
-
-[prose]
-vocabulary = [
-    "ABC",
-    "ACME",
-    "AES",
-    "ANN",
-    "ANSI",
-    "AOT",
-    "ARG",
-    "ARIA",
-    "ASCII",
-    "ASD",
-    "AST",
-    "ATS",
-    "AWQ",
-    "BASH",
-    "BCP",
-    "BEM",
-    "BOM",
-    "BSD",
-    "BSL",
-    "CDN",
-    "CDPATH",
-    "CJS",
-    "CORS",
-    "CPU",
-    "CRLF",
-    "CRUD",
-    "CSP",
-    "CSRF",
-    "CSV",
-    "CTE",
-    "CUDA",
-    "DDL",
-    "DEBUG",
-    "DELETE",
-    "DNS",
-    "DOM",
-    "DTO",
-    "ENV",
-    "EOF",
-    "EOL",
-    "ERR",
-    "ESM",
-    "(?-i:\\bEXIT\\b)",
-    "FAST",
-    "GET",
-    "GIF",
-    "GNU",
-    "GPU",
-    "GRDB",
-    "GUID",
-    "HEAD",
-    "HMAC",
-    "HOME",
-    "HSTS",
-    "HTTPS",
-    "Husky",
-    "ICU",
-    "IDE",
-    "IFS",
-    "IME",
-    "INI",
-    "INT",
-    "ISC",
-    "ISO",
-    "JIT",
-    "JPEG",
-    "JSONB",
-    "JSONC",
-    "JSONL",
-    "JSPB",
-    "JSX",
-    "JWT",
-    "Lefthook",
-    "LFS",
-    "LLM",
-    "LTS",
-    "MARK",
-    "MIME",
-    "MIT",
-    "MVC",
-    "MVP",
-    "MVVM",
-    "NAME",
-    "NOTE",
-    "NPM",
-    "NUL",
-    "NVIDIA",
-    "OCSP",
-    "OIDC",
-    "ORM",
-    "OTP",
-    "OWASP",
-    "PATCH",
-    "PATH",
-    "PEP",
-    "PID",
-    "PII",
-    "PLR",
-    "PNG",
-    "POSIX",
-    "POST",
-    "PUT",
-    "PWA",
-    "PWD",
-    "PYPI",
-    "RAM",
-    "README",
-    "RETURN",
-    "RFC",
-    "RGB",
-    "RLS",
-    "RPC",
-    "RSA",
-    "RSC",
-    "RTL",
-    "(?-i:\\bRUN\\b)",
-    "SAST",
-    "SCSS",
-    "SDK",
-    "SEO",
-    "SGID",
-    "SHA",
-    "(?-i:\\bSHELL\\b)",
-    "SIM",
-    "SPDX",
-    "SSE",
-    "SSH",
-    "SSR",
-    "SSRF",
-    "STDERR",
-    "STDIN",
-    "STDOUT",
-    "SUID",
-    "SVG",
-    "SWC",
-    "TCA",
-    "TCP",
-    "TERM",
-    "TIP",
-    "TLS",
-    "TODO",
-    "TRT",
-    "TRY",
-    "TSX",
-    "TTY",
-    "Turborepo",
-    "UDP",
-    "UTC",
-    "UTF",
-    "UUID",
-    "VIP",
-    "VIPER",
-    "WASM",
-    "WCAG",
-    "WSL",
-    "XML",
-]
-
-[tools.codeql]
-languages = ["javascript-typescript", "actions"]
-
-[[tools.codeql.ignore]]
-rule = "js/file-system-race"
-paths = [
-    "tests/cli/commands/agents.test.ts",
-    "tests/cli/checks/framework/nextjs.test.ts",
-    "tests/cli/checks/language/swift/build/isolation.test.ts",
-    "tests/tools/npm/project.test.ts",
-    "tests/harness/preservation.ts",
-]
-reason = "Each test owns its temporary tree and is the only writer; the stat and the read it compares are the assertion."
-
-[[tools.codeql.ignore]]
-rule = "js/bad-code-sanitization"
-paths = ["packages/cli/src/generation/fragments.ts"]
-reason = "JSON.stringify emits whole literals into a standalone ESLint module, never into an HTML script element."
-
-[[tools.codeql.ignore]]
-rule = "js/incomplete-sanitization"
-paths = ["packages/cli/src/checks/tool/actions.ts"]
-reason = "Only the leading self-repository marker is translated; later dollar signs are path characters and must stay."
-
-[[tools.codeql.ignore]]
-rule = "js/http-to-file-access"
-paths = ["packages/cli/scripts/grammars.ts"]
-reason = "Every downloaded byte is checked against the pinned SHA-256 digest before the cache file is written."
-
+rule = "package-json/require-exports"
 
 [[ignore]]
 check = "jest/coverage"
@@ -851,14 +483,88 @@ paths = ["tests/**"]
 reason = "The suite uses bun:test. Jest is installed only to exercise the supported Jest adapter and plugin in test repositories."
 
 [[ignore]]
-check = "vitest/coverage"
-paths = ["tests/**"]
-reason = "The suite uses bun:test. Vitest is installed only to exercise its adapter and plugin in test repositories."
-
-[[ignore]]
 check = "nextjs/tsc"
 paths = ["tests/**"]
 reason = "The test workspace installs Next.js for test application tests; its own sources contain no Next.js app or pages. The TypeScript check owns these sources."
+
+[[ignore]]
+check = "security/codeql"
+paths = ["packages/cli/src/generation/fragments.ts"]
+reason = "JSON.stringify emits whole literals into a standalone ESLint module, never into an HTML script element."
+rule = "js/bad-code-sanitization"
+
+[[ignore]]
+check = "security/codeql"
+paths = ["tests/cli/commands/agents.test.ts", "tests/cli/checks/framework/nextjs.test.ts", "tests/cli/checks/language/swift/build/isolation.test.ts", "tests/tools/npm/project.test.ts", "tests/harness/preservation.ts"]
+reason = "Each test owns its temporary tree and is the only writer; the stat and the read it compares are the assertion."
+rule = "js/file-system-race"
+
+[[ignore]]
+check = "security/codeql"
+paths = ["packages/cli/scripts/grammars.ts"]
+reason = "Every downloaded byte is checked against the pinned SHA-256 digest before the cache file is written."
+rule = "js/http-to-file-access"
+
+[[ignore]]
+check = "security/codeql"
+paths = ["packages/cli/src/checks/tool/actions.ts"]
+reason = "Only the leading self-repository marker is translated; later dollar signs are path characters and must stay."
+rule = "js/incomplete-sanitization"
+
+[[ignore]]
+check = "spelling/typos"
+paths = ["packages/cli/configurations/general/prose/styles/gspot/us-english.yml"]
+reason = "The Vale substitution list names the British spellings it corrects."
+
+[[ignore]]
+check = "spelling/typos"
+paths = ["tests/config/samples/spelling.ts", "tests/config/cli/parsers/output/formats.ts", "tests/config/cli/generation/eslint/runtimes.ts"]
+reason = "The spelling tests use deliberate misspellings; every other test file stays checked."
+
+[[ignore]]
+check = "spelling/typos"
+paths = ["tests/config/samples/spelling.ts"]
+reason = "This literal supplies a deliberate misspelling to the spelling checks and their corrections."
+
+[[ignore]]
+check = "structure/folder-names"
+paths = ["tests/tools/configurations/language/bash", "tests/tools/configurations/language/swift", "tests/cli/checks/language/python", "tests/cli/checks/language/swift", "tests/cli/checks/language/bash", "tests/config/cli/checks/language/bash", "tests/config/cli/checks/language/swift", "tests/config/cli/checks/language/python", "tests/config/tools/configurations/language/bash", "tests/config/tools/configurations/language/typescript", "tests/config/tools/configurations/language/swift", "packages/cli/src/checks/language/bash", "packages/cli/src/checks/language/python", "packages/cli/src/parsers/schema/python", "packages/cli/src/tools/python", "tests/cli/tools/python", "tests/config/cli/tools/python", "packages/cli/src/checks/language/swift", "packages/cli/src/parsers/swift", "packages/cli/src/types/parsers/swift", "tests/cli/parsers/swift", "tests/config/cli/parsers/swift", "tests/config/samples/swift"]
+reason = "Each directory belongs to a named language configuration or its tests. The TypeScript files implement or test that configuration."
+
+[[ignore]]
+check = "structure/lone-files"
+paths = ["docs/src/pages/schema"]
+reason = "Astro maps this directory to the published /schema/gspot.schema.json endpoint; moving the route changes the public schema URL."
+
+[[ignore]]
+check = "structure/lone-files"
+paths = ["packages/cli/src/config/checks/database", "packages/cli/src/types/checks/database"]
+reason = "The database and library namespaces match the behavioral check owners. Repository policy keeps each owner’s static constants and declarations in config and types even when that category currently has one file."
+
+[[ignore]]
+check = "structure/lone-files"
+paths = ["tests/cli/docs", "tests/cli/parsers/naming", "tests/config/cli/checks/language/bash", "tests/config/cli/checks/tool/xcode", "tests/config/cli/docs", "tests/config/cli/parsers/tool", "tests/config/cli/tools/python", "tests/config/tools/configurations/language/bash", "tests/types/cli/checks/framework", "tests/types/cli/checks/general", "tests/types/cli/checks/library", "tests/types/cli/docs", "tests/types/cli/execution", "tests/types/cli/generation", "tests/types/plugin/rules", "tests/types/tools/checks/supabase", "tests/types/tools/configurations/general", "tests/types/tools/generation", "tests/types/tools/lifecycle"]
+reason = "These suite namespaces follow their behavioral source owners. The docs tests stay under cli/docs, and each matching config or types namespace owns its suite data. Their placement follows the repository ownership contract even when an owner needs one file."
+
+[[ignore]]
+check = "structure/prefix-collisions"
+paths = ["docs/src"]
+reason = "Astro fixes the name of the content configuration file beside the content folder."
+
+[[ignore]]
+check = "structure/prefix-collisions"
+paths = ["packages/cli/configurations/language/html", "packages/cli/configurations/language/markdown", "packages/cli/configurations/tool/docker"]
+reason = "A configuration template takes the name of the file it writes, and a tool names its own configuration files."
+
+[[ignore]]
+check = "structure/prefix-collisions"
+paths = ["packages/eslint-plugin/src/rules/**", "tests/plugin/rules/**", "tests/config/plugin/rules/**"]
+reason = "ESLint rule ids are the file names, and the ids share their first word by convention."
+
+[[ignore]]
+check = "typescript/tsc"
+paths = ["tests/**"]
+reason = "The root compiler includes tests/**/*.ts. Running a second compiler for the tests scope would duplicate the same target."
 
 [[ignore]]
 check = "typescript/tsconfig"
@@ -866,90 +572,6 @@ paths = ["tests/**"]
 reason = "The root tsconfig.json owns every test source and its required compiler options. The root check verifies that configuration."
 
 [[ignore]]
-check = "typescript/tsc"
+check = "vitest/coverage"
 paths = ["tests/**"]
-reason = "The root compiler includes tests/**/*.ts. Running a second compiler for the tests scope would duplicate the same target."
-
-
-[[naming.fixed_keys]]
-file = "tests/types/generation/configuration-files.ts"
-names = ["MD007", "customSyntax"]
-reason = "Markdownlint names its indentation rule MD007. Stylelint names its parser option customSyntax. These native configuration keys retain their exact API spelling."
-
-[[naming.fixed_keys]]
-file = "tests/types/generation/workflow.ts"
-names = ["with"]
-reason = "GitHub Actions uses with as the key for action inputs."
-
-[[naming.fixed_keys]]
-file = "tests/types/tools/generation/parameter-limits.ts"
-names = ["rule_id"]
-reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
-
-[[naming.allowed]]
-name = "noHelpersBesideTests"
-reason = "This binding owns the published ESLint rule no-helpers-beside-tests."
-
-[[naming.allowed]]
-name = "HelpersBesideTestsOptions"
-reason = "This type describes the options of the published ESLint rule no-helpers-beside-tests."
-
-[[naming.allowed]]
-name = "no-helpers-beside-tests"
-reason = "This filename identifies the published ESLint rule no-helpers-beside-tests."
-
-[[naming.allowed]]
-name = "no-helpers-beside-tests.test"
-reason = "This test filename identifies its published ESLint rule no-helpers-beside-tests."
-
-[[structure.lone_files_allowed]]
-paths = [
-    "packages/cli/src/config/checks/database",
-    "packages/cli/src/types/checks/database",
-    "packages/cli/src/types/checks/library",
-]
-reason = "The database and library namespaces match the behavioral check owners. Repository policy keeps each owner’s static constants and declarations in config and types even when that category currently has one file."
-
-[[structure.lone_files_allowed]]
-paths = [
-    "tests/cli/checks/general/security",
-    "tests/cli/docs",
-    "tests/cli/parsers/naming",
-    "tests/config/cli/checks/general/security",
-    "tests/config/cli/checks/language/bash",
-    "tests/config/cli/checks/tool/xcode",
-    "tests/config/cli/docs",
-    "tests/config/cli/parsers/toml",
-    "tests/config/cli/parsers/tool",
-    "tests/config/cli/tools/python",
-    "tests/config/tools/configurations/language/bash",
-    "tests/types/cli/checks/framework",
-    "tests/types/cli/checks/general",
-    "tests/types/cli/checks/library",
-    "tests/types/cli/docs",
-    "tests/types/cli/execution",
-    "tests/types/cli/generation",
-    "tests/types/plugin/rules",
-    "tests/types/tools/checks/supabase",
-    "tests/types/tools/configurations/general",
-    "tests/types/tools/generation",
-    "tests/types/tools/lifecycle",
-]
-reason = "These suite namespaces follow their behavioral source owners. The docs tests stay under cli/docs, and each matching config or types namespace owns its suite data. Their placement follows the repository ownership contract even when an owner needs one file."
-
-[[tools.knip.ignore_dependencies]]
-name = "satteri"
-workspace = "docs"
-reason = "Astro prerender externalizes this native Markdown loader in astro.config.ts. A direct dependency keeps Bun’s package lookup at the installed loader origin; the site build verifies native resolution."
-
-[[ignore]]
-check = "security/semgrep"
-rule = "gspot.javascript.no-dynamic-require"
-paths = ["scripts/eslint-presets.ts"]
-reason = "This explicit maintenance command imports the selected installed preset exports after validating each package name and exact manifest pin. Loading those local tool exports is its required behavior, not an application import of untrusted code."
-
-[[ignore]]
-check = "actions/zizmor"
-rule = "self-repository"
-paths = [".github/workflows/ci.yml", ".github/workflows/release.yml"]
-reason = "The repository diagram requires the supported ./ reference form. These jobs check out the repository before calling their own actions; the dedicated $/ spelling is a preference rather than a missing security contract here."
+reason = "The suite uses bun:test. Vitest is installed only to exercise its adapter and plugin in test repositories."

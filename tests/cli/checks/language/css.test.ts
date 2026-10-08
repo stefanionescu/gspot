@@ -21,7 +21,6 @@ test('global CSS classes are not module exports and explicitly local classes sti
     expect(failed.report.checks[0]?.findings).toMatchObject([
         { file: 'styles.module.css', line: 3, rule: 'unused-class', message: 'No importer reads the class local.' },
     ]);
-    expect(failed.report.checks[0]?.findings).toHaveLength(1);
     await Bun.write(
         join(sandbox.path, 'view.ts'),
         'import styles from "./styles.module.css";\nexport const card = [styles.card, styles.local];\n',
@@ -202,7 +201,6 @@ test.each(DYNAMIC_READS)(
         expect(failed.report.checks[0]?.findings).toMatchObject([
             { file: 'view.ts', line: 3, rule: 'undefined-class' },
         ]);
-        expect(failed.report.checks[0]?.findings).toHaveLength(1);
         await Bun.write(join(sandbox.path, 'view.ts'), `import styles from './styles.module.css';\n${source}\n`);
         const corrected = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
         expect(corrected.report.exitCode).toBe(0);
@@ -223,7 +221,6 @@ test('CSS destructuring resolves aliases and reports unused definitions and miss
         { file: 'styles.module.css', line: 3, rule: 'unused-class' },
         { file: 'view.ts', line: 2, rule: 'undefined-class' },
     ]);
-    expect(failed.report.checks[0]?.findings).toHaveLength(2);
     await Bun.write(
         join(sandbox.path, 'view.ts'),
         "import styles from './styles.module.css';\nexport const { card: label, unused } = styles;\n",

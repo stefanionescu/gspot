@@ -15,29 +15,6 @@ const document = {
                 category: 'security',
             },
         },
-        {
-            id: 'gspot.cloudflare.no-dom-html-sinks',
-            'pattern-either': [
-                {
-                    pattern: '$ELEMENT.innerHTML = $VALUE',
-                },
-                {
-                    pattern: '$ELEMENT.outerHTML = $VALUE',
-                },
-                {
-                    pattern: '$ELEMENT.insertAdjacentHTML($POSITION, $VALUE)',
-                },
-                {
-                    pattern: 'document.write($VALUE)',
-                },
-            ],
-            message: 'DOM XSS risk. Use textContent, DOM node creation, or trusted static markup.',
-            languages: ['javascript', 'typescript'],
-            severity: 'ERROR',
-            paths: {
-                include: ['/shared/**'],
-            },
-        },
         ...(isAll
             ? [
                   {

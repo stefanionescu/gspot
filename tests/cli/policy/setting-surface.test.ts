@@ -22,23 +22,22 @@ test.each(['recommended', 'all'] as const)('new license policy requires an expli
     });
 });
 
-test('spelling entries accept an identity reason while other missing or invalid reasons are refused', () => {
-    for (const words of ['["Codex"]', '[{word = "Codex", reason = "Codex"}]'])
-        expect(() =>
-            parseStrictPolicy(
-                buildPolicy(['spelling'], {
-                    tables: `require_reasons = true\n[tools.typos]\nwords = ${words}\n`,
-                }),
-            ),
-        ).not.toThrow();
-    for (const words of ['[{}]', '[{word = "Codex"}]', '[{word = "Codex", reason = "because"}]'])
-        expect(() =>
-            parseStrictPolicy(
-                buildPolicy(['spelling'], {
-                    tables: `require_reasons = true\n[tools.typos]\nwords = ${words}\n`,
-                }),
-            ),
-        ).toThrow('reason');
+test.each(['Codex', 'The public product name.'])('spelling accepts the reason %s', (reason) => {
+    expect(() =>
+        parseStrictPolicy(buildPolicy(['spelling'], { tables: `[words]\nCodex = ${JSON.stringify(reason)}\n` })),
+    ).not.toThrow();
+});
+
+test.each(['', 'because'])('spelling refuses the invalid reason %s', (reason) => {
+    expect(() =>
+        parseStrictPolicy(buildPolicy(['spelling'], { tables: `[words]\nCodex = ${JSON.stringify(reason)}\n` })),
+    ).toThrow('reason');
+});
+
+test('spelling refuses a word without a string reason', () => {
+    expect(() => parseStrictPolicy(buildPolicy(['spelling'], { tables: '[words]\nCodex = {}\n' }))).toThrow(
+        'expected string',
+    );
 });
 
 describe('conflicting configuration defaults', () => {
@@ -73,27 +72,25 @@ describe('conflicting configuration defaults', () => {
     });
 
     test('reports an unresolved conflict at the scope that selects the configurations', () => {
-        const policy = parseStrictPolicy(
-            buildPolicy([], { tables: '[[scope]]\npath = "db"\nconfigurations = ["sql"]\n' }),
-        );
+        const policy = parseStrictPolicy(buildPolicy([], { tables: '[scope."db"]\nconfigurations = ["sql"]\n' }));
         expect(validateAgainstSurface(knownSettings([]), policy, new Map([['db', settings]]))).toStrictEqual([
-            { path: ['scope', 0, 'configurations'], message: settings.problems[0]!.message },
+            { path: ['scope', 'db', 'configurations'], message: settings.problems[0]!.message },
         ]);
     });
 
     test('an inherited scope value settles descendants but leaves a sibling conflict visible', () => {
         const policy = parseStrictPolicy(
             buildPolicy([], {
-                tables: '[[scope]]\npath = "app"\nconfigurations = ["sql"]\n[scope.tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "app/db"\nconfigurations = ["sql"]\n[[scope]]\npath = "other"\nconfigurations = ["sql"]\n',
+                tables: '[scope."app"]\nconfigurations = ["sql"]\n[scope."app".tools.sqlfluff]\ndialect = "sqlite"\n[scope."app/db"]\nconfigurations = ["sql"]\n[scope."other"]\nconfigurations = ["sql"]\n',
             }),
         );
-        const scopes = new Map(policy.scopes.map(({ path }) => [path, settings]));
+        const scopes = new Map(Object.keys(policy.scope).map((path) => [path, settings]));
         expect(validateAgainstSurface(knownSettings([]), policy, scopes)).toStrictEqual([
-            { path: ['scope', 2, 'configurations'], message: settings.problems[0]!.message },
+            { path: ['scope', 'other', 'configurations'], message: settings.problems[0]!.message },
         ]);
         expect(settingValue(settings, policy, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
             value: 'sqlite',
-            source: '[[scope]] app',
+            source: '[scope."app"]',
         });
     });
 });
@@ -156,7 +153,7 @@ describe('root and scoped settings', () => {
     test('resolves configuration default, root table, then scope table', () => {
         const policy = parseStrictPolicy(
             buildPolicy(['bash'], {
-                tables: '[limits]\nfile_lines = 250\n[[scope]]\npath = "api"\n[scope.limits]\nfile_lines = 200\n',
+                tables: '[limits]\nfile_lines = 250\n[scope."api"]\n[scope."api".limits]\nfile_lines = 200\n',
             }),
         );
         expect(settingValue(surface, policy, 'limits.file_lines')?.value).toBe(250);
@@ -167,7 +164,7 @@ describe('root and scoped settings', () => {
     test('lists append and deduplicate across layers', () => {
         const policy = parseStrictPolicy(
             buildPolicy(['bash'], {
-                tables: '[naming]\nbanned = ["dispatcher"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned = ["dispatcher", "orchestrator"]\n',
+                tables: '[naming]\nbanned = ["dispatcher"]\n[scope."api"]\n[scope."api".naming]\nbanned = ["dispatcher", "orchestrator"]\n',
             }),
         );
         expect(settingValue(surface, policy, 'naming.banned', 'api')?.value).toStrictEqual([
@@ -193,7 +190,7 @@ describe('merged settings', () => {
         const defaults = knownSettings(manifests);
         const policy = parseStrictPolicy(
             buildPolicy(['naming'], {
-                tables: '[naming]\nbanned = ["dispatcher", "manager"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned = ["orchestrator", "handler"]\n',
+                tables: '[naming]\nbanned = ["dispatcher", "manager"]\n[scope."api"]\n[scope."api".naming]\nbanned = ["orchestrator", "handler"]\n',
             }),
         );
         expect(settingValue(defaults, policy, 'naming.banned', 'api')?.value).toStrictEqual([
@@ -209,7 +206,7 @@ describe('merged settings', () => {
         const settings = knownSettings(selectConfigurations(['css'], configurationManifests()));
         const policy = parseStrictPolicy(
             buildPolicy(['css'], {
-                tables: '[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "error" }]\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.stylelint.rules]\ncolor-named = ["always-where-possible"]\n',
+                tables: '[tools.stylelint.rules]\nselector-max-id = 0\ncolor-named = ["never", { severity = "error" }]\n[scope."app"]\nconfigurations = []\n[scope."app".tools.stylelint.rules]\ncolor-named = ["always-where-possible"]\n',
             }),
         );
         expect(settingValue(settings, policy, 'tools.stylelint.rules', 'app')?.value).toStrictEqual({
@@ -225,17 +222,15 @@ describe('merged settings', () => {
 
 describe('setting validation', () => {
     test('raising a ceiling needs a reason that names the command, and lowering one does not', () => {
-        const problems = policyProblems(
-            'require_reasons = true\nconfigurations = ["bash"]\n[limits]\nfile_lines = 400\n',
-        );
+        const problems = policyProblems('configurations = ["bash"]\n[limits]\nfile_lines = 400\n');
         expect(problems[0]).toContain('gspot set limits.file_lines 400 --reason');
         const lowered = parseStrictPolicy(buildPolicy(['bash'], { tables: '[limits]\nfile_lines = 200\n' }));
         expect(validateAgainstSurface(surface, lowered, new Map())).toStrictEqual([]);
     });
 
-    test('a setting no configuration has is refused with the keys that exist', () => {
+    test('an undeclared native setting is refused with its owning table', () => {
         const problems = policyProblems(buildPolicy(['bash'], { tables: '[tools.shellcheck]\nseverity = "style"\n' }));
-        expect(problems[0]).toContain('No selected configuration has the setting `tools.shellcheck.severity`');
+        expect(problems[0]).toContain('`severity` is not a setting gspot knows under [tools.shellcheck]');
     });
 
     test('term-group controls are refused because no group can be removed', () => {
@@ -255,9 +250,7 @@ test('raising the duplication line floor requires a reason, while lowering it ti
     const key = 'limits.duplication.min_lines';
     const shipped = settings.defaults.get(key)!.value as number;
     const [raised, lowered] = [shipped + 1, shipped - 1].map((value) =>
-        policyProblems(
-            `require_reasons = true\nconfigurations = ["duplication"]\n[limits.duplication]\nmin_lines = ${String(value)}\n`,
-        ),
+        policyProblems(`configurations = ["duplication"]\n[limits.duplication]\nmin_lines = ${String(value)}\n`),
     );
     expect(raised).toHaveLength(1);
     expect(raised![0]).toContain(`gspot set ${key} ${String(shipped + 1)} --reason`);
@@ -267,14 +260,14 @@ test('raising the duplication line floor requires a reason, while lowering it ti
 test.each(['../outside', 'C:outside'])('the harness role refuses the escaping folder %s', (path) => {
     expect(() =>
         parseStrictPolicy(
-            buildPolicy(['jest'], { tables: `[architecture.roles]\ntest_support = ${JSON.stringify(path)}\n` }),
+            buildPolicy(['jest'], { tables: `[architecture.roles]\ntest_harness = ${JSON.stringify(path)}\n` }),
         ),
     ).toThrow('Use a relative path with forward slashes, without parent traversal or a drive prefix.');
 });
 
 test('the harness role accepts an owned folder', () => {
     const policy = parseStrictPolicy(
-        buildPolicy(['jest'], { tables: '[architecture.roles]\ntest_support = "tests/fixtures"\n' }),
+        buildPolicy(['jest'], { tables: '[architecture.roles]\ntest_harness = "tests/fixtures"\n' }),
     );
-    expect(policy.architecture.roles['test_support']).toBe('tests/fixtures');
+    expect(policy.architecture.roles['test_harness']).toBe('tests/fixtures');
 });

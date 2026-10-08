@@ -1,7 +1,6 @@
 export const EXPLAIN_POLICY = `configurations = []
 
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = ["bash"]
 
 [[ignore]]

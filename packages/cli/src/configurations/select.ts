@@ -1,5 +1,5 @@
 import { GspotError } from '#cli/platform/errors.ts';
-import { scopeAncestors } from '#cli/repository/scopes.ts';
+import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
 import { unknownConfigurationDiagnostic } from '#cli/configurations/problems.ts';
 
 import type {
@@ -74,7 +74,8 @@ export function selectConfigurations(configurationNames: string[], manifests: Ma
  * The root selection and each ancestor scope selection, deduplicated in order.
  * @param policy the declared selections.
  * @param policy.configurations the configurations the root selects.
- * @param policy.scopes the scopes, each with the configurations it selects.
+ * @param policy.scope the keyed scopes, each with its authored configuration choices.
+ * @param policy.removed_configurations the manually removed configurations.
  * @param scope the scope path.
  * @param manifests every configuration manifest.
  * @returns the manifests in order.
@@ -94,14 +95,19 @@ export function selectForScope(
         )
         .map((manifest) => manifest.configuration.name)
         .toArray();
-    return selectConfigurations(
-        [
-            ...policy.configurations,
-            ...scopeAncestors(policy.scopes, scope).flatMap((entry) => entry.configurations),
-            ...automatic,
-        ],
-        manifests,
-    );
+    const choices = new Set<string>();
+    const tables = [
+        policy,
+        ...Object.entries(policy.scope)
+            .filter(([ancestor]) => isInScope(scope, ancestor))
+            .toSorted(([left], [right]) => byScopeDepth(left, right))
+            .map(([, entry]) => entry),
+    ];
+    for (const table of tables) {
+        for (const removed of table.removed_configurations) choices.delete(removed);
+        for (const configuration of table.configurations) choices.add(configuration);
+    }
+    return selectConfigurations([...choices, ...automatic], manifests);
 }
 
 /**

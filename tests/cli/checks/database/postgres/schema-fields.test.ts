@@ -1,26 +1,24 @@
-import { test, expect, describe } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { parseMigration } from '#tests/harness/migrations.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 
-describe('schema', () => {
-    test('keys count as indexes, a table constraint names its columns, and a dropped table leaves', async () => {
-        const fields = buildSchema([
-            await parseMigration(
-                '1_create.sql',
-                'CREATE TABLE posts (id UUID PRIMARY KEY, author_id UUID REFERENCES users (id), team_id UUID, CONSTRAINT team_fk FOREIGN KEY (team_id) REFERENCES teams (id));\nCREATE TABLE drafts (id UUID PRIMARY KEY, post_id UUID REFERENCES posts (id));',
-            ),
-            await parseMigration(
-                '2_index.sql',
-                'CREATE INDEX posts_author_idx ON posts (author_id, id);\nDROP TABLE drafts;',
-            ),
-        ]);
-        expect(fields.tables.keys().toArray()).toStrictEqual(['public.posts']);
-        expect(fields.foreignKeys.map((key) => `${key.table}.${key.column}`)).toStrictEqual([
-            'public.posts.author_id',
-            'public.posts.team_id',
-        ]);
-        expect(fields.indexed.get('public.posts')).toStrictEqual(new Set(['id', 'author_id']));
-    });
+test('keys count as indexes, a table constraint names its columns, and a dropped table leaves', async () => {
+    const fields = buildSchema([
+        await parseMigration(
+            '1_create.sql',
+            'CREATE TABLE posts (id UUID PRIMARY KEY, author_id UUID REFERENCES users (id), team_id UUID, CONSTRAINT team_fk FOREIGN KEY (team_id) REFERENCES teams (id));\nCREATE TABLE drafts (id UUID PRIMARY KEY, post_id UUID REFERENCES posts (id));',
+        ),
+        await parseMigration(
+            '2_index.sql',
+            'CREATE INDEX posts_author_idx ON posts (author_id, id);\nDROP TABLE drafts;',
+        ),
+    ]);
+    expect(fields.tables.keys().toArray()).toStrictEqual(['public.posts']);
+    expect(fields.foreignKeys.map((key) => `${key.table}.${key.column}`)).toStrictEqual([
+        'public.posts.author_id',
+        'public.posts.team_id',
+    ]);
+    expect(fields.indexed.get('public.posts')).toStrictEqual(new Set(['id', 'author_id']));
 });
 
 test('table recreation discards security, policies, keys, and indexes from the old table', async () => {

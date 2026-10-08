@@ -7,14 +7,15 @@ import { testdir, createFileTree } from 'testdirs';
 import { checkRun } from '#cli/execution/built-in.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { TYPO } from '#tests/config/harness/spelling.ts';
+import { TYPO } from '#tests/config/samples/spelling.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
+import { stat, chmod, writeFile } from 'node:fs/promises';
 import { containing } from '#tests/harness/expectations.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { statSync, chmodSync, existsSync, writeFileSync } from 'node:fs';
-import { TYPO_REPORT, MARKDOWN_REPORT } from '#tests/config/cli/execution/parse-output/formats.ts';
+import { TYPO_REPORT, MARKDOWN_REPORT } from '#tests/config/cli/parsers/output/formats.ts';
 
 test.each(['{file}', '{files}'])(
     'declared findings exits distinguish partial reports from fatal %s execution',
@@ -24,16 +25,15 @@ test.each(['{file}', '{files}'])(
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 configurations: [],
-                check: [
-                    {
-                        name: 'project/exit-contract',
+                check: {
+                    'project/exit-contract': {
                         command: [process.execPath, 'checker.cjs', placeholder],
                         paths: [source],
                         stage: 'commit',
                         exit_codes: [1],
                         output: { format: 'regex', pattern: String.raw`^(?<file>.+):(?<line>\d+): (?<message>.+)$` },
                     },
-                ],
+                },
             }),
             [source]: '1',
             'checker.cjs':
@@ -48,13 +48,13 @@ test.each(['{file}', '{files}'])(
         expect(finding.findings).toStrictEqual([
             containing({ file: source, line: 1, message: 'Located defect before exit' }),
         ]);
-        writeFileSync(join(sandbox.path, source), '7');
+        await writeFile(join(sandbox.path, source), '7');
         const fatal = await runCheckCommand(session, planned);
         expect(fatal.status).toBe('error');
         expect(fatal.findings).toStrictEqual([]);
         expect(fatal.note).toContain('exit 7');
         expect(await Bun.file(join(sandbox.path, source)).text()).toBe('7');
-        writeFileSync(join(sandbox.path, source), '0');
+        await writeFile(join(sandbox.path, source), '0');
         const corrected = await runCheckCommand(session, planned);
         expect(corrected.status).toBe('passed');
         expect(corrected.findings).toStrictEqual([]);
@@ -73,8 +73,8 @@ test.each([0, 1, 3] as const)(
             '.github/workflows/caller.yml': workflow,
             actionlint: `#!${process.execPath}\nif (process.argv.includes('--version')) console.log('1.7.12'); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${String(code)} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${String(code)}; }\n`,
         });
-        chmodSync(executable, 0o755);
-        chmodSync(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
+        await chmod(executable, 0o755);
+        await chmod(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
         const session = await openSession(sandbox.path);
         const plans = planRun(session, { stage: 'commit', skips: [], only: ['actions/actionlint'] });
         const planned = plans[0]!;
@@ -83,10 +83,11 @@ test.each([0, 1, 3] as const)(
         expect(result.status, JSON.stringify(result)).toBe(({ 0: 'passed', 1: 'failed', 3: 'error' } as const)[code]);
         const workspace = await Bun.file(record).text();
         expect(workspace).not.toBe(sandbox.path);
-        expect(existsSync(workspace)).toBe(false);
+        expect(await pathExists(workspace)).toBe(false);
         expect(await Bun.file(join(sandbox.path, '.github/workflows/caller.yml')).text()).toBe(workflow);
-        expect(statSync(join(sandbox.path, '.github/workflows/caller.yml')).mode & 0o777).toBe(getKeptMode(0o444));
-        expect(existsSync(join(sandbox.path, '.git'))).toBe(false);
+        const attributes = await stat(join(sandbox.path, '.github/workflows/caller.yml'));
+        expect(attributes.mode & 0o777).toBe(getKeptMode(0o444));
+        expect(await pathExists(join(sandbox.path, '.git'))).toBe(false);
         // An exit outside the contract is an error that names the exit code and carries no findings.
         expect(result.note?.includes('exit 3') ?? false).toBe(code === 3);
         expect(result.findings.length > 0).toBe(code === 1);
@@ -105,9 +106,8 @@ test.each(['typos', 'markdownlint'] as const)(
         const command = [process.execPath, 'checker.cjs', '{files}'];
         const policy = stringify({
             configurations: [],
-            check: [
-                {
-                    name: 'project/native-exit',
+            check: {
+                'project/native-exit': {
                     command,
                     fix: [...command, '--fix'],
                     paths: [path],
@@ -115,7 +115,7 @@ test.each(['typos', 'markdownlint'] as const)(
                     exit_codes: [accepted],
                     output: { format },
                 },
-            ],
+            },
         });
         await createFileTree(sandbox.path, {
             'gspot.toml': policy,
@@ -131,7 +131,7 @@ test.each(['typos', 'markdownlint'] as const)(
             failed: ['project/native-exit'],
             checks: [{ check: 'project/native-exit', status: 'failed', findings: [{ file: path, line: 1 }] }],
         });
-        writeFileSync(join(sandbox.path, 'status.txt'), String(native));
+        await writeFile(join(sandbox.path, 'status.txt'), String(native));
         const fatal = await runGspot(sandbox.path, checkArguments);
         expect(fatal.code, fatal.stdout + fatal.stderr).toBe(2);
         expect(JSON.parse(fatal.stdout) as RunReport).toMatchObject({
@@ -145,7 +145,7 @@ test.each(['typos', 'markdownlint'] as const)(
             failed: ['project/native-exit'],
             checks: [{ status: 'passed', findings: [] }],
         });
-        writeFileSync(join(sandbox.path, 'status.txt'), '0');
+        await writeFile(join(sandbox.path, 'status.txt'), '0');
         const corrected = await runGspot(sandbox.path, checkArguments);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);

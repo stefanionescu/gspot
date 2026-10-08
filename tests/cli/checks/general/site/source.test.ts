@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
@@ -44,7 +44,7 @@ test.each(SVG_SAVING_CASES)('SVG optimization $name', async ({ level, percent, s
         tables:
             percent === undefined
                 ? ''
-                : `[tools.svgo]\nmin_saving_percent = { value = ${String(percent)}, reason = "Required asset size threshold." }\n`,
+                : `[tools.svgo]\nmin_saving_percent = ${String(percent)}\n[reasons]\n"tools.svgo.min_saving_percent" = "Required asset size threshold."\n`,
     });
     await createFileTree(sandbox.path, { 'gspot.toml': policy, 'icon.svg': ORIGINAL_SVG });
     const session = await openSession(sandbox.path);
@@ -56,25 +56,19 @@ test.each(SVG_SAVING_CASES)('SVG optimization $name', async ({ level, percent, s
             version: pin.version,
         }),
     });
-    using resources = new DisposableStack();
-    resources.use(mockPinnedExecutables([pin]));
-    resources.use(
-        spyOn(processes, 'run').mockImplementation((_argv, options) => {
-            expect(options.stdin).toBe(ORIGINAL_SVG);
-            return Promise.resolve({
-                code: 0,
-                stdout: '<svg/>'.padEnd(Buffer.byteLength(ORIGINAL_SVG) - saved),
-                stderr: '',
-                missing: false,
-                duration: 1,
-            });
-        }),
-    );
+    using _executables = mockPinnedExecutables([pin]);
+    using run = spyOn(processes, 'run').mockResolvedValue({
+        code: 0,
+        stdout: '<svg/>'.padEnd(Buffer.byteLength(ORIGINAL_SVG) - saved),
+        stderr: '',
+        missing: false,
+        duration: 1,
+    });
     const findings = await svgo(buildCheckInput(session, 'site/svgo'));
+    expect(run.mock.calls.map(([, options]) => options.stdin)).toStrictEqual([ORIGINAL_SVG]);
     if (finding) {
         expect(findings).toMatchObject([{ file: 'icon.svg', rule: 'unoptimized' }]);
-        expect(findings).toHaveLength(1);
     } else expect(findings).toStrictEqual([]);
-    expect(readFileSync(join(sandbox.path, 'icon.svg'), 'utf8')).toBe(ORIGINAL_SVG);
-    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
+    expect(await readFile(join(sandbox.path, 'icon.svg'), 'utf8')).toBe(ORIGINAL_SVG);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
 });

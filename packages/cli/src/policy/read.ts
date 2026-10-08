@@ -1,19 +1,21 @@
 import type { z } from 'zod';
 import { join } from 'node:path';
 import { readText } from '#cli/platform/source.ts';
-import { valueAt } from '#cli/platform/objects.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { buildPolicy } from '#cli/policy/normalize.ts';
-import { TomlError, parse as parseToml } from 'smol-toml';
 import { policySchema } from '#cli/policy/schema/policy.ts';
+import { valueAt, isRecord } from '#cli/platform/objects.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
-import { FIELD_PROBLEMS } from '#cli/config/policy/settings.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
+import { parseTomlText, readPolicyFile } from '#cli/policy/file.ts';
+import { FIELD_PROBLEMS, SCOPE_KEY_DEPTH } from '#cli/config/policy/settings.ts';
 import type { Policy, RawPolicy, PolicyFile, PolicyProblem } from '#cli/types/policy/settings.ts';
 import { completenessProblems, unknownConfigurationProblems } from '#cli/policy/errors/selection.ts';
 import { reasonProblems, restrictionProblems, pathProblems as getPathProblems } from '#cli/policy/errors/reasons.ts';
 
 function issueLines(path: string, issue: z.core.$ZodIssue): string[] {
+    if (issue.code === 'invalid_key')
+        return issue.issues.flatMap((child) => issueLines(path, { ...child, path: [...issue.path, ...child.path] }));
     const segments = issue.path.filter((part): part is KeyPath[number] => typeof part !== 'symbol');
     if (issue.code !== 'unrecognized_keys') return [problemText({ path: segments, message: issue.message }, path)];
     const where = segments.map(String).join('.');
@@ -58,6 +60,11 @@ function collectProblems(policy: Policy, root: string | undefined): PolicyProble
 }
 
 function ownerOf(path: KeyPath): KeyPath {
+    const depth = path[0] === 'scope' ? SCOPE_KEY_DEPTH : 0;
+    const reasonKey = path[depth + 1];
+    if (path[depth] === 'words') return path;
+    if (path[depth] === 'reasons' && typeof reasonKey === 'string')
+        return [...path.slice(0, depth), ...reasonKey.split('.')];
     const last = path.at(-1);
     return typeof last === 'string' && FIELD_PROBLEMS.has(last) ? path.slice(0, -1) : path;
 }
@@ -73,12 +80,15 @@ function byRemovalOrder(left: KeyPath, right: KeyPath): number {
 function dropOwner(raw: RawPolicy, owner: KeyPath): void {
     const container = valueAt(raw, owner.slice(0, -1));
     const last = owner.at(-1);
-    if (container === null || typeof container !== 'object' || last === undefined) return;
-    if (Array.isArray(container)) {
-        if (typeof last === 'number') container.splice(last, 1);
+    if (Array.isArray(container) && typeof last === 'number') {
+        container.splice(last, 1);
         return;
     }
-    if (typeof last === 'string') Reflect.deleteProperty(container, last);
+    if (!isRecord(container) || typeof last !== 'string') return;
+    Reflect.deleteProperty(container, last);
+    const path = owner[0] === 'scope' ? owner.slice(0, SCOPE_KEY_DEPTH) : [];
+    const reasons = valueAt(raw, [...path, 'reasons']);
+    if (isRecord(reasons)) Reflect.deleteProperty(reasons, owner.slice(path.length).join('.'));
 }
 
 /**
@@ -91,26 +101,6 @@ export function problemText(problem: PolicyProblem, file?: string): string {
     const where = problem.path.map(String).join('.');
     const place = [file, where].filter((part) => part !== undefined && part !== '');
     return [...place, problem.message].join(': ');
-}
-
-/**
- * Parse TOML and retain the parser location in policy errors.
- *
- * @param text the TOML text
- * @param path the source file or URL, for the error
- * @param kind whether the document is a policy or reusable template
- * @returns the parsed table
- */
-export function parseTomlText(text: string, path: string, kind: 'policy' | 'template'): Record<string, unknown> {
-    try {
-        return parseToml(text);
-    } catch (error) {
-        if (!(error instanceof TomlError)) throw error;
-        const detail = error.message.split('\n', 1).join('').replace('Invalid TOML document: ', '');
-        throw new GspotError(kind, [
-            `${path}:${String(error.line)}:${String(error.column)} is not valid TOML: ${detail}`,
-        ]);
-    }
 }
 
 /**
@@ -176,9 +166,7 @@ export function hasPolicy(root: string): boolean {
  */
 export function readPolicy(root: string): PolicyFile {
     const path = join(root, POLICY_FILE);
-    const text = readText(root, POLICY_FILE);
-    if (text === undefined)
-        throw new GspotError('policy', [`There is no gspot.toml here. Run \`gspot init\` to create one.`]);
+    const text = readPolicyFile(root);
     const { policy, problems } = readPolicyText(text, root);
     return { policy, path, text, problems };
 }

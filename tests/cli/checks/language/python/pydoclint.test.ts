@@ -1,12 +1,12 @@
 import { join } from 'node:path';
-import { chmodSync } from 'node:fs';
+import { chmod } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
 import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { PYPROJECT } from '#tests/config/samples/python/source.ts';
+import { PYPROJECT } from '#tests/config/samples/python.ts';
 import { pydoclint, docstringConfiguration } from '#cli/checks/language/python/pydoclint.ts';
 import { DOCSTRING_STYLES, DOCSTRING_PROJECTS } from '#tests/config/cli/checks/language/python/pydoclint.ts';
 
@@ -19,7 +19,7 @@ test.each(DOCSTRING_PROJECTS)('pydoclint runs with $name', async ({ files, style
         'example/__init__.py': '"""Test."""\n',
         [executable]: '',
     });
-    chmodSync(join(sandbox.path, executable), 0o755);
+    await chmod(join(sandbox.path, executable), 0o755);
     const session = await openSession(sandbox.path);
     const [planned] = planRun(session, { stage: 'all', skips: [], only: ['python/pydoclint'] });
     using _version = spyOn(spawn, 'runBlocking').mockReturnValue({
@@ -95,7 +95,7 @@ test('pydoclint keeps earlier style findings when a later native style batch fai
             'def double(value: int) -> int:\n    """Double it.\n\n    Parameters\n    ----------\n    value\n        A number.\n    """\n    return value * 2\n',
         [executable]: '',
     });
-    chmodSync(join(sandbox.path, executable), 0o755);
+    await chmod(join(sandbox.path, executable), 0o755);
     const session = await openSession(sandbox.path);
     const [planned] = planRun(session, { stage: 'all', skips: [], only: ['python/pydoclint'] });
     using _version = spyOn(spawn, 'runBlocking').mockReturnValue({

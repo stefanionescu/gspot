@@ -1,4 +1,5 @@
 import { resolve } from 'node:path';
+import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { Argument } from '@commander-js/extra-typings';
@@ -12,29 +13,17 @@ import { detectUnselected } from '#cli/configurations/detect.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/options.ts';
 import { everyTable, listSettings } from '#cli/policy/settings/lookup.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
-import type { ExtraRow, SettingsListing, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
+import type { SettingsListing, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 function scopeTag(scope: string | undefined): string {
     return scope === undefined || scope === '' ? '' : `  [scope ${scope}]`;
 }
 
-function getExtras(scope: string, tools: Policy['tools']): ExtraRow[] {
-    return Object.entries(tools).flatMap(([tool, table]) => {
-        if (table.verbatim === undefined) return [];
-        return [
-            {
-                tool,
-                keys: Object.keys(table.verbatim).filter((key) => key !== 'reason'),
-                ...(table.verbatim.reason === undefined ? {} : { reason: table.verbatim.reason }),
-                scope,
-            },
-        ];
-    });
-}
-
 function buildSettingsResult(session: Session): CommandResult {
     const { rows, extras } = buildSettingRows(session.policyFiles.policy, session.scopes);
-    const displayed = rows.filter((row) => row.scope === '' || row.source.startsWith(`[[scope]] ${row.scope}`));
+    const displayed = rows.filter(
+        (row) => row.scope === '' || row.source.startsWith(`[scope.${JSON.stringify(row.scope)}]`),
+    );
     const width = Math.max(...displayed.map((row) => row.key.length)) + KEY_GAP;
     const lines = displayed.map((row) => {
         const value = row.value === undefined ? 'unset' : JSON.stringify(row.value);
@@ -109,7 +98,18 @@ function buildConfigurationsResult(session: Session): CommandResult {
  */
 function buildSettingRows(policy: Policy, scopes: ScopeSelection[]): SettingsListing {
     const extras = everyTable(policy).flatMap(({ table, scope = '' }) =>
-        table.tools === undefined ? [] : getExtras(scope, table.tools),
+        (table.tools === undefined ? [] : Object.entries(table.tools)).flatMap(([tool, { verbatim }]) =>
+            verbatim === undefined
+                ? []
+                : [
+                      compact({
+                          tool,
+                          keys: Object.keys(verbatim),
+                          reason: table.reasons?.[`tools.${tool}.verbatim`],
+                          scope,
+                      }),
+                  ],
+        ),
     );
     const rows = scopes.flatMap((selection) => {
         const scope = selection.scope.path;

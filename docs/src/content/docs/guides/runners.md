@@ -3,11 +3,11 @@ title: Runners
 description: Run gspot through mise, npm, pnpm, Yarn, Bun, or PATH.
 ---
 
-The `run_with` setting determines how hooks and CI launch gspot. A runner choice does not add the CLI to your application dependencies. Install the CLI using the [installation guide](/guides/install/).
+The `runner` setting determines how hooks and CI launch gspot. A runner choice does not add the CLI to your application dependencies. Install the CLI using the [installation guide](/guides/install/).
 
 ## mise
 
-With `run_with = "mise"`, gspot writes `.mise/conf.d/gspot-tools.toml` with the CLI pin on the npm backend (`npm:@gspothq/cli`) and required executable tools. It leaves your authored `mise.toml` unchanged. Hooks run `mise exec -- gspot`. gspot needs Node.js 24.2 or newer, or Bun 1.4.2 or newer, under every runner, including mise. Applicable tools still require their own runtimes.
+With `runner = "mise"`, gspot writes `.mise/conf.d/gspot-tools.toml` with the CLI pin on the npm backend (`npm:@gspothq/cli`) and required executable tools. It leaves your authored `mise.toml` unchanged. Hooks run `mise exec -- gspot`. gspot needs Node.js 24.2 or newer, or Bun 1.4.2 or newer, under every runner, including mise. Applicable tools still require their own runtimes.
 
 Initialize a Python repository interactively and choose mise:
 
@@ -29,9 +29,9 @@ Applicable Python tools live in `.gspot/pyproject.toml`; uv installs them into `
 
 ## No runner
 
-`gspot init --no-task` leaves out `run_with`. Hooks call `gspot` on `PATH`, so install the pinned CLI globally. Native tools still need mise or a separate installation. `gspot doctor` prints acquisition commands.
+`gspot init --no-task` selects `runner = "none"`. Hooks call `gspot` on `PATH`, so install the pinned CLI globally. Native tools still need mise or a separate installation. `gspot doctor` prints acquisition commands.
 
-A missing `[hooks]` or `[ci]` table disables that integration. `--no-hooks` and `--no-ci` leave those tables out during initialization.
+`hooks.enabled = false` disables hooks; an absent `[ci]` disables CI. `--no-hooks` and `--no-ci` select those choices during initialization.
 
 ## Private registries
 

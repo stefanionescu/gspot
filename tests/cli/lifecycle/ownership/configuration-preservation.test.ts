@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { applyBlock } from '#cli/platform/managed-blocks.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
-import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { proposeBlock, proposeMerge } from '#cli/lifecycle/ownership/plans.ts';
 import { MALFORMED_BLOCKS } from '#tests/config/cli/platform/managed-blocks.ts';
@@ -22,7 +22,7 @@ test('managed block updates and removal preserve authored bytes and subsequent s
         expect(installed.startsWith(original)).toBe(true);
         const prefix = 'Additional instructions.\n';
         const suffix = '\nLater authored instructions.\n';
-        writeFileSync(join(directory.path, 'AGENTS.md'), prefix + installed + suffix);
+        await writeFile(join(directory.path, 'AGENTS.md'), prefix + installed + suffix);
         expect(applyPlan(log, proposeBlock(log, 'AGENTS.md', 'updated instructions', 'markdown'))).toBe('changed');
         expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(
             prefix + applyBlock(original, 'updated instructions', { path: 'AGENTS.md', style: 'markdown' }) + suffix,
@@ -62,7 +62,7 @@ test('shared TOML updates preserve comments and later authored settings through 
         ).toBe('changed');
         const installed = log.files.read('compiler.toml')!.bytes.toString('utf8');
         const edited = installed.replace('strict = false', 'strict = true');
-        writeFileSync(join(directory.path, 'compiler.toml'), edited);
+        await writeFile(join(directory.path, 'compiler.toml'), edited);
         expect(
             applyPlan(log, proposeMerge(log, 'compiler.toml', [{ path: ['extends'], value: './.gspot/second.json' }])),
         ).toBe('changed');
@@ -104,7 +104,7 @@ test('leaving TOML keys restores their original values and preserves authored ch
             .read('package.toml')!
             .bytes.toString('utf8')
             .replace('private = true', 'private = false');
-        writeFileSync(join(directory.path, 'package.toml'), edited);
+        await writeFile(join(directory.path, 'package.toml'), edited);
         expect(
             applyPlan(log, proposeMerge(log, 'package.toml', [{ path: ['scripts', 'check'], value: 'gspot check' }])),
         ).toBe('changed');
@@ -140,7 +140,7 @@ test('nested TOML ownership preserves authored entries and comments through upda
             .read('tool.toml')!
             .bytes.toString('utf8')
             .replace('echo original', 'echo authored-later');
-        writeFileSync(join(directory.path, 'tool.toml'), edited);
+        await writeFile(join(directory.path, 'tool.toml'), edited);
         expect(
             applyPlan(
                 log,
@@ -161,7 +161,7 @@ test('adopting identical authored configuration restores its bytes and permissio
     await using directory = await testdir();
     const content = 'authored = true\n[scripts]\ncheck = "gspot check"\n';
     await createFileTree(directory.path, { 'package.toml': content });
-    chmodSync(join(directory.path, 'package.toml'), 0o640);
+    await chmod(join(directory.path, 'package.toml'), 0o640);
     {
         using log = openOwnership(directory.path);
 
@@ -169,8 +169,9 @@ test('adopting identical authored configuration restores its bytes and permissio
             proposeMerge(log, 'package.toml', [{ path: ['scripts', 'check'], value: 'gspot check' }], true),
         ]);
         expect(applyPlan(log, proposeRestoration(log, 'package.toml'))).toBe('changed');
-        expect(readFileSync(join(directory.path, 'package.toml'), 'utf8')).toBe(content);
-        expect(statSync(join(directory.path, 'package.toml')).mode & 0o777).toBe(getKeptMode(0o640));
+        expect(await readFile(join(directory.path, 'package.toml'), 'utf8')).toBe(content);
+        const metadata = await stat(join(directory.path, 'package.toml'));
+        expect(metadata.mode & 0o777).toBe(getKeptMode(0o640));
     }
 });
 
@@ -189,16 +190,18 @@ test('identical unrecorded blocks and configuration fields survive adoption, lat
             proposeBlock(log, 'AGENTS.md', 'existing instructions', 'markdown'),
             proposeMerge(log, 'package.toml', [{ path: ['scripts', 'check'], value: 'gspot check' }]),
         ]);
-        writeFileSync(join(directory.path, 'AGENTS.md'), instructions + 'Later authored instructions.\n');
-        writeFileSync(join(directory.path, 'package.toml'), configuration.replace('true', 'false'));
+        await writeFile(join(directory.path, 'AGENTS.md'), instructions + 'Later authored instructions.\n');
+        await writeFile(join(directory.path, 'package.toml'), configuration.replace('true', 'false'));
         applyPlans(
             log,
             ['AGENTS.md', 'package.toml'].map((path) => proposeRestoration(log, path)),
         );
-        expect(readFileSync(join(directory.path, 'AGENTS.md'), 'utf8')).toBe(
+        expect(await readFile(join(directory.path, 'AGENTS.md'), 'utf8')).toBe(
             instructions + 'Later authored instructions.\n',
         );
-        expect(readFileSync(join(directory.path, 'package.toml'), 'utf8')).toBe(configuration.replace('true', 'false'));
+        expect(await readFile(join(directory.path, 'package.toml'), 'utf8')).toBe(
+            configuration.replace('true', 'false'),
+        );
         expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
     }
 });
@@ -220,10 +223,10 @@ test('shared TOML removes created empty parents and preserves authored empty par
         applyPlan(log, proposeMerge(log, path, fields, true));
         const installed = log.files.read(path)!.bytes.toString('utf8');
         const edited = installed.replace('4', '99');
-        writeFileSync(join(directory.path, path), edited);
+        await writeFile(join(directory.path, path), edited);
         expect(applyPlan(log, proposeMerge(log, path, []))).toBe('preserved');
         expect(log.files.read(path)!.bytes.toString('utf8')).toBe(edited);
-        writeFileSync(join(directory.path, path), installed);
+        await writeFile(join(directory.path, path), installed);
         applyPlan(log, proposeMerge(log, path, [fields[1]!]));
         expect(parseToml(log.files.read(path)!.bytes.toString('utf8'))).toStrictEqual({
             authored: true,
@@ -233,7 +236,7 @@ test('shared TOML removes created empty parents and preserves authored empty par
         applyPlan(log, proposeMerge(log, path, []));
         expect(parseToml(log.files.read(path)!.bytes.toString('utf8'))).toStrictEqual({ authored: true, kept: {} });
         applyPlan(log, proposeMerge(log, path, fields, true));
-        writeFileSync(
+        await writeFile(
             join(directory.path, path),
             log.files.read(path)!.bytes.toString('utf8').replace('true', 'false'),
         );
@@ -254,7 +257,7 @@ test.each(MALFORMED_BLOCKS)(
         expect(() => proposeBlock(log, path, 'replacement', style)).toThrow(
             `${path} has incomplete or repeated gspot block markers.`,
         );
-        expect(readFileSync(join(directory.path, path), 'utf8')).toBe(source);
+        expect(await readFile(join(directory.path, path), 'utf8')).toBe(source);
         expect(log.state).toStrictEqual(records);
     },
 );
@@ -276,15 +279,15 @@ test('restoration names malformed files and preserves their bytes and ownership 
         .bytes.toString('utf8')
         .replace('<!-- <<< gspot managed <<< -->', '');
     const toml = '[install\n';
-    writeFileSync(join(directory.path, 'AGENTS.md'), instructions);
-    writeFileSync(join(directory.path, 'bunfig.toml'), toml);
+    await writeFile(join(directory.path, 'AGENTS.md'), instructions);
+    await writeFile(join(directory.path, 'bunfig.toml'), toml);
     expect(() => proposeRestoration(log, 'AGENTS.md')).toThrow(
         'AGENTS.md has incomplete or repeated gspot block markers.',
     );
     expect(() => proposeRestoration(log, 'bunfig.toml')).toThrow(
         'bunfig.toml is not valid TOML. Fix the file, then run gspot apply.',
     );
-    expect(readFileSync(join(directory.path, 'AGENTS.md'), 'utf8')).toBe(instructions);
-    expect(readFileSync(join(directory.path, 'bunfig.toml'), 'utf8')).toBe(toml);
+    expect(await readFile(join(directory.path, 'AGENTS.md'), 'utf8')).toBe(instructions);
+    expect(await readFile(join(directory.path, 'bunfig.toml'), 'utf8')).toBe(toml);
     expect(log.state).toStrictEqual(records);
 });

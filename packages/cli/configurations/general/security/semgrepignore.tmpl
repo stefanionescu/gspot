@@ -1,13 +1,8 @@
-node_modules/
 dist/
 build/
 coverage/
-.build/
-DerivedData/
-Pods/
-.venv/
+<% for (const path of ignoredPaths) { %><%= path %>
+<% } %>
 .env*
-*.lock
-package-lock.json
-<% for (const path of scopeIgnorePatterns((settings['tools.semgrep.exclude'] ?? []).flatMap((entry) => entry.paths ?? []), scope)) { %><%= path %>
+<% for (const path of scopeIgnorePatterns(ignoresFor('security/semgrep').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths ?? []), scope)) { %><%= path %>
 <% } %>

@@ -1,17 +1,17 @@
 // Locate declared tools, inspect their versions, and report an actionable installation command.
-
 import semver from 'semver';
 import { join, relative } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
+import { installedPackage } from '#cli/repository/manifests.ts';
 import { parseVersionOutput } from '#cli/parsers/tool/version.ts';
 import { misePin, toolProjectPackage } from '#cli/configurations/pins.ts';
 import type { ParsedToolVersion } from '#cli/types/parsers/tool-version.ts';
 import { HOST_HINTS, VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 import { DOT_GSPOT, NODE_MODULES_DIRECTORY } from '#cli/config/platform/locations.ts';
-import { packageVersion, installedPackage, locateCandidates, locateRepositoryCandidates } from '#cli/tools/locate.ts';
+import { packageVersion, locateCandidates, locateRepositoryCandidates } from '#cli/tools/locate.ts';
 
 import type {
     Inspected,
@@ -230,7 +230,7 @@ export function toolVersionState(found: string, want: string, floor: string): To
  */
 export function inspectTool(context: ToolSearch, tool: ToolPin): ToolInspection {
     const { root, inspections } = context;
-    const runner = context.policyFiles?.policy.run_with;
+    const runner = context.policyFiles?.policy.runner;
     const pending = isInstallationPending(context, tool, runner);
     if (tool.system !== true && pending) return pendingInspection(tool);
     const cwd = context.cwd ?? root;

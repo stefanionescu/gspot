@@ -1,45 +1,24 @@
 import { resolve } from 'node:path';
-import { stringify } from 'smol-toml';
+import { isDeepStrictEqual } from 'node:util';
+import { readPolicy } from '#cli/policy/read.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { printResult } from '#cli/terminal/messages.ts';
+import { savePolicy } from '#cli/commands/save-policy.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { knownChecks } from '#cli/configurations/manifests.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { readPolicy, parseTomlText } from '#cli/policy/read.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
+import { reasonDiagnostic } from '#cli/policy/errors/reasons.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
 import { similar, codeList, quoteArgument } from '#cli/platform/text.ts';
 import type { Policy, Mutation, TomlTable } from '#cli/types/policy/settings.ts';
-import { commitPolicy, previewPolicy, requireReason } from '#cli/commands/policy-edit.ts';
-
-/**
- * Adds an ignore: its paths join an entry with the same check, rule, reason, and expiry.
- * An ignore with no paths covers the whole scope, so it leaves the merged entry without paths.
- * @param raw the policy table
- * @param entry the ignore as the command built it
- */
-function addIgnore(raw: TomlTable, entry: TomlTable): void {
-    const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
-    const same = list.find((existing) =>
-        ['check', 'rule', 'reason', 'until'].every((field) => existing[field] === entry[field]),
-    );
-    if (same === undefined) {
-        list.push(entry);
-        raw['ignore'] = list;
-        return;
-    }
-    const added = entry['paths'];
-    const existing = same['paths'];
-    if (!Array.isArray(added) || !Array.isArray(existing)) Reflect.deleteProperty(same, 'paths');
-    else same['paths'] = [...new Set([...(existing as string[]), ...(added as string[])])];
-}
+import { emitPolicy, mergeIgnore, parseTomlText, parseExpiryDate } from '#cli/policy/file.ts';
 
 function assertKnownCheck(checkName: string, policy: Policy): void {
-    const known = knownChecks(policy.checks);
+    const known = knownChecks(Object.values(policy.check));
     if (known.includes(checkName)) return;
     throw new GspotError('policy', [
         `There is no check called \`${checkName}\`.${similar(checkName, known).length > 0 ? ' Did you mean ' + codeList(similar(checkName, known)) + '?' : ''}`,
@@ -64,7 +43,7 @@ function buildIgnore(options: IgnoreOptions): TomlTable {
     if (options.reason !== undefined) {
         entry['reason'] = options.reason;
     }
-    if (options.until !== undefined) entry['until'] = options.until;
+    if (options.until !== undefined) entry['until'] = parseExpiryDate(options.until);
     return entry;
 }
 
@@ -72,11 +51,14 @@ async function deleteIgnore(root: string, options: IgnoreOptions, ignores: TomlT
     const selector = {
         check: options.check,
         rule: options.rule,
-        ...compact({ reason: options.reason, until: options.until }),
+        ...compact({
+            reason: options.reason,
+            until: options.until === undefined ? undefined : parseExpiryDate(options.until),
+        }),
     };
     const removed = new Set(options.paths);
     const hasMatchingRemoval = (entry: TomlTable): boolean => {
-        if (!Object.entries(selector).every(([key, value]) => entry[key] === value)) return false;
+        if (!Object.entries(selector).every(([key, value]) => isDeepStrictEqual(entry[key], value))) return false;
         const paths = entry['paths'] as string[] | undefined;
         return removed.size === 0
             ? paths === undefined || paths.length === 0
@@ -86,7 +68,7 @@ async function deleteIgnore(root: string, options: IgnoreOptions, ignores: TomlT
     const noun = removedCount === 1 ? 'entry' : 'entries';
     const summary =
         removedCount === 0
-            ? 'no matching ignore entry'
+            ? 'nothing to remove: no matching ignore entry'
             : `removed ${String(removedCount)} ignore ${noun} for ${options.check}`;
     const mutation: Mutation = (raw) => {
         const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
@@ -101,9 +83,7 @@ async function deleteIgnore(root: string, options: IgnoreOptions, ignores: TomlT
         if (kept.length === 0) Reflect.deleteProperty(raw, 'ignore');
         else raw['ignore'] = kept;
     };
-    if (options.isDryRun) return previewPolicy(root, mutation, summary);
-    using log = openOwnership(root);
-    const committed = await commitPolicy(root, log, mutation, summary);
+    const committed = await savePolicy(root, { change: mutation, summary, isDryRun: options.isDryRun });
     return !committed.json.changed && committed.exitCode === 0 ? { ...committed, text: `${summary}\n` } : committed;
 }
 
@@ -117,8 +97,10 @@ async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     assertVersionPin(root);
     const { policy, text } = readPolicy(root);
     assertKnownCheck(options.check, policy);
-    if (!options.remove && policy.require_reasons)
-        requireReason(options.reason, `gspot ignore ${options.check}`, buildReasonHint(options));
+    if (!options.remove) {
+        const diagnostic = reasonDiagnostic(`gspot ignore ${options.check}`, options.reason, buildReasonHint(options));
+        if (diagnostic !== undefined) throw new GspotError('policy', diagnostic);
+    }
     if (options.remove) {
         // Effective policy omits invalid ignores; removal can repair the authored entries too.
         const ignores = (parseTomlText(text, POLICY_FILE, 'policy')['ignore'] as TomlTable[] | undefined) ?? [];
@@ -126,20 +108,16 @@ async function ignoreCommand(options: IgnoreOptions): Promise<CommandResult> {
     }
     const entry = buildIgnore(options);
     let written = '';
-    const mutation: Mutation = (raw) => {
-        addIgnore(raw, entry);
-        const list = raw['ignore'] as TomlTable[];
-        const saved = list.find((existing) =>
-            ['check', 'rule', 'reason', 'until'].every((key) => existing[key] === entry[key]),
-        );
-        written = stringify({ ignore: [saved] }).trimEnd();
-    };
-    if (options.isDryRun) {
-        const preview = previewPolicy(root, mutation, 'Ignore proposed.');
-        return { ...preview, text: `${written}\n${preview.text}` };
-    }
-    using log = openOwnership(root);
-    const result = await commitPolicy(root, log, mutation, 'Ignore saved.');
+    const result = await savePolicy(root, {
+        change: (raw) => {
+            const list = (raw['ignore'] as TomlTable[] | undefined) ?? [];
+            const saved = mergeIgnore(list, entry);
+            raw['ignore'] = list;
+            written = emitPolicy('', { ignore: [saved] }).trimEnd();
+        },
+        summary: options.isDryRun ? 'Ignore proposed.' : 'Ignore saved.',
+        isDryRun: options.isDryRun,
+    });
     return result.exitCode === 0 && result.json.changed ? { ...result, text: `${written}\n${result.text}` } : result;
 }
 
@@ -161,7 +139,7 @@ export function registerIgnore(program: Program): void {
         )
         .option('--paths <glob...>', 'Apply the ignore to these paths only; without it, everywhere')
         .option('--rule <rule>', 'Turn off one rule of the check')
-        .option('--reason <text>', 'Say why; required when require_reasons is true')
+        .option('--reason <text>', 'Say why; required when adding an ignore')
         .option('--until <date>', 'Stop applying this ignore on YYYY-MM-DD (UTC)')
         .option('--remove', 'Delete the matching ignore entries')
         .option('--dry-run', 'Print the change and write nothing')

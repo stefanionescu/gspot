@@ -1,41 +1,42 @@
 import type { RuntimeSchemaCase } from '#tests/types/cli/docs/schema.ts';
 
 /** The public executable registration used by published-schema cases. */
-export const SCHEMA_CHECK = { name: 'project/lint', command: ['lint'], paths: ['src/**'], stage: 'commit' };
+export const SCHEMA_CHECK = { command: ['lint'], paths: ['src/**'], stage: 'commit' };
 
 /** Each published-schema input exercises one supported value or refusal. */
 export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
     {
-        name: 'a numeric wrapper reason in the root namespace',
+        name: 'a numeric reason in the root namespace',
         input: {
             configurations: ['site'],
-            require_reasons: false,
-            site: { build: { value: 'npm run build', reason: 42 } },
+            site: { build_command: ['npm', 'run', 'build'] },
+            reasons: { 'site.build_command': 42 },
         },
         valid: false,
-        diagnostic: 'gspot.toml: site.build.reason: Invalid input: expected string, received number',
+        diagnostic: 'gspot.toml: reasons.site.build_command: Invalid input: expected string, received number',
     },
     {
-        name: 'a scoped list wrapper with a boolean reason',
+        name: 'a scoped list with a boolean reason',
         input: {
             configurations: ['site'],
-            scope: [{ path: 'app', site: { sitemap_exclude: { value: ['404.html'], reason: false } } }],
+            scope: { app: { site: { sitemap_exclude: ['404.html'] }, reasons: { 'site.sitemap_exclude': false } } },
         },
         valid: false,
-        diagnostic: 'gspot.toml: scope.0.site.sitemap_exclude.reason: Invalid input: expected string, received boolean',
+        diagnostic:
+            'gspot.toml: scope.app.reasons.site.sitemap_exclude: Invalid input: expected string, received boolean',
     },
     {
-        name: 'a namespace wrapper with a substantive reason',
+        name: 'a namespace value with a substantive reason',
         input: {
             configurations: ['site'],
-            require_reasons: true,
-            site: { build: { value: 'npm run build', reason: 'The project owns its build command.' } },
+            site: { build_command: ['npm', 'run', 'build'] },
+            reasons: { 'site.build_command': 'The project owns its build command.' },
         },
         valid: true,
     },
     {
-        name: 'a namespace value wrapper with no required reason',
-        input: { configurations: ['site'], site: { build: { value: 'npm run build' } } },
+        name: 'a namespace value with no required reason',
+        input: { configurations: ['site'], site: { build_command: ['npm', 'run', 'build'] } },
         valid: true,
     },
     {
@@ -104,70 +105,70 @@ export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
         diagnostic: 'gspot.toml: tools.eslint.rules.eqeqeq.0:',
     },
     {
-        name: 'custom Semgrep rule files',
-        input: { configurations: ['security'], semgrep: { rule_files: ['security/own.yml'] } },
-        valid: true,
-    },
-    {
-        name: 'a scoped Vitest configuration file',
-        input: { configurations: ['vitest'], scope: [{ path: 'app', vitest: { config_file: 'testing/config.mjs' } }] },
-        valid: true,
+        name: 'removed scoped Vitest configuration file',
+        input: { configurations: ['vitest'], scope: { app: { vitest: { config_file: 'testing/config.mjs' } } } },
+        valid: false,
+        diagnostic: '`vitest` is not a setting gspot knows under [scope.app]',
     },
     {
         name: 'site kilobyte limits',
-        input: { configurations: ['site'], limits: { site: { kilobytes: [{ paths: ['**/*.html'], kb: 10 }] } } },
+        input: { configurations: ['site'], site: { max_kilobytes: [{ paths: ['**/*.html'], kb: 10 }] } },
         valid: true,
     },
     {
         name: 'obsolete Semgrep configs',
         input: { configurations: ['security'], tools: { semgrep: { configs: ['security/own.yml'] } } },
         valid: false,
-        diagnostic: 'gspot.toml: tools.semgrep.configs:',
+        diagnostic: '`configs` is not a setting gspot knows under [tools.semgrep]',
     },
     {
         name: 'obsolete Vitest config',
         input: { configurations: ['vitest'], tools: { vitest: { config: 'testing/config.mjs' } } },
         valid: false,
-        diagnostic: 'gspot.toml: tools.vitest.config:',
+        diagnostic: '`vitest` is not a setting gspot knows under [tools]',
     },
     {
         name: 'obsolete site sizes',
         input: { configurations: ['site'], site: { sizes: [{ paths: ['**/*.html'], kb: 10 }] } },
         valid: false,
-        diagnostic: 'gspot.toml: site.sizes:',
+        diagnostic: '`sizes` is not a setting gspot knows under [site]',
     },
-    { name: 'finding code 2', input: { check: [{ ...SCHEMA_CHECK, exit_codes: [2] }] }, valid: true },
+    { name: 'finding code 2', input: { check: { 'project/lint': { ...SCHEMA_CHECK, exit_codes: [2] } } }, valid: true },
     {
         name: 'finding code 0',
-        input: { check: [{ ...SCHEMA_CHECK, exit_codes: [0] }] },
+        input: { check: { 'project/lint': { ...SCHEMA_CHECK, exit_codes: [0] } } },
         valid: false,
-        diagnostic: 'gspot.toml: check.0.exit_codes.0:',
+        diagnostic: 'gspot.toml: check.project/lint.exit_codes.0:',
     },
     {
         name: 'finding code 256',
-        input: { check: [{ ...SCHEMA_CHECK, exit_codes: [256] }] },
+        input: { check: { 'project/lint': { ...SCHEMA_CHECK, exit_codes: [256] } } },
         valid: false,
-        diagnostic: 'gspot.toml: check.0.exit_codes.0:',
+        diagnostic: 'gspot.toml: check.project/lint.exit_codes.0:',
     },
     {
         name: 'a text finding code',
-        input: { check: [{ ...SCHEMA_CHECK, exit_codes: ['2'] }] },
+        input: { check: { 'project/lint': { ...SCHEMA_CHECK, exit_codes: ['2'] } } },
         valid: false,
-        diagnostic: 'gspot.toml: check.0.exit_codes.0:',
+        diagnostic: 'gspot.toml: check.project/lint.exit_codes.0:',
     },
     {
         name: 'an empty command',
-        input: { check: [{ ...SCHEMA_CHECK, command: [] }] },
+        input: { check: { 'project/lint': { ...SCHEMA_CHECK, command: [] } } },
         valid: false,
-        diagnostic: 'gspot.toml: check.0.command:',
+        diagnostic: 'gspot.toml: check.project/lint.command:',
     },
     {
         name: 'an empty program',
-        input: { check: [{ ...SCHEMA_CHECK, command: [''] }] },
+        input: { check: { 'project/lint': { ...SCHEMA_CHECK, command: [''] } } },
         valid: false,
-        diagnostic: 'gspot.toml: check.0.command.0:',
+        diagnostic: 'gspot.toml: check.project/lint.command.0:',
     },
-    { name: 'an empty argument', input: { check: [{ ...SCHEMA_CHECK, command: ['tool', ''] }] }, valid: true },
+    {
+        name: 'an empty argument',
+        input: { check: { 'project/lint': { ...SCHEMA_CHECK, command: ['tool', ''] } } },
+        valid: true,
+    },
     {
         name: 'a formatter override',
         input: { format: { overrides: [{ paths: ['src'], indent_width: 8, quotes: 'double' }] } },
@@ -183,7 +184,12 @@ export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
         name: 'a pinned license exception',
         input: {
             licenses: {
-                exceptions: [{ package: '@example/scoped@1.2.3-beta.1', license: 'MIT', reason: 'Verified.' }],
+                exceptions: {
+                    '@example/scoped@1.2.3-beta.1': {
+                        license: 'MIT',
+                        reason: 'The installed package license was verified.',
+                    },
+                },
             },
         },
         valid: true,
@@ -192,15 +198,18 @@ export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
         name: 'a license exception with a version range',
         input: {
             licenses: {
-                exceptions: [{ package: 'example@^1.2.3', license: 'MIT', reason: 'Version range' }],
+                exceptions: { 'example@^1.2.3': { license: 'MIT', reason: 'Version range' } },
             },
         },
         valid: false,
-        diagnostic: 'gspot.toml: licenses.exceptions.0.package:',
+        diagnostic: 'gspot.toml: licenses.exceptions.example@^1.2.3:',
     },
     {
         name: 'a reasoned Squawk transaction value',
-        input: { tools: { squawk: { assume_in_transaction: { value: false, reason: 'Runs outside transactions.' } } } },
+        input: {
+            tools: { squawk: { assume_in_transaction: false } },
+            reasons: { 'tools.squawk.assume_in_transaction': 'Runs outside transactions.' },
+        },
         valid: true,
     },
     {
@@ -211,9 +220,9 @@ export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
     },
     {
         name: 'a scoped SQLFluff dialect that injects a directive',
-        input: { scope: [{ path: 'db', tools: { sqlfluff: { dialect: 'sqlite\nexclude_rules = ALL' } } }] },
+        input: { scope: { db: { tools: { sqlfluff: { dialect: 'sqlite\nexclude_rules = ALL' } } } } },
         valid: false,
-        diagnostic: 'gspot.toml: scope.0.tools.sqlfluff.dialect:',
+        diagnostic: 'gspot.toml: scope.db.tools.sqlfluff.dialect:',
     },
     {
         name: 'a SQLFluff dialect label',
@@ -222,26 +231,73 @@ export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
     },
     {
         name: 'a scoped SQLFluff dialect label',
-        input: { scope: [{ path: 'db', tools: { sqlfluff: { dialect: 'sqlite' } } }] },
+        input: { scope: { db: { tools: { sqlfluff: { dialect: 'sqlite' } } } } },
         valid: true,
     },
     {
-        name: 'a snapshot layout',
-        input: { tools: { xctest: { reference_layout: '__Snapshots__/{file}/{test}.*' } } },
-        valid: true,
-    },
-    {
-        name: 'a snapshot layout outside the scope',
-        input: { tools: { xctest: { reference_layout: '../{file}/{test}.*' } } },
+        name: 'the removed XCTest snapshot layout',
+        input: { configurations: ['xctest'], tools: { xctest: { reference_layout: '__Snapshots__/{file}/{test}.*' } } },
         valid: false,
-        diagnostic: 'gspot.toml: tools.xctest.reference_layout:',
+        diagnostic: '`xctest` is not a setting gspot knows under [tools]',
     },
 ];
 
-/** Every scope and locale-value branch has an independently named case. */
+/** Both translation settings validate independently at the root and in a scope. */
 export const LOCALE_SCHEMA_CASES = [
-    { name: 'root with an invalid list', scoped: false, locales: [], valid: false },
-    { name: 'scope with an invalid list', scoped: true, locales: [], valid: false },
-    { name: 'root with locale settings', scoped: false, locales: { directory: 'messages', base: 'en' }, valid: true },
-    { name: 'scope with locale settings', scoped: true, locales: { directory: 'messages', base: 'en' }, valid: true },
+    {
+        name: 'root refuses the removed locales table',
+        scoped: false,
+        settings: { locales: { directory: 'messages', base: 'en' } },
+        key: 'locales',
+        valid: false,
+    },
+    {
+        name: 'scope refuses the removed locales table',
+        scoped: true,
+        settings: { locales: { directory: 'messages', base: 'en' } },
+        key: 'locales',
+        valid: false,
+    },
+    {
+        name: 'root with an invalid message folder',
+        scoped: false,
+        settings: { messages_folder: [] },
+        key: 'messages_folder',
+        valid: false,
+    },
+    {
+        name: 'scope with an invalid message folder',
+        scoped: true,
+        settings: { messages_folder: [] },
+        key: 'messages_folder',
+        valid: false,
+    },
+    {
+        name: 'root with an invalid base locale',
+        scoped: false,
+        settings: { base_locale: [] },
+        key: 'base_locale',
+        valid: false,
+    },
+    {
+        name: 'scope with an invalid base locale',
+        scoped: true,
+        settings: { base_locale: [] },
+        key: 'base_locale',
+        valid: false,
+    },
+    {
+        name: 'root with translation settings',
+        scoped: false,
+        settings: { messages_folder: 'messages', base_locale: 'en' },
+        key: 'messages_folder',
+        valid: true,
+    },
+    {
+        name: 'scope with translation settings',
+        scoped: true,
+        settings: { messages_folder: 'messages', base_locale: 'en' },
+        key: 'messages_folder',
+        valid: true,
+    },
 ];

@@ -1,5 +1,4 @@
 <% const presets = eslintPresets('nestjs'); if (isAll) { %>
 <%~ eslintModule.block({ files: eslintFiles.typescript, rules: { '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }] } }) %>,
-<% } for (const selected of configurationScopes('nestjs')) { const prefix = selected.path === '' ? '' : `${selected.path}/`; %>
-<%~ eslintModule.block({ files: eslintFiles.typescriptSource.map((pattern) => [`${prefix}**/*`, pattern]), rules: { ...Object.assign({}, ...presets.recommended.blocks.map((block) => block.rules ?? {})), ...(selected.dependencies.includes('@nestjs/swagger') ? {} : Object.assign({}, ...presets.noSwagger.blocks.map((block) => block.rules))), '@darraghor/nestjs-typed/injectable-should-be-provided': ['error', { src: [`${prefix}**/*.ts`], filterFromPaths: ['/dist/', '/node_modules/', String.raw`\.test\.`, String.raw`\.spec\.`] }] } }, "plugins: { '@darraghor/nestjs-typed': nestjsTyped.plugin }") %>,
-<% } %>
+<% } const prefix = scope === '' ? '' : `${scope}/`; %>
+<%~ eslintModule.block({ files: eslintFiles.typescriptSource, rules: { ...Object.assign({}, ...presets.recommended.blocks.map((block) => block.rules ?? {})), ...(scopeDependencies.includes('@nestjs/swagger') ? {} : Object.assign({}, ...presets.noSwagger.blocks.map((block) => block.rules))), '@darraghor/nestjs-typed/injectable-should-be-provided': ['error', { src: [`${prefix}**/*.ts`], filterFromPaths: ['/dist/', '/node_modules/', String.raw`\.test\.`, String.raw`\.spec\.`] }] } }, "plugins: { '@darraghor/nestjs-typed': nestjsTyped.plugin }") %>,

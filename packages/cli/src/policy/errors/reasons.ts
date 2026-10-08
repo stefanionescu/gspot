@@ -1,6 +1,5 @@
 // Exception reasons, unconditional policy restrictions, and declared scope paths.
 import { isDeepStrictEqual } from 'node:util';
-import { pathKey } from '#cli/platform/paths.ts';
 import { isRecord } from '#cli/platform/objects.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { quoteArgument } from '#cli/platform/text.ts';
@@ -8,6 +7,7 @@ import { everyTable } from '#cli/policy/settings/lookup.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import { allChecks } from '#cli/configurations/declarations.ts';
 import { REASON_WORDS_MIN } from '#cli/config/policy/settings.ts';
+import { pathKey, trimTrailingSlashes } from '#cli/platform/paths.ts';
 import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Policy, ToolTable, PolicyProblem } from '#cli/types/policy/settings.ts';
@@ -17,9 +17,8 @@ function located(path: KeyPath, text: string | undefined): PolicyProblem[] {
 }
 
 function ignoreProblems(policy: Policy): PolicyProblem[] {
-    if (!policy.require_reasons) return [];
     const problems: PolicyProblem[] = [];
-    for (const [index, entry] of policy.ignores.entries()) {
+    for (const [index, entry] of policy.ignore.entries()) {
         const where = `[[ignore]] (${entry.check})`;
         problems.push(...located(['ignore', index, 'reason'], reasonDiagnostic(where, entry.reason)));
     }
@@ -27,7 +26,6 @@ function ignoreProblems(policy: Policy): PolicyProblem[] {
 }
 
 function declarationProblems(policy: Policy): PolicyProblem[] {
-    if (!policy.require_reasons) return [];
     return ['generated', 'vendored'].flatMap((kind) =>
         policy.declarations
             .filter((entry) => entry.kind === kind)
@@ -39,20 +37,29 @@ function declarationProblems(policy: Policy): PolicyProblem[] {
 }
 
 function namingPathProblems(policy: Policy): PolicyProblem[] {
-    if (!policy.require_reasons) return [];
-    return policy.naming.paths.flatMap((rule, index) => {
-        if (rule.skip !== true) return [];
-        const where = `[[naming.paths]] excluding ${(rule.names ?? []).join(', ')}`;
-        return located(['naming', 'paths', index, 'reason'], reasonDiagnostic(where, rule.reason));
-    });
+    return everyTable(policy).flatMap(({ table, path }) =>
+        (table.naming?.overrides ?? []).flatMap((override, index) =>
+            override.allowed === undefined
+                ? []
+                : located(
+                      [...path, 'naming', 'overrides', index, 'reason'],
+                      reasonDiagnostic(`[[naming.overrides]] allowing ${override.allowed.join(', ')}`, override.reason),
+                  ),
+        ),
+    );
 }
 
-function toolReasonProblems(tool: string, table: ToolTable, requireReasons: boolean, path: KeyPath): PolicyProblem[] {
-    if (!requireReasons || table.verbatim === undefined || isReasonAccepted(table.verbatim.reason)) return [];
+function toolReasonProblems(
+    tool: string,
+    table: ToolTable,
+    reason: string | undefined,
+    path: KeyPath,
+): PolicyProblem[] {
+    if (table.verbatim === undefined || isReasonAccepted(reason)) return [];
     return [
         {
-            path: [...path, 'verbatim', 'reason'],
-            message: `[tools.${tool}.verbatim] needs a \`reason\` that names the option gspot has no setting for. The reason appears in \`gspot list settings\`.`,
+            path: [...path, 'verbatim'],
+            message: `[tools.${tool}.verbatim] needs an entry in [reasons] that names the option gspot has no setting for. The reason appears in \`gspot list settings\`.`,
         },
     ];
 }
@@ -90,11 +97,11 @@ function disabledRuleProblems(tool: string, table: ToolTable, path: KeyPath): Po
 function duplicateScopeProblems(paths: string[]): PolicyProblem[] {
     const seen = new Set<string>();
     const problems: PolicyProblem[] = [];
-    for (const [index, path] of paths.entries()) {
-        const key = pathKey(path);
+    for (const path of paths) {
+        const key = pathKey(trimTrailingSlashes(path));
         if (seen.has(key))
             problems.push({
-                path: ['scope', index, 'path'],
+                path: ['scope', path],
                 message: `Scope path is declared more than once: ${path}.`,
             });
         seen.add(key);
@@ -134,16 +141,36 @@ export function reasonDiagnostic(where: string, reason: string | undefined, comm
 export function reasonProblems(policy: Policy): PolicyProblem[] {
     const tools = everyTable(policy).flatMap(({ table: layer, path }) =>
         (layer.tools === undefined ? [] : Object.entries(layer.tools)).flatMap(([tool, table]) =>
-            toolReasonProblems(tool, table, policy.require_reasons, [...path, 'tools', tool]),
+            toolReasonProblems(tool, table, layer.reasons?.[`tools.${tool}.verbatim`], [...path, 'tools', tool]),
         ),
     );
-    return [...ignoreProblems(policy), ...declarationProblems(policy), ...namingPathProblems(policy), ...tools];
+    const words = Object.entries(policy.words).flatMap(([word, reason]) =>
+        word === reason ? [] : located(['words', word], reasonDiagnostic(`The accepted word ${word}`, reason)),
+    );
+    const modules = everyTable(policy).flatMap(({ table, path }) =>
+        (table.architecture?.modules ?? []).flatMap((module, index) =>
+            module.reason === undefined
+                ? []
+                : located(
+                      [...path, 'architecture', 'modules', index, 'reason'],
+                      reasonDiagnostic(`The architecture module ${module.name}`, module.reason),
+                  ),
+        ),
+    );
+    return [
+        ...modules,
+        ...words,
+        ...ignoreProblems(policy),
+        ...declarationProblems(policy),
+        ...namingPathProblems(policy),
+        ...tools,
+    ];
 }
 
 /**
  * Reports lint rules disabled outside the ignore policy.
  * @param policy the normalized policy
- * @returns the prohibited changes, regardless of require_reasons
+ * @returns the prohibited changes, at both check levels
  */
 export function restrictionProblems(policy: Policy): PolicyProblem[] {
     return everyTable(policy).flatMap(({ table: layer, path }) =>
@@ -167,12 +194,13 @@ export function restrictionProblems(policy: Policy): PolicyProblem[] {
  * @returns the problems in plain English
  */
 export function pathProblems(root: string, policy: Policy): PolicyProblem[] {
-    const paths = policy.scopes.map((scope) => scope.path);
+    const paths =
+        'scope' in policy.authored && policy.authored.scope !== undefined ? Object.keys(policy.authored.scope) : [];
     using files = openRoot(root);
-    const missing = paths.flatMap((path, index) => {
-        const location: KeyPath = ['scope', index, 'path'];
+    const missing = paths.flatMap((path) => {
+        const location: KeyPath = ['scope', path];
         try {
-            const entry = files.stat(path);
+            const entry = files.stat(trimTrailingSlashes(path));
             return entry === undefined || entry.isDirectory()
                 ? []
                 : [
@@ -207,11 +235,42 @@ export function isReasonAccepted(reason: string | undefined): boolean {
  * @returns whether a reason is needed
  */
 export function isLoosening(declaration: SettingDeclaration, value: unknown, shipped: unknown): boolean {
-    if (declaration.direction === 'loosening')
-        return Array.isArray(value)
-            ? value.some((item) => !Array.isArray(shipped) || !shipped.some((entry) => isDeepStrictEqual(item, entry)))
-            : true;
+    if (declaration.direction === 'loosening') {
+        if (Array.isArray(value))
+            return value.some(
+                (item) => !Array.isArray(shipped) || !shipped.some((entry) => isDeepStrictEqual(item, entry)),
+            );
+        if (isRecord(value))
+            return Object.entries(value).some(
+                ([key, entry]) => !isRecord(shipped) || !isDeepStrictEqual(entry, shipped[key]),
+            );
+        return true;
+    }
     if (declaration.direction === 'ceiling' || declaration.direction === 'floor')
         return isThresholdLoosening(declaration.direction, value, shipped);
     return false;
+}
+
+/**
+ * Require a setting explanation when loosening values do not carry their own reasons.
+ * @param declaration the setting's declared direction
+ * @param before the selected default before the authored change
+ * @param after the authored value after the change
+ * @returns whether the setting needs an explanation in its reasons table
+ */
+export function isReasonOwed(declaration: SettingDeclaration, before: unknown, after: unknown): boolean {
+    if (!isLoosening(declaration, after, before)) return false;
+    if (Array.isArray(after))
+        return after.some(
+            (item) =>
+                !isRecord(item) || !isReasonAccepted(typeof item['reason'] === 'string' ? item['reason'] : undefined),
+        );
+    if (isRecord(after))
+        return Object.values(after).some((item) => {
+            if (typeof item === 'string') return !isReasonAccepted(item);
+            return (
+                !isRecord(item) || !isReasonAccepted(typeof item['reason'] === 'string' ? item['reason'] : undefined)
+            );
+        });
+    return true;
 }

@@ -16,7 +16,6 @@ CREATE POLICY members_read ON public.teams FOR SELECT USING (true);
 COMMIT;
 `;
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['postgres'],
     modules: false,
@@ -24,7 +23,6 @@ export const REPOSITORY: RepositoryScenario = {
     files: { [`${FOLDER}/20240101000000_create_teams.sql`]: TEAMS },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'postgres/squawk',

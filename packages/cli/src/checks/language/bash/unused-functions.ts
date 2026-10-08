@@ -1,6 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { ENTRY_FUNCTIONS } from '#cli/config/checks/language/bash.ts';
+import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 /**
  * One finding per function that no script references, outside the entry functions.
@@ -8,12 +9,11 @@ import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/script
  * @returns the findings
  */
 export const unusedFunctions: BuiltInCheck = async (input) => {
-    const entries = entryFunctions(input);
     const index = await getScriptIndex(input);
     const referenced = new Set(index.files.flatMap((file) => file.references.keys().toArray()));
     return index.files.flatMap((file) => {
         return file.functions
-            .filter((entry) => !entries.has(entry.name) && !referenced.has(entry.name))
+            .filter((entry) => !ENTRY_FUNCTIONS.includes(entry.name) && !referenced.has(entry.name))
             .map((entry) =>
                 findingAt(
                     input,

@@ -1,14 +1,20 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { rmSync, mkdirSync } from 'node:fs';
+import { rm, mkdir } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { stalePaths } from '#cli/checks/general/docs.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { DOC_TASK_FILES, DOC_TASK_SCOPES, DOC_TASK_FINDINGS } from '#tests/config/cli/checks/general/docs.ts';
+
+import {
+    DOC_TASK_FILES,
+    DOC_TASK_SCOPES,
+    DOC_TASK_FINDINGS,
+    DOC_FENCE_PATH_CASES,
+} from '#tests/config/cli/checks/general/docs.ts';
 
 test('wildcard examples stay intact while emphasized literal paths remain checked', async () => {
     await using sandbox = await testdir();
@@ -52,7 +58,7 @@ test('command check IDs resolve while undefined checks remain findings', async (
         stringify({
             level: 'all',
             configurations: ['docs'],
-            check: [{ name: 'tests/coverage', command: ['true'], paths: ['tests/**'], stage: 'manual' }],
+            check: { 'tests/coverage': { command: ['true'], paths: ['tests/**'], stage: 'manual' } },
         }),
     );
     const input = buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] });
@@ -144,8 +150,8 @@ test('a directory at a task configuration path is an error, not absent configura
     await createFileTree(sandbox.path, { 'a.md': 'Run `bun run build`.\n', 'package.json': '{}' });
     await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
     const session = await openSession(sandbox.path);
-    rmSync(join(sandbox.path, 'package.json'));
-    mkdirSync(join(sandbox.path, 'package.json'));
+    await rm(join(sandbox.path, 'package.json'));
+    await mkdir(join(sandbox.path, 'package.json'));
     const selected = buildCheckInput(session, 'docs/stale-paths', { paths: ['a.md'] });
     expect(() => stalePaths(selected)).toThrow('Cannot read task definitions from package.json.');
 });
@@ -193,3 +199,19 @@ test.each([
     const input = buildCheckInput(session, 'docs/stale-paths', { paths: ['app/nested/guide.md'] });
     expect(() => stalePaths(input)).toThrow(`Cannot read task definitions from ${path}.`);
 });
+
+test.each(DOC_FENCE_PATH_CASES)(
+    'a $language fence with "$metadata" reports example paths=$reported',
+    async ({ metadata, language, reported }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['docs'], { level: 'all' }),
+            'guide.md': `> ~~~${language} ${metadata}\n> cat src/example.ts\n> ~~~\n\nSee src/missing.ts.\n`,
+        });
+        const input = buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['guide.md'] });
+        expect(stalePaths(input).map(({ line, message }) => [line, message])).toStrictEqual([
+            ...(reported ? [[2, 'src/example.ts names no tracked file or folder.']] : []),
+            [5, 'src/missing.ts names no tracked file or folder.'],
+        ]);
+    },
+);

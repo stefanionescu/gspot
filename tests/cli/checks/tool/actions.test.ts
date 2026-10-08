@@ -1,5 +1,5 @@
-import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { chmod } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
@@ -12,7 +12,7 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 import { PATH, PINACT_STUB } from '#tests/config/cli/checks/tool/actions.ts';
 
 const TOOL_FAILURES_POLICY = buildPolicy(['files', 'actions'], {
-    tables: 'run_with = "mise"\n[agent_rules]\nenabled = false\n',
+    tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n',
     level: 'all',
 });
 
@@ -24,7 +24,7 @@ test('the pin verification adapter reports a rejected commit and preserves the w
         'bin/pinact': PINACT_STUB,
         'bin/pinact.cmd': '@echo off\r\nbun "%~dp0pinact" %*\r\n',
     });
-    chmodSync(join(sandbox.path, 'bin/pinact'), 0o755);
+    await chmod(join(sandbox.path, 'bin/pinact'), 0o755);
     commitAll(sandbox.path);
     const environment = {
         PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,

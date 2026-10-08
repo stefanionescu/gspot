@@ -1,7 +1,7 @@
 {
     "recommended": {
         "package": "@next/eslint-plugin-next",
-        "version": "16.3.6",
+        "version": "16.3.8",
         "source": "configs.core-web-vitals",
         "blocks": [
             {

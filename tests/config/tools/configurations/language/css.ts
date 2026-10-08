@@ -5,15 +5,14 @@ export const FILES = {
 };
 
 /** Active rule options inherit across scopes. Inactive native options cannot add checks. */
-export const TABLES = `run_with = "mise"
+export const TABLES = `runner = "mise"
 [agent_rules]
 enabled = false
 [tools.stylelint.rules]
 color-hex-length = "short"
 number-max-precision = 0
 selector-max-id = 0
-[[scope]]
-path = "app"
+[scope."app"]
 configurations = []
 [scope.tools.stylelint.rules]
 color-hex-length = "long"
@@ -35,14 +34,12 @@ export const TAILWIND_FILES = {
     'other/site.css': '@tailwind utilities;\n\na {\n    color: theme("colors.brand");\n}\n',
 };
 
-export const TAILWIND_TABLES = `run_with = "mise"
+export const TAILWIND_TABLES = `runner = "mise"
 [agent_rules]
 enabled = false
-[[scope]]
-path = "app"
+[scope."app"]
 configurations = ["css"]
-[[scope]]
-path = "other"
+[scope."other"]
 configurations = ["css"]
 `;
 

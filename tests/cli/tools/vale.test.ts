@@ -6,10 +6,11 @@ import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { rootView } from '#cli/policy/settings/view.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
+import { chmod, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 import { hasValePackages, removeValePackages, installValePackages } from '#cli/tools/vale.ts';
-import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
 
 import {
     CONFIG,
@@ -42,19 +43,19 @@ test.each(VALE_ACQUISITION_FAILURES)(
         const executable = join(directory.path, 'node_modules/.bin/vale');
         const launcher = `#!${process.execPath}\nif (process.argv.includes('--version')) console.log(${JSON.stringify(version)});\nelse {\nawait Bun.write(${JSON.stringify(join(directory.path, 'sync-root'))}, process.cwd());\n${script}\n}\n`;
         await createFileTree(directory.path, { 'node_modules/.bin/vale': launcher });
-        chmodSync(executable, EXECUTABLE_FILE);
+        await chmod(executable, EXECUTABLE_FILE);
         if (failure === 'cancellation') session.cancelSignal = AbortSignal.abort();
         expect(await installValePackages({ ...request, cancelSignal: session.cancelSignal })).toBe(expected);
-        expect(readFileSync(join(directory.path, installed), 'utf8')).toBe('original bytes\n');
-        expect(readFileSync(join(directory.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
+        expect(await readFile(join(directory.path, installed), 'utf8')).toBe('original bytes\n');
+        expect(await readFile(join(directory.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
         const recordedWork = join(directory.path, 'sync-root');
-        if (existsSync(recordedWork)) expect(existsSync(readFileSync(recordedWork, 'utf8'))).toBe(false);
+        if (await pathExists(recordedWork)) expect(await pathExists(await readFile(recordedWork, 'utf8'))).toBe(false);
         delete session.cancelSignal;
-        writeFileSync(executable, launcher.replace(script, CORRECTED_VALE_ACQUISITION));
+        await writeFile(executable, launcher.replace(script, CORRECTED_VALE_ACQUISITION));
         expect(await installValePackages({ ...request, cancelSignal: session.cancelSignal })).toBeUndefined();
-        expect(readFileSync(join(directory.path, installed), 'utf8')).toBe('corrected bytes\n');
+        expect(await readFile(join(directory.path, installed), 'utf8')).toBe('corrected bytes\n');
         expect(hasValePackages(directory.path, 'all')).toBe(true);
-        expect(readFileSync(join(directory.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
+        expect(await readFile(join(directory.path, 'guide.md'), 'utf8')).toBe('Authored text.\n');
     },
 );
 
@@ -68,13 +69,13 @@ async function linkedStyles(directory: string, kind: string): Promise<string> {
     });
     const root = join(directory, 'project');
     if (kind === 'configuration') {
-        unlinkSync(join(root, '.gspot/config/vale.ini'));
-        symlinkSync('../../outside/vale.ini', join(root, '.gspot/config/vale.ini'));
+        await unlink(join(root, '.gspot/config/vale.ini'));
+        await symlink('../../outside/vale.ini', join(root, '.gspot/config/vale.ini'));
     } else if (kind === 'package') {
-        symlinkSync('../../../../outside', join(root, '.gspot/config/vale/styles/Google'));
+        await symlink('../../../../outside', join(root, '.gspot/config/vale/styles/Google'));
     } else {
         await createFileTree(root, { '.gspot/config/vale/styles/Google/.keep': '' });
-        symlinkSync('../../../../../outside', join(root, '.gspot/config/vale/styles/Google/nested'));
+        await symlink('../../../../../outside', join(root, '.gspot/config/vale/styles/Google/nested'));
     }
     return root;
 }
@@ -96,7 +97,7 @@ test.each(VALE_REMOVAL_LINKS)(
             },
             { message },
         );
-        expect(readFileSync(join(directory.path, 'outside/terms.yml'), 'utf8')).toBe('external bytes\n');
+        expect(await readFile(join(directory.path, 'outside/terms.yml'), 'utf8')).toBe('external bytes\n');
     },
 );
 
@@ -106,7 +107,7 @@ test.each(['recommended', 'all'] as const)('package readiness requires the gener
     await createFileTree(sandbox.path, { '.gspot/config/vale.ini': CONFIG });
     expect(hasValePackages(sandbox.path, level)).toBe(level === 'recommended');
     for (const folder of VALE_PACKAGE_FOLDERS)
-        mkdirSync(join(sandbox.path, '.gspot/config/vale/styles', folder), { recursive: true });
+        await mkdir(join(sandbox.path, '.gspot/config/vale/styles', folder), { recursive: true });
     expect(hasValePackages(sandbox.path, level)).toBe(true);
 });
 
@@ -116,7 +117,7 @@ test.each(VALE_PACKAGE_FOLDERS)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { '.gspot/config/vale.ini': 'Packages = \n' });
         for (const folder of VALE_PACKAGE_FOLDERS.filter((folder) => folder !== missing))
-            mkdirSync(join(sandbox.path, '.gspot/config/vale/styles', folder), { recursive: true });
+            await mkdir(join(sandbox.path, '.gspot/config/vale/styles', folder), { recursive: true });
         expect(hasValePackages(sandbox.path, 'all')).toBe(false);
     },
 );
@@ -141,6 +142,6 @@ test.each([false, true])(
             await rejects(installValePackages(request), {
                 message: 'Vale setup input is missing: .gspot/config/vale.ini',
             });
-        expect(existsSync(join(directory.path, '.gspot/config/vale/styles'))).toBe(false);
+        expect(await pathExists(join(directory.path, '.gspot/config/vale/styles'))).toBe(false);
     },
 );

@@ -1,6 +1,5 @@
 import picomatch from 'picomatch';
 import { join, posix } from 'node:path';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { readSource } from '#cli/platform/source.ts';
 import { parseDirectives } from '#cli/parsers/nginx.ts';
@@ -92,14 +91,10 @@ async function testConfiguration(input: CheckInput, path: string, work: string, 
  * @returns one finding for each file nginx refuses
  */
 export async function nginxTest(input: CheckInput): Promise<CheckOutcome> {
-    const image = input.view.options('tools.nginx')['image'] as string;
-    const scopes = input.scopeEntries;
+    const image = input.view.options('tools.nginx')['image'];
     const paths = input.files
         .map((file) => file.path)
-        .filter(
-            (path) =>
-                (path === NGINX_MAIN || path.endsWith(`/${NGINX_MAIN}`)) && scopeOf(path, scopes).path === input.scope,
-        );
+        .filter((path) => path === NGINX_MAIN || path.endsWith(`/${NGINX_MAIN}`));
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = scratchFolder('gspot-nginx-');
     const work = workFolder.path;

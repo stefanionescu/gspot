@@ -1,6 +1,6 @@
 import executables from 'which';
 import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -12,7 +12,7 @@ import { denoLint } from '#cli/checks/platform/supabase.ts';
 test('pinned Deno reports a lint defect and accepts its correction in a scoped edge function', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { tables: '[[scope]]\npath = "apps/api"\nconfigurations = ["supabase"]\n' }),
+        'gspot.toml': buildPolicy([], { tables: '[scope."apps/api"]\nconfigurations = ["supabase"]\n' }),
         'apps/api/supabase/functions/hello/index.ts': 'export function greet(value: any) { return value; }\n',
     });
     const native = Bun.which('deno', { PATH: buildToolsPath(['deno']) });
@@ -35,7 +35,7 @@ test('pinned Deno reports a lint defect and accepts its correction in a scoped e
                 rule: 'no-explicit-any',
             },
         ]);
-        writeFileSync(
+        await writeFile(
             join(sandbox.path, 'apps/api/supabase/functions/hello/index.ts'),
             'export function greet(value: string) { return value; }\n',
         );

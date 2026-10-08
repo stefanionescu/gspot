@@ -1,6 +1,9 @@
 import { join } from 'node:path';
-import { statSync, chmodSync } from 'node:fs';
-import { GIT_TIMEOUT_MS } from '#tests/config/harness/git.ts';
+import { createFileTree } from 'testdirs';
+import { buildPolicy } from '#tests/harness/policy.ts';
+import { stat, chmod, writeFile } from 'node:fs/promises';
+import { PUSH_CONTENT } from '#tests/config/samples/git.ts';
+import type { PushRepository } from '#tests/types/harness/git.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -35,7 +38,6 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
         {
             cwd,
             env: { ...environmentVariables(), ...environment },
-            timeoutMs: GIT_TIMEOUT_MS,
         },
     );
     return { code: result.code, stdout: result.stdout, stderr: result.stderr };
@@ -74,9 +76,10 @@ export function commitAll(cwd: string): void {
  * @param cwd the test repository
  * @param path the repository-relative file
  */
-export function markExecutable(cwd: string, path: string): void {
+export async function markExecutable(cwd: string, path: string): Promise<void> {
     const full = join(cwd, path);
-    chmodSync(full, statSync(full).mode | 0o111);
+    const attributes = await stat(full);
+    await chmod(full, attributes.mode | 0o111);
     if (process.platform !== 'win32') return;
     for (const argv of [
         ['add', '--', path],
@@ -85,4 +88,31 @@ export function markExecutable(cwd: string, path: string): void {
         const result = git(cwd, argv);
         if (result.code !== 0) throw new Error(`Marking ${path} executable failed: ${result.stderr}${result.stdout}`);
     }
+}
+
+/**
+ * Creates committed source and conflicting working-tree bytes for native and command push selection.
+ * @param root the test repository
+ * @returns the commit objects and the zero object for a new ref
+ */
+export async function preparePushRepository(root: string): Promise<PushRepository> {
+    await createFileTree(root, {
+        'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'changed.sh': PUSH_CONTENT.base,
+        'legacy.sh': PUSH_CONTENT.broken,
+    });
+    commitAll(root);
+    const base = gitOutput(root, ['rev-parse', 'HEAD']);
+    await writeFile(join(root, 'changed.sh'), PUSH_CONTENT.reviewed);
+    gitOutput(root, ['add', 'changed.sh']);
+    gitOutput(root, ['commit', '-qm', 'reviewed']);
+    const reviewed = gitOutput(root, ['rev-parse', 'HEAD']);
+    gitOutput(root, ['branch', 'reviewed', reviewed]);
+    await writeFile(join(root, 'changed.sh'), PUSH_CONTENT.broken);
+    gitOutput(root, ['add', 'changed.sh']);
+    gitOutput(root, ['commit', '-qm', 'unreviewed']);
+    const broken = gitOutput(root, ['rev-parse', 'HEAD']);
+    await writeFile(join(root, 'changed.sh'), PUSH_CONTENT.working);
+    await writeFile(join(root, 'gspot.toml'), PUSH_CONTENT.policy);
+    return { base, reviewed, broken, zero: '0'.repeat(base.length) };
 }

@@ -9,8 +9,8 @@ export type CapturedInvocation = { argv: string[]; cwd: string };
 /** What a spawned command left behind, for tests. */
 export type SpawnOutcome = Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>;
 
-/** Input and deadline settings passed to a source CLI subprocess. */
-export type GspotSpawnOptions = Pick<AsyncSpawnOptions, 'stdin' | 'timeoutMs'>;
+/** Input settings passed to a source CLI subprocess. */
+export type GspotSpawnOptions = Pick<AsyncSpawnOptions, 'stdin'>;
 
-/** Exact byte input and a requested deadline for a live source CLI child. */
-export type GspotChildOptions = Pick<AsyncSpawnOptions, 'timeoutMs'> & { stdin?: string | Uint8Array };
+/** Exact byte input for a live source CLI child. */
+export type GspotChildOptions = { stdin?: string | Uint8Array };

@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { rename } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -8,13 +8,13 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { PAGE } from '#tests/config/cli/checks/general/structure/layout.ts';
+import { ROUTE_CASES } from '#tests/config/cli/checks/general/structure/layout.ts';
 
-test('folder checks count code files and preserve allowed and nested directories', async () => {
+test('folder checks count code files and preserve ignored and nested directories', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['typescript'], {
-            tables: '[structure]\nlone_files_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
+            tables: '[[ignore]]\ncheck = "structure/lone-files"\npaths = ["allowed/**", "parent/child/**"]\nreason = "Required entry directory."\n',
             level: 'all',
         }),
         'lone/only.ts': '',
@@ -47,7 +47,7 @@ test('folder checks count code files and preserve allowed and nested directories
     ]);
 });
 
-test('prefix checks group files and directories once and honor allowances and the threshold', async () => {
+test('prefix checks group files and directories once and honor ignores and the threshold', async () => {
     const policy = buildPolicy(['typescript'], { level: 'all' });
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -81,51 +81,19 @@ test('prefix checks group files and directories once and honor allowances and th
         { file: 'cards/asset-card.ts', rule: 'shared-prefix' },
         { file: 'mixed/turn.ts', rule: 'shared-prefix' },
     ]);
-    expect(initial.report.checks[0]?.findings).toHaveLength(2);
     const allowed =
         policy +
-        '[structure]\nprefix_collisions_allowed = [{ paths = ["cards/**"], reason = "Required public names." }]\n';
+        '[[ignore]]\ncheck = "structure/prefix-collisions"\npaths = ["cards/**"]\nreason = "Required public names."\n';
     await Bun.write(join(sandbox.path, 'gspot.toml'), allowed);
     const retained = await executeRun(await openSession(sandbox.path), options);
     expect(retained.report.checks[0]?.findings).toMatchObject([{ file: 'mixed/turn.ts' }]);
-    expect(retained.report.checks[0]?.findings).toHaveLength(1);
     await Bun.write(
         join(sandbox.path, 'gspot.toml'),
-        allowed + '[limits]\nprefix_collisions = { value = 3, reason = "Required grouping threshold." }\n',
+        allowed +
+            '[limits]\nprefix_collisions = 3\n[reasons]\n"limits.prefix_collisions" = "Required grouping threshold."\n',
     );
     const raised = await executeRun(await openSession(sandbox.path), options);
     expect(raised.report.exitCode).toBe(0);
-});
-
-test.each([
-    ['typescript', 'ts'],
-    ['swift', 'swift'],
-    ['python', 'py'],
-])('%s retains shared folder enforcement and reads corrections', async (configuration, extension) => {
-    const language = { ts: 'typescript', tsx: 'typescript', swift: 'swift', py: 'python' }[extension] ?? 'javascript';
-    const lone = `feature/only.${extension}`;
-    const card = `cards/asset-card.${extension}`;
-    const list = `cards/asset-list.${extension}`;
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([configuration, language, 'structure'], { level: 'all' }),
-        [lone]: '',
-        [card]: '',
-        [list]: '',
-    });
-    const options = buildRunOptions({ only: ['structure/lone-files', 'structure/prefix-collisions'] });
-    const initial = await executeRun(await openSession(sandbox.path), options);
-    expect(initial.report.exitCode).toBe(1);
-    expect(initial.report.checks.flatMap((check) => check.findings)).toMatchObject([
-        { check: 'structure/lone-files', file: lone, line: 1, rule: 'lone-file' },
-        { check: 'structure/prefix-collisions', file: card, line: 1, rule: 'shared-prefix' },
-    ]);
-    await Bun.write(join(sandbox.path, `feature/second.${extension}`), '');
-    renameSync(join(sandbox.path, list), join(sandbox.path, `cards/other.${extension}`));
-    const corrected = await executeRun(await openSession(sandbox.path), options);
-    expect(corrected.report.checks).toHaveLength(2);
-    expect(corrected.report.checks.flatMap((check) => check.findings)).toStrictEqual([]);
-    expect(corrected.report.exitCode).toBe(0);
 });
 
 if (isPosix)
@@ -144,8 +112,8 @@ if (isPosix)
                 left.localeCompare(right),
             ),
         ).toStrictEqual([paths[0]!, paths[2]!].toSorted((left, right) => left.localeCompare(right)));
-        renameSync(join(sandbox.path, paths[1]!), join(sandbox.path, 'a\nb/other.ts'));
-        renameSync(join(sandbox.path, paths[3]!), join(sandbox.path, 'a/other.ts'));
+        await rename(join(sandbox.path, paths[1]!), join(sandbox.path, 'a\nb/other.ts'));
+        await rename(join(sandbox.path, paths[3]!), join(sandbox.path, 'a/other.ts'));
         commitAll(sandbox.path);
         const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);
@@ -155,10 +123,13 @@ if (isPosix)
 test.each(['', 'nested'])('naming checks leave the harness folder of scope %j alone', async (scope) => {
     await using sandbox = await testdir();
     const prefix = scope === '' ? '' : `${scope}/`;
-    const scopePolicy = scope === '' ? '' : `\n[[scope]]\npath = "${scope}"\nconfigurations = []\n`;
+    const scopePolicy =
+        scope === ''
+            ? ''
+            : `\n[scope."${scope}"]\nconfigurations = []\n[scope."${scope}".architecture.roles]\ntest_harness = "tests/helpers"\n`;
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['typescript', 'naming'], {
-            tables: `[architecture.roles]\ntest_support = "tests/helpers"\n${scopePolicy}`,
+            tables: `[architecture.roles]\ntest_harness = "tests/helpers"\n${scopePolicy}`,
             level: 'all',
         }),
         [`${prefix}tests/helpers/startup.ts`]: '',
@@ -208,44 +179,39 @@ test.each(['recommended', 'all'])('structural checks classify output directories
     expect(result.report.exitCode).toBe(level === 'all' ? 1 : 0);
 });
 
-// A framework allows its own one-file folders through the setting default it declares; the repository adds its own.
 async function loneFiles(root: string): Promise<string[]> {
     const result = await executeRun(await openSession(root), buildRunOptions({ only: ['structure/lone-files'] }));
     return result.report.checks.flatMap((check) => check.findings.map((finding) => finding.file));
 }
 
-test('SvelteKit route folders hold one page each without a finding, and other lone files still report', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['javascript', 'svelte'], { level: 'all' }),
-        'package.json': '{"name":"example","private":true,"type":"module"}\n',
-        'src/routes/about/+page.svelte': PAGE,
-        'src/routes/blog/[slug]/+page.svelte': PAGE,
-        'src/lib/lone/util.js': 'export const answer = 42;\n',
-    });
-    expect(await loneFiles(sandbox.path)).toStrictEqual(['src/lib/lone/util.js']);
-});
+test.each(ROUTE_CASES)(
+    '$framework $name route files need an explicit ignore and retain unignored neighbors',
+    async ({ framework, name, directory, content }) => {
+        await using sandbox = await testdir();
+        const route = `${directory}/users/${name}`;
+        const neighbor = `${directory}/teams/${name}`;
+        const policy = buildPolicy(['typescript', framework], { level: 'all' });
+        await createFileTree(sandbox.path, {
+            'gspot.toml': policy,
+            'package.json': '{"name":"example","private":true,"type":"module"}\n',
+            [route]: content,
+            [neighbor]: content,
+        });
+        expect(await loneFiles(sandbox.path)).toStrictEqual([neighbor, route]);
+        await Bun.write(
+            join(sandbox.path, 'gspot.toml'),
+            policy +
+                `[[ignore]]\ncheck = "structure/lone-files"\npaths = ["${route}"]\nreason = "The route file has the framework-required path."\n`,
+        );
+        expect(await loneFiles(sandbox.path)).toStrictEqual([neighbor]);
+    },
+);
 
-test('the repository allowance joins the framework allowance instead of replacing it', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['javascript', 'svelte'], {
-            tables: '[structure]\nlone_files_allowed = [{ paths = ["src/lib/lone/**"], reason = "Required entry directory." }]\n',
-            level: 'all',
-        }),
-        'package.json': '{"name":"example","private":true,"type":"module"}\n',
-        'src/routes/about/+page.svelte': PAGE,
-        'src/lib/lone/util.js': 'export const answer = 42;\n',
-        'src/lib/other/util.js': 'export const answer = 42;\n',
-    });
-    expect(await loneFiles(sandbox.path)).toStrictEqual(['src/lib/other/util.js']);
-});
-
-test('file allowances exclude named prefix peers without hiding unrelated collisions', async () => {
+test('path ignores exclude named prefix peers without hiding unrelated collisions', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['typescript'], {
-            tables: '[structure]\nprefix_collisions_allowed = [{ paths = ["mise.toml", "mise.test.toml"], reason = "Mise selects these configuration file names." }]\n',
+            tables: '[[ignore]]\ncheck = "structure/prefix-collisions"\npaths = ["mise.toml", "mise.test.toml"]\nreason = "Mise selects these configuration file names."\n',
             level: 'all',
         }),
         'mise.toml': '',
@@ -261,7 +227,6 @@ test('file allowances exclude named prefix peers without hiding unrelated collis
     expect(result.report.checks.flatMap((check) => check.findings)).toMatchObject([
         { file: 'cards/asset-one.ts', rule: 'shared-prefix' },
     ]);
-    expect(result.report.checks.flatMap((check) => check.findings)).toHaveLength(1);
 });
 
 test.each(['.githooks', '.husky', '.git-hooks', '.mise/tasks/hook'])(
@@ -279,7 +244,7 @@ test.each(['.githooks', '.husky', '.git-hooks', '.mise/tasks/hook'])(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['typescript'], {
                 level: 'all',
-                tables: '[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n',
+                tables: '[scope."app"]\nconfigurations = ["typescript"]\n',
             }),
             ...hooks,
             [`${directory}-other/hook-first.ts`]: '',

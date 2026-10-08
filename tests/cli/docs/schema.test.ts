@@ -12,6 +12,13 @@ import { EXCEPTION_SCHEMA_CASES } from '#tests/config/cli/docs/exceptions.ts';
 import { POLICY_FIELD_SCHEMA_CASES } from '#tests/config/cli/docs/policy-fields.ts';
 import { SCHEMA_CHECK, LOCALE_SCHEMA_CASES, RUNTIME_SCHEMA_CASES } from '#tests/config/cli/docs/schema.ts';
 
+import {
+    TOOL_SCHEMA_CASES,
+    TOOL_SCHEMA_SCOPES,
+    VERBATIM_TOOL_NAMES,
+    NO_VERBATIM_TOOL_NAMES,
+} from '#tests/config/cli/docs/tools.ts';
+
 const validate = new Ajv2020({ strict: false }).compile(buildJsonSchema());
 
 describe('the JSON schema of gspot.toml', () => {
@@ -19,15 +26,19 @@ describe('the JSON schema of gspot.toml', () => {
         expect(
             policySchema.safeParse({
                 configurations: ['bash'],
-                limits: { file_lines: 300, python: { file_lines: { value: 400, reason: 'why' } } },
+                limits: { file_lines: 300, python: { file_lines: 400 } },
+                reasons: {
+                    'limits.file_lines': 'The source has long declarative tables.',
+                    'limits.python.file_lines': 'The source has long declarative tables.',
+                },
             }).success,
         ).toBe(true);
         expect(policySchema.safeParse({ unknown: true }).success).toBe(false);
     });
 
     test('the published schema accepts a check with and without its correction command', () => {
-        expect(validate({ check: [SCHEMA_CHECK] })).toBe(true);
-        expect(validate({ check: [{ ...SCHEMA_CHECK, fix: ['lint', '--fix'] }] })).toBe(true);
+        expect(validate({ check: { 'project/lint': SCHEMA_CHECK } })).toBe(true);
+        expect(validate({ check: { 'project/lint': { ...SCHEMA_CHECK, fix: ['lint', '--fix'] } } })).toBe(true);
     });
 });
 
@@ -43,37 +54,82 @@ test.each([...RUNTIME_SCHEMA_CASES, ...POLICY_FIELD_SCHEMA_CASES, ...NAMING_SCHE
     },
 );
 
-test.each(LOCALE_SCHEMA_CASES)('manifest settings validate $name', ({ scoped: nested, locales, valid }) => {
-    const settings = { i18n: { locales } };
-    const document = {
-        configurations: ['i18n'],
-        ...(nested ? { scope: [{ path: 'app', ...settings }] } : settings),
-    };
-    const text = stringify(document);
-    const key = nested ? 'scope.0.i18n.locales' : 'i18n.locales';
-    if (valid) expect(() => parseStrictPolicy(text)).not.toThrow();
-    else expect(() => parseStrictPolicy(text)).toThrow(key);
-    expect(validate(document)).toBe(valid);
-});
+test.each(LOCALE_SCHEMA_CASES)(
+    'manifest settings validate $name',
+    ({ scoped: nested, settings: translationSettings, key: setting, valid }) => {
+        const settings = { i18n: translationSettings };
+        const document = {
+            configurations: ['i18n'],
+            ...(nested ? { scope: { app: settings } } : settings),
+        };
+        const text = stringify(document);
+        const table = `${nested ? 'scope.app.' : ''}i18n`;
+        const key =
+            setting === 'locales' ? `\`locales\` is not a setting gspot knows under [${table}]` : `${table}.${setting}`;
+        if (valid) expect(() => parseStrictPolicy(text)).not.toThrow();
+        else expect(() => parseStrictPolicy(text)).toThrow(key);
+        expect(validate(document)).toBe(valid);
+    },
+);
 
 test('manifest settings preserve typed values and reject unknown siblings', () => {
-    const source = buildPolicy(['bash'], { tables: '[bash]\nsafety_owners = ["scripts/cleanup.sh"]\n' });
-    expect(parseStrictPolicy(source).configurationSettings?.['bash']).toMatchObject({
-        safety_owners: ['scripts/cleanup.sh'],
+    const source = buildPolicy(['i18n'], { tables: '[i18n]\nmessages_folder = "messages"\nbase_locale = "fr"\n' });
+    expect(parseStrictPolicy(source).configurationSettings?.['i18n']).toMatchObject({
+        messages_folder: 'messages',
+        base_locale: 'fr',
     });
     const invalid = source + 'unknown = true\n';
     expect(() => {
         parseStrictPolicy(invalid);
-    }).toThrow('gspot.toml: bash.unknown:');
-    expect(validate({ configurations: ['bash'], bash: { safety_owners: ['scripts/cleanup.sh'] } })).toBe(true);
-    expect(validate({ configurations: ['bash'], bash: { unknown: true } })).toBe(false);
+    }).toThrow('`unknown` is not a setting gspot knows under [i18n]');
+    expect(validate({ configurations: ['i18n'], i18n: { messages_folder: 'messages', base_locale: 'fr' } })).toBe(true);
+    expect(validate({ configurations: ['i18n'], i18n: { unknown: true } })).toBe(false);
 });
 
 test.each(UNSAFE_DIRECTORIES)(
     'published and runtime schemas reject an escaping agent-rule project folder %j',
     (path) => {
-        const input = { agent_rules: { project_folder: path } };
+        const input = { agent_rules: { own_rules_folder: path } };
         expect(policySchema.safeParse(input).success).toBe(false);
         expect(validate(input)).toBe(false);
     },
 );
+
+for (const scope of TOOL_SCHEMA_SCOPES)
+    test.each(TOOL_SCHEMA_CASES)(
+        `runtime and published tool schemas agree in ${scope || 'root'} on $name`,
+        ({ input, valid, diagnostic }) => {
+            const { configurations, ...table } = input;
+            const document = { configurations, ...(scope === '' ? table : { scope: { [scope]: table } }) };
+            const problems = policyProblems(stringify(document));
+            if (valid) expect(problems).toStrictEqual([]);
+            else {
+                const owner = scope === '' ? '' : `scope.${scope}.`;
+                expect(problems).toContainEqual(
+                    textContaining(diagnostic.replace('under [tools', `under [${owner}tools`)),
+                );
+            }
+            expect(validate(document)).toBe(valid);
+        },
+    );
+
+for (const scope of TOOL_SCHEMA_SCOPES)
+    test.each([...VERBATIM_TOOL_NAMES, ...NO_VERBATIM_TOOL_NAMES])(
+        `native verbatim applicability agrees in ${scope || 'root'} for %s`,
+        (tool) => {
+            const key = `tools.${tool}.verbatim`;
+            const table = {
+                tools: {
+                    [tool]: {
+                        verbatim: { native_option: { value: false, reason: 'The native option keeps its own key.' } },
+                    },
+                },
+                reasons: { [key]: 'The native writer owns these project options.' },
+            };
+            const document = scope === '' ? table : { scope: { [scope]: table } };
+            const accepted = VERBATIM_TOOL_NAMES.includes(tool);
+            expect(policySchema.safeParse(document).success).toBe(accepted);
+            expect(validate(document)).toBe(accepted);
+            expect(policyProblems(stringify(document)).length === 0).toBe(accepted);
+        },
+    );

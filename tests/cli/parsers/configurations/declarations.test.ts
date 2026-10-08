@@ -1,14 +1,10 @@
 import { test, expect } from 'bun:test';
-import { assertManifests } from '#cli/configurations/problems.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
 
 import {
     TOOL_DECLARATION,
-    CONSUMER_DECLARATION,
     SECURITY_DECLARATION,
-    SELECTOR_DECLARATION,
     SUPPRESSION_DECLARATION,
-    SYSTEM_TOOL_DECLARATION,
     SYNTAX_SELECTOR_DECLARATION,
 } from '#tests/config/cli/parsers/configurations.ts';
 
@@ -23,76 +19,12 @@ test('the folder gives a configuration its name and kind, and the [configuration
     ).toThrow('its folder already gives');
 });
 
-test('a generated config refuses an undeclared consuming tool and accepts a tool declared by another configuration', () => {
-    const consumer = parseConfigurationManifest('consumer', { kind: 'tool', tables: CONSUMER_DECLARATION });
-    const executable = parseConfigurationManifest('executable', { kind: 'tool', tables: SYSTEM_TOOL_DECLARATION });
-    const manifests = new Map([['consumer', consumer]]);
-    expect(() => {
-        assertManifests(manifests);
-    }).toThrow('config .gspot/config/example.toml requires undeclared tool example.');
-    manifests.set('executable', executable);
-    expect(() => {
-        assertManifests(manifests);
-    }).not.toThrow();
-    consumer.configs[0]!.required_tools = ['missing-parser'];
-    expect(() => {
-        assertManifests(manifests);
-    }).toThrow('requires undeclared tool missing-parser.');
-    consumer.configs[0]!.required_tools = ['example'];
-    expect(() => {
-        assertManifests(manifests);
-    }).not.toThrow();
-    expect(consumer.configs[0]?.tool).toStrictEqual(['example']);
-    expect(
-        parseConfigurationManifest('consumer', {
-            kind: 'tool',
-            tables: CONSUMER_DECLARATION.replace('["example"]', '"example"'),
-        }).configs[0]?.tool,
-    ).toStrictEqual(['example']);
-    consumer.configs[0]!.check = ['executable/missing'];
-    expect(() => {
-        assertManifests(manifests);
-    }).toThrow('config .gspot/config/example.toml requires undeclared check executable/missing.');
-});
-
 test('a template pointer rejects a conflicting emission mode', () => {
     const source = `[[config]]\ntemplate = "config.tmpl"\ntarget = ".gspot/config.toml"\n[config.stub_file]\npath = "config.toml"\ntemplate = "editor.tmpl"\n`;
     expect(() => parseConfigurationManifest('example', { kind: 'general', tables: `${source}copy = true\n` })).toThrow(
         'config.0.stub_file: Unrecognized key: "copy"',
     );
     expect(() => parseConfigurationManifest('example', { kind: 'general', tables: source })).not.toThrow();
-});
-
-test.each([
-    {
-        name: 'a key without shared ownership',
-        selection: 'key = "eslintConfig"',
-        message: 'A selected key or table must preserve its shared file.',
-    },
-    {
-        name: 'a table without shared ownership',
-        selection: 'table = "tool.ruff"',
-        message: 'A selected key or table must preserve its shared file.',
-    },
-    {
-        name: 'both a key and a table',
-        selection: 'key = "eslintConfig"\ntable = "tool.ruff"\nshared = true',
-        message: 'A replace row selects either a key or a table.',
-    },
-])('replacement refuses $name', ({ selection, message: diagnostic }) => {
-    expect(() =>
-        parseConfigurationManifest('example', {
-            tables: SELECTOR_DECLARATION + selection,
-        }),
-    ).toThrow(diagnostic);
-});
-
-test('a replacement selecting a shared key preserves the containing file', () => {
-    expect(() =>
-        parseConfigurationManifest('example', {
-            tables: `${SELECTOR_DECLARATION}key = "eslintConfig"\nshared = true\n`,
-        }),
-    ).not.toThrow();
 });
 
 test('query-pack metadata refuses a version range and accepts an exact release', () => {

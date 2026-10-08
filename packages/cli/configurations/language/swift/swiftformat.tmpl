@@ -1,4 +1,5 @@
 <%
+const version = swiftVersion();
 const document = {
     options: {
         indent: format.indent_style === 'tab' ? 'tab' : format.indent_width,
@@ -23,9 +24,9 @@ const document = {
         linebreaks: 'lf',
         importgrouping: 'length,alpha',
         self: 'init-only',
-        swiftversion: settings['tools.swiftformat.swift_version'],
+        ...(version === undefined ? {} : { swiftversion: version }),
     },
-    enable: isAll ? ['wrapEnumCases'].filter((rule) => !rulesOff('swift/swiftformat').includes(rule)) : [],
+    enable: isAll ? ['blockComments', 'wrapEnumCases'].filter((rule) => !rulesOff('swift/swiftformat').includes(rule)) : [],
     disable: [...new Set([
         ...[
             'trailingClosures',

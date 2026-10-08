@@ -1,0 +1,35 @@
+[configuration]
+title = "Swift Snapshot Testing"
+requires = ["swift"]
+description = "SnapshotTesting comparisons keep recording disabled and retain references only while their test source exists."
+
+[detect]
+dependencies = ["swift-snapshot-testing"]
+
+[files]
+paths = ["**/*.swift", "**/__Snapshots__/**"]
+kinds = ["source", "binary"]
+
+[[check]]
+name = "recording"
+title = "Disable snapshot recording"
+example = "A snapshot test left in recording mode reports a recording finding. Inspect and retain the intended reference images, remove the recording flag, and rerun in comparison mode."
+level = "recommended"
+stage = "commit"
+runs = "files"
+files = { tags = ["swift-test"] }
+summary = "Refuses a snapshot test left in a recording mode."
+why = "A recording test writes a new reference and passes, so it approves whatever the screen shows."
+help = "Take the recording flag out, and commit the references it wrote after looking at them."
+
+[[check]]
+name = "references"
+title = "Validate snapshot references"
+example = "A snapshot reference folder whose corresponding test file no longer exists reports unused references. Delete the unused references, or rename the folder to match the renamed test file."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { paths = ["**/*"], kinds = ["source", "binary"] }
+summary = "Checks that __Snapshots__ reference folders name a sibling Swift test file."
+why = "References of a deleted test stay in the repository, and every clone pays for them."
+help = "Delete the references of the test that is gone, or rename the folder after the test file."

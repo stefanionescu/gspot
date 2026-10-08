@@ -31,8 +31,12 @@ level = "recommended"
 stage = "commit"
 runs = "scope"
 tool = "spectral"
-files = {extensions = [".yaml", ".yml", ".json"]}
-summary = "Lints the OpenAPI document named in tools.openapi.document with the Spectral OpenAPI rules."
+cwd = "root"
+command = ["spectral", "lint", "--ruleset", "{tool_file:spectral}", "--format", "text", "{setting:openapi.document}"]
+when = { setting = "openapi.document" }
+output = { format = "regex", pattern = '^(?<file>.+):(?<line>\d+):(?<column>\d+) (?:error|warning) (?<rule>\S+) "(?<message>.*)"$' }
+files = { extensions = [".yaml", ".yml", ".json"] }
+summary = "Lints the OpenAPI document named in openapi.document with the Spectral OpenAPI rules."
 why = "Clients are written from this document, so an operation with no id or an undefined response becomes somebody's broken client."
 help = "Change the document the way the rule says, or the code that writes it."
 
@@ -43,20 +47,21 @@ example = "A committed OpenAPI document that differs from the configured generat
 level = "recommended"
 stage = "push"
 runs = "scope"
-summary = "Runs the command in tools.openapi.generate and fails when it changes the document."
+summary = "Runs the command in openapi.generate_command and fails when it changes the document."
 why = "A committed document that lags the routes describes a service that does not exist."
 help = "Run the command and commit the document it writes."
 
 [[setting]]
-name = "tools.openapi.document"
-type = "string"
+name = "openapi.document"
+type = "path"
 direction = "neutral"
 default = ""
 summary = "The committed OpenAPI document, relative to the project scope; empty turns both OpenAPI checks off."
 
 [[setting]]
-name = "tools.openapi.generate"
-type = "string"
+name = "openapi.generate_command"
+type = "list"
+items = "string"
 direction = "neutral"
-default = ""
+default = []
 summary = "The command that writes the OpenAPI document from the code, run in the project scope folder."

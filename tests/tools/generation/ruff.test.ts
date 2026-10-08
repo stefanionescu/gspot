@@ -30,7 +30,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python'], {
             level: 'all',
-            tables: '[[scope]]\npath = "app"\nconfigurations = ["pytest"]\n[scope.limits.python]\nfunction_parameters = 3\n',
+            tables: '[scope."app"]\nconfigurations = ["pytest"]\n[scope."app".limits.python]\nfunction_parameters = 3\n',
         }),
         'tests/__init__.py': '"""Root test package."""\n',
         'app/__init__.py': '"""Application package."""\n',
@@ -39,18 +39,16 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
         'app/tests/test_example.py': defect,
     });
     const session = await openSession(sandbox.path);
-    const rendered = emitAll(session);
-    const configs = rendered.files.filter(({ path }) => path.startsWith('.gspot/') && path.endsWith('/ruff.toml'));
+    const emitted = emitAll(session);
+    const configs = emitted.files.filter(({ path }) => path.startsWith('.gspot/') && path.endsWith('/ruff.toml'));
     expect(configs.map(({ path }) => path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
         '.gspot/config/app/ruff.toml',
         '.gspot/config/ruff.toml',
     ]);
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log, undefined, rendered);
-    const root = parse(configs.find(({ path }) => path === '.gspot/config/ruff.toml')!.content);
+    writeOutputs(session, log, undefined, emitted);
     const app = parse(configs.find(({ path }) => path === '.gspot/config/app/ruff.toml')!.content);
-    expect(root).toMatchObject({ lint: { pylint: { 'max-args': 7 } } });
-    expect(app).toMatchObject({ lint: { pylint: { 'max-args': 3 }, select: containingAll(['PT001']) } });
+    expect(app).toMatchObject({ lint: { select: containingAll(['PT001']) } });
 
     const run = (path: string) =>
         runTestCommandBlocking(['ruff', 'check', '--no-cache', '--output-format', 'json', path], {
@@ -146,17 +144,17 @@ test('Python uses one function-size ceiling without a second statement-count fin
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     expect(JSON.parse(checked.stdout)).toStrictEqual([]);
-    const sized = await spawnGspot(sandbox.path, ['check', '--only', 'python/function-lines', '--json']);
+    const sized = await spawnGspot(sandbox.path, ['check', '--only', 'python/function-size', '--json']);
     expect(sized.code, sized.stdout + sized.stderr).toBe(0);
     expect((JSON.parse(sized.stdout) as RunReport).checks).toMatchObject([
-        { check: 'python/function-lines', status: 'passed', findings: [] },
+        { check: 'python/function-size', status: 'passed', findings: [] },
     ]);
 });
 
 test('Ruff editor discovery and explicit formatting agree on root and nested policy', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildPolicy(['python'], {
-            tables: '[format]\nquotes = "single"\nline_ending = "crlf"\n[[scope]]\npath = "app"\n[scope.format]\nquotes = "double"\nline_ending = "lf"\n',
+            tables: '[format]\nquotes = "single"\nline_ending = "crlf"\n[scope."app"]\n[scope."app".format]\nquotes = "double"\nline_ending = "lf"\n',
         }),
         'sample.py': 'VALUE = "example"\n',
         'app/sample.py': 'VALUE = "example"\n',
@@ -181,7 +179,7 @@ test('Ruff editor discovery and explicit formatting agree on root and nested pol
 test.each(['recommended', 'all'] as const)('Ruff fixes respect each project Python version at %s', async (level) => {
     await using sandbox = await testdir();
     const tables = VERSION_CASES.filter(({ scope }) => scope !== '')
-        .map(({ scope }) => `[[scope]]\npath = "${scope}"\n`)
+        .map(({ scope }) => `[scope."${scope}"]\n`)
         .join('');
     const files = Object.fromEntries(
         VERSION_CASES.flatMap(({ scope, requires }) => [

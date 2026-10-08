@@ -1,5 +1,5 @@
 export const POLICY =
-    'configurations = ["markdown", "structure"]\n[agent_rules]\nenabled = false\n[[scope]]\npath = "api"\nconfigurations = ["bash"]\n';
+    'configurations = ["markdown", "structure"]\n[agent_rules]\nenabled = false\n[scope."api"]\nconfigurations = ["bash"]\n';
 
 /** Mutually exclusive setting operations are refused before policy input is read. */
 export const SET_ARGUMENT_CONFLICTS = [

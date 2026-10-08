@@ -10,14 +10,13 @@ test('Cloudflare header checks report only files in their owning scope', async (
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy(['cloudflare'], {
-            tables: '[[scope]]\npath = "workers/api"\nconfigurations = ["cloudflare"]\n',
+            tables: '[scope."workers/api"]\nconfigurations = ["cloudflare"]\n',
         }),
         _headers: '  Invalid header\n',
         'workers/api/_headers': '/*\n  X-Frame-Options: DENY\n',
     });
     const session = await openSession(directory.path);
-    const check = session.manifests.get('cloudflare')!.checks.find((entry) => entry.name === 'cloudflare/headers')!;
-    const input = buildCheckInput(session, check.name);
+    const input = buildCheckInput(session, 'cloudflare/headers');
     expect(headers(input).map(({ file }) => file)).toStrictEqual(['_headers']);
-    expect(headers({ ...input, scope: 'workers/api' })).toStrictEqual([]);
+    expect(headers(buildCheckInput(session, 'cloudflare/headers', { scope: 'workers/api' }))).toStrictEqual([]);
 });

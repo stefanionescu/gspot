@@ -1,5 +1,6 @@
 // What init proposes before anything is written: the detection, the selection, the policy text, and the plan.
 import { print } from '#cli/terminal/messages.ts';
+import { compact } from '#cli/platform/objects.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { runGitBlocking } from '#cli/platform/git.ts';
@@ -13,7 +14,6 @@ import { selectForInit } from '#cli/lifecycle/selection.ts';
 import { getTooling } from '#cli/configurations/takeover.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { planTakeover } from '#cli/commands/init/takeover.ts';
-import type { TomlTable } from '#cli/types/policy/settings.ts';
 import { askQuestions } from '#cli/commands/init/questions.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { detectionText } from '#cli/commands/init/detection.ts';
@@ -22,7 +22,6 @@ import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { Planning, InitPrepared } from '#cli/types/commands/init.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { draftPolicy, proposeText } from '#cli/commands/init/policy-text.ts';
-import { prepareConfigurationOverrides } from '#cli/lifecycle/configuration-overrides.ts';
 import type { InitInputs, InitOptions, InitSelection } from '#cli/types/lifecycle/selection.ts';
 
 function assertCleanTree(root: string, options: InitOptions): void {
@@ -88,8 +87,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
     const draft = draftPolicy(selection, answers);
-    const templateTables = options.template?.tables as TomlTable | undefined;
-    const policyText = proposeText({ ...draft, ...(templateTables === undefined ? {} : { templateTables }) });
+    const policyText = proposeText({ ...draft, ...compact({ template: options.template }) }, repo, manifests);
     const policy = parseStrictPolicy(policyText, root);
     const session = await openSession(root, { policy, text: policyText, path: POLICY_FILE, problems: [] });
     const applicable = applicableManifests(session);
@@ -108,7 +106,6 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
         replaced,
     };
     return {
-        selections: prepareConfigurationOverrides({ ...inputs, options }, selection),
         plan: buildInitPlan(planning, policy, policyText, applicable),
         policyText,
         removed: replaced.removed,

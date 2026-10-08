@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -24,7 +24,7 @@ async function expectFormatterCorrection(root: string): Promise<void> {
         const quote = singleQuote ? "'" : '"';
         const terminator = semi ? ';' : '';
         const ending = endOfLine === 'crlf' ? '\r\n' : '\n';
-        expect(readFileSync(join(root, file), 'utf8')).toBe(
+        expect(await readFile(join(root, file), 'utf8')).toBe(
             [
                 `const greeting = ${quote}hello${quote}${terminator}`,
                 'if (greeting) {',
@@ -63,13 +63,11 @@ test('formatter overrides drive CLI findings and correction without EditorConfig
         'generated/kept.json': '{"value":1}',
         'generated/review.json': '{"value":1}',
     });
-    const reasons = await spawnGspot(root, ['set', 'require_reasons', 'true']);
-    expect(reasons.code, reasons.stdout + reasons.stderr).toBe(0);
     const excluded = await spawnGspot(root, [
-        'set',
-        'tools.prettier.exclude',
-        '["generated/**","!generated/review.json"]',
-        '--replace',
+        'ignore',
+        'format/prettier',
+        '--paths',
+        'generated/kept.json',
         '--reason',
         reason,
     ]);
@@ -82,9 +80,9 @@ test('formatter overrides drive CLI findings and correction without EditorConfig
     ]);
     const fixed = await spawnGspot(root, [...args.slice(0, 4), '--fix', ...args.slice(4)]);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-    expect(readFileSync(join(root, 'generated/kept.json'), 'utf8')).toBe('{"value":1}');
-    expect(JSON.parse(readFileSync(join(root, 'generated/review.json'), 'utf8'))).toStrictEqual({ value: 1 });
-    const removed = await spawnGspot(root, ['set', 'tools.prettier.exclude', 'generated/**', '--remove']);
+    expect(await readFile(join(root, 'generated/kept.json'), 'utf8')).toBe('{"value":1}');
+    expect(JSON.parse(await readFile(join(root, 'generated/review.json'), 'utf8'))).toStrictEqual({ value: 1 });
+    const removed = await spawnGspot(root, ['ignore', 'format/prettier', '--paths', 'generated/kept.json', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const exposed = await spawnGspot(root, args);
     expect(exposed.code, exposed.stdout + exposed.stderr).toBe(1);

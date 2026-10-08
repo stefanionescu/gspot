@@ -19,3 +19,6 @@ export const YARN_BERRY_MAJOR = 2;
 export const JAVASCRIPT_RUNTIMES = ['node', 'bun', 'deno'] as const;
 
 export const RUNTIME_COMMAND = /^\s*(node|bun|deno)(?:\s|$)/u;
+
+export const NEXT_ESLINT_PLUGIN = '@next/eslint-plugin-next';
+export const NEXT_ESLINT_PLUGIN_MAJOR = /^\^(?:0|[1-9]\d*)$/u;

@@ -1,6 +1,7 @@
 // Validated configuration declarations and their shipped rule assets.
 import { posix } from 'node:path';
 import { listAssets } from '#cli/platform/assets.ts';
+import type { FileDeclaration } from '#cli/types/repository/inventory.ts';
 import { CONFIG_PREFIX, CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
 import type { Manifest, OwnedCheck, RuleSource, ConfigurationFile } from '#cli/types/configurations.ts';
 
@@ -35,7 +36,7 @@ export function targetInScope(scope: string, config: ConfigurationFile): string 
 }
 
 /**
- * The name a `{config:<name>}` placeholder uses for a config file.
+ * The name a `{tool_file:<name>}` placeholder uses for a config file.
  * @param target the target path
  * @returns the file name under .gspot/config without its extensions
  */
@@ -57,4 +58,32 @@ export function configurationFiles(manifest: Manifest): RuleSource[] {
         source,
         path: `${kind}/${name}/${posix.relative(manifest.dir + '/' + CONFIGURATION_RULES_FOLDER, source)}`,
     }));
+}
+
+/**
+ * Resolve authored declarations and generated paths of the configurations each scope selects.
+ * @param declarations the authored file declarations
+ * @param selected the actual manifests selected by each authored scope
+ * @returns file declarations with internal configuration origins retained
+ */
+export function fileDeclarations(
+    declarations: FileDeclaration[],
+    selected: Map<string, Manifest[]>,
+): FileDeclaration[] {
+    return [
+        ...declarations.filter((entry) => entry.kind !== 'generated' || entry.configuration === undefined),
+        ...selected.entries().flatMap(([path, manifests]) =>
+            manifests.flatMap(({ generated, configuration }) =>
+                generated.length === 0
+                    ? []
+                    : [
+                          {
+                              kind: 'generated' as const,
+                              configuration: configuration.name,
+                              paths: generated.map((file) => posix.join(path, file)),
+                          },
+                      ],
+            ),
+        ),
+    ];
 }

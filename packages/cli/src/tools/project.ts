@@ -107,7 +107,7 @@ export async function prepareToolProject<Parsed, Preparation, Installation>(
         writeFileSync(join(work.path, basename(description.manifestPath)), manifest.content);
         content = await description.createLockfile(work.path, preparation, recorded, project);
     }
-    return { path, content, readOnly: true, kind: 'lock', ...compact({ read: original }) };
+    return { path, content, kind: 'lock', ...compact({ read: original }) };
 }
 
 /**

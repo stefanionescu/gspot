@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
@@ -28,9 +28,9 @@ test.each(['recommended', 'all'] as const)(
             writeOutputs(session, log, undefined, generated);
             expect(log.entryFor('app/package.json')?.configuration?.format).toBe('json');
         }
-        expect(readFileSync(join(sandbox.path, 'app/child/package.json'), 'utf8')).toBe(TAKEOVER_PACKAGE);
-        expect(readFileSync(join(sandbox.path, 'other/package.json'), 'utf8')).toBe(TAKEOVER_PACKAGE);
-        expect(readFileSync(join(sandbox.path, 'plain/package.json'), 'utf8')).toBe('{"private":true}\n');
+        expect(await readFile(join(sandbox.path, 'app/child/package.json'), 'utf8')).toBe(TAKEOVER_PACKAGE);
+        expect(await readFile(join(sandbox.path, 'other/package.json'), 'utf8')).toBe(TAKEOVER_PACKAGE);
+        expect(await readFile(join(sandbox.path, 'plain/package.json'), 'utf8')).toBe('{"private":true}\n');
         session = await openSession(sandbox.path);
         expect(
             getSuggestions(session).unowned.filter((row) => ['package.json', 'app/package.json'].includes(row.path)),
@@ -40,9 +40,9 @@ test.each(['recommended', 'all'] as const)(
                 .unowned.filter((row) => row.note.includes('stylelint'))
                 .map(({ path, command }) => ({ path, command })),
         ).toStrictEqual(STYLELINT_SUGGESTIONS);
-        const installed = readFileSync(join(sandbox.path, 'app/package.json'), 'utf8');
-        writeFileSync(join(sandbox.path, 'app/package.json'), installed.replace('native-project', 'edited-project'));
-        writeFileSync(
+        const installed = await readFile(join(sandbox.path, 'app/package.json'), 'utf8');
+        await writeFile(join(sandbox.path, 'app/package.json'), installed.replace('native-project', 'edited-project'));
+        await writeFile(
             join(sandbox.path, 'gspot.toml'),
             buildPolicy([], { level, tables: '[agent_rules]\nenabled = false\n' }),
         );
@@ -54,8 +54,8 @@ test.each(['recommended', 'all'] as const)(
             expect(log.entryFor('package.json')).toBeUndefined();
             expect(log.entryFor('app/package.json')).toBeUndefined();
         }
-        expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe(TAKEOVER_PACKAGE);
-        expect(readFileSync(join(sandbox.path, 'app/package.json'), 'utf8')).toBe(
+        expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(TAKEOVER_PACKAGE);
+        expect(await readFile(join(sandbox.path, 'app/package.json'), 'utf8')).toBe(
             TAKEOVER_PACKAGE.replace('native-project', 'edited-project'),
         );
     },

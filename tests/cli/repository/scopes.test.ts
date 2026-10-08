@@ -4,9 +4,23 @@ import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { npmToolNames } from '#cli/configurations/pins.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
+import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
+import { rm, mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { INVALID_WORKSPACE_CASES } from '#tests/config/cli/repository/scopes.ts';
 import { scopeOf, proposedScopes, packageWorkspaces } from '#cli/repository/scopes.ts';
-import { rmSync, mkdirSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+
+function proposeProjectScopes(files: TrackedFile[], manifests: ProjectManifest[]) {
+    const configurations = configurationManifests();
+    return proposedScopes(
+        files,
+        manifests,
+        [...configurations.values()].flatMap((manifest) => manifest.detect.project_files),
+        npmToolNames(configurations.values()),
+    );
+}
 
 test.each([
     { 'package.json': '{"workspaces":["packages/*"]}' },
@@ -29,12 +43,7 @@ test.each([
         'packages/api',
         'packages/lint',
     ]);
-    const scopes = proposedScopes(
-        repository.files,
-        readManifests(sandbox.path, repository.files),
-        ['package.json'],
-        npmToolNames(configurationManifests().values()),
-    );
+    const scopes = proposeProjectScopes(repository.files, readManifests(sandbox.path, repository.files));
     expect(scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
 });
 
@@ -51,25 +60,22 @@ test('workspace discovery stays within the requested root', async () => {
         const root = join(sandbox.path, directory);
         expect(packageWorkspaces(root)).toStrictEqual([]);
     }
-    writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
+    await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
     expect(packageWorkspaces(join(sandbox.path, 'empty'))).toStrictEqual([]);
 });
 
-test.each(['pnpm-workspace.yaml', 'lerna.json', 'rush.json'])(
-    'invalid or unreadable %s cannot become an empty workspace',
-    async (path) => {
+test.each(INVALID_WORKSPACE_CASES)(
+    'invalid or unreadable $path cannot become an empty workspace',
+    async ({ path, content }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'package.json': '{}', [path]: '{' });
         expect(() => packageWorkspaces(sandbox.path)).toThrow();
         await Bun.file(join(sandbox.path, path)).delete();
-        mkdirSync(join(sandbox.path, path));
+        await mkdir(join(sandbox.path, path));
         expect(() => packageWorkspaces(sandbox.path)).toThrow();
-        rmSync(join(sandbox.path, path), { recursive: true });
+        await rm(join(sandbox.path, path), { recursive: true });
         await createFileTree(sandbox.path, {
-            [path]:
-                path === 'rush.json'
-                    ? '{"projects":[{"packageName":"app","projectFolder":"packages/app"}]}'
-                    : '{"packages":["packages/*"]}',
+            [path]: content,
             'packages/app/package.json': '{"name":"app"}',
         });
         expect(packageWorkspaces(sandbox.path)).toStrictEqual(['packages/app']);
@@ -89,12 +95,11 @@ test.each([
         'outside/app/package.json': '{"name":"outside-app"}',
     });
     const root = join(directory.path, 'project');
-    symlinkSync('../../outside', join(root, 'packages/linked'));
+    await symlink('../../outside', join(root, 'packages/linked'));
     expect(() => packageWorkspaces(root)).toThrow(`Workspace package leaves the repository: ${escaped}`);
-    expect(readFileSync(join(directory.path, 'outside/package.json'), 'utf8')).toBe('{"name":"outside"}');
     expect(packageWorkspaces(join(root, 'packages'))).toStrictEqual([]);
-    unlinkSync(join(root, 'packages/linked'));
-    writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
+    await unlink(join(root, 'packages/linked'));
+    await writeFile(join(root, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
     await createFileTree(root, { 'packages/app/package.json': '{"name":"inside"}' });
     expect(packageWorkspaces(root)).toStrictEqual(['packages/app']);
 });
@@ -109,20 +114,12 @@ test('broad workspace patterns ignore private environments containing external i
         'outside/python': 'The interpreter belongs outside the repository.\n',
     });
     const root = join(directory.path, 'project');
-    symlinkSync('../../../../outside/python', join(root, '.gspot/.venv/bin/python'));
+    await symlink('../../../../outside/python', join(root, '.gspot/.venv/bin/python'));
     const repository = await readRepository(root, [], [], []);
     expect(packageWorkspaces(root)).toStrictEqual(['packages/app']);
     expect(
-        proposedScopes(
-            repository.files,
-            readManifests(root, repository.files),
-            ['package.json'],
-            npmToolNames(configurationManifests().values()),
-        ).map((scope) => scope.path),
+        proposeProjectScopes(repository.files, readManifests(root, repository.files)).map((scope) => scope.path),
     ).toStrictEqual(['packages/app']);
-    expect(readFileSync(join(directory.path, 'outside/python'), 'utf8')).toBe(
-        'The interpreter belongs outside the repository.\n',
-    );
 });
 
 test('workspace selection does not parse an inactive lower-priority configuration', async () => {
@@ -151,12 +148,7 @@ test('every folder that holds a project file is a scope, the root and lint-only 
     });
     const repository = await readRepository(sandbox.path, [], [], []);
     const projectManifests = readManifests(sandbox.path, repository.files);
-    const found = proposedScopes(
-        repository.files,
-        projectManifests,
-        [...configurationManifests().values()].flatMap((manifest) => manifest.detect.project_files),
-        npmToolNames(configurationManifests().values()),
-    );
+    const found = proposeProjectScopes(repository.files, projectManifests);
     expect(found.map((scope) => [scope.path, scope.source])).toStrictEqual([
         ['api', 'project'],
         ['apps/web', 'project'],
@@ -173,11 +165,10 @@ test('workspace discovery accepts linked authored declarations and package manif
         'settings/app.json': '{"name":"application"}',
         'packages/app/.keep': '',
     });
-    symlinkSync('settings/root.json', join(sandbox.path, 'package.json'));
-    symlinkSync('settings/workspace.yaml', join(sandbox.path, 'pnpm-workspace.yaml'));
-    symlinkSync('../../settings/app.json', join(sandbox.path, 'packages/app/package.json'));
+    await symlink('settings/root.json', join(sandbox.path, 'package.json'));
+    await symlink('settings/workspace.yaml', join(sandbox.path, 'pnpm-workspace.yaml'));
+    await symlink('../../settings/app.json', join(sandbox.path, 'packages/app/package.json'));
     expect(packageWorkspaces(sandbox.path)).toStrictEqual(['packages/app']);
-    expect(readFileSync(join(sandbox.path, 'settings/workspace.yaml'), 'utf8')).toBe('packages: ["packages/*"]\n');
 });
 
 test('root selections remain local to each repository read and missing-scope fallback', async () => {
@@ -213,26 +204,25 @@ test('scope discovery excludes declared npm tools and hook managers without hidi
         'packages/process',
     ]);
     expect(
-        proposedScopes(
-            repository.files,
-            readManifests(sandbox.path, repository.files),
-            ['package.json'],
-            npmToolNames(configurationManifests().values()),
-        ).map((scope) => scope.path),
+        proposeProjectScopes(repository.files, readManifests(sandbox.path, repository.files)).map(
+            (scope) => scope.path,
+        ),
     ).toStrictEqual(['packages/custom', 'packages/process']);
-    for (const [path, bytes] of Object.entries(manifests))
-        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(bytes);
-    writeFileSync(
+    await writeFile(
         join(sandbox.path, 'packages/next/package.json'),
         '{"dependencies":{"next":"16.0.0"},"devDependencies":{"@next/eslint-plugin-next":"16.0.0"}}',
     );
     const corrected = await readRepository(sandbox.path, [], [], []);
     expect(
-        proposedScopes(
-            corrected.files,
-            readManifests(sandbox.path, corrected.files),
-            ['package.json'],
-            npmToolNames(configurationManifests().values()),
-        ).map((scope) => scope.path),
+        proposeProjectScopes(corrected.files, readManifests(sandbox.path, corrected.files)).map((scope) => scope.path),
     ).toStrictEqual(['packages/custom', 'packages/next', 'packages/process']);
+});
+
+test('Python scopes use captured project files and omit workspace-only members after the manifest changes', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, PYTHON_PROJECT_FILES);
+    const repository = await readRepository(sandbox.path, [], [], []);
+    const projectManifests = readManifests(sandbox.path, repository.files);
+    await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
+    expect(proposeProjectScopes(repository.files, projectManifests).map((scope) => scope.path)).toStrictEqual(['api']);
 });

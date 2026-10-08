@@ -4,7 +4,6 @@ import { hasPolicy } from '#cli/policy/read.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { Option } from '@commander-js/extra-typings';
 import { getTemplate } from '#cli/policy/templates.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { writeSetup } from '#cli/commands/init/write.ts';
@@ -12,6 +11,7 @@ import { initPlanText } from '#cli/commands/init/plan.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
+import { trimTrailingSlashes } from '#cli/platform/paths.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import type { Template } from '#cli/types/policy/templates.ts';
 import { ALREADY_INSTALLED } from '#cli/config/commands/init.ts';
@@ -20,17 +20,18 @@ import type { InitOptions } from '#cli/types/lifecycle/selection.ts';
 import { note, print, printResult } from '#cli/terminal/messages.ts';
 import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
 import type { InitJson, InitPrepared } from '#cli/types/commands/init.ts';
+import { Option, InvalidArgumentError } from '@commander-js/extra-typings';
 
 // A template answers the questions a flag did not: its configurations, hooks, workflow, runner, and rules.
 function templateAnswers(template: Template): Partial<InitOptions> {
     const { tables } = template;
     const configurations = tables.configurations ?? [];
-    const install = tables.agent_rules.enabled;
+    const install = tables.agent_rules?.enabled;
     return compact({
         configurations: configurations.length === 0 ? [NO_CONFIGURATIONS] : configurations,
-        hooks: tables.hooks !== undefined,
+        hooks: tables.hooks?.enabled === true,
         ci: tables.ci === undefined ? 'none' : tables.ci.provider,
-        runner: tables.run_with ?? 'none',
+        runner: tables.runner ?? 'none',
         rules: install,
     });
 }
@@ -55,6 +56,20 @@ function presentPlan(root: string, options: InitOptions, prepared: InitPrepared)
         },
         exitCode: EXIT_ERROR,
     };
+}
+
+// Commander passes no previous value for the first authored scope argument.
+function parseScopeConfigurations(value: string, previous: Map<string, string[]> | undefined): Map<string, string[]> {
+    const separator = value.indexOf('=');
+    if (separator === -1) throw new InvalidArgumentError('Write each scope as path=configuration,configuration.');
+    const path = trimTrailingSlashes(value.slice(0, separator));
+    const configurations = value
+        .slice(separator + 1)
+        .split(',')
+        .map((name) => name.trim())
+        .filter((name) => name !== '');
+    const scopes = previous ?? new Map<string, string[]>();
+    return scopes.set(path, configurations);
 }
 
 /**
@@ -117,9 +132,11 @@ export function registerInit(program: Program): void {
             '--configurations <configurations...>',
             'Override detected project configurations at the root; general checks remain automatic',
         )
-        .option(
-            '--scope-configurations <path=configurations...>',
-            'Add scopes, each as a path and its comma-separated configurations',
+        .addOption(
+            new Option(
+                '--scope-configurations <path=configurations...>',
+                'Add scopes, each as a path and its comma-separated configurations',
+            ).argParser(parseScopeConfigurations),
         )
         .option('--no-install', 'Skip installing the tools and print the install command')
         .addOption(

@@ -4,7 +4,7 @@ import { pathMatcher } from '#cli/repository/selectors.ts';
 import { rolePaths } from '#cli/policy/settings/lookup.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { readSwift, disposeSwift } from '#cli/parsers/swift.ts';
+import { readSwift, disposeSwift } from '#cli/parsers/swift/source.ts';
 import { ENVIRONMENT_READ } from '#cli/config/checks/language/swift.ts';
 
 /**

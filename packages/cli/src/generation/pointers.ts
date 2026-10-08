@@ -51,7 +51,6 @@ export function bodyPointer(
     return {
         path: pointerPath,
         content: `${headerFor(pointerPath, version)}${ended}`,
-        readOnly: true,
         kind: 'pointer',
     };
 }

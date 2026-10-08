@@ -59,7 +59,7 @@ test.each(['recommended', 'all'])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['javascript'], {
-                tables: '[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n',
+                tables: '[scope."app"]\nconfigurations = ["javascript"]\n',
                 level: level,
             }),
             'package.json': '{"private":true,"type":"module"}\n',
@@ -88,7 +88,7 @@ test.each(['recommended', 'all'])(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['javascript'], {
-                tables: '[tools.eslint]\nimport_extensions = {"**/*" = "js"}\n[[scope]]\npath = "app"\nconfigurations = ["javascript"]\n',
+                tables: '[tools.eslint]\nimport_extensions = {"**/*" = "js"}\n[scope."app"]\nconfigurations = ["javascript"]\n',
                 level,
             }),
             'package.json': '{"private":true,"type":"module","imports":{"#manifest":"./package.json"}}\n',

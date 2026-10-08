@@ -1,5 +1,5 @@
 import type { FileCopy } from '#cli/types/platform/root.ts';
-import type { TomlTable, PolicyScope } from '#cli/types/policy/settings.ts';
+import type { Template } from '#cli/types/policy/templates.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
 import type { Tooling, Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 
@@ -9,7 +9,6 @@ import type {
     RunnerChoice,
     InitSelection,
     ConfigurationReason,
-    ConfigurationSelections,
 } from '#cli/types/lifecycle/selection.ts';
 
 export type Choice<T extends string> = { value: T; label: string; hint?: string | undefined };
@@ -48,9 +47,9 @@ export type Replaced = {
 };
 
 export type PolicyDraft = {
-    templateTables?: TomlTable;
+    template?: Template;
     configurations: string[];
-    scopes: PolicyScope[];
+    scopes: ScopeEntry[];
     hooks: boolean;
     ci: CiChoice;
     rules: boolean;
@@ -68,7 +67,6 @@ export type InitAnswers = {
 
 /** Everything init computes before it asks to continue. */
 export type InitPrepared = {
-    selections: ConfigurationSelections;
     plan: InitPlan;
     policyText: string;
     removed: { path: string }[];

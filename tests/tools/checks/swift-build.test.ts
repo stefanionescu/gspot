@@ -4,21 +4,19 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
+import { stat, readFile, writeFile } from 'node:fs/promises';
 import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { swiftBuild } from '#cli/checks/language/swift/build.ts';
-import { buildFolder } from '#cli/checks/language/swift/cache.ts';
-import { rmSync, statSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { useCacheDirectory } from '#tests/harness/environment.ts';
 
 // The manifest assigns compiler-backed Swift checks to macOS.
 test.skipIf(!isMacos)(
     'incremental Swift builds preserve compiler state and still detect a changed source',
     async () => {
         await using sandbox = await testdir();
-        using resources = new DisposableStack();
-        resources.defer(() => {
-            rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-        });
+        await using _cache = await useCacheDirectory();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['swift']),
             'Package.swift':
@@ -28,18 +26,18 @@ test.skipIf(!isMacos)(
         const first = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         expect(await swiftBuild(first)).toStrictEqual([]);
         const plan = buildPlan(first);
-        const files = [...new Bun.Glob('**/Value.swift.o').scanSync({ cwd: plan.folder })];
+        const files = await Array.fromAsync(new Bun.Glob('**/Value.swift.o').scan({ cwd: plan.folder }));
         expect(files).toHaveLength(1);
         const compiledFile = join(plan.folder, files[0]!);
-        const modified = statSync(compiledFile).mtimeMs;
+        const { mtimeMs: modified } = await stat(compiledFile);
         const again = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         expect(await swiftBuild(again)).toStrictEqual([]);
-        expect(statSync(compiledFile).mtimeMs).toBe(modified);
-        writeFileSync(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
+        expect(await stat(compiledFile)).toMatchObject({ mtimeMs: modified });
+        await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
         expect(await swiftBuild(buildCheckInput(await openSession(sandbox.path), 'swift/build'))).toMatchObject([
             { file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' },
         ]);
-        writeFileSync(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
+        await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
         expect(await swiftBuild(buildCheckInput(await openSession(sandbox.path), 'swift/build'))).toStrictEqual([]);
     },
 );
@@ -47,10 +45,7 @@ test.skipIf(!isMacos)(
     'Xcode reuses compiled objects and reports source errors without changing the project',
     async () => {
         await using sandbox = await testdir();
-        using resources = new DisposableStack();
-        resources.defer(() => {
-            rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-        });
+        await using _cache = await useCacheDirectory();
         const project = `// !$*UTF8*$!
 {
     archiveVersion = 1;
@@ -75,7 +70,7 @@ test.skipIf(!isMacos)(
         const source = 'let value: Int = 1\nprint(value)\n';
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['swift', 'xcode'], {
-                tables: '[tools.xcode]\nproject = "Example.xcodeproj"\nscheme = "Example"\ndestination = "platform=macOS"\n',
+                tables: '[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\nxcode_destination = "platform=macOS"\n',
             }),
             'Example.xcodeproj/project.pbxproj': project,
             'Example.xcodeproj/xcshareddata/xcschemes/Example.xcscheme':
@@ -86,20 +81,24 @@ test.skipIf(!isMacos)(
         const first = buildCheckInput(await openSession(sandbox.path), 'swift/build');
         expect(await swiftBuild(first)).toStrictEqual([]);
         const plan = buildPlan(first);
-        const objects = [...new Bun.Glob('derived/**/main.o').scanSync({ cwd: plan.folder })];
+        const objects = await Array.fromAsync(new Bun.Glob('**/main.o').scan({ cwd: plan.folder }));
         expect(objects.length).toBeGreaterThan(0);
-        const times = objects.map((file) => statSync(join(plan.folder, file)).mtimeMs);
+        const times = await Promise.all(
+            objects.map((file) => stat(join(plan.folder, file)).then(({ mtimeMs }) => mtimeMs)),
+        );
         expect(await swiftBuild(buildCheckInput(await openSession(sandbox.path), 'swift/build'))).toStrictEqual([]);
-        expect(objects.map((file) => statSync(join(plan.folder, file)).mtimeMs)).toStrictEqual(times);
-        expect(readFileSync(join(sandbox.path, 'main.swift'), 'utf8')).toBe(source);
-        expect(readFileSync(join(sandbox.path, 'Example.xcodeproj/project.pbxproj'), 'utf8')).toBe(project);
-        expect(readFileSync(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('authored content\n');
-        expect(existsSync(join(sandbox.path, 'build'))).toBe(false);
-        writeFileSync(join(sandbox.path, 'main.swift'), 'let value: Int = "wrong"\nprint(value)\n');
+        expect(
+            await Promise.all(objects.map((file) => stat(join(plan.folder, file)).then(({ mtimeMs }) => mtimeMs))),
+        ).toStrictEqual(times);
+        expect(await readFile(join(sandbox.path, 'main.swift'), 'utf8')).toBe(source);
+        expect(await readFile(join(sandbox.path, 'Example.xcodeproj/project.pbxproj'), 'utf8')).toBe(project);
+        expect(await readFile(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe('authored content\n');
+        expect(await pathExists(join(sandbox.path, 'build'))).toBe(false);
+        await writeFile(join(sandbox.path, 'main.swift'), 'let value: Int = "wrong"\nprint(value)\n');
         expect(await swiftBuild(buildCheckInput(await openSession(sandbox.path), 'swift/build'))).toMatchObject([
             { file: 'main.swift', line: 1, column: 18, rule: 'compiler' },
         ]);
-        writeFileSync(join(sandbox.path, 'main.swift'), source);
+        await writeFile(join(sandbox.path, 'main.swift'), source);
         expect(await swiftBuild(buildCheckInput(await openSession(sandbox.path), 'swift/build'))).toStrictEqual([]);
     },
 );

@@ -5,7 +5,7 @@ export const outputSchema = z.strictObject({
     format: z.enum([
         'regex',
         'grouped',
-        'eslint',
+        'sarif',
         'knip',
         'semgrep',
         'trufflehog-json',
@@ -27,6 +27,7 @@ export const outputSchema = z.strictObject({
             column: z.string().optional(),
             rule: z.string().optional(),
             message: z.string().optional(),
+            fixable: z.string().optional(),
         })
         .optional(),
     pattern: z.string().optional(),

@@ -17,7 +17,7 @@ mise = "taplo"
 brew = "taplo"
 cargo = "taplo-cli"
 # No npm pin: the npm build of Taplo checks no file on Windows, so every platform takes the native release.
-github = {name = "tamasfe/taplo", version = "0.10.0"}
+github = { name = "tamasfe/taplo", version = "0.10.0" }
 
 [[tool.replace]]
 file = "taplo.toml"
@@ -87,9 +87,9 @@ example = "The TOML line `enabled =` lacks a value and reports a parse error. Us
 level = "recommended"
 stage = "commit"
 runs = "files"
-command = ["taplo", "check", "--config", "{config:taplo}", "--colors", "never", "--no-schema", "{files}"]
-files = {extensions = [".toml"]}
-output = {format = "regex", pattern = "^\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML."}
+command = ["taplo", "check", "--config", "{tool_file:taplo}", "--colors", "never", "--no-schema", "{files}"]
+files = { extensions = [".toml"] }
+output = { format = "regex", pattern = "^\\s*┌─ (?<file>(?:[A-Za-z]:)?[^:]+):(?<line>\\d+):(?<column>\\d+)$", message = "The file does not parse as TOML." }
 summary = "Parses every TOML file with taplo; the schema check runs at push through v8r."
 why = "A TOML file that does not parse stops the tool that reads it at the worst moment."
 help = "Fix the line taplo names."
@@ -101,10 +101,10 @@ example = "The TOML assignment `enabled=true` differs from the configured format
 level = "recommended"
 stage = "commit"
 runs = "files"
-command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
-fix = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "{files}"]
-files = {extensions = [".toml"]}
-output = {format = "regex", pattern = "^(?:--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file is not formatted with the configured TOML settings."}
+command = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
+fix = ["taplo", "fmt", "--config", "{tool_file:taplo}", "--colors", "never", "{files}"]
+files = { extensions = [".toml"] }
+output = { format = "regex", pattern = "^(?:--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file is not formatted with the configured TOML settings." }
 summary = "Checks that every TOML file is formatted the way taplo formats it with the shared settings."
 why = "One formatter keeps a diff about the values, not the spacing."
 help = "Run gspot check --fix."
@@ -116,9 +116,9 @@ example = "Two `enabled` keys in the same YAML mapping report a duplicate-key fi
 level = "recommended"
 stage = "commit"
 runs = "files"
-command = ["yamllint", "-c", "{config:yamllint}", "-f", "parsable", "-s", "{files}"]
-files = {extensions = [".yaml", ".yml"]}
-output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$"}
+command = ["yamllint", "-c", "{tool_file:yamllint}", "-f", "parsable", "-s", "{files}"]
+files = { extensions = [".yaml", ".yml"] }
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): \\[(?:error|warning)\\] (?<message>.*?)(?: \\((?<rule>[a-z-]+)\\))?$" }
 summary = "Parses every YAML file and checks its indentation, keys, and values with yamllint."
 why = "A YAML file that parses to the wrong shape fails silently: a duplicated key wins, a stray tab changes the nesting."
 help = "Fix the line yamllint names, or set the rule's options with gspot set tools.yamllint.rules."
@@ -132,9 +132,9 @@ stage = "push"
 runs = "files"
 needs = ["network"]
 command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
-env = {V8R_CONFIG_FILE = "{config:v8r}"}
-files = {extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"]}
-output = {format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$"}
+env = { V8R_CONFIG_FILE = "{tool_file:v8r}" }
+files = { extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"] }
+output = { format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$" }
 summary = "Validates every configuration file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog."
 why = "A key the schema refuses is a setting that never applies, and nobody finds out until the behavior it was meant to change does not change."
 help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schemas."
@@ -148,8 +148,8 @@ stage = "commit"
 runs = "files"
 platforms = ["macos"]
 command = ["plutil", "-lint", "{files}"]
-files = {extensions = [".plist", ".entitlements"]}
-output = {format = "regex", pattern = "^(?<file>[^:]+): (?<message>(?!OK$).+)$"}
+files = { extensions = [".plist", ".entitlements"] }
+output = { format = "regex", pattern = "^(?<file>[^:]+): (?<message>(?!OK$).+)$" }
 summary = "Parses every property list and entitlements file with plutil."
 why = "A broken plist fails the build or, worse, ships an app whose settings silently fell back to defaults."
 help = "Fix the element plutil names."
@@ -162,8 +162,8 @@ level = "recommended"
 stage = "commit"
 runs = "files"
 command = ["xmllint", "--noout", "{files}"]
-files = {extensions = [".xml", ".storyboard", ".xib"]}
-output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}
+files = { extensions = [".xml", ".storyboard", ".xib"] }
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$" }
 summary = "Parses every XML file, storyboard, and xib with xmllint."
 why = "Malformed XML is refused by the reader at the worst moment."
 help = "Fix the line xmllint names."
@@ -176,14 +176,8 @@ default = {}
 summary = "Native option tables for active YAML rules. Coverage comes from recommended or all, and formatting width comes from [format]. Accept a finding with gspot ignore files/yamllint --rule <rule> --reason <why>."
 
 [[setting]]
-name = "tools.taplo.formatting"
-type = "table"
-direction = "rule-options"
-summary = "Formatting options taplo takes, by option name, on top of the shared [format] settings."
-
-[[setting]]
 name = "tools.v8r.schemas"
-type = "list"
+type = "table"
 direction = "neutral"
-default = []
+default = {}
 summary = "File patterns mapped to schema URLs, for files the SchemaStore catalog does not know; each entry has a pattern and a schema."

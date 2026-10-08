@@ -1,7 +1,7 @@
 [configuration]
 title = "TypeScript"
 requires = ["javascript", "structure"]
-recommends = ["naming", "format"]
+suggests = ["naming", "format"]
 description = "The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code."
 
 [detect]
@@ -14,18 +14,12 @@ filenames = ["tsconfig.json", "tsconfig.*.json"]
 
 [[tool]]
 name = "typescript-eslint"
-eslint = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
+eslint = { extensions = [".ts", ".tsx", ".mts", ".cts"] }
 rule_url = "https://typescript-eslint.io/rules/{rule}"
 kind = "library"
 version = "8.70.0"
 npm = "typescript-eslint"
 min_version = "8.29.0"
-
-[[tool]]
-name = "eslint-import-resolver-typescript"
-kind = "library"
-version = "4.4.5"
-npm = "eslint-import-resolver-typescript"
 
 [[config]]
 template = "eslint.fragment.js.tmpl"
@@ -37,7 +31,7 @@ fragment = true
 [[config]]
 target = ".gspot/config/tsconfig.json"
 tool = ["tsc", "vue-tsc", "svelte-check", "next"]
-check = ["typescript/tsc", "vue/tsc", "svelte/check", "nextjs/tsc"]
+check = ["typescript/tsc", "vue/vue-tsc", "svelte/svelte-check", "nextjs/tsc"]
 scoped = true
 
 [[check]]
@@ -49,7 +43,7 @@ stage = "push"
 runs = "scope"
 cwd = "scope"
 tool = "tsc"
-output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
+output = { format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$" }
 summary = "Checks that every TypeScript file type-checks with the strict compiler options."
 why = "A file that does not type-check can crash at run time in a way the editor already knew about."
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
@@ -66,6 +60,3 @@ help = "Enable the reported compiler option in the authored TypeScript configura
 
 [required_eslint_rules]
 ts = ["@typescript-eslint/no-explicit-any", "@typescript-eslint/no-floating-promises"]
-
-[set]
-"tools.eslint.component_languages" = ["ts"]

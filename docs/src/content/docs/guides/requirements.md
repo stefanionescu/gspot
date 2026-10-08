@@ -28,6 +28,6 @@ JavaScript checks inherit an authored `jsconfig.json` first and `tsconfig.json` 
 
 SwiftFormat supports macOS and Linux. Xcode checks and XCTest coverage require macOS with Xcode selected by `xcode-select`. Container checks can require a running Docker daemon. Some scans and generators need network access. Each [check page](/reference/checks/) states its platforms and external requirements.
 
-The Bash configuration uses Bash 4.4 or newer for its Bash checks. macOS's bundled Bash is older; install the required Bash separately. A check that cannot run reports the missing requirement instead of counting as passed.
+The Bash, zsh, and Bats scripts configuration uses Bash 4.4 or newer for its Bash checks. macOS's bundled Bash is older; install the required Bash separately. A check that cannot run reports the missing requirement instead of counting as passed.
 
 If gspot reports that its runtime cannot resolve an existing filesystem path, use a path or runtime that supports that filename. This requirement applies to repository roots and source files.

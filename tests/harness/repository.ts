@@ -6,12 +6,19 @@ import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
-import { install, buildSandboxPath } from '#tests/harness/install.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
 import type { CheckCommand } from '#tests/types/harness/check-case.ts';
 import type { CaseChanges } from '#tests/types/harness/preservation.ts';
-import type { RepositorySetup, RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import { initRepository, buildSandboxPath } from '#tests/harness/install.ts';
 
-// The manifest a fixture with dependencies starts from.
+import type {
+    RepositorySetup,
+    RepositoryScenario,
+    OwnedTestRepository,
+    RuntimeEvidenceCase,
+} from '#tests/types/harness/repository.ts';
+
+// The manifest a sandbox with dependencies starts from.
 function buildManifest(dependencies: Record<string, string> | undefined): Record<string, string> {
     if (dependencies === undefined) return {};
     const manifest = {
@@ -29,7 +36,7 @@ function buildManifest(dependencies: Record<string, string> | undefined): Record
 async function installTools(root: string, sandbox: RepositorySetup): Promise<Record<string, string>> {
     const environment = { PATH: buildSandboxPath(['typos', 'ec', 'ast-grep', ...(sandbox.tools ?? [])]) };
     const argv = ['init', '--yes', '--configurations', ...sandbox.configurations, ...(sandbox.init ?? QUIET_INIT)];
-    await install(root, argv, environment, {
+    await initRepository(root, argv, environment, {
         without: sandbox.without ?? [],
         level: sandbox.level ?? 'all',
     });
@@ -54,8 +61,8 @@ export async function prepareTestRepository(
             : { 'tsconfig.json': JSON.stringify(sandbox.tsconfig, null, 4) + '\n' }),
         ...sandbox.files,
     });
-    if (sandbox.modules !== false) linkInstalledModules(join(root, 'node_modules'));
-    sandbox.before?.(root);
+    if (sandbox.modules !== false) await linkInstalledModules(join(root, 'node_modules'));
+    await sandbox.before?.(root);
     commitAll(root);
     if (sandbox.installs !== false) return installTools(root, sandbox);
     // Checks gspot runs itself need only the policy: no generated file, tool project, or lockfile.
@@ -97,17 +104,81 @@ export async function createTestRepository(
  * @param changes the authored files and policy changed by the test
  * @returns cleanup of the test's source and generated state
  */
-export function preserveRepositoryChanges(repository: OwnedTestRepository, changes: CaseChanges): AsyncDisposable {
+export async function preserveRepositoryChanges(
+    repository: OwnedTestRepository,
+    changes: CaseChanges,
+): Promise<AsyncDisposable> {
     const { root, environment, run } = repository;
     const tree = gitOutput(root, ['write-tree']).trim();
-    const restore = applyChanges(root, changes);
+    const restore = await applyChanges(root, changes);
     return {
         async [Symbol.asyncDispose]() {
-            restore();
+            await restore();
             gitOutput(root, ['read-tree', tree]);
             const applied = await run(root, ['apply'], environment);
             if (applied.code !== 0)
                 throw new Error(`Test repository restoration failed: ${applied.stdout}${applied.stderr}`);
         },
     };
+}
+
+/**
+ * Build runtime evidence rows from the declared JavaScript runtimes.
+ * @returns each runtime's detection forms and one undeclared JavaScript source
+ */
+export function runtimeEvidenceCases(): RuntimeEvidenceCase[] {
+    return [
+        ...JAVASCRIPT_RUNTIMES.flatMap((runtime) => [
+            {
+                name: `${runtime} engine`,
+                runtime,
+                package: { engines: { [runtime]: '>=1' } },
+                source: '',
+                detected: true,
+            },
+            {
+                name: `${runtime} script`,
+                runtime,
+                package: { scripts: { start: `${runtime} run entry.js` } },
+                source: '',
+                detected: true,
+            },
+            {
+                name: `${runtime} shebang`,
+                runtime,
+                package: {},
+                source: `#!/usr/bin/env ${runtime}\nconsole.log(1);\n`,
+                detected: true,
+            },
+            {
+                name: `${runtime} quoted script text`,
+                runtime,
+                package: { scripts: { start: `echo "${runtime} entry.js"` } },
+                source: '',
+                detected: false,
+            },
+            {
+                name: `${runtime} type dependency`,
+                runtime,
+                package: { devDependencies: { [`@types/${runtime}`]: '1.0.0' } },
+                source: '',
+                detected: false,
+            },
+            {
+                name: `${runtime} tool-project manifest`,
+                runtime,
+                package: {},
+                source: '',
+                toolProjectManifest: { engines: { [runtime]: '>=1' } },
+                detected: false,
+            },
+        ]),
+        {
+            name: 'JavaScript without a declared runtime',
+            runtime: 'node',
+            package: {},
+            source: 'console.log(1);\n',
+            detected: false,
+        },
+    ];
 }

@@ -80,4 +80,4 @@ Run `gspot doctor`, install the tool using the acquisition command it prints, an
 
 ## npm exec cannot find gspot
 
-Install the exact CLI dependency in the repository. Initialization does not add `@gspothq/cli` to `devDependencies`. If the CLI is already installed, verify that hooks use the runner configured by `run_with`.
+Install the exact CLI dependency in the repository. Initialization does not add `@gspothq/cli` to `devDependencies`. If the CLI is already installed, verify that hooks use the runner configured by `runner`.

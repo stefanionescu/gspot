@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -29,7 +29,7 @@ test.each(['secrets/env-files', 'structure/tracked-dependencies'])(
         expect(found.report.checks[0]!.findings).toMatchObject([
             { file: check === 'secrets/env-files' ? '.env' : 'node_modules' },
         ]);
-        writeFileSync(join(sandbox.path, '.git/index'), 'corrupt index');
+        await writeFile(join(sandbox.path, '.git/index'), 'corrupt index');
         const failed = await executeRun(session, options);
         expect(failed.report.exitCode).toBe(2);
         expect(failed.report.checks[0]!.status).toBe('error');
@@ -46,7 +46,7 @@ test('execution reports the unstaged selection count before command rendering', 
     });
     gitOutput(sandbox.path, ['init', '-q']);
     gitOutput(sandbox.path, ['add', '.']);
-    writeFileSync(join(sandbox.path, 'source.ts'), 'export const value = 1;\n');
+    await writeFile(join(sandbox.path, 'source.ts'), 'export const value = 1;\n');
     const selection = await getStaged(sandbox.path);
     const options = buildRunOptions({
         only: ['secrets/env-files'],

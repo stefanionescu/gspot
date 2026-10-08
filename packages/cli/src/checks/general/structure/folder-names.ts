@@ -1,10 +1,9 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { directoryOf } from '#cli/platform/paths.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { harnessFolders } from '#cli/policy/settings/lookup.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { BANNED_FOLDERS } from '#cli/config/checks/general/structure.ts';
-import { repositoryHarnessFolders } from '#cli/policy/settings/lookup.ts';
-import { isAllowedFolder, structureSources } from '#cli/checks/general/structure/source-files.ts';
+import { structureSources, isDependencyFolder } from '#cli/checks/general/structure/source-files.ts';
 
 /**
  * One finding per banned folder name on the path of a checked file, once per folder.
@@ -13,10 +12,7 @@ import { isAllowedFolder, structureSources } from '#cli/checks/general/structure
  */
 export const folderNames: BuiltInCheck = (input) => {
     const files = structureSources(input);
-    const allowed = pathMatcher(
-        input.policyFiles.policy.structure.folder_names_allowed.flatMap((entry) => entry.paths),
-    );
-    const harnesses = new Set(repositoryHarnessFolders(input.policyFiles.policy, input.scope));
+    const harnesses = new Set(harnessFolders(input.policyFiles.policy, input.scope));
     const seen = new Set<string>();
     return files.flatMap((file) => {
         const segments = directoryOf(file.path)
@@ -25,7 +21,7 @@ export const folderNames: BuiltInCheck = (input) => {
         return segments.flatMap((segment, index) => {
             const folder = segments.slice(0, index + 1).join('/');
             if (seen.has(folder) || harnesses.has(folder) || !BANNED_FOLDERS.includes(segment.toLowerCase())) return [];
-            if (isAllowedFolder(folder, allowed)) return [];
+            if (isDependencyFolder(folder)) return [];
             seen.add(folder);
             return [
                 findingAt(

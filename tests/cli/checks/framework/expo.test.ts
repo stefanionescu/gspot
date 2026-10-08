@@ -12,7 +12,7 @@ test.each(DOCTOR_RESULTS)('Expo Doctor preserves scoped orchestration for $name'
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':
-            'configurations = []\n[[scope]]\npath = "apps/first"\nconfigurations = ["expo"]\n[[scope]]\npath = "apps/second"\nconfigurations = ["expo"]\n[agent_rules]\nenabled = false\n',
+            'configurations = []\n[scope."apps/first"]\nconfigurations = ["expo"]\n[scope."apps/second"]\nconfigurations = ["expo"]\n[agent_rules]\nenabled = false\n',
         '.gspot/node_modules/.bin/expo-doctor': '// The process boundary supplies the Doctor report.\n',
         '.gspot/node_modules/.bin/expo-doctor.cmd': '@echo off\r\n',
         '.gspot/node_modules/expo-doctor/package.json': '{"name":"expo-doctor","version":"1.20.4"}\n',

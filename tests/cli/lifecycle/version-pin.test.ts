@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
-import { unlinkSync, writeFileSync } from 'node:fs';
+import { unlink, writeFile } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -23,7 +23,7 @@ describe('the version pin', () => {
         expect(() => {
             assertVersionPin(sandbox.path);
         }).not.toThrow();
-        writeFileSync(join(sandbox.path, '.gspot/version'), '9.9.9\n');
+        await writeFile(join(sandbox.path, '.gspot/version'), '9.9.9\n');
         expect(() => {
             assertVersionPin(sandbox.path);
         }).toThrow('gspot apply');
@@ -44,7 +44,7 @@ test('a different saved version refuses check and doctor reports both remedies u
     const refused = await runGspot(sandbox.path, ['apply', '--json']);
     expect(refused.code).toBe(2);
     expect(refused.stdout).toContain('Delete it, then run gspot apply.');
-    unlinkSync(join(sandbox.path, '.gspot/version'));
+    await unlink(join(sandbox.path, '.gspot/version'));
     const applied = await runGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(readVersionPin(sandbox.path)).toBe(RUNNING_VERSION);

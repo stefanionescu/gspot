@@ -34,15 +34,26 @@ import {
 const matchesEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
 
 function declaredKind(path: string, rules: FileClassificationRules): Verdict | undefined {
-    for (const entry of rules.declarations) {
-        if (!pathMatcher(entry.paths)(path)) continue;
-        return {
-            kind: entry.kind,
-            source: entry.kind,
-            ...(entry.kind === 'generated' && entry.generator !== undefined ? { producedBy: entry.generator } : {}),
-        };
-    }
-    return attributeKind(rules.attributes.get(path));
+    const matched = rules.declarations.filter((entry) => pathMatcher(entry.paths)(path));
+    const entry = matched.find(
+        (declaration) => declaration.kind === 'vendored' || declaration.configuration === undefined,
+    );
+    if (entry === undefined)
+        return (
+            attributeKind(rules.attributes.get(path)) ??
+            matched.map((declaration) => ({
+                kind: declaration.kind,
+                source:
+                    declaration.kind === 'generated'
+                        ? (declaration.configuration ?? declaration.kind)
+                        : declaration.kind,
+            }))[0]
+        );
+    return {
+        kind: entry.kind,
+        source: entry.kind,
+        ...(entry.kind === 'generated' && entry.generator !== undefined ? { producedBy: entry.generator } : {}),
+    };
 }
 
 function attributeKind(attributes: Record<string, string> | undefined): Verdict | undefined {
@@ -83,7 +94,7 @@ function sourceKind(root: string, entry: RawEntry, prefix: Buffer): Verdict {
 }
 
 /**
- * Whether a path is a Vale package file: under the styles folder and not the gspot style or vocabulary.
+ * Whether a path is a Vale package file: under the styles folder and not the gspot style or accepted-word files.
  * @param path the file, relative to the root
  * @returns true for a package file
  */

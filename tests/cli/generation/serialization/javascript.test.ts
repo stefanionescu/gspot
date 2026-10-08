@@ -19,10 +19,13 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
             'gspot.toml': stringify({
                 configurations: ['javascript', 'docker', 'prose'],
                 tools: {
-                    eslint: { verbatim: { reason, name: 'custom' } },
-                    trivy: { ignore: [{ id: 'CVE-2026-12345', reason }] },
+                    eslint: { verbatim: { name: 'custom' } },
                 },
-                ignore: [{ check: 'prose/vale', rule: 'Vale.Spelling', reason }],
+                reasons: { 'tools.eslint.verbatim': reason },
+                ignore: [
+                    { check: 'prose/vale', rule: 'Vale.Spelling', reason },
+                    { check: 'docker/trivy-config', rule: 'CVE-2026-12345', reason },
+                ],
             }),
         });
         await createFileTree(sandbox.path, {
@@ -44,9 +47,7 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
         }
         const ignored = output.files.find((file) => file.path === '.gspot/config/trivyignore');
         expect(ignored).toBeDefined();
-        expect(ignored!.content.split('\n').filter((line) => line !== '' && !line.startsWith('#'))).toStrictEqual([
-            'CVE-2026-12345',
-        ]);
+        expect(ignored!.content.split('\n').filter((line) => line !== '' && !line.startsWith('#'))).toStrictEqual([]);
         const vale = output.files.find((file) => file.path === '.gspot/config/vale.ini');
         expect(vale).toBeDefined();
         expect(

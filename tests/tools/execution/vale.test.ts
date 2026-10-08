@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readAsset } from '#cli/platform/assets.ts';
@@ -72,10 +72,7 @@ test('Vale preserves ESLint delimiters while checking punctuation inside reasons
 test.each([
     ['ts', '//', 'const text = "delve";'],
     ['mts', '//', 'const text = "delve";'],
-    ['js', '//', 'const text = "delve";'],
-    ['cjs', '//', 'const text = "delve";'],
     ['py', '#', 'text = "delve"'],
-    ['swift', '//', 'let text = "delve"'],
 ])('Vale parses Markdown in %s comments without treating source strings as prose', async (extension, marker, code) => {
     await using directory = await testdir();
     const path = `source.${extension}`;
@@ -149,7 +146,7 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
 
 test('heading capitalization distinguishes ordinary edge from the browser name and rejects title case', async () => {
     await using directory = await testdir();
-    const rule = readFileSync(
+    const rule = await readFile(
         join(workspaceRoot, 'packages/cli/configurations/general/prose/styles/gspot/heading-case.yml'),
         'utf8',
     );

@@ -33,6 +33,8 @@ export const PROSE_GRAMMARS: Record<string, ProseGrammar> = {
 
 export const GSPOT_STYLE = 'gspot';
 
+export const WORDS = 'words';
+
 /** Maps the three documentation length rules to their limit keys. */
 export const LENGTH_RULES: Record<string, string> = {
     'sentence-length': 'docs.sentence_words',

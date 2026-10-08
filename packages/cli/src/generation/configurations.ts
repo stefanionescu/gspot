@@ -80,7 +80,6 @@ function addPointer(
             ? bodyPointer(pointer, pointerPath, file.path, inputs.version)
             : {
                   path: pointerPath,
-                  readOnly: true,
                   kind: 'pointer' as const,
                   content: emitTarget(
                       `${manifest.dir}/${pointer.template}`,
@@ -92,9 +91,20 @@ function addPointer(
     generated.files.push(pointed);
 }
 
+function isConditionMet(
+    configuration: ConfigurationFile,
+    context: EmitInputs,
+    condition: ConfigurationFile['when'],
+): boolean {
+    if (condition === undefined) return true;
+    return isConfigurationSelected(
+        configuration.scoped ? [context.selection] : context.scopes,
+        condition.configuration,
+    );
+}
+
 // Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
 function isTargetEnabled(configuration: ConfigurationFile, context: EmitInputs, consumers: EmitConsumers): boolean {
-    const { scopes, selection } = context;
     const needed = configuration.scoped ? consumers.scope : consumers.repository;
     const constraints = [
         [configuration.tool, needed.tools],
@@ -102,10 +112,7 @@ function isTargetEnabled(configuration: ConfigurationFile, context: EmitInputs, 
     ] as const;
     if (constraints.some(([names, available]) => names.length > 0 && !names.some((name) => available.has(name))))
         return false;
-    const { when: condition } = configuration;
-    if (condition === undefined) return true;
-    const selectedScopes = configuration.scoped ? [selection] : scopes;
-    return isConfigurationSelected(selectedScopes, condition.configuration);
+    return isConditionMet(configuration, context, configuration.when);
 }
 
 // Emits one configuration target: its file, its nested copies, and its pointer.
@@ -140,14 +147,14 @@ function emitConfiguration(
             inputs,
             configuration.generated_header,
         ),
-        readOnly: true,
         kind: 'config',
         ...(paths === undefined ? {} : { ruleData: payload }),
     };
     if (paths !== undefined && !capture.recorded)
         throw new Error(`The render template for ${target} did not provide its declared rule data.`);
     generated.files.push(file);
-    addPointer({ ...context, inputs }, configuration, file, generated, fragmentPaths);
+    if (isConditionMet(configuration, context, configuration.stub_file?.when))
+        addPointer({ ...context, inputs }, configuration, file, generated, fragmentPaths);
 }
 
 /**

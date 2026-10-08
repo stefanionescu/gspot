@@ -2,18 +2,17 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
 
 // The files a check reports and the status it ends with, for a staged run and for a push of the same change.
 async function verdicts(format: 'sha1' | 'sha256'): Promise<unknown> {
     await using sandbox = await testdir();
     const check = {
-        name: 'sandbox/report',
         command: [
             process.execPath,
             '-e',
@@ -25,21 +24,25 @@ async function verdicts(format: 'sha1' | 'sha256'): Promise<unknown> {
         output: { format: 'lines' },
     };
     await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({ configurations: [], agent_rules: { enabled: false }, check: [check] }),
+        'gspot.toml': stringify({
+            configurations: [],
+            agent_rules: { enabled: false },
+            check: { 'sandbox/report': check },
+        }),
         'src/kept.ts': 'export {};\n',
     });
     gitOutput(sandbox.path, ['init', '-q', `--object-format=${format}`]);
     gitOutput(sandbox.path, ['add', '-A']);
     gitOutput(sandbox.path, ['commit', '-qm', 'base']);
     const base = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
-    writeFileSync(join(sandbox.path, 'src/changed.ts'), 'export const changed = 1;\n');
+    await writeFile(join(sandbox.path, 'src/changed.ts'), 'export const changed = 1;\n');
     gitOutput(sandbox.path, ['add', 'src/changed.ts']);
     const staged = await runGspot(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']);
     const stagedReport = JSON.parse(staged.stdout) as RunReport;
     gitOutput(sandbox.path, ['commit', '-qm', 'change']);
     const head = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     gitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
-    const pushed = await spawnGspot(
+    const pushed = await runGspot(
         sandbox.path,
         ['check', '--only', 'sandbox/report', '--hook', 'pre-push', '--json', '--', 'origin', 'unused'],
         {},

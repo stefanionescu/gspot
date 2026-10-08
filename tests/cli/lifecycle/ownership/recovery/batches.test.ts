@@ -1,7 +1,7 @@
 // A child process runs one log call and exits at middle.txt, either just before its file operation or just after.
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
@@ -55,11 +55,11 @@ test.each(['before', 'after'] as const)(
             point,
             String.raw`applyPlans(log, ${JSON.stringify(paths)}.map(path=>proposeReplacement(log,{path: path, next: {bytes:Buffer.from('installed '+path+'\n'),mode:0o444}, kind: 'config', canReplace: true})));`,
         );
-        expect(readFileSync(join(directory.path, 'first.txt'), 'utf8')).toBe('installed first.txt\n');
-        expect(readFileSync(join(directory.path, 'middle.txt'), 'utf8')).toBe(
+        expect(await readFile(join(directory.path, 'first.txt'), 'utf8')).toBe('installed first.txt\n');
+        expect(await readFile(join(directory.path, 'middle.txt'), 'utf8')).toBe(
             `${point === 'before' ? 'authored' : 'installed'} middle.txt\n`,
         );
-        expect(readFileSync(join(directory.path, 'last.txt'), 'utf8')).toBe('authored last.txt\n');
+        expect(await readFile(join(directory.path, 'last.txt'), 'utf8')).toBe('authored last.txt\n');
         {
             using log = openOwnership(directory.path);
 
@@ -78,7 +78,7 @@ test.each(['before', 'after'] as const)(
                 ),
             );
             for (const path of paths)
-                expect(readFileSync(join(directory.path, path), 'utf8')).toBe(`installed ${path}\n`);
+                expect(await readFile(join(directory.path, path), 'utf8')).toBe(`installed ${path}\n`);
             expect(log.state.files.map((entry) => entry.path)).toHaveLength(paths.length);
         }
     },

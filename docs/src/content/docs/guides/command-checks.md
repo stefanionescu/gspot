@@ -10,9 +10,9 @@ findings, so they appear in the same report as every other check.
 
 This check reports `FIXME` lines in the files under `notes/`. It needs Node.js on your `PATH`.
 
-Save the checker as `scripts/check-notes.mjs`:
+Save this checker under the example filename:
 
-```javascript
+```javascript title="scripts/check-notes.mjs"
 import { readFile } from 'node:fs/promises';
 
 for (const path of process.argv.slice(2)) {
@@ -26,27 +26,26 @@ for (const path of process.argv.slice(2)) {
 ```
 
 Add the check to `gspot.toml`. For a new repository, this is the complete policy. In an
-existing policy, add only the `[[check]]` entry and its `[check.output]` table:
+existing policy, add the named check and its output table:
 
-```toml
+```toml title="Note checker policy"
 configurations = []
 
-[[check]]
-name = "project/notes"
+[check."project/notes"]
 command = ["node", "scripts/check-notes.mjs", "{files}"]
 paths = ["notes/**"]
 stage = "commit"
 summary = "Finds unfinished FIXME notes."
 help = "Replace each FIXME note with the completed instruction."
 
-[check.output]
+[check."project/notes".output]
 format = "regex"
 pattern = '^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$'
 ```
 
-Save a note with a defect as `notes/deploy.txt`:
+Save this note under the example filename:
 
-```text
+```text title="notes/deploy.txt"
 FIXME: document the deployment command.
 ```
 
@@ -57,10 +56,10 @@ gspot apply
 gspot check --only project/notes
 ```
 
-The check exits with `1` and reports a finding at `notes/deploy.txt:1`. Replace the note with
+The check exits with `1` and reports a finding on the note's first line. Replace it with
 the finished instruction:
 
-```text
+```text title="Corrected note"
 Run the deployment command documented in the release guide.
 ```
 
@@ -80,20 +79,20 @@ run.
 
 ## Read the output
 
-`[check.output]` decides how the output becomes findings:
+`[check."project/notes".output]` decides how the output becomes findings:
 
 - `format = "regex"` matches each line. The groups `file`, `line`, and `message` fill the
   finding.
-- Set `format = "json"` for JSON output, then map fields under `[check.output.fields]`. Use `items` or `children` for nested results:
+- Set `format = "json"` for JSON output, then map fields under `[check."project/notes".output.fields]`. Use `items` or `children` for nested results:
 
     ```toml
-    [check.output]
+    [check."project/notes".output]
     format = "json"
-    [check.output.fields]
+    [check."project/notes".output.fields]
     message = "message"
     ```
 
-- `eslint`, `grouped`, `lines`, and `none` support other output contracts described in the reference.
+- `sarif`, `grouped`, `lines`, and `none` support other output contracts described in the reference.
 - `format = "typos"` reads the JSON of typos. It turns byte offsets into character columns.
 - `format = "markdownlint"` reads the results of markdownlint.
 - `format = "knip"` reads Knip JSON and preserves issue categories and source positions.
@@ -123,4 +122,4 @@ code.
 
 ## Native exclusions
 
-Set `ignore_file = ".exampleignore"` on the check to read ordered gitignore patterns from that repository-relative file. Saved `[[ignore]]` exclusions still apply. Include the ignore file in Git with your check policy.
+Set `ignore_file = ".exampleignore"` on the check to read ordered gitignore patterns from that scope-relative file. Saved `[[ignore]]` exclusions still apply. Include the ignore file in Git with your check policy.

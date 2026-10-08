@@ -10,7 +10,7 @@ const manifests = configurationManifests();
 const express = manifests.get('express')!;
 test('a selected framework adds its rules after the shipped ones and before the repository rules', () => {
     const text = buildPolicy(['typescript', 'express'], {
-        tables: '[[naming.paths]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nignored_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n',
+        tables: '[[naming.overrides]]\npaths = ["src/hooks/**"]\ncategories = ["functions"]\nignored_prefix = "^use(?=[A-Z])"\nreason = "A hook starts with use."\n',
     });
     const policy = parseStrictPolicy(text);
     const effective = effectivePolicy(knownSettings([]), policy, '', [express]);
@@ -34,7 +34,10 @@ test('a selected framework adds its rules after the shipped ones and before the 
         kind: `typescript functions`,
         name: 'useLogin',
     });
-    expect(hook.map((rule) => rule.source)).toStrictEqual(['the express configuration', '[[naming.paths]] entry 1']);
+    expect(hook.map((rule) => rule.source)).toStrictEqual([
+        'the express configuration',
+        '[[naming.overrides]] entry 1',
+    ]);
     // The framework rule names its languages, so a Python function is outside it.
     const python = rulesFor(effective, {
         file: 'src/app.py',

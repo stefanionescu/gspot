@@ -1,6 +1,7 @@
 // What the selected fragments add to a generated target: rendered text, imports, file globs, and selectors.
 import { eta } from '#cli/generation/templates.ts';
 import { readAsset } from '#cli/platform/assets.ts';
+import { harnessFolders } from '#cli/policy/settings/lookup.ts';
 import type { Fragment } from '#cli/types/generation/fragments.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
@@ -47,6 +48,10 @@ function renderedFragments(fragments: Fragment[], inputs: TemplateInputs, scopes
                 ...inputs,
                 ...selection.view,
                 scope,
+                harness: harnessFolders(inputs.policy, scope)[0],
+                scopeDependencies: inputs
+                    .configurationScopes(manifest.configuration.name)
+                    .flatMap((entry) => (entry.path === scope ? entry.dependencies : [])),
                 eslintModule: template,
                 files: (extension: string) => selectedFiles.filter((path) => path.endsWith(extension)),
             });
@@ -86,13 +91,16 @@ export function fragmentInputs(
             .filter((config) => config.fragment && config.target === target.target)
             .map((config) => ({ manifest, config })),
     );
-    const fragmentFiles = [...new Set(fragments.flatMap(({ config }) => config.component_globs))];
+    const components = fragments.flatMap(({ manifest, config }) =>
+        config.component_globs.map((pattern) => ({ pattern, configuration: manifest.configuration.name })),
+    );
+    const fragmentFiles = [...new Set(components.map(({ pattern }) => pattern))];
     const config = target.target.endsWith('eslint.config.mjs') ? inputs.eslint() : undefined;
     const eslintFiles =
         config === undefined
             ? inputs.eslintFiles
             : eslintFilePatterns({
-                  components: fragmentFiles,
+                  components,
                   tests: config.testFiles,
                   scripts: config.scriptFiles,
                   nodeFiles: config.nodeFiles,

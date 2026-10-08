@@ -5,5 +5,4 @@ export type TaskSources = { mise: Set<string>; packages: Set<string> };
 export type PathIndex = {
     known: Set<string>;
     tasks: TaskSources;
-    isException: (path: string) => boolean;
 };

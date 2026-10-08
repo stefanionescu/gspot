@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
 import { SHOWN } from '#tests/config/cli/checks/language/python/exports.ts';
-import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python/source.ts';
 
 import {
     exportOrder,
@@ -52,14 +52,14 @@ test('__all__ belongs at the bottom, lists shortest names first, and stays under
     ]);
     await Bun.write(
         `${sandbox.path}/gspot.toml`,
-        buildPolicy(['python'], { level: 'all', tables: '[limits.python]\npackage_exports = 2\n' }),
+        buildPolicy(['python'], { level: 'all', tables: '[limits]\nindex_exports = 2\n' }),
     );
     expect(
         await packageExports(buildCheckInput(await openSession(sandbox.path), 'python/package-exports')),
     ).toMatchObject([{ file: 'example/__init__.py', line: 4, rule: 'package-exports' }]);
     await Bun.write(
         `${sandbox.path}/gspot.toml`,
-        buildPolicy(['python'], { level: 'all', tables: '[limits.python]\npackage_exports = 3\n' }),
+        buildPolicy(['python'], { level: 'all', tables: '[limits]\nindex_exports = 3\n' }),
     );
     expect(
         await packageExports(buildCheckInput(await openSession(sandbox.path), 'python/package-exports')),

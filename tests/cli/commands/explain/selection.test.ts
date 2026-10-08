@@ -1,7 +1,7 @@
-// Bun command fixtures distinguish named explanations from tracked or explicit file paths.
+// Bun command sandboxes distinguish named explanations from tracked or explicit file paths.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -14,32 +14,30 @@ test('explain > setting explanations include nested-only settings and each inher
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': `configurations = []
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = ["jest"]
-[scope.tools.jest.coverage]
+[scope."api".coverage]
 lines = 90
-[[scope]]
-path = "api/worker"
+[scope."api/worker"]
 configurations = []
-[scope.tools.jest.coverage]
+[scope."api/worker".coverage]
 lines = 95
 `,
         'api/example.test.js': 'test("example", () => {});\n',
         'api/worker/example.test.js': 'test("worker", () => {});\n',
     });
-    const result = await runGspot(sandbox.path, ['explain', 'tools.jest.coverage.lines', '--json']);
+    const result = await runGspot(sandbox.path, ['explain', 'coverage.lines', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({
         scopes: [
-            { scope: 'api', current: 90, source: '[[scope]] api' },
-            { scope: 'api/worker', current: 95, source: '[[scope]] api/worker' },
+            { scope: 'api', current: 90, source: '[scope."api"]' },
+            { scope: 'api/worker', current: 95, source: '[scope."api/worker"]' },
         ],
     });
     const policy = join(sandbox.path, 'gspot.toml');
     const original = await Bun.file(policy).text();
     await Bun.write(policy, original.replace('lines = 95', 'lines = 96'));
-    const updated = await runGspot(sandbox.path, ['explain', 'tools.jest.coverage.lines', '--json']);
+    const updated = await runGspot(sandbox.path, ['explain', 'coverage.lines', '--json']);
     expect(updated.code, updated.stdout + updated.stderr).toBe(0);
     expect(JSON.parse(updated.stdout)).toMatchObject({
         scopes: [
@@ -51,11 +49,9 @@ lines = 95
 test('explain > path explanations include enabled repository commands and global exceptions', async () => {
     await using sandbox = await testdir();
     const policy = `configurations = []
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = []
-[[check]]
-name = "project/syntax"
+[check."project/syntax"]
 command = ["bash", "-n", "{files}"]
 paths = ["**/*.sh"]
 stage = "manual"
@@ -69,7 +65,7 @@ stage = "manual"
     expect(JSON.parse(ignored.stdout)).toMatchObject({
         ignores: [{ check: 'project/syntax', reason: 'The fixture verifies a disabled check.' }],
     });
-    writeFileSync(join(sandbox.path, 'gspot.toml'), policy);
+    await writeFile(join(sandbox.path, 'gspot.toml'), policy);
     const corrected = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(JSON.parse(corrected.stdout)).toMatchObject({
@@ -101,7 +97,11 @@ test('explain > a recognized name keeps its meaning, and a tracked or explicit p
     commitAll(sandbox.path);
     const configuration = await runGspot(sandbox.path, ['explain', 'bash', '--json']);
     expect(configuration.code, configuration.stdout + configuration.stderr).toBe(0);
-    expect(JSON.parse(configuration.stdout)).toMatchObject({ kind: 'configuration', subject: 'bash' });
+    expect(JSON.parse(configuration.stdout)).toMatchObject({
+        kind: 'configuration',
+        subject: 'bash',
+        title: 'Bash, zsh, and Bats scripts',
+    });
     const file = await runGspot(sandbox.path, ['explain', './bash', '--json']);
     expect(file.code, file.stdout + file.stderr).toBe(0);
     expect(JSON.parse(file.stdout)).toMatchObject({ kind: 'path', subject: 'bash', path: 'bash' });
@@ -173,13 +173,13 @@ test('explain > configuration and check explanations still resolve without a pol
 
 test.each([
     'level',
-    'require_reasons',
+    'removed_configurations',
     'tool_timeout_seconds',
-    'run_with',
+    'runner',
     'generated',
     'vendored',
     'exclude',
-    'tests',
+    'test_files',
 ])('explain recognizes the top-level setting %s', async (key) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': 'configurations = []\n' });

@@ -47,11 +47,11 @@ function workflowOutput(policy: Policy, scopes: ScopeSelection[], version: strin
             run: policy.ci.files,
             platforms: policy.ci.platforms,
             hasSwift,
-            isMise: policy.run_with === 'mise',
+            isMise: policy.runner === 'mise',
             manualChecks: [
                 ...new Set(
                     [
-                        ...policy.checks,
+                        ...Object.values(policy.check),
                         ...scopes.flatMap((selection) =>
                             selection.selected.flatMap((configuration) => configuration.checks),
                         ),
@@ -92,16 +92,16 @@ function blockOutputs(
 ): void {
     if (repository.hasGit) generated.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
     generated.blocks.push({ path: '.gitattributes', block: attributesBlock(generated.files), style: 'hash' });
-    if (!policy.agentRules.enabled) return;
+    if (!policy.agent_rules.enabled) return;
     if (repository.files.some((file) => file.path === 'CLAUDE.md'))
         generated.notes.push('CLAUDE.md text moves to the end of AGENTS.md');
     const block = managedBlock({
-        rules: policy.agentRules,
+        rules: policy.agent_rules,
         files: rules,
         level: policy.level,
         hasChecks: manifests.some((manifest) => manifest.checks.length > 0),
     });
-    for (const path of new Set(['AGENTS.md', ...policy.agentRules.instruction_files]))
+    for (const path of new Set(['AGENTS.md', ...policy.agent_rules.instruction_files]))
         generated.blocks.push({ path, block, style: 'markdown' });
 }
 
@@ -182,18 +182,17 @@ export function emitAll(session: Session): Generated {
     );
     generated.files.push(
         ...hookFiles(root, policy, version),
-        ...npmProject(manifests, packageInstaller, policy.run_with),
+        ...npmProject({ root, scopes, manifests, installer: packageInstaller, runner: policy.runner }),
         ...pythonProject(manifests),
     );
-    if (policy.run_with === 'mise') generated.files.push(miseFile(manifests, version));
+    if (policy.runner === 'mise') generated.files.push(miseFile(manifests, version));
     workflowOutput(policy, scopes, version, generated);
     const selected = everyManifest(scopes);
-    const rules = selectRuleFiles(policy.agentRules, selected, repository, policy.level);
+    const rules = selectRuleFiles(policy.agent_rules, selected, repository, policy.level);
     generated.files.push(
         ...rules.map((file) => ({
             path: file.target,
             content: file.content,
-            readOnly: true,
             kind: 'rules' as const,
         })),
     );

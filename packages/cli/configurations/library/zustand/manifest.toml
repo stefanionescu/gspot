@@ -17,8 +17,9 @@ selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0
 message = "Pass a selector to the store hook, so the component renders when its slice changes and at no other time."
 
 [[setting]]
-name = "zustand.store_files"
+name = "architecture.roles.stores"
 type = "list"
+items = "path"
 direction = "neutral"
 default = ["**/store.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/stores/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/store/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}", "**/*.store.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"]
 summary = "The files that may create a store."

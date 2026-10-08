@@ -37,7 +37,6 @@ export const CASES: FindingCase[] = [
     },
 ];
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['markdown', 'docs', 'prose'],
 

@@ -7,21 +7,6 @@ export const TABLES = `// A test file.\n\nimport { uuid, pgTable } from 'drizzle
 
 export const CASES: FindingCase[] = [
     {
-        check: 'trpc/boundaries',
-        files: {
-            'src/server/router.ts': 'export const appRouter = {};\n',
-            'src/client/page.ts': `// A test file.\n\nimport { appRouter } from '../server/router.ts';\n\n/** The router, pulled into client code. */\nexport const leaked = appRouter;\n`,
-        },
-        expected: { file: 'src/client/page.ts', rule: 'server-import', line: 3 },
-        corrected: {
-            files: {
-                'src/server/router.ts': 'export const appRouter = {};\n',
-                'src/client/page.ts':
-                    'import type { appRouter } from "../server/router.ts";\nexport type Router = typeof appRouter;\n',
-            },
-        },
-    },
-    {
         check: 'drizzle/relations',
         files: { 'src/tables.ts': TABLES },
         expected: { file: 'src/tables.ts', rule: 'relations', line: 9 },
@@ -33,7 +18,6 @@ export const CASES: FindingCase[] = [
     },
 ];
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     installs: false,
     configurations: ['typescript', 'zod', 'trpc', 'tanstack-query', 'zustand', 'react-hook-form', 'drizzle'],

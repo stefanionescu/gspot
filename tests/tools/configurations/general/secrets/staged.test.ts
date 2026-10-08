@@ -8,9 +8,8 @@ import { buildInitArguments } from '#tests/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { install, buildToolsPath } from '#tests/harness/install.ts';
-import { testKeyId, secretSettings } from '#tests/config/harness/secrets.ts';
+import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
+import { testKeyId, secretSettings } from '#tests/config/samples/secrets.ts';
 import type { SecretEnvironment } from '#tests/types/tools/configurations/general/secrets.ts';
 
 /** Creates and commits a clean script, then installs the secrets configuration and its native tools. */
@@ -18,7 +17,7 @@ async function prepareStagedSecrets(root: string): Promise<SecretEnvironment> {
     await createFileTree(root, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
     commitAll(root);
     const environment = { PATH: buildToolsPath(['gitleaks']) };
-    await install(root, buildInitArguments(['secrets']), environment, { level: 'all' });
+    await initRepository(root, buildInitArguments(['secrets']), environment, { level: 'all' });
     expect(git(root, ['add', '-A']).code).toBe(0);
     return environment;
 }
@@ -51,18 +50,14 @@ async function expectStagedSecret(root: string, environment: Record<string, stri
     ]);
 }
 
-test(
-    'staged secrets fail and accept corrections without running network verification',
-    async () => {
-        await using sandbox = await testdir();
-        const environment = await prepareStagedSecrets(sandbox.path);
-        const clean = await spawnGspot(sandbox.path, ['check', '--hook', 'pre-commit'], environment);
-        expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-        await expectStagedSecret(sandbox.path, environment);
-        const checked = await spawnGspot(sandbox.path, ['check', '--hook', 'pre-commit', '--json'], environment);
-        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        const network = JSON.parse(checked.stdout) as RunReport;
-        expect(network.checks.map((check) => check.check)).not.toContain('secrets/trufflehog');
-    },
-    NATIVE_TEST_TIMEOUT_MS,
-);
+test('staged secrets fail and accept corrections without running network verification', async () => {
+    await using sandbox = await testdir();
+    const environment = await prepareStagedSecrets(sandbox.path);
+    const clean = await spawnGspot(sandbox.path, ['check', '--hook', 'pre-commit'], environment);
+    expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+    await expectStagedSecret(sandbox.path, environment);
+    const checked = await spawnGspot(sandbox.path, ['check', '--hook', 'pre-commit', '--json'], environment);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    const network = JSON.parse(checked.stdout) as RunReport;
+    expect(network.checks.map((check) => check.check)).not.toContain('secrets/trufflehog');
+});

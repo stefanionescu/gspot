@@ -1,19 +1,11 @@
-import type { YarnOperations } from '#tests/types/cli/npm.ts';
+const AUTHORED_VERSION_INPUTS: Record<string, string> = {
+    'package.json': '{"packageManager":"bun@0.0.0"}\n',
+};
 
-export const YARN_MANAGERS: YarnOperations[] = [
-    {
-        installer: { name: 'yarn', version: '1.22.22' },
-        lockfile: ['yarn', 'install'],
-        install: ['yarn', 'install', '--frozen-lockfile'],
-        settings: false,
-    },
-    {
-        installer: { name: 'yarn', version: '4.12.0' },
-        lockfile: ['yarn', 'install', '--mode=update-lockfile'],
-        install: ['yarn', 'install', '--immutable'],
-        settings: true,
-    },
-];
+const RECORDED_VERSION_INPUTS: Record<string, string> = {
+    'bun.lock': 'recorded root lockfile\n',
+    '.gspot/package.json': '{"packageManager":"bun@0.0.0+sha512.0a1b2c"}\n',
+};
 
 /** Download failures that identify both GitHub and its refusal. */
 export const GITHUB_DOWNLOAD_FAILURES = [
@@ -42,4 +34,11 @@ export const PACKAGE_FAILURES = [
     { frozen: true, refusal: 'HTTP 403 Forbidden' },
     { frozen: false, refusal: 'error: private-check-tool@1.0.0 was not found' },
     { frozen: true, refusal: 'error: private-check-tool@1.0.0 was not found' },
+];
+
+export const PACKAGE_VERSION_CASES = [
+    { source: 'authored', operation: 'lockfile', files: AUTHORED_VERSION_INPUTS } as const,
+    { source: 'authored', operation: 'install', files: AUTHORED_VERSION_INPUTS } as const,
+    { source: 'recorded', operation: 'lockfile', files: RECORDED_VERSION_INPUTS } as const,
+    { source: 'recorded', operation: 'install', files: RECORDED_VERSION_INPUTS } as const,
 ];

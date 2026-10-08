@@ -1,7 +1,7 @@
 [configuration]
 title = "Commits"
 always_selected = true
-when = {git = true}
+when = { git = true }
 description = "Checks commit messages for a conventional type, an optional project scope, a first line of 72 characters or fewer, and a wrapped body."
 
 [files]
@@ -79,8 +79,8 @@ example = "The proposed message `changed stuff` lacks the configured conventiona
 level = "all"
 stage = "message"
 runs = "files"
-command = ["commitlint", "--config", "{config:commitlint}", "--edit", "{message_file}"]
-output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
+command = ["commitlint", "--config", "{tool_file:commitlint}", "--edit", "{message_file}"]
+output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
 summary = "Checks the commit message being written: a conventional type, an optional known scope, a first line of 72 characters or fewer, and a wrapped body."
 why = "A history of typed, scoped subjects is what release notes, blame and bisect are read from; a free-form message hides the change."
 help = "Write <type>: <subject> or <type>(<scope>): <subject>, with an accepted type and optional scope. Keep the whole first line at 72 characters or fewer. Change accepted types with gspot set tools.commitlint.types."
@@ -93,7 +93,7 @@ level = "all"
 stage = "push"
 runs = "once"
 tool = "commitlint"
-output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
+output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
 summary = "Checks the message of every commit the push sends. Run by hand, it checks every commit from the upstream merge base to HEAD."
 why = "A message written past the hook (--no-verify, a rebase, a merge) still reaches the shared branch unless the push checks it."
 help = "Reword the commits that fail with git rebase -i, or change the rule with gspot set tools.commitlint.rules."
@@ -101,6 +101,7 @@ help = "Reword the commits that fail with git rebase -i, or change the rule with
 [[setting]]
 name = "tools.commitlint.types"
 type = "list"
+items = "string"
 direction = "neutral"
 default = ["feat", "fix", "refactor", "perf", "docs", "test", "build", "ci", "chore", "style", "revert"]
 summary = "The commit types the type-enum rule allows."
@@ -108,6 +109,7 @@ summary = "The commit types the type-enum rule allows."
 [[setting]]
 name = "tools.commitlint.scopes"
 type = "list"
+items = "string"
 direction = "neutral"
 default = []
 summary = "Optional commit scopes accepted by the scope-enum rule. Empty derives exact names from the last segment of each project scope path; a repository with no project scopes gets no enum. A message can omit its scope."

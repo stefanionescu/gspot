@@ -7,3 +7,6 @@ export type SuppressionForm = {
     reason: RegExp;
     forbidden: boolean;
 };
+
+/** The native comment marker and language-specific file ceiling. */
+export type CommentStyle = readonly [language: string, marker: string];

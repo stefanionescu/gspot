@@ -1,4 +1,7 @@
-import type { EslintPresetSources } from '#cli/types/generation/eslint.ts';
+import type { EslintPresetSources, EslintBoundaryPolicy, EslintDependencyNode } from '#cli/types/generation/eslint.ts';
+
+/** Mise task files use the script runtime and process rules. */
+export const MISE_SCRIPT_PATH = '.mise/tasks/**';
 
 /** The core catalog shares the preset producer and exact tool pin. */
 export const ESLINT_RULE_NAMES_FILE = 'configurations/language/javascript/eslint-rule-names.json';
@@ -69,8 +72,7 @@ export const ESLINT_LIMITS: Record<string, string> = {
     depth: 'nesting',
     statements: 'statements',
     nestedCallbacks: 'callback_nesting',
-    identicalFunctions: 'identical_function_lines',
-    barrelReexports: 'barrel_reexports',
+    barrelReexports: 'index_exports',
 };
 
 // The limits JavaScript files read on their own, over the TypeScript ones.
@@ -79,7 +81,49 @@ export const ESLINT_JAVASCRIPT_LIMITS: Record<string, string> = {
 };
 
 // The roles import-direction reads from architecture.roles; the types and harness roles also have their own settings.
-export const DIRECTION_ROLES = ['tests', 'config', 'env', 'runtime'];
+export const DIRECTION_ROLES = ['tests', 'config', 'env', 'runtime'] as const;
 
 /** Frameworks whose application sources use browser APIs. Build scripts retain Node.js. */
 export const ESLINT_BROWSER_CONFIGURATIONS = ['react', 'vue', 'svelte', 'vite'];
+
+/** Keep native calls while classifying import and export types by their actual specifiers. */
+export const TRPC_DEPENDENCY_NODES = ['require', 'dynamic-import'];
+
+export const TRPC_DEPENDENCY_SELECTORS: EslintDependencyNode[] = [
+    {
+        selector:
+            'ImportDeclaration:not([importKind=type]):matches([specifiers.length=0], :has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier)) > Literal',
+        kind: 'value',
+        name: 'import',
+    },
+    {
+        selector:
+            'ImportDeclaration:matches([importKind=type], [specifiers.length>0]:not(:has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier))) > Literal',
+        kind: 'type',
+        name: 'import',
+    },
+    {
+        selector:
+            ':matches(ExportAllDeclaration:not([exportKind=type]), ExportNamedDeclaration:not([exportKind=type]):matches([specifiers.length=0], :has(ExportSpecifier:not([exportKind=type])))) > Literal',
+        kind: 'value',
+        name: 'export',
+    },
+    {
+        selector:
+            ':matches(ExportAllDeclaration[exportKind=type], ExportNamedDeclaration:matches([exportKind=type], [specifiers.length>0]:not(:has(ExportSpecifier:not([exportKind=type]))))) > Literal',
+        kind: 'type',
+        name: 'export',
+    },
+];
+
+/** Native boundary classification leaves unknown clients outside authored architecture policies. */
+export const TRPC_UNKNOWN_IMPORT_POLICIES: EslintBoundaryPolicy[] = [
+    { from: { file: { isUnknown: true } }, allow: { to: { file: { path: '**/*' } } } },
+    { allow: { to: { file: { isUnknown: true } } } },
+];
+
+/** The final native policy refuses server values even when an authored edge permits the import. */
+export const TRPC_SERVER_VALUE_POLICY: EslintBoundaryPolicy = {
+    from: { file: [{ isUnknown: true }, { categories: { noneOf: ['server'] } }] },
+    disallow: { to: { file: { categories: 'server' } }, dependency: { kind: 'value' } },
+};

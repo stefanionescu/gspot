@@ -206,6 +206,17 @@ export function globPaths(cwd: string, patterns: string | string[], options: Glo
 }
 
 /**
+ * Remove trailing separators from an authored scope path.
+ * @param path the authored scope path
+ * @returns the path without trailing slashes
+ */
+export function trimTrailingSlashes(path: string): string {
+    let end = path.length;
+    while (end > 0 && path[end - 1] === '/') end -= 1;
+    return path.slice(0, end);
+}
+
+/**
  * The Unicode-normalized, case-insensitive key for identifying a repository path.
  * @param path the repository-relative path
  * @returns its comparison key

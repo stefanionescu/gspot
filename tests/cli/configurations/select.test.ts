@@ -1,7 +1,8 @@
 import { test, expect, describe } from 'bun:test';
-import { selectConfigurations } from '#cli/configurations/select.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { selectForScope, selectConfigurations } from '#cli/configurations/select.ts';
+import { PROJECT_CHOICES, PROJECT_SELECTIONS } from '#tests/config/cli/configurations/select.ts';
 
 describe('selectConfigurations', () => {
     test('pulls required configurations in, dependencies first, in order of first mention', () => {
@@ -26,4 +27,12 @@ describe('selectConfigurations', () => {
         ]);
         expect(() => selectConfigurations(['a'], map)).toThrow('a -> b -> a');
     });
+});
+
+test.each(PROJECT_SELECTIONS)('scope %s retains configuration %s: %s', (scope, name, selected) => {
+    const names = selectForScope(PROJECT_CHOICES, scope, configurationManifests()).map(
+        (manifest) => manifest.configuration.name,
+    );
+    expect(names.includes(name)).toBe(selected);
+    expect(names).toContain('gspot');
 });

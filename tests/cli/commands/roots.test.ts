@@ -6,8 +6,9 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { existsSync, unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 const INIT = buildInitArguments(['bash']);
 
@@ -16,17 +17,17 @@ test('init refuses a symlinked managed directory without writing outside the con
     await createFileTree(directory.path, { 'project/entry.sh': 'echo example\n', 'outside/sentinel': 'authored\n' });
     const project = join(directory.path, 'project');
     const outside = join(directory.path, 'outside');
-    symlinkSync(outside, join(project, '.gspot'));
+    await symlink(outside, join(project, '.gspot'));
     const refused = await runGspot(project, INIT);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
-    expect(existsSync(join(outside, 'mutation.lock'))).toBe(false);
-    expect(existsSync(join(outside, 'ownership.json'))).toBe(false);
-    expect(existsSync(join(project, 'gspot.toml'))).toBe(false);
-    unlinkSync(join(project, '.gspot'));
+    expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
+    expect(await pathExists(join(outside, 'mutation.lock'))).toBe(false);
+    expect(await pathExists(join(outside, 'ownership.json'))).toBe(false);
+    expect(await pathExists(join(project, 'gspot.toml'))).toBe(false);
+    await unlink(join(project, '.gspot'));
     const corrected = await runGspot(project, INIT);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
+    expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
 });
 
 test('a configuration below the Git root owns only its own project writes and changed paths', async () => {
@@ -47,17 +48,17 @@ test('a configuration below the Git root owns only its own project writes and ch
     const source = join(app, 'src');
     const applied = await runGspot(source, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(existsSync(join(app, '.gspot/config/sqlfluff.cfg'))).toBe(true);
-    expect(existsSync(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(false);
+    expect(await pathExists(join(app, '.gspot/config/sqlfluff.cfg'))).toBe(true);
+    expect(await pathExists(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(false);
     const selected = await runGspot(source, ['set', 'level', 'all']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(outerPolicy);
-    expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe(
+    expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(outerPolicy);
+    expect(await readFile(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe(
         'Preserve outside the configuration root.\n',
     );
-    expect(readFileSync(join(app, 'gspot.toml'), 'utf8')).toContain('level = "all"');
-    writeFileSync(join(app, 'src/query.sql'), 'SELECT 2;\n');
-    writeFileSync(join(directory.path, 'outside.sql'), 'SELECT FROM;\n');
+    expect(await readFile(join(app, 'gspot.toml'), 'utf8')).toContain('level = "all"');
+    await writeFile(join(app, 'src/query.sql'), 'SELECT 2;\n');
+    await writeFile(join(directory.path, 'outside.sql'), 'SELECT FROM;\n');
     const checked = await runGspot(source, [
         'check',
         '--changed',

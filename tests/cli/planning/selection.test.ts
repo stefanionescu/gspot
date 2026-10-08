@@ -1,21 +1,20 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { unlinkSync, symlinkSync } from 'node:fs';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { unlink, symlink } from 'node:fs/promises';
+import { preparePolicy } from '#cli/policy/edit.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { preparePolicy } from '#cli/commands/policy-edit.ts';
-import type { RawPolicy } from '#cli/types/policy/settings.ts';
+import { policySchema } from '#cli/policy/schema/policy.ts';
 import { planRun, configuredChecks } from '#cli/planning/plan.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
-import { AUTOMATIC_GENERAL_CONFIGURATIONS } from '#tests/config/harness/policy.ts';
+import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 
 import {
     COMPONENTS,
@@ -32,7 +31,7 @@ import {
 test('a nested Next.js check replaces TypeScript only in its own scope', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildPolicy(['typescript'], {
-            tables: '[[scope]]\npath = "app"\nconfigurations = ["typescript", "nextjs"]',
+            tables: '[scope."app"]\nconfigurations = ["typescript", "nextjs"]',
         }),
         'source.ts': 'export const port = 8080;\n',
         'app/source.ts': 'export const port = 3000;\n',
@@ -74,14 +73,14 @@ test.each(MANUAL_SELECTIONS)(
         const options = {
             isDryRun: true,
             ...(configurations === undefined ? {} : { configurations: [...configurations] }),
-            scopes: ['app=javascript'],
+            scopes: new Map([['app', ['javascript']]]),
         };
         const interactive = await prepare(sandbox.path, buildInitOptions(sandbox.path, { ...options, yes: false }));
         const accepted = await prepare(sandbox.path, buildInitOptions(sandbox.path, options));
         expect(interactive.policyText).toBe(accepted.policyText);
         expect(interactive.plan).toStrictEqual(accepted.plan);
-        const policy = parse(accepted.policyText) as RawPolicy;
-        for (const configuration of [...AUTOMATIC_GENERAL_CONFIGURATIONS, 'licenses'])
+        const policy = policySchema.parse(parse(accepted.policyText));
+        for (const configuration of [...alwaysSelectedConfigurations(), 'licenses'])
             expect(policy.configurations).toContain(configuration);
         await Bun.write(join(sandbox.path, 'gspot.toml'), accepted.policyText);
         for (const level of ['recommended', 'all', 'recommended'] as const) {
@@ -151,7 +150,7 @@ test.each(['recommended', 'all'] as const)(
     },
 );
 
-test.each(POLICY_PATHS)('a change to %s retains project inputs and tool exclusions', async (path) => {
+test.each(POLICY_PATHS)('a change to %s retains project inputs and check path ignores', async (path) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': LINK_POLICY,
@@ -202,17 +201,18 @@ test('Prettier planning honors linked authored ignores inside the repository and
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['markdown']),
         'settings/format.ignore': ignored,
+        '.gspot/config/.keep': '',
         'ignored.md': '# Ignored\n',
         'kept.md': '# Kept\n',
     });
     await createFileTree(outside.path, { 'format.ignore': ignored });
-    symlinkSync('settings/format.ignore', join(sandbox.path, '.prettierignore'));
+    await symlink('../../settings/format.ignore', join(sandbox.path, '.gspot/config/prettierignore'));
     const session = await openSession(sandbox.path);
     const plans = planRun(session, { stage: 'commit', skips: [], only: ['format/prettier'] });
     expect(plans[0]!.files.map((file) => file.path)).toContain('kept.md');
     expect(plans[0]!.files.map((file) => file.path)).not.toContain('ignored.md');
-    unlinkSync(join(sandbox.path, '.prettierignore'));
-    symlinkSync(join(outside.path, 'format.ignore'), join(sandbox.path, '.prettierignore'));
+    await unlink(join(sandbox.path, '.gspot/config/prettierignore'));
+    await symlink(join(outside.path, 'format.ignore'), join(sandbox.path, '.gspot/config/prettierignore'));
     expect(await rejection(openSession(sandbox.path))).toContain('Source link leaves the repository');
     expect(await Bun.file(join(outside.path, 'format.ignore')).text()).toBe(ignored);
 });
@@ -222,7 +222,7 @@ test.each(NODE_REQUIREMENTS)(
     async ({ configurations, runner, files, node }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(configurations, { tables: `run_with = "${runner}"\n` }),
+            'gspot.toml': buildPolicy(configurations, { tables: `runner = "${runner}"\n` }),
             ...files,
         });
         const session = await openSession(sandbox.path);
@@ -267,7 +267,7 @@ test('project type checking belongs to push and preserves explicit selection', a
 test.each(['bun', 'mise'])('private schema tools include their runtime peer under %s', async (runner) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['files'], { tables: `run_with = "${runner}"\n` }),
+        'gspot.toml': buildPolicy(['files'], { tables: `runner = "${runner}"\n` }),
         'settings.json': '{"enabled":true}\n',
     });
     const session = await openSession(sandbox.path);
@@ -276,38 +276,34 @@ test.each(['bun', 'mise'])('private schema tools include their runtime peer unde
     expect(names.includes('ajv')).toBe(runner === 'bun');
 });
 
-test.each(['recommended', 'all'] as const)(
-    '%s selects Next.js builds only for scopes with an app and retains all project inputs',
-    async (level) => {
-        for (const route of NEXT_BUILD_ROUTES) {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, {
-                'gspot.toml': buildPolicy(['nextjs'], { level, tables: NEXT_BUILD_TABLES }),
-                ...NEXT_BUILD_FILES,
-                [`web/${route}`]: 'export default function Page() { return null; }\n',
-            });
-            const planned = planRun(await openSession(sandbox.path), {
-                stage: 'push',
-                skips: [],
-                only: ['nextjs/build'],
-            });
-            if (level === 'recommended') {
-                expect(planned).toStrictEqual([]);
-                continue;
-            }
-            expect(planned.find((entry) => entry.scope.scope.path === '')).toMatchObject({
-                files: [],
-                triggerPaths: [],
-            });
-            const app = planned.find((entry) => entry.scope.scope.path === 'web');
-            expect(app?.skip).toBeUndefined();
-            expect(
-                app?.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right)),
-            ).toStrictEqual(
-                ['web/package.json', 'web/src/data.ts', 'web/tsconfig.json', `web/${route}`].toSorted((left, right) =>
-                    left.localeCompare(right),
-                ),
-            );
+test.each((['recommended', 'all'] as const).flatMap((level) => NEXT_BUILD_ROUTES.map((route) => ({ level, route }))))(
+    '$level selects Next.js builds for $route only in app scopes and retains all project inputs',
+    async ({ level, route }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['nextjs'], { level, tables: NEXT_BUILD_TABLES }),
+            ...NEXT_BUILD_FILES,
+            [`web/${route}`]: 'export default function Page() { return null; }\n',
+        });
+        const planned = planRun(await openSession(sandbox.path), {
+            stage: 'push',
+            skips: [],
+            only: ['nextjs/build'],
+        });
+        if (level === 'recommended') {
+            expect(planned).toStrictEqual([]);
+            return;
         }
+        expect(planned.find((entry) => entry.scope.scope.path === '')).toMatchObject({
+            files: [],
+            triggerPaths: [],
+        });
+        const app = planned.find((entry) => entry.scope.scope.path === 'web');
+        expect(app?.skip).toBeUndefined();
+        expect(app?.files.map((file) => file.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
+            ['web/package.json', 'web/src/data.ts', 'web/tsconfig.json', `web/${route}`].toSorted((left, right) =>
+                left.localeCompare(right),
+            ),
+        );
     },
 );

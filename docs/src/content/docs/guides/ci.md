@@ -10,9 +10,9 @@ gspot init --ci github
 gspot init --ci gitlab
 ```
 
-GitHub receives `.github/workflows/gspot.yml`. GitLab receives `.gitlab/ci/gspot.yml`; include it in your pipeline:
+GitHub receives a workflow. Include the generated GitLab configuration in your pipeline:
 
-```yaml
+```yaml title="GitLab pipeline include"
 include:
   - local: .gitlab/ci/gspot.yml
 ```

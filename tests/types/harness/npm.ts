@@ -14,7 +14,7 @@ export type PackageProject = {
     [Symbol.asyncDispose](): Promise<void>;
 };
 
-/** Inputs for authoring a native package-manager installation fixture. */
+/** Inputs for authoring a native package-manager installation sandbox. */
 export type PackageProjectOptions = {
     root: string;
     artifacts: string;
@@ -26,10 +26,10 @@ export type PackageProjectOptions = {
 
 /** Managed bytes and file mode captured before package installation. */
 export type PackageInputs = {
-    manifest: NonSharedBuffer;
+    manifest: Buffer;
     lockfilePath: string;
-    lockfile: NonSharedBuffer;
+    lockfile: Buffer;
     mode: number;
     ownershipPath: string;
-    ownership: NonSharedBuffer;
+    ownership: Buffer;
 };

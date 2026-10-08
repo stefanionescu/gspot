@@ -49,18 +49,15 @@ run = "bun packages/eslint-plugin/build.ts"
 
 [tasks.test]
 description = "Run deterministic CLI and plugin tests."
-dir = "{{config_root}}/tests"
-run = "bun test --timeout 60000 ./cli ./plugin"
+run = "bun test ./tests/cli ./tests/plugin"
 
 [tasks."test:tools"]
 description = "Run native compatibility tests with the selected tools installed."
-dir = "{{config_root}}/tests"
-run = "bun {{config_root}}/scripts/plugin.ts test"
+run = "bun scripts/plugin.ts test"
 
 [tasks."test:package"]
 description = "Build and pack the CLI with the plugin, then test installed consumers."
-dir = "{{config_root}}/tests"
-run = "bun {{config_root}}/scripts/plugin.ts package"
+run = "bun scripts/plugin.ts package"
 
 [tasks."generate:docs"]
 description = "Generate Astro content and TypeScript metadata."

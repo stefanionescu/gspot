@@ -6,7 +6,6 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
 import { buildSandboxPath } from '#tests/harness/install.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 
 // A fresh clone installs immutable tools and rejects then accepts a real staged commit.
 async function expectCloneHooks(source: string, environment: Record<string, string>): Promise<void> {
@@ -37,39 +36,35 @@ async function expectCloneHooks(source: string, environment: Record<string, stri
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
 }
 
-test(
-    'installed and freshly cloned repositories enforce staged defects through real commits',
-    async () => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
-        commitAll(sandbox.path);
-        const initialized = await spawnGspot(sandbox.path, [
-            'init',
-            '--yes',
-            '--configurations',
-            'bash',
-            '--no-task',
-            '--no-ci',
-            '--no-rules',
-            '--no-install',
-        ]);
-        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        const installed = await spawnGspot(sandbox.path, ['install']);
-        expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-        await Bun.write(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');
-        expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const environment = {
-            PATH: buildSandboxPath([]),
-            NO_COLOR: '1',
-        };
-        const commit = git(sandbox.path, ['commit', '-qm', 'bad'], environment);
-        expect(commit.code).not.toBe(0);
-        expect(`${commit.stdout}${commit.stderr}`).toContain('SC2086');
-        await Bun.write(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "$1"\n');
-        expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const corrected = git(sandbox.path, ['commit', '-qm', 'Correct shell input'], environment);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        await expectCloneHooks(sandbox.path, environment);
-    },
-    NATIVE_TEST_TIMEOUT_MS,
-);
+test('installed and freshly cloned repositories enforce staged defects through real commits', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
+    commitAll(sandbox.path);
+    const initialized = await spawnGspot(sandbox.path, [
+        'init',
+        '--yes',
+        '--configurations',
+        'bash',
+        '--no-task',
+        '--no-ci',
+        '--no-rules',
+        '--no-install',
+    ]);
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    const installed = await spawnGspot(sandbox.path, ['install']);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    await Bun.write(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');
+    expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
+    const environment = {
+        PATH: buildSandboxPath([]),
+        NO_COLOR: '1',
+    };
+    const commit = git(sandbox.path, ['commit', '-qm', 'bad'], environment);
+    expect(commit.code).not.toBe(0);
+    expect(`${commit.stdout}${commit.stderr}`).toContain('SC2086');
+    await Bun.write(join(sandbox.path, 'scripts/b.sh'), '#!/usr/bin/env bash\necho "$1"\n');
+    expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
+    const corrected = git(sandbox.path, ['commit', '-qm', 'Correct shell input'], environment);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    await expectCloneHooks(sandbox.path, environment);
+});

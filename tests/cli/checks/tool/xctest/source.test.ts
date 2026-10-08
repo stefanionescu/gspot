@@ -1,4 +1,4 @@
-// Test repository for the xctest configuration: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
+// Test repository for the xctest configuration: a skipped test with no reason and a sleep.
 import { planRun } from '#cli/planning/plan.ts';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -8,7 +8,6 @@ import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
 import { REPOSITORY } from '#tests/config/cli/checks/tool/xctest/source.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 
@@ -16,13 +15,8 @@ describe('the xctest configuration', () => {
     const resources = new AsyncDisposableStack();
     let testRepository: OwnedTestRepository;
     beforeAll(async () => {
-        const budget = openTestBudget(suiteTimeout());
-        try {
-            testRepository = resources.use(await createTestRepository(REPOSITORY, runGspot));
-        } finally {
-            budget[Symbol.dispose]();
-        }
-    }, suiteTimeout());
+        testRepository = resources.use(await createTestRepository(REPOSITORY, runGspot));
+    });
     afterAll(async () => {
         await resources.disposeAsync();
     });
@@ -47,7 +41,7 @@ describe('the xctest configuration', () => {
 test('Swift checks report each scope independently and file-list inputs omit sibling sources', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['swift', 'xctest'], { tables: '[[scope]]\npath = "apps/second"\n' }),
+        'gspot.toml': buildPolicy(['swift', 'xctest'], { tables: '[scope."apps/second"]\n' }),
         'Tests/RootTests.swift': 'import XCTest\nfunc testRoot() throws { throw XCTSkip() }\n',
         'apps/second/Tests/SecondTests.swift': 'import XCTest\nfunc testSecond() throws { throw XCTSkip() }\n',
     });

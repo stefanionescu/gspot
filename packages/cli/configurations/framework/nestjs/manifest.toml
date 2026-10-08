@@ -1,7 +1,11 @@
+[compiler_options]
+experimentalDecorators = true
+emitDecoratorMetadata = true
+
 [configuration]
 title = "NestJS"
 requires = ["typescript"]
-recommends = ["security"]
+suggests = ["security"]
 description = "A NestJS service: the compiler options decorators need, the NestJS plugin rules for providers, routes, and DTOs, controllers that reach data through a service, and no circular modules."
 
 [detect]
@@ -44,7 +48,7 @@ selector = "Decorator[expression.callee.name=/^(InjectRepository|InjectModel|Inj
 message = "A controller reaches data through a service. Inject the service, and keep the repository behind it."
 files = ["**/*.controller.ts"]
 
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["**"]
 languages = ["typescript", "javascript"]
 categories = ["functions", "methods"]

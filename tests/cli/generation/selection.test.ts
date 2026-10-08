@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -17,7 +17,7 @@ test('manual language choices include security output without selecting security
     const plainSession = await openSession(sandbox.path);
     const plainOutput = emitAll(plainSession);
     expect(plainOutput.files.find((file) => file.path === target)?.content).toContain('rules:');
-    writeFileSync(join(sandbox.path, 'gspot.toml'), buildPolicy(['bash', 'security']));
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy(['bash', 'security']));
     const securitySession = await openSession(sandbox.path);
     const securityOutput = emitAll(securitySession);
     const generated = securityOutput.files.find((file) => file.path === target);
@@ -34,7 +34,7 @@ test('license configuration retains scoped exceptions and inherited license allo
         'app/child/source.py': 'selected = True\n',
         'sibling/source.py': 'selected = True\n',
         'gspot.toml': buildPolicy(['licenses'], {
-            tables: '[licenses]\nallowed = ["MPL-2.0"]\n[[scope]]\npath = "app"\n[[scope.licenses.exceptions]]\npackage = "example@1.2.3"\nlicense = "BSD"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "sibling"\n',
+            tables: '[licenses]\nallowed = ["MPL-2.0"]\n[scope."app"]\n[scope."app".licenses.exceptions."example@1.2.3"]\nlicense = "BSD"\nreason = "Reviewed installed metadata."\n[scope."app/child"]\n[scope."sibling"]\n',
         }),
     });
     const session = await openSession(sandbox.path);
@@ -49,11 +49,11 @@ test('license configuration retains scoped exceptions and inherited license allo
     ])
         expect(parsed.get(path)!.allowed).toContain('MPL-2.0');
     for (const path of ['.gspot/config/app/licenses.json', '.gspot/config/app/child/licenses.json'])
-        expect(parsed.get(path)!.exceptions).toStrictEqual([
-            { package: 'example@1.2.3', license: 'BSD', reason: 'Reviewed installed metadata.' },
-        ]);
+        expect(parsed.get(path)!.exceptions).toStrictEqual({
+            'example@1.2.3': { license: 'BSD', reason: 'Reviewed installed metadata.' },
+        });
     for (const path of ['.gspot/config/licenses.json', '.gspot/config/sibling/licenses.json'])
-        expect(parsed.get(path)!.exceptions).toStrictEqual([]);
+        expect(parsed.get(path)!.exceptions).toStrictEqual({});
 });
 
 test.each([{ configurations: ['licenses'] }, { configurations: [] }])(
@@ -61,7 +61,7 @@ test.each([{ configurations: ['licenses'] }, { configurations: [] }])(
     async ({ configurations }) => {
         await using sandbox = await testdir({
             'gspot.toml': buildPolicy([...configurations], {
-                tables: '[[licenses.exceptions]]\npackage = "example@1.0.0"\nlicense = "MIT"\nreason = "Reviewed installed metadata."\n[[scope]]\npath = "docs"\nconfigurations = ["licenses"]\n',
+                tables: '[licenses.exceptions."example@1.0.0"]\nlicense = "MIT"\nreason = "Reviewed installed metadata."\n[scope."docs"]\nconfigurations = ["licenses"]\n',
             }),
             'docs/package.json': '{"name":"docs","private":true}',
         });

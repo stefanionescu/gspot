@@ -7,7 +7,7 @@ import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { proposeMerge } from '#cli/lifecycle/ownership/plans.ts';
-import { statSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 
 test('JSON field ownership survives reopen, updates and removal while keeping unrelated bytes and modes', async () => {
@@ -15,7 +15,7 @@ test('JSON field ownership survives reopen, updates and removal while keeping un
     const path = 'package.json';
     const original = TAKEOVER_PACKAGE.replaceAll('\n', '\r\n');
     await createFileTree(sandbox.path, { [path]: original });
-    chmodSync(join(sandbox.path, path), 0o640);
+    await chmod(join(sandbox.path, path), 0o640);
     const changes = [{ path: ['stylelint'], value: { extends: './.stylelintrc.json' } }];
     let log = openOwnership(sandbox.path);
     try {
@@ -27,7 +27,7 @@ test('JSON field ownership survives reopen, updates and removal while keeping un
             original.replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./.stylelintrc.json"}'),
         );
         expect(applyPlan(log, proposeMerge(log, path, changes))).toBe('unchanged');
-        writeFileSync(join(sandbox.path, path), installed.replace('native-project', 'edited-project'));
+        await writeFile(join(sandbox.path, path), installed.replace('native-project', 'edited-project'));
         log[Symbol.dispose]();
         log = openOwnership(sandbox.path);
         expect(
@@ -35,10 +35,11 @@ test('JSON field ownership survives reopen, updates and removal while keeping un
         ).toBe('changed');
         expect(hasFields(sandbox.path, { path, changes })).toBe(false);
         expect(applyPlan(log, proposeRestoration(log, path))).toBe('changed');
-        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(
             original.replace('native-project', 'edited-project'),
         );
-        expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(getKeptMode(0o640));
+        const metadata = await stat(join(sandbox.path, path));
+        expect(metadata.mode & 0o777).toBe(getKeptMode(0o640));
     } finally {
         log[Symbol.dispose]();
     }
@@ -54,7 +55,7 @@ test('JSON ownership leaves edited managed fields and their records intact durin
     );
     const installed = log.files.read('package.json')!.bytes.toString('utf8');
     const edited = installed.replace('./managed.json', './authored.json');
-    writeFileSync(join(sandbox.path, 'package.json'), edited);
+    await writeFile(join(sandbox.path, 'package.json'), edited);
     const records = structuredClone(log.state);
     expect(
         applyPlan(
@@ -63,7 +64,7 @@ test('JSON ownership leaves edited managed fields and their records intact durin
         ),
     ).toBe('preserved');
     expect(applyPlan(log, proposeRestoration(log, 'package.json'))).toBe('preserved');
-    expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe(edited);
+    expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(edited);
     expect(log.state).toStrictEqual(records);
 });
 
@@ -93,7 +94,7 @@ test.each(['', '[]', 'false', '{"stylelint":', '{ /* comment */ "stylelint": {} 
         expect(() =>
             proposeMerge(log, 'package.json', [{ path: ['stylelint'], value: { extends: './managed.json' } }], true),
         ).toThrow('package.json is not valid JSON. Fix the file, then run gspot apply.');
-        expect(readFileSync(join(sandbox.path, 'package.json'), 'utf8')).toBe(source);
+        expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(source);
         expect(log.state).toStrictEqual(records);
     },
 );

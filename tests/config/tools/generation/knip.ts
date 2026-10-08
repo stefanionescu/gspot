@@ -27,8 +27,7 @@ export const KNIP_UNUSED_FILES = [
 export const KNIP_ENTRY_TABLES = `
 [tools.knip]
 entry = ["main.js"]
-[[scope]]
-path = "child"
+[scope."child"]
 configurations = ["javascript"]
 [scope.tools.knip]
 entry = ["main.js"]

@@ -1,8 +1,8 @@
 export const SCOPE_POLICY =
-    'configurations = ["naming", "bash"]\n[naming]\nallowed = [{name = "remoteRecord", reason = "The external JavaScript interface fixes this name."}]\n[[naming.paths]]\npaths = ["web/source.js"]\nnames = ["remoteRecord"]\nskip = true\nreason = "The external JavaScript interface fixes this name."\n[[scope]]\npath = "web"\nconfigurations = ["javascript"]\n[scope.naming]\nallowed = [{name = "remoteRecord", reason = "The external JavaScript interface fixes this name."}]\n[[scope]]\npath = "worker"\nconfigurations = ["python"]\n[scope.naming]\nallowed = [{name = "remote_record", reason = "The external Python interface fixes this name."}]\n';
+    'configurations = ["naming", "bash"]\n[naming]\nallowed = {remoteRecord = "The external JavaScript interface fixes this name."}\n[[naming.overrides]]\npaths = ["web/source.js"]\nallowed = ["remoteRecord"]\nreason = "The external JavaScript interface fixes this name."\n[scope."web"]\nconfigurations = ["javascript"]\n[scope."web".naming]\nallowed = {remoteRecord = "The external JavaScript interface fixes this name."}\n[scope."worker"]\nconfigurations = ["python"]\n[scope."worker".naming]\nallowed = {remote_record = "The external Python interface fixes this name."}\n';
 
 export const TEST_PATH_POLICY =
-    'level = "all"\nconfigurations = ["javascript", "swift", "naming"]\ntests = ["qa/**"]\n[[scope]]\npath = "apps/web"\ntests = ["verification/**"]\n[[scope]]\npath = "apps/api"\n';
+    'level = "all"\nconfigurations = ["javascript", "swift", "naming"]\ntest_files = ["qa/**"]\n[scope."apps/web"]\ntest_files = ["verification/**"]\n[scope."apps/api"]\n';
 
 export const TEST_PATH_FILES = {
     'qa/entry.js': 'export const testcaseCount = 1;\n',
@@ -17,14 +17,7 @@ export const TEST_PATH_FILES = {
     'apps/api/verification/entry.js': 'export const testcaseCount = 1;\n',
 };
 
-export const LANGUAGE_CEILINGS = [
-    { language: 'typescript', characters: 35, words: 4 },
-    { language: 'javascript', characters: 35, words: 4 },
-    { language: 'python', characters: 35, words: 4 },
-    { language: 'swift', characters: 40, words: 5 },
-    { language: 'bash', characters: 35, words: 4 },
-    { language: 'sql', characters: 55, words: 7 },
-] as const;
+export const NAMING_LANGUAGES = ['typescript', 'javascript', 'python', 'swift', 'bash', 'sql'] as const;
 
 export const TECHNICAL_NAMES = [
     'base64',
@@ -76,9 +69,9 @@ export const NAME_WORDS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven'
 export const ORDINARY_WORDS = ['data', 'message', 'values', 'id'];
 
 export const RESERVED_POLICY =
-    '[naming]\nreserved = [{term = "record", uses = ["properties"]}]\n' +
-    '[[scope]]\npath = "app"\n[scope.naming]\nreserved = [{term = "record", uses = ["functions"]}]\n' +
-    '[[scope]]\npath = "sibling"\n';
+    '[naming]\nreserved = {record = ["properties"]}\n' +
+    '[scope."app"]\n[scope."app".naming]\nreserved = {record = ["functions"]}\n' +
+    '[scope."sibling"]\n';
 
 export const RESERVED_FILES = {
     'entry.ts': 'export const record = 1;\nexport type Row = { record: string };\n',
@@ -97,11 +90,11 @@ export const NUMBERED_FILES = {
 };
 
 export const PREFIX_EXCEPTION =
-    '[[naming.paths]]\npaths = [".mise/tasks/*.sh", "scripts/steps/*.sh"]\n' +
+    '[[naming.overrides]]\npaths = [".mise/tasks/*.sh", "scripts/steps/*.sh"]\n' +
     'categories = ["files"]\nignored_prefix = \'^\\d{2}-\'\nreason = "The project orders its tasks by this prefix."\n';
 
 export const REPEATED_EXCEPTION =
-    '[[naming.paths]]\npaths = ["entry.ts"]\nnames = ["userUser"]\nallow_repeated_words = true\n' +
+    '[[naming.overrides]]\npaths = ["entry.ts"]\nnames = ["userUser"]\nallow_repeated_words = true\n' +
     'reason = "The generated interface fixes this exact repeated name."\n';
 
 export const RESTORED_TERMS = [

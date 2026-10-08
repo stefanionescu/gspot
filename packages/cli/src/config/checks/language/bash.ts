@@ -1,24 +1,9 @@
 import type { BashCountRule } from '#cli/types/checks/language/bash.ts';
-/** Features and their minimum Bash versions. */
-export const BASH_FEATURES: [RegExp, string, string][] = [
-    [/\b(?:mapfile|readarray)\b/u, 'mapfile and readarray need Bash 4.0', '4.0.0'],
-    [/\bdeclare\s+-A\b/u, 'associative arrays need Bash 4.0', '4.0.0'],
-    [/\$\{[^}\n]+(?:,,|\^\^)\}/u, 'case-conversion expansion needs Bash 4.0', '4.0.0'],
-    [/\bcoproc\b/u, 'coproc needs Bash 4.0', '4.0.0'],
-    [/\bwait\s+-n\b/u, 'wait -n needs Bash 4.3', '4.3.0'],
-    [/\binherit_errexit\b/u, 'inherit_errexit needs Bash 4.4', '4.4.0'],
-];
 
 /** The two shebangs a Bash script may open with. */
 export const BASH_SHEBANGS = ['#!/usr/bin/env bash', '#!/bin/bash'];
 
 export const EXIT_CALL = /\bexit(?:\s|$)/u;
-
-/** Lines 2 and 3 of the header, joined: a bare # line, then a comment that says what the script does. */
-export const HEADER_COMMENT = /^#\n# .*\S/u;
-
-/** The inherited errexit option and the Bash version that introduced it. */
-export const INHERITED_ERREXIT = { statement: 'shopt -s inherit_errexit', version: '4.4.0' };
 
 /** The line every executable ends with. */
 export const MAIN_CALL = 'main "$@"';
@@ -28,13 +13,8 @@ export const OTHER_SHEBANG = /^#!.*\b(?:zsh|sh|dash|ksh)\b/u;
 
 export const READONLY_WORD = 'readonly';
 
-/** The fourth header line: the Bash version and the platforms. */
-export const RUNTIME_HEADER = /^# Runtime: Bash (?<major>\d+)\.(?<minor>\d+)\+, (?<platforms>.+)\.$/u;
-
 /** Strict mode supported by every declared Bash version. */
 export const STRICT_MODE = ['set -euo pipefail'];
-
-export const SSH_BLOCK_LINES = 3;
 
 /** An ssh heredoc, which needs a name and a description on the line above. */
 export const SSH_HEREDOC = /\bssh\b.*<</u;
@@ -67,7 +47,7 @@ export const SAFETY_OWNER_RULES: [RegExp, string, string][] = [
 /** A top-level assignment of an upper-case name. */
 export const TOP_LEVEL_ASSIGNMENT = /^(?<name>[A-Z_][A-Z0-9_]*)=/u;
 
-/** Functions every script may leave uncalled; bash.entry_functions adds the ones a project names. */
+/** Functions every script may leave uncalled. */
 export const ENTRY_FUNCTIONS = ['main'];
 
 /** Prose that announces a deprecated alias. */
@@ -119,17 +99,6 @@ export const COUNT_RULES: BashCountRule[] = [
 /** Count the matched block and the outermost block, which the nesting query cannot match. */
 export const OUTER_LEVELS = 2;
 
-/** The boundary header a script under an architecture root opens with, and how many words it needs. */
-export const BOUNDARY_HEADER = /^# Boundary: (?<description>.+)$/u;
-
-/** The first eight lines can contain the boundary declaration. */
-export const BOUNDARY_HEADER_WINDOW = 8;
-
-export const BOUNDARY_MIN_WORDS = 4;
-
-/** The annotation a source statement carries on the line above it. */
-export const SOURCE_ANNOTATION = /^# shellcheck source=(?<path>\S+)$/u;
-
 /** The include guard a configuration owner opens with, and the line after it. */
 export const CONFIG_GUARD = /^\[\[ -n \$\{(?<name>[A-Z_][A-Z0-9_]*):-\} \]\] && return 0$/u;
 
@@ -137,12 +106,6 @@ export const CONFIG_GUARD = /^\[\[ -n \$\{(?<name>[A-Z_][A-Z0-9_]*):-\} \]\] && 
 export const DEFAULT_EXPANSION = /\$\{[A-Z_][A-Z0-9_]*:-[^}]+\}/u;
 
 export const SCRIPT_TAG = 'shell';
-
-/** The bare comment marker begins the two-line script description. */
-export const BARE_COMMENT_LINE = 2;
-
-/** The fourth header line declares the Bash version and operating systems. */
-export const RUNTIME_LINE = 4;
 
 /** A comment that directs ShellCheck, which must sit on the line it covers. */
 export const SHELLCHECK_DIRECTIVE = /^#\s*shellcheck\b/u;

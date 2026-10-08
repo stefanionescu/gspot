@@ -1,7 +1,8 @@
-// The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, mktemp cleanup.
-import semver from 'semver';
+// The Bash interpreter contract: shebang, strict mode, entry point, library shape, and temporary cleanup.
 import { findingAt } from '#cli/checks/finding.ts';
 import type { CodeLine } from '#cli/types/parsers/bash.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
+import { rolePaths } from '#cli/policy/settings/lookup.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { codeLines, withoutDeclaration } from '#cli/parsers/bash.ts';
 import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
@@ -12,55 +13,17 @@ import {
     EXIT_CALL,
     MAIN_CALL,
     STRICT_MODE,
-    RUNTIME_LINE,
-    BASH_FEATURES,
     BASH_SHEBANGS,
     OTHER_SHEBANG,
     READONLY_WORD,
-    HEADER_COMMENT,
-    RUNTIME_HEADER,
     SOURCE_STATEMENT,
-    BARE_COMMENT_LINE,
-    INHERITED_ERREXIT,
     TOP_LEVEL_ASSIGNMENT,
 } from '#cli/config/checks/language/bash.ts';
 
-// The shebang every script opens with, then the four-line header when bash.platforms names its platforms.
-function headerProblems(file: ScriptFile, platforms: string | undefined, report: ScriptReport): void {
-    if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))
-        report(1, 'shebang', `The first line is not one of ${BASH_SHEBANGS.join(' or ')}.`);
-    if (platforms === undefined) return;
-    if (file.lines.length < RUNTIME_LINE || !HEADER_COMMENT.test(file.lines.slice(1, RUNTIME_LINE - 1).join('\n')))
-        report(BARE_COMMENT_LINE, 'header', 'Lines 2 and 3 are a bare "#" and then "# <what this script does>".');
-}
-
-function runtimeVersion(file: ScriptFile, platforms: string, report: ScriptReport): string | undefined {
-    const runtime = RUNTIME_HEADER.exec(file.lines[RUNTIME_LINE - 1] ?? '');
-    const named = runtime?.groups?.['platforms'] ?? '';
-    if (runtime === null || (named !== 'Linux' && named !== platforms)) {
-        report(RUNTIME_LINE, 'runtime-header', `Line 4 is "# Runtime: Bash N.N+, ${platforms}." (or "Linux").`);
-        return undefined;
-    }
-    const version = runtime.groups as Record<'major' | 'minor', string>;
-    return `${version.major}.${version.minor}.0`;
-}
-
-function versionProblems(file: ScriptFile, version: string | undefined, report: ScriptReport): void {
-    if (version === undefined) return;
-    for (const [index, code] of file.code.entries()) {
-        const feature = BASH_FEATURES.find(([pattern, , minimum]) => semver.lt(version, minimum) && pattern.test(code));
-        if (feature !== undefined)
-            report(index + 1, 'bash-version', `${feature[1]}, but the header declares Bash ${version}.`);
-    }
-}
-
-function strictModeProblems(code: CodeLine[], version: string | undefined, report: ScriptReport): void {
+function strictModeProblems(code: CodeLine[], report: ScriptReport): void {
     const first = code.findIndex((line) => !line.code.startsWith('set ') && !line.code.startsWith('shopt '));
     const before = new Set(code.slice(0, first === -1 ? code.length : first).map((line) => line.code));
-    const required = [...STRICT_MODE];
-    if (version !== undefined && semver.gte(version, INHERITED_ERREXIT.version))
-        required.push(INHERITED_ERREXIT.statement);
-    const missing = required.filter((statement) => !before.has(statement));
+    const missing = STRICT_MODE.filter((statement) => !before.has(statement));
     if (missing.length > 0)
         report(code[0]?.number ?? 1, 'strict-mode', `Put ${missing.join(' and ')} before the first command.`);
 }
@@ -117,22 +80,15 @@ function libraryProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: bool
     }
 }
 
-function fileProblems(
-    input: CheckInput,
-    file: ScriptFile,
-    platforms: string | undefined,
-    isConfigOwner: boolean,
-): Finding[] {
+function fileProblems(input: CheckInput, file: ScriptFile, isConfigOwner: boolean): Finding[] {
     const findings: Finding[] = [];
     const report: ScriptReport = (line, rule, text) => {
         findings.push(findingAt(input, { file: file.path, line }, rule, text));
     };
-    headerProblems(file, platforms, report);
-    // Without the header, a script declares no Bash version, so no feature is checked against one.
-    const version = platforms === undefined ? undefined : runtimeVersion(file, platforms, report);
-    versionProblems(file, version, report);
+    if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))
+        report(1, 'shebang', `The first line is not one of ${BASH_SHEBANGS.join(' or ')}.`);
     const code = codeLines(file.code).filter((line) => !line.code.startsWith('#!'));
-    if (file.isExecutable) strictModeProblems(code, version, report);
+    if (file.isExecutable) strictModeProblems(code, report);
     if (file.isExecutable) entryProblems(file, code, report);
     else libraryProblems(file, code, isConfigOwner, report);
     for (const temporary of file.temporaryPaths)
@@ -147,11 +103,9 @@ function fileProblems(
  * @returns the findings
  */
 export const contract: BuiltInCheck = async (input) => {
-    const runtime = input.view.settings['bash.platforms'];
-    const platforms = typeof runtime === 'string' ? runtime : undefined;
-    const owners = new Set(input.view.settings['bash.config_owners'] as string[]);
+    const isOwner = pathMatcher(rolePaths(input.policyFiles.policy.architecture.roles, 'env'));
     const index = await getScriptIndex(input);
     return index.files
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))
-        .flatMap((file) => fileProblems(input, file, platforms, owners.has(file.path)));
+        .flatMap((file) => fileProblems(input, file, isOwner(file.path)));
 };

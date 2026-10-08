@@ -4,7 +4,7 @@ import type { allowlistSchema } from '#cli/parsers/schema/licenses.ts';
 
 export type LicensedPackage = { name: string; license: string };
 
-export type LicenseException = z.infer<typeof allowlistSchema>['exceptions'][number];
+export type LicenseException = z.infer<typeof allowlistSchema>['exceptions'][string];
 
 /** Allowed package licenses and explicitly reasoned exceptions from generated policy. */
 export type LicenseAllowlist = z.infer<typeof allowlistSchema>;

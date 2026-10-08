@@ -1,6 +1,6 @@
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -25,7 +25,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across ownership
     const generated = emitAll(session).configurations.find((entry) => entry.path === 'bunfig.toml')!;
     const log = openOwnership(repository.path);
     applyPlan(log, proposeMerge(log, generated.path, generated.changes, true));
-    const installed = readFileSync(join(repository.path, 'bunfig.toml'), 'utf8');
+    const installed = await readFile(join(repository.path, 'bunfig.toml'), 'utf8');
     expect(Bun.TOML.parse(installed)).toStrictEqual({
         install: {
             exact: true,
@@ -37,7 +37,7 @@ test('Bun safeguards preserve stricter age and unrelated fields across ownership
     expect(applyPlan(log, proposeMerge(log, generated.path, generated.changes, true))).toBe('unchanged');
     expect(applyPlan(log, proposeRestoration(log, 'bunfig.toml'))).toBe('changed');
     log[Symbol.dispose]();
-    expect(readFileSync(join(repository.path, 'bunfig.toml'), 'utf8')).toBe(original);
+    expect(await readFile(join(repository.path, 'bunfig.toml'), 'utf8')).toBe(original);
 });
 
 test.each([...AGE_CASES])('Bun generation sets the required age with $name authored settings', async (entry) => {
@@ -65,7 +65,7 @@ test.each(['', 'apps/api/'])(
         const path = `${prefix}bunfig.toml`;
         await createFileTree(repository.path, {
             'gspot.toml': buildPolicy(['dependencies'], {
-                tables: '[agent_rules]\nenabled = false\n[[scope]]\npath = "apps/api"\nconfigurations = ["dependencies"]\n',
+                tables: '[agent_rules]\nenabled = false\n[scope."apps/api"]\nconfigurations = ["dependencies"]\n',
             }),
             [`${prefix}bun.lock`]: '{"lockfileVersion":1,"workspaces":{},"packages":{}}',
             [path]: source,
@@ -73,6 +73,6 @@ test.each(['', 'apps/api/'])(
         });
         const session = await openSession(repository.path);
         expect(() => emitAll(session)).toThrow(`${path} is not valid TOML. Fix the file, then run gspot apply.`);
-        expect(readFileSync(join(repository.path, path), 'utf8')).toBe(source);
+        expect(await readFile(join(repository.path, path), 'utf8')).toBe(source);
     },
 );

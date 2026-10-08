@@ -4,33 +4,35 @@ import { commitAll } from '#tests/harness/git.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { GUIDE } from '#tests/config/samples/docs.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
-import { CLEAN_SWIFT } from '#tests/config/samples/swift.ts';
+import { runTestCommand } from '#tests/harness/command.ts';
+import { chmod, mkdir, appendFile } from 'node:fs/promises';
 import { runFindingCase } from '#tests/harness/check-case.ts';
-import { chmodSync, mkdirSync, appendFileSync } from 'node:fs';
 import { installToolProjects } from '#tests/harness/install.ts';
 import { installedModules } from '#tests/harness/environment.ts';
+import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { SCENARIOS } from '#tests/config/tools/configurations/cases.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import * as postgres from '#tests/config/tools/configurations/postgres.ts';
+import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import * as libraries from '#tests/config/tools/configurations/libraries.ts';
 import { HEAD, BASH_CASES, TOOL_CHECKS } from '#tests/config/samples/bash.ts';
+import * as toolVitest from '#tests/config/tools/configurations/tool/vitest.ts';
 import * as languageSql from '#tests/config/tools/configurations/language/sql.ts';
 import * as toolOpenapi from '#tests/config/tools/configurations/tool/openapi.ts';
-import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python/source.ts';
 import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.ts';
 import * as languagePython from '#tests/config/tools/configurations/language/python.ts';
-import { suiteTimeout, openTestBudget, runTestCommand } from '#tests/harness/command.ts';
+import type { BashBoundary, ConfigurationCallbacks } from '#tests/types/tools/cases.ts';
+import { SCENARIOS, BASH_LOCATIONS } from '#tests/config/tools/configurations/cases.ts';
+import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
 import * as frameworkNextjs from '#tests/config/tools/configurations/framework/nextjs.ts';
-import { ARCHITECTURE } from '#tests/config/tools/configurations/language/typescript/source.ts';
 import * as languageBashChecks from '#tests/config/tools/configurations/language/bash/checks.ts';
 import type { RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import * as languageSwiftChecks from '#tests/config/tools/configurations/language/swift/checks.ts';
 import * as markdownDocsProse from '#tests/config/tools/configurations/general/markdown-docs-prose.ts';
-import type { BashBoundary, ConfigurationCallbacks } from '#tests/types/tools/configurations/cases.ts';
+import { DOUBLE_JS, ARCHITECTURE } from '#tests/config/tools/configurations/language/typescript/source.ts';
 import * as languageTypescriptChecks from '#tests/config/tools/configurations/language/typescript/checks.ts';
 
 /**
@@ -80,9 +82,7 @@ const BOUNDARIES: BashBoundary[] = [
         source: `${HEAD}${filesAtLimit}\nreadonly EXTRA=1\n`,
         corrected: `${HEAD}${filesAtLimit}\n`,
         expected: {
-            file: 'scripts/long.sh',
-            rule: 'file-lines',
-            line: 1,
+            ...BASH_LOCATIONS[0],
             message: `This file has ${String(fileLines + 1)} code lines, over the ceiling of ${String(fileLines)}.`,
         },
     },
@@ -90,9 +90,7 @@ const BOUNDARIES: BashBoundary[] = [
         source: `${HEAD}# main: prints each line.\nmain() {\n${bodyAtLimit}\n    echo "$1"\n}\n\nmain "$@"\n`,
         corrected: `${HEAD}# main: prints each line.\nmain() {\n${bodyAtLimit}\n}\n\nmain "$@"\n`,
         expected: {
-            file: 'scripts/tall.sh',
-            rule: 'function-lines',
-            line: 9,
+            ...BASH_LOCATIONS[1],
             message: `main has ${String(functionLines + 1)} code lines, over the ceiling of ${String(functionLines)}.`,
         },
     },
@@ -100,9 +98,7 @@ const BOUNDARIES: BashBoundary[] = [
         source: `${HEAD}# main: selects a branch.\nmain() {\n${branchesAtLimit}\n    if [[ -n "$1" ]]; then echo "$1"; fi\n}\n\nmain "$@"\n`,
         corrected: `${HEAD}# main: selects a branch.\nmain() {\n${branchesAtLimit}\n}\n\nmain "$@"\n`,
         expected: {
-            file: 'scripts/branchy.sh',
-            rule: 'branches',
-            line: 9,
+            ...BASH_LOCATIONS[2],
             message: `main has ${String(branches + 1)} branches, over the ceiling of ${String(branches)}.`,
         },
     },
@@ -110,9 +106,7 @@ const BOUNDARIES: BashBoundary[] = [
         source: `${HEAD}# main: selects nested conditions.\nmain() {\n${nestedConditions(nesting + 1)}\n}\n\nmain "$@"\n`,
         corrected: `${HEAD}# main: selects nested conditions.\nmain() {\n${nestedConditions(nesting)}\n}\n\nmain "$@"\n`,
         expected: {
-            file: 'scripts/deep.sh',
-            rule: 'nesting',
-            line: 9,
+            ...BASH_LOCATIONS[3],
             message: `main has ${String(nesting + 1)} levels of nesting, over the ceiling of ${String(nesting)}.`,
         },
     },
@@ -120,9 +114,7 @@ const BOUNDARIES: BashBoundary[] = [
         source: `${HEAD}# main: updates its value.\nmain() {\n${assignmentsAtLimit}\n    total="$1"\n    echo "\${total}"\n}\n\nmain "$@"\n`,
         corrected: `${HEAD}# main: updates its value.\nmain() {\n${assignmentsAtLimit}\n    echo "\${total}"\n}\n\nmain "$@"\n`,
         expected: {
-            file: 'scripts/mutable.sh',
-            rule: 'assignments',
-            line: 9,
+            ...BASH_LOCATIONS[4],
             message: `main has ${String(assignments + 1)} assignments, over the ceiling of ${String(assignments)}.`,
         },
     },
@@ -149,8 +141,8 @@ const CALLBACKS = new Map<RepositoryScenario, ConfigurationCallbacks>([
     [
         languagePython.REPOSITORY,
         {
-            corrected: (entry) => ({
-                files: { ...languagePython.CORRECTIONS[entry.check], [MODULE_PATH]: CLEAN_MODULE },
+            corrected: () => ({
+                files: { [MODULE_PATH]: CLEAN_MODULE },
             }),
         },
     ],
@@ -164,7 +156,7 @@ const CALLBACKS = new Map<RepositoryScenario, ConfigurationCallbacks>([
                 };
                 const excluded = await spawnGspot(
                     root,
-                    ['set', 'tools.sqlfluff.exclude', JSON.stringify(exclusion)],
+                    ['ignore', 'sql/sqlfluff', '--paths', ...exclusion.paths, '--reason', exclusion.reason],
                     environment,
                 );
                 if (excluded.code !== 0)
@@ -179,9 +171,9 @@ const CALLBACKS = new Map<RepositoryScenario, ConfigurationCallbacks>([
         languageTypescriptChecks.REPOSITORY,
         {
             prepare: async (root, environment) => {
-                mkdirSync(join(root, 'node_modules'));
+                await mkdir(join(root, 'node_modules'));
 
-                appendFileSync(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
+                await appendFile(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
                 const applied = await spawnGspot(root, ['apply'], environment);
                 if (applied.code !== 0) throw new Error(applied.stdout + applied.stderr);
                 await installToolProjects(root);
@@ -209,8 +201,8 @@ const CALLBACKS = new Map<RepositoryScenario, ConfigurationCallbacks>([
     [
         languageBashChecks.REPOSITORY,
         {
-            before: (root) => {
-                chmodSync(join(root, 'scripts/build.sh'), 0o755);
+            before: async (root) => {
+                await chmod(join(root, 'scripts/build.sh'), 0o755);
             },
             corrected: (entry) => ({
                 files: Object.fromEntries(Object.keys(entry.files).map((path) => [path, languageBashChecks.CLEAN])),
@@ -218,7 +210,7 @@ const CALLBACKS = new Map<RepositoryScenario, ConfigurationCallbacks>([
             cases: [
                 ...BASH_CASES.filter((entry) => TOOL_CHECKS.includes(entry.check)),
                 ...BOUNDARIES.map((entry) => ({
-                    check: 'bash/limits',
+                    check: entry.expected.rule === 'file-lines' ? 'structure/file-lines' : 'bash/function-size',
                     files: { [entry.expected.file]: entry.source },
                     expected: entry.expected,
                     corrected: { files: { [entry.expected.file]: entry.corrected } },
@@ -265,8 +257,23 @@ for (const declared of SCENARIOS) {
     const callbacks = CALLBACKS.get(declared.repository);
     let scenario = declared;
     if (callbacks !== undefined) {
-        const { cases = declared.cases, ...repository } = callbacks;
-        scenario = { ...declared, cases, repository: { ...declared.repository, ...repository } };
+        const { cases = declared.cases, ...configuration } = callbacks;
+        scenario = { ...declared, cases, repository: { ...declared.repository, ...configuration } };
+    }
+    const cases = structuredClone(scenario.cases);
+    for (const entry of cases) {
+        if (declared.repository === frameworkNestjs.REPOSITORY)
+            entry.files['src/greeting.controller.ts'] = frameworkNestjs.CONTROLLER.replace(
+                "@Get(':name')",
+                "@Get(':id')",
+            );
+        if (declared.repository === languageSwiftChecks.REPOSITORY && entry.check === 'swift/swiftformat')
+            entry.files['Sources/App/Greeting.swift'] = CLEAN_SWIFT.replace('func greeting', 'func   greeting');
+        if (declared.repository === languageTypescriptChecks.REPOSITORY && entry.check === 'javascript/tsc')
+            entry.files['src/orders/double.js'] = DOUBLE_JS.replace('twice(3)', 'twice("x")');
+        if (declared.repository === toolVitest.REPOSITORY)
+            entry.corrected!.files['src/math.test.ts'] =
+                toolVitest.TEST.replace('positiveTotal }', 'positiveTotal, triple }') + toolVitest.TRIPLE_TEST;
     }
     describe.skipIf(scenario.platforms !== undefined && !scenario.platforms.includes(process.platform))(
         scenario.name,
@@ -274,17 +281,10 @@ for (const declared of SCENARIOS) {
             const resources = new AsyncDisposableStack();
             let repository: OwnedTestRepository;
             beforeAll(async () => {
-                const budget = openTestBudget(suiteTimeout());
-                try {
-                    repository = resources.use(await createTestRepository(scenario.repository, spawnGspot));
-                } finally {
-                    budget[Symbol.dispose]();
-                }
-            }, suiteTimeout());
-            afterAll(async () => {
-                await resources.disposeAsync();
+                repository = resources.use(await createTestRepository(scenario.repository, spawnGspot));
             });
-            for (const entry of scenario.cases) {
+            afterAll(() => resources.disposeAsync());
+            for (const entry of cases) {
                 const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
                 const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
                 test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
@@ -306,7 +306,6 @@ for (const declared of SCENARIOS) {
                             { check: entry.check, status: 'passed', findings: [] },
                         ]);
                     },
-                    suiteTimeout(),
                 );
             }
         },

@@ -1,76 +1,66 @@
-import { isDeepStrictEqual } from 'node:util';
-import { isComment } from '#cli/parsers/toml/nodes.ts';
+import { patch } from '@decimalturn/toml-patch';
+import { tomlRange } from '#cli/parsers/toml/nodes.ts';
 import { PATCH_FORMAT } from '#cli/config/parsers/toml.ts';
-import { patch, parseDocument } from '@decimalturn/toml-patch';
-import type { Comment, TomlBlock } from '#cli/types/parsers/toml.ts';
-
-// Own-line comments without an intervening blank line describe the following table.
-function tableComments(nodes: TomlBlock[], line: number): Comment[] {
-    const comments: Comment[] = [];
-    let precedingLine = line;
-    for (const node of nodes.toReversed()) {
-        if (!isComment(node) || node.loc.end.line + 1 !== precedingLine) break;
-        comments.unshift(node);
-        precedingLine = node.loc.start.line;
-    }
-    return comments;
-}
-
-// Locate the original comment block nearest its table, even when new assignments interrupt it.
-function matchingComments(nodes: TomlBlock[], comments: Comment[], before: number): Comment[] {
-    let found: Comment[] = [];
-    for (let index = 0; index <= before - comments.length; index++) {
-        const candidates = nodes.slice(index, index + comments.length);
-        if (
-            candidates.every(isComment) &&
-            isDeepStrictEqual(
-                candidates.map((node) => node.raw),
-                comments.map((node) => node.raw),
-            )
-        )
-            found = candidates;
-    }
-    return found;
-}
+import type { TomlSyntax, TomlComments, TomlTextChunk } from '#cli/types/parsers/toml.ts';
+import { tomlSyntax, emitTomlComments, tomlCommentOwners } from '#cli/parsers/toml/comments.ts';
 
 /**
- * Edit TOML values while keeping comments above the first table attached to that table.
- * New root assignments belong before those comments, so removing an assignment cannot remove authored prose.
- * @param source the authored document
- * @param entries the resulting values
- * @returns the edited TOML with table comments in their original ownership
+ * Patch managed tool values and retain comments on their original semantic owners.
+ * Native chunks keep their authored order and formatting.
+ * @param original indexed authored source before edits
+ * @param values the resulting native values
+ * @returns the native edited document with its owned comments
  */
-export function patchToml(source: string, entries: Record<string, unknown>): string {
-    const output = patch(source, entries, PATCH_FORMAT);
-    const nodes = parseDocument(source).cst;
-    const tableIndex = nodes.findIndex((node) => 'items' in node);
-    const table = nodes[tableIndex];
-    if (table === undefined || !('items' in table)) return output;
-    const comments = tableComments(nodes.slice(0, tableIndex), table.loc.start.line);
-    if (comments.length === 0) return output;
-    const nextNodes = parseDocument(output).cst;
-    const nextTableIndex = nextNodes.findIndex(
-        (node) =>
-            isDeepStrictEqual(node.type, table.type) &&
-            'items' in node &&
-            isDeepStrictEqual(node.key.item.value, table.key.item.value),
+export function patchToml(original: TomlSyntax, values: Record<string, unknown>): string {
+    const patched = patch(original.document.toTomlString, values, PATCH_FORMAT);
+    const current = tomlSyntax(patched, values);
+    const unmatched = new Set(tomlCommentOwners(current));
+    const retained = new Set(current.entries.map(({ kind, path }) => JSON.stringify([kind, ...path])));
+    const comments: TomlComments = new Map();
+    const changed = tomlCommentOwners(original)
+        .map((source) => {
+            const found = [...unmatched].find((candidate) => candidate.comment.raw === source.comment.raw);
+            if (found !== undefined) unmatched.delete(found);
+            return { source, found };
+        })
+        .filter(({ source, found }) => found?.identity !== source.identity);
+    const chunks = changed.flatMap(({ source: { comment, owner: authored }, found }): TomlTextChunk[] => {
+        const owner =
+            authored ??
+            original.entries.find(
+                (entry) =>
+                    tomlRange(entry.node)[0] > tomlRange(comment)[1] &&
+                    retained.has(JSON.stringify([entry.kind, ...entry.path])),
+            );
+        if (owner === undefined) return [];
+        const key = JSON.stringify([owner.kind, ...owner.path]);
+        if (!retained.has(key)) return [];
+        const block = comments.get(key) ?? { path: owner.path, owned: [], free: [] };
+        block[authored === undefined ? 'free' : 'owned'].push({
+            raw: comment.raw,
+            start: tomlRange(comment)[0],
+            line: comment.loc.start.line,
+        });
+        comments.set(key, block);
+        if (found === undefined) return [];
+        const [start, end] = tomlRange(found.comment);
+        return [{ start, end: end + Number(patched[end] === '\n'), text: '' }];
+    });
+    for (const entry of current.entries) {
+        const text = emitTomlComments(comments, entry.kind, entry.path, '');
+        if (text === '') continue;
+        const start = tomlRange(entry.node)[0];
+        chunks.push({ start, end: start, text: text + '\n' });
+    }
+    let position = 0;
+    return (
+        chunks
+            .toSorted((left, right) => left.start - right.start)
+            .map((chunk) => {
+                const retained = patched.slice(position, chunk.start) + chunk.text;
+                position = chunk.end;
+                return retained;
+            })
+            .join('') + patched.slice(position)
     );
-    const nextTable = nextNodes[nextTableIndex];
-    if (nextTable === undefined) return output;
-    const matched = matchingComments(nextNodes, comments, nextTableIndex);
-    const firstComment = matched.at(0);
-    const lastComment = matched.at(-1);
-    if (
-        firstComment === undefined ||
-        lastComment === undefined ||
-        lastComment.loc.end.line + 1 === nextTable.loc.start.line
-    )
-        return output;
-    const lines = output.split(/(?<=\n)/u);
-    const first = firstComment.loc.start.line - 1;
-    const end = lastComment.loc.end.line;
-    const destination = nextTable.loc.start.line - 1;
-    const block = lines.splice(first, end - first);
-    lines.splice(destination - block.length, 0, ...block);
-    return lines.join('');
 }

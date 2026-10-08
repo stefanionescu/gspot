@@ -34,23 +34,21 @@ check = "site/html-validate"
 rule = "wcag/h37"
 paths = ["app/**"]
 reason = "Application alternative text is supplied by the rendering environment."
-[[scope]]
-path = "app"
+[scope."app"]
 configurations = ["site"]
-[scope.site]
-build = "node build.mjs"
-[[scope]]
-path = "other"
+[scope.app.site]
+build_command = ["node", "build.mjs"]
+[scope."other"]
 configurations = ["site"]
-[scope.site]
-build = "node build.mjs"
+[scope.other.site]
+build_command = ["node", "build.mjs"]
 `;
 /** An exception applies to its selected site while the other site keeps the native rule. */
 export const SITE_HTML_RULE_SCOPES = [
     ['app', 'off'],
     ['other', 'error'],
 ] as const;
-/** The fixture installs only its native validator before generating the complete selected tool project. */
+/** The sandbox installs only its native validator before generating the complete selected tool project. */
 export const SITE_HTML_INSTALL_ARGUMENTS = [
     'npm',
     'install',

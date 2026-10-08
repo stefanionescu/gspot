@@ -1,101 +1,54 @@
 import { z } from 'zod';
+import { compact, valueAt } from '#cli/platform/objects.ts';
 import { namingLists } from '#cli/parsers/schema/naming.ts';
 import { outputSchema } from '#cli/parsers/schema/output.ts';
-import { agentRulesSchema } from '#cli/policy/schema/agent-rules.ts';
-import { toolsSchema, licenseSettingsSchema } from '#cli/policy/schema/tools.ts';
-import { configurationSettingSchemas } from '#cli/policy/schema/configurations.ts';
+import type { AuthoredReasons } from '#cli/types/policy/settings.ts';
+import { DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
+import { architectureSchema } from '#cli/policy/schema/architecture.ts';
 import { vendoredSchema, generatedSchema } from '#cli/parsers/schema/inventory.ts';
-import { reasoned, relativePath, namingCategorySchema } from '#cli/policy/schema/fields.ts';
+import { agentRulesSchema, agentRulesValuesSchema } from '#cli/policy/schema/agent-rules.ts';
+import { publicToolsSchema, configurationSettingSchemas } from '#cli/policy/schema/namespaces.ts';
+import { levelSchema, runnerSchema, operatingSystemSchema } from '#cli/parsers/schema/settings.ts';
 import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
-import { INDENT_MAX, PRINT_WIDTH_MAX, PRINT_WIDTH_MIN, DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
-import { levelSchema, runnerSchema, numberSettingSchema, operatingSystemSchema } from '#cli/parsers/schema/settings.ts';
 
-const reasonedNumber = reasoned(z.number());
+import {
+    defaultValue,
+    formatSchema,
+    relativePath,
+    authoredDefault,
+    localDateSchema,
+    limitTableSchema,
+    namingCategorySchema,
+} from '#cli/policy/schema/fields.ts';
 
-const groupedLimits = z.record(z.string(), reasonedNumber);
+const limitValue = z.union([limitTableSchema.valueType, limitTableSchema]);
 
-const limitValue = z.union([reasonedNumber, groupedLimits]);
-
-const limitsSchema = z
-    .object({ site: z.strictObject({ kilobytes: reasoned(z.array(z.unknown())).optional() }).optional() })
-    .catchall(limitValue);
+const limitsSchema = z.record(z.string(), limitValue);
 
 const namingLanguage = z.object(namingCategorySchema.shape).catchall(namingCategorySchema);
 
-const element = z.strictObject({ name: z.string(), paths: z.array(z.string()) });
-
-const allowedEdge = z.strictObject({ from: z.string(), to: z.array(z.string()), reason: z.string().optional() });
-
-const roleGlobs = z.union([z.string(), z.array(z.string())]);
-
-// The harness role names folders inside the scope, so it refuses a path that leaves it.
-const roles = z.object({ test_support: z.union([relativePath, z.array(relativePath)]).optional() }).catchall(roleGlobs);
-
-const architectureSchema = z.strictObject({
-    modules: z.array(element).default([]),
-    imports_allowed: z.array(allowedEdge).default([]),
-    roles: roles.default({}),
-});
-
-const reasonedPaths = z.strictObject({ paths: z.array(z.string().min(1)).min(1), reason: z.string().optional() });
-
-const singletonAllowance = z.strictObject({
-    names: z.array(z.string().min(1)).min(1),
-    paths: z.array(z.string().min(1)).min(1).optional(),
-    reason: z.string().optional(),
-});
-
 const structureSchema = z.strictObject({
-    reexports: z.enum(['none', 'index-only']).default('none'),
-    lone_files_allowed: z.array(reasonedPaths).default([]),
-    prefix_collisions_allowed: z.array(reasonedPaths).default([]),
-    folder_names_allowed: z.array(reasonedPaths).default([]),
-    python: z.strictObject({ singletons_allowed: z.array(singletonAllowance).optional() }).default({}),
+    reexports: authoredDefault(z.enum(['none', 'index-only']).default('none')),
 });
-
-const formatFields = z.strictObject({
-    indent_style: z.enum(['space', 'tab']).optional(),
-    indent_width: numberSettingSchema({ integer: true, minimum: 1, maximum: INDENT_MAX }).optional(),
-    print_width: numberSettingSchema({ integer: true, minimum: PRINT_WIDTH_MIN, maximum: PRINT_WIDTH_MAX }).optional(),
-    line_ending: z.enum(['lf', 'crlf']).optional(),
-    final_newline: z.boolean().optional(),
-    quotes: z.enum(['single', 'double']).optional(),
-    trailing_commas: z.enum(['all', 'es5', 'none']).optional(),
-    semicolons: z.boolean().optional(),
-});
-
-const formatOverride = formatFields
-    .extend({ paths: z.array(z.string().min(1)).min(1) })
-    .refine((entry) => Object.keys(entry).length > 1, {
-        message: 'A format override needs at least one formatting option.',
-    })
-    .meta({ minProperties: 2 });
-
-const formatSchema = formatFields.extend({ overrides: z.array(formatOverride).optional() });
 
 // The package manager install settings the dependencies configuration writes into the install configuration.
 const dependenciesSchema = z.strictObject({
-    min_release_age_days: reasonedNumber.optional(),
+    min_release_age_days: z.number().optional(),
     scanner: z.string().optional(),
-    registry_hosts: reasoned(z.array(z.string().min(1))).optional(),
-    ranges_allowed: z.array(reasonedPaths).optional(),
+    registry_hosts: z.array(z.string().min(1)).optional(),
 });
-
-const proseSchema = z.strictObject({ vocabulary: reasoned(z.array(z.string())).default([]) });
 
 const ignoreSchema = z.strictObject({
     check: z.string(),
     rule: z.string().optional(),
     paths: z.array(z.string()).optional(),
     reason: z.string().optional(),
-    until: z.iso
-        .date()
+    until: localDateSchema
         .optional()
         .meta({ description: 'Stop applying this ignore on this date, in YYYY-MM-DD format (UTC).' }),
 });
 
 const checkSchema = z.strictObject({
-    name: z.string().meta({ description: 'The unique identifier used by gspot check --only.' }),
     command: commandSchema.describe('The executable and arguments to run on selected files.'),
     paths: z
         .array(z.string().min(1))
@@ -135,44 +88,61 @@ const checkSchema = z.strictObject({
 });
 
 const hooksSchema = z.strictObject({
-    push_files: z
-        .enum(['changed', 'all'])
-        .default('changed')
-        .meta({ description: 'Check affected paths or the full tree of each pushed revision.' }),
+    enabled: authoredDefault(z.boolean().default(false)).describe('Install and run the configured Git hooks.'),
+    push_files: authoredDefault(z.enum(['changed', 'all']).default('changed')).meta({
+        description: 'Check affected paths or the full tree of each pushed revision.',
+    }),
 });
 
 const namingSchema = namingLists.partial().catchall(namingLanguage);
 
 const scopeBody = {
+    reasons: z.record(z.string().min(1), z.string()).optional(),
     ...configurationSettingSchemas,
-    licenses: licenseSettingsSchema.optional(),
     limits: limitsSchema.optional(),
     naming: namingSchema.optional(),
     architecture: architectureSchema.optional(),
     structure: structureSchema.optional(),
-    tools: toolsSchema.optional(),
+    tools: publicToolsSchema.optional(),
     format: formatSchema.optional(),
     dependencies: dependenciesSchema.optional(),
-    tool_timeout_seconds: reasonedNumber.optional(),
+    tool_timeout_seconds: z.number().optional(),
 };
 
 const ciSchema = z.strictObject({
     provider: z.enum(['github', 'gitlab']).meta({ description: 'The CI provider that receives generated jobs.' }),
-    platforms: z
-        .array(operatingSystemSchema)
-        .min(1)
-        .default(['linux'])
-        .meta({ description: 'Platforms for GitHub check and manual jobs.' }),
-    files: z
-        .enum(['changed', 'all'])
-        .default('changed')
-        .meta({ description: 'Check changed inputs or the full checked-out tree in CI.' }),
+    platforms: authoredDefault(z.array(operatingSystemSchema).min(1).default(['linux'])).meta({
+        description: 'Platforms for GitHub check and manual jobs.',
+    }),
+    files: authoredDefault(z.enum(['changed', 'all']).default('changed')).meta({
+        description: 'Check changed inputs or the full checked-out tree in CI.',
+    }),
 });
+
+/** Native table defaults resolved once, without altering authored policy presence. */
+export const policyTableValuesSchema = z
+    .strictObject({
+        agent_rules: agentRulesValuesSchema,
+        hooks: hooksSchema
+            .transform((raw) => ({
+                enabled: defaultValue(hooksSchema.shape.enabled, raw.enabled),
+                push_files: defaultValue(hooksSchema.shape.push_files, raw.push_files),
+            }))
+            .optional(),
+        ci: ciSchema
+            .transform((raw) => ({
+                provider: raw.provider,
+                platforms: defaultValue(ciSchema.shape.platforms, raw.platforms),
+                files: defaultValue(ciSchema.shape.files, raw.files),
+            }))
+            .optional(),
+    })
+    .transform(compact);
 
 /** The [hooks], [ci], and [agent_rules] fields as dotted settings; fields without defaults are optional. */
 export const tableSettingSchemas = Object.fromEntries(
     Object.entries({ hooks: hooksSchema, ci: ciSchema, agent_rules: agentRulesSchema }).flatMap(([section, schema]) =>
-        Object.entries(schema.shape as Record<string, z.ZodType>).map(
+        Object.entries<z.ZodType>(schema.shape).map(
             ([key, field]) =>
                 [
                     `${section}.${key}`,
@@ -182,49 +152,76 @@ export const tableSettingSchemas = Object.fromEntries(
     ),
 );
 
-/** One [[scope]] entry: its path, configurations, and the per-scope tables. */
+/** One scope map value: its manual configuration choices and authored concern tables. */
 export const scopeSchema = z.strictObject({
-    path: relativePath,
     configurations: z.array(z.string()).optional(),
-    tests: z.array(z.string()).optional(),
+    removed_configurations: z.array(z.string()).optional(),
+    test_files: z.array(relativePath).optional(),
     ...scopeBody,
 });
 
 /** Top-level gspot.toml keys shown by gspot list settings and the settings reference. */
 export const rootSettingSchemas = {
-    level: levelSchema.default('recommended').meta({
+    level: authoredDefault(levelSchema.default('recommended')).meta({
         description:
             'Recommended includes correctness, security, accessibility, type safety, routine formatting, and declared contracts. All adds stable conventions. Neither enables experimental rules.',
     }),
-    require_reasons: z
-        .boolean()
-        .default(false)
-        .meta({ description: 'Require a reason for ignores and loosened settings.' }),
-    run_with: runnerSchema.optional().meta({ description: 'The runner that installs and runs gspot.' }),
-    tests: z
-        .array(z.string())
-        .default(DEFAULT_TEST_PATTERNS)
-        .meta({ description: 'Test files where applicable linters relax rules intended for production source.' }),
-    exclude: z
-        .array(z.string())
-        .default([])
-        .meta({ description: 'Paths and directory patterns excluded before reading source content.' }),
-    generated: z
-        .array(generatedSchema)
-        .default([])
-        .meta({ description: 'Generated files excluded from source checks.' }),
-    vendored: z.array(vendoredSchema).default([]).meta({ description: 'Upstream files excluded from source checks.' }),
+    words: authoredDefault(z.record(z.string().min(1), z.string()).default({})).describe(
+        'Accepted words and the reason for each spelling.',
+    ),
+    removed_configurations: authoredDefault(z.array(z.string()).default([])).describe(
+        'Manual configuration removals retained through re-detection.',
+    ),
+    runner: runnerSchema.optional().meta({ description: 'The runner that installs and runs gspot.' }),
+    test_files: authoredDefault(z.array(relativePath).default(DEFAULT_TEST_PATTERNS)).meta({
+        description: 'Test files where applicable linters relax rules intended for production source.',
+    }),
+    exclude: authoredDefault(z.array(z.string()).default([])).meta({
+        description: 'Paths and directory patterns excluded before reading source content.',
+    }),
+    generated: authoredDefault(z.array(generatedSchema).default([])).meta({
+        description: 'Generated files excluded from source checks.',
+    }),
+    vendored: authoredDefault(z.array(vendoredSchema).default([])).meta({
+        description: 'Upstream files excluded from source checks.',
+    }),
 };
 
-export const policySchema = z.strictObject({
-    ...rootSettingSchemas,
-    configurations: z.array(z.string()).optional(),
-    scope: z.array(scopeSchema).optional(),
-    ...scopeBody,
-    prose: proseSchema.optional(),
-    ignore: z.array(ignoreSchema).optional(),
-    check: z.array(checkSchema).optional(),
-    hooks: hooksSchema.optional(),
-    ci: ciSchema.optional(),
-    agent_rules: agentRulesSchema.prefault({}),
-});
+export const policySchema = z
+    .strictObject({
+        ...rootSettingSchemas,
+        configurations: z.array(z.string()).optional(),
+        scope: z.record(relativePath, scopeSchema).optional(),
+        ...scopeBody,
+        ignore: z.array(ignoreSchema).optional(),
+        check: z.record(z.string().min(1), checkSchema).optional(),
+        hooks: hooksSchema.optional(),
+        ci: ciSchema.optional(),
+        agent_rules: authoredDefault(agentRulesSchema.default({})),
+    })
+    .superRefine(validateAuthoredReasons);
+
+/**
+ * Refuse explanations whose setting is absent from the same authored table.
+ * @param raw the authored values, before execution defaults
+ * @param context the native schema issue collector
+ */
+export function validateAuthoredReasons(raw: AuthoredReasons, context: z.RefinementCtx): void {
+    const tables = [
+        { table: raw, path: [] },
+        ...(raw.scope === undefined ? [] : Object.entries(raw.scope)).map(([scope, table]) => ({
+            table,
+            path: ['scope', scope],
+        })),
+    ];
+    for (const { table, path } of tables) {
+        if (table.reasons === undefined) continue;
+        const orphaned = Object.keys(table.reasons).filter((key) => valueAt(table, key.split('.')) === undefined);
+        for (const key of orphaned)
+            context.addIssue({
+                code: 'custom',
+                path: [...path, 'reasons', key],
+                message: `The reason for ${key} has no setting written in this table.`,
+            });
+    }
+}

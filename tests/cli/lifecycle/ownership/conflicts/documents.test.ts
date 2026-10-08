@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
@@ -16,13 +16,13 @@ test('TOML task ownership refuses malformed and edited fields and creates new ta
 
         const changes = [{ path: ['tasks', 'gspot:check', 'run'], value: 'gspot check' }];
         expect(() => proposeMerge(log, 'broken.toml', changes, true)).toThrow();
-        expect(readFileSync(join(directory.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
+        expect(await readFile(join(directory.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
         applyPlan(log, proposeMerge(log, 'mise.toml', changes));
-        const installed = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
+        const installed = await readFile(join(directory.path, 'mise.toml'), 'utf8');
         expect(parseToml(installed)).toStrictEqual({ tasks: { 'gspot:check': { run: 'gspot check' } } });
-        writeFileSync(join(directory.path, 'mise.toml'), installed.replace('gspot check', 'authored check'));
+        await writeFile(join(directory.path, 'mise.toml'), installed.replace('gspot check', 'authored check'));
         expect(applyPlan(log, proposeRestoration(log, 'mise.toml'))).toBe('preserved');
-        expect(readFileSync(join(directory.path, 'mise.toml'), 'utf8')).toContain('authored check');
+        expect(await readFile(join(directory.path, 'mise.toml'), 'utf8')).toContain('authored check');
     }
 });
 
@@ -36,11 +36,11 @@ test('edited and repeated managed blocks are preserved without overwriting their
             .read('AGENTS.md')!
             .bytes.toString('utf8')
             .replace('installed instructions', 'authored instructions');
-        writeFileSync(join(directory.path, 'AGENTS.md'), edited);
+        await writeFile(join(directory.path, 'AGENTS.md'), edited);
         expect(applyPlan(log, proposeBlock(log, 'AGENTS.md', 'replacement', 'markdown'))).toBe('preserved');
         expect(applyPlan(log, proposeRestoration(log, 'AGENTS.md'))).toBe('preserved');
         expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(edited);
-        writeFileSync(join(directory.path, 'AGENTS.md'), edited + edited);
+        await writeFile(join(directory.path, 'AGENTS.md'), edited + edited);
         expect(() => applyPlan(log, proposeBlock(log, 'AGENTS.md', 'replacement', 'markdown'))).toThrow(
             'incomplete or repeated',
         );
@@ -56,13 +56,13 @@ test('shared TOML preserves changed managed keys and rejects malformed input', a
 
         applyPlan(log, proposeMerge(log, 'config.toml', [{ path: ['extends'], value: './managed.json' }], true));
         const authored = 'extends = "./authored.json"\n';
-        writeFileSync(join(directory.path, 'config.toml'), authored);
+        await writeFile(join(directory.path, 'config.toml'), authored);
         expect(applyPlan(log, proposeMerge(log, 'config.toml', [{ path: ['extends'], value: './next.json' }]))).toBe(
             'preserved',
         );
         expect(applyPlan(log, proposeRestoration(log, 'config.toml'))).toBe('preserved');
         expect(log.files.read('config.toml')!.bytes.toString('utf8')).toBe(authored);
-        writeFileSync(join(directory.path, 'invalid.toml'), '[ unfinished');
+        await writeFile(join(directory.path, 'invalid.toml'), '[ unfinished');
         expect(() =>
             applyPlan(log, proposeMerge(log, 'invalid.toml', [{ path: ['value'], value: true }], true)),
         ).toThrow('invalid.toml is not valid TOML. Fix the file, then run gspot apply.');
@@ -77,9 +77,9 @@ test.each(['json', 'toml'])('restoration preserves an authored non-UTF-8 edit to
     using log = openOwnership(sandbox.path);
     applyPlan(log, proposeMerge(log, path, [{ path: ['owned'], value: true }], true));
     const authored = Buffer.from([0xff]);
-    writeFileSync(join(sandbox.path, path), authored);
+    await writeFile(join(sandbox.path, path), authored);
     const recorded = structuredClone(log.state);
     expect(applyPlan(log, proposeRestoration(log, path))).toBe('preserved');
-    expect(readFileSync(join(sandbox.path, path))).toStrictEqual(authored);
+    expect(await readFile(join(sandbox.path, path))).toStrictEqual(authored);
     expect(log.state).toStrictEqual(recorded);
 });

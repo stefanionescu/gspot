@@ -1,5 +1,6 @@
-<% const config = eslint(); %>
+<% const config = eslint(); const projects = scopes.map((scope) => `${scope.path === '' ? '' : `${scope.path}/`}tsconfig.json`); %>
 import { join, relative, sep } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import eslint from '@eslint/js';
 import gspot from '@gspothq/eslint-plugin';
@@ -54,8 +55,7 @@ const BASE_SELECTORS = IS_ALL ? [
         // The first argument is the message when it stands alone or before an options object; an error class that takes a code first is left alone.
         { selector: 'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > Literal.arguments:first-child[value=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
         { selector: 'NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type="ObjectExpression"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
-        { selector: 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]', message: 'A message a client reads names no identifier; put the value in its own field.' },
-        { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
+        { selector: 'CallExpression[callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
 ] : [];
 const coreRules = {
     // regexp also validates constructor patterns and Unicode set expressions.
@@ -75,8 +75,7 @@ const coreRules = {
 
 const gspotRules = { ...presets.gspot.blocks[0].rules, ...config.gspotRules };
 
-// sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
-// helper (ESLint's RuleTester) looks empty to it; vitest/expect-expect covers the same ground.
+// The selected test framework owns assertion checks; no-empty-test-file duplicates vitest/expect-expect.
 const sonarRules = {
     // regexp owns exponential and polynomial backtracking, including constructor patterns.
     'sonarjs/slow-regex': 'off',
@@ -86,10 +85,15 @@ const sonarRules = {
     // Native owners cover these defects without duplicate reports.
     'sonarjs/no-empty-character-class': 'off',
     'sonarjs/no-useless-catch': 'off',
+    'sonarjs/no-parameter-reassignment': 'off',
+    'sonarjs/for-loop-increment-sign': 'off',
+    // The secrets configuration owns secret detection.
+    'sonarjs/no-hardcoded-passwords': 'off',
+    'sonarjs/no-hardcoded-secrets': 'off',
     // A file of fixtures beside tests contains no test cases.
     'sonarjs/no-empty-test-file': 'off',
     'sonarjs/cognitive-complexity': ['error', limits.cognitive],
-    'sonarjs/no-identical-functions': ['error', limits.identicalFunctions],
+    'sonarjs/no-identical-functions': ['error', settings['limits.duplication.min_lines']],
     'sonarjs/no-collapsible-if': 'error',
     'sonarjs/no-nested-switch': 'error',
     'sonarjs/prefer-object-literal': 'error',
@@ -117,13 +121,11 @@ const unicornRules = {
 };
 
 const securityRules = {
-    'security/detect-buffer-noassert': 'error',
     'security/detect-child-process': 'error',
     'security/detect-disable-mustache-escape': 'error',
     // Sonar covers dynamic execution; Node covers deprecated constructors without matching local names.
     'security/detect-eval-with-expression': 'off',
     'security/detect-new-buffer': 'off',
-    'security/detect-no-csrf-before-method-override': 'error',
     // detect-non-literal-regexp is off: it flags the constructor, not the input.
     'security/detect-non-literal-regexp': 'off',
     'security/detect-non-literal-require': 'error',
@@ -132,7 +134,7 @@ const securityRules = {
     // regexp analyzes backtracking instead of treating nested repetition as an unsafe pattern.
     'security/detect-unsafe-regex': 'off',
     // detect-object-injection fires on every bracket access and detect-non-literal-fs-filename on every path
-    // variable; neither names a defect a linter of file paths can avoid.
+    // variable; those operations alone do not show that the input is unsafe.
     'security/detect-object-injection': 'off',
     'security/detect-non-literal-fs-filename': 'off',
 };
@@ -153,8 +155,7 @@ const nodeRules = (version) => {
     'n/prefer-global/url-search-params': ['error', 'always'],
     'n/prefer-promises/dns': 'error',
     'n/prefer-promises/fs': 'error',
-    // A command-line tool reads and writes files synchronously by design.
-    'n/no-sync': 'off',
+    'n/no-sync': 'error',
     'n/no-callback-literal': 'error',
     'n/no-new-require': 'error',
     'n/no-path-concat': 'error',
@@ -233,8 +234,7 @@ const runtimeMatchers = runtimeDeclarations.map(({ scope, includes, excludes }) 
     const excluded = excludes.map((source) => new RegExp(source, 's'));
     return (path) => {
         if (scope !== '' && !path.startsWith(`${scope}/`)) return false;
-        const local = scope === '' ? path : path.slice(scope.length + 1);
-        return included.some((pattern) => pattern.test(local)) && !excluded.some((pattern) => pattern.test(local));
+        return included.some((pattern) => pattern.test(path)) && !excluded.some((pattern) => pattern.test(path));
     };
 });
 function runtimeMatches(index) {
@@ -253,6 +253,19 @@ function policyMatches(declaration) {
     Object.defineProperty(matches, Symbol.for('gspot.eslint.scope'), { value: declaration });
     return matches;
 }
+// Native component parsers retain script language attributes; the final parser owns syntax errors.
+function componentMatches(parser, framework) {
+    return (file) => {
+        try {
+            const parsed = parser.parseForESLint(readFileSync(file, 'utf8'), { filePath: file, tsconfigRootDir: root, ecmaVersion: 'latest', sourceType: 'module', parser: framework === 'vue' ? false : { ts: tseslint.parser, typescript: tseslint.parser } });
+            const scripts = framework === 'vue' ? parsed.services.getDocumentFragment().children.filter((node) => node.type === 'VElement' && node.name === 'script') : parsed.ast.body.filter((node) => node.type === 'SvelteScriptElement');
+            return scripts.some((script) => script.startTag.attributes.some((attribute) => attribute.key?.name === 'lang' && ['ts', 'typescript'].includes(framework === 'vue' ? attribute.value?.value : attribute.value[0]?.value)));
+        } catch (error) {
+            if (error instanceof SyntaxError || (error instanceof Error && error.name === 'TSError')) return false;
+            throw error;
+        }
+    };
+}
 export default [
     { ignores: <%= json(config.ignoredPaths) %> },
 <% for (const [name, source] of [['eslint', 'eslint.configs.recommended'], ['sonar', 'sonarjs.configs.recommended'], ['unicorn', 'unicorn.configs.recommended']]) { const { parser, ...preset } = presets[name].blocks[0]; %>
@@ -262,7 +275,7 @@ export default [
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } }) %>,
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'jsdoc/require-param-type': 'error', 'jsdoc/require-returns-type': 'error', 'jsdoc/check-types': 'error', 'jsdoc/no-undefined-types': 'error', 'jsdoc/valid-types': 'error' } }) %>,
 <% for (const block of [...config.importStyleBlocks, ...config.scopeBlocks, ...config.boundaryBlocks]) { const { settings, ...data } = block; %>
-    <%~ eslintModule.block(data, settings === undefined ? '' : `settings: ${json(settings)}`) %>,
+    <%~ eslintModule.block(data, settings === undefined ? '' : `settings: { ...${json(settings)}, 'import/resolver': { typescript: { project: ${json(projects)}.map((project) => join(root, project)) } } }`) %>,
 <% } if (RESTRICTED.length > 0) { %>
     <%~ eslintModule.block({ files: CODE, rules: { 'no-restricted-imports': ['error', { paths: RESTRICTED }] } }) %>,
 <% } eslintModule.blocks.push(...eslintFragmentBlocks); %>
@@ -278,6 +291,7 @@ export default [
 <% for (const [name, files, source] of [['packageJson', ['**/package.json'], 'packageJson.configs.recommended'], ['prettier', CODE, 'prettierConfig']]) { const { parser, ...preset } = presets[name].blocks[0]; %>
     <%~ eslintModule.block({ files, ...preset }, `...${source}`) %>,
 <% } %>
+    <%~ eslintModule.block({ files: ['**/package.json'], rules: { 'package-json/restrict-dependency-ranges': ['error', { rangeType: 'pin' }] } }) %>,
     <%~ eslintModule.block({ files: JAVASCRIPT, rules: { 'max-params': ['error', JAVASCRIPT_LIMITS.parameters] } }) %>,
 <% if (config.verbatim !== undefined) { %>
     // [tools.eslint.verbatim]: <%= json(config.verbatim.reason, 0) %>

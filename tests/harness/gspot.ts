@@ -1,12 +1,12 @@
 // Running gspot from a test: in-process for command behavior, or as a child process end to end.
 import { join } from 'node:path';
 import { spyOn } from 'bun:test';
+import { Readable } from 'node:stream';
 import { main } from '#cli/commands/program.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
-import { SOURCE_CLI_PATH } from '#tests/config/harness/cli.ts';
 import type { RunOptions } from '#cli/types/execution/check.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
+import { SOURCE_CLI_PATH } from '#tests/config/harness/gspot.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import type { CapturedProcess } from '#tests/types/harness/process.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
@@ -21,12 +21,14 @@ export const gspot = join(workspaceRoot, SOURCE_CLI_PATH);
  * @param cwd the test repository
  * @param argv the command line after gspot
  * @param environment verbatim variables, restored afterwards
+ * @param options byte input for commands that read standard input
  * @returns the exit code and both streams
  */
 export async function runGspot(
     cwd: string,
     argv: string[],
     environment: Record<string, string> = {},
+    options: GspotChildOptions = {},
 ): Promise<SpawnOutcome> {
     const stdout: string[] = [];
     const stderr: string[] = [];
@@ -42,12 +44,19 @@ export async function runGspot(
     const current = environmentVariables();
     const previous = Object.keys(variables).map((name) => [name, current[name]] as const);
     const exitCode = process.exitCode;
+    const stdin = Object.getOwnPropertyDescriptor(process, 'stdin')!;
     for (const [name, value] of Object.entries(variables)) setEnvironmentVariable(name, value);
     process.exitCode = 0;
     try {
+        if (options.stdin !== undefined)
+            Object.defineProperty(process, 'stdin', {
+                value: Readable.from([Buffer.from(options.stdin)]),
+                configurable: true,
+            });
         const code = await main(['-C', cwd, ...argv]);
         return { code, stdout: stdout.join(''), stderr: stderr.join('') };
     } finally {
+        Object.defineProperty(process, 'stdin', stdin);
         for (const spy of writes) spy.mockRestore();
         for (const [name, value] of previous) setEnvironmentVariable(name, value);
         // Bun keeps the last code when undefined is assigned, so an unset code comes back as 0.
@@ -60,7 +69,7 @@ export async function runGspot(
  * @param cwd the test repository
  * @param argv the command line after gspot
  * @param environment verbatim variables
- * @param options stdin and the requested command limit, clamped to the remaining test budget
+ * @param options stdin for the child process
  * @returns the exit code and both streams
  */
 
@@ -73,7 +82,6 @@ export async function spawnGspot(
     return await runTestCommand([process.execPath, gspot, ...argv], {
         cwd,
         env: { NO_COLOR: '1', CI: '1', ...environment },
-        timeoutMs: NATIVE_TEST_TIMEOUT_MS,
         ...options,
     });
 }
@@ -83,7 +91,7 @@ export async function spawnGspot(
  * @param cwd the test repository
  * @param argv the command line after gspot
  * @param environment verbatim variables
- * @param options stdin and the requested command limit
+ * @param options stdin for the child process
  * @returns the live child; captureChild owns its output and cleanup
  */
 export function startGspot(
@@ -93,8 +101,8 @@ export function startGspot(
     options: GspotChildOptions = {},
 ): CapturedProcess {
     const command = [process.execPath, gspot, ...argv];
-    const { stdin, ...limits } = options;
-    const prepared = prepareTestCommand(command, { cwd, ...limits }, 'source CLI subprocess');
+    const { stdin } = options;
+    const prepared = prepareTestCommand(command, { cwd }, 'source CLI subprocess');
     return Bun.spawn(command, {
         cwd,
         env: { ...environmentVariables(), NO_COLOR: '1', CI: '1', ...environment },

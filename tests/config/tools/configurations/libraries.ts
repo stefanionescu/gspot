@@ -3,7 +3,6 @@ import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'zod', 'trpc', 'zustand', 'drizzle'],
     files: {

@@ -2,71 +2,22 @@
 import { readFileSync } from 'node:fs';
 import { resolve, basename } from 'node:path';
 import { isRecord } from '#cli/platform/objects.ts';
-import { parseTomlText } from '#cli/policy/read.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { contentDigest } from '#cli/platform/text.ts';
-import { stringify, parse as parseToml } from 'smol-toml';
-import type { KeyPath } from '#cli/types/parsers/document.ts';
-import type { TomlTable } from '#cli/types/policy/settings.ts';
+import { emitPolicy, parseTomlText } from '#cli/policy/file.ts';
 import { templateSchema } from '#cli/policy/schema/templates.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 import { unknownConfigurations } from '#cli/configurations/problems.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Template, ExportedTemplate } from '#cli/types/policy/templates.ts';
 
 import {
     RAW_HOST,
-    PATH_KEYS,
     GITHUB_PREFIX,
     TEMPLATE_FILE,
-    LOCAL_MODULE_PATH,
-    REPOSITORY_TABLES,
     REQUEST_TIMEOUT_MS,
     TEMPLATE_EXTENSION,
 } from '#cli/config/policy/templates.ts';
-
-function getRepositoryPaths(value: unknown, path: KeyPath = []): KeyPath[] {
-    if (Array.isArray(value)) return value.flatMap((item, index) => getRepositoryPaths(item, [...path, index]));
-    if (!isRecord(value)) return [];
-    return Object.entries(value).flatMap(([key, inner]) => {
-        const location = [...path, key];
-        const isLocalModule = key === 'module' && typeof inner === 'string' && LOCAL_MODULE_PATH.test(inner);
-        return PATH_KEYS.has(key) || isLocalModule ? [location] : getRepositoryPaths(inner, location);
-    });
-}
-
-function locationText(path: KeyPath): string {
-    let text = '';
-    for (const key of path) {
-        if (typeof key === 'number') text += `[${String(key)}]`;
-        else text += text === '' ? key : `.${key}`;
-    }
-    return text;
-}
-
-function containerSize(value: unknown): number | undefined {
-    if (Array.isArray(value)) return value.length;
-    if (isRecord(value)) return Object.keys(value).length;
-    return undefined;
-}
-
-// Project the recorded omissions without deciding again which fields name repository paths.
-function omitRepositoryPaths(value: unknown, omitted: ReadonlySet<string>, path: KeyPath = []): unknown {
-    if (omitted.has(JSON.stringify(path))) return undefined;
-    if (Array.isArray(value))
-        return value.flatMap((item, index) => {
-            const next = omitRepositoryPaths(item, omitted, [...path, index]);
-            return next === undefined ? [] : [next];
-        });
-    if (!isRecord(value)) return value;
-    const entries = Object.entries(value).flatMap(([key, inner]): [string, unknown][] => {
-        const next = omitRepositoryPaths(inner, omitted, [...path, key]);
-        if (next === undefined) return [];
-        const previousSize = containerSize(inner);
-        if (previousSize !== undefined && previousSize > 0 && containerSize(next) === 0) return [];
-        return [[key, next]];
-    });
-    return Object.fromEntries(entries);
-}
 
 function buildGithubUrl(source: string): string {
     const [location = '', ref = 'HEAD'] = source.slice(GITHUB_PREFIX.length).split('@');
@@ -76,7 +27,9 @@ function buildGithubUrl(source: string): string {
 }
 
 async function getRemoteText(url: string): Promise<string> {
-    const response = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+    const token = new URL(url).origin === new URL(RAW_HOST).origin ? environmentVariables()['GITHUB_TOKEN'] : undefined;
+    const headers = token === undefined ? {} : { Authorization: `Bearer ${token}` };
+    const response = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS), headers });
     if (!response.ok) throw new GspotError('template', [`The template at ${url} answered ${String(response.status)}.`]);
     return response.text();
 }
@@ -99,34 +52,15 @@ function getLocalText(source: string, cwd: string): string {
  * @returns the template text and omission report
  */
 export function exportTemplate(policyText: string, file: string): ExportedTemplate {
-    const raw = parseToml(policyText) as TomlTable;
-    const leftOut: string[] = [];
-    for (const table of REPOSITORY_TABLES) {
-        const entries = raw[table];
-        if (Array.isArray(entries))
-            leftOut.push(...entries.map((_entry, index) => `${table}[${String(index)}]: belongs to this repository`));
-        Reflect.deleteProperty(raw, table);
-    }
-    const targets = new Map<string, KeyPath>();
-    for (const path of getRepositoryPaths(raw)) {
-        // A path inside an array belongs to its entry; sibling entries retain their original policy.
-        const entry = path.findLastIndex((key) => typeof key === 'number');
-        const target = entry === -1 ? path : path.slice(0, entry + 1);
-        targets.set(JSON.stringify(target), target);
-    }
-    const everyTarget = [...targets.values()];
-    const paths = everyTarget.filter(
-        (path) =>
-            !everyTarget.some(
-                (parent) => parent.length < path.length && parent.every((key, index) => key === path[index]),
-            ),
-    );
-    leftOut.push(...paths.map((path) => `${locationText(path)}: names a repository path`));
-    const omitted = new Set(paths.map((path) => JSON.stringify(path)));
-    const { configurations, ...rest } = omitRepositoryPaths(raw, omitted) as TomlTable;
+    const raw = parseTomlText(policyText, 'gspot.toml', 'policy');
+    const scopes = isRecord(raw['scope']) ? Object.keys(raw['scope']) : [];
+    Reflect.deleteProperty(raw, 'scope');
     const name = basename(file).replace(TEMPLATE_EXTENSION, '');
-    const document = { template: name, selection: 'exact', configurations: configurations ?? [], ...rest };
-    return { text: stringify(document).trimEnd().concat('\n'), leftOut };
+    const document = { template: name, selection: 'exact', ...raw };
+    return {
+        text: emitPolicy(policyText, document),
+        leftOut: scopes.map((scope) => `scope.${JSON.stringify(scope)}: belongs to this repository`),
+    };
 }
 
 /**
@@ -150,14 +84,17 @@ export function parseTemplate(text: string, source: string): Template {
     const unknown = unknownConfigurations(declarations, configurationManifests()).map(
         ({ message: diagnostic }) => diagnostic,
     );
-    const paths = getRepositoryPaths(raw).map((path) => {
-        const where = locationText(path.slice(0, -1));
-        const key = path.at(-1);
-        return `${where} holds \`${String(key)}\`, which names a path of one repository; a template carries no path.`;
-    });
-    const problems = [...shape, ...unknown, ...paths];
+    const problems = [...shape, ...unknown];
     if (!result.success || problems.length > 0) throw new GspotError('template', problems);
-    return { source, digest: contentDigest(text), tables: result.data };
+    return {
+        text,
+        digest: contentDigest(text),
+        tables: {
+            ...result.data,
+            template: result.data.template ?? basename(source).replace(TEMPLATE_EXTENSION, ''),
+            selection: result.data.selection ?? 'exact',
+        },
+    };
 }
 
 /**

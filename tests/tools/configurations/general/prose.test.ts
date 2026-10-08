@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { readFileSync, writeFileSync } from 'node:fs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -19,14 +19,14 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
     const environment = { PATH: buildToolsPath(['vale']) };
     const applied = await spawnGspot(directory.path, ['apply'], environment);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const reconciledPolicy = readFileSync(join(directory.path, 'gspot.toml'), 'utf8');
+    const reconciledPolicy = await readFile(join(directory.path, 'gspot.toml'), 'utf8');
     for (const [key, value] of [
         ['prose.disabled', '{"rule":"gspot.dates","reason":"Archived example"}'],
         ['tools.vale.enabled', 'false'],
     ]) {
         const refused = await spawnGspot(directory.path, ['set', key!, value!], environment);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(reconciledPolicy);
+        expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(reconciledPolicy);
     }
     const command = ['check', '--only', 'prose/vale', '--json'];
     const before = await spawnGspot(directory.path, command, environment);
@@ -43,7 +43,16 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
     ]);
     const ignored = await spawnGspot(
         directory.path,
-        ['ignore', 'prose/vale', '--rule', 'gspot.dates', '--paths', 'archive.md'],
+        [
+            'ignore',
+            'prose/vale',
+            '--rule',
+            'gspot.dates',
+            '--paths',
+            'archive.md',
+            '--reason',
+            'Archived dates retain their original notation.',
+        ],
         environment,
     );
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
@@ -54,7 +63,7 @@ test('a path-specific Vale ignore retains findings elsewhere and reports its act
         { file: 'guide.md', rule: 'gspot.dates' },
     ]);
     expect(report.ignores).toContainEqual(containing({ check: 'prose/vale', rule: 'gspot.dates', matched: 1 }));
-    writeFileSync(join(directory.path, 'guide.md'), '# Schedule\n\nRelease on March 4, 2026.\n');
+    await writeFile(join(directory.path, 'guide.md'), '# Schedule\n\nRelease on March 4, 2026.\n');
     const corrected = await spawnGspot(directory.path, command, environment);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });

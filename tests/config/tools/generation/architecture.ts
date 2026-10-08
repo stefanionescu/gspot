@@ -10,9 +10,9 @@ export const ARCHITECTURE_CASES: ArchitectureToolCase[] = [
 ];
 
 export const ARCHITECTURE_POLICIES = {
-    none: '[[scope]]\npath = "apps/api"\nconfigurations = ["typescript"]\n',
-    root: '[[architecture.modules]]\nname = "app"\npaths = ["app/**"]\n[[architecture.modules]]\nname = "storage"\npaths = ["storage/**"]\n[[architecture.imports_allowed]]\nfrom = "app"\nto = ["app"]\n[[scope]]\npath = "apps/api"\nconfigurations = ["typescript"]\n',
-    scoped: '[[scope]]\npath = "apps/api"\nconfigurations = ["typescript"]\n[[scope.architecture.modules]]\nname = "app"\npaths = ["app/**"]\n[[scope.architecture.modules]]\nname = "storage"\npaths = ["storage/**"]\n[[scope.architecture.imports_allowed]]\nfrom = "app"\nto = ["app"]\n',
+    none: '[scope."apps/api"]\nconfigurations = ["typescript"]\n',
+    root: '[[architecture.modules]]\nname = "app"\npaths = ["app/**"]\nmay_import = ["app"]\n[[architecture.modules]]\nname = "storage"\npaths = ["storage/**"]\n[scope."apps/api"]\nconfigurations = ["typescript"]\n',
+    scoped: '[scope."apps/api"]\nconfigurations = ["typescript"]\n[[scope."apps/api".architecture.modules]]\nname = "app"\npaths = ["app/**"]\nmay_import = ["app"]\n[[scope."apps/api".architecture.modules]]\nname = "storage"\npaths = ["storage/**"]\n',
 };
 
 export const ARCHITECTURE_PROJECT = {

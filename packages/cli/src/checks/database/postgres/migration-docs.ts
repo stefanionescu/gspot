@@ -3,8 +3,8 @@ import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { Migration } from '#cli/types/checks/database/postgres.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
-import type { Migration, DocProblem } from '#cli/types/checks/database/postgres.ts';
 
 import {
     PURPOSE,
@@ -17,25 +17,52 @@ import {
     MIGRATION_STATEMENTS,
 } from '#cli/config/checks/database/postgres.ts';
 
-function headerProblems(migration: Migration, lines: string[]): DocProblem[] {
-    const problems: DocProblem[] = [];
+function headerFindings(input: Pick<CheckInput, 'check'>, migration: Migration, lines: string[]): Finding[] {
+    const findings: Finding[] = [];
     const isBoxed =
         lines[0] === DOC_SEPARATOR && lines[2] === DOC_SEPARATOR && lines.slice(HEADER_LINES).includes(DOC_SEPARATOR);
     if (!isBoxed)
-        problems.push({ line: 1, rule: 'header', text: 'The migration header sits between separator lines.' });
+        findings.push(
+            findingAt(
+                input,
+                { file: migration.path, line: 1 },
+                'header',
+                'The migration header sits between separator lines.',
+            ),
+        );
     const wanted = `-- Migration: ${migration.name}`;
-    if (lines[1] !== wanted) problems.push({ line: 2, rule: 'header', text: `The second line is "${wanted}".` });
+    if (lines[1] !== wanted)
+        findings.push(findingAt(input, { file: migration.path, line: 2 }, 'header', `The second line is "${wanted}".`));
     if (!PURPOSE.test(lines[3] ?? ''))
-        problems.push({ line: HEADER_LINES, rule: 'header', text: 'The fourth line starts with "-- Purpose:".' });
-    return problems;
+        findings.push(
+            findingAt(
+                input,
+                { file: migration.path, line: HEADER_LINES },
+                'header',
+                'The fourth line starts with "-- Purpose:".',
+            ),
+        );
+    return findings;
 }
 
-function sectionProblems(lines: string[], sections: Set<string>): DocProblem[] {
-    return lines.flatMap((line, index): DocProblem[] => {
+function sectionFindings(
+    input: Pick<CheckInput, 'check'>,
+    migration: Migration,
+    lines: string[],
+    sections: Set<string>,
+): Finding[] {
+    return lines.flatMap((line, index): Finding[] => {
         const name = SECTION.exec(line)?.groups?.['name'];
         if (name === undefined || !sections.has(name)) return [];
         if (lines[index - 1] === DOC_SEPARATOR && lines[index + 1] === DOC_SEPARATOR) return [];
-        return [{ line: index + 1, rule: 'section', text: `The "${name}" heading sits between separator lines.` }];
+        return [
+            findingAt(
+                input,
+                { file: migration.path, line: index + 1 },
+                'section',
+                `The "${name}" heading sits between separator lines.`,
+            ),
+        ];
     });
 }
 
@@ -59,48 +86,60 @@ function commentsAbove(lines: string[], line: number): string[] {
     return found;
 }
 
-function statementProblems(migration: Migration, lines: string[], sections: Set<string>): DocProblem[] {
-    return migration.statements.flatMap((statement): DocProblem[] => {
+function statementFindings(
+    input: Pick<CheckInput, 'check'>,
+    migration: Migration,
+    lines: string[],
+    sections: Set<string>,
+): Finding[] {
+    return migration.statements.flatMap((statement): Finding[] => {
         const layout = MIGRATION_STATEMENTS[statement.kind];
         if (layout === undefined) return [];
         const { section: wanted, words } = layout;
         const { line } = positionAt(migration.text, statement.start);
-        const problems: DocProblem[] = [];
+        const findings: Finding[] = [];
         const section = sectionAbove(lines, line, sections);
         if (section !== wanted)
-            problems.push({
-                line,
-                rule: 'placement',
-                text: `${words} belongs under "${wanted}", and it is under "${section ?? 'no section'}".`,
-            });
+            findings.push(
+                findingAt(
+                    input,
+                    { file: migration.path, line },
+                    'placement',
+                    `${words} belongs under "${wanted}", and it is under "${section ?? 'no section'}".`,
+                ),
+            );
         const label = DOC_LABELS[statement.kind];
         const comments = commentsAbove(lines, line);
         const isLabeled =
             label === undefined ||
             (comments.some((text) => label.test(text)) && comments.some((text) => PURPOSE.test(text)));
         if (!isLabeled)
-            problems.push({
-                line,
-                rule: 'label',
-                text: `${words} has no labeled block with a "-- Purpose:" line above it.`,
-            });
-        return problems;
+            findings.push(
+                findingAt(
+                    input,
+                    { file: migration.path, line },
+                    'label',
+                    `${words} has no labeled block with a "-- Purpose:" line above it.`,
+                ),
+            );
+        return findings;
     });
 }
 
 /**
- * The layout problems of one migration.
+ * The layout findings of one migration.
+ * @param input the check identity
  * @param migration the migration
  * @param sections the section names a heading may carry
- * @returns the problems, each with its line
+ * @returns findings with source files and line numbers
  */
-export function docProblems(migration: Migration, sections: string[]): DocProblem[] {
+export function docFindings(input: Pick<CheckInput, 'check'>, migration: Migration, sections: string[]): Finding[] {
     const lines = migration.text.split('\n');
     const known = new Set(sections);
     return [
-        ...headerProblems(migration, lines),
-        ...sectionProblems(lines, known),
-        ...statementProblems(migration, lines, known),
+        ...headerFindings(input, migration, lines),
+        ...sectionFindings(input, migration, lines, known),
+        ...statementFindings(input, migration, lines, known),
     ];
 }
 
@@ -111,11 +150,7 @@ export function docProblems(migration: Migration, sections: string[]): DocProble
  */
 export async function migrationDocs(input: CheckInput): Promise<Finding[]> {
     const tool = input.view.options('postgres');
-    const sections = tool['doc_sections'] as string[];
+    const sections = tool['doc_sections'];
     const migrations = await migrationsOf(input);
-    return migrations.flatMap((migration) =>
-        docProblems(migration, sections).map((problem) =>
-            findingAt(input, { file: migration.path, line: problem.line }, problem.rule, problem.text),
-        ),
-    );
+    return migrations.flatMap((migration) => docFindings(input, migration, sections));
 }

@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
-import { mkdirSync, symlinkSync } from 'node:fs';
+import { mkdir, symlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -8,7 +8,6 @@ import { buildToolsPath } from '#tests/harness/install.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { BATS_MINIMUM_FILES } from '#tests/config/tools/configurations/language/bash/bats.ts';
 
 test.skipIf(!isMacos).each(['recommended', 'all'] as const)(
@@ -20,8 +19,8 @@ test.skipIf(!isMacos).each(['recommended', 'all'] as const)(
             'gspot.toml': buildPolicy(['bash'], { level }),
         });
         const bin = join(sandbox.path, 'bin');
-        mkdirSync(bin);
-        symlinkSync('/bin/bash', join(bin, 'bash'));
+        await mkdir(bin);
+        await symlink('/bin/bash', join(bin, 'bash'));
         const available = { PATH: buildToolsPath(['bats']) };
         const stock = { PATH: `${bin}${delimiter}${available.PATH}` };
         const applied = await spawnGspot(sandbox.path, ['apply'], stock);
@@ -50,5 +49,4 @@ test.skipIf(!isMacos).each(['recommended', 'all'] as const)(
             { file: 'script.bats', line: 2 },
         ]);
     },
-    NATIVE_TEST_TIMEOUT_MS,
 );

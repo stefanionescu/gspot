@@ -1,6 +1,5 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parseIndexRevision } from '#cli/parsers/git.ts';
 import { parseJsonDocument } from '#cli/parsers/json.ts';
@@ -118,7 +117,7 @@ export async function symlinks(input: CheckInput): Promise<Finding[]> {
     const links = entries.filter(
         (entry) =>
             entry.mode === SYMLINK_MODE &&
-            scopeOf(entry.path, input.scopeEntries).path === input.scope &&
+            input.files.some((file) => file.path === entry.path) &&
             folders.some((folder) => entry.path.startsWith(folder)),
     );
     const targets = await getBlobs(
@@ -146,11 +145,6 @@ export async function symlinks(input: CheckInput): Promise<Finding[]> {
  */
 export function trackedByExtension(input: CheckInput, endings: string[]): string[] {
     return input.files
-        .filter(
-            (file) =>
-                file.kind === 'source' &&
-                scopeOf(file.path, input.scopeEntries).path === input.scope &&
-                endings.some((ending) => file.path.endsWith(ending)),
-        )
+        .filter((file) => file.kind === 'source' && endings.some((ending) => file.path.endsWith(ending)))
         .map((file) => file.path);
 }

@@ -3,9 +3,8 @@ import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
 import { skipFor } from '#cli/planning/skips.ts';
-import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { AUTOMATIC_GENERAL_CONFIGURATIONS } from '#tests/config/harness/policy.ts';
+import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 
 test.each(['recommended', 'all'] as const)(
     '%s selects general checks from a stored empty manual list without changing policy',
@@ -23,7 +22,7 @@ test.each(['recommended', 'all'] as const)(
         const selected = session.scopes.flatMap((scope) =>
             scope.selected.map((manifest) => manifest.configuration.name),
         );
-        for (const configuration of [...AUTOMATIC_GENERAL_CONFIGURATIONS, 'licenses'])
+        for (const configuration of [...alwaysSelectedConfigurations(), 'licenses'])
             expect(selected).toContain(configuration);
         expect(selected).not.toContain('javascript');
         expect(selected).not.toContain('markdown');
@@ -88,6 +87,7 @@ test.each(['secrets/gitleaks-files', 'security/semgrep'])(
                 { platform: 'macos', arch: 'arm64' },
                 true,
                 session.policyFiles.policy,
+                [],
             ),
         ).toStrictEqual({ cause: 'condition', note: `The ${name} check scans the files of this Git repository.` });
     },

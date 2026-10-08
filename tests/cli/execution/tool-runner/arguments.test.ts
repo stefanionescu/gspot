@@ -1,7 +1,7 @@
 import executables from 'which';
 import { join } from 'node:path';
-import { chmodSync } from 'node:fs';
 import { stringify } from 'smol-toml';
+import { chmod } from 'node:fs/promises';
 import { run } from '#cli/platform/spawn.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
@@ -38,8 +38,7 @@ test('Batched tool invocations preserve spaced Unicode file arguments', async ()
 
 test('per-file execution preserves expanded flags and arguments after the file', async () => {
     const policy = `configurations = []
-[[check]]
-name = "sandbox/arguments"
+[check."sandbox/arguments"]
 command = ${JSON.stringify([process.execPath, 'echo.cjs', '{existing:--config:settings.txt}', '{file}', 'config', '--quiet'])}
 paths = ["inputs/**"]
 stage = "commit"
@@ -73,9 +72,8 @@ test('a repository command receives a declared empty argument without changing i
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             configurations: [],
-            check: [
-                {
-                    name: 'project/arguments',
+            check: {
+                'project/arguments': {
                     command: [
                         process.execPath,
                         '-e',
@@ -86,7 +84,7 @@ test('a repository command receives a declared empty argument without changing i
                     paths: ['source.txt'],
                     stage: 'commit',
                 },
-            ],
+            },
         }),
         'source.txt': 'source input',
     });
@@ -103,9 +101,8 @@ test('per-file failures name the selected file when expanded arguments follow it
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             configurations: [],
-            check: [
-                {
-                    name: 'project/file-result',
+            check: {
+                'project/file-result': {
                     command: [
                         process.execPath,
                         'validate.cjs',
@@ -117,7 +114,7 @@ test('per-file failures name the selected file when expanded arguments follow it
                     paths: ['inputs/**'],
                     stage: 'commit',
                 },
-            ],
+            },
         }),
         'settings.txt': '',
         'inputs/café source.txt': 'invalid',
@@ -139,14 +136,13 @@ test.skipIf(!isPosix)('a signaled per-file process is an execution error rather 
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             configurations: [],
-            check: [
-                {
-                    name: 'project/termination',
+            check: {
+                'project/termination': {
                     command: [process.execPath, '-e', 'process.kill(process.pid, "SIGTERM")', '{file}'],
                     paths: ['source.txt'],
                     stage: 'commit',
                 },
-            ],
+            },
         }),
         'source.txt': 'valid source',
     });
@@ -166,9 +162,8 @@ test.skipIf(!isPosix)(
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 configurations: [],
-                check: [
-                    {
-                        name: 'project/companion',
+                check: {
+                    'project/companion': {
                         stage: 'commit',
                         paths: ['source.txt'],
                         command: [
@@ -177,14 +172,14 @@ test.skipIf(!isPosix)(
                             "const result = Bun.spawnSync(['shellcheck', '--version']); process.stdout.write(result.stdout); process.exitCode = result.exitCode;",
                         ],
                     },
-                ],
+                },
             }),
             'source.txt': '',
             'copy/.keep': '',
             'native/shellcheck': `#!${process.execPath}\nconsole.log('ShellCheck version: 0.11.0');\n`,
             'inactive/shellcheck': `#!${process.execPath}\nprocess.exit(7);\n`,
         });
-        for (const path of ['native/shellcheck', 'inactive/shellcheck']) chmodSync(join(sandbox.path, path), 0o755);
+        for (const path of ['native/shellcheck', 'inactive/shellcheck']) await chmod(join(sandbox.path, path), 0o755);
         const session = await openSession(sandbox.path);
         const planned = planRun(session, { stage: 'commit', skips: [], only: ['project/companion'] })[0]!;
         planned.check.other_tools = ['shellcheck'];

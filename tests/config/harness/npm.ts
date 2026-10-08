@@ -1,7 +1,7 @@
 import type { RegistryPackage } from '#tests/types/harness/registry.ts';
 // The authored files every package project starts from.
 export const AUTHORED_FILES = {
-    // These fixtures invoke the source launcher, so mise must not install the unpublished CLI.
+    // These sandboxes invoke the source launcher, so mise must not install the unpublished CLI.
     'mise.toml': '[settings]\ndisable_tools = ["npm:@gspothq/cli"]\n',
     'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
     'source.js': 'export const greeting="hello";',
@@ -25,7 +25,5 @@ export const PACKAGE_PROJECTS = [
     ['npm', 'package.json', 'none'],
 ] as const;
 
-export const VERSION_TIMEOUT_MS = 15_000;
-
-/** Package-manager fixtures exercise Prettier and native EditorConfig acquisition, not application analyzers. */
+/** Package-manager sandboxes exercise Prettier and native EditorConfig acquisition, not application analyzers. */
 export const EXCLUDED_PACKAGE_CHECKS = ['files/v8r', 'javascript/eslint', 'javascript/tsc', 'javascript/knip'];

@@ -4,10 +4,12 @@ import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { waitForExit, waitForFile } from '#tests/harness/process.ts';
 import { planFixer, buildFixerPolicy } from '#tests/harness/fixer.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
-import { rmSync, mkdirSync, existsSync, readdirSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { rm, mkdir, readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 
 test.each([
     { preview: false, isolated: false },
@@ -22,17 +24,17 @@ test.each([
         const session = await openSession(sandbox.path);
         const planned = planFixer(session, "await Bun.write('source.txt', 'changed')");
         planned.check.run_in_copy = isolated;
-        rmSync(join(sandbox.path, 'source.txt'));
-        symlinkSync(join(external.path, 'source.txt'), join(sandbox.path, 'source.txt'));
-        expect(await rejection(applyFixers(session, [planned], { isDryRun: preview }))).toContain(
-            'Source link leaves the repository',
-        );
-        expect(readFileSync(join(external.path, 'source.txt'), 'utf8')).toBe('external original');
-        rmSync(join(sandbox.path, 'source.txt'));
-        writeFileSync(join(sandbox.path, 'source.txt'), 'original');
-        const corrected = await applyFixers(session, [planned], { isDryRun: preview });
+        await rm(join(sandbox.path, 'source.txt'));
+        await symlink(join(external.path, 'source.txt'), join(sandbox.path, 'source.txt'));
+        expect(
+            await rejection(applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: preview })),
+        ).toContain('Source link leaves the repository');
+        expect(await readFile(join(external.path, 'source.txt'), 'utf8')).toBe('external original');
+        await rm(join(sandbox.path, 'source.txt'));
+        await writeFile(join(sandbox.path, 'source.txt'), 'original');
+        const corrected = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: preview });
         expect(corrected.changed).toStrictEqual(['source.txt']);
-        expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'changed');
+        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'changed');
     },
 );
 test.each([false, true])(
@@ -57,11 +59,11 @@ test.each([false, true])(
         );
         planned.check.run_in_copy = true;
         planned.check.exit_codes = [3];
-        const result = await applyFixers(session, [planned], { isDryRun: preview });
+        const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: preview });
         expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
-        expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
-        expect(readFileSync(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
-        expect(existsSync(readFileSync(trace, 'utf8'))).toBe(false);
+        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(preview ? 'original' : 'corrected');
+        expect(await readFile(join(sandbox.path, 'unowned.json'), 'utf8')).toBe('{}');
+        expect(await pathExists(await readFile(trace, 'utf8'))).toBe(false);
         // A preview shows the correction as a diff instead of writing it.
         const expectedDiff = textContaining('+corrected');
         expect(result.diffs).toStrictEqual(preview ? [expectedDiff] : []);
@@ -88,15 +90,21 @@ test('isolated correction refuses to overwrite source changed during execution a
     );
     planned.check.run_in_copy = true;
     expect(
-        await rejection(applyFixers(session, [planned], { isDryRun: false }).then(({ results }) => results[0]!)),
+        await rejection(
+            applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
+                ({ results }) => results[0]!,
+            ),
+        ),
     ).toContain('z-last.txt changed while its fix was running');
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
-    expect(readFileSync(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
-    expect(existsSync(readFileSync(trace, 'utf8'))).toBe(false);
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+    expect(await readFile(join(sandbox.path, 'z-last.txt'), 'utf8')).toBe('new working content');
+    expect(await pathExists(await readFile(trace, 'utf8'))).toBe(false);
     const corrected = planFixer(session, "await Bun.write('source.txt', 'corrected')");
     corrected.check.run_in_copy = true;
     expect(
-        await applyFixers(session, [corrected], { isDryRun: false }).then(({ results }) => results[0]!),
+        await applyFixers(session, [corrected], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
+            ({ results }) => results[0]!,
+        ),
     ).toMatchObject({
         status: 'changed',
         changed: ['source.txt'],
@@ -111,14 +119,14 @@ test('removes the scratch directory after a failed correction and preserves sour
         session,
         "await Bun.write('source.txt', 'partial'); process.stdout.write(process.cwd()); process.exitCode = 3",
     );
-    const report = await applyFixers(session, [planned], { isDryRun: true });
+    const report = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: true });
     const result = report.results[0];
     expect(result?.status).toBe('failed');
     if (result?.status !== 'failed') throw new Error('The correction did not report its failure.');
     const scratch = result.note.slice(result.note.indexOf(': ') + 2);
     expect(scratch).toContain('gspot-fix-');
-    expect(existsSync(scratch)).toBe(false);
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+    expect(await pathExists(scratch)).toBe(false);
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
     expect(report.changed).toStrictEqual(['source.txt']);
     expect(report.diffs.join('\n')).toContain('+partial');
 });
@@ -132,26 +140,28 @@ test.each(['copy', 'read'])('cleans the scratch directory after a failed %s', as
         "const fs = require('node:fs'); fs.unlinkSync('source.txt'); fs.mkdirSync('source.txt');",
     );
     if (operation === 'copy') {
-        rmSync(join(sandbox.path, 'source.txt'));
-        mkdirSync(join(sandbox.path, 'source.txt'));
+        await rm(join(sandbox.path, 'source.txt'));
+        await mkdir(join(sandbox.path, 'source.txt'));
     }
     const temporary = join(sandbox.path, 'scratch');
-    mkdirSync(temporary);
+    await mkdir(temporary);
     const temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary);
     try {
         let failure: unknown;
         try {
-            await applyFixers(session, [planned], { isDryRun: true });
+            await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: true });
         } catch (error) {
             failure = error;
         }
         expect(failure).toBeInstanceOf(Error);
-        expect(readdirSync(temporary)).toStrictEqual([]);
+        expect(await readdir(temporary)).toStrictEqual([]);
     } finally {
         temporaryDirectory.mockRestore();
     }
-    // A failed read leaves the source untouched; a failed copy had already replaced it with a directory.
-    expect(operation !== 'read' || readFileSync(join(sandbox.path, 'source.txt'), 'utf8') === 'original').toBe(true);
+    // The copy row replaces the source with a directory before the run.
+    expect(operation !== 'read' || (await readFile(join(sandbox.path, 'source.txt'), 'utf8')) === 'original').toBe(
+        true,
+    );
 });
 
 test.each([false, true])(
@@ -171,11 +181,12 @@ test.each([false, true])(
         );
         planned.check.run_in_copy = isolated;
         const execution = applyFixers({ ...session, cancelSignal: controller.signal }, [planned], {
+            checks: BUILT_IN_CHECKS,
             isDryRun: false,
         }).then(({ results }) => results[0]!);
         try {
             expect(await waitForFile(ready)).toBe(true);
-            const pid = Number(readFileSync(ready, 'utf8'));
+            const pid = Number(await readFile(ready, 'utf8'));
             expect(pid).toBeGreaterThan(0);
             controller.abort();
             const result = await execution;
@@ -184,7 +195,7 @@ test.each([false, true])(
             if (result.status !== 'failed') throw new Error('The correction did not report its process failure.');
             expect(result.note).toContain('was canceled');
             expect(result.changed).toStrictEqual(['source.txt']);
-            expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('partial');
+            expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('partial');
         } finally {
             controller.abort();
             await execution;
@@ -192,9 +203,9 @@ test.each([false, true])(
         const corrected = await applyFixers(
             session,
             [planFixer(session, "await Bun.write('source.txt', 'corrected')")],
-            { isDryRun: false },
+            { checks: BUILT_IN_CHECKS, isDryRun: false },
         ).then(({ results }) => results[0]!);
         expect(corrected.status).toBe('changed');
-        expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
+        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
     },
 );

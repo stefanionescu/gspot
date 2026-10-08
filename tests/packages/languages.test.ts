@@ -3,23 +3,22 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { createConsumer } from '#tests/harness/consumer.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runPackageCheck } from '#tests/harness/check-case.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { ConfigurationsListJson } from '#cli/types/commands/list.ts';
+import { PROSE_CHECK, SWIFT_CHECK } from '#tests/config/packages/languages.ts';
 import { initializeConsumer, getPublishedRelease } from '#tests/harness/release.ts';
-import { BASH_CHECK, PROSE_CHECK, SWIFT_CHECK, PYTHON_CHECK } from '#tests/config/packages/languages.ts';
 
 const release = getPublishedRelease();
 
 // Prepare the installed consumer and its project vocabulary before observing native checks.
 async function prepareLanguages(installation: Consumer): Promise<void> {
     const { command, onlineOptions } = installation;
-    writeFileSync(join(installation.root, 'entry.py'), 'answer = "example"\n');
+    await writeFile(join(installation.root, 'entry.py'), 'answer = "example"\n');
     await createFileTree(installation.root, {
         'broken.sh': '#!/usr/bin/env bash\necho example\n',
         'guide.md': '# Guide\n\nRead the guide.\n',
@@ -29,8 +28,8 @@ async function prepareLanguages(installation: Consumer): Promise<void> {
         [
             ...command,
             'set',
-            'prose.vocabulary',
-            'NebulaConfiguration',
+            'words',
+            '{"NebulaConfiguration":"Reviewed project name."}',
             '--reason',
             'NebulaConfiguration is the project name.',
         ],
@@ -42,7 +41,7 @@ async function prepareLanguages(installation: Consumer): Promise<void> {
 // SQL discovery and its embedded parser work after installation without checkout dependencies.
 async function expectInstalledSql(installation: Consumer): Promise<void> {
     const { root, command, offlineOptions, onlineOptions } = installation;
-    writeFileSync(join(root, 'query.sql'), 'SELECT 1;\n');
+    await writeFile(join(root, 'query.sql'), 'SELECT 1;\n');
     const detected = await runTestCommand([...command, 'list', '--json'], offlineOptions);
     expect(detected.code, detected.stdout + detected.stderr).toBe(0);
     const available = JSON.parse(detected.stdout) as ConfigurationsListJson;
@@ -51,7 +50,7 @@ async function expectInstalledSql(installation: Consumer): Promise<void> {
     expect(added.code, added.stdout + added.stderr).toBe(0);
     const configured = await runTestCommand([...command, 'set', 'tools.sqlfluff.dialect', 'postgres'], onlineOptions);
     expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-    writeFileSync(join(root, 'query.sql'), 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n');
+    await writeFile(join(root, 'query.sql'), 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n');
     const defect = await runTestCommand(
         [...command, 'check', 'query.sql', '--only', 'sql/trivial-functions', '--json'],
         offlineOptions,
@@ -64,10 +63,10 @@ async function expectInstalledSql(installation: Consumer): Promise<void> {
         { file: 'query.sql', line: 1, rule: 'trivial-function' },
         { file: 'query.sql', line: 1, rule: 'trivial-file' },
     ]);
-    expect(readFileSync(join(root, 'query.sql'), 'utf8')).toBe(
+    expect(await readFile(join(root, 'query.sql'), 'utf8')).toBe(
         'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n',
     );
-    writeFileSync(join(root, 'query.sql'), 'SELECT 1;\n');
+    await writeFile(join(root, 'query.sql'), 'SELECT 1;\n');
     const sql = await runTestCommand(
         [...command, 'check', 'query.sql', '--only', 'sql/trivial-functions', '--json'],
         offlineOptions,
@@ -84,46 +83,41 @@ async function expectInstalledSql(installation: Consumer): Promise<void> {
     });
 }
 
-test(
-    'one installed consumer runs the pinned language tools against defects and their corrections',
-    async () => {
-        await using installation = await createConsumer(release.registry, release.version);
+test('one installed consumer runs the pinned language tools against defects and their corrections', async () => {
+    await using installation = await createConsumer(release.registry, release.version);
 
-        await prepareLanguages(installation);
-        for (const check of [PROSE_CHECK, PYTHON_CHECK, BASH_CHECK, SWIFT_CHECK]) {
-            if (check === SWIFT_CHECK) {
-                const level = await runTestCommand(
-                    [...installation.command, 'set', 'level', 'all'],
-                    installation.onlineOptions,
-                );
-                expect(level.code, level.stdout + level.stderr).toBe(0);
-            }
-            const { failed, fixed, passed } = await runPackageCheck(installation, installation.offlineOptions, check);
-            expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-            expect(failed.report.skips).toStrictEqual([]);
-            expect(failed.report.checks).toMatchObject([
-                {
-                    check: check.only,
-                    status: 'failed',
-                    findings: check.findings.map((finding) => ({ file: check.path, ...finding })),
-                },
-            ]);
-            expect(fixed).toBeUndefined();
-            expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-            expect(passed.report.skips).toStrictEqual([]);
-            expect(passed.report.checks).toMatchObject([{ check: check.only, status: 'passed', findings: [] }]);
-            if (check === PROSE_CHECK) {
-                const acceptedWords = readFileSync(
-                    join(installation.root, '.gspot/config/vale/styles/config/vocabularies/gspot/accept.txt'),
-                    'utf8',
-                )
-                    .trim()
-                    .split('\n');
-                expect(acceptedWords).toContain('NebulaConfiguration');
-                expect(acceptedWords).toContain('TypeScript');
-            }
+    await prepareLanguages(installation);
+    for (const check of [PROSE_CHECK, SWIFT_CHECK]) {
+        if (check === SWIFT_CHECK) {
+            const level = await runTestCommand(
+                [...installation.command, 'set', 'level', 'all'],
+                installation.onlineOptions,
+            );
+            expect(level.code, level.stdout + level.stderr).toBe(0);
         }
-        await expectInstalledSql(installation);
-    },
-    NATIVE_TEST_TIMEOUT_MS,
-);
+        const { failed, fixed, passed } = await runPackageCheck(installation, installation.offlineOptions, check);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        expect(failed.report.skips).toStrictEqual([]);
+        expect(failed.report.checks).toMatchObject([
+            {
+                check: check.only,
+                status: 'failed',
+                findings: check.findings.map((finding) => ({ file: check.path, ...finding })),
+            },
+        ]);
+        expect(fixed).toBeUndefined();
+        expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+        expect(passed.report.skips).toStrictEqual([]);
+        expect(passed.report.checks).toMatchObject([{ check: check.only, status: 'passed', findings: [] }]);
+        if (check === PROSE_CHECK) {
+            const vocabulary = await readFile(
+                join(installation.root, '.gspot/config/vale/styles/config/vocabularies/words/accept.txt'),
+                'utf8',
+            );
+            const acceptedWords = vocabulary.trim().split('\n');
+            expect(acceptedWords).toContain('NebulaConfiguration');
+            expect(acceptedWords).toContain('TypeScript');
+        }
+    }
+    await expectInstalledSql(installation);
+});

@@ -36,5 +36,5 @@ export function miseFile(manifests: Manifest[], version: string): GeneratedFile 
         miseToolLine({ name: GSPOT_MISE_TOOL, version }),
         ...misePins(manifests).map((pin) => miseToolLine(pin)),
     ];
-    return { path: MISE_CONFIG_PATH, content: `${lines.join('\n')}\n`, readOnly: true, kind: 'runner' };
+    return { path: MISE_CONFIG_PATH, content: `${lines.join('\n')}\n`, kind: 'runner' };
 }

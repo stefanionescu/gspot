@@ -1,25 +1,20 @@
+import type { Identifier } from '#cli/types/parsers/naming.ts';
+import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { FindingPlace } from '#cli/types/parsers/output.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 
 /** A banned term split into parts, with where it came from. */
 export type Term = { term: string; parts: string[]; source: string; group?: string };
 
-/** One thing wrong with one identifier. */
-export type NameProblem = {
-    rule:
-        | 'case'
-        | 'digits'
-        | 'length'
-        | 'words'
-        | 'duplicate-words'
-        | 'banned-term'
-        | 'reserved-term'
-        | 'callback-verb';
-    message: string;
-    source?: string;
+/** The naming policy and whether this is a React file or a test file. */
+export type NamingInputs = Pick<CheckInput, 'check'> & {
+    policy: EffectivePolicy;
+    isReactFile: boolean;
+    isTestFile: boolean;
 };
 
-/** The naming policy and whether this is a React file or a test file. */
-export type NamingInputs = { policy: EffectivePolicy; isReactFile: boolean; isTestFile: boolean };
+/** The input and diagnostic location shared by the checks of one identifier. */
+export type NamingContext = NamingInputs & { identifier: Identifier; place: FindingPlace; prefix: string };
 
 /** A path-scoped rule, compiled. */
 export type PathRule = {
@@ -27,7 +22,7 @@ export type PathRule = {
     languages: Set<string> | undefined;
     categories: Set<string> | undefined;
     names: Set<string> | undefined;
-    excludes: boolean;
+    allowed: Set<string> | undefined;
     isDigitsAllowed: boolean;
     isRepeatAllowed: boolean;
     structuralPrefix: RegExp | undefined;
@@ -43,7 +38,6 @@ export type EffectivePolicy = {
     terms: Term[];
     reserved: Map<string, string[]>;
     allowed: Map<string, string | undefined>;
-    fixedKeys: Map<string, Set<string>>;
     rules: PathRule[];
     limitsFor: (language: string, category: string) => CategoryLimits;
     isDigitsAllowed: boolean;

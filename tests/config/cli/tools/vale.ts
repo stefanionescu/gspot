@@ -29,12 +29,6 @@ export const VALE_ACQUISITION_FAILURES = [
         'Vale setup output is missing: .gspot/config/vale/styles/config/dictionaries',
         'tool_timeout_seconds = 1\n',
     ],
-    [
-        'a reasoned deadline',
-        'setInterval(() => {}, 1000);',
-        'Vale package sync exceeded its tool deadline.',
-        'tool_timeout_seconds = { value = 1, reason = "Keep local style acquisition bounded." }\n',
-    ],
 ] as const;
 
 export const CORRECTED_VALE_ACQUISITION = String.raw`

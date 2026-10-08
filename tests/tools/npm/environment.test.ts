@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runTool } from '#cli/tools/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { statSync, readFileSync, writeFileSync } from 'node:fs';
+import { stat, readFile, writeFile } from 'node:fs/promises';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 
 test('native registry settings authenticate from an isolated project and preserve authored configuration', async () => {
@@ -49,8 +49,8 @@ test('native registry settings authenticate from an isolated project and preserv
         expect(missing.code).not.toBe(0);
         expect(requests.rejected).toBeGreaterThan(0);
         const source = `registry=${registry}\n//127.0.0.1:${String(server.port)}/:_authToken=${token}\n`;
-        writeFileSync(join(repository.path, '.npmrc'), source, { mode: 0o600 });
-        const mode = statSync(join(repository.path, '.npmrc')).mode;
+        await writeFile(join(repository.path, '.npmrc'), source, { mode: 0o600 });
+        const { mode } = await stat(join(repository.path, '.npmrc'));
         const corrected = await runTool(command, {
             cwd: isolated.path,
             env: await registryEnvironment(repository.path),
@@ -59,8 +59,8 @@ test('native registry settings authenticate from an isolated project and preserv
         expect(JSON.parse(corrected.stdout)).toBe('1.0.0');
         expect(requests.authenticated).toBeGreaterThan(0);
         expect(corrected.stdout + corrected.stderr).not.toContain(token);
-        expect(readFileSync(join(repository.path, '.npmrc'), 'utf8')).toBe(source);
-        expect(statSync(join(repository.path, '.npmrc')).mode).toBe(mode);
+        expect(await readFile(join(repository.path, '.npmrc'), 'utf8')).toBe(source);
+        expect(await stat(join(repository.path, '.npmrc'))).toMatchObject({ mode });
     } finally {
         await server.stop(true);
     }

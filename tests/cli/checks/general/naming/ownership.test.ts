@@ -1,7 +1,7 @@
 // Native naming contracts follow their configuration, language, category, and scope.
 import { join } from 'node:path';
-import { renameSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { rename } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -28,8 +28,8 @@ test.each(FRAMEWORK_CONTRACTS)(
                 level: 'all',
                 tables:
                     `[naming]\nbanned = ${JSON.stringify(banned)}\n` +
-                    `[[scope]]\npath = "app"\nconfigurations = ["${configuration}"]\n` +
-                    '[[scope]]\npath = "sibling"\n',
+                    `[scope."app"]\nconfigurations = ["${configuration}"]\n` +
+                    '[scope."sibling"]\n',
             }),
             'entry.ts': source,
             'app/entry.ts': source,
@@ -191,7 +191,7 @@ test('pytest owns test-prefix counting without changing sibling Python contracts
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python', 'naming'], {
             level: 'all',
-            tables: '[[scope]]\npath = "app"\nconfigurations = ["pytest"]\n[[scope]]\npath = "sibling"\n',
+            tables: '[scope."app"]\nconfigurations = ["pytest"]\n[scope."sibling"]\n',
         }),
         'test_entry.py': source,
         'app/test_entry.py': source,
@@ -233,7 +233,7 @@ test('Python module filenames preserve the neighboring TypeScript filename contr
     expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'javascript/__init__.ts', line: 1, column: 1, rule: 'case' },
     ]);
-    renameSync(join(sandbox.path, 'javascript/__init__.ts'), join(sandbox.path, 'javascript/entry.ts'));
+    await rename(join(sandbox.path, 'javascript/__init__.ts'), join(sandbox.path, 'javascript/entry.ts'));
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);

@@ -105,7 +105,7 @@ export async function migrationOrder(input: CheckInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function migrationsFrozen(input: CheckInput): Promise<Finding[]> {
-    const through = input.view.options('postgres')['frozen_through'] as string;
+    const through = input.view.options('postgres')['frozen_through'];
     if (through === FROZEN_NONE) return [];
     const migrations = await migrationsOf(input);
     const texts = await committedMigrationTexts(

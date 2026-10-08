@@ -3,8 +3,9 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { createHash } from 'node:crypto';
+import { readFile, writeFile } from 'node:fs/promises';
 import { npmPackSchema } from '#automation/parsers/npm.ts';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 import type {
@@ -49,7 +50,7 @@ export async function packRegistryPackages(
         );
         if (packed.code !== 0) throw new Error(`Package packing failed: ${packed.stdout}${packed.stderr}`);
         const [{ filename }] = npmPackSchema.parse(JSON.parse(packed.stdout));
-        const archive = readFileSync(join(work, filename));
+        const archive = await readFile(join(work, filename));
         packages.push({
             ...declaration,
             filename: join(work, filename),
@@ -57,7 +58,7 @@ export async function packRegistryPackages(
         });
     }
     const manifest = join(work, 'packages.json');
-    writeFileSync(manifest, JSON.stringify(packages));
+    await writeFile(manifest, JSON.stringify(packages));
     return manifest;
 }
 
@@ -76,7 +77,7 @@ export async function createPackageRegistry(work: string, options: PackageRegist
     const manifests = [metadata];
     if (declarations.length > 0) manifests.push(await packRegistryPackages(work, declarations, execute));
     for (const manifest of manifests) {
-        const entries = packedPackagesSchema.parse(JSON.parse(readFileSync(manifest, 'utf8')));
+        const entries = packedPackagesSchema.parse(JSON.parse(await readFile(manifest, 'utf8')));
         for (const entry of entries) packages.set(entry.name, entry);
     }
     let requests = 0;
@@ -96,7 +97,7 @@ export async function createPackageRegistry(work: string, options: PackageRegist
             const tarball = `${name}/-/${name.slice(name.lastIndexOf('/') + 1)}-${entry.version}.tgz`;
             if (separator !== -1) {
                 if (pathname !== tarball) return Response.json({ error: 'Package not found' }, { status: 404 });
-                return new Response(new Uint8Array(readFileSync(entry.filename)));
+                return new Response(Bun.file(entry.filename));
             }
             const { filename: _filename, integrity, ...manifest } = entry;
             return Response.json({
@@ -132,11 +133,11 @@ export async function createInstallationRegistry(
     const resources = new AsyncDisposableStack();
     try {
         const environment: Record<string, string> = {};
-        if (existsSync(join(root, '.gspot/package.json'))) {
+        if (await pathExists(join(root, '.gspot/package.json'))) {
             const work = resources.use(await testdir());
             const registry = resources.use(await createPackageRegistry(work.path, { declarations: [], execute }));
             const npmrc = join(work.path, '.npmrc');
-            writeFileSync(npmrc, `@gspothq:registry=${registry.url}/\n`, { mode: 0o600 });
+            await writeFile(npmrc, `@gspothq:registry=${registry.url}/\n`, { mode: 0o600 });
             environment['NPM_CONFIG_USERCONFIG'] = npmrc;
         }
         return {

@@ -8,7 +8,6 @@ export const CARELESS = 'FROM node:latest\nCOPY . .\nCMD ["node", "index.js"]\n'
 
 export const IGNORES = '.git\nnode_modules\n.env*\n';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['docker'],
     modules: false,
@@ -22,7 +21,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'docker/compose',

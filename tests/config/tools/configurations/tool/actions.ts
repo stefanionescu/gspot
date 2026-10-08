@@ -14,7 +14,6 @@ export const ACTIONS_INIT = [
     '--no-install',
 ];
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['actions'],
     modules: false,
@@ -24,7 +23,6 @@ export const REPOSITORY: RepositoryScenario = {
     files: { '.github/workflows/build.yml': `${WORKFLOW_HEAD}            - run: echo built\n` },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'actions/actionlint',

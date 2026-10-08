@@ -6,8 +6,8 @@ import { COMMITLINT_REJECTED_SELECTIONS } from '#tests/config/cli/generation/lev
 test.each(['recommended', 'all'] as const)(
     '%s keeps commitlint severity and coverage with the level in root and scoped settings',
     (level) => {
-        for (const scope of ['', '[[scope]]\npath = "app"\n']) {
-            const table = scope === '' ? 'tools' : 'scope.tools';
+        for (const scope of ['', '[scope."app"]\n']) {
+            const table = scope === '' ? 'tools' : 'scope."app".tools';
             for (const selection of COMMITLINT_REJECTED_SELECTIONS)
                 expect(() =>
                     parseStrictPolicy(

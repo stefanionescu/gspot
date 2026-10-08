@@ -105,11 +105,14 @@
     "include": ["../../../tests"],
     "extraPaths": ["../../../tests"],
     "exclude": [
-        "../../../tests/**/.venv",
-        "../../../tests/**/__pycache__",
-        "../../../tests/**/node_modules",
-        "../../../tests/**/.gspot",
-        "../../../tests/**/build",
-        "../../../tests/**/dist"
+        "../../../**/node_modules/**",
+        "../../../.gspot/**",
+        "../../../prettier.config.mjs",
+        "../../../docs/prettier.config.mjs",
+        "../../../docs/worker-configuration.d.ts",
+        "../../../packages/cli/prettier.config.mjs",
+        "../../../packages/eslint-plugin/prettier.config.mjs",
+        "../../../tests/prettier.config.mjs",
+        "../../../tests/next-env.d.ts"
     ]
 }

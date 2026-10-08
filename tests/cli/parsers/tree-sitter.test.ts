@@ -1,15 +1,14 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { Tree } from 'web-tree-sitter';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { parseSqlFile } from '#cli/parsers/sql/statements.ts';
-import { readSwift, disposeSwift } from '#cli/parsers/swift.ts';
 import { readPython, disposePython } from '#cli/parsers/python.ts';
+import { readSwift, disposeSwift } from '#cli/parsers/swift/source.ts';
+import { TYPED_DECLARATION } from '#tests/config/cli/parsers/tree-sitter.ts';
 import { parserFor, parseSource, visitParsed } from '#cli/parsers/tree-sitter.ts';
-import { SQL_DECLARATION, TYPED_DECLARATION } from '#tests/config/cli/parsers/tree-sitter.ts';
 
 test('run-owned parses separate grammars and copied trees survive cache cleanup', async () => {
     const reads: ReadCache = { root: '/repository', sources: new Map(), memo: new Map() };
@@ -26,9 +25,6 @@ test('run-owned parses separate grammars and copied trees survive cache cleanup'
         expect(javascript.rootNode.hasError).toBe(true);
         expect(repeated).not.toBe(typescript);
         expect(repeated.rootNode.text).toBe(TYPED_DECLARATION);
-        const sql = await parseSqlFile(SQL_DECLARATION, reads);
-        expect(sql.error).toBeUndefined();
-        expect(sql.statements).toHaveLength(1);
         resources.dispose();
         expect(typescript.rootNode.text).toBe(TYPED_DECLARATION);
         using nextResources = new DisposableStack();
@@ -65,7 +61,7 @@ test('a rejected observation read is evicted and partial trees are released befo
     const failed = await rejection(visitParsed(input, readPython, disposePython));
     expect(failed).toContain('second.py');
     expect(deletion).toHaveBeenCalledTimes(1);
-    writeFileSync(join(sandbox.path, 'second.py'), 'def second():\n    return 2\n');
+    await writeFile(join(sandbox.path, 'second.py'), 'def second():\n    return 2\n');
     using recovered = await visitParsed(input, readPython, disposePython);
     expect(recovered.value.functions.map(({ name }) => name)).toStrictEqual(['first', 'second']);
     expect(recovered.value.modules[0]!.tree.rootNode.text).toBe('def first():\n    return 1\n');

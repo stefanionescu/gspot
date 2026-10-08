@@ -10,28 +10,18 @@ import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
-
-import {
-    statSync,
-    chmodSync,
-    lstatSync,
-    unlinkSync,
-    symlinkSync,
-    readFileSync,
-    readlinkSync,
-    writeFileSync,
-} from 'node:fs';
+import { stat, chmod, lstat, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
 // Later user edits remain intact across replacement and giving the file back.
-function expectEditedLinkPreserved(log: Log, path: string, absolute: string, next: FileCopy): void {
+async function expectEditedLinkPreserved(log: Log, path: string, absolute: string, next: FileCopy): Promise<void> {
     expect(applyPlan(log, proposeReplacement(log, { path: path, next: next, kind: 'config', canReplace: true }))).toBe(
         'changed',
     );
-    unlinkSync(absolute);
-    symlinkSync('../tool/original.sh', absolute);
+    await unlink(absolute);
+    await symlink('../tool/original.sh', absolute);
     expect(applyPlan(log, proposeReplacement(log, { path: path, next: next, kind: 'config' }))).toBe('preserved');
     expect(applyPlan(log, proposeRestoration(log, path))).toBe('preserved');
-    expect(readlinkSync(absolute)).toBe('../tool/original.sh');
+    expect(await readlink(absolute)).toBe('../tool/original.sh');
 }
 
 if (isPosix) {
@@ -39,7 +29,7 @@ if (isPosix) {
         await using directory = await testdir();
         await createFileTree(directory.path, { '.gspot/authored.txt': 'keep\n' });
         const original = Buffer.from([0, 255, 1, 10]);
-        writeFileSync(join(directory.path, 'config.txt'), original, { mode: 0o640 });
+        await writeFile(join(directory.path, 'config.txt'), original, { mode: 0o640 });
         let log = openOwnership(directory.path);
         try {
             expect(
@@ -67,9 +57,10 @@ if (isPosix) {
             log = openOwnership(directory.path);
             expect(applyPlan(log, proposeRestoration(log, 'config.txt'))).toBe('changed');
             expect(log.files.read('config.txt')).toBeUndefined();
-            expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
+            expect(await readFile(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
             expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
-            expect(statSync(join(directory.path, '.gspot/state/ownership.json')).mode & 0o777).toBe(getKeptMode(0o600));
+            const ownershipMetadata = await stat(join(directory.path, '.gspot/state/ownership.json'));
+            expect(ownershipMetadata.mode & 0o777).toBe(getKeptMode(0o600));
         } finally {
             log[Symbol.dispose]();
         }
@@ -84,9 +75,9 @@ if (isPosix) {
         });
         const path = 'vendor/tools/.bin/tool';
         const absolute = join(directory.path, path);
-        chmodSync(join(directory.path, 'vendor/tools/tool/bin.sh'), 0o755);
-        chmodSync(join(directory.path, 'vendor/tools/tool/original.sh'), 0o755);
-        symlinkSync('../tool/original.sh', absolute);
+        await chmod(join(directory.path, 'vendor/tools/tool/bin.sh'), 0o755);
+        await chmod(join(directory.path, 'vendor/tools/tool/original.sh'), 0o755);
+        await symlink('../tool/original.sh', absolute);
         const next = { bytes: Buffer.from('../tool/bin.sh'), mode: 0o777, isLink: true as const };
         let log = openOwnership(directory.path);
         try {
@@ -106,11 +97,10 @@ if (isPosix) {
             log[Symbol.dispose]();
             log = openOwnership(directory.path);
             expect(applyPlan(log, proposeRestoration(log, path))).toBe('changed');
-            expect(lstatSync(absolute, { throwIfNoEntry: false })).toBeUndefined();
-            expect(statSync(join(directory.path, 'vendor/tools/tool/original.sh')).mode & 0o777).toBe(
-                getKeptMode(0o755),
-            );
-            expectEditedLinkPreserved(log, path, absolute, next);
+            expect(await lstat(absolute).catch((error: unknown) => error)).toMatchObject({ code: 'ENOENT' });
+            const originalMetadata = await stat(join(directory.path, 'vendor/tools/tool/original.sh'));
+            expect(originalMetadata.mode & 0o777).toBe(getKeptMode(0o755));
+            await expectEditedLinkPreserved(log, path, absolute, next);
         } finally {
             log[Symbol.dispose]();
         }
@@ -125,14 +115,15 @@ if (isPosix) {
             expect(applyPlan(log, proposeReplacement(log, { path: 'tool', next: next, kind: 'config' }))).toBe(
                 'changed',
             );
-            unlinkSync(join(directory.path, 'tool'));
-            writeFileSync(join(directory.path, 'tool'), 'target', { mode: 0o777 });
+            await unlink(join(directory.path, 'tool'));
+            await writeFile(join(directory.path, 'tool'), 'target', { mode: 0o777 });
             expect(applyPlan(log, proposeReplacement(log, { path: 'tool', next: next, kind: 'config' }))).toBe(
                 'preserved',
             );
             expect(applyPlan(log, proposeRestoration(log, 'tool'))).toBe('preserved');
-            expect(lstatSync(join(directory.path, 'tool')).isFile()).toBe(true);
-            expect(readFileSync(join(directory.path, 'target'), 'utf8')).toBe('authored target');
+            const restoredMetadata = await lstat(join(directory.path, 'tool'));
+            expect(restoredMetadata.isFile()).toBe(true);
+            expect(await readFile(join(directory.path, 'target'), 'utf8')).toBe('authored target');
         } finally {
             log[Symbol.dispose]();
         }

@@ -1,9 +1,9 @@
 export const XCTEST_EXECUTION_POLICY = `configurations = ["xctest", "xcode"]
-[tools.xcode]
-project = "Example.xcodeproj"
-scheme = "Example"
-[tools.xctest]
-coverage = [{ target = "Example", percent = 80 }]
+[swift]
+xcode_project = "Example.xcodeproj"
+xcode_scheme = "Example"
+[coverage]
+overrides = [{ target = "Example", percent = 80 }]
 `;
 
 export const SHEBANG = `#!${process.execPath}\n`;
@@ -11,11 +11,11 @@ export const SHEBANG = `#!${process.execPath}\n`;
 export const XCTEST_FAILURES = [
     {
         failure: 'no-project',
-        policy: 'configurations = ["xctest", "xcode"]\n[tools.xcode]\nproject = ""\nscheme = "Example"\n[tools.xctest]\ncoverage = [{ target = "Example", percent = 80 }]\n',
+        policy: 'configurations = ["xctest", "xcode"]\n[swift]\nxcode_project = ""\nxcode_scheme = "Example"\n[coverage]\noverrides = [{ target = "Example", percent = 80 }]\n',
         build: '',
         coverage: 1,
-        code: 2,
-        status: 'error',
+        code: 0,
+        status: 'skipped',
         produced: false,
     },
     {

@@ -6,23 +6,22 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { buildFolder } from '#cli/checks/language/swift/cache.ts';
+import { useCacheDirectory } from '#tests/harness/environment.ts';
+import { SWIFT_PACKAGE } from '#tests/config/samples/swift/source.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { swiftBuild, swiftlintAnalyze } from '#cli/checks/language/swift/build.ts';
-import { rmSync, mkdirSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 test('analysis refuses an incomplete compiler log after a failed build', async () => {
     await using sandbox = await testdir();
     using _executables = mockPinnedExecutables(
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
+    await using _cache = await useCacheDirectory();
+    await createFileTree(sandbox.path, { 'Package.swift': SWIFT_PACKAGE, 'gspot.toml': buildPolicy(['swift']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
     const run = spyOn(spawn, 'run')
         .mockResolvedValueOnce({ code: 7, stdout: '', stderr: '', missing: false, duration: 1 })
@@ -40,10 +39,8 @@ test('a silent successful SwiftLint analyzer returns no findings', async () => {
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
     using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
+    await using _cache = await useCacheDirectory();
+    await createFileTree(sandbox.path, { 'Package.swift': SWIFT_PACKAGE, 'gspot.toml': buildPolicy(['swift']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
     resources.use(
         spyOn(spawn, 'run').mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 }),
@@ -57,10 +54,8 @@ test('a silent failed SwiftLint analyzer reports its exit code', async () => {
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
     using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
+    await using _cache = await useCacheDirectory();
+    await createFileTree(sandbox.path, { 'Package.swift': SWIFT_PACKAGE, 'gspot.toml': buildPolicy(['swift']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
     resources.use(
         spyOn(spawn, 'run')
@@ -75,11 +70,8 @@ test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async 
     using _executables = mockPinnedExecutables(
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
+    await using _cache = await useCacheDirectory();
+    await createFileTree(sandbox.path, { 'Package.swift': SWIFT_PACKAGE, 'gspot.toml': buildPolicy(['swift']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
     const run = spyOn(spawn, 'run');
     if (step === 'analyzer')
@@ -97,20 +89,17 @@ test('manual analysis clears its own compiler state without consuming the increm
     using _executables = mockPinnedExecutables(
         [...configurationManifests().values()].flatMap((manifest) => manifest.tools),
     );
-    using resources = new DisposableStack();
-    resources.defer(() => {
-        rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
-    });
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['swift']) });
+    await using _cache = await useCacheDirectory();
+    await createFileTree(sandbox.path, { 'Package.swift': SWIFT_PACKAGE, 'gspot.toml': buildPolicy(['swift']) });
     const input = buildCheckInput(await openSession(sandbox.path), 'swift/swiftlint-analyze');
     const compile = buildPlan(input);
     const analyzer = buildPlan(input, 'analyze');
     const compilerState = join(compile.folder, 'package', 'state');
     const analyzerState = join(analyzer.scratch!, 'state');
-    mkdirSync(join(compile.folder, 'package'), { recursive: true });
-    mkdirSync(analyzer.scratch!, { recursive: true });
-    writeFileSync(compilerState, 'incremental');
-    writeFileSync(analyzerState, 'old analyzer');
+    await mkdir(join(compile.folder, 'package'), { recursive: true });
+    await mkdir(analyzer.scratch!, { recursive: true });
+    await writeFile(compilerState, 'incremental');
+    await writeFile(analyzerState, 'old analyzer');
     const run = spyOn(spawn, 'run')
         .mockResolvedValueOnce({ code: 0, stdout: 'incremental log', stderr: '', missing: false, duration: 1 })
         .mockResolvedValueOnce({ code: 0, stdout: 'complete compiler log', stderr: '', missing: false, duration: 1 })
@@ -118,10 +107,10 @@ test('manual analysis clears its own compiler state without consuming the increm
     try {
         expect(await swiftBuild(input)).toStrictEqual([]);
         expect(await swiftlintAnalyze(input)).toStrictEqual([]);
-        expect(readFileSync(compilerState, 'utf8')).toBe('incremental');
-        expect(existsSync(analyzerState)).toBe(false);
-        expect(readFileSync(analyzer.log, 'utf8')).toContain('complete compiler log');
-        expect(readFileSync(compile.log, 'utf8')).toContain('incremental log');
+        expect(await readFile(compilerState, 'utf8')).toBe('incremental');
+        expect(await pathExists(analyzerState)).toBe(false);
+        expect(await readFile(analyzer.log, 'utf8')).toContain('complete compiler log');
+        expect(await readFile(compile.log, 'utf8')).toContain('incremental log');
     } finally {
         run.mockRestore();
     }

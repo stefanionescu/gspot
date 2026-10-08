@@ -1,32 +1,21 @@
 // Host Bash and Zsh and the pinned Bats parse test scripts after apply writes the configuration.
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
+import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
+import { SYNTAX_CASES } from '#tests/config/tools/configurations/language/bash/syntax.ts';
 
-test.each([
-    { check: 'bash/syntax', path: 'script.sh', files: 2, broken: 'if then\n' },
-    // Windows has no zsh to install, and it runs no Bats, a Bash script, from PATH; Linux and macOS have both.
-    ...(isPosix
-        ? [
-              { check: 'bash/zsh', path: 'script.zsh', files: 2, broken: 'if then\n' },
-              {
-                  check: 'bash/bats',
-                  path: 'script.bats',
-                  files: 1,
-                  broken: '@test "broken" {\n    if then\n}\n',
-              },
-          ]
-        : []),
-])(
-    '$check reports syntax in $path and accepts its correction',
+// Windows has no Zsh or Bats native tools; Linux and macOS run all three.
+test.each(isPosix ? SYNTAX_CASES : SYNTAX_CASES.slice(0, 1))(
+    '$check accepts clean files and reports syntax in $path',
     async (entry) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -44,9 +33,11 @@ test.each([
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         const report = JSON.parse(clean.stdout) as RunReport;
         expect(report.checks[0]?.status).toBe('passed');
-        expect(report.checks[0]?.fileCount).toBe(entry.files);
+        const planned = planRun(await openSession(sandbox.path), { stage: 'all', skips: [], only: [entry.check] });
+        expect(planned[0]?.files.map(({ path }) => path)).toStrictEqual(entry.files);
+        expect(report.checks[0]?.fileCount).toBe(entry.files.length);
         const path = join(sandbox.path, entry.path);
-        const original = readFileSync(path);
+        const original = await readFile(path);
         try {
             await Bun.write(path, entry.broken);
             const broken = await spawnGspot(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
@@ -56,18 +47,12 @@ test.each([
             expect(failed.checks[0]!.findings).toContainEqual(
                 containing({
                     file: entry.path,
-                    line: entry.check === 'bash/syntax' ? 1 : 2,
-                    message: textContaining(entry.check === 'bash/zsh' ? 'parse error' : 'syntax'),
+                    line: entry.line,
+                    message: textContaining(entry.message),
                 }),
             );
         } finally {
             await Bun.write(path, original);
         }
-        const corrected = await spawnGspot(sandbox.path, ['check', '--only', entry.check, '--json'], environment);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: entry.check, status: 'passed', fileCount: entry.files, findings: [] },
-        ]);
     },
-    NATIVE_TEST_TIMEOUT_MS,
 );

@@ -1,17 +1,22 @@
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/platform/source.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { toolPin } from '#cli/configurations/pins.ts';
+import { checkInput } from '#cli/execution/built-in.ts';
+import { tsc } from '#cli/checks/language/typescript.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { nextSettingsProblems } from '#cli/parsers/nextjs.ts';
+import { parseNextBuildFlags } from '#cli/parsers/command.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
+import { allChecks } from '#cli/configurations/declarations.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
+import { readSource, createReadCache } from '#cli/platform/source.ts';
+import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 
 import {
-    PAIRS,
-    TSC_LINE,
     CAUSE_MARKS,
     NEXT_CONFIG,
     SHOWN_LINES,
@@ -29,41 +34,6 @@ function failureSummary(text: string): string {
     const marked = lines.findIndex((line) => CAUSE_MARKS.some((mark) => line.includes(mark)));
     const shown = marked === -1 ? lines.slice(-SHOWN_LINES) : lines.slice(marked, marked + MARKED_LINES);
     return shown.join(' ').trim();
-}
-
-// next typegen writes next-env.d.ts and the route types, which a fresh clone lacks and tsc needs.
-// CI=1 stops Next.js installing missing packages; generated files stay in the scratch copy.
-async function typegen(input: CheckInput): Promise<void> {
-    const cwd = input.scopeRoot;
-    const result = await runCheckTool(input, ['next', 'typegen'], {
-        cwd,
-        env: { CI: '1' },
-    });
-    const output = `${result.stdout}${result.stderr}`;
-    if (result.code !== 0) throw new Error(`The next typegen command failed: ${failureSummary(output)}`);
-}
-
-function typeFinding(input: CheckInput, line: string): Finding[] {
-    const groups = TSC_LINE.exec(line)?.groups;
-    if (groups === undefined) return [];
-    const file = groups['file'];
-    if (file === undefined) return [];
-    const rule = groups['rule'];
-    if (rule === undefined) return [];
-    const text = groups['text'];
-    if (text === undefined) return [];
-    return [
-        findingAt(
-            input,
-            {
-                file: input.scope === '' ? file : `${input.scope}/${file}`,
-                line: Number(groups['line']),
-                column: Number(groups['column']),
-            },
-            rule,
-            text,
-        ),
-    ];
 }
 
 /**
@@ -119,46 +89,34 @@ export function nextConfiguration(input: CheckInput): Finding[] {
 }
 
 /**
- * Packages that ship together sit on one version in every package.json.
- * @param input the check input
- * @returns the findings
+ * Generate Next.js route types and run the shared TypeScript check in the same disposable project.
+ * @param session the repository and tool session
+ * @param planned the Next.js compiler check
+ * @returns the compiler findings and native execution status
  */
-export function versionPairs(input: CheckInput): Finding[] {
-    const manifests = sourcePaths(input).filter((path) => path === 'package.json' || path.endsWith('/package.json'));
-    return manifests.flatMap((path) => {
-        const parsed = parsePackageManifest(readSource(input.root, path, input.reads).toString('utf8'), path);
-        const versions = { ...parsed.devDependencies, ...parsed.dependencies };
-        return PAIRS.filter(
-            ([left, right]) =>
-                versions[left] !== undefined && versions[right] !== undefined && versions[left] !== versions[right],
-        ).map(([left, right]) =>
-            findingAt(
-                input,
-                { file: path, line: 1 },
-                'version-pair',
-                `${left} is ${versions[left] ?? ''} and ${right} is ${versions[right] ?? ''}. They ship together, so they sit on one version.`,
-            ),
-        );
+export async function nextjsTsc(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
+    const started = performance.now();
+    using scratchFolder = await copyIntoScratch(checkInput(session, planned));
+    const root = scratchFolder.path;
+    const isolated = { ...session, root, reads: createReadCache(root) };
+    // CI prevents package installation; generated Next.js files stay in the compiler's scratch project.
+    const generated = await runCheckTool(checkInput(isolated, planned), ['next', 'typegen'], {
+        cwd: join(root, planned.scope.scope.path),
+        env: { CI: '1' },
     });
-}
-
-/**
- * Has Next.js write its types, then runs the type check of the scope.
- * @param input the check input
- * @returns one finding for each type error
- */
-export async function nextTypes(input: CheckInput): Promise<Finding[]> {
-    using scratchFolder = await copyIntoScratch(input);
-    const scratch = scratchFolder.path;
-    const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
-    await typegen(isolated);
-    const cwd = isolated.scopeRoot;
-    const command = ['tsc', '--noEmit', '-p', 'tsconfig.json', '--pretty', 'false'];
-    const result = await runCheckTool(isolated, command, { cwd });
-    const found = result.stdout.split('\n').flatMap((line) => typeFinding(input, line));
-    const output = `${result.stdout}\n${result.stderr}`;
-    if (result.code !== 0 && found.length === 0) throw new Error(`The tsc command failed: ${failureSummary(output)}`);
-    return found;
+    const output = `${generated.stdout}${generated.stderr}`;
+    if (generated.code !== 0) throw new Error(`The next typegen command failed: ${failureSummary(output)}`);
+    const compiler = allChecks(session.manifests.values()).get('typescript/tsc');
+    if (compiler === undefined) throw new Error('The Next.js compiler check requires typescript/tsc.');
+    const result = await tsc(isolated, {
+        ...planned,
+        check: { ...compiler.check, ...planned.check },
+        tool: toolPin(session.manifests.values(), 'tsc', compiler.configuration),
+    });
+    result.duration = performance.now() - started;
+    return result.command === undefined
+        ? result
+        : { ...result, command: result.command.map((part) => part.replaceAll(root, () => session.root)) };
 }
 
 /**
@@ -171,7 +129,10 @@ export async function nextBuild(input: CheckInput): Promise<Finding[]> {
     const scratch = scratchFolder.path;
     const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
     const cwd = isolated.scopeRoot;
-    const flags = input.view.options('tools.next')['build_flags'] as string[];
+    const manifest = parsePackageManifest(
+        readSource(input.root, posix.join(input.scope, 'package.json'), input.reads).toString('utf8'),
+    );
+    const flags = parseNextBuildFlags(manifest.scripts?.['build'] ?? 'next build');
     const command = ['next', 'build', ...flags];
     const result = await runCheckTool(isolated, command, { cwd, env: { CI: '1' } });
     if (result.code === 0) return [];

@@ -1,9 +1,9 @@
 // Why a planned check does not run: an ignore, a waiting setting, a rule, the platform, or a flag.
 import ignore from 'ignore';
 import { readText } from '#cli/platform/source.ts';
-import { toolName } from '#cli/configurations/pins.ts';
-import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import { coversScope, pathMatcher } from '#cli/repository/selectors.ts';
+import { coversScope } from '#cli/repository/selectors.ts';
+import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
+import { getProjectDependencies } from '#cli/repository/manifests.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
@@ -19,14 +19,19 @@ import type {
 } from '#cli/types/planning.ts';
 
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
-function conditionSkip(check: PlannedCheck, hasGit: boolean): Skip {
-    const { configuration, git } = { ...check.manifest?.configuration.when, ...check.check.when };
+function conditionSkip(check: PlannedCheck, hasGit: boolean, projects: ProjectManifest[]): Skip {
+    const { configuration, git, dependencies } = { ...check.manifest?.configuration.when, ...check.check.when };
     if (configuration !== undefined && !check.scope.view.configurations.includes(configuration))
         return {
             cause: 'condition',
             note: `Needs the ${configuration} configuration, which this scope does not select.`,
         };
-    if (git === undefined || git === hasGit) return undefined;
+    if (
+        dependencies !== undefined &&
+        !dependencies.some((name) => name in getProjectDependencies(projects, check.scope.scope.path))
+    )
+        return { cause: 'condition', note: `Needs a project dependency: ${dependencies.join(', ')}.` };
+    if (git !== !hasGit) return undefined;
     return {
         cause: 'condition',
         note: git
@@ -68,18 +73,11 @@ function platformSkip(check: CheckDeclaration, tool: ToolPin | undefined, host: 
     return undefined;
 }
 
-// Native ignore syntax combines authored file content with the tool's saved ordered exclusions.
+// Native ignore syntax belongs to the check's authored or generated ignore file.
 function nativeIgnore(session: Session, check: PlannedCheck): NativeIgnore | undefined {
     const file = check.check.ignore_file;
     if (file === undefined) return undefined;
-    const text = readText(session.root, file, session.reads);
-    const tool = toolName(check.check);
-    const setting = tool === undefined ? undefined : check.scope.view.settings[`tools.${tool}.exclude`];
-    const lines = (Array.isArray(setting) ? setting : []).filter((line: unknown) => typeof line === 'string');
-    // Saved exclusions remain effective when their generated ignore file has no active tool consumer.
-    const matcher = ignore()
-        .add(text ?? '')
-        .add(lines);
+    const matcher = ignore().add(readText(session.root, file, session.reads) ?? '');
     return { file, matches: matcher.ignores.bind(matcher) };
 }
 
@@ -112,12 +110,20 @@ export function selectionStatus(
  * @param host the platform and architecture the run is on
  * @param hasGit whether the repository is a Git repository
  * @param policy the repository level
+ * @param projects the validated project manifests
  * @returns the skip
  */
-export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, hasGit: boolean, policy: Policy): Skip {
+export function skipFor(
+    check: PlannedCheck,
+    options: PlanOptions,
+    host: Host,
+    hasGit: boolean,
+    policy: Policy,
+    projects: ProjectManifest[],
+): Skip {
     const selected = selectionStatus(policy, check.scope, check.check);
     if (selected !== undefined) return selected;
-    const condition = conditionSkip(check, hasGit);
+    const condition = conditionSkip(check, hasGit, projects);
     if (condition !== undefined) return condition;
     const byPlatform = options.includeUnsupported === true ? undefined : platformSkip(check.check, check.tool, host);
     if (byPlatform !== undefined) return byPlatform;
@@ -125,30 +131,18 @@ export function skipFor(check: PlannedCheck, options: PlanOptions, host: Host, h
 }
 
 /**
- * Restrict file checks through policy exclusions and declared native ignore files.
+ * Restrict file checks through their declared native ignore files.
  * @param session the source-read owner
  * @param check the planned check
  * @returns the check with its files restricted
  */
 export function restrictIgnoredPaths(session: Session, check: PlannedCheck): PlannedCheck {
     if (check.skip !== undefined || check.check.runs !== 'files' || check.files.length === 0) return check;
-    const ignored = check.scope.view
-        .ignoresFor(check.check.name)
-        .flatMap((entry) =>
-            entry.rule === undefined && entry.paths !== undefined && entry.paths.length > 0
-                ? [pathMatcher(entry.paths)]
-                : [],
-        );
-    const owners = ignored.length === 0 ? [] : [POLICY_FILE];
     const native = nativeIgnore(session, check);
-    if (native !== undefined) {
-        ignored.push(native.matches);
-        owners.push(native.file);
-    }
-    if (ignored.length === 0) return check;
-    const files = check.files.filter((file) => !ignored.some((matches) => matches(file.path)));
+    if (native === undefined) return check;
+    const files = check.files.filter((file) => !native.matches(file.path));
     return files.length === 0
-        ? { ...check, skip: { cause: 'ignore', note: `all selected paths are disabled by ${owners.join(' or ')}` } }
+        ? { ...check, skip: { cause: 'ignore', note: `all selected paths are disabled by ${native.file}` } }
         : { ...check, files };
 }
 

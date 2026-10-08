@@ -1,10 +1,10 @@
 export const POLICY_PATHS = ['gspot.toml', '.gspot/config/lychee.toml'];
 
 export const LINK_POLICY = `configurations = ["docs"]
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = ["docs"]
-[[tools.lychee.exclude]]
+[[ignore]]
+check = "docs/lychee"
 paths = ["ignored/**"]
 reason = "These pages are evaluated only after the documentation build."
 `;
@@ -58,8 +58,7 @@ export const NEXT_BUILD_FILES = {
     'web/src/data.ts': 'export const count = 1;\n',
 };
 
-export const NEXT_BUILD_TABLES = `[[scope]]
-path = "web"
+export const NEXT_BUILD_TABLES = `[scope."web"]
 configurations = ["nextjs"]
 `;
 

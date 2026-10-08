@@ -16,9 +16,9 @@ describe('configuration directory boundaries', () => {
                 ] as const,
         ),
     )('%s refuses escaping directory %j before filesystem discovery', (table, path) => {
-        const text = stringify(table === 'scope' ? { scope: [{ path }] } : { agent_rules: { folder: path } });
+        const text = stringify(table === 'scope' ? { scope: { [path]: {} } } : { agent_rules: { folder: path } });
         const problems = policyProblems(text);
-        expect(problems.join('\n')).toContain(table === 'scope' ? 'scope.0.path' : 'agent_rules.folder');
+        expect(problems.join('\n')).toContain(table === 'scope' ? `scope.${path}` : 'agent_rules.folder');
         expect(problems.join('\n')).toContain('Use a relative path');
     });
 
@@ -27,11 +27,11 @@ describe('configuration directory boundaries', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { [`${path}/source.ts`]: 'export const count = 1;\n' });
         const policy = parseStrictPolicy(
-            stringify({ scope: [{ path }], agent_rules: { folder: 'agent rules/café 100%' } }),
+            stringify({ scope: { [path]: {} }, agent_rules: { folder: 'agent rules/café 100%' } }),
             sandbox.path,
         );
-        expect(policy.scopes[0]?.path).toBe(path);
-        expect(policy.agentRules.folder).toBe('agent rules/café 100%');
+        expect(Object.keys(policy.scope)).toStrictEqual([path]);
+        expect(policy.agent_rules.folder).toBe('agent rules/café 100%');
     });
 });
 
@@ -54,27 +54,23 @@ test.each([
 test.each(["author's name", '$(printf injected); *'])(
     'an existing naming entry %j asks for a reason on that entry',
     (name) => {
-        const found = policyProblems(
-            stringify({ configurations: ['naming'], require_reasons: true, naming: { allowed: [{ name }] } }),
-        );
+        const found = policyProblems(stringify({ configurations: ['naming'], naming: { allowed: { [name]: '' } } }));
         expect(found).toHaveLength(1);
         expect(found[0]).toContain(name);
-        expect(found[0]).toContain('Add `reason = "..."` to this entry.');
+        expect(found[0]).toContain('reason');
         expect(found[0]).not.toContain('run:');
         const reason = 'The external interface fixes this exact name.';
         const corrected = parseStrictPolicy(
-            stringify({ configurations: ['naming'], require_reasons: true, naming: { allowed: [{ name, reason }] } }),
+            stringify({ configurations: ['naming'], naming: { allowed: { [name]: reason } } }),
         );
-        expect(corrected.naming.allowed).toStrictEqual([{ name, reason }]);
+        expect(corrected.naming.allowed).toStrictEqual({ [name]: reason });
     },
 );
 
 test.each([false, true])(
     'override rule severities are refused without accepting sibling rule selections (scoped: %s)',
     (nested) => {
-        const prefix = nested
-            ? '[[scope]]\npath = "app"\n[[scope.tools.eslint.overrides]]'
-            : '[[tools.eslint.overrides]]';
+        const prefix = nested ? '[scope."app"]\n[[scope."app".tools.eslint.overrides]]' : '[[tools.eslint.overrides]]';
         const source = buildPolicy(['javascript'], {
             tables: `${prefix}\npaths = ["src/**"]\nrules = {eqeqeq = 0, "no-var" = []}\n`,
         });
@@ -82,18 +78,18 @@ test.each([false, true])(
         expect(() => readPolicyText(source)).toThrow('gspot ignore');
         const corrected = parseStrictPolicy(source.replace('eqeqeq = 0, ', ''));
         expect(nested ? corrected.scopeTables['app']?.tools?.['eslint'] : corrected.tools['eslint']).toStrictEqual({
-            overrides: [{ paths: ['src/**'], rules: { 'no-var': [] } }],
+            overrides: [{ paths: [nested ? 'app/src/**' : 'src/**'], rules: { 'no-var': [] } }],
         });
     },
 );
 
 test.each(UNSAFE_DIRECTORIES)('authored agent rules refuse an escaping project folder %j', (path) => {
-    const found = policyProblems(stringify({ agent_rules: { project_folder: path } }));
-    expect(found).toContainEqual(textContaining('agent_rules.project_folder'));
+    const found = policyProblems(stringify({ agent_rules: { own_rules_folder: path } }));
+    expect(found).toContainEqual(textContaining('agent_rules.own_rules_folder'));
     expect(found).toContainEqual(textContaining('Use a relative path'));
 });
 
 test('authored agent rules accept a repository-relative project folder', () => {
-    const policy = parseStrictPolicy(stringify({ agent_rules: { project_folder: 'rules/café 100%' } }));
-    expect(policy.agentRules.project_folder).toBe('rules/café 100%');
+    const policy = parseStrictPolicy(stringify({ agent_rules: { own_rules_folder: 'rules/café 100%' } }));
+    expect(policy.agent_rules.own_rules_folder).toBe('rules/café 100%');
 });

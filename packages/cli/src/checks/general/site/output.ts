@@ -8,10 +8,8 @@ import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import type { NameAllowance } from '#cli/types/policy/settings.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import { SITEMAP_LOCATION } from '#cli/config/checks/general/site.ts';
-import type { SizeLimit, LinkExclusion } from '#cli/types/checks/general/site.ts';
 import { filesUnder, requireBuild, repositoryPath } from '#cli/checks/general/site/build.ts';
 import { purgecssReportSchema, linkinatorReportSchema, htmlValidationReportSchema } from '#cli/parsers/schema/site.ts';
 
@@ -28,11 +26,9 @@ function pageOf(url: string): [string, ...string[]] {
  * @param isExternal whether the links that leave the site count
  * @returns one finding for each broken link
  */
-export async function brokenLinks(input: CheckInput, isExternal: boolean): Promise<Finding[]> {
+export async function linkinator(input: CheckInput, isExternal: boolean): Promise<Finding[]> {
     const build = await requireBuild(input);
-    const skipped = (
-        (input.view.options('tools.linkinator')['exclude_urls'] as LinkExclusion[] | undefined) ?? []
-    ).flatMap((entry) => (entry.pattern === undefined ? [] : [entry.pattern]));
+    const skipped = input.view.options('links').allowed_urls;
     const skips = [
         // Linkinator serves the output on the loopback address, so an internal run skips every other host.
         ...(isExternal ? [] : [String.raw`^https?://(?!localhost|127\.0\.0\.1)`]),
@@ -112,9 +108,7 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const sheets = filesUnder(build.output).filter((path) => path.endsWith('.css'));
     if (sheets.length === 0) return [];
-    const safelist = ((input.view.options('tools.purgecss')['safelist'] as NameAllowance[] | undefined) ?? []).flatMap(
-        (entry) => entry.names ?? [],
-    );
+    const safelist = Object.keys(input.view.options('tools.purgecss').safelist);
     const argv = [
         'purgecss',
         '--css',
@@ -154,7 +148,7 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
  * @returns one finding for each ceiling passed
  */
 export async function siteSize(input: CheckInput): Promise<Finding[]> {
-    const limits = input.view.options('limits.site')['kilobytes'] as SizeLimit[];
+    const limits = input.view.options('site').max_kilobytes;
     const build = await requireBuild(input);
     const files = filesUnder(build.output);
     return limits.flatMap((limit) => {
@@ -192,7 +186,7 @@ export async function sitemap(input: CheckInput): Promise<Finding[]> {
         .filter((url) => url !== undefined)
         .toArray();
     const listed = new Set(urls.flatMap((url) => pageOf(url)));
-    const isLeftOut = pathMatcher(input.view.options('site')['sitemap_exclude'] as string[]);
+    const isLeftOut = pathMatcher(input.view.options('site').sitemap_exclude);
     const missing = urls
         .filter((url) => pageOf(url).every((page) => !files.has(page)))
         .map((url) =>

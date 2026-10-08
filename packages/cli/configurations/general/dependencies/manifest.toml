@@ -17,7 +17,7 @@ version = "2.6.0"
 min_version = "2.0.0"
 mise = "osv-scanner"
 brew = "osv-scanner"
-github = {name = "google/osv-scanner", version = "v2.6.0"}
+github = { name = "google/osv-scanner", version = "v2.6.0" }
 winget = "Google.OSVScanner"
 scoop = "osv-scanner"
 
@@ -83,10 +83,10 @@ level = "recommended"
 stage = "push"
 runs = "once"
 needs = ["network"]
-files = {filenames = ["bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "go.mod", "Cargo.lock", "Gemfile.lock", "gems.locked", "requirements.txt", "Pipfile.lock", "poetry.lock", "pdm.lock", "pylock.toml", "uv.lock", "pom.xml", "gradle.lockfile", "buildscript-gradle.lockfile", "conan.lock", "pubspec.lock", "mix.lock", "cabal.project.freeze", "stack.yaml.lock", "composer.lock", "renv.lock", "packages.config", "packages.lock.json", "*.deps.json"], paths = ["**/gradle/verification-metadata.xml", "gradle/verification-metadata.xml"], kinds = ["source", "generated"]}
+files = { filenames = ["bun.lock", "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "go.mod", "Cargo.lock", "Gemfile.lock", "gems.locked", "requirements.txt", "Pipfile.lock", "poetry.lock", "pdm.lock", "pylock.toml", "uv.lock", "pom.xml", "gradle.lockfile", "buildscript-gradle.lockfile", "conan.lock", "pubspec.lock", "mix.lock", "cabal.project.freeze", "stack.yaml.lock", "composer.lock", "renv.lock", "packages.config", "packages.lock.json", "*.deps.json"], paths = ["**/gradle/verification-metadata.xml", "gradle/verification-metadata.xml"], kinds = ["source", "generated"] }
 # The private tool lockfiles under .gspot stay out: a repository cannot upgrade a package that a gspot tool pins.
-command = ["osv-scanner", "scan", "source", "--config", "{config:osv-scanner}", "--format", "json", "--allow-no-lockfiles", "--recursive", "--experimental-exclude", ".gspot", "{root}"]
-output = {format = "json", items = "results", children = "packages.vulnerabilities", fields = {file = "source.path", rule = "id", message = "package.name package.version summary"}}
+command = ["osv-scanner", "scan", "source", "--config", "{tool_file:osv-scanner}", "--format", "json", "--allow-no-lockfiles", "--recursive", "--experimental-exclude", ".gspot", "{root}"]
+output = { format = "json", items = "results", children = "packages.vulnerabilities", fields = { file = "source.path", rule = "id", message = "package.name package.version summary" } }
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
 why = "An advisory identifies a vulnerability in a dependency version."
 help = "Upgrade the package the finding names. When no fix exists, accept the advisory with `gspot ignore dependencies/osv --rule <advisory-id> --reason \"<why>\" --until <YYYY-MM-DD>`. Recheck it before that date."
@@ -98,10 +98,10 @@ example = "Two workspace manifests declaring different versions of a dependency 
 level = "all"
 stage = "push"
 runs = "once"
-command = ["syncpack", "lint", "--config", "{config:syncpack}"]
+command = ["syncpack", "lint", "--config", "{tool_file:syncpack}"]
 tool = "syncpack"
-files = {filenames = ["package.json"]}
-output = {format = "lines"}
+files = { filenames = ["package.json"] }
+output = { format = "lines" }
 summary = "Checks that every workspace package resolves each dependency to one version."
 why = "Two versions of one dependency in a workspace mean two behaviors, and a bug that appears in one package only."
 help = "Run syncpack fix --config .gspot/config/syncpack.json, or align the versions by hand."
@@ -113,7 +113,7 @@ example = "A dependency declared with a range such as `^1.2.3` reports an unpinn
 level = "all"
 stage = "commit"
 runs = "once"
-files = {filenames = ["package.json"]}
+files = { filenames = ["package.json"] }
 summary = "Checks every package.json: exact versions, one packageManager across the workspace, a private root, and one kind of lockfile."
 why = "A version range installs a different tree tomorrow, and two package managers produce two trees today."
 help = "Pin the version the lockfile holds, name one packageManager, mark a workspace root private, and delete the lockfile of the manager the repository does not use."
@@ -136,7 +136,7 @@ example = "A Bun project without the required `[install] minimumReleaseAge` repo
 level = "all"
 stage = "commit"
 runs = "scope"
-files = {filenames = ["bunfig.toml", "bun.lock", "bun.lockb"], kinds = ["source", "generated"]}
+files = { filenames = ["bunfig.toml", "bun.lock", "bun.lockb"], kinds = ["source", "generated"] }
 summary = "Checks each Bun project's bunfig.toml for the required minimum release age and security scanner."
 why = "Most malicious releases are pulled within days, so a package nobody installs in its first week rarely harms anybody."
 help = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the message names, and the scanner under [install.security]."
@@ -148,7 +148,7 @@ example = "A locked package URL pointing to a host outside `dependencies.registr
 level = "recommended"
 stage = "commit"
 runs = "scope"
-files = {filenames = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock"], kinds = ["source", "generated"]}
+files = { filenames = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock"], kinds = ["source", "generated"] }
 summary = "Checks that npm, pnpm, Yarn, and text Bun lockfile downloads in each project scope use HTTPS and allowed registry hosts."
 why = "A lockfile line that resolves from another host installs code nobody chose, and a review rarely reads lockfiles."
 help = "Install the package from the registry again, or add the host to dependencies.registry_hosts."
@@ -170,13 +170,7 @@ summary = "The security scanner Bun names in [install.security]. An empty string
 [[setting]]
 name = "dependencies.registry_hosts"
 type = "list"
+items = "string"
 direction = "loosening"
 default = ["registry.npmjs.org", "registry.yarnpkg.com"]
 summary = "The hosts a lockfile may resolve packages from."
-
-[[setting]]
-name = "dependencies.ranges_allowed"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Manifest allowances with paths and reason fields for version ranges, such as a library others install."

@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { rmSync } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -12,7 +12,7 @@ test('the index keeps deleted tracked paths, encoded names, and excludes untrack
     expect(await readIndexEntries(sandbox.path)).toStrictEqual([]);
     gitOutput(sandbox.path, ['init', '-q']);
     gitOutput(sandbox.path, ['add', '--', path]);
-    rmSync(join(sandbox.path, path));
+    await rm(join(sandbox.path, path));
     const entries = await readIndexEntries(sandbox.path);
     expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
 });

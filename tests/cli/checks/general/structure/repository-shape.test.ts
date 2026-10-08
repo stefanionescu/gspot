@@ -7,7 +7,6 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { checkInput } from '#cli/execution/built-in.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
@@ -16,7 +15,7 @@ import { configurationLogic } from '#cli/checks/general/structure/config-logic.t
 import { staleAllowlists } from '#cli/checks/general/structure/stale-allowlists.ts';
 import { REPOSITORY_SHAPE_POLICY } from '#tests/config/cli/checks/general/structure/repository-shape.ts';
 
-test('documentation path exceptions must match tracked paths or actual documentation references', async () => {
+test('check path ignores must match tracked paths even when documentation mentions them', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'docs/guide.md': 'The runner writes `.reports/output.json`.\n',
@@ -25,17 +24,14 @@ test('documentation path exceptions must match tracked paths or actual documenta
         join(sandbox.path, 'gspot.toml'),
         stringify({
             level: 'all',
-            configurations: ['docs', 'structure'],
-            docs: {
-                exclude: [
-                    {
-                        paths: ['.reports/output.json', '.reports/unused.json'],
-                        reason: 'The runner writes an ignored report.',
-                    },
-                ],
-            },
+            configurations: ['docs', 'structure', 'nextjs'],
+            generated: [{ paths: ['missing.d.ts'], reason: 'The authored output must match a tracked file.' }],
             ignore: [
-                { check: 'docs/lychee', paths: ['.reports/output.json'], reason: 'An obsolete source exclusion.' },
+                {
+                    check: 'docs/lychee',
+                    paths: ['.reports/output.json', '.reports/unused.json'],
+                    reason: 'An obsolete source exclusion.',
+                },
             ],
         }),
     );
@@ -44,22 +40,19 @@ test('documentation path exceptions must match tracked paths or actual documenta
     });
     expect(staleAllowlists(selected).map(({ message: description }) => description)).toStrictEqual([
         '.reports/output.json under [[ignore]] matches no tracked file or folder.',
-        '.reports/unused.json under docs.exclude matches no tracked file or folder.',
+        '.reports/unused.json under [[ignore]] matches no tracked file or folder.',
+        'missing.d.ts under [[generated]] matches no tracked file or folder.',
     ]);
 });
 test('suppression validation ignores source values and valid reasons but refuses forbidden markers', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': 'require_reasons = true\nconfigurations = ["typescript", "bash", "security"]\n',
+        'gspot.toml': 'configurations = ["typescript", "bash", "security"]\n',
         'a.ts': 'const marker = /eslint-disable/u; // eslint-disable-next-line no-x -- Required generated protocol binding.\nlet y; // eslint-disable-line\n',
         'b.sh': '# shellcheck disable=SC2086 # reason: the split is wanted\necho x # nosemgrep\n',
     });
     const session = await openSession(sandbox.path);
-    const scope = session.scopes[0]!;
-    const check = scope.selected
-        .flatMap((manifest) => manifest.checks)
-        .find((check) => check.name === 'structure/suppressions')!;
-    const read = checkInput(session, { scope, check, files: session.repository.files });
+    const read = buildCheckInput(session, 'structure/suppressions');
     const found = await suppressions(read);
     expect(found.map((finding) => `${finding.file}:${String(finding.line)} ${finding.rule ?? ''}`)).toStrictEqual([
         'a.ts:2 eslint-no-reason',
@@ -141,7 +134,6 @@ test('folder layout exempts installed dependencies while tracked dependency enfo
     expect(result.report.checks.find((check) => check.check === 'structure/lone-files')?.findings).toMatchObject([
         { file: 'feature/only.ts', rule: 'lone-file' },
     ]);
-    expect(result.report.checks.find((check) => check.check === 'structure/lone-files')?.findings).toHaveLength(1);
     expect(
         result.report.checks
             .find((check) => check.check === 'structure/tracked-dependencies')

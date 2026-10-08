@@ -4,14 +4,12 @@ import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 
 export const COMMAND = ['check', '--only', 'site/svgo', '--json'];
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['site'],
 
     files: STATIC_SITE_FILES,
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'site/build',

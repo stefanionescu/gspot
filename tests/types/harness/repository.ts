@@ -9,7 +9,7 @@ export type RepositorySetup = {
     dependencies?: Record<string, string>;
     /** The source files of the repository. */
     files: Record<string, string>;
-    /** Static TypeScript project data serialized when the fixture is prepared. */
+    /** Static TypeScript project data serialized when the sandbox is prepared. */
     tsconfig?: Record<string, unknown>;
     /** Manual language and framework removals applied after initialization. */
     without?: string[];
@@ -17,7 +17,7 @@ export type RepositorySetup = {
     init?: string[];
     /** Tools on the PATH beside typos, ec, and ast-grep. */
     tools?: string[];
-    /** Whether this repository's node_modules is linked into the sandbox; it is unless a fixture says otherwise. */
+    /** Whether this repository's node_modules is linked into the sandbox; it is unless a test says otherwise. */
     modules?: boolean;
     /** The level set after init; all unless a test says otherwise. */
     level?: Level;
@@ -31,10 +31,24 @@ export type TestRepository = { root: string; environment: Record<string, string>
 /** A test table's repository, setup, and default correction. */
 export type RepositoryScenario = RepositorySetup & {
     dirname?: string;
-    before?: (root: string) => void;
+    before?: (root: string) => void | Promise<void>;
     prepare?: (root: string, environment: Record<string, string>) => void | Promise<void>;
     corrected?: (entry: FindingCase) => Correction;
 };
 
 /** One installed repository shared by the cases of a table. */
 export type OwnedTestRepository = TestRepository & AsyncDisposable & { run: CheckCommand };
+
+/** Each declared runtime has six independent forms of project evidence. */
+export type RuntimeEvidenceCase = {
+    name: string;
+    runtime: string;
+    package: {
+        engines?: Record<string, string>;
+        scripts?: Record<string, string>;
+        devDependencies?: Record<string, string>;
+    };
+    source: string;
+    detected: boolean;
+    toolProjectManifest?: { engines: Record<string, string> };
+};

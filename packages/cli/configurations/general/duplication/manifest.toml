@@ -27,7 +27,7 @@ example = "Two selected files containing the same substantial code block can exc
 level = "all"
 stage = "push"
 runs = "scope"
-files = {languages = true}
+files = { languages = true }
 tool = "jscpd"
 summary = "Finds blocks of code copied between files. While the duplicated share stays at or under the ceiling it passes, and over it every copy is a finding that names both places."
 why = "A copied block is fixed in one place and stays broken in the other."
@@ -53,10 +53,3 @@ type = "number"
 direction = "ceiling"
 default = 4
 summary = "The largest share of duplicated lines the check accepts, as a number out of 100."
-
-[[setting]]
-name = "tools.jscpd.exclude"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Paths the duplication check skips, each with a reason."

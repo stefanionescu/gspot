@@ -29,11 +29,10 @@ export const HTML_ACCESSIBILITY_CORRECTED = `<!doctype html>
 /** Each selected site builds its authored page without changing the root source owner. */
 export const HTML_ACCESSIBILITY_SCOPES = `[agent_rules]
 enabled = false
-[[scope]]
-path = "app"
+[scope."app"]
 configurations = ["site"]
-[scope.site]
-build = "node build.mjs"
+[scope.app.site]
+build_command = ["node", "build.mjs"]
 `;
 /** Each public invocation selects one native reader and keeps its unrelated source unchanged. */
 export const HTML_ACCESSIBILITY_CHECKS: HtmlAccessibilityCheck[] = [
@@ -43,7 +42,7 @@ export const HTML_ACCESSIBILITY_CHECKS: HtmlAccessibilityCheck[] = [
         arguments: ['check', 'index.html', '--json', '--only', 'html/validate'],
         source: 'index.html',
         preserved: 'app/page.html',
-        configuration: '.gspot/config/html-validate-templates.json',
+        configuration: '.gspot/config/html-validate-source.json',
         findings: [
             { file: 'index.html', line: 7, column: 24, rule: 'no-autoplay' },
             { file: 'index.html', line: 8, column: 24, rule: 'no-autoplay' },

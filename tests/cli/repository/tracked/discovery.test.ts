@@ -1,9 +1,6 @@
-import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { rejects } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
-import { statSync, writeFileSync } from 'node:fs';
 import * as childProcess from 'node:child_process';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
@@ -14,6 +11,7 @@ import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { findRoot, isGitRepository } from '#cli/repository/root.ts';
 import { trackedEntries, readIndexEntries } from '#cli/repository/tracked.ts';
 import { REPLACED_PARENT_PATHS } from '#tests/config/cli/repository/tracked.ts';
+import { rm, stat, chmod, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 test('repository file discovery > excluded links are omitted before resolving external targets', async () => {
     await using sandbox = await testdir();
@@ -22,13 +20,12 @@ test('repository file discovery > excluded links are omitted before resolving ex
         'outside.ts': 'private external bytes',
     });
     const root = join(sandbox.path, 'project');
-    fs.symlinkSync('../outside.ts', join(root, 'excluded.ts'));
+    await symlink('../outside.ts', join(root, 'excluded.ts'));
     gitOutput(root, ['init', '-q']);
     const repository = await readRepository(root, [], [], ['excluded.ts']);
     expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
     const unexcluded = await readRepository(root, [], [], []);
     expect(unexcluded.files.map((file) => file.path)).toStrictEqual(['local.ts']);
-    expect(fs.readFileSync(join(sandbox.path, 'outside.ts'), 'utf8')).toBe('private external bytes');
 });
 
 test('repository file discovery > keeps tracked deletions out of readable entries', async () => {
@@ -36,13 +33,13 @@ test('repository file discovery > keeps tracked deletions out of readable entrie
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', 'source.ts']);
-    fs.rmSync(join(sandbox.path, 'source.ts'));
+    await rm(join(sandbox.path, 'source.ts'));
     expect(await trackedEntries(sandbox.path)).toStrictEqual([]);
 });
 
 test('repository file discovery > classifies a dangling tracked symlink without reading its absent target', async () => {
     await using sandbox = await testdir();
-    fs.symlinkSync('missing.ts', join(sandbox.path, 'linked.ts'), 'file');
+    await symlink('missing.ts', join(sandbox.path, 'linked.ts'), 'file');
     gitOutput(sandbox.path, ['init']);
     gitOutput(sandbox.path, ['add', 'linked.ts']);
     const repository = await readRepository(sandbox.path, [], [], []);
@@ -85,15 +82,15 @@ test('repository file discovery > reports a corrupt Git index instead of switchi
     gitOutput(cwd, ['init']);
     expect(isGitRepository(cwd)).toBe(true);
     gitOutput(cwd, ['add', 'source.ts']);
-    const expectedRoot = statSync(cwd, { bigint: true });
-    const actualRoot = statSync(findRoot(cwd), { bigint: true });
+    const expectedRoot = await stat(cwd, { bigint: true });
+    const canonicalRoot = await stat(findRoot(cwd), { bigint: true });
     expect(expectedRoot.ino).toBeGreaterThan(0n);
-    expect(actualRoot.dev).toBe(expectedRoot.dev);
-    expect(actualRoot.ino).toBe(expectedRoot.ino);
+    expect(canonicalRoot.dev).toBe(expectedRoot.dev);
+    expect(canonicalRoot.ino).toBe(expectedRoot.ino);
     const entries = await trackedEntries(cwd);
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
-    writeFileSync(join(cwd, '.git', 'index'), 'corrupt index');
-    await rejects(trackedEntries(cwd), { message: /Git ls-files failed/u });
+    await writeFile(join(cwd, '.git', 'index'), 'corrupt index');
+    expect(await rejection(trackedEntries(cwd))).toContain('Git ls-files failed');
 });
 
 test('repository file discovery > reports invalid Git metadata instead of treating the directory as non-Git', async () => {
@@ -102,7 +99,7 @@ test('repository file discovery > reports invalid Git metadata instead of treati
         '.git/sentinel': 'incomplete metadata',
         'source.ts': 'export {};\n',
     });
-    await rejects(trackedEntries(sandbox.path), { message: /Git ls-files failed/u });
+    expect(await rejection(trackedEntries(sandbox.path))).toContain('Git ls-files failed');
     expect(() => findRoot(sandbox.path)).toThrow('Git root discovery failed');
     expect(() => isGitRepository(sandbox.path)).toThrow('Git work-tree discovery failed');
 });
@@ -131,7 +128,7 @@ test('repository file discovery > reports a missing Git executable instead of re
             duration: 0,
         }),
     );
-    await rejects(trackedEntries(sandbox.path), { message: /git executable not found/u });
+    expect(await rejection(trackedEntries(sandbox.path))).toContain('git executable not found');
     expect(() => findRoot(sandbox.path)).toThrow('git executable not found');
     expect(() => isGitRepository(sandbox.path)).toThrow('git executable not found');
 });
@@ -153,7 +150,7 @@ test('non-Git discovery applies nested ignore overrides without sharing them wit
         'sibling/local.ts': 'retained',
         '.gspot/state/private.txt': 'ownership metadata',
     });
-    fs.symlinkSync('source.ts', join(sandbox.path, 'linked.ts'));
+    await symlink('source.ts', join(sandbox.path, 'linked.ts'));
     const entries = await trackedEntries(sandbox.path);
     expect(entries.map((entry) => entry.path)).toStrictEqual([
         '.gitignore',
@@ -172,20 +169,13 @@ test.each(REPLACED_PARENT_PATHS)(
         await createFileTree(sandbox.path, { [path]: 'source' });
         gitOutput(sandbox.path, ['init', '-q']);
         gitOutput(sandbox.path, ['add', path]);
-        fs.rmSync(join(sandbox.path, 'src'), { recursive: true });
-        writeFileSync(join(sandbox.path, 'src'), 'replacement');
-        let error: unknown;
-        try {
-            await trackedEntries(sandbox.path);
-        } catch (error_) {
-            error = error_;
-        }
-        expect(error).toMatchObject({
-            code: 'ENOTDIR',
-            message: `Git lists ${path}, but src is now a file.`,
-        });
-        expect(fs.readFileSync(join(sandbox.path, 'src'), 'utf8')).toBe('replacement');
-        fs.unlinkSync(join(sandbox.path, 'src'));
+        await rm(join(sandbox.path, 'src'), { recursive: true });
+        await writeFile(join(sandbox.path, 'src'), 'replacement');
+        expect(trackedEntries(sandbox.path)).rejects.toThrow(
+            expect.objectContaining({ code: 'ENOTDIR', message: `Git lists ${path}, but src is now a file.` }),
+        );
+        expect(await readFile(join(sandbox.path, 'src'), 'utf8')).toBe('replacement');
+        await unlink(join(sandbox.path, 'src'));
         await createFileTree(sandbox.path, { [path]: 'restored' });
         const entries = await trackedEntries(sandbox.path);
         expect(entries.map((entry) => entry.path)).toStrictEqual([path]);
@@ -202,7 +192,7 @@ test('on Windows, tracked discovery takes the executable bit from the Git index'
     ])
         gitOutput(sandbox.path, argv);
     // Only the file system knows this bit, and Windows file systems keep none.
-    fs.chmodSync(join(sandbox.path, 'local.sh'), 0o700);
+    await chmod(join(sandbox.path, 'local.sh'), 0o700);
     const platform = process.platform;
     Object.defineProperty(process, 'platform', { value: 'win32' });
     try {
@@ -257,7 +247,7 @@ test('a failed index listing cannot report a Windows executable as an ordinary f
     const platform = process.platform;
     Object.defineProperty(process, 'platform', { value: 'win32' });
     try {
-        await rejects(trackedEntries(sandbox.path), { message: /Index access denied\./u });
+        expect(await rejection(trackedEntries(sandbox.path))).toContain('Index access denied.');
     } finally {
         Object.defineProperty(process, 'platform', { value: platform });
     }

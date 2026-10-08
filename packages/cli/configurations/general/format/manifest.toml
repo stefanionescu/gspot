@@ -1,3 +1,5 @@
+generated = ["prettier.config.mjs"]
+
 [configuration]
 title = "Format"
 description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint."
@@ -82,11 +84,11 @@ shared = true
 [[tool]]
 name = "ec"
 version = "3.4.0"
-env = {EC_VERSION = "v3.4.0"}
-npm = {name = "editorconfig-checker", version = "7.0.0"}
+env = { EC_VERSION = "v3.4.0" }
+npm = { name = "editorconfig-checker", version = "7.0.0" }
 mise = "aqua:editorconfig-checker/editorconfig-checker"
 brew = "editorconfig-checker"
-github = {name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0"}
+github = { name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0" }
 
 [[tool.replace]]
 file = ".editorconfig"
@@ -102,13 +104,20 @@ tool = "prettier"
 generated_header = false
 
 [config.stub_file]
-path = ".prettierrc.json"
-template = "prettier.json.tmpl"
+path = "prettier.config.mjs"
+template = "pointer.mjs.tmpl"
+when = { configuration = "javascript" }
+
+[[config]]
+template = "prettierignore.tmpl"
+target = ".gspot/config/prettierignore"
+tool = "prettier"
 
 [[config]]
 template = "prettierignore.tmpl"
 target = ".prettierignore"
 tool = "prettier"
+when = { configuration = "javascript" }
 
 [[check]]
 name = "prettier"
@@ -117,11 +126,11 @@ example = "A selected JavaScript file containing `const value={enabled:true};` d
 level = "recommended"
 stage = "commit"
 runs = "files"
-ignore_file = ".prettierignore"
-command = ["prettier", "--check", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
+ignore_file = ".gspot/config/prettierignore"
+command = ["prettier", "--check", "--config", "{tool_file:prettier}", "--ignore-path", ".gspot/config/prettierignore", "--log-level", "warn", "{files}"]
 exit_codes = [1]
-fix = ["prettier", "--write", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
-output = {format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", message = "This file is not formatted the way Prettier formats it."}
+fix = ["prettier", "--write", "--config", "{tool_file:prettier}", "--ignore-path", ".gspot/config/prettierignore", "--log-level", "warn", "{files}"]
+output = { format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", message = "This file is not formatted the way Prettier formats it." }
 summary = "Checks that every file Prettier formats is already formatted that way."
 why = "Formatting by hand differs by editor; one formatter keeps diffs about the change and not the spacing."
 help = "Run gspot check --fix to format every file, or prettier --write on one file."
@@ -135,8 +144,8 @@ stage = "commit"
 runs = "files"
 command = ["ec", "-no-color", "-disable-indent-size", "{files}"]
 tool = "ec"
-files = {paths = ["**"]}
-output = {format = "grouped", file_pattern = "^(?<file>.+):$", pattern = "^\\s+(?:(?<line>\\d+)(?:-\\d+)?: )?(?<message>\\S.*)$"}
+files = { paths = ["**"] }
+output = { format = "grouped", file_pattern = "^(?<file>.+):$", pattern = "^\\s+(?:(?<line>\\d+)(?:-\\d+)?: )?(?<message>\\S.*)$" }
 summary = "Checks line endings, final newlines and trailing whitespace in every file against .editorconfig."
 why = "These rules cover the files no formatter touches, so a stray tab or missing newline never lands in a diff. Indentation is the formatters' job and is not checked here."
 help = "Fix the line the checker names; most editors apply .editorconfig on save."
@@ -198,19 +207,7 @@ default = true
 summary = "Whether JavaScript and TypeScript statements end with semicolons."
 
 [[setting]]
-name = "tools.editorconfig.verbatim"
-type = "table"
-direction = "neutral"
-summary = "A section gspot does not write, added verbatim to .editorconfig with a reason."
-
-[[setting]]
 name = "format.overrides"
 type = "list"
 direction = "neutral"
 summary = "Formatting options for selected paths, in order. A scope's overrides apply inside that scope only."
-
-[[setting]]
-name = "tools.prettier.exclude"
-type = "list"
-direction = "loosening"
-summary = "Ordered Prettier ignore lines, including negations, appended after lockfiles and declared inventory exclusions."

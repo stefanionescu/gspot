@@ -9,12 +9,13 @@ import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { locateCandidates } from '#cli/tools/locate.ts';
 import * as environment from '#cli/platform/environment.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
+import { chmod, mkdir, unlink, symlink } from 'node:fs/promises';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { chmodSync, mkdirSync, existsSync, unlinkSync, symlinkSync } from 'node:fs';
 
 test.skipIf(!isPosix)(
     'the tool inspection > version inspections and tool execution prefer helpers from the selected installation',
@@ -27,7 +28,7 @@ test.skipIf(!isPosix)(
             'unrelated/companion': `#!${process.execPath}\nconsole.log('9.0.0');\n`,
         });
         for (const path of ['node_modules/.bin/teller', 'node_modules/.bin/companion', 'unrelated/companion'])
-            chmodSync(join(sandbox.path, path), EXECUTABLE_FILE);
+            await chmod(join(sandbox.path, path), EXECUTABLE_FILE);
         const env = { PATH: join(sandbox.path, 'unrelated') };
         const tool = { ...buildBinaryPin('teller', '3.8.1'), env };
         const read = inspectTool({ root: sandbox.path, inspections: new Map() }, tool);
@@ -46,21 +47,13 @@ test('the tool inspection > an active PATH executable wins over an unrelated mis
         'mise/shims/teller': '#!/bin/sh\necho 1.0.0\n',
     });
     const active = join(sandbox.path, 'active/teller');
-    chmodSync(active, EXECUTABLE_FILE);
-    chmodSync(join(sandbox.path, 'mise/shims/teller'), EXECUTABLE_FILE);
-    const which = spyOn(executables, 'sync').mockReturnValue(active);
-    const home = spyOn(environment, 'miseHome').mockReturnValue(join(sandbox.path, 'mise'));
-    try {
-        const inspection = inspectTool(
-            { root: sandbox.path, inspections: new Map() },
-            buildBinaryPin('teller', '3.8.1'),
-        );
-        expect(inspection.state).toBe('ok');
-        expect(inspection.path).toBe(active);
-    } finally {
-        which.mockRestore();
-        home.mockRestore();
-    }
+    await chmod(active, EXECUTABLE_FILE);
+    await chmod(join(sandbox.path, 'mise/shims/teller'), EXECUTABLE_FILE);
+    using _which = spyOn(executables, 'sync').mockReturnValue(active);
+    using _home = spyOn(environment, 'miseHome').mockReturnValue(join(sandbox.path, 'mise'));
+    const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, buildBinaryPin('teller', '3.8.1'));
+    expect(inspection.state).toBe('ok');
+    expect(inspection.path).toBe(active);
 });
 
 test('the tool inspection > a managed npm inspection refuses a linked manifest before executing and accepts its corrected file', async () => {
@@ -71,18 +64,18 @@ test('the tool inspection > a managed npm inspection refuses a linked manifest b
     });
     await createFileTree(outside.path, { 'package.json': '{"name":"teller","version":"5.0.1"}' });
     const manifest = join(sandbox.path, '.gspot/node_modules/teller/package.json');
-    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
-    mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
-    symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
-    symlinkSync(join(outside.path, 'package.json'), manifest);
+    await chmod(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
+    await mkdir(join(sandbox.path, '.gspot/node_modules/.bin'));
+    await symlink('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
+    await symlink(join(outside.path, 'package.json'), manifest);
     const context = { root: sandbox.path, inspections: new Map() };
     const tool = buildBinaryPin('teller', '5.0.1', 'teller');
     expect(() => inspectTool(context, tool)).toThrow('private regular file');
-    expect(existsSync(join(sandbox.path, 'executed'))).toBe(false);
-    unlinkSync(manifest);
+    expect(await pathExists(join(sandbox.path, 'executed'))).toBe(false);
+    await unlink(manifest);
     await Bun.write(manifest, '{"name":"teller","version":"5.0.1"}');
     expect(inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
-    expect(existsSync(join(sandbox.path, 'executed'))).toBe(true);
+    expect(await pathExists(join(sandbox.path, 'executed'))).toBe(true);
     expect(await Bun.file(join(outside.path, 'package.json')).text()).toBe('{"name":"teller","version":"5.0.1"}');
 });
 
@@ -92,9 +85,9 @@ test('the tool inspection > an npm tool is the version its package holds, whatev
         '.gspot/node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
         '.gspot/node_modules/teller/run.sh': '#!/bin/sh\necho 4.4.2\n',
     });
-    chmodSync(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
-    mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
-    symlinkSync('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
+    await chmod(join(sandbox.path, '.gspot/node_modules/teller/run.sh'), EXECUTABLE_FILE);
+    await mkdir(join(sandbox.path, '.gspot/node_modules/.bin'));
+    await symlink('../teller/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/teller'));
     const inspection = inspectTool(
         { root: sandbox.path, inspections: new Map() },
         buildBinaryPin('teller', '5.0.1', 'teller'),
@@ -114,9 +107,9 @@ test.each([
             '.gspot/node_modules/wrapper/package.json': '{"name":"wrapper","version":"0.7.0"}',
             '.gspot/node_modules/wrapper/run.sh': '#!/bin/sh\necho "$WRAPPER_NATIVE_VERSION"\n',
         });
-        chmodSync(join(sandbox.path, '.gspot/node_modules/wrapper/run.sh'), EXECUTABLE_FILE);
-        mkdirSync(join(sandbox.path, '.gspot/node_modules/.bin'));
-        symlinkSync('../wrapper/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/wrapped'));
+        await chmod(join(sandbox.path, '.gspot/node_modules/wrapper/run.sh'), EXECUTABLE_FILE);
+        await mkdir(join(sandbox.path, '.gspot/node_modules/.bin'));
+        await symlink('../wrapper/run.sh', join(sandbox.path, '.gspot/node_modules/.bin/wrapped'));
         const tool = buildBinaryPin('wrapped', '0.10.0');
         tool.min_version = '0.9.0';
         tool.env = { WRAPPER_NATIVE_VERSION: native };
@@ -132,7 +125,7 @@ test('the tool inspection > a shim that no configuration gives a version is miss
     await createFileTree(sandbox.path, {
         'node_modules/.bin/shimmed': "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
     });
-    chmodSync(join(sandbox.path, 'node_modules/.bin/shimmed'), EXECUTABLE_FILE);
+    await chmod(join(sandbox.path, 'node_modules/.bin/shimmed'), EXECUTABLE_FILE);
     const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, buildBinaryPin('shimmed', '3.8.1'));
     expect(inspection.state).toBe('missing');
     expect(inspection.want).toBe('3.8.1');
@@ -143,7 +136,7 @@ test('the tool inspection > color codes around a version are no part of it', asy
     await createFileTree(sandbox.path, {
         'node_modules/.bin/painter': "#!/bin/sh\nprintf 'painter \\033[1;36m26.8.0\\033[0m using more\\n'\n",
     });
-    chmodSync(join(sandbox.path, 'node_modules/.bin/painter'), EXECUTABLE_FILE);
+    await chmod(join(sandbox.path, 'node_modules/.bin/painter'), EXECUTABLE_FILE);
     const inspection = inspectTool({ root: sandbox.path, inspections: new Map() }, buildBinaryPin('painter', '26.8.0'));
     expect(inspection.found).toBe('26.8.0');
     expect(inspection.state).toBe('ok');
@@ -184,17 +177,17 @@ test.each(['mise', 'npm'])(
     async (runner) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy([], { tables: `run_with = "${runner}"\n` }),
+            'gspot.toml': buildPolicy([], { tables: `runner = "${runner}"\n` }),
             'node_modules/.bin/teller': '#!/bin/sh\necho 3.8.1\n',
             'node_modules/.bin/ec': '#!/bin/sh\necho 3.4.0\n',
             '.gspot/node_modules/.bin/teller': `#!/bin/sh\necho ${runner === 'mise' ? '1.0.0' : '3.8.1'}\n`,
             '.gspot/node_modules/.bin/ec': '#!/bin/sh\nexit 99\n',
             '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
         });
-        chmodSync(join(sandbox.path, 'node_modules/.bin/teller'), EXECUTABLE_FILE);
-        chmodSync(join(sandbox.path, 'node_modules/.bin/ec'), EXECUTABLE_FILE);
-        chmodSync(join(sandbox.path, '.gspot/node_modules/.bin/teller'), EXECUTABLE_FILE);
-        chmodSync(join(sandbox.path, '.gspot/node_modules/.bin/ec'), EXECUTABLE_FILE);
+        await chmod(join(sandbox.path, 'node_modules/.bin/teller'), EXECUTABLE_FILE);
+        await chmod(join(sandbox.path, 'node_modules/.bin/ec'), EXECUTABLE_FILE);
+        await chmod(join(sandbox.path, '.gspot/node_modules/.bin/teller'), EXECUTABLE_FILE);
+        await chmod(join(sandbox.path, '.gspot/node_modules/.bin/ec'), EXECUTABLE_FILE);
         {
             using log = openOwnership(sandbox.path);
             log.state.installing = ['npm'];
@@ -239,25 +232,20 @@ test.skipIf(!isPosix).each([0, 1])(
             'bin/mise': `#!${process.execPath}\nif (process.cwd() !== ${JSON.stringify(join(sandbox.path, 'work'))}) process.exit(9); console.log(${JSON.stringify(executable)}); process.exitCode = ${String(status)};\n`,
         });
         for (const path of ['mise/shims/teller', 'mise/installs/teller/3.8.1/teller', 'bin/mise'])
-            chmodSync(join(sandbox.path, path), EXECUTABLE_FILE);
-        const which = spyOn(executables, 'sync')
+            await chmod(join(sandbox.path, path), EXECUTABLE_FILE);
+        using _which = spyOn(executables, 'sync')
             .mockReturnValueOnce(join(sandbox.path, 'mise/shims/teller'))
             .mockReturnValue(join(sandbox.path, 'bin/mise'));
-        const home = spyOn(environment, 'miseHome').mockReturnValue(join(sandbox.path, 'mise'));
-        try {
-            const candidates = locateCandidates(join(sandbox.path, 'copy'), 'teller', {
-                searchFolders: [],
-                installedRoot: join(sandbox.path, 'work'),
-            });
-            expect(candidates).toStrictEqual(status === 0 ? [executable] : []);
-            if (status === 0) {
-                const result = await runTool([candidates[0]!], { cwd: join(sandbox.path, 'copy') });
-                expect(result.code).toBe(0);
-                expect(result.stdout.trim()).toBe('3.8.1');
-            }
-        } finally {
-            which.mockRestore();
-            home.mockRestore();
+        using _home = spyOn(environment, 'miseHome').mockReturnValue(join(sandbox.path, 'mise'));
+        const candidates = locateCandidates(join(sandbox.path, 'copy'), 'teller', {
+            searchFolders: [],
+            installedRoot: join(sandbox.path, 'work'),
+        });
+        expect(candidates).toStrictEqual(status === 0 ? [executable] : []);
+        if (status === 0) {
+            const result = await runTool([candidates[0]!], { cwd: join(sandbox.path, 'copy') });
+            expect(result.code).toBe(0);
+            expect(result.stdout.trim()).toBe('3.8.1');
         }
     },
 );

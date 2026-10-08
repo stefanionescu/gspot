@@ -4,8 +4,10 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { existsSync, unlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { unlink, readFile, writeFile } from 'node:fs/promises';
 import { TWO_RULES, QUALITY_FIX, IGNORE_CASES, QUALITY_COMMAND } from '#tests/config/cli/commands/ignores.ts';
 
 test('a global ignore stops a command check and its correction command until removed', async () => {
@@ -13,35 +15,36 @@ test('a global ignore stops a command check and its correction command until rem
     const command = ['bash', '-c', 'printf executed > read.txt; exit 1'];
     const fix = ['bash', '-c', 'printf corrected > corrected.txt'];
     const policy = buildPolicy([], {
-        tables: `[agent_rules]\nenabled = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(command)}\nfix = ${JSON.stringify(fix)}\npaths = ["entry.sh"]\nstage = "commit"\n`,
+        tables: `[agent_rules]\nenabled = false\n[check."project/quality"]\ncommand = ${JSON.stringify(command)}\nfix = ${JSON.stringify(fix)}\npaths = ["entry.sh"]\nstage = "commit"\n`,
     });
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const args = ['check', '--only', 'project/quality', '--json'];
     const before = await runGspot(directory.path, args);
     expect(before.code, before.stdout + before.stderr).toBe(1);
-    expect(readFileSync(join(directory.path, 'read.txt'), 'utf8')).toBe('executed');
-    unlinkSync(join(directory.path, 'read.txt'));
-    const ignored = await runGspot(directory.path, ['ignore', 'project/quality']);
+    expect(await readFile(join(directory.path, 'read.txt'), 'utf8')).toBe('executed');
+    await unlink(join(directory.path, 'read.txt'));
+    const reason = 'The fixture preserves the command failure.';
+    const ignored = await runGspot(directory.path, ['ignore', 'project/quality', '--reason', reason]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     const skipped = await runGspot(directory.path, [...args, '--fix']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
     const report = JSON.parse(skipped.stdout) as RunReport;
     expect(report.checks[0]).toMatchObject({ check: 'project/quality', status: 'skipped', findings: [] });
     expect(report.skips).toStrictEqual([{ check: 'project/quality', cause: 'ignore' }]);
-    expect(report.ignores).toStrictEqual([{ check: 'project/quality', matched: 0 }]);
-    expect(existsSync(join(directory.path, 'read.txt'))).toBe(false);
-    expect(existsSync(join(directory.path, 'corrected.txt'))).toBe(false);
+    expect(report.ignores).toStrictEqual([{ check: 'project/quality', reason, matched: 0 }]);
+    expect(await pathExists(join(directory.path, 'read.txt'))).toBe(false);
+    expect(await pathExists(join(directory.path, 'corrected.txt'))).toBe(false);
     const removed = await runGspot(directory.path, ['ignore', 'project/quality', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const restored = await runGspot(directory.path, args);
     expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    expect(readFileSync(join(directory.path, 'read.txt'), 'utf8')).toBe('executed');
+    expect(await readFile(join(directory.path, 'read.txt'), 'utf8')).toBe('executed');
 });
 
 test('path-specific ignores prevent checker and fixer execution and report an entirely ignored selection', async () => {
     await using directory = await testdir();
     const policy = buildPolicy([], {
-        tables: `[agent_rules]\nenabled = false\n[[check]]\nname = "project/quality"\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\n`,
+        tables: `[agent_rules]\nenabled = false\n[check."project/quality"]\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\nreason = "The skipped input preserves the defect."\n`,
     });
     await createFileTree(directory.path, {
         'gspot.toml': policy,
@@ -55,22 +58,24 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     const report = JSON.parse(corrected.stdout) as RunReport;
     expect(report.checks[0]).toMatchObject({ status: 'passed', fileCount: 2, findings: [] });
     // A second correction pass reruns the fixer over the files the first pass changed.
-    for (const log of ['checked.txt', 'fixed.txt'])
-        for (const line of readFileSync(join(directory.path, log), 'utf8').trim().split('\n'))
+    for (const log of ['checked.txt', 'fixed.txt']) {
+        const entries = await readFile(join(directory.path, log), 'utf8');
+        for (const line of entries.trim().split('\n'))
             expect((JSON.parse(line) as string[]).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
                 'inputs/regular.txt',
                 'inputs/skip-keep.txt',
             ]);
-    expect(readFileSync(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('defect\n');
-    const checked = readFileSync(join(directory.path, 'checked.txt'), 'utf8');
-    const fixed = readFileSync(join(directory.path, 'fixed.txt'), 'utf8');
+    }
+    expect(await readFile(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('defect\n');
+    const checked = await readFile(join(directory.path, 'checked.txt'), 'utf8');
+    const fixed = await readFile(join(directory.path, 'fixed.txt'), 'utf8');
     const skipped = await runGspot(directory.path, [...args, '--', 'inputs/skip café.txt']);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
     const skippedReport = JSON.parse(skipped.stdout) as RunReport;
     expect(skippedReport.skips).toStrictEqual([{ check: 'project/quality', cause: 'ignore' }]);
     expect(skippedReport.checks[0]).toMatchObject({ status: 'skipped', findings: [] });
-    expect(readFileSync(join(directory.path, 'checked.txt'), 'utf8')).toBe(checked);
-    expect(readFileSync(join(directory.path, 'fixed.txt'), 'utf8')).toBe(fixed);
+    expect(await readFile(join(directory.path, 'checked.txt'), 'utf8')).toBe(checked);
+    expect(await readFile(join(directory.path, 'fixed.txt'), 'utf8')).toBe(fixed);
     const restored = await runGspot(directory.path, [
         'ignore',
         'project/quality',
@@ -82,7 +87,7 @@ test('path-specific ignores prevent checker and fixer execution and report an en
     expect(restored.code, restored.stdout + restored.stderr).toBe(0);
     const accepted = await runGspot(directory.path, [...args, '--', 'inputs/skip café.txt']);
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect(readFileSync(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('corrected\n');
+    expect(await readFile(join(directory.path, 'inputs/skip café.txt'), 'utf8')).toBe('corrected\n');
 });
 
 test.each([...IGNORE_CASES])(
@@ -93,7 +98,7 @@ test.each([...IGNORE_CASES])(
         const result = await runGspot(directory.path, [...argv]);
         expect(result.code, result.stdout + result.stderr).toBe(code);
         expect(result.stdout + result.stderr).toContain(expected);
-        expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(TWO_RULES);
+        expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(TWO_RULES);
     },
 );
 
@@ -103,7 +108,7 @@ test('removing the ignore of one rule keeps the ignore of the other rule', async
     const removed = await runGspot(directory.path, ['ignore', 'bash/shellcheck', '--rule', 'SC2086', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(removed.stdout).toContain('removed 1 ignore entry for bash/shellcheck');
-    const policy = readFileSync(join(directory.path, 'gspot.toml'), 'utf8');
+    const policy = await readFile(join(directory.path, 'gspot.toml'), 'utf8');
     expect(policy).not.toContain('SC2086');
     expect(policy).toContain('rule = "SC2034"');
 });
@@ -128,7 +133,7 @@ test('merged ignores print saved paths and allow individual paths to be removed'
     expect(added.stdout).toContain('b.sh');
     const removed = await runGspot(directory.path, ['ignore', 'bash/shellcheck', '--remove', '--paths', 'b.sh']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const saved = readFileSync(join(directory.path, 'gspot.toml'), 'utf8');
+    const saved = await readFile(join(directory.path, 'gspot.toml'), 'utf8');
     expect(saved).toContain('a.sh');
     expect(saved).not.toContain('b.sh');
     expect(saved).toContain('# Comment on configurations.');
@@ -154,8 +159,12 @@ test('ignore merges matching expiry dates and removes only the selected expiry',
         expect(saved.code, saved.stdout + saved.stderr).toBe(0);
     }
     const entry = { check: 'bash/shellcheck', rule: 'SC2086', reason: 'The fixture preserves word splitting.' };
-    const readEntries = () => parse(readFileSync(join(directory.path, 'gspot.toml'), 'utf8'))['ignore'];
-    expect(readEntries()).toStrictEqual([
+    const readEntries = async () =>
+        parseStrictPolicy(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).ignore.map((entry) => ({
+            ...entry,
+            until: entry.until?.toISOString(),
+        }));
+    expect(await readEntries()).toStrictEqual([
         {
             ...entry,
             until: '2099-05-20',
@@ -179,7 +188,7 @@ test('ignore merges matching expiry dates and removes only the selected expiry',
         '--remove',
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(readEntries()).toStrictEqual([
+    expect(await readEntries()).toStrictEqual([
         {
             ...entry,
             until: '2099-05-20',
@@ -199,7 +208,7 @@ test('ignore rejects an invalid expiry without changing authored policy', async 
         'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
         'example.sh': 'echo ready\n',
     });
-    const before = readFileSync(join(directory.path, 'gspot.toml'), 'utf8');
+    const before = await readFile(join(directory.path, 'gspot.toml'), 'utf8');
     const invalid = await runGspot(directory.path, [
         'ignore',
         'bash/shellcheck',
@@ -212,7 +221,7 @@ test('ignore rejects an invalid expiry without changing authored policy', async 
     ]);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
     expect(invalid.stdout + invalid.stderr).toContain('until');
-    expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(before);
+    expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(before);
 });
 
 test('ignore combines matching paths, keeps different reasons, and lets a pathless entry cover the whole scope', async () => {
@@ -234,20 +243,20 @@ test('ignore combines matching paths, keeps different reasons, and lets a pathle
         expect(result.code, result.stdout + result.stderr).toBe(0);
     }
     const policyPath = join(directory.path, 'gspot.toml');
-    expect(parse(readFileSync(policyPath, 'utf8'))['ignore']).toStrictEqual([
+    expect(parse(await readFile(policyPath, 'utf8'))['ignore']).toStrictEqual([
         { check: 'bash/shellcheck', rule: 'SC2312', paths: ['a.sh', 'b.sh'], reason },
         { check: 'bash/shellcheck', rule: 'SC2312', paths: ['other.sh'], reason: 'Another cause.' },
     ]);
     const everywhere = await runGspot(directory.path, [...args, '--reason', reason]);
     expect(everywhere.code, everywhere.stdout + everywhere.stderr).toBe(0);
-    expect(parse(readFileSync(policyPath, 'utf8'))['ignore']).toStrictEqual([
+    expect(parse(await readFile(policyPath, 'utf8'))['ignore']).toStrictEqual([
         { check: 'bash/shellcheck', rule: 'SC2312', reason },
         { check: 'bash/shellcheck', rule: 'SC2312', paths: ['other.sh'], reason: 'Another cause.' },
     ]);
     const removed = await runGspot(directory.path, [...args, '--reason', reason, '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(removed.stdout).toContain('removed 1 ignore entry for bash/shellcheck');
-    expect(parse(readFileSync(policyPath, 'utf8'))['ignore']).toStrictEqual([
+    expect(parse(await readFile(policyPath, 'utf8'))['ignore']).toStrictEqual([
         { check: 'bash/shellcheck', rule: 'SC2312', paths: ['other.sh'], reason: 'Another cause.' },
     ]);
 });
@@ -263,6 +272,8 @@ test('an ignored folder includes descendants while a negated file remains enforc
     const ignored = await runGspot(directory.path, [
         'ignore',
         'bash/syntax',
+        '--reason',
+        'The legacy files retain malformed syntax.',
         '--paths',
         'legacy scripts',
         '!legacy scripts/required.sh',
@@ -276,12 +287,14 @@ test('an ignored folder includes descendants while a negated file remains enforc
         new Set(['legacy scripts/required.sh']),
     );
     expect(report.ignores[0]?.matched).toBe(0);
-    writeFileSync(join(directory.path, 'legacy scripts/required.sh'), 'echo corrected\n');
+    await writeFile(join(directory.path, 'legacy scripts/required.sh'), 'echo corrected\n');
     const corrected = await runGspot(directory.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const removed = await runGspot(directory.path, [
         'ignore',
         'bash/syntax',
+        '--reason',
+        'The legacy files retain malformed syntax.',
         '--paths',
         'legacy scripts',
         '!legacy scripts/required.sh',

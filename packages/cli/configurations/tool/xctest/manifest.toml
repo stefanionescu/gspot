@@ -1,16 +1,16 @@
 [configuration]
 title = "Swift Tests"
-requires = ["swift"]
-description = "Swift test files under XCTest, Swift Testing, and snapshot testing. A disabled test says why, no test sleeps, and no snapshot test records. Every reference has its test, and coverage holds a floor."
+requires = ["swift", "coverage"]
+description = "Swift test files under XCTest and Swift Testing. A disabled test says why, no test sleeps, and coverage holds a floor."
 
 [detect]
 tags = ["swift-test", "swift-test-target"]
 paths = ["**/*.xctestplan"]
 
 [files]
-paths = ["**/*Tests/**/*.swift", "**/__Snapshots__/**"]
+paths = ["**/*Tests/**/*.swift"]
 filenames = ["*.xctestplan"]
-kinds = ["source", "binary"]
+kinds = ["source"]
 
 [[config]]
 template = "swiftlint.yml.tmpl"
@@ -18,7 +18,7 @@ target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
 scoped = true
 fragment = true
-stub_file = {path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n"}
+stub_file = { path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
 
 [[check]]
 name = "disabled"
@@ -27,7 +27,7 @@ example = "In a Swift test, `throw XCTSkip()` reports a missing reason. Restore 
 level = "recommended"
 stage = "commit"
 runs = "files"
-files = {tags = ["swift-test"]}
+files = { tags = ["swift-test"] }
 summary = "Checks that skip calls and disabled traits name a nonempty reason, and unavailable tests carry an explanation."
 why = "A test turned off with no reason stays off, because nobody knows when it is safe to turn on."
 help = "Say why the test is off and what turns it back on, or delete the test."
@@ -39,71 +39,21 @@ example = "A test using a fixed sleep to wait for asynchronous work reports a ti
 level = "all"
 stage = "commit"
 runs = "files"
-files = {tags = ["swift-test"]}
-summary = "Refuses sleep calls in test files outside tools.xctest.sleep_allowed."
+files = { tags = ["swift-test"] }
+summary = "Refuses sleep calls in test files."
 why = "A sleep makes a test slow when it passes and flaky when the machine is slower than the number."
 help = "Wait on an expectation or a confirmation, or poll a condition with a timeout."
 
 [[check]]
-name = "recording"
-title = "Disable snapshot recording"
-example = "A snapshot test left in recording mode reports a recording finding. Inspect and retain the intended reference images, remove the recording flag, and rerun in comparison mode."
-level = "recommended"
-stage = "commit"
-runs = "files"
-files = {tags = ["swift-test"]}
-summary = "Refuses a snapshot test left in a recording mode."
-why = "A recording test writes a new reference and passes, so it approves whatever the screen shows."
-help = "Take the recording flag out, and commit the references it wrote after looking at them."
-
-[[check]]
-name = "references"
-title = "Validate snapshot references"
-example = "A snapshot reference folder whose corresponding test file no longer exists reports unused references. Delete the unused references, or rename the folder to match the renamed test file."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = {paths = ["**/*"], kinds = ["source", "binary"]}
-summary = "Checks that snapshot references match tools.xctest.reference_layout and name a test file beside the layout."
-why = "References of a deleted test stay in the repository, and every clone pays for them."
-help = "Delete the references of the test that is gone, or rename the folder after the test file."
-
-[[check]]
 name = "coverage"
 title = "Check Swift test coverage"
-example = "A branch that no test exercises can leave coverage below the floor configured under `tools.xctest`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
+example = "A branch that no test exercises can leave coverage below the floor configured under `coverage`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
 level = "recommended"
-when = {setting = "tools.xctest.coverage"}
 stage = "push"
 runs = "scope"
 needs = ["build"]
-platforms = ["macos"]
-files = {extensions = [".swift"]}
-summary = "Runs the tests with coverage and holds each target named in tools.xctest.coverage to its floor."
+platforms = ["macos", "linux"]
+files = { extensions = [".swift"] }
+summary = "Measures Xcode projects and Swift packages, holding each source target against coverage.lines and its coverage.overrides floor."
 why = "A floor keeps new code from arriving untested."
 help = "Add tests for the target, or lower its floor with a reason."
-
-[[setting]]
-name = "tools.xctest.coverage"
-type = "list"
-direction = "floor"
-default = []
-summary = "Coverage floors: a target and the share of lines out of 100. Empty turns the check off."
-
-[[setting]]
-name = "tools.xctest.sleep_allowed"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Test paths that may sleep, each with a reason."
-
-[[setting]]
-name = "tools.xctest.reference_layout"
-type = "string"
-direction = "neutral"
-default = "__Snapshots__/{file}/{test}.*"
-summary = "Snapshot paths relative to the test file directory, with {file} as its stem, {test} as the test name, and * as a wildcard."
-
-[setting.validation]
-pattern = '^(?!/|\.\.?(?:/|$))(?!.*\/\.\.?(?:\/|$))[^{}\\\r\n]*(?:\{file\}[^{}\\\r\n]*\{test\}|\{test\}[^{}\\\r\n]*\{file\})[^{}\\\r\n]*$'
-message = "Use a relative snapshot layout containing {file} and {test} exactly once each."

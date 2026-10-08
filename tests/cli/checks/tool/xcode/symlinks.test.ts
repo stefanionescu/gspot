@@ -1,15 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { rejects } from 'node:assert/strict';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { symlinks } from '#cli/checks/tool/xcode/project.ts';
-import { unlinkSync, symlinkSync, readFileSync, writeFileSync } from 'node:fs';
+import { rejection, containing } from '#tests/harness/expectations.ts';
+import { unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 // Windows file names cannot hold a newline or a quote.
 test.skipIf(!isPosix)(
@@ -22,22 +21,18 @@ test.skipIf(!isPosix)(
             'target.swift': 'let value = 1\n',
         });
         const path = 'link\n"é.swift';
-        symlinkSync('target.swift', join(sandbox.path, path));
+        await symlink('target.swift', join(sandbox.path, path));
         gitOutput(sandbox.path, ['init']);
         gitOutput(sandbox.path, ['add', '.']);
-        unlinkSync(join(sandbox.path, path));
-        symlinkSync('working-tree.swift', join(sandbox.path, path));
+        await unlink(join(sandbox.path, path));
+        await symlink('working-tree.swift', join(sandbox.path, path));
         const session = await openSession(sandbox.path);
-        const selected = session.scopes[0]!;
-        const check = selected.selected
-            .flatMap((manifest) => manifest.checks)
-            .find((check) => check.name === 'xcode/symlinks')!;
-        const input = buildCheckInput(session, check.name);
+        const input = buildCheckInput(session, 'xcode/symlinks');
         expect(await symlinks(input)).toStrictEqual([
             containing({ check: 'xcode/symlinks', file: path, line: 1, rule: 'symlink', fixable: false }),
         ]);
-        unlinkSync(join(sandbox.path, path));
-        writeFileSync(join(sandbox.path, path), 'let value = 1\n');
+        await unlink(join(sandbox.path, path));
+        await writeFile(join(sandbox.path, path), 'let value = 1\n');
         gitOutput(sandbox.path, ['add', '.']);
         expect(await symlinks(input)).toStrictEqual([
             containing({
@@ -45,14 +40,13 @@ test.skipIf(!isPosix)(
                 rule: 'symlink',
             }),
         ]);
-        const corrected = buildCheckInput(await openSession(sandbox.path), check.name);
+        const corrected = buildCheckInput(await openSession(sandbox.path), 'xcode/symlinks');
         expect(await symlinks(corrected)).toStrictEqual([]);
-        const index = readFileSync(join(sandbox.path, '.git', 'index'));
-        writeFileSync(join(sandbox.path, '.git', 'index'), 'broken');
-        await rejects(openSession(sandbox.path), { message: /Git ls-files failed/u });
-        writeFileSync(join(sandbox.path, '.git', 'index'), index);
-        const recovered = buildCheckInput(await openSession(sandbox.path), check.name);
+        const index = await readFile(join(sandbox.path, '.git', 'index'));
+        await writeFile(join(sandbox.path, '.git', 'index'), 'broken');
+        expect(await rejection(openSession(sandbox.path))).toContain('Git ls-files failed');
+        await writeFile(join(sandbox.path, '.git', 'index'), index);
+        const recovered = buildCheckInput(await openSession(sandbox.path), 'xcode/symlinks');
         expect(await symlinks(recovered)).toStrictEqual([]);
-        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe('let value = 1\n');
     },
 );

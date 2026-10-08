@@ -1,7 +1,10 @@
+import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { UV_MISE_PIN } from '#cli/config/tools/python.ts';
+import { environmentExecutable } from '#cli/platform/paths.ts';
+import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { installationDiagnostics } from '#cli/tools/credentials.ts';
+import { toolPin, pythonInstallerPin } from '#cli/configurations/pins.ts';
 
 /**
  * Resolve uv through the selected runner before a temporary project uses it.
@@ -16,22 +19,54 @@ export async function acquirePythonInstaller(
     cancelSignal: AbortSignal | undefined,
 ): Promise<string> {
     if (runner !== 'mise') return 'uv';
-    const acquired = await runTool(['mise', 'install', UV_MISE_PIN], { cwd: root, cancelSignal });
+    const uv = pythonInstallerPin();
+    const pin = `${uv.name}@${uv.version}`;
+    const acquired = await runTool(['mise', 'install', pin], { cwd: root, cancelSignal });
     cancelSignal?.throwIfAborted();
     if (acquired.missing) throw new GspotError('tool', 'mise is unavailable. Install mise, then rerun the command.');
     if (acquired.code !== 0)
         throw new GspotError(
             'installation',
-            `mise did not install ${UV_MISE_PIN}. Run mise install ${UV_MISE_PIN} and read its error.
+            `mise did not install ${pin}. Run mise install ${pin} and read its error.
 ${installationDiagnostics(acquired, [])}`,
         );
-    const located = await runTool(['mise', 'which', 'uv', '--tool', UV_MISE_PIN], { cwd: root, cancelSignal });
+    const located = await runTool(['mise', 'which', 'uv', '--tool', pin], { cwd: root, cancelSignal });
     cancelSignal?.throwIfAborted();
     if (located.code !== 0 || located.stdout.trim() === '')
         throw new GspotError(
             'tool',
-            `Cannot locate ${UV_MISE_PIN}. Run: mise install ${UV_MISE_PIN}, then rerun the command.
+            `Cannot locate ${pin}. Run: mise install ${pin}, then rerun the command.
 ${installationDiagnostics(located, [])}`,
         );
     return located.stdout.trim();
+}
+
+/**
+ * Run a pinned Python check over the scope's installed project dependencies.
+ * @param selection the scope's selected tool declarations
+ * @param scopeRoot the native project folder
+ * @param command the target executable and its arguments
+ * @returns uv's project command without synchronizing the project or its lockfile
+ */
+export function pythonProjectCommand(
+    selection: ScopeSelection,
+    scopeRoot: string,
+    command: [string, ...string[]],
+): string[] {
+    const tool = toolPin(selection.selected, command[0]);
+    const packagePin = tool.installers['pypi'];
+    if (packagePin?.version === undefined)
+        throw new GspotError('tool', `The ${tool.name} check has no pinned Python package declaration.`);
+    return [
+        'uv',
+        'run',
+        '--no-sync',
+        '--project',
+        scopeRoot,
+        '--python',
+        environmentExecutable(join(scopeRoot, '.venv'), 'python'),
+        '--with',
+        `${packagePin.name}==${packagePin.version}`,
+        ...command,
+    ];
 }

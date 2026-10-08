@@ -25,7 +25,7 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         "SET lock_timeout = '5s';\nSET statement_timeout = '30s';\nALTER TABLE public.teams ADD COLUMN size BIGINT;\n";
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['supabase'], {
-            tables: '[tools.squawk]\nassume_in_transaction = false\n[[scope]]\npath = "transactional"\n[scope.tools.squawk]\nassume_in_transaction = true\n[[scope]]\npath = "transactional/child"\n',
+            tables: '[tools.squawk]\nassume_in_transaction = false\n[scope."transactional"]\n[scope.tools.squawk]\nassume_in_transaction = true\n[scope."transactional/child"]\n',
         }),
         'migration.sql': defect,
         'supabase/migrations/0001_initial.sql': defect,
@@ -33,8 +33,8 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         'transactional/child/supabase/migrations/0001_initial.sql': 'SELECT 1;\n',
     });
     const session = await openSession(sandbox.path);
-    const rendered = emitAll(session);
-    const configs = rendered.files.filter(({ path }) => path.endsWith('/squawk.toml'));
+    const emitted = emitAll(session);
+    const configs = emitted.files.filter(({ path }) => path.endsWith('/squawk.toml'));
     expect(
         Object.fromEntries(configs.map(({ path, content }) => [path, parse(content)['assume_in_transaction']])),
     ).toStrictEqual({
@@ -43,7 +43,7 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         '.gspot/config/transactional/child/squawk.toml': true,
     });
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log, undefined, rendered);
+    writeOutputs(session, log, undefined, emitted);
     const transactional = squawk(sandbox.path, '.gspot/config/transactional/child/squawk.toml');
     expect(transactional.code, transactional.stderr).toBe(0);
     const failed = squawk(sandbox.path, '.gspot/config/squawk.toml');

@@ -4,7 +4,7 @@ export const LINK_PAGE =
 
 /** Child URL exceptions extend root policy without exempting root links. */
 export const LINK_SCOPE_TABLES =
-    '[agent_rules]\nenabled = false\n[tools.lychee]\nexclude_urls = [{ patterns = ["/root-only$"], reason = "The root guide describes an unavailable endpoint." }]\n[[scope]]\npath = "app"\nconfigurations = []\n[scope.tools.lychee]\nexclude_urls = [{ patterns = ["/child-only$"], reason = "The child guide describes an unavailable endpoint." }]\n';
+    '[agent_rules]\nenabled = false\n[tools.lychee]\nexclude_urls = [{ patterns = ["/root-only$"], reason = "The root guide describes an unavailable endpoint." }]\n[scope."app"]\nconfigurations = []\n[scope.tools.lychee]\nexclude_urls = [{ patterns = ["/child-only$"], reason = "The child guide describes an unavailable endpoint." }]\n';
 
 /** Text-fragment failures and their independently valid correction. */
 export const LINK_TEXT_CASES = [

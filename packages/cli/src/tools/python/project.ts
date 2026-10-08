@@ -6,6 +6,7 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { SETUP } from '#cli/config/tools/install.ts';
 import type { ToolProject } from '#cli/types/tools/project.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
+import { pythonInstallerPin } from '#cli/configurations/pins.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { parsePythonSettings } from '#cli/tools/python/registry.ts';
 import { PYTHON_MIN_VERSION } from '#cli/config/parsers/packages.ts';
@@ -15,15 +16,8 @@ import { pythonToolProjectSchema } from '#cli/parsers/schema/python/tools.ts';
 import type { PythonExecution, PythonPreparation } from '#cli/types/tools/python.ts';
 import { DOT_GSPOT, UV_LOCKFILE, TOOL_PYTHON_PROJECT } from '#cli/config/platform/locations.ts';
 import { installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
+import { UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS, UV_LOCKFILE_ARGUMENTS } from '#cli/config/tools/python.ts';
 import { chmodSync, lstatSync, unlinkSync, copyFileSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-
-import {
-    UV_MISE_PIN,
-    UV_ACQUISITION,
-    UV_VENV_ARGUMENTS,
-    UV_INSTALL_ARGUMENTS,
-    UV_LOCKFILE_ARGUMENTS,
-} from '#cli/config/tools/python.ts';
 
 /**
  * Copy repository uv index settings into the scratch folder, make relative paths absolute, and collect registry credentials.
@@ -119,17 +113,28 @@ export const pythonToolProject: ToolProject<string, PythonPreparation, PythonExe
     lockfilePath: () => UV_LOCKFILE,
     matches: pythonLockfileMatches,
     current: (project, recorded) => (pythonLockfileMatches(project, recorded) ? recorded : undefined),
-    commands: (_project, runner) => ({
-        installer: runner === 'mise' ? [['mise', 'install', UV_MISE_PIN]] : [],
-        lockfile: [['uv', ...UV_LOCKFILE_ARGUMENTS, '--project', DOT_GSPOT]],
-        environment: [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS].map((args) => ['uv', ...args, '--project', DOT_GSPOT]),
-    }),
+    commands: (_project, runner) => {
+        const uv = pythonInstallerPin();
+        return {
+            installer: runner === 'mise' ? [['mise', 'install', `${uv.name}@${uv.version}`]] : [],
+            lockfile: [['uv', ...UV_LOCKFILE_ARGUMENTS, '--project', DOT_GSPOT]],
+            environment: [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS].map((args) => [
+                'uv',
+                ...args,
+                '--project',
+                DOT_GSPOT,
+            ]),
+        };
+    },
     createLockfile: async (work, preparation) => {
         const credentials = writePythonSettings(preparation.root, work);
         const executable = await preparation.pythonInstaller(preparation.cancelSignal);
         const result = await runUv(work, UV_LOCKFILE_ARGUMENTS, executable, credentials, preparation.cancelSignal);
         if (result.missing)
-            throw new GspotError('tool', `uv is unavailable. Run: ${UV_ACQUISITION}, then rerun the command.`);
+            throw new GspotError(
+                'tool',
+                `uv is unavailable. Run: python -m pip install uv==${pythonInstallerPin().version}, then rerun the command.`,
+            );
         if (result.code !== 0)
             throw new GspotError(
                 'installation',
@@ -142,7 +147,10 @@ export const pythonToolProject: ToolProject<string, PythonPreparation, PythonExe
         for (const args of [UV_VENV_ARGUMENTS, UV_INSTALL_ARGUMENTS]) {
             const result = await runUv(work, args, executable, credentials, cancelSignal);
             if (result.missing)
-                throw new GspotError('tool', `uv is unavailable. Run: ${UV_ACQUISITION}, then gspot install.`);
+                throw new GspotError(
+                    'tool',
+                    `uv is unavailable. Run: python -m pip install uv==${pythonInstallerPin().version}, then gspot install.`,
+                );
             if (result.code !== 0)
                 throw new GspotError(
                     'installation',

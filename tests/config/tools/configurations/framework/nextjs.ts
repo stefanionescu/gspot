@@ -9,7 +9,6 @@ export const COUNT = '// A test file.\n\n/** A number that holds text. */\nexpor
 export const BUILD_FAILURE =
     "import Missing from './missing-component';\nexport default function Page() { return <Missing />; }\n";
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['nextjs'],
     tsconfig: {
@@ -27,7 +26,7 @@ export const REPOSITORY: RepositoryScenario = {
     without: ['css'],
     files: {
         '.gitignore': 'node_modules\n.next\n',
-        'package.json': `{\n    "name": "example",\n    "version": "1.0.0",\n    "description": "A test Next.js app for the tests.",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "19.1.1"\n    }\n}\n`,
+        'package.json': `{\n    "name": "example",\n    "version": "1.0.0",\n    "description": "A test Next.js app for the tests.",\n    "private": true,\n    "type": "module",\n    "scripts": { "build": "next build --webpack" },\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "19.1.1"\n    }\n}\n`,
         'next.config.mjs': NEXT_CONFIG_FILE,
         'app/page.tsx': NEXT_PAGE,
         'app/layout.tsx': NEXT_LAYOUT,
@@ -36,7 +35,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'nextjs/tsc',

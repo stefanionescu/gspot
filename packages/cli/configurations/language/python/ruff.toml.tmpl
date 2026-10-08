@@ -733,26 +733,14 @@ const conventions = [
 ];
 const families = [...baseline, ...(isAll ? conventions : []), ...ruffRules];
 const perFile = ignoresFor('python/ruff').filter((entry) => entry.rule !== undefined && (entry.paths ?? []).length > 0);
-const testRules = settings['tools.ruff.rules_off_in_tests'];
-const testFiles = testRules.length > 0 ? settings['tests'] : [];
-const byPath = new Map(testFiles.map((path) => [path, testRules]));
+const byPath = new Map();
 for (const entry of perFile)
     for (const path of entry.paths) byPath.set(path, [...(byPath.get(path) ?? []), entry.rule]);
 const convention = settings['tools.ruff.docstring_convention'];
 const document = {
     'line-length': format.print_width,
     'indent-width': format.indent_width,
-    exclude: [
-        '.git',
-        '.venv',
-        '__pycache__',
-        '.ruff_cache',
-        '.pytest_cache',
-        'build',
-        'dist',
-        'node_modules',
-        '.gspot',
-    ],
+    'extend-exclude': pythonExcludes('python/ruff'),
     format: {
         'indent-style': format.indent_style === 'tab' ? 'tab' : 'space',
         'quote-style': format.quotes,
@@ -767,7 +755,7 @@ const document = {
         ...(convention === undefined ? {} : { pydocstyle: { convention } }),
         pylint: {
             'max-args': limit('function_parameters', 'python'),
-            'max-positional-args': limit('positional_arguments', 'python') ?? limit('function_parameters', 'python'),
+            'max-positional-args': limit('function_parameters', 'python'),
             'max-branches': limit('branches', 'python'),
             'max-returns': limit('returns', 'python'),
         },

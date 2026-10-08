@@ -1,12 +1,12 @@
 // Docker-dependent scenarios probe the daemon lazily without blocking unrelated test imports.
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { prepareTestCommand } from '#tests/harness/command.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
-import { DOCKER_STARTUP_TIMEOUT_MS } from '#tests/config/harness/docker.ts';
 
 let available: boolean | undefined;
 
 /**
- * Probe Docker once with the bounded startup limit and require Linux containers.
+ * Probe Docker once with the remaining test time and require Linux containers.
  * @returns whether Docker-dependent native scenarios can run
  */
 export function hasLinuxDocker(): boolean {
@@ -15,10 +15,8 @@ export function hasLinuxDocker(): boolean {
         available = false;
         return available;
     }
-    const result = runBlocking(['docker', 'info', '--format', '{{.OSType}}'], {
-        cwd: root,
-        timeoutMs: DOCKER_STARTUP_TIMEOUT_MS,
-    });
+    const command = ['docker', 'info', '--format', '{{.OSType}}'];
+    const result = runBlocking(command, prepareTestCommand(command, { cwd: root }, 'Docker availability').options);
     available = result.code === 0 && result.stdout.trim() === 'linux';
     return available;
 }

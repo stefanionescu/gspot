@@ -15,7 +15,7 @@ brew = "typos-cli"
 cargo = "typos-cli"
 winget = "crate-ci.typos"
 scoop = "typos"
-github = {name = "crate-ci/typos", version = "v1.43.5"}
+github = { name = "crate-ci/typos", version = "v1.43.5" }
 
 [[tool.replace]]
 file = "typos.toml"
@@ -38,28 +38,13 @@ example = "A misspelled word in selected text reports a spelling finding. Correc
 level = "recommended"
 stage = "commit"
 runs = "files"
-command = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
-fix = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
+command = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
+fix = ["typos", "--isolated", "--config", "{tool_file:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
 exit_codes = [2]
-output = {format = "typos"}
+output = { format = "typos" }
 summary = "Finds misspelled words in code, comments, and documentation."
 why = "A typo in an identifier spreads to every caller; in prose it costs the reader a second look."
-help = "Fix the spelling, or use gspot set tools.typos.words with a word entry when it is a real name."
-
-[[setting]]
-name = "tools.typos.words"
-reason_identity = "word"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Words typos flags that the repository uses on purpose: a bare word, or an entry with word and reason. The word itself is an accepted reason."
-
-[[setting]]
-name = "tools.typos.exclude"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Root-relative paths typos skips, each with a reason."
+help = "Fix the spelling, or write the real name and its reason in [words]."
 
 [[setting]]
 name = "tools.typos.locale"

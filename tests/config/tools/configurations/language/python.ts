@@ -1,28 +1,18 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
+import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
-import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python/source.ts';
-
-// What each check accepts beside the clean module.
-export const CORRECTIONS: Record<string, Record<string, string>> = {
-    'python/pip-installs': {
-        'uv.lock': 'version = 1\n',
-        'scripts/setup.sh': '#!/usr/bin/env bash\nprintf "Dependencies are owned by pyproject.toml\\n"\n',
-    },
-    'python/stale-exclusions': { 'example/gone.py': '"""A file with a separate dependency set."""\n' },
-};
 
 // The docstrings are Google style, and pydoclint reads that from the project, not from gspot.
-export const TOOLS_PROJECT =
+export const PYPROJECT =
     '[project]\nname = "example"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n\n[tool.pydoclint]\nstyle = "google"\n';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['python'],
     modules: false,
 
     tools: ['ruff', 'basedpyright'],
     files: {
-        'pyproject.toml': TOOLS_PROJECT,
+        'pyproject.toml': PYPROJECT,
         'example/__init__.py': '"""The test package."""\n',
         [MODULE_PATH]: CLEAN_MODULE,
     },

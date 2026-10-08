@@ -12,7 +12,6 @@ export const UNTESTED = `${VITEST_SOURCE}\n/**\n * Triples a number.\n * @param 
 export const TEST =
     "import { test, expect } from 'vitest';\nimport { positiveTotal } from './public.js';\n\ntest('adds only positive values', () => {\n    expect(positiveTotal([2, 3])).toBe(5);\n    expect(positiveTotal([-2, 3])).toBe(3);\n    expect(positiveTotal([])).toBe(0);\n});\n";
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['typescript', 'vitest'],
     files: {
@@ -28,17 +27,14 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-export const TRIPLED =
-    "import { test, expect } from 'vitest';\nimport { positiveTotal, triple } from './public.js';\n\ntest('adds only positive values', () => {\n    expect(positiveTotal([2, 3])).toBe(5);\n    expect(positiveTotal([-2, 3])).toBe(3);\n    expect(positiveTotal([])).toBe(0);\n});\n" +
-    '\ntest("triples a number", () => { expect(triple(3)).toBe(9); });\n';
+export const TRIPLE_TEST = '\ntest("triples a number", () => { expect(triple(3)).toBe(9); });\n';
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'vitest/coverage',
         files: { 'src/public.ts': UNTESTED },
         policy: '[vitest]\nconfig_file = "testing/coverage.config.mjs"\n',
         expected: { message: 'Coverage for functions (50%) does not meet global threshold (80%)' },
-        corrected: { files: { 'src/public.ts': UNTESTED, 'src/math.test.ts': TRIPLED } },
+        corrected: { files: { 'src/public.ts': UNTESTED, 'src/math.test.ts': TEST } },
     },
 ];

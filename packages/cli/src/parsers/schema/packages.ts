@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import semver from 'semver';
-import { NPM_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';
+import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN, NEXT_ESLINT_PLUGIN_MAJOR } from '#cli/config/parsers/packages.ts';
 
 const stringList = z.array(z.string());
 const stringMap = z.record(z.string(), z.string());
@@ -24,9 +24,15 @@ const devEngineInstaller = z.object({ name: z.string().optional(), version: z.st
 const devEngines = z.object({
     packageManager: z.union([devEngineInstaller, z.array(devEngineInstaller)]).optional(),
 });
-const exactVersion = z
+const installerVersion = z
     .string()
-    .refine((value) => semver.valid(value) !== null, 'Package manager version must be exact.');
+    .refine(
+        (value) =>
+            semver.valid(value) !== null || (/^(?:0|[1-9]\d*)\.x$/u.test(value) && semver.validRange(value) !== null),
+        'Package manager version must be exact or a major requirement.',
+    );
+
+const toolDependencyVersion = z.string().refine((value) => semver.valid(value) !== null);
 
 export const poetryToolSchema = z.object({
     dependencies: pythonDependencyMap.optional(),
@@ -35,7 +41,7 @@ export const poetryToolSchema = z.object({
 
 export const packageInstallerIdentitySchema = z.strictObject({
     name: z.enum(['npm', 'bun', 'pnpm', 'yarn']),
-    version: exactVersion.optional(),
+    version: installerVersion.optional(),
 });
 
 export const packageInstallerSchema = packageInstallerIdentitySchema.required();
@@ -49,10 +55,11 @@ export const toolProjectSchema = z.strictObject({
     private: z.literal(NPM_TOOL_PROJECT.private),
     type: z.literal(NPM_TOOL_PROJECT.type),
     packageManager: z.string(),
-    devDependencies: z.record(
-        z.string(),
-        z.string().refine((value) => semver.valid(value) !== null),
-    ),
+    devDependencies: z
+        .object({
+            [NEXT_ESLINT_PLUGIN]: toolDependencyVersion.or(z.string().regex(NEXT_ESLINT_PLUGIN_MAJOR)).optional(),
+        })
+        .catchall(toolDependencyVersion),
 });
 
 export const pipfileSchema = z.object({

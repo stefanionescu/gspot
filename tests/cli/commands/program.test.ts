@@ -63,7 +63,7 @@ test('help remains readable and exits 0 after a structured argument failure', as
 test.each(['-h', '--help'])('ignore %s describes root-wide ignores and removal of multiple entries', async (flag) => {
     await using directory = await testdir();
     await createFileTree(directory.path, { 'gspot.toml': 'malformed = [' });
-    const before = readTree(directory.path);
+    const before = await readTree(directory.path);
     const help = await runGspot(directory.path, ['ignore', flag]);
     expect(help.code, help.stdout + help.stderr).toBe(0);
     expect(help.stderr).toBe('');
@@ -72,7 +72,7 @@ test.each(['-h', '--help'])('ignore %s describes root-wide ignores and removal o
     );
     expect(help.stdout).toContain('Delete the matching ignore entries');
     expect(help.stdout).not.toContain('--scope');
-    expect(readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(directory.path)).toStrictEqual(before);
 });
 
 test('a package manager version failure retains its tool code and diagnostic in human and JSON output', async () => {
@@ -81,7 +81,7 @@ test('a package manager version failure retains its tool code and diagnostic in 
         'gspot.toml': buildPolicy(['bash'], { tables: '[agent_rules]\nenabled = false\n' }),
         'entry.sh': 'echo example\n',
     });
-    const before = readTree(directory.path);
+    const before = await readTree(directory.path);
     const run = processes.runBlocking;
     using boundary = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
         if (command[0] !== 'npm' || command[1] !== '--version') return run(command, options);
@@ -91,7 +91,7 @@ test('a package manager version failure retains its tool code and diagnostic in 
     expect(human.code, human.stdout + human.stderr).toBe(2);
     expect(human.stdout).toBe('');
     expect(human.stderr).toBe('Cannot determine the npm version for the tool project.\n');
-    expect(readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(directory.path)).toStrictEqual(before);
     const structured = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
     expect(structured.code, structured.stdout + structured.stderr).toBe(2);
     expect(structured.stderr).toBe('');
@@ -100,5 +100,5 @@ test('a package manager version failure retains its tool code and diagnostic in 
         message: 'Cannot determine the npm version for the tool project.',
     });
     expect(boundary).toHaveBeenCalledWith(['npm', '--version'], expect.objectContaining({ cwd: directory.path }));
-    expect(readTree(directory.path)).toStrictEqual(before);
+    expect(await readTree(directory.path)).toStrictEqual(before);
 });

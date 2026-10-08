@@ -37,21 +37,22 @@ example = "An installed package whose reported license is outside the allowed li
 level = "recommended"
 stage = "push"
 runs = "once"
-files = {filenames = ["package.json", "pyproject.toml"]}
+files = { filenames = ["package.json", "pyproject.toml"] }
 summary = "Compares the license every installed npm or Python package reports with the allowed list and the exceptions."
 why = "A license the project cannot accept arrives silently with a transitive dependency."
-help = "Replace the package, or add an entry to licenses.exceptions with gspot set. Include package (name@version), license, and reason. An exception holds only while the package reports that license."
+help = "Replace the package, or add an entry to licenses.exceptions with gspot set. Use the exact package name@version as the key, and include license and reason. An exception holds only while the package reports that license."
 
 [[setting]]
 name = "licenses.allowed"
 type = "list"
+items = "string"
 direction = "neutral"
 default = []
 summary = "The SPDX license ids a dependency may report."
 
 [[setting]]
 name = "licenses.exceptions"
-type = "list"
+type = "table"
 direction = "loosening"
-default = []
+default = {}
 summary = "Packages accepted under a license outside the list: name@version, the license it reports, and the reason."

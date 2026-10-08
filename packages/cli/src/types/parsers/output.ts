@@ -6,17 +6,12 @@ import type {
     findingSchema,
     knipReportSchema,
     typosEntrySchema,
-    eslintReportSchema,
-    eslintDiagnosticSchema,
     markdownlintReportSchema,
 } from '#cli/parsers/schema/report.ts';
 
 /** The output table accepted by configuration and command checks. */
 export type OutputSpec = z.infer<typeof outputSchema>;
 
-/** Native ESLint source diagnostic derived from the report schema. */
-export type EslintDiagnostic = z.infer<typeof eslintDiagnosticSchema>;
-export type EslintReport = z.infer<typeof eslintReportSchema>;
 export type MarkdownlintEntry = z.infer<typeof markdownlintReportSchema>[number];
 export type KnipReport = z.infer<typeof knipReportSchema>;
 export type TypoEntry = z.infer<typeof typosEntrySchema>;
@@ -38,3 +33,11 @@ export type FindingPlace = Pick<Finding, 'file' | 'line' | 'column'>;
 
 /** A Vale diagnostic normalized to a repository path and one-based source location. */
 export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };
+
+/** One format's parser, source-file checks and protection of captured output. */
+export type OutputDescriptor = {
+    read: (parsing: Parsing, output: OutputSpec) => Finding[];
+    namesFiles: (output: OutputSpec) => boolean;
+    verifyFiles: boolean;
+    withholdOutput: boolean;
+};

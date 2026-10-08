@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
-import { statSync, readFileSync, writeFileSync } from 'node:fs';
+import { stat, readFile, writeFile } from 'node:fs/promises';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
@@ -19,7 +19,7 @@ async function publish(point: 'error' | 'restoration error' | 'interruption' | '
     const directory = await testdir();
     const original = Buffer.from([0, 255, 10, 13]);
     const destination = join(directory.path, 'config.txt');
-    writeFileSync(destination, original, { mode: 0o444 });
+    await writeFile(destination, original, { mode: 0o444 });
     const program = String.raw`
 import { mock } from 'bun:test';
 const fs = await import('node:fs');
@@ -68,8 +68,9 @@ test('a failed read-only replacement keeps the original bytes and mode with Wind
     {
         using log = openOwnership(directory.path);
 
-        expect(readFileSync(published.destination)).toStrictEqual(published.original);
-        expect(statSync(published.destination).mode & 0o777).toBe(getKeptMode(0o444));
+        expect(await readFile(published.destination)).toStrictEqual(published.original);
+        const publishedMetadata = await stat(published.destination);
+        expect(publishedMetadata.mode & 0o777).toBe(getKeptMode(0o444));
         expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
     }
 });
@@ -104,7 +105,7 @@ test('a file edited during an interrupted replacement is kept, and recovery refu
     expect(() => openOwnership(directory.path)).toThrow(
         'A previous gspot run stopped while writing config.txt, and the file changed since then.',
     );
-    expect(readFileSync(published.destination, 'utf8')).toBe('developer edit\n');
+    expect(await readFile(published.destination, 'utf8')).toBe('developer edit\n');
 });
 
 test('an inconsistent interrupted log cannot acquire ownership of current bytes', async () => {
@@ -124,28 +125,29 @@ test('an inconsistent interrupted log cannot acquire ownership of current bytes'
         );
     }
     const record = join(directory.path, '.gspot/state/ownership.json');
-    const state = ownershipSchema.parse(JSON.parse(readFileSync(record, 'utf8')));
+    const state = ownershipSchema.parse(JSON.parse(await readFile(record, 'utf8')));
     const entry = state.files[0]!;
     state.pending = [
         {
             path: entry.path,
             after: entry.installed!,
-            entry: { ...entry, installed: { hash: 'f'.repeat(64), mode: 0o644 } },
+            entry: { ...entry, installed: { hash: 'f'.repeat(64) } },
         },
     ];
     const inconsistent = JSON.stringify(state);
-    writeFileSync(record, inconsistent);
+    await writeFile(record, inconsistent);
     expect(() => openOwnership(directory.path)).toThrow('different installed identity');
-    expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('installed\n');
-    expect(readFileSync(record, 'utf8')).toBe(inconsistent);
+    expect(await readFile(join(directory.path, 'config.txt'), 'utf8')).toBe('installed\n');
+    expect(await readFile(record, 'utf8')).toBe(inconsistent);
 });
 
 test('a full disk while logging a batch keeps every file and permits a corrected batch', async () => {
     await using directory = await testdir();
     const original = Buffer.from([0, 255, 10, 13, 42]);
     for (const name of ['first.bin', 'second.bin'])
-        writeFileSync(join(directory.path, name), original, { mode: 0o444 });
-    const originalMode = statSync(join(directory.path, 'first.bin')).mode & 0o777;
+        await writeFile(join(directory.path, name), original, { mode: 0o444 });
+    const originalMetadata = await stat(join(directory.path, 'first.bin'));
+    const originalMode = originalMetadata.mode & 0o777;
     const program = `
 import { mock } from 'bun:test';
 const boundary = await import(${JSON.stringify(boundary)});
@@ -175,8 +177,9 @@ try {
     expect(code, stderr).toBe(0);
     expect(JSON.parse(stdout)).toStrictEqual({ code: 'ENOSPC' });
     for (const name of ['first.bin', 'second.bin']) {
-        expect(readFileSync(join(directory.path, name))).toStrictEqual(original);
-        expect(statSync(join(directory.path, name)).mode & 0o777).toBe(originalMode);
+        expect(await readFile(join(directory.path, name))).toStrictEqual(original);
+        const restoredMetadata = await stat(join(directory.path, name));
+        expect(restoredMetadata.mode & 0o777).toBe(originalMode);
     }
     expect(getOwnership(directory.path).files).toStrictEqual([]);
     {
@@ -191,6 +194,6 @@ try {
             }),
         );
         expect(applyPlans(log, plans)).toStrictEqual(['changed', 'changed']);
-        expect(readFileSync(join(directory.path, 'first.bin'), 'utf8')).toBe('installed');
+        expect(await readFile(join(directory.path, 'first.bin'), 'utf8')).toBe('installed');
     }
 });

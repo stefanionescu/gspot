@@ -1,4 +1,4 @@
-/** The streams and termination controls owned by a child-process fixture. */
+/** The streams and termination controls owned by a test child process. */
 export type CapturedProcess = Pick<
     Bun.Subprocess<Bun.Spawn.Writable, 'pipe', 'pipe'>,
     'stdout' | 'stderr' | 'exitCode' | 'kill' | 'exited'

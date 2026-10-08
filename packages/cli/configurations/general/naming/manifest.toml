@@ -42,30 +42,24 @@ help = "Remove the entry that matches nothing, or fix its name or path."
 [[setting]]
 name = "naming.banned"
 type = "list"
+items = "string"
 direction = "tightening"
 default = []
 summary = "Words this repository bans in identifiers, beyond the shipped groups."
 
 [[setting]]
 name = "naming.allowed"
-type = "list"
+type = "table"
 direction = "loosening"
-default = []
+default = {}
 summary = "Exact identifiers allowed despite the policy, each with a reason."
 
 [[setting]]
 name = "naming.reserved"
-type = "list"
+type = "table"
 direction = "tightening"
-default = []
+default = {}
 summary = "Terms restricted to identifier categories, such as properties or directories."
-
-[[setting]]
-name = "naming.fixed_keys"
-type = "list"
-direction = "loosening"
-default = []
-summary = "Property keys a protocol or format fixes, exempt in one named file."
 
 [[setting]]
 name = "naming.max_chars"
@@ -88,6 +82,7 @@ summary = "The most words one identifier may have."
 [[setting]]
 name = "naming.case"
 type = "list"
+items = "string"
 direction = "loosening"
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
 categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]

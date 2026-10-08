@@ -2,7 +2,6 @@ import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 
-/** Authored inputs and configuration selection for this scenario. */
 export const REPOSITORY: RepositoryScenario = {
     configurations: ['files'],
     modules: false,
@@ -16,7 +15,6 @@ export const REPOSITORY: RepositoryScenario = {
     },
 };
 
-/** Defects, expected findings, and explicit corrections. */
 export const CASES: FindingCase[] = [
     {
         check: 'files/taplo',

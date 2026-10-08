@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
-import { ESLINT_WARN, ESLINT_ERROR } from '#cli/config/parsers/output.ts';
 
 export const findingSchema = z.strictObject({
     check: z.string(),
@@ -28,18 +27,6 @@ export const resultSchema = z.strictObject({
     reproduce: z.string().optional(),
     command: z.array(z.string()).optional(),
 });
-
-export const eslintDiagnosticSchema = z.object({
-    ruleId: z.string().nullable(),
-    line: z.number().int().positive().optional(),
-    column: z.number().int().positive().optional(),
-    message: z.string(),
-    fix: z.unknown().optional(),
-    severity: z.union([z.literal(ESLINT_WARN), z.literal(ESLINT_ERROR)]),
-});
-export const eslintReportSchema = z.array(
-    z.object({ filePath: z.string().min(1), messages: z.array(eslintDiagnosticSchema) }),
-);
 
 export const markdownlintReportSchema = z.array(
     z.object({

@@ -23,14 +23,14 @@ test.each(['', 'app'])('native Stylelint discovery uses owned package fields at 
         [authoredConfiguration]: 'export default { rules: { "property-no-unknown": null } };\n',
     });
     commitAll(sandbox.path);
-    linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
+    await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
     const command = ['node', '--input-type=module', '-e', STYLELINT_DISCOVERY, stylesheet];
     const before = await runTestCommand(command, { cwd: sandbox.path });
     expect(before.code, before.stdout + before.stderr).toBe(0);
     expect(before.stdout).toBe('[]');
     const options = buildInitOptions(
         sandbox.path,
-        scope === '' ? { configurations: ['css'] } : { configurations: ['none'], scopes: ['app=css'] },
+        scope === '' ? { configurations: ['css'] } : { configurations: ['none'], scopes: new Map([['app', ['css']]]) },
     );
     const prepared = await prepare(sandbox.path, options);
     expect(prepared.plan.remove).toContainEqual({
@@ -68,7 +68,7 @@ test('native Stylelint discovery retires a standalone module configuration witho
         '.stylelintrc.mjs': 'export default { rules: { "property-no-unknown": null } };\n',
     });
     commitAll(sandbox.path);
-    linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
+    await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
     const command = ['node', '--input-type=module', '-e', STYLELINT_DISCOVERY, 'source.css'];
     const before = await runTestCommand(command, { cwd: sandbox.path });
     expect(before.code, before.stdout + before.stderr).toBe(0);
@@ -104,7 +104,7 @@ test.each(['eslint.config.mts', 'eslint.config.cts'])(
             'main.js': 'export const value = 1;\n',
         });
         commitAll(sandbox.path);
-        linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
+        await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
         const command = ['node', '--input-type=module', '-e', ESLINT_DISCOVERY, 'main.js'];
         const before = await runTestCommand(command, { cwd: sandbox.path });
         expect(before.code, before.stdout + before.stderr).toBe(0);
@@ -137,7 +137,7 @@ test.each(KNIP_TAKEOVERS)(
             'unused.js': 'export const unused = 2;\n',
         });
         commitAll(sandbox.path);
-        linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
+        await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
         const command = [
             'node',
             '.gspot/node_modules/knip/bin/knip.js',

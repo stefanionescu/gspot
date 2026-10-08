@@ -1,9 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { applyFixers } from '#cli/execution/fixers.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { planFixer, buildFixerPolicy } from '#tests/harness/fixer.ts';
 
@@ -21,12 +23,12 @@ test('fixer environment paths expand against the scratch execution root during p
         `await Bun.write('café settings.txt', 'scratch corrected'); await Bun.write('source.txt', await Bun.file(process.env['SANDBOX_SETTINGS']).text()); await Bun.write(${JSON.stringify(trace)}, process.cwd())`,
     );
     planned.check.env = { SANDBOX_SETTINGS: '{root}/café settings.txt' };
-    const result = await applyFixers(session, [planned], { isDryRun: true });
+    const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: true });
     expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
     expect(result.diffs).toStrictEqual([textContaining('+scratch corrected')]);
-    const executionRoot = readFileSync(trace, 'utf8');
+    const executionRoot = await readFile(trace, 'utf8');
     expect(executionRoot).not.toBe(sandbox.path);
-    expect(existsSync(executionRoot)).toBe(false);
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
-    expect(readFileSync(join(sandbox.path, 'café settings.txt'), 'utf8')).toBe('corrected');
+    expect(await pathExists(executionRoot)).toBe(false);
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+    expect(await readFile(join(sandbox.path, 'café settings.txt'), 'utf8')).toBe('corrected');
 });

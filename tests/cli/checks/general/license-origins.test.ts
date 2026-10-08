@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { chmodSync } from 'node:fs';
+import { chmod } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -25,11 +25,14 @@ async function prepareInventories(
     const version = toolPin(configurationManifests().values(), 'pip-licenses').version!;
     const tables = scopes
         .map((scope) => {
-            const exception = scope === origin ? `[[scope.licenses.exceptions]]\n${EXCEPTION_ENTRY}` : '';
-            return `[[scope]]\npath = "${scope}"\n${exception}`;
+            const exception =
+                scope === origin
+                    ? `[scope."${scope}".licenses.exceptions."Absent_Package@2.0.0"]\n${EXCEPTION_ENTRY}`
+                    : '';
+            return `[scope."${scope}"]\n${exception}`;
         })
         .join('');
-    const rootException = origin === '' ? `[[licenses.exceptions]]\n${EXCEPTION_ENTRY}` : '';
+    const rootException = origin === '' ? `[licenses.exceptions."Absent_Package@2.0.0"]\n${EXCEPTION_ENTRY}` : '';
     const files = Object.fromEntries(
         Object.keys(reports).flatMap((scope) => [
             [join(scope, 'pyproject.toml'), '[project]\nname = "fixture"\nversion = "0.0.0"\n'],
@@ -48,7 +51,7 @@ async function prepareInventories(
         '.gspot/probe/.venv/installed': 'Absent_Package@2.0.0',
         [scanner.path]: scanner.body.replace('VERSION', version),
     });
-    chmodSync(join(root, scanner.path), 0o755);
+    await chmod(join(root, scanner.path), 0o755);
     const applied = await runGspot(root, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 }

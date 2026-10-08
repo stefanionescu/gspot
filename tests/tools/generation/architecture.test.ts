@@ -32,7 +32,10 @@ test.each(ARCHITECTURE_CASES)(
             cwd: sandbox.path,
         });
         expect(linted.code, linted.stdout + linted.stderr).toBe(0);
-        const configured = Array.from({ length: 2 }, () => ({ plugin: enabled, classic: enabled, modern: true }));
+        const configured = [
+            { plugin: enabled, classic: declarations === 'root', modern: true },
+            { plugin: enabled, classic: enabled, modern: true },
+        ];
         const diagnostic = [{ ruleId: 'boundaries/dependencies', line: 1, column: 23, severity: 2 }];
         expect(linted.stdout).toBe(
             JSON.stringify({

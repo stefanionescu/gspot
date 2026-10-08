@@ -1,7 +1,19 @@
 [configuration]
 title = "gspot"
 always_selected = true
-description = "The checks gspot runs on its own output: every generated file matches what gspot writes from the policy."
+description = "The checks gspot runs on policy layout and generated files."
+
+[[check]]
+name = "policy-layout"
+title = "Keep canonical policy layout"
+example = "A hand-edited policy with separated tables reports a layout finding. Run gspot check --fix --only gspot/policy-layout to regroup its tables and retain their comments."
+level = "recommended"
+stage = "commit"
+runs = "files"
+files = { paths = ["gspot.toml"] }
+summary = "Compares gspot.toml with the canonical policy writer."
+why = "One policy layout keeps related settings and their reasons together."
+help = "Run gspot check --fix --only gspot/policy-layout."
 
 [[tool]]
 name = "node"

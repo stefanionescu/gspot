@@ -1,3 +1,3 @@
 <%~ toml({
-    exclude: (settings['tools.lychee.exclude_urls'] ?? []).flatMap((entry) => typeof entry === 'string' ? [entry] : (entry.patterns ?? [])),
+    exclude: settings['links.allowed_urls'],
 }).trimEnd() %>

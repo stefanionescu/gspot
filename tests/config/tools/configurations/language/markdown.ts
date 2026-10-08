@@ -8,7 +8,7 @@ export const FILES = {
 };
 
 /** Options for inactive rules must not enable them; scope options replace their own rule's values only. */
-export const TABLES = `run_with = "mise"
+export const TABLES = `runner = "mise"
 [agent_rules]
 enabled = false
 [format]
@@ -19,8 +19,7 @@ MD041 = {}
 MD013 = { line_length = 10 }
 MD033 = {}
 MD060 = { style = "aligned" }
-[[scope]]
-path = "app"
+[scope."app"]
 configurations = []
 [scope.tools.markdownlint.rules]
 MD044 = { names = ["Nested label"] }

@@ -4,10 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { HtmlValidationConfiguration } from '#tests/types/generation/configuration-files.ts';
 
@@ -43,7 +44,7 @@ for (const repository of SITE_HTML_REPOSITORIES)
             expect(installed.code, installed.stdout + installed.stderr).toBe(0);
             const applied = await spawnGspot(sandbox.path, ['apply']);
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-            const appliedPolicy = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
+            const appliedPolicy = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
             const checked = await spawnGspot(sandbox.path, ['check', '--json', '--only', 'site/html-validate']);
             expect(checked.code, checked.stdout + checked.stderr).toBe(1);
             expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
@@ -54,7 +55,7 @@ for (const repository of SITE_HTML_REPOSITORIES)
                     findings: [containing({ file: 'other/dist/index.html', line: 7, rule: 'wcag/h37' })],
                 },
             ]);
-            expect(existsSync(join(sandbox.path, '.gspot/config/html-validate-built.json'))).toBe(false);
+            expect(await pathExists(join(sandbox.path, '.gspot/config/html-validate-built.json'))).toBe(false);
             for (const [scope, severity] of SITE_HTML_RULE_SCOPES) {
                 const native = await runTestCommand(
                     [
@@ -71,15 +72,15 @@ for (const repository of SITE_HTML_REPOSITORIES)
                 const document = JSON.parse(native.stdout) as HtmlValidationConfiguration;
                 expect(document.rules['wcag/h37']).toBe(severity);
             }
-            writeFileSync(join(sandbox.path, 'other/page.html'), SITE_HTML_CORRECTED);
+            await writeFile(join(sandbox.path, 'other/page.html'), SITE_HTML_CORRECTED);
             const corrected = await spawnGspot(sandbox.path, ['check', '--json', '--only', 'site/html-validate']);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
             expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
                 { scope: 'app', status: 'passed', findings: [] },
                 { scope: 'other', status: 'passed', findings: [] },
             ]);
-            expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(appliedPolicy);
+            expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(appliedPolicy);
             for (const scope of ['app', 'other'])
-                expect(readFileSync(join(sandbox.path, `${scope}/build.mjs`), 'utf8')).toBe(SITE_HTML_BUILD);
+                expect(await readFile(join(sandbox.path, `${scope}/build.mjs`), 'utf8')).toBe(SITE_HTML_BUILD);
         },
     );

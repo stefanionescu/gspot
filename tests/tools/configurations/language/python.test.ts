@@ -1,4 +1,4 @@
-// Test repository for the python configuration: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
+// The Python configuration reports lint, layout, and type errors and accepts their corrections.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
@@ -9,107 +9,98 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { install, buildToolsPath } from '#tests/harness/install.ts';
-import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python/source.ts';
+import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
+import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python.ts';
 
 import {
-    TOOLS_PROJECT,
+    PYPROJECT,
     DOCSTRING_MODULES,
     IMPORT_CONFIGURATIONS,
 } from '#tests/config/tools/configurations/language/python.ts';
 
-test(
-    'deptry excludes private tools without Git and preserves authored exclusions beside real findings',
-    async () => {
-        await using sandbox = await testdir();
-        const project = '[project]\nname = "dependency-example"\nversion = "1.0.0"\ndependencies = []\n';
-        const exclusions = '\n[tool.deptry]\nexclude = ["^generated/"]\nextend_exclude = ["^vendor/"]\n';
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['python']),
-            'pyproject.toml': project + exclusions,
-            'src/main.py': 'import undeclared_example\n',
-            'generated/client.py': 'import generated_dependency\n',
-            'vendor/client.py': 'import vendor_dependency\n',
-        });
-        for (const command of ['apply', 'install']) {
-            const prepared = await spawnGspot(sandbox.path, [command]);
-            expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
-        }
-        const args = ['check', '--only', 'python/deptry', '--json'];
-        const failed = await spawnGspot(sandbox.path, args);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        const findings = (JSON.parse(failed.stdout) as RunReport).checks[0]!.findings;
-        expect(findings).toHaveLength(1);
-        expect(findings[0]).toMatchObject({ file: 'src/main.py', rule: 'DEP001', line: 1 });
-        await Bun.write(join(sandbox.path, 'src/main.py'), 'import json\nprint(json.dumps({"ready": True}))\n');
-        const corrected = await spawnGspot(sandbox.path, args);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect((JSON.parse(corrected.stdout) as RunReport).checks[0]).toMatchObject({
-            status: 'passed',
-            findings: [],
-        });
-        const initialized = await runTestCommand(['git', 'init', '-q'], { cwd: sandbox.path });
-        expect(initialized.code, initialized.stderr).toBe(0);
-        const applied = await spawnGspot(sandbox.path, ['apply']);
-        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        const primed = await spawnGspot(sandbox.path, args);
-        expect(primed.code, primed.stdout + primed.stderr).toBe(0);
-        await Bun.write(join(sandbox.path, 'pyproject.toml'), project + exclusions.replace('"^vendor/"', '"^other/"'));
-        const changed = await spawnGspot(sandbox.path, args);
-        expect(changed.code, changed.stdout + changed.stderr).toBe(1);
-        expect((JSON.parse(changed.stdout) as RunReport).checks[0]!.findings).toMatchObject([
-            { file: 'vendor/client.py', rule: 'DEP001', line: 1 },
-        ]);
-    },
-    NATIVE_TEST_TIMEOUT_MS,
-);
+test('deptry excludes private tools without Git and preserves authored exclusions beside real findings', async () => {
+    await using sandbox = await testdir();
+    const project = '[project]\nname = "dependency-example"\nversion = "1.0.0"\ndependencies = []\n';
+    const exclusions = '\n[tool.deptry]\nexclude = ["^generated/"]\nextend_exclude = ["^vendor/"]\n';
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['python']),
+        'pyproject.toml': project + exclusions,
+        'src/main.py': 'import undeclared_example\n',
+        'generated/client.py': 'import generated_dependency\n',
+        'vendor/client.py': 'import vendor_dependency\n',
+    });
+    for (const command of ['apply', 'install']) {
+        const prepared = await spawnGspot(sandbox.path, [command]);
+        expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+    }
+    const args = ['check', '--only', 'python/deptry', '--json'];
+    const failed = await spawnGspot(sandbox.path, args);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    const findings = (JSON.parse(failed.stdout) as RunReport).checks[0]!.findings;
+    expect(findings).toHaveLength(1);
+    expect(findings[0]).toMatchObject({ file: 'src/main.py', rule: 'DEP001', line: 1 });
+    await Bun.write(join(sandbox.path, 'src/main.py'), 'import json\nprint(json.dumps({"ready": True}))\n');
+    const corrected = await spawnGspot(sandbox.path, args);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect((JSON.parse(corrected.stdout) as RunReport).checks[0]).toMatchObject({
+        status: 'passed',
+        findings: [],
+    });
+    const initialized = await runTestCommand(['git', 'init', '-q'], { cwd: sandbox.path });
+    expect(initialized.code, initialized.stderr).toBe(0);
+    const applied = await spawnGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const primed = await spawnGspot(sandbox.path, args);
+    expect(primed.code, primed.stdout + primed.stderr).toBe(0);
+    await Bun.write(join(sandbox.path, 'pyproject.toml'), project + exclusions.replace('"^vendor/"', '"^other/"'));
+    const changed = await spawnGspot(sandbox.path, args);
+    expect(changed.code, changed.stdout + changed.stderr).toBe(1);
+    expect((JSON.parse(changed.stdout) as RunReport).checks[0]!.findings).toMatchObject([
+        { file: 'vendor/client.py', rule: 'DEP001', line: 1 },
+    ]);
+});
 
-test(
-    'the python configuration > init replaces an authored Pyright configuration with the pointer, and the check reports the type error',
-    async () => {
-        const typed = `${CLEAN_MODULE}\n\nTOTAL: int = "three"\n`;
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'pyproject.toml': TOOLS_PROJECT,
-            'pyrightconfig.json':
-                '{\n    "typeCheckingMode": "basic",\n    "exclude": [".venv", "example/skipped.py"]\n}\n',
-            'example/__init__.py': '"""The test package."""\n',
-            'example/skipped.py': '"""A file the old setup left out."""\n',
-            [MODULE_PATH]: typed,
-        });
-        commitAll(sandbox.path);
-        const environment = { PATH: buildToolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
-        await install(sandbox.path, buildInitArguments(['python']), environment, {});
-        // The authored file is gone; the pointer stands in its place, and the policy carries none of its settings.
-        const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
-        expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');
-        expect(pointer).not.toContain('basic');
-        const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
-        expect(policy).not.toContain('example/skipped.py');
-        const command = ['check', '--only', 'python/basedpyright', '--json'];
-        const refused = await spawnGspot(sandbox.path, command, environment);
-        expect(refused.code, refused.stdout + refused.stderr).toBe(1);
-        const report = JSON.parse(refused.stdout) as RunReport;
-        expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-            ['python/basedpyright', 'failed'],
-        ]);
-        expect(report.checks[0]?.findings).toContainEqual(
-            containing({
-                file: MODULE_PATH,
-                rule: 'reportAssignmentType',
-            }),
-        );
-        await Bun.write(`${sandbox.path}/${MODULE_PATH}`, `${CLEAN_MODULE}\n\nTOTAL: int = 3\n`);
-        const corrected = await spawnGspot(sandbox.path, command, environment);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const accepted = JSON.parse(corrected.stdout) as RunReport;
-        expect(accepted.checks.map((check) => [check.check, check.status])).toStrictEqual([
-            ['python/basedpyright', 'passed'],
-        ]);
-    },
-    NATIVE_TEST_TIMEOUT_MS,
-);
+test('the python configuration > init replaces an authored Pyright configuration with the pointer, and the check reports the type error', async () => {
+    const typed = `${CLEAN_MODULE}\n\nTOTAL: int = "three"\n`;
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'pyproject.toml': PYPROJECT,
+        'pyrightconfig.json':
+            '{\n    "typeCheckingMode": "basic",\n    "exclude": [".venv", "example/skipped.py"]\n}\n',
+        'example/__init__.py': '"""The test package."""\n',
+        'example/skipped.py': '"""A file the old setup left out."""\n',
+        [MODULE_PATH]: typed,
+    });
+    commitAll(sandbox.path);
+    const environment = { PATH: buildToolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
+    await initRepository(sandbox.path, buildInitArguments(['python']), environment, {});
+    // The authored file is gone; the pointer stands in its place, and the policy carries none of its settings.
+    const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
+    expect(pointer).toContain('"extends": "./.gspot/config/basedpyrightconfig.json"');
+    expect(pointer).not.toContain('basic');
+    const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
+    expect(policy).not.toContain('example/skipped.py');
+    const command = ['check', '--only', 'python/basedpyright', '--json'];
+    const refused = await spawnGspot(sandbox.path, command, environment);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(1);
+    const report = JSON.parse(refused.stdout) as RunReport;
+    expect(report.checks.map((check) => [check.check, check.status])).toStrictEqual([
+        ['python/basedpyright', 'failed'],
+    ]);
+    expect(report.checks[0]?.findings).toContainEqual(
+        containing({
+            file: MODULE_PATH,
+            rule: 'reportAssignmentType',
+        }),
+    );
+    await Bun.write(`${sandbox.path}/${MODULE_PATH}`, `${CLEAN_MODULE}\n\nTOTAL: int = 3\n`);
+    const corrected = await spawnGspot(sandbox.path, command, environment);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    const accepted = JSON.parse(corrected.stdout) as RunReport;
+    expect(accepted.checks.map((check) => [check.check, check.status])).toStrictEqual([
+        ['python/basedpyright', 'passed'],
+    ]);
+});
 
 test.each(['recommended', 'all'] as const)(
     'pydoclint detects source docstrings at $0 without repeating annotation types',
@@ -123,10 +114,10 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['python'], {
                 level,
-                tables: '[[scope]]\npath = "app"\nconfigurations = ["python"]\n',
+                tables: '[scope."app"]\nconfigurations = ["python"]\n',
             }),
-            'pyproject.toml': TOOLS_PROJECT.split('[tool.pydoclint]', 1)[0]!,
-            'app/pyproject.toml': TOOLS_PROJECT.split('[tool.pydoclint]', 1)[0]!,
+            'pyproject.toml': PYPROJECT.split('[tool.pydoclint]', 1)[0]!,
+            'app/pyproject.toml': PYPROJECT.split('[tool.pydoclint]', 1)[0]!,
             ...files,
         });
         for (const command of ['apply', 'install']) {
@@ -160,14 +151,13 @@ test.each(['recommended', 'all'] as const)(
             ['app', 'passed', []],
         ]);
     },
-    NATIVE_TEST_TIMEOUT_MS,
 );
 
 test.each(IMPORT_CONFIGURATIONS)(
     'import-linter reads $file and retains the dependency chain in each scope',
     async ({ file, text }) => {
         await using sandbox = await testdir();
-        const project = TOOLS_PROJECT.split('[tool.pydoclint]', 1)[0]!;
+        const project = PYPROJECT.split('[tool.pydoclint]', 1)[0]!;
         const files = Object.fromEntries(
             ['', 'app/'].flatMap((scope) => [
                 [scope + 'pyproject.toml', project],
@@ -178,7 +168,7 @@ test.each(IMPORT_CONFIGURATIONS)(
             ]),
         );
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['python'], { tables: '[[scope]]\npath = "app"\nconfigurations = ["python"]\n' }),
+            'gspot.toml': buildPolicy(['python'], { tables: '[scope."app"]\nconfigurations = ["python"]\n' }),
             ...files,
         });
         for (const command of ['apply', 'install']) {
@@ -212,13 +202,12 @@ test.each(IMPORT_CONFIGURATIONS)(
             ['app', 'passed', []],
         ]);
     },
-    NATIVE_TEST_TIMEOUT_MS,
 );
 
 test('pydoclint preserves authored requirements to repeat signature types in docstrings', async () => {
     await using sandbox = await testdir();
     const project =
-        TOOLS_PROJECT + 'arg-type-hints-in-docstring = true\ncheck_return_types = true\ncheck-yield-types = true\n';
+        PYPROJECT + 'arg-type-hints-in-docstring = true\ncheck_return_types = true\ncheck-yield-types = true\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python']),
         'pyproject.toml': project,

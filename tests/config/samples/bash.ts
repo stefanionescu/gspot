@@ -6,7 +6,7 @@ export const HEAD =
 export const BASH_CASES_MAIN = '# main: runs the script.\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
 
 /** The checks of the table that run a tool, ShellCheck, shfmt, Bash, or ast-grep, rather than gspot alone. */
-export const TOOL_CHECKS = ['bash/shellcheck', 'bash/shfmt', 'bash/syntax', 'bash/limits'];
+export const TOOL_CHECKS = ['bash/shellcheck', 'bash/shfmt', 'bash/syntax', 'bash/function-size'];
 
 /** A clean bash script every test repository starts from. Its main holds enough statements not to be trivial. */
 export const CLEAN_BASH_SCRIPT = `${HEAD}main() {\n    local name="$1"\n    local greeting="hello \${name}"\n    echo "\${greeting}"\n}\n\nmain "$@"\n`;
@@ -32,8 +32,7 @@ export const BASH_CASES: FindingCase[] = [
     {
         check: 'bash/contract',
         files: { 'scripts/headless.sh': '#!/usr/bin/env bash\nmain() {\n    echo hi\n}\n\nmain "$@"\n' },
-        policy: '[bash]\nplatforms = "macOS and Linux"\n',
-        expected: { file: 'scripts/headless.sh', rule: 'runtime-header', line: 4 },
+        expected: { file: 'scripts/headless.sh', rule: 'strict-mode', line: 2 },
         executable: ['scripts/headless.sh'],
     },
     {
@@ -42,13 +41,6 @@ export const BASH_CASES: FindingCase[] = [
             'scripts/silent.sh': `${HEAD}_quiet() {\n    echo one\n    echo "$1"\n    echo three\n}\n\n# main: runs the script.\nmain() {\n    _quiet "$1"\n    _quiet "$1"\n}\n\nmain "$@"\n`,
         },
         expected: { file: 'scripts/silent.sh', rule: 'missing-comment', line: 8 },
-    },
-    {
-        check: 'bash/duplicate-functions',
-        files: {
-            'scripts/twice.sh': `${HEAD}# _first: prints three lines.\n_first() {\n    echo one\n    echo two\n    echo "$1"\n}\n\n# _second: prints three lines again.\n_second() {\n    echo one\n    echo two\n    echo "$1"\n}\n\n${BASH_CASES_MAIN}`,
-        },
-        expected: { file: 'scripts/twice.sh', rule: 'same-body', line: 9 },
     },
     {
         check: 'bash/unused-functions',
@@ -159,15 +151,8 @@ export const BASH_CASES: FindingCase[] = [
             'scripts/settings.sh':
                 '#!/usr/bin/env bash\n#\n# Holds the settings.\n# Runtime: Bash 4.0+, macOS and Linux.\n\nreadonly PORT=8080\n',
         },
-        policy: '[bash]\nconfig_owners = ["scripts/settings.sh"]\n',
+        policy: '[architecture]\nroles = { env = "scripts/settings.sh" }\n',
         expected: { file: 'scripts/settings.sh', rule: 'guard-first', line: 6 },
-    },
-    {
-        check: 'bash/boundaries',
-        files: { 'deploy/step.sh': `${HEAD}${BASH_CASES_MAIN}` },
-        policy: '[bash]\nboundary_roots = ["deploy"]\n',
-        expected: { file: 'deploy/step.sh', rule: 'boundary-header', line: 1 },
-        executable: ['deploy/step.sh'],
     },
     {
         check: 'bash/env-owner',

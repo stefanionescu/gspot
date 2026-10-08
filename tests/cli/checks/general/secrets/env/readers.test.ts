@@ -1,9 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { openSession } from '#cli/commands/session.ts';
+import { buildCheckInput } from '#tests/harness/input.ts';
+import { envTemplate } from '#cli/checks/general/secrets.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 
 import {
     READER_FILES,
@@ -28,8 +33,7 @@ test.each(['recommended', 'all'] as const)(
         expect(report.checks).toMatchObject([
             { check: 'secrets/env-template', status: 'failed', findings: READER_FINDINGS },
         ]);
-        expect(report.checks[0]!.findings).toHaveLength(4);
-        await Bun.write(join(sandbox.path, '.env.example'), READER_TEMPLATE);
+        await Bun.write(join(sandbox.path, 'config/example.env'), READER_TEMPLATE);
         const corrected = await runGspot(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
@@ -60,7 +64,6 @@ test.each(['recommended', 'all'] as const)(
                 findings: [{ file: 'sibling/source.ts', line: 1, rule: 'missing-key' }],
             },
         ]);
-        expect(report.checks.map((check) => check.findings.length)).toEqual([1, 1, 1]);
         await createFileTree(sandbox.path, PROJECT_READER_CORRECTIONS);
         const corrected = await runGspot(sandbox.path, command);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -90,6 +93,77 @@ test.each(['recommended', 'all'] as const)(
                 findings: [{ file: 'source.ts', line: 1, rule: 'missing-key' }],
             },
         ]);
-        expect((JSON.parse(checked.stdout) as RunReport).checks[0]!.findings).toHaveLength(1);
     },
 );
+
+test('environment reads without a template in their scope report the unmet prerequisite', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        '.env.example': 'KNOWN=value\n',
+        'app/source.ts': 'process.env.MISSING;\n',
+    });
+    await Bun.write(
+        join(sandbox.path, 'gspot.toml'),
+        buildPolicy(['files'], {
+            level: 'all',
+            tables: '[scope."app"]\nconfigurations = ["files"]\n',
+        }),
+    );
+    const input = buildCheckInput(await openSession(sandbox.path), 'secrets/env-template', {
+        scope: 'app',
+        paths: ['.env.example', 'app/source.ts'],
+    });
+    expect(() => envTemplate(input)).toThrow('secrets.env_examples');
+    const checked = await runGspot(sandbox.path, [
+        'check',
+        'app/source.ts',
+        '--only',
+        'secrets/env-template',
+        '--json',
+    ]);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+        {
+            check: 'secrets/env-template',
+            scope: 'app',
+            status: 'skipped',
+            findings: [],
+            note: textContaining('secrets.env_examples'),
+        },
+    ]);
+});
+
+test('modern environment accessors in component and module files require matching template keys', async () => {
+    await using sandbox = await testdir();
+    const policy = buildPolicy(['files'], { level: 'all' });
+    const sources = {
+        'app.astro': '---\nconst endpoint = import.meta.env.VITE_API;\n---\n<main>{endpoint}</main>\n',
+        'app.svelte': '<script>const endpoint = import.meta.env["SVELTE_API"];</script>\n<main>{endpoint}</main>\n',
+        'app.vue':
+            '<script setup>const endpoint = import.meta.env.VUE_API;</script>\n<template>{{ endpoint }}</template>\n',
+        'worker.ts': 'const endpoint = Deno.env.get("DENO_API");\nDeno.env.get("DENO_API");\n',
+        'module.mts': 'export const endpoint = import.meta.env.MODULE_API;\n',
+        'common.cts': 'export const endpoint = process.env.COMMON_API;\n',
+        'legacy.cjs': 'exports.endpoint = process.env.LEGACY_API;\n',
+        'notes.txt': 'import.meta.env.UNREAD_API; Deno.env.get("UNREAD_API");\n',
+    };
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, '.env.example': 'KNOWN=example\n', ...sources });
+    const rejected = envTemplate(buildCheckInput(await openSession(sandbox.path), 'secrets/env-template'));
+    expect(rejected.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'app.astro', line: 2, rule: 'missing-key' },
+        { file: 'app.svelte', line: 1, rule: 'missing-key' },
+        { file: 'app.vue', line: 1, rule: 'missing-key' },
+        { file: 'common.cts', line: 1, rule: 'missing-key' },
+        { file: 'legacy.cjs', line: 1, rule: 'missing-key' },
+        { file: 'module.mts', line: 1, rule: 'missing-key' },
+        { file: 'worker.ts', line: 1, rule: 'missing-key' },
+    ]);
+    await Bun.write(
+        join(sandbox.path, '.env.example'),
+        'KNOWN=example\nVITE_API=example\nSVELTE_API=example\nVUE_API=example\nDENO_API=example\nMODULE_API=example\nCOMMON_API=example\nLEGACY_API=example\n',
+    );
+    expect(envTemplate(buildCheckInput(await openSession(sandbox.path), 'secrets/env-template'))).toStrictEqual([]);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
+    for (const [path, text] of Object.entries(sources))
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
+});

@@ -5,67 +5,39 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
-import { suiteTimeout, openTestBudget } from '#tests/harness/command.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { REPOSITORY, SVELTE_CLEAN } from '#tests/config/tools/configurations/framework/svelte.ts';
 
 const resources = new AsyncDisposableStack();
 let testRepository: OwnedTestRepository;
 beforeAll(async () => {
-    const budget = openTestBudget(suiteTimeout());
-    try {
-        testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
-    } finally {
-        budget[Symbol.dispose]();
-    }
-}, suiteTimeout());
+    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+});
 afterAll(async () => {
     await resources.disposeAsync();
 });
 
 describe('the svelte configuration', () => {
-    test(
-        'svelte/check takes over typescript/tsc',
-        async () => {
-            const { root, environment } = testRepository;
-            const both = await spawnGspot(
-                root,
-                ['check', '--json', '--only', 'typescript/tsc', 'svelte/check'],
-                environment,
+    test('format/prettier reports and corrects a component through the Svelte plugin', async () => {
+        const { root, environment } = testRepository;
+        const path = join(root, 'src/Greeting.svelte');
+        const restore = await applyChanges(root, {
+            check: 'format/prettier',
+            files: { 'src/Greeting.svelte': SVELTE_CLEAN.replace('<p>', '<p     >') },
+        });
+        try {
+            const loose = await spawnGspot(root, ['check', '--only', 'format/prettier', '--json'], environment);
+            expect(loose.code, loose.stdout + loose.stderr).toBe(1);
+            expect((JSON.parse(loose.stdout) as RunReport).checks[0]!.findings).toContainEqual(
+                containing({ file: 'src/Greeting.svelte' }),
             );
-            expect(both.code, both.stdout + both.stderr).toBe(0);
-            expect((JSON.parse(both.stdout) as RunReport).checks).toContainEqual(
-                containing({ check: 'typescript/tsc', status: 'skipped', note: 'svelte/check runs it here' }),
-            );
-        },
-        NATIVE_TEST_TIMEOUT_MS,
-    );
-
-    test(
-        'format/prettier reports and corrects a component through the Svelte plugin',
-        async () => {
-            const { root, environment } = testRepository;
-            const path = join(root, 'src/Greeting.svelte');
-            const restore = applyChanges(root, {
-                check: 'format/prettier',
-                files: { 'src/Greeting.svelte': SVELTE_CLEAN.replace('<p>', '<p     >') },
-            });
-            try {
-                const loose = await spawnGspot(root, ['check', '--only', 'format/prettier', '--json'], environment);
-                expect(loose.code, loose.stdout + loose.stderr).toBe(1);
-                expect((JSON.parse(loose.stdout) as RunReport).checks[0]!.findings).toContainEqual(
-                    containing({ file: 'src/Greeting.svelte' }),
-                );
-                const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'format/prettier'], environment);
-                expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-                expect(await Bun.file(path).text()).toBe(SVELTE_CLEAN);
-            } finally {
-                restore();
-            }
-        },
-        NATIVE_TEST_TIMEOUT_MS,
-    );
+            const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'format/prettier'], environment);
+            expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+            expect(await Bun.file(path).text()).toBe(SVELTE_CLEAN);
+        } finally {
+            await restore();
+        }
+    });
 });

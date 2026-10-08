@@ -1,7 +1,7 @@
 [configuration]
 title = "React"
 requires = ["javascript"]
-recommends = ["typescript", "css", "react-dom"]
+suggests = ["typescript", "css", "react-dom"]
 description = "React components: the recommended React and hooks rules as errors, component files that keep their state on a reload, and the Testing Library rules over test files."
 
 [detect]
@@ -38,19 +38,19 @@ tool = "eslint"
 imports = "eslint.imports.js.tmpl"
 fragment = true
 
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["**/*.tsx", "**/*.jsx"]
 categories = ["files"]
 case = ["pascal", "kebab"]
 reason = "A component file takes the component's name."
 
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["**/*.tsx", "**/*.jsx"]
 categories = ["functions"]
 case = ["pascal", "camel"]
 reason = "A function that returns JSX is a component and takes a capital."
 
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["**"]
 languages = ["typescript", "javascript"]
 categories = ["functions", "methods"]
@@ -66,10 +66,23 @@ reason = "React renders a component by its name, so a component of one statement
 jsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
 tsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "react/jsx-key", "react/no-danger"]
 
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["**"]
 languages = ["typescript", "javascript"]
 categories = ["functions", "methods", "variables"]
-names = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
-skip = true
+allowed = ["useSyncExternalStore", "getSnapshot", "getServerSnapshot"]
 reason = "React defines these subscription and snapshot callback names."
+
+[set]
+"tools.eslint.import_extensions" = { "**/*" = "extensionless" }
+
+[[check]]
+name = "version-pairs"
+title = "Keep React packages on one version"
+example = "Different installed versions of react and react-dom report an alignment finding. Install the same version of both and update the lockfile with the package manager."
+level = "recommended"
+stage = "commit"
+runs = "once"
+summary = "Checks that react and react-dom use the same installed version."
+why = "React and its DOM renderer ship together and expect matching versions."
+help = "Install the same version of react and react-dom."

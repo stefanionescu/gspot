@@ -1,13 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { buildInitArguments } from '#tests/harness/init.ts';
-import { INIT_CI_CASES } from '#tests/config/cli/commands/init/ci.ts';
+import { initCommand } from '#cli/commands/init/command.ts';
+import { commitAll, gitOutput } from '#tests/harness/git.ts';
+import { askQuestions } from '#cli/commands/init/questions.ts';
+import { EMPTY_TOOLING } from '#tests/config/harness/tooling.ts';
+import { buildInitOptions, buildInitArguments } from '#tests/harness/init.ts';
+import { INIT_CI_CASES, CI_PREFERENCE_CASES } from '#tests/config/cli/commands/init/ci.ts';
 
 test.each(INIT_CI_CASES)(
     'an explicit CI provider takes precedence over $name and preserves authored jobs',
@@ -15,7 +18,7 @@ test.each(INIT_CI_CASES)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { [path]: content, 'control.txt': 'preserve this source\n' });
         commitAll(sandbox.path);
-        const before = readTree(sandbox.path);
+        const before = await readTree(sandbox.path);
         for (const provider of ['github', 'gitlab'] as const) {
             const preview = await runGspot(sandbox.path, [
                 'init',
@@ -47,7 +50,7 @@ test.each(INIT_CI_CASES)(
                 path: `${path}: quality`,
                 note: 'existing lint job retained; no duplicate CI job proposed',
             });
-            expect(readTree(sandbox.path)).toStrictEqual(before);
+            expect(await readTree(sandbox.path)).toStrictEqual(before);
             expect(await Bun.file(join(sandbox.path, path)).text()).toBe(content);
         }
     },
@@ -61,7 +64,7 @@ test('initialization distinguishes retained CI jobs from tool settings that gene
         'query.sql': 'SELECT 1;\n',
     });
     commitAll(sandbox.path);
-    const before = readTree(sandbox.path);
+    const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, [...buildInitArguments(['sql']), '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stderr).toBe('');
@@ -72,11 +75,33 @@ test('initialization distinguishes retained CI jobs from tool settings that gene
     expect(retained).toContain('existing lint job retained; no duplicate CI job proposed');
     expect(preview.stdout).not.toContain('kept active');
     expect(preview.stdout).not.toContain('left in place, no longer read');
-    expect(readTree(sandbox.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
     const empty = await runGspot(sandbox.path, [...buildInitArguments(['none']), '--dry-run']);
     expect(empty.code, empty.stdout + empty.stderr).toBe(0);
     expect(empty.stdout).toMatch(/^ {2}security\s+detected\s/mu);
     expect(empty.stdout).not.toMatch(/^ {2}sql\s+/mu);
     expect(empty.stdout).not.toContain('the rules install alone');
-    expect(readTree(sandbox.path)).toStrictEqual(before);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test.each(CI_PREFERENCE_CASES)('initialization CI preference uses %s', async (_label, ci, path, remote, expected) => {
+    await using sandbox = await testdir();
+    if (path !== '') await createFileTree(sandbox.path, { [path]: '{}\n' });
+    gitOutput(sandbox.path, ['init', '-q']);
+    gitOutput(sandbox.path, ['config', 'remote.origin.url', remote]);
+    const options = buildInitOptions(sandbox.path, { isDryRun: true });
+    delete options.ci;
+    const answers = await askQuestions(sandbox.path, options, { ...EMPTY_TOOLING, ci: [...ci] });
+    expect(answers).toStrictEqual({ hooks: false, runner: 'none', rules: false, ci: expected });
+});
+
+test('init keeps an unsupported CI pipeline in place and names it in the plan', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'bitbucket-pipelines.yml': '{}\n' });
+    const before = await readTree(sandbox.path);
+    const result = await initCommand(buildInitOptions(sandbox.path, { isDryRun: true, configurations: ['none'] }));
+    expect(result.exitCode, result.text).toBe(0);
+    const { plan } = result.json as Required<Pick<InitJson, 'plan'>>;
+    expect(plan.retained.map((entry) => entry.path)).toStrictEqual(['bitbucket-pipelines.yml']);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

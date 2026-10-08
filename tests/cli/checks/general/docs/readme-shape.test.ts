@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -143,5 +143,5 @@ test('README shape diagnostics give a valid reasoned exception command without c
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     expect(preview.stdout).toContain('check = "docs/readme-shape"');
     expect(preview.stdout).toMatch(/paths = \[\s*"README\.md"\s*\]/u);
-    expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
 });

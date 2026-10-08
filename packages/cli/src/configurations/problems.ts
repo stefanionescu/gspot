@@ -8,8 +8,8 @@ import { similar, codeList } from '#cli/platform/text.ts';
 import { allChecks, configurationName } from '#cli/configurations/declarations.ts';
 
 import {
-    CONFIG_PLACEHOLDER,
     SETTING_PLACEHOLDER,
+    TOOL_FILE_PLACEHOLDER,
     SETTING_DEFAULT_FIELDS,
     CONFIGURATION_RULES_FOLDER,
 } from '#cli/config/configurations.ts';
@@ -69,7 +69,7 @@ function configurationReaders(checks: ParsedCheck[]): Set<string> {
             ...(check.fix ?? []),
             ...(check.env === undefined ? [] : Object.values(check.env)),
         ])
-            for (const match of argument.matchAll(CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
+            for (const match of argument.matchAll(TOOL_FILE_PLACEHOLDER)) readers.add(match[1] ?? '');
     return readers;
 }
 
@@ -297,7 +297,7 @@ export function manifestProblems(raw: ParsedManifest): string[] {
         })
         .map(
             (config) =>
-                `config ${config.target} has no check that reads it ({config:${configurationName(config.target)}}) and no pointer.`,
+                `config ${config.target} has no check that reads it ({tool_file:${configurationName(config.target)}}) and no pointer.`,
         );
     return [...declarations, ...configurations];
 }

@@ -5,12 +5,12 @@ export const READERS_HEADERS =
 
 export const EXPECTED_READERS: ScopeReaderFindings[] = [
     {
-        check: 'supabase/config',
+        check: 'supabase/project-file',
         root: [],
         nested: [{ file: 'apps/backend/supabase/config.toml', rule: 'function' }],
     },
     {
-        check: 'supabase/admin-key',
+        check: 'supabase/service-role-key',
         root: [],
         nested: [{ file: 'apps/backend/client.ts', rule: 'admin-key' }],
     },

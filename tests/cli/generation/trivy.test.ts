@@ -5,7 +5,7 @@ import { emitFile } from '#tests/harness/generated.ts';
 
 test('Trivy converts a duration to seconds and a severity string to its native list', async () => {
     const text = await emitFile(
-        buildPolicy(['docker'], { tables: '[tools.trivy]\ntimeout = "10m"\nseverity = "HIGH,CRITICAL"\n' }),
+        buildPolicy(['docker'], { tables: 'tool_timeout_seconds = 600\n[tools.trivy]\nseverity = "HIGH,CRITICAL"\n' }),
         '.gspot/config/trivy.yml',
         { Dockerfile: 'FROM scratch\n' },
     );

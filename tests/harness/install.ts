@@ -11,17 +11,16 @@ import type { SandboxInstallation } from '#tests/types/harness/install.ts';
 import { testModules, installedModules, sourceLauncherDirectory } from '#tests/harness/environment.ts';
 
 /**
- * Remove optional fixture configurations through the public mutation and installation pipeline.
- * @param cwd the initialized fixture repository.
- * @param configurations the configurations the fixture removes.
- * @param environment the fixture's isolated environment.
- * @returns the number of removed configurations, whose commands also install applicable tools.
+ * Remove optional sandbox configurations through the public mutation pipeline.
+ * @param cwd the initialized sandbox repository.
+ * @param configurations the configurations the sandbox removes.
+ * @param environment the sandbox's isolated environment.
  */
-export async function removeConfigurations(
+async function removeConfigurations(
     cwd: string,
     configurations: string[],
     environment: Record<string, string>,
-): Promise<number> {
+): Promise<void> {
     const selected = new Set(readPolicy(cwd).policy.configurations);
     const chosen = configurations.filter((name) => selected.has(name));
     for (const configuration of chosen) {
@@ -31,7 +30,6 @@ export async function removeConfigurations(
                 `Test repository removal of ${configuration} failed with status ${String(removed.code)}: ${removed.stderr}${removed.stdout}`,
             );
     }
-    return chosen.length;
 }
 
 /**
@@ -71,7 +69,7 @@ export function buildSandboxPath(names: string[]): string {
  * @param environment verbatim variables, such as the PATH of the tools.
  * @param settings the configurations to omit and the level to select before installing tools.
  */
-export async function install(
+export async function initRepository(
     cwd: string,
     argv: string[],
     environment: Record<string, string>,
@@ -90,12 +88,10 @@ export async function install(
         if (selected.code !== 0)
             throw new Error(`The ${level} level was not selected: ${selected.stdout}${selected.stderr}`);
     }
-    const removed = await removeConfigurations(cwd, without, installationEnvironment);
-    if (removed === 0) {
-        const installed = await spawnGspot(cwd, ['install'], installationEnvironment);
-        if (installed.code !== 0)
-            throw new Error(`Test repository installation failed: ${installed.stdout}${installed.stderr}`);
-    }
+    await removeConfigurations(cwd, without, installationEnvironment);
+    const installed = await spawnGspot(cwd, ['install'], installationEnvironment);
+    if (installed.code !== 0)
+        throw new Error(`Test repository installation failed: ${installed.stdout}${installed.stderr}`);
 }
 
 /** Install generated, locked tool projects through the public command. */

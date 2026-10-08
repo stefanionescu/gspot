@@ -1,8 +1,9 @@
-import { PRIVATE_PYTHON_LOCKFILE } from '#tests/config/samples/python/tools.ts';
+import { PRIVATE_PYTHON_LOCKFILE } from '#tests/config/samples/python.ts';
 
 const LOCKFILE_STEPS = [['uv', 'lock', '--project', '.gspot']];
 
 export const CONSTRAINT = { name: 'pyjwt', specifier: '>=2.14.0' };
+export const CONSTRAINT_ARGUMENT = `${CONSTRAINT.name}${CONSTRAINT.specifier}`;
 
 export const PYTHON_LOCKFILE_PLANS = [
     { state: 'missing', lockfile: undefined, floor: '>=3.11', refreshLockfiles: false, steps: LOCKFILE_STEPS },

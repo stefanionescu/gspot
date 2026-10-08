@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openRoot } from '#cli/platform/root/open.ts';
+import { link, stat, symlink, readFile } from 'node:fs/promises';
 import { isMacos, isPosix } from '#tests/config/harness/platforms.ts';
-import { linkSync, statSync, symlinkSync, readFileSync } from 'node:fs';
 import { fileMode, portableSegments } from '#cli/platform/root/rules.ts';
 
 import {
@@ -62,9 +62,9 @@ test.skipIf(!isPosix).each(['portable', 'native'] as const)(
         await createFileTree(directory.path, { 'project/.keep': '', 'outside/sentinel': 'authored\n' });
         const outside = join(directory.path, 'outside');
         const project = join(directory.path, 'project');
-        symlinkSync(outside, join(project, 'escape'));
-        symlinkSync(join(outside, 'sentinel'), join(project, 'linked'));
-        linkSync(join(outside, 'sentinel'), join(project, 'hardlinked'));
+        await symlink(outside, join(project, 'escape'));
+        await symlink(join(outside, 'sentinel'), join(project, 'linked'));
+        await link(join(outside, 'sentinel'), join(project, 'hardlinked'));
         using root = openRoot(project, format);
         for (const { path, refusal } of UNSAFE_DESTINATIONS) {
             expect(() => {
@@ -73,10 +73,11 @@ test.skipIf(!isPosix).each(['portable', 'native'] as const)(
             expect(() => {
                 root.remove(path, { bytes: Buffer.from('authored\n'), mode: 0o644 });
             }).toThrow(refusal);
-            expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
+            expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
         }
         root.mkdir('.gspot/state/private', 0o700);
-        expect(statSync(join(project, '.gspot/state/private')).mode & 0o777).toBe(0o700);
+        const attributes = await stat(join(project, '.gspot/state/private'));
+        expect(attributes.mode & 0o777).toBe(0o700);
     },
 );
 
@@ -110,70 +111,76 @@ test.skipIf(!isPosix)(
         await using directory = await testdir();
         await createFileTree(directory.path, { 'project/target': 'inside', 'outside/sentinel': 'outside' });
         const project = join(directory.path, 'project');
-        symlinkSync('../outside', join(project, 'escape'));
-        symlinkSync('../outside/sentinel', join(project, 'escaped-file'));
+        await symlink('../outside', join(project, 'escape'));
+        await symlink('../outside/sentinel', join(project, 'escaped-file'));
         using root = openRoot(project);
         for (const { target, refusal } of LINK_TARGET_REFUSALS) {
             expect(() => {
                 root.write('tool', { bytes: Buffer.from(target), mode: 0o777, isLink: true }, undefined);
             }).toThrow(refusal);
             expect(root.read('tool')).toBeUndefined();
-            expect(readFileSync(join(directory.path, 'outside/sentinel'), 'utf8')).toBe('outside');
+            expect(await readFile(join(directory.path, 'outside/sentinel'), 'utf8')).toBe('outside');
         }
         const next = { bytes: Buffer.from('target'), mode: 0o777, isLink: true as const };
         root.write('tool', next, undefined);
         expect(root.readKeepingLinks('tool')).toStrictEqual(next);
-        expect(readFileSync(join(project, 'tool'), 'utf8')).toBe('inside');
+        expect(await readFile(join(project, 'tool'), 'utf8')).toBe('inside');
         root.remove('tool', next);
         expect(root.read('tool')).toBeUndefined();
-        expect(readFileSync(join(project, 'target'), 'utf8')).toBe('inside');
+        expect(await readFile(join(project, 'target'), 'utf8')).toBe('inside');
     },
 );
 
-test('mutation paths reject portable escapes and preserve ordinary Unicode names', () => {
-    for (const path of [
-        '../outside',
-        '/outside',
-        'a/../b',
-        'a//b',
-        'a/./b',
-        'C:relative',
-        'C:/absolute',
-        String.raw`\\server\share`,
-        String.raw`a\b`,
-        'nul.txt',
-        'a/COM1',
-        'a.',
-        'a ',
-        'a\0b',
-        '',
-    ]) {
-        expect(() => portableSegments(path)).toThrow('Unsafe lifecycle path');
-    }
+test.each([
+    '../outside',
+    '/outside',
+    'a/../b',
+    'a//b',
+    'a/./b',
+    'C:relative',
+    'C:/absolute',
+    String.raw`\\server\share`,
+    String.raw`a\b`,
+    'nul.txt',
+    'a/COM1',
+    'a.',
+    'a ',
+    'a\0b',
+    '',
+])('mutation paths reject the portable escape %j', (path) => {
+    expect(() => portableSegments(path)).toThrow('Unsafe lifecycle path');
+});
+
+test('mutation paths preserve ordinary Unicode names', () => {
     expect(portableSegments('documents/équipe 50%.md')).toStrictEqual(['documents', 'équipe 50%.md']);
 });
 
-test('Windows file identities retain read-only changes without inventing POSIX permissions', () => {
-    const writable = [0o600, 0o640, 0o644, 0o755, 0o777];
-    const readonly = [0o400, 0o440, 0o444, 0o555];
-    const writableModes = writable.map((mode) => fileMode({ mode }, 'win32'));
-    const readonlyModes = readonly.map((mode) => fileMode({ mode }, 'win32'));
-    expect(new Set(writableModes).size).toBe(1);
-    expect(new Set(readonlyModes).size).toBe(1);
-    expect(writableModes[0]).not.toBe(readonlyModes[0]);
-    for (const mode of [...writable, ...readonly]) {
-        expect(fileMode({ mode }, 'darwin')).toBe(mode);
-        expect(fileMode({ mode }, 'linux')).toBe(mode);
-        expect(fileMode({ mode: fileMode({ mode }, 'win32') }, 'win32')).toBe(fileMode({ mode }, 'win32'));
-        expect(fileMode({ mode, isLink: true }, 'win32')).toBe(writableModes[0]!);
-    }
+test.each([
+    [0o600, true],
+    [0o640, true],
+    [0o644, true],
+    [0o755, true],
+    [0o777, true],
+    [0o400, false],
+    [0o440, false],
+    [0o444, false],
+    [0o555, false],
+] as const)('Windows file identity for mode %i retains its writable class', (mode, writable) => {
+    const writableMode = fileMode({ mode: 0o600 }, 'win32');
+    const readonlyMode = fileMode({ mode: 0o400 }, 'win32');
+    expect(writableMode).not.toBe(readonlyMode);
+    expect(fileMode({ mode }, 'win32')).toBe(writable ? writableMode : readonlyMode);
+    expect(fileMode({ mode }, 'darwin')).toBe(mode);
+    expect(fileMode({ mode }, 'linux')).toBe(mode);
+    expect(fileMode({ mode: fileMode({ mode }, 'win32') }, 'win32')).toBe(fileMode({ mode }, 'win32'));
+    expect(fileMode({ mode, isLink: true }, 'win32')).toBe(writableMode);
 });
 
 test('empty-directory removal bounds parents and preserves nonempty directories', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'project/.keep': '', 'outside/kept/value': 'external' });
     const root = join(sandbox.path, 'project');
-    symlinkSync('../outside', join(root, 'linked'));
+    await symlink('../outside', join(root, 'linked'));
     using files = openRoot(root);
     expect(() => {
         files.rmdir('linked/kept');
@@ -189,7 +196,7 @@ test('empty-directory removal bounds parents and preserves nonempty directories'
         files.rmdir('cache/kept');
     }).toThrow('ENOTEMPTY');
     expect(files.read('cache/kept/value')?.bytes.toString()).toBe('retained');
-    expect(readFileSync(join(sandbox.path, 'outside/kept/value'), 'utf8')).toBe('external');
+    expect(await readFile(join(sandbox.path, 'outside/kept/value'), 'utf8')).toBe('external');
 });
 
 test.skipIf(!isMacos)(

@@ -41,11 +41,11 @@ function foreignHooks(root: string): string[] {
  * @returns the command and completion note, or instructions for existing hooks
  */
 export function getHookPlan({ policy, repository }: HookContext): HookPlan {
-    if (policy.hooks === undefined || !repository.hasGit) return { note: '' };
+    if (policy.hooks?.enabled !== true || !repository.hasGit) return { note: '' };
     const foreign = foreignHooks(repository.root);
     if (foreign.length > 0) {
         const lines = (Object.keys(HOOK_ARGS) as HookName[]).map(
-            (name) => `  ${name}: ${hookLine(name, policy.run_with)}`,
+            (name) => `  ${name}: ${hookLine(name, policy.runner)}`,
         );
         return {
             note: `hooks already run from ${foreign.join(', ')}; add these gspot lines to them:\n${lines.join('\n')}`,
@@ -81,7 +81,7 @@ export function installHooks(context: HookContext): string {
  * @returns whether the hooks are ready, and the line
  */
 export function hookStatus({ policy, repository }: HookContext): HookStatus {
-    if (policy.hooks === undefined) return { ready: true, text: 'none' };
+    if (policy.hooks?.enabled !== true) return { ready: true, text: 'none' };
     if (!repository.hasGit) return { ready: false, text: 'not installed: no Git repository' };
     const path = ownHooksPath(repository.root);
     if (readGitSetting(repository.root, 'core.hooksPath') === path) return { ready: true, text: `${path}: installed` };

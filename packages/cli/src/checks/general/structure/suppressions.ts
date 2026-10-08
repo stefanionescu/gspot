@@ -93,6 +93,7 @@ export async function suppressionComments(
                             file: file.path,
                             line: comment.line,
                             form: form.form,
+                            reasonForm: form.reason.source,
                             forbidden: form.forbidden,
                             ...(reason === undefined ? {} : { reason }),
                         },
@@ -127,14 +128,13 @@ export async function suppressions(input: CheckInput): Promise<Finding[]> {
                     `${entry.form} suppression is not allowed; fix the finding or configure an explicit ignore.`,
                 ),
             ];
-        if (!input.policyFiles.policy.require_reasons) return [];
         if (isReasonAccepted(entry.reason)) return [];
         return [
             findingAt(
                 input,
                 at,
                 `${entry.form}-no-reason`,
-                `This ${entry.form} suppression needs a meaningful reason.`,
+                `This ${entry.form} suppression needs a meaningful reason matching ${entry.reasonForm}.`,
             ),
         ];
     });

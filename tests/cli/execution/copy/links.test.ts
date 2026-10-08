@@ -2,18 +2,18 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { LINKS } from '#tests/config/cli/execution/copy.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
 
 // Adds each link to the index as Git stores it, so the test needs no link support from the file system.
-function stageLinks(root: string): void {
+async function stageLinks(root: string): Promise<void> {
     for (const [path, target] of Object.entries(LINKS)) {
-        writeFileSync(join(root, '.git', 'link-target'), target);
+        await writeFile(join(root, '.git', 'link-target'), target);
         const hash = gitOutput(root, ['hash-object', '-w', '.git/link-target']);
         gitOutput(root, ['update-index', '--add', '--cacheinfo', `120000,${hash},${path}`]);
     }
@@ -22,7 +22,6 @@ function stageLinks(root: string): void {
 async function linkSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const sandbox = await testdir();
     const check = {
-        name: 'sandbox/report',
         command: [
             process.execPath,
             '-e',
@@ -34,7 +33,11 @@ async function linkSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
         output: { format: 'lines' },
     };
     await createFileTree(sandbox.path, {
-        'gspot.toml': stringify({ configurations: [], agent_rules: { enabled: false }, check: [check] }),
+        'gspot.toml': stringify({
+            configurations: [],
+            agent_rules: { enabled: false },
+            check: { 'sandbox/report': check },
+        }),
         'src/source.ts': 'export {};\n',
     });
     gitOutput(sandbox.path, ['init', '-q']);
@@ -45,7 +48,7 @@ async function linkSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
 
 test('a staged check with tracked links of every kind exits by its findings alone', async () => {
     await using sandbox = await linkSandbox();
-    stageLinks(sandbox.path);
+    await stageLinks(sandbox.path);
     await Bun.write(`${sandbox.path}/src/source.ts`, 'export const changed = 1;\n');
     gitOutput(sandbox.path, ['add', 'src/source.ts']);
     const result = await runGspot(sandbox.path, ['check', '--only', 'sandbox/report', '--staged', '--json']);
@@ -57,13 +60,13 @@ test('a staged check with tracked links of every kind exits by its findings alon
 test('a push of a commit with tracked links of every kind exits by its findings alone', async () => {
     await using sandbox = await linkSandbox();
     const base = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
-    stageLinks(sandbox.path);
+    await stageLinks(sandbox.path);
     await Bun.write(`${sandbox.path}/src/source.ts`, 'export const changed = 1;\n');
     gitOutput(sandbox.path, ['add', 'src/source.ts']);
     gitOutput(sandbox.path, ['commit', '-qm', 'links']);
     const head = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     gitOutput(sandbox.path, ['update-ref', 'refs/remotes/origin/main', base]);
-    const result = await spawnGspot(
+    const result = await runGspot(
         sandbox.path,
         ['check', '--only', 'sandbox/report', '--hook', 'pre-push', '--json', '--', 'origin', 'unused'],
         {},

@@ -45,8 +45,7 @@ reason = "The build owns these outputs."
 [[vendored]]
 paths = ["vendor/**"]
 reason = "These scripts belong to a dependency."
-[[scope]]
-path = "child"
+[scope."child"]
 configurations = ["javascript"]
 [scope.limits.javascript]
 min_function_statements = 1

@@ -1,23 +1,24 @@
 import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { pathMatcher } from '#cli/repository/selectors.ts';
+import { rolePaths } from '#cli/policy/settings/lookup.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/language/bash.ts';
 
 /**
- * One finding per `${name:-value}` default outside the configuration owners, unless an allowed fragment is on the line.
+ * One finding per `${name:-value}` default outside the environment owners.
  * @param input the check context
  * @returns the findings
  */
 export const guardDefaults: BuiltInCheck = async (input) => {
-    const owners = new Set(input.view.settings['bash.config_owners'] as string[]);
-    const fragments = input.view.settings['bash.defaults_allowed'] as string[];
+    const isOwner = pathMatcher(rolePaths(input.policyFiles.policy.architecture.roles, 'env'));
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) => {
-        if (owners.has(file.path)) return [];
+        if (isOwner(file.path)) return [];
         return file.code.flatMap((line, position) => {
-            if (line.trimStart().startsWith('#') || fragments.some((fragment) => line.includes(fragment))) return [];
+            if (line.trimStart().startsWith('#')) return [];
             const match = DEFAULT_EXPANSION.exec(line);
             return match === null
                 ? []
@@ -39,11 +40,11 @@ export const guardDefaults: BuiltInCheck = async (input) => {
  * @returns the findings
  */
 export const guards: BuiltInCheck = async (input) => {
-    const owners = new Set(input.view.settings['bash.config_owners'] as string[]);
+    const isOwner = pathMatcher(rolePaths(input.policyFiles.policy.architecture.roles, 'env'));
     const index = await getScriptIndex(input);
     const seen = new Map<string, string>();
     return index.files
-        .filter((file) => owners.has(file.path))
+        .filter((file) => isOwner(file.path))
         .flatMap((file) => {
             const [first = { number: 1, code: '' }, second] = codeLines(file.code);
             const name = CONFIG_GUARD.exec(first.code)?.groups?.['name'];

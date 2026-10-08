@@ -14,10 +14,10 @@ import {
     FILE_PLACEHOLDER,
     WORKSPACE_PREFIX,
     FILES_PLACEHOLDER,
-    CONFIG_PLACEHOLDER,
     POINTER_PLACEHOLDER,
     SETTING_PLACEHOLDER,
     EXISTING_PLACEHOLDER,
+    TOOL_FILE_PLACEHOLDER,
 } from '#cli/config/configurations.ts';
 
 /**
@@ -61,7 +61,8 @@ function configurationPath(session: ToolSession, planned: PlannedCheck, name: st
     const target = allConfigurations(session, planned).find(
         (config) => !config.fragment && configurationName(config.target) === name,
     );
-    if (!target) throw new Error(`Check ${planned.check.name} names {config:${name}} and no configuration writes it.`);
+    if (!target)
+        throw new Error(`Check ${planned.check.name} names {tool_file:${name}} and no configuration writes it.`);
     return targetInScope(planned.scope.scope.path, target);
 }
 
@@ -129,7 +130,7 @@ export function commandConfigurations(
         ...new Set([
             ...nestedConfigurations(session, planned),
             ...parts.flatMap((part) => {
-                const configured = [...part.matchAll(CONFIG_PLACEHOLDER)]
+                const configured = [...part.matchAll(TOOL_FILE_PLACEHOLDER)]
                     .map((match) => match.groups?.['name'])
                     .filter((name) => name !== undefined)
                     .map((name) => configurationPath(session, planned, name));
@@ -186,7 +187,7 @@ export function substituteValue(
                 ? String(found)
                 : '';
         })
-        .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
+        .replaceAll(TOOL_FILE_PLACEHOLDER, (_match, name: string) =>
             toPlatform(join(session.root, configurationPath(session, planned, name))),
         )
         .replaceAll(POINTER_PLACEHOLDER, (_match, name: string) => toPlatform(posix.join(substitutions.scope, name)))

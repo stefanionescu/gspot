@@ -86,14 +86,15 @@ async function findTreeSyntaxProblem(
 }
 
 /**
- * The lines of a Markdown text outside free-text fences, with their numbers.
+ * The lines of Markdown outside free-text and titled example fences, with their numbers.
  * @param text the Markdown text.
  * @returns the lines a path check reads.
  */
 export function proseLines(text: string): ProseLine[] {
     const ignored = new Set<number>();
     visit(fromMarkdown(text), 'code', (node) => {
-        if (!FREE_TEXT_FENCES.has(node.lang ?? '') || node.position === undefined) return;
+        const titled = node.meta?.split(/\s+/u).some((attribute) => attribute.startsWith('title=')) === true;
+        if ((!FREE_TEXT_FENCES.has(node.lang ?? '') && !titled) || node.position === undefined) return;
         for (let line = node.position.start.line; line <= node.position.end.line; line += 1) ignored.add(line);
     });
     return text.split('\n').flatMap((line, index) => (ignored.has(index + 1) ? [] : [{ number: index + 1, line }]));

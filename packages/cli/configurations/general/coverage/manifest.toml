@@ -1,0 +1,59 @@
+[configuration]
+title = "Coverage"
+description = "Coverage floors shared by test runners."
+
+[[setting]]
+name = "coverage.lines"
+type = "number"
+direction = "floor"
+default = 0
+default_all = 80
+summary = "The minimum percentage of source lines covered by tests."
+
+[setting.validation]
+minimum = 0
+maximum = 100
+
+[[setting]]
+name = "coverage.branches"
+type = "number"
+direction = "floor"
+default = 0
+default_all = 80
+summary = "The minimum percentage of source branches covered by tests."
+
+[setting.validation]
+minimum = 0
+maximum = 100
+
+[[setting]]
+name = "coverage.functions"
+type = "number"
+direction = "floor"
+default = 0
+default_all = 80
+summary = "The minimum percentage of source functions covered by tests."
+
+[setting.validation]
+minimum = 0
+maximum = 100
+
+[[setting]]
+name = "coverage.statements"
+type = "number"
+direction = "floor"
+default = 0
+default_all = 80
+summary = "The minimum percentage of source statements covered by tests."
+
+[setting.validation]
+minimum = 0
+maximum = 100
+
+[[setting]]
+name = "coverage.overrides"
+type = "list"
+direction = "floor"
+default = []
+summary = "Line coverage floors for named Swift targets."
+items = { target = "string", percent = { type = "number", validation = { minimum = 0, maximum = 100 } } }

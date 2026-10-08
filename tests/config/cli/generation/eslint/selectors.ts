@@ -11,3 +11,16 @@ export const INJECTED = {
     selector: "Decorator[expression.callee.name='InjectRepository']",
     message: 'Inject the service.',
 };
+
+export const RESPONSE_MESSAGES =
+    'response.json({ message: `Item ${identifier}` });\ncustom.info(`Item ${identifier}`);\n';
+export const LEVEL_RULES = {
+    'sonarjs/no-empty-test-file': 0,
+    'sonarjs/no-parameter-reassignment': 0,
+    'sonarjs/for-loop-increment-sign': 0,
+    'security/detect-object-injection': 0,
+    'security/detect-non-literal-fs-filename': 0,
+    'security/detect-non-literal-require': 2,
+    'n/no-sync': 2,
+    'for-direction': 2,
+};

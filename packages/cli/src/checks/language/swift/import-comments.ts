@@ -2,7 +2,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { readSwift, disposeSwift } from '#cli/parsers/swift.ts';
+import { readSwift, disposeSwift } from '#cli/parsers/swift/source.ts';
 import { COMMENTS, DIRECTIVE } from '#cli/config/checks/language/swift.ts';
 
 /**

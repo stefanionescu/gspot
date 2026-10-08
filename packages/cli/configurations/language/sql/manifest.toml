@@ -1,7 +1,7 @@
 [configuration]
 title = "SQL"
 requires = ["format", "structure"]
-recommends = ["naming"]
+suggests = ["naming"]
 description = "SQLFluff checks layout and style in the project dialect. At all, SQL checks line comments, file length, and PostgreSQL function structure."
 
 [detect]
@@ -14,7 +14,7 @@ kinds = ["source"]
 [[tool]]
 name = "sqlfluff"
 crash_pattern = '^Traceback \(most recent call last\):$'
-suppression = {marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)"}
+suppression = { marker = "\\bnoqa\\b", reason = "--[^\\n]*?-- ?(?<reason>\\S.*)" }
 version = "4.3.0"
 min_version = "3.0.0"
 pypi = "sqlfluff"
@@ -54,24 +54,13 @@ title = "Lint SQL files"
 example = "The query `select id from user_accounts;` reports CP01 under the configured uppercase keyword policy. Format it as `SELECT id FROM user_accounts;` and rerun using the project dialect."
 level = "recommended"
 stage = "commit"
-command = ["sqlfluff", "lint", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
+command = ["sqlfluff", "lint", "--config", "{tool_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
 exit_codes = [1]
-fix = ["sqlfluff", "fix", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
-output = {format = "json", children = "violations", fields = {file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description"}}
+fix = ["sqlfluff", "fix", "--config", "{tool_file:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
+output = { format = "json", children = "violations", fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description" } }
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database configuration names."
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
 help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule <code> --reason \"<why>\"."
-
-[[check]]
-name = "file-lines"
-title = "Limit SQL file lines"
-example = "A SQL file with 401 code lines exceeds a 400-line ceiling. Split independent database changes into appropriately ordered files and rerun with each file below the configured limit."
-level = "all"
-stage = "commit"
-limit = "limits.sql.file_lines"
-summary = "Checks that no SQL file has more code lines than the ceiling."
-why = "A long SQL file holds more than one change, and one change is what a reviewer can hold."
-help = "Split the file by the object it changes, or raise limits.sql.file_lines with a reason."
 
 [[setting]]
 name = "tools.sqlfluff.dialect"
@@ -83,13 +72,6 @@ summary = "The sqlfluff dialect; a database configuration sets it."
 [setting.validation]
 pattern = '^[a-z][a-z0-9_]*$'
 message = "Use a SQLFluff dialect label, such as postgres or sqlite."
-
-[[setting]]
-name = "tools.sqlfluff.exclude"
-type = "list"
-direction = "loosening"
-default = []
-summary = "SQL paths the lint and the parse leave out, such as templates with placeholders and scripts for psql, each with a reason."
 
 [[setting]]
 name = "limits.sql.file_lines"

@@ -1,4 +1,5 @@
 // Build one check input from the session and inventory owned by its test.
+import { scopeOf } from '#cli/repository/scopes.ts';
 import { checkInput } from '#cli/execution/built-in.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
@@ -18,10 +19,11 @@ export function buildCheckInput(session: ToolSession, checkId: string, options: 
     const check = scope.selected.flatMap((manifest) => manifest.checks).find((entry) => entry.name === checkId);
     if (check === undefined) throw new Error(`The test repository selects no check called ${checkId}.`);
     const paths = options.paths;
-    const files =
-        paths === undefined
-            ? session.repository.files
-            : session.repository.files.filter((file) => paths.includes(file.path));
+    const files = session.repository.files.filter(
+        (file) =>
+            (check.runs === 'once' || scopeOf(file.path, session.repository.scopes).path === path) &&
+            (paths === undefined || paths.includes(file.path)),
+    );
     return {
         ...checkInput(session, { scope, check, files }),
         repositoryFiles: session.repository.files,

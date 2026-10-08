@@ -16,11 +16,11 @@ import { pythonIdentifiers } from '#cli/parsers/naming/python.ts';
 import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
 import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
 import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
-import { nameProblems } from '#cli/checks/general/naming/problems.ts';
+import { nameFindings } from '#cli/checks/general/naming/findings.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/policy.ts';
 import { typescriptIdentifiers } from '#cli/parsers/naming/typescript.ts';
+import { everyTable, harnessFolders } from '#cli/policy/settings/lookup.ts';
 import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
-import { everyTable, repositoryHarnessFolders } from '#cli/policy/settings/lookup.ts';
 import { WRAPPERS, REACT_FILE, MIGRATION_PREFIX } from '#cli/config/checks/general/naming.ts';
 import type { FileNames, NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
@@ -43,20 +43,13 @@ function sourceFiles(input: CheckInput): NamingSource[] {
 }
 
 function findingsFor(input: CheckInput, policy: EffectivePolicy, identifiers: Identifier[]): Finding[] {
-    const isTestFile = pathMatcher(input.view.settings['tests'] as string[]);
+    const isTestFile = pathMatcher(input.view.settings['test_files'] as string[]);
     return identifiers.flatMap((identifier) =>
-        nameProblems(identifier, {
+        nameFindings(identifier, {
+            check: input.check,
             policy,
             isReactFile: REACT_FILE.test(identifier.file),
-            isTestFile: isTestFile(posix.relative(input.scope, identifier.file)),
-        }).map((problem) => {
-            const source = problem.source === undefined ? '' : ` (${problem.source})`;
-            return findingAt(
-                input,
-                { file: identifier.file, line: identifier.line, column: identifier.column },
-                problem.rule,
-                `${identifier.kind} "${identifier.name}": ${problem.message}${source}.`,
-            );
+            isTestFile: isTestFile(identifier.file),
         }),
     );
 }
@@ -72,7 +65,7 @@ async function identifierFindings(input: CheckInput, policy: EffectivePolicy): P
 }
 
 function pathIdentifiers(input: CheckInput): Identifier[] {
-    const harnesses = new Set(repositoryHarnessFolders(input.policyFiles.policy, input.scope));
+    const harnesses = new Set(harnessFolders(input.policyFiles.policy, input.scope));
     const seen = new Set<string>();
     return sourceFiles(input).flatMap(({ file, language }) => {
         const all = [fileIdentifier(file.path, language), ...directoryIdentifiers(file.path, language)];
@@ -129,21 +122,21 @@ async function policyFindings(input: CheckInput): Promise<Finding[]> {
     return layers.flatMap(({ scope, naming }) => {
         const scopeFiles = files.filter((file) => isInScope(file.path, scope));
         const names = new Set(scopeFiles.flatMap((file) => file.names));
-        const unused = naming.allowed
-            .filter((entry) => !names.has(entry.name))
-            .map((entry) => `naming.allowed names "${entry.name}", which no identifier in this scope carries.`);
-        const dead = naming.paths
+        const unused = Object.keys(naming.allowed)
+            .filter((name) => !names.has(name))
+            .map((name) => `naming.allowed names "${name}", which no identifier in this scope carries.`);
+        const dead = naming.overrides
             .filter((rule) => {
                 const matches = pathMatcher(rule.paths);
                 return scopeFiles.every((file) => !matches(file.path));
             })
-            .map((rule) => `A [[naming.paths]] entry matches no file: ${rule.paths.join(', ')}.`);
-        const cases = naming.paths
+            .map((rule) => `A [[naming.overrides]] entry matches no file: ${rule.paths.join(', ')}.`);
+        const cases = naming.overrides
             .flatMap((rule) => rule.case ?? [])
             .filter((name) => !CASE_NAMES.includes(name))
             .map(
                 (name) =>
-                    `A [[naming.paths]] entry names the case "${name}", which is not one of ${CASE_NAMES.join(', ')}.`,
+                    `A [[naming.overrides]] entry names the case "${name}", which is not one of ${CASE_NAMES.join(', ')}.`,
             );
         return [...unused, ...dead, ...cases].map((text) =>
             findingAt(input, { file: POLICY_FILE }, 'stale-entry', scope === '' ? text : `${text} (scope ${scope})`),

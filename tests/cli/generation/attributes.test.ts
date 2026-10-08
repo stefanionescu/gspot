@@ -11,7 +11,7 @@ test('the attributes block keeps LF in each generated file, including one in a s
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['security', 'format'], {
-            tables: '[agent_rules]\nenabled = false\n[[scope]]\npath = "web app"\nconfigurations = ["security", "javascript"]\n',
+            tables: '[agent_rules]\nenabled = false\n[scope."web app"]\nconfigurations = ["security", "javascript"]\n',
         }),
         'web app/page.js': 'export const page = 1;\n',
     });

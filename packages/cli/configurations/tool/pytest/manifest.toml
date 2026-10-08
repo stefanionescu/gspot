@@ -1,6 +1,6 @@
 [configuration]
 title = "pytest"
-requires = ["python"]
+requires = ["python", "coverage"]
 description = "pytest suites: Ruff pytest style rules over the tests, pytest test-name prefixes, and a coverage floor at push."
 
 [detect]
@@ -10,7 +10,7 @@ filenames = ["conftest.py", "pytest.ini"]
 [[tool]]
 name = "pytest"
 system = true
-suppression = {marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)"}
+suppression = { marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)" }
 min_version = "7.0.0"
 pypi = "pytest"
 version_pattern = "(\\d+\\.\\d+\\.\\d+)"
@@ -18,35 +18,25 @@ version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 [[check]]
 name = "coverage"
 title = "Check Python test coverage"
-example = "A branch that no test exercises can leave coverage below the floor configured under `tools.pytest.coverage.lines`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
+example = "A branch that no test exercises can leave coverage below the floor configured under `coverage.lines`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
 level = "recommended"
 stage = "push"
 runs = "scope"
 cwd = "scope"
-command = ["pytest", "-q", "--strict-markers", "--strict-config", "--cov", "--cov-fail-under={setting:tools.pytest.coverage.lines}", "--no-header", "-p", "no:cacheprovider"]
+command = ["pytest", "-q", "--strict-markers", "--strict-config", "--cov", "--cov-fail-under={setting:coverage.lines}", "--no-header", "-p", "no:cacheprovider"]
 exit_codes = [1]
-files = {extensions = [".py"]}
-output = {format = "regex", pattern = "^(?<message>(?:FAIL Required test coverage|FAILED |ERROR ).*)$"}
+files = { extensions = [".py"] }
+output = { format = "regex", pattern = "^(?<message>(?:FAIL Required test coverage|FAILED |ERROR ).*)$" }
 summary = "Runs the test suite with coverage, and fails when a test fails or the covered share falls under the floor."
 why = "A floor keeps new code from arriving untested."
-help = "Fix the failing test, or add tests for the code the report shows uncovered. Lower tools.pytest.coverage.lines with a reason."
+help = "Fix the failing test, or add tests for the code the report shows uncovered. Lower coverage.lines with a reason."
 
-[[setting]]
-name = "tools.pytest.coverage.lines"
-type = "number"
-direction = "floor"
-default = 0
-default_all = 80
-summary = "The smallest share of lines the tests cover, out of 100."
-
-[set]
-"tools.ruff.rules_off_in_tests" = ["S101", "PLR2004"]
 
 [ruff_rules]
 recommended = ["PT008", "PT009", "PT010", "PT011", "PT012", "PT013", "PT014", "PT015", "PT016", "PT017", "PT020", "PT021", "PT024", "PT025", "PT027", "PT028", "PT030", "PT031"]
-all = ["PT001", "PT002", "PT003", "PT006", "PT007", "PT018", "PT019", "PT022", "PT023", "PT026", "PTH100", "PTH101", "PTH102", "PTH103", "PTH104", "PTH105", "PTH106", "PTH107", "PTH108", "PTH109", "PTH110", "PTH111", "PTH112", "PTH113", "PTH114", "PTH115", "PTH116", "PTH117", "PTH118", "PTH119", "PTH120", "PTH121", "PTH122", "PTH123", "PTH124", "PTH201", "PTH202", "PTH203", "PTH204", "PTH205", "PTH206", "PTH207", "PTH208", "PTH210", "PTH211"]
+all = ["PT001", "PT002", "PT003", "PT006", "PT007", "PT018", "PT019", "PT022", "PT023", "PT026"]
 
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/conftest.py"]
 languages = ["python"]
 categories = ["functions", "methods"]

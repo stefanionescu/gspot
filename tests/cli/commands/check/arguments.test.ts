@@ -1,8 +1,8 @@
-// Bun fixtures exercise file, stage, and scope selection through the public CLI.
+// Bun sandboxes exercise file, stage, and scope selection through the public CLI.
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { containing } from '#tests/harness/expectations.ts';
@@ -18,13 +18,17 @@ async function selectionSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> 
         'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;',
         '{files}',
     ];
-    const entries = ['one', 'two', 'three'].map((name) => ({
-        name: `sandbox/${name}`,
-        command,
-        paths: ['src/**', 'docs/**'],
-        stage: 'commit',
-        output: { format: 'lines' },
-    }));
+    const entries = Object.fromEntries(
+        ['one', 'two', 'three'].map((name) => [
+            `sandbox/${name}`,
+            {
+                command,
+                paths: ['src/**', 'docs/**'],
+                stage: 'commit',
+                output: { format: 'lines' },
+            },
+        ]),
+    );
     const sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({ configurations: [], check: entries }),
@@ -118,8 +122,7 @@ test('-C resolves file arguments from the folder it names', async () => {
 test('--staged keeps default stages while --hook pre-commit selects commit checks', async () => {
     const definitions = ['commit', 'push', 'manual'].map(
         (name) => `
-[[check]]
-name = "sandbox/${name}"
+[check."sandbox/${name}"]
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 paths = ["source.txt"]
 stage = "${name}"
@@ -163,8 +166,7 @@ stage = "${name}"
 
 test('a manual check runs only when --only names it', async () => {
     const definition = `
-[[check]]
-name = "sandbox/manual"
+[check."sandbox/manual"]
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 paths = ["source.txt"]
 stage = "manual"
@@ -190,11 +192,9 @@ test('a scope path selects its checks and its reproduction command repeats the s
     await createFileTree(sandbox.path, {
         'gspot.toml': `level = "all"
 configurations = []
-[[scope]]
-path = "api"
+[scope."api"]
 configurations = ["javascript", "naming"]
-[[scope]]
-path = "web"
+[scope."web"]
 configurations = ["javascript", "naming"]
 `,
         'api/port.js': 'export const helperCommand = 1;\n',
@@ -226,9 +226,9 @@ test('a staged change to only gspot.toml rechecks every file a configuration che
         'db/report.sql': `${body}\n`,
     });
     commitAll(sandbox.path);
-    writeFileSync(join(sandbox.path, 'gspot.toml'), loose.replace('file_lines = 100', 'file_lines = 5'));
+    await writeFile(join(sandbox.path, 'gspot.toml'), loose.replace('file_lines = 100', 'file_lines = 5'));
     gitOutput(sandbox.path, ['add', 'gspot.toml']);
-    const checked = await runGspot(sandbox.path, ['check', '--staged', '--only', 'sql/file-lines', '--json']);
+    const checked = await runGspot(sandbox.path, ['check', '--staged', '--only', 'structure/file-lines', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks[0]?.findings).toContainEqual(containing({ file: 'db/report.sql' }));

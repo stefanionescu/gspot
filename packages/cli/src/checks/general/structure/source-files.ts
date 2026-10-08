@@ -20,15 +20,10 @@ export function structureSources(input: CheckInput): TrackedFile[] {
 }
 
 /**
- * Test shared folder exclusions and both forms of an authored allowance.
+ * Identify dependency directories that native tools own.
  * @param directory the repository-relative directory
- * @param isAllowed the authored allowance matcher
- * @returns whether folder checks exempt the directory
+ * @returns whether a dependency folder contains the directory
  */
-export function isAllowedFolder(directory: string, isAllowed: (path: string) => boolean): boolean {
-    return (
-        directory.split('/').some((segment) => DEPENDENCY_FOLDERS.includes(segment)) ||
-        isAllowed(directory) ||
-        isAllowed(`${directory}/`)
-    );
+export function isDependencyFolder(directory: string): boolean {
+    return directory.split('/').some((segment) => DEPENDENCY_FOLDERS.includes(segment));
 }

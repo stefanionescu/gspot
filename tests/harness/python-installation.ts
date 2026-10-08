@@ -11,13 +11,13 @@ import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { environmentBin } from '#cli/platform/paths.ts';
 import { pythonProject } from '#cli/generation/python.ts';
-import { READ_ONLY_FILE } from '#cli/config/platform/modes.ts';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { acquirePythonInstaller } from '#cli/tools/python/uv.ts';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { pythonToolProject } from '#cli/tools/python/project.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { emitAll, gitignoreBlock } from '#cli/generation/outputs.ts';
 import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
@@ -40,7 +40,7 @@ import {
 
 const pythonLockfiles = new Map<string, Promise<string>>();
 
-// Shared native checks select the complete fixture environment ahead of the suite's tool bins.
+// Shared native checks select the complete sandbox environment ahead of the suite's tool bins.
 function pythonEnvironment(root: string) {
     return {
         PATH: [environmentBin(join(root, PYTHON_ENVIRONMENT_DIRECTORY)), environmentVariables()['PATH'] ?? ''].join(
@@ -56,7 +56,7 @@ function pythonEnvironment(root: string) {
  * @returns the managed environment bin before the declared tool bins
  */
 export async function installSuitePythonTools(root: string, cancelSignal: AbortSignal): Promise<string> {
-    mkdirSync(root, { recursive: true });
+    await mkdir(root, { recursive: true });
     const generated = pythonProject(
         [...configurationManifests().values()].map((manifest) => ({
             ...manifest,
@@ -78,7 +78,7 @@ export async function installSuitePythonTools(root: string, cancelSignal: AbortS
             log,
             proposeReplacement(log, {
                 path: file.path,
-                next: { bytes: Buffer.from(file.content), mode: READ_ONLY_FILE },
+                next: { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE },
                 kind: file.kind === 'lock' ? 'lock' : 'config',
             }),
         );
@@ -98,9 +98,9 @@ export async function installSuitePythonTools(root: string, cancelSignal: AbortS
 }
 
 /**
- * Generate the fixture's selected configuration and share the suite's managed Python installation.
+ * Generate the sandbox's selected configuration and share the suite's managed Python installation.
  * @param root the authored native-check repository
- * @returns the fixture environment bin before every other tool path
+ * @returns the sandbox environment bin before every other tool path
  */
 export async function sharePythonTools(root: string): Promise<Record<string, string>> {
     const archives = environmentVariables()['GSPOT_PACKAGE_ARCHIVES'];
@@ -121,7 +121,6 @@ export async function sharePythonTools(root: string): Promise<Record<string, str
     generated.files.push({
         path: UV_LOCKFILE,
         content: await resolved,
-        readOnly: true,
         kind: 'lock',
         ...compact({ read: original }),
     });
@@ -166,12 +165,12 @@ export async function preparePythonInstallation(
             indexUrl === undefined
                 ? ''
                 : `[[${indexPrefix}index]]\nname = "gspot-test"\nurl = "${indexUrl}"\ndefault = true\n`;
-        const authored = indexFile === 'pyproject.toml' ? readFileSync(join(root, indexFile), 'utf8') : '';
-        writeFileSync(join(root, indexFile), authored + index);
-        const rootProject = readFileSync(join(root, 'pyproject.toml'));
-        const rootConfiguration = readFileSync(join(root, indexFile));
+        const authored = indexFile === 'pyproject.toml' ? await readFile(join(root, indexFile), 'utf8') : '';
+        await writeFile(join(root, indexFile), authored + index);
+        const rootProject = await readFile(join(root, 'pyproject.toml'));
+        const rootConfiguration = await readFile(join(root, indexFile));
         const applied = await spawnGspot(root, ['apply']);
-        if (applied.code !== 0) throw new Error(`Python fixture apply failed: ${applied.stdout}${applied.stderr}`);
+        if (applied.code !== 0) throw new Error(`Python sandbox apply failed: ${applied.stdout}${applied.stderr}`);
         return {
             root,
             rootProject,
@@ -188,7 +187,7 @@ export async function preparePythonInstallation(
 
 /**
  * Install the generated pinned Python project and select its companion executables for native checks.
- * @param root the fixture containing an applied Python tool project
+ * @param root the sandbox containing an applied Python tool project
  * @returns the private environment ahead of host executable shims
  */
 export async function installGeneratedPythonTools(root: string): Promise<Record<string, string>> {
@@ -206,9 +205,9 @@ export async function createPythonRegistry(work: string, execute: RegistryComman
     const binary = Bun.which('ruff');
     if (binary === null) throw new Error('Ruff is unavailable on PATH.');
     const inspected = await execute([binary, '--version'], { cwd: work });
-    if (inspected.code !== 0) throw new Error(`Ruff fixture version failed: ${inspected.stderr}`);
+    if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
     const version = RUFF_VERSION_OUTPUT.exec(inspected.stdout.trim())?.groups?.['version'];
-    if (version === undefined) throw new Error('Ruff fixture version output is invalid.');
+    if (version === undefined) throw new Error('Ruff version output is invalid.');
     const wheel = `ruff-${version}-py3-none-any.whl`;
     const packed = await execute(
         ['python3', fileURLToPath(new URL('ruff_wheel.py', import.meta.url)), binary, join(work, wheel), version],
@@ -216,8 +215,8 @@ export async function createPythonRegistry(work: string, execute: RegistryComman
             cwd: work,
         },
     );
-    if (packed.code !== 0) throw new Error(`Ruff fixture packaging failed: ${packed.stderr}`);
-    const archive = readFileSync(join(work, wheel));
+    if (packed.code !== 0) throw new Error(`Ruff wheel packaging failed: ${packed.stderr}`);
+    const archive = await Bun.file(join(work, wheel)).bytes();
     const digest = createHash('sha256').update(archive).digest('hex');
     const { user, password } = PYTHON_REGISTRY_CREDENTIALS;
     const credentials = `${user}:${password}`;

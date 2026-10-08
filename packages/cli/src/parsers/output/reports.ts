@@ -1,22 +1,14 @@
 // Findings from validated structured reports produced by named tools.
+import { resolve, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { LINE_FEED } from '#cli/config/parsers/source.ts';
-import { resolve, relative, isAbsolute } from 'node:path';
-import { toPosix, toolPath } from '#cli/platform/paths.ts';
+import type { Finding, TypoEntry, ValeAlert, MarkdownlintEntry } from '#cli/types/parsers/output.ts';
 
-import type {
-    Finding,
-    TypoEntry,
-    ValeAlert,
-    EslintReport,
-    EslintDiagnostic,
-    MarkdownlintEntry,
-} from '#cli/types/parsers/output.ts';
 import {
     alertsSchema,
     typosEntrySchema,
-    eslintReportSchema,
     historyMetadataSchema,
     trufflehogResultSchema,
     markdownlintReportSchema,
@@ -107,34 +99,6 @@ function typoFinding(
         fixable: entry.line_num !== undefined && corrections.length === 1,
         ...position,
     };
-}
-
-function eslintFinding(check: string, file: string, entry: EslintDiagnostic, help: string): Finding {
-    const finding: Finding = { check, file, message: entry.message, help, fixable: entry.fix !== undefined };
-    if (entry.line !== undefined) finding.line = entry.line;
-    if (entry.column !== undefined) finding.column = entry.column;
-    if (entry.ruleId !== null) finding.rule = entry.ruleId;
-    return finding;
-}
-
-/**
- * Findings from a validated ESLint JSON report.
- * @param check the check ID
- * @param text the structured report
- * @param help the check help text
- * @returns findings with ESLint positions and fix availability
- */
-export function eslintFindings(check: string, text: string, help: string): Finding[] {
-    let files: EslintReport;
-    try {
-        files = eslintReportSchema.parse(JSON.parse(text));
-    } catch (error) {
-        throw new GspotError('output', 'ESLint returned invalid structured findings.', { cause: error });
-    }
-    return files.flatMap((file) => {
-        const path = isAbsolute(file.filePath) ? toPosix(file.filePath) : toolPath(file.filePath);
-        return file.messages.map((entry) => eslintFinding(check, path, entry, help));
-    });
 }
 
 /**

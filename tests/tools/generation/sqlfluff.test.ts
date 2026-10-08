@@ -7,7 +7,6 @@ import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { NATIVE_TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { FOREIGN_DIALECT_CASES } from '#tests/config/cli/checks/language/sql.ts';
 import { SQL_FUNCTION_SOURCE } from '#tests/config/tools/generation/sqlfluff.ts';
 
@@ -15,20 +14,20 @@ test('SQLFluff honors root and nested dialect settings over the database default
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['postgres'], {
-            tables: '[tools.sqlfluff]\ndialect = "sqlite"\n[[scope]]\npath = "warehouse"\n[scope.tools.sqlfluff]\ndialect = "duckdb"\n[[scope]]\npath = "warehouse/child"\n',
+            tables: '[tools.sqlfluff]\ndialect = "sqlite"\n[scope."warehouse"]\n[scope.tools.sqlfluff]\ndialect = "duckdb"\n[scope."warehouse/child"]\n',
         }),
         'query.sql': 'PRAGMA table_info (users);\n',
         'warehouse/query.sql': 'SELECT 1;\n',
         'warehouse/child/query.sql': 'SELECT * EXCLUDE (secret) FROM records;\n',
     });
     const session = await openSession(sandbox.path);
-    const rendered = emitAll(session);
-    const configs = rendered.files.filter((file) => file.path.endsWith('sqlfluff.cfg'));
+    const emitted = emitAll(session);
+    const configs = emitted.files.filter((file) => file.path.endsWith('sqlfluff.cfg'));
     const config = configs.find((file) => file.path === '.gspot/config/sqlfluff.cfg')!;
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log, undefined, rendered);
+    writeOutputs(session, log, undefined, emitted);
     const lint = ['sqlfluff', 'lint', '--config', config.path, '--ignore-local-config', '--rules', 'LT01'];
-    const options = { cwd: sandbox.path, timeoutMs: NATIVE_TEST_TIMEOUT_MS };
+    const options = { cwd: sandbox.path };
     const wrong = await runTestCommand([...lint, '--dialect', 'postgres', 'query.sql'], options);
     expect(wrong.code, wrong.stderr).toBe(1);
     expect(wrong.stdout).toContain('PRS');
@@ -76,10 +75,10 @@ test.each(['recommended', 'all'] as const)(
             'query.sql': source,
         });
         const session = await openSession(sandbox.path);
-        const rendered = emitAll(session);
-        const configuration = rendered.files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
+        const emitted = emitAll(session);
+        const configuration = emitted.files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
         using ownership = openOwnership(sandbox.path);
-        writeOutputs(session, ownership, undefined, rendered);
+        writeOutputs(session, ownership, undefined, emitted);
         const parseArguments = ['parse', '--config', configuration.path, '--ignore-local-config', 'query.sql'];
         const accepted = await runTestCommand(['sqlfluff', ...parseArguments], { cwd: sandbox.path });
         expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
@@ -95,7 +94,7 @@ test.each(['recommended', 'all'] as const)(
 );
 
 test.each(FOREIGN_DIALECT_CASES)(
-    'SQLFluff parses the $dialect fixture that PostgreSQL rejects',
+    'SQLFluff parses the $dialect sample that PostgreSQL rejects',
     async ({ dialect, source }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -103,10 +102,10 @@ test.each(FOREIGN_DIALECT_CASES)(
             'query.sql': source,
         });
         const session = await openSession(sandbox.path);
-        const rendered = emitAll(session);
-        const config = rendered.files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
+        const emitted = emitAll(session);
+        const config = emitted.files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
         using log = openOwnership(sandbox.path);
-        writeOutputs(session, log, undefined, rendered);
+        writeOutputs(session, log, undefined, emitted);
         const lint = ['sqlfluff', 'lint', '--config', config.path, '--ignore-local-config', '--rules', 'LT01'];
         const options = { cwd: sandbox.path };
         const native = await runTestCommand([...lint, 'query.sql'], options);
@@ -126,10 +125,10 @@ test.each(['recommended', 'all'] as const)(
             'functions.sql': SQL_FUNCTION_SOURCE,
         });
         const session = await openSession(sandbox.path);
-        const rendered = emitAll(session);
-        const config = rendered.files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
+        const emitted = emitAll(session);
+        const config = emitted.files.find(({ path }) => path === '.gspot/config/sqlfluff.cfg')!;
         using log = openOwnership(sandbox.path);
-        writeOutputs(session, log, undefined, rendered);
+        writeOutputs(session, log, undefined, emitted);
         const lintArguments = [
             '--config',
             config.path,

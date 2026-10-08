@@ -1,7 +1,7 @@
 // Exercise process backends on Bun with children bounded by the test budget.
 import { join } from 'node:path';
-import { chmodSync } from 'node:fs';
 import { test, expect } from 'bun:test';
+import { chmod } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { run, runBlocking } from '#cli/platform/spawn.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
@@ -34,7 +34,7 @@ for (const backend of backends) {
                 process.platform === 'win32' ? `@echo off\r\necho unrelated\r\n` : `#!/bin/sh\necho unrelated\n`,
         });
         for (const path of ['selected/parent', 'selected/sibling', 'unrelated/sibling'])
-            chmodSync(join(sandbox.path, path + extension), 0o755);
+            await chmod(join(sandbox.path, path + extension), 0o755);
         const result = await backend.execute([join(sandbox.path, `selected/parent${extension}`)], {
             cwd: sandbox.path,
             env: { PATH: join(sandbox.path, 'unrelated') },
@@ -50,7 +50,6 @@ process.stderr.write(text);
 process.exitCode = ${String(status)};`;
         const result = await backend.execute([process.execPath, '-e', script], {
             cwd: sandbox.path,
-            timeoutMs: 5000,
         });
         expect(result.code).toBe(status);
         expect(result.stdout).toBe('é'.repeat(1024 * 1024));
@@ -71,7 +70,7 @@ process.exitCode = ${String(status)};`;
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'denied.sh': '#!/bin/sh\nexit 0\n' });
         const executable = join(sandbox.path, 'denied.sh');
-        chmodSync(executable, 0o600);
+        await chmod(executable, 0o600);
         const result = await backend.execute([executable], { cwd: sandbox.path });
         expect(result.code).not.toBe(0);
         expect(result.code).not.toBe(127);
@@ -94,7 +93,6 @@ process.exitCode = ${String(status)};`;
         await using sandbox = await testdir();
         const result = await backend.execute([process.execPath, '-e', "process.kill(process.pid, 'SIGTERM')"], {
             cwd: sandbox.path,
-            timeoutMs: 5000,
         });
         expect(result.isTimedOut).toBe(false);
         expect(result.isErrored).toBe(true);
@@ -110,7 +108,6 @@ test('cancellation terminates the process without reporting a timeout', async ()
         command,
         {
             cwd: sandbox.path,
-            timeoutMs: 5000,
             cancelSignal: AbortSignal.timeout(150),
         },
         'cancellation',

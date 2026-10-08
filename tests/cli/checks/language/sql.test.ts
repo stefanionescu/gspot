@@ -48,7 +48,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
     await Bun.write(
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['sql'], {
-            tables: '[limits.sql]\nfunction_parameters = 8\n[tools.sqlfluff]\ndialect = "postgres"\n',
+            tables: '[reasons]\n"limits.sql.function_parameters" = "The fixture measures the boundary at eight parameters."\n[limits.sql]\nfunction_parameters = 8\n[tools.sqlfluff]\ndialect = "postgres"\n',
             level: 'all',
         }),
     );
@@ -147,10 +147,10 @@ test.each(FOREIGN_DIALECT_CASES)('the $dialect dialect bypasses PostgreSQL parsi
     ]);
 });
 
-test('SQL function structure follows the coverage level and preserves reasoned parser exclusions', async () => {
+test('SQL function structure follows the coverage level and preserves check-specific path ignores', async () => {
     await using sandbox = await testdir();
     const tables =
-        '[tools.sqlfluff]\ndialect = "postgres"\nexclude = [{paths = ["template.sql"], reason = "The migration runner replaces these placeholders."}]\n';
+        '[tools.sqlfluff]\ndialect = "postgres"\n[[ignore]]\ncheck = "sql/trivial-functions"\npaths = ["template.sql"]\nreason = "The migration runner replaces these placeholders."\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['sql'], { tables, level: 'recommended' }),
         'wrapper.sql': 'CREATE FUNCTION wrapper() RETURNS int LANGUAGE sql RETURN 1;\n',

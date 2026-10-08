@@ -18,12 +18,12 @@ export const DISABLED_RULES = [
 
 export const INVALID_ENVIRONMENT_SETTINGS = [
     { table: 'dotenv', value: 'accessor = "read_env"', diagnostic: 'dotenv' },
-    { table: 'env', value: 'accessor = "read_env"', diagnostic: 'accessor' },
-    { table: 'env', value: 'enabled = false', diagnostic: 'enabled' },
-    { table: 'env', value: 'reader_functions = "read_env"', diagnostic: 'reader_functions' },
-    { table: 'env', value: 'reader_functions = [false]', diagnostic: 'reader_functions' },
-    { table: 'env', value: 'reader_functions = [""]', diagnostic: 'reader_functions' },
-    { table: 'env', value: 'templates = [false]', diagnostic: 'templates' },
+    { table: 'secrets', value: 'accessor = "read_env"', diagnostic: 'accessor' },
+    { table: 'secrets', value: 'enabled = false', diagnostic: 'enabled' },
+    { table: 'secrets', value: 'reader_functions = "read_env"', diagnostic: 'reader_functions' },
+    { table: 'secrets', value: 'reader_functions = [false]', diagnostic: 'reader_functions' },
+    { table: 'secrets', value: 'reader_functions = [""]', diagnostic: 'reader_functions' },
+    { table: 'secrets', value: 'env_examples = [false]', diagnostic: 'env_examples' },
 ];
 
 /** Framework coverage follows the level and declared dependencies, with no extra switches. */
@@ -31,7 +31,7 @@ export const REMOVED_FRAMEWORK_CONTROLS = [
     {
         table: 'tools.next',
         key: 'build_on_push',
-        diagnostic: 'No selected configuration has the setting `tools.next.build_on_push`',
+        diagnostic: '`next` is not a setting gspot knows',
     },
     { table: 'nestjs', key: 'swagger', diagnostic: '`nestjs` is not a setting gspot knows' },
 ];
@@ -39,10 +39,13 @@ export const REMOVED_FRAMEWORK_CONTROLS = [
 /** Native Stylelint options own at-rule exceptions. */
 export const REMOVED_STYLELINT_SETTING = '[tools.stylelint]\nignore_at_rules = ["container"]\n';
 
-/** Malformed wrapper reasons are document-shape errors, independent of exception enforcement. */
+/** Malformed explanations are document-shape errors, independent of exception enforcement. */
 export const MALFORMED_REASON_CASES = [
     { name: 'numeric', reason: 42, received: 'number' },
     { name: 'boolean', reason: false, received: 'boolean' },
     { name: 'array', reason: [], received: 'array' },
     { name: 'table', reason: {}, received: 'object' },
 ] as const;
+
+/** Former path allowances replaced by check-specific ignore records. */
+export const REMOVED_STRUCTURE_SETTINGS = ['lone_files_allowed', 'prefix_collisions_allowed', 'folder_names_allowed'];

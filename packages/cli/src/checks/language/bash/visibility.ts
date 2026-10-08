@@ -1,6 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { ENTRY_FUNCTIONS } from '#cli/config/checks/language/bash.ts';
+import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 /**
  * One finding per function whose underscore disagrees with its callers: file-local without one, or private with outside callers.
@@ -8,11 +9,13 @@ import { entryFunctions, getScriptIndex } from '#cli/checks/language/bash/script
  * @returns the findings
  */
 export const privatePrefix: BuiltInCheck = async (input) => {
-    const entries = entryFunctions(input);
     const index = await getScriptIndex(input);
     return index.files.flatMap((file) =>
         file.functions.flatMap((entry) => {
-            if (entries.has(entry.name) || index.files.every((candidate) => !candidate.references.has(entry.name)))
+            if (
+                ENTRY_FUNCTIONS.includes(entry.name) ||
+                index.files.every((candidate) => !candidate.references.has(entry.name))
+            )
                 return [];
             const callers = index.files
                 .filter(

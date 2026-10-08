@@ -26,12 +26,20 @@ example = "If the base locale defines `welcome` but another required locale does
 level = "recommended"
 stage = "push"
 runs = "scope"
-summary = "Checks the message files under i18n.locales: each message parses, none is empty, no key holds a dot, and every locale holds every key of the base."
+when = { dependencies = ["next-intl"] }
+summary = "Checks next-intl JSON/ICU message files under i18n.messages_folder: each message parses, none is empty, no key holds a dot, and every locale holds every key of the base."
 why = "A key missing in one locale shows the key itself, or another language, in the middle of a translated screen."
 help = "Correct the message, or add the missing key to the locale."
 
 [[setting]]
-name = "i18n.locales"
-type = "table"
+name = "i18n.messages_folder"
+type = "path"
 direction = "neutral"
-summary = "The scope-relative directory of <locale>.json message files, and the base locale, such as messages/en.json."
+summary = "The folder of <locale>.json message files, relative to its scope."
+
+[[setting]]
+name = "i18n.base_locale"
+type = "string"
+direction = "neutral"
+default = "en"
+summary = "The locale whose message keys every other locale must contain."

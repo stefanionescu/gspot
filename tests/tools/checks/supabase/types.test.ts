@@ -1,9 +1,9 @@
 import { isCI } from 'std-env';
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { test, expect } from 'bun:test';
 import { randomUUID } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { parse, stringify } from 'smol-toml';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -14,14 +14,9 @@ import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { DATABASE_START } from '#tests/config/tools/checks/supabase/database.ts';
 import type { SupabaseDatabase, SupabaseProjectFiles } from '#tests/types/tools/checks/supabase/types.ts';
 import { NESTED_POLICY, API_MIGRATIONS, WEB_MIGRATIONS } from '#tests/config/tools/checks/supabase/types.ts';
-
-import {
-    DATABASE_START,
-    DOCKER_STATUS_TIMEOUT,
-    DATABASE_COMMAND_TIMEOUT,
-} from '#tests/config/tools/checks/supabase/database.ts';
 
 // The database test needs a Docker daemon with Linux containers. In CI it runs only in the database workflow, started by
 // hand, which sets GSPOT_SUPABASE_TEST, because pulling the Postgres image on every run hits the registry rate limit.
@@ -45,7 +40,7 @@ test.skipIf(!runsDatabase)(
                 findings: [{ file: 'database.ts', rule: 'stale', line: 1 }],
             },
         ]);
-        expect(readFileSync(join(sandbox.path, 'database.ts'), 'utf8')).toBe('export type Database = {};\n');
+        expect(await readFile(join(sandbox.path, 'database.ts'), 'utf8')).toBe('export type Database = {};\n');
         const generated = await runTestCommand(['supabase', 'gen', 'types', 'typescript', '--local'], options);
         expect(generated.code, generated.stderr).toBe(0);
         expect(generated.stdout).toContain('export type Database');
@@ -56,7 +51,7 @@ test.skipIf(!runsDatabase)(
         );
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
-        expect(readFileSync(configPath)).toStrictEqual(authored);
+        expect(await readFile(configPath)).toStrictEqual(authored);
     },
 );
 
@@ -94,14 +89,14 @@ test.skipIf(!runsDatabase)(
             ['apps/api', 'passed'],
             ['apps/web', 'passed'],
         ]);
-        expect(readFileSync(api.configPath)).toStrictEqual(api.authored);
-        expect(readFileSync(web.configPath)).toStrictEqual(web.authored);
+        expect(await readFile(api.configPath)).toStrictEqual(api.authored);
+        expect(await readFile(web.configPath)).toStrictEqual(web.authored);
     },
 );
 
 async function configureDatabaseProject(root: string, project: string): Promise<SupabaseProjectFiles> {
     const configPath = join(root, 'supabase/config.toml');
-    const config = parse(readFileSync(configPath, 'utf8'));
+    const config = parse(await readFile(configPath, 'utf8'));
     config['project_id'] = project;
     const listener = createServer();
     await new Promise<void>((complete) => listener.listen(0, '127.0.0.1', complete));
@@ -121,7 +116,7 @@ async function configureDatabaseProject(root: string, project: string): Promise<
         'gspot.toml': buildPolicy(['supabase'], { tables: '[supabase]\ntypes_file = "database.ts"\n' }),
         'database.ts': 'export type Database = {};\n',
     });
-    return { configPath, authored: readFileSync(configPath) };
+    return { configPath, authored: await readFile(configPath) };
 }
 
 /** Starts an isolated native database and retains the authored configuration for preservation checks. */
@@ -130,16 +125,11 @@ async function prepareSupabaseDatabase(
     migrations: Record<string, string> = {},
 ): Promise<SupabaseDatabase> {
     const project = `gspot-types-${randomUUID().replaceAll('-', '').slice(0, 28)}`;
-    const options = { cwd: root, timeoutMs: DATABASE_COMMAND_TIMEOUT };
+    const options = { cwd: root };
     const version = await runTestCommand(['supabase', '--version'], options);
-    if (version.code !== 0) throw new Error(`Supabase fixture version failed: ${version.stderr}`);
-    for (const { args, timeoutMs } of [
-        { args: ['docker', 'info', '--format', '{{.ServerVersion}}'], timeoutMs: DOCKER_STATUS_TIMEOUT },
-        { args: ['supabase', 'init'], timeoutMs: options.timeoutMs },
-    ]) {
-        const initialized = await runTestCommand(args, { ...options, timeoutMs });
-        if (initialized.code !== 0) throw new Error(`Supabase fixture ${args.join(' ')} failed: ${initialized.stderr}`);
-    }
+    if (version.code !== 0) throw new Error(`Supabase version failed: ${version.stderr}`);
+    const initialized = await runTestCommand(['supabase', 'init'], options);
+    if (initialized.code !== 0) throw new Error(`Supabase sandbox init failed: ${initialized.stderr}`);
     const { configPath, authored } = await configureDatabaseProject(root, project);
     await createFileTree(
         root,
@@ -152,7 +142,7 @@ async function prepareSupabaseDatabase(
     await using cleanup = new AsyncDisposableStack();
     cleanup.defer(dispose);
     const started = await runTestCommand(DATABASE_START, options);
-    if (started.code !== 0) throw new Error(`Supabase database fixture failed: ${started.stdout}${started.stderr}`);
+    if (started.code !== 0) throw new Error(`Supabase database sandbox failed: ${started.stdout}${started.stderr}`);
     const resources = cleanup.move();
     return {
         options,

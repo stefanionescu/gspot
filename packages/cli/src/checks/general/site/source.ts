@@ -21,7 +21,7 @@ async function svgFinding(input: CheckInput, path: string): Promise<Finding[]> {
     if (result.code !== 0) throw new Error(`SVGO could not optimize ${path}: ${result.stderr.trim()}`);
     const originalBytes = Buffer.byteLength(original);
     const saved = originalBytes - Buffer.byteLength(result.stdout);
-    const minimum = input.view.options('tools.svgo')['min_saving_percent'] as number;
+    const minimum = input.view.options('tools.svgo')['min_saving_percent'];
     const exceeds = saved * FULL_PERCENTAGE > originalBytes * minimum;
     return exceeds
         ? [

@@ -7,11 +7,9 @@ export const TEXT_COMPONENTS = {
 
 /** Scoped React Native and Expo projects sharing no framework configuration. */
 export const MOBILE_POLICY = `configurations = ["javascript"]
-[[scope]]
-path = "bare"
+[scope."bare"]
 configurations = ["react-native"]
-[[scope]]
-path = "expo-app"
+[scope."expo-app"]
 configurations = ["expo"]
 [agent_rules]
 enabled = false

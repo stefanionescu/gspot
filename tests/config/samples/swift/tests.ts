@@ -1,0 +1,1 @@
+export const CLEAN = `import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        XCTAssertEqual("Home", "Home")\n    }\n}\n`;

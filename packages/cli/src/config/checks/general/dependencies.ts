@@ -17,11 +17,12 @@ export const STALE_LOCKFILE_DIAGNOSTICS: Record<string, RegExp> = {
 
 export const NPM_MANIFEST = 'package.json';
 
-export const DEPENDENCY_TABLES = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
-
-export const EXACT_VERSION = /^\d+\.\d+\.\d+$|^\d+\.\d+\.\d+[-+][\w.+-]+$/u;
-
-export const NON_REGISTRY_VERSION = /^(?:workspace:|file:|link:|git\+|github:|https?:|catalog:)/u;
-
 /** Diagnostic lines retained from a package manager's frozen installation. */
 export const LOCKFILE_DIAGNOSTIC_LINES = 3;
+
+export const NEXT_VERSION_PAIRS: [string, string][] = [
+    ['next', 'eslint-config-next'],
+    ['next', '@next/eslint-plugin-next'],
+];
+
+export const REACT_VERSION_PAIRS: [string, string][] = [['react', 'react-dom']];

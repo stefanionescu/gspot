@@ -25,29 +25,6 @@ async function expectRecommendedLevel(root: string, command: string[]): Promise<
     await Bun.write(join(root, 'entry.sh'), 'helper_command=example\n');
 }
 
-// A reasoned allowance suppresses one finding; removing it restores enforcement.
-async function expectNamingAllowance(root: string, command: string[]): Promise<void> {
-    const allowed = await runGspot(root, [
-        'set',
-        'naming.allowed',
-        '{"name":"helper_command"}',
-        '--reason',
-        'External protocol fixes this name',
-    ]);
-    expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
-    // A list setting names what it added, never only the new item as if it were the whole list.
-    expect(allowed.stdout).toContain('added to naming.allowed:');
-    const accepted = await runGspot(root, command);
-    expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
-    expect((JSON.parse(accepted.stdout) as RunReport).checks[1]?.findings).toStrictEqual([]);
-    const removed = await runGspot(root, ['set', 'naming.allowed', 'helper_command', '--remove']);
-    expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    expect(removed.stdout).toContain('removed from naming.allowed:');
-    const restored = await runGspot(root, command);
-    expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-    expect((JSON.parse(restored.stdout) as RunReport).checks[1]?.findings[0]?.rule).toBe('banned-term');
-}
-
 test('switching levels preserves defect checks and selects stricter naming checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -73,7 +50,6 @@ test('switching levels preserves defect checks and selects stricter naming check
         line: 1,
         rule: 'banned-term',
     });
-    await expectNamingAllowance(sandbox.path, command);
     const reset = await runGspot(sandbox.path, ['set', 'level', '--default']);
     expect(reset.code, reset.stdout + reset.stderr).toBe(0);
     const routine = await runGspot(sandbox.path, command);

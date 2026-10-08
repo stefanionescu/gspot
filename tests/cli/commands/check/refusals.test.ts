@@ -2,14 +2,13 @@
 import * as os from 'node:os';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { captureChild } from '#tests/harness/process.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
-import { runGspot, startGspot } from '#tests/harness/gspot.ts';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 import {
     FIX_REFUSALS,
@@ -21,7 +20,7 @@ import {
 // A committed repository with a check whose fixer rewrites the source when it runs.
 async function fixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = [process.execPath, '-e', String.raw`require('node:fs').writeFileSync('source.txt', 'fixed\n')`];
-    const check = `[[check]]\nname = "sandbox/fixable"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}\nfix = ${JSON.stringify(fix)}\npaths = ["source.txt"]\nstage = "commit"\n`;
+    const check = `[check."sandbox/fixable"]\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}\nfix = ${JSON.stringify(fix)}\npaths = ["source.txt"]\nstage = "commit"\n`;
     const sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], { tables: check }),
@@ -36,7 +35,7 @@ test.each(FIX_REFUSALS)('check %p exits 2 and leaves the working tree as it was'
     const refused = await runGspot(sandbox.path, ['check', ...flags, '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(expected);
-    expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
     expect(gitOutput(sandbox.path, ['status', '--porcelain'])).toBe('');
 });
 
@@ -44,16 +43,17 @@ test.each([...PUSH_INPUT_REFUSALS])(
     'a push hook given $name exits 2 and leaves the working tree as it was',
     async ({ stdin, diagnostic }) => {
         await using sandbox = await fixableSandbox();
-        const child = startGspot(
+        const originalStdin = Object.getOwnPropertyDescriptor(process, 'stdin');
+        const refused = await runGspot(
             sandbox.path,
             ['check', '--hook', 'pre-push', '--', 'origin', 'unused'],
             {},
             { stdin: typeof stdin === 'string' ? stdin : Buffer.from(stdin) },
         );
-        await using capture = captureChild(child);
-        expect(await child.exited).toBe(2);
-        expect(await capture.errors).toContain(diagnostic);
-        expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
+        expect(refused.code).toBe(2);
+        expect(refused.stderr).toContain(diagnostic);
+        expect(Object.getOwnPropertyDescriptor(process, 'stdin')).toStrictEqual(originalStdin);
+        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
         expect(gitOutput(sandbox.path, ['status', '--porcelain'])).toBe('');
     },
 );
@@ -61,10 +61,10 @@ test.each([...PUSH_INPUT_REFUSALS])(
 test('a staged check during a merge conflict exits 2 with the conflict named and leaves no snapshot', async () => {
     await using sandbox = await fixableSandbox();
     gitOutput(sandbox.path, ['checkout', '-qb', 'other']);
-    writeFileSync(join(sandbox.path, 'source.txt'), 'other\n');
+    await writeFile(join(sandbox.path, 'source.txt'), 'other\n');
     gitOutput(sandbox.path, ['commit', '-qam', 'Other']);
     gitOutput(sandbox.path, ['checkout', '-q', '-']);
-    writeFileSync(join(sandbox.path, 'source.txt'), 'main\n');
+    await writeFile(join(sandbox.path, 'source.txt'), 'main\n');
     gitOutput(sandbox.path, ['commit', '-qam', 'Main']);
     expect(git(sandbox.path, ['merge', '-q', 'other']).code).not.toBe(0);
     await using temporary = await testdir();
@@ -73,7 +73,7 @@ test('a staged check during a merge conflict exits 2 with the conflict named and
         const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Resolve index conflicts');
-        expect(readdirSync(temporary.path)).toStrictEqual([]);
+        expect(await readdir(temporary.path)).toStrictEqual([]);
     } finally {
         temporaryDirectory.mockRestore();
     }
@@ -87,15 +87,20 @@ test('a staged check over a file name that is not UTF-8 exits 2 and leaves no sn
     const line = Buffer.concat([Buffer.from(`100644 ${hash}\t`), name, Buffer.from('\n')]);
     const command = ['git', 'update-index', '--index-info'];
     const prepared = prepareTestCommand(command, { cwd: sandbox.path }, 'index a raw filename');
-    const indexed = Bun.spawnSync(command, { cwd: sandbox.path, stdin: line, timeout: prepared.options.timeoutMs });
-    expect(indexed.exitCode, indexed.stderr.toString()).toBe(0);
+    const indexed = Bun.spawn(command, {
+        cwd: sandbox.path,
+        stdin: line,
+        stderr: 'pipe',
+        timeout: prepared.options.timeoutMs,
+    });
+    expect(await indexed.exited, await new Response(indexed.stderr).text()).toBe(0);
     await using temporary = await testdir();
     const temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary.path);
     try {
         const refused = await runGspot(sandbox.path, ['check', '--staged', '--json']);
         expect(refused.code, refused.stdout + refused.stderr).toBe(2);
         expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain('Revision paths must be valid');
-        expect(readdirSync(temporary.path)).toStrictEqual([]);
+        expect(await readdir(temporary.path)).toStrictEqual([]);
     } finally {
         temporaryDirectory.mockRestore();
     }
@@ -113,16 +118,14 @@ test.each(PUSH_ARGUMENT_REFUSALS)(
     async ({ arguments: argv }) => {
         await using sandbox = await fixableSandbox();
         for (const json of [false, true]) {
-            const child = startGspot(
+            const refused = await runGspot(
                 sandbox.path,
                 ['check', '--hook', 'pre-push', ...(json ? ['--json'] : []), '--', ...argv],
                 {},
                 { stdin: '' },
             );
-            await using capture = captureChild(child);
-            expect(await child.exited).toBe(2);
-            const stdout = await capture.output;
-            const stderr = await capture.errors;
+            expect(refused.code).toBe(2);
+            const { stdout, stderr } = refused;
             const diagnostic = 'Pre-push expects the remote name and URL supplied by Git.';
             if (json) {
                 expect(JSON.parse(stdout) as CommandFailureJson).toStrictEqual({
@@ -134,7 +137,7 @@ test.each(PUSH_ARGUMENT_REFUSALS)(
                 expect(stdout).toBe('');
                 expect(stderr).toBe(`${diagnostic}\n`);
             }
-            expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
+            expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original\n');
             expect(gitOutput(sandbox.path, ['status', '--porcelain'])).toBe('');
         }
     },

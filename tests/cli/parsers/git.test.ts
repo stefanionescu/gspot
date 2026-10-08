@@ -33,7 +33,11 @@ test.each(['index', 'commit'] as const)('%s entries retain full identities, mode
 
 for (const { name, output, message } of INVALID_ENTRIES)
     test(`entry parsing rejects ${name}`, () => {
-        expect(() => parseGitEntries(Buffer.from(output), 'index')).toThrow(message);
+        const bytes =
+            typeof output === 'string'
+                ? Buffer.from(output)
+                : Buffer.concat([Buffer.from(output.prefix), Buffer.from(output.bytes)]);
+        expect(() => parseGitEntries(bytes, 'index')).toThrow(message);
     });
 
 test('batch parsing retains binary content and an empty blob in response order', async () => {

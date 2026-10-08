@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { rmSync, readFileSync } from 'node:fs';
+import { rm, readFile } from 'node:fs/promises';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -22,7 +22,7 @@ test.skipIf(!isMacos)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['xctest', 'xcode'], {
-                tables: '[tools.xcode]\nproject = "Inspection.xcodeproj"\nscheme = "Inspection"\ndestination = "platform=macOS"\n[[tools.xctest.coverage]]\ntarget = "Inspection.xctest"\npercent = 100\n',
+                tables: '[swift]\nxcode_project = "Inspection.xcodeproj"\nxcode_scheme = "Inspection"\nxcode_destination = "platform=macOS"\n[coverage]\noverrides = [{ target = "Inspection.xctest", percent = 100 }]\n',
                 level: 'all',
             }),
             'Inspection.xcodeproj/project.pbxproj': XCTEST_COVERAGE_PROJECT,
@@ -59,12 +59,12 @@ test.skipIf(!isMacos)(
             expect(corrected.report.checks).toMatchObject([
                 { check: 'xctest/coverage', status: 'passed', findings: [] },
             ]);
-            expect(readFileSync(join(sandbox.path, 'Value.swift'), 'utf8')).toBe(XCTEST_COVERAGE_SOURCE);
-            expect(readFileSync(join(sandbox.path, 'Inspection.xcodeproj/project.pbxproj'), 'utf8')).toBe(
+            expect(await readFile(join(sandbox.path, 'Value.swift'), 'utf8')).toBe(XCTEST_COVERAGE_SOURCE);
+            expect(await readFile(join(sandbox.path, 'Inspection.xcodeproj/project.pbxproj'), 'utf8')).toBe(
                 XCTEST_COVERAGE_PROJECT,
             );
         } finally {
-            rmSync(buildFolder(sandbox.path), { recursive: true, force: true });
+            await rm(buildFolder(sandbox.path), { recursive: true, force: true });
         }
     },
 );

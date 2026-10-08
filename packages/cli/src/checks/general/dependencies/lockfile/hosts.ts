@@ -35,7 +35,7 @@ function fileFindings(input: CheckInput, path: string, hosts: Set<string>): Find
  * @returns the findings
  */
 export function lockfileHosts(input: CheckInput): Finding[] {
-    const hosts = new Set(input.view.options('dependencies')['registry_hosts'] as string[] | undefined);
+    const hosts = new Set(input.view.options('dependencies')['registry_hosts']);
     const paths = input.files
         .map((file) => file.path)
         .filter((path) => {

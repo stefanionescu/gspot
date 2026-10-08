@@ -13,7 +13,7 @@ test.each(NON_ERROR_FAILURES)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy([], {
-                tables: '[[check]]\nname = "project/source"\ncommand = ["bun", "-e", ""]\npaths = ["source.txt"]\nstage = "commit"\n',
+                tables: '[check."project/source"]\ncommand = ["bun", "-e", ""]\npaths = ["source.txt"]\nstage = "commit"\n',
             }),
             'source.txt': 'source',
         });

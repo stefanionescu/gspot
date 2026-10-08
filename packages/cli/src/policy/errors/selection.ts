@@ -5,6 +5,7 @@ import { everyTable } from '#cli/policy/settings/lookup.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
 import { validateAgainstSurface } from '#cli/policy/errors/keys.ts';
+import { architectureRolesSchema } from '#cli/policy/schema/fields.ts';
 import { unknownConfigurations } from '#cli/configurations/problems.ts';
 import { configurationFiles } from '#cli/configurations/declarations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -40,8 +41,8 @@ export function unknownConfigurationProblems(policy: Policy): PolicyProblem[] {
     const manifests = configurationManifests();
     const declarations: ConfigurationDeclaration[] = [
         ...policy.configurations.map((name, index) => ({ name, path: ['configurations', index] })),
-        ...policy.scopes.flatMap((scope, scopeIndex) =>
-            scope.configurations.map((name, index) => ({ name, path: ['scope', scopeIndex, 'configurations', index] })),
+        ...Object.entries(policy.scope).flatMap(([path, scope]) =>
+            scope.configurations.map((name, index) => ({ name, path: ['scope', path, 'configurations', index] })),
         ),
     ];
     return unknownConfigurations(declarations, manifests).map(({ path, message: diagnostic }) => ({
@@ -66,13 +67,35 @@ export function completenessProblems(policy: Policy): PolicyProblem[] {
     const rootSelected = selectForScope(policy, '', manifests);
     // A scope table is read against the settings of the configurations that scope selects, the root configurations included.
     const scopeSurfaces = new Map(
-        policy.scopes.map((scope) => [
-            scope.path,
-            knownSettings(selectForScope(policy, scope.path, manifests), policy.level),
+        Object.keys(policy.scope).map((scope) => [
+            scope,
+            knownSettings(selectForScope(policy, scope, manifests), policy.level),
         ]),
     );
     problems.push(
-        ...excludeErrors(policy.agentRules.exclude).map(({ index, message: diagnostic }) => ({
+        ...everyTable(policy).flatMap(({ table, scope, path }) => {
+            const selected =
+                scope === undefined
+                    ? [
+                          rootSelected,
+                          ...Object.keys(policy.scope).map((name) => selectForScope(policy, name, manifests)),
+                      ].flat()
+                    : selectForScope(policy, scope, manifests);
+            const declarations = new Set(
+                selected.flatMap((manifest) => manifest.settings.map((setting) => setting.name)),
+            );
+            return (table.architecture === undefined ? [] : Object.keys(table.architecture.roles))
+                .filter(
+                    (role) =>
+                        !Object.hasOwn(architectureRolesSchema.shape, role) &&
+                        !declarations.has(`architecture.roles.${role}`),
+                )
+                .map((role) => ({
+                    path: [...path, 'architecture', 'roles', role],
+                    message: `The ${role} architecture role is not declared by a selected configuration.`,
+                }));
+        }),
+        ...excludeErrors(policy.agent_rules.exclude).map(({ index, message: diagnostic }) => ({
             path: ['agent_rules', 'exclude', index],
             message: diagnostic,
         })),

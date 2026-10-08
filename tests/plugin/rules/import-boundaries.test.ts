@@ -58,12 +58,6 @@ createRuleTester().run<keyof typeof importBoundaries.meta.messages, [Partial<Imp
                 ],
             },
             {
-                code: "import { b } from '../user/b';",
-                filename: '/repo/features/cart/a.ts',
-                errors: [{ messageId: 'escape' }],
-            },
-
-            {
                 code: "import { a } from '../turn/a.js';",
                 filename: '/repo/src/other/b.ts',
                 options: [{ aliases: ALIASES }],

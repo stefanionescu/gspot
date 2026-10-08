@@ -10,7 +10,7 @@ gspot remove nextjs
 gspot apply --dry-run
 ```
 
-Required configurations stay selected while another active configuration needs them. Later `apply` detects applicable stacks again. To stop using Next.js checks permanently, remove the Next.js project evidence or explicitly accept the checks you intend to exclude.
+Required configurations stay selected while another active configuration needs them. Removal records a visible `removed_configurations` choice, so later detection keeps Next.js removed. Use `gspot add nextjs` to restore it.
 
 ## Remove the repository setup
 

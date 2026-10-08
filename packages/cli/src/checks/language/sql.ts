@@ -3,15 +3,13 @@ import { isRecord } from '#cli/platform/objects.ts';
 import { readSource } from '#cli/platform/source.ts';
 import type { Node, ParseResult } from '@pgsql/types';
 import { trivialText } from '#cli/parsers/statements.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { parse, nodeOf, nodesOf } from '#cli/parsers/sql/pg.ts';
-import type { PathAllowance } from '#cli/types/policy/settings.ts';
 import { positionAt, parseSqlFile } from '#cli/parsers/sql/statements.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
+import { PARSED_DIALECTS, OUTPUT_PARAMETERS } from '#cli/config/checks/language/sql.ts';
 import type { SqlSource, SqlFileInput, SqlFunctionFindings } from '#cli/types/checks/language/sql.ts';
-import { LINE_COMMENT, PARSED_DIALECTS, OUTPUT_PARAMETERS } from '#cli/config/checks/language/sql.ts';
 
 function sources(input: CheckInput): SqlSource[] {
     return input.files
@@ -128,38 +126,19 @@ async function fileFindings(analysis: SqlFileInput): Promise<Finding[]> {
 }
 
 /**
- * One finding for each file with more code lines than limits.sql.file_lines.
- * @param input the check input
- * @returns the findings
- */
-export function fileLines(input: CheckInput): Finding[] {
-    const ceiling = input.view.limit('file_lines', 'sql');
-    if (ceiling === undefined) return [];
-    return sources(input).flatMap((source): Finding[] => {
-        const lines = source.text.split('\n').map((line) => line.trim());
-        const count = lines.filter((line) => line !== '' && !line.startsWith(LINE_COMMENT)).length;
-        if (count <= ceiling) return [];
-        const diagnostic = `This file has ${String(count)} code lines, over the ceiling of ${String(ceiling)}.`;
-        return [findingAt(input, { file: source.path, line: 1 }, 'file-lines', diagnostic)];
-    });
-}
-
-/**
  * Report trivial PostgreSQL functions and excessive declared input parameters.
  * @param input the check input
  * @returns the findings
  */
 export async function trivialFunctions(input: CheckInput): Promise<Finding[]> {
     const sqlfluff = input.view.options('tools.sqlfluff');
-    const dialect = sqlfluff['dialect'] as string;
+    const dialect = sqlfluff['dialect'];
     if (!PARSED_DIALECTS.has(dialect)) return [];
-    const excluded = ((sqlfluff['exclude'] as PathAllowance[] | undefined) ?? []).flatMap((entry) => entry.paths);
-    const isExcluded = pathMatcher(excluded);
     const findings: Finding[] = [];
     const threshold = input.view.limit('min_function_statements', 'sql');
     const maximum = input.view.limit('function_parameters', 'sql');
     if (threshold === undefined && maximum === undefined) return [];
-    for (const source of sources(input).filter((entry) => !isExcluded(entry.path))) {
+    for (const source of sources(input)) {
         const parsed = await parseSqlFile(source.text, input.reads);
         if (parsed.error !== undefined) continue;
         findings.push(...(await fileFindings({ input, source, parsed, threshold, maximum })));

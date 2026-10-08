@@ -1,8 +1,6 @@
 // Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
 import { kindOf } from '#cli/repository/kind.ts';
 import { tagEntry } from '#cli/repository/tags.ts';
-import { isRecord } from '#cli/platform/objects.ts';
-import { toolName } from '#cli/configurations/pins.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -47,18 +45,23 @@ function ownedFor(context: PlanInputs, entry: PlanEntry, scopePath: string): Tra
     return listOwned(context, entry, scopePath);
 }
 
-// The files less the paths the check's tool excludes, such as tools.semgrep.exclude. Only entries with paths count;
-// the Prettier ignore lines go to .prettierignore instead.
-function withoutExcluded(files: TrackedFile[], check: CheckDeclaration, scope: ScopeSelection): TrackedFile[] {
-    const tool = toolName(check);
-    const excluded = tool === undefined ? undefined : scope.view.settings[`tools.${tool}.exclude`];
-    const patterns = (Array.isArray(excluded) ? excluded : []).flatMap((entry: unknown) => {
-        const paths = isRecord(entry) ? entry['paths'] : undefined;
-        return Array.isArray(paths) ? paths.map(String) : [];
-    });
-    if (patterns.length === 0) return files;
-    const isExcluded = pathMatcher(patterns);
-    return files.filter((file) => !isExcluded(file.path));
+// Check-specific policy ignores apply to live files and deleted project triggers alike.
+function withoutIgnored(
+    files: TrackedFile[],
+    check: CheckDeclaration,
+    scope: ScopeSelection,
+): Pick<PlannedCheck, 'files' | 'skip'> {
+    const paths = scope.view
+        .ignoresFor(check.name)
+        .flatMap((entry) => (entry.rule === undefined ? (entry.paths ?? []) : []));
+    const isIgnored = pathMatcher(paths);
+    const selected = files.filter((file) => !isIgnored(file.path));
+    return {
+        files: selected,
+        ...(files.length > 0 && selected.length === 0
+            ? { skip: { cause: 'ignore' as const, note: 'all selected paths are disabled by gspot.toml' } }
+            : {}),
+    };
 }
 
 // The files narrowed to the selection: a project check keeps everything when the selection touches it.
@@ -99,7 +102,9 @@ function missingTriggers(context: PlanInputs, entry: PlanEntry, scopePath: strin
         );
         return { ...raw, prefix, tags: tagged.tags, kind: verdict.kind, kindSource: verdict.source };
     });
-    return withoutExcluded(ownedBy(owners, scope.selected, missing, scopePath), check, scope).map((file) => file.path);
+    return withoutIgnored(ownedBy(owners, scope.selected, missing, scopePath), check, scope).files.map(
+        (file) => file.path,
+    );
 }
 
 /**
@@ -121,14 +126,15 @@ export function childScopes(session: Session, scope: ScopeSelection): string[] {
  * @param check the check
  * @returns true when the check runs once for the repository
  */
-export function runsAtRoot(manifest: Manifest, check: CheckDeclaration): boolean {
+export function runsAtRoot(manifest: Manifest | undefined, check: CheckDeclaration): boolean {
+    if (manifest === undefined) return true;
     if (manifest.configuration.kind !== 'general' || manifest.files.languages || check.runs === 'scope') return false;
     const command = [...(check.command ?? []), ...(check.env === undefined ? [] : Object.values(check.env))];
     return !manifest.configs.some(
         (config) =>
             config.scoped &&
             !config.fragment &&
-            command.some((part) => part.includes(`{config:${configurationName(config.target)}}`)),
+            command.some((part) => part.includes(`{tool_file:${configurationName(config.target)}}`)),
     );
 }
 
@@ -143,16 +149,21 @@ export function filesFor(
     context: PlanInputs,
     entry: PlanEntry,
     isRootCheck: boolean,
-): Pick<PlannedCheck, 'files' | 'triggerPaths'> {
+): Pick<PlannedCheck, 'files' | 'triggerPaths' | 'skip'> {
     const { scope, children } = context;
     const { check, manifest } = entry;
     const scopePath = isRootCheck ? '' : scope.scope.path;
     const triggerPaths = missingTriggers(context, entry, scopePath);
-    const keepsChildScopes = check.runs !== 'files' || (manifest !== undefined && runsAtRoot(manifest, check));
+    const keepsChildScopes = check.runs !== 'files' || runsAtRoot(manifest, check);
     let files =
         triggerPaths.length === 0 ? ownedFor(context, entry, scopePath) : projectFiles(context, scopePath, check.runs);
-    if (!keepsChildScopes && manifest !== undefined)
-        files = files.filter((file) => isOutsideChildren(file.path, children));
-    const selected = withoutExcluded(files, check, scope);
-    return { files: triggerPaths.length === 0 ? narrowed(context, entry, selected) : selected, triggerPaths };
+    if (!keepsChildScopes) files = files.filter((file) => isOutsideChildren(file.path, children));
+    if (check.runs === 'files' && triggerPaths.length === 0)
+        return { ...withoutIgnored(narrowed(context, entry, files), check, scope), triggerPaths };
+    const selected = withoutIgnored(files, check, scope);
+    return {
+        ...selected,
+        files: triggerPaths.length === 0 ? narrowed(context, entry, selected.files) : selected.files,
+        triggerPaths,
+    };
 }

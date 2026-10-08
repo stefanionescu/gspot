@@ -1,7 +1,7 @@
 // The TypeScript rules the generated ESLint configuration enables, loaded directly.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { writeFileSync } from 'node:fs';
+import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
@@ -84,9 +84,41 @@ test('index-only reexports keep a nonduplicate barrel and reject forwarding from
                 ['gspot/no-trivial-files', 'gspot/no-reexports', 'import-x/export'].includes(rule ?? ''),
         ),
     ).toStrictEqual([]);
-    writeFileSync(join(sandbox.path, 'src/forward.ts'), 'export const shared = 1;\n');
+    await writeFile(join(sandbox.path, 'src/forward.ts'), 'export const shared = 1;\n');
     const corrected = await messagesOf(sandbox.path);
     expect(corrected.filter(({ rule }) => rule === 'gspot/no-reexports' || rule === 'import-x/export')).toStrictEqual(
         [],
     );
+});
+
+test('generated TypeScript reports an unused ordinary local once and accepts disposal-only bindings', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['typescript']),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'tsconfig.json':
+            '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ESNext"},"include":["client.ts"]}\n',
+        'client.ts': 'export {};\n',
+    });
+    const eslint = await createEslint(sandbox.path);
+    const unused = await eslint.lintText('export function count(): number { const unused = 1; return 2; }\n', {
+        filePath: 'client.ts',
+    });
+    expect(
+        unused.flatMap((file) => file.messages).filter(({ ruleId }) => ruleId?.includes('unused') === true),
+    ).toMatchObject([{ ruleId: '@typescript-eslint/no-unused-vars', line: 1 }]);
+    const resources = await eslint.lintText(
+        `
+export async function disposeResources(): Promise<void> {
+    using local = { [Symbol.dispose]() {} };
+    await using asynchronous = { async [Symbol.asyncDispose]() {} };
+}
+`,
+        { filePath: 'client.ts' },
+    );
+    expect(
+        resources
+            .flatMap((file) => file.messages)
+            .filter(({ ruleId, fatal }) => fatal === true || ruleId?.includes('unused') === true),
+    ).toStrictEqual([]);
 });

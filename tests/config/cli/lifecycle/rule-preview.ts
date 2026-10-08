@@ -1,12 +1,5 @@
 import type { RulePreviewCase } from '#tests/types/cli/lifecycle/rule-preview.ts';
 
-/** Tracked rule files survive a clone even when its private ownership journal does not. */
-export const CLONE_RULE_FILES = [
-    '.gspot/config/eslint.config.mjs',
-    '.gspot/config/commitlint.config.cjs',
-    '.gspot/config/markdownlint.jsonc',
-];
-
 /** Actual policy transitions for native rule additions, removals, and option changes. */
 export const RULE_PREVIEW_CASES: RulePreviewCase[] = [
     {

@@ -7,7 +7,7 @@ description = "Drizzle: no update or delete without a where, raw SQL only where 
 dependencies = ["drizzle-orm"]
 
 [agent_rules]
-"DRIZZLE.md" = {dependencies = ["pg", "postgres"]}
+"DRIZZLE.md" = { dependencies = ["pg", "postgres"] }
 
 [[tool]]
 name = "eslint-plugin-drizzle"
@@ -30,8 +30,7 @@ fragment = true
 
 [[config.selectors]]
 selector = "TaggedTemplateExpression[tag.name='sql']"
-message = "Raw SQL skips the types of the schema. Use the query builder, or allow the path under drizzle.raw_sql_allowed with a reason."
-allowed = "drizzle.raw_sql_allowed"
+message = "Raw SQL skips the types of the schema. Use the query builder, or accept this finding with a rule-specific ignore."
 
 [[check]]
 name = "relations"
@@ -39,7 +38,7 @@ title = "Declare every Drizzle relation"
 example = "An exported `orders` table whose column uses `.references(() => users.id)` reports `relations` when the scope has no `relations(orders, ...)` declaration. Add that declaration with the table's actual relationships and rerun. The check recognizes the supported source forms; it does not execute the schema."
 level = "all"
 stage = "commit"
-files = {extensions = [".ts"]}
+files = { extensions = [".ts"] }
 summary = "Checks that every table with a reference has a relations entry."
 why = "The query builder joins through relations, so a reference without one works in SQL and is missing in code."
 help = "Add a relations call for the table."
@@ -52,14 +51,15 @@ level = "recommended"
 stage = "push"
 runs = "scope"
 tool = "drizzle-kit"
-files = {extensions = [".ts", ".sql"]}
+files = { extensions = [".ts", ".sql"] }
 summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
 why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
 help = "Run drizzle-kit generate and commit the migration."
 
 [[setting]]
-name = "drizzle.raw_sql_allowed"
+name = "drizzle.client_names"
 type = "list"
-direction = "loosening"
-default = []
-summary = "Paths that may hold raw SQL templates, each with a reason."
+items = "string"
+direction = "neutral"
+default = ["db"]
+summary = "The Drizzle client identifiers checked for update and delete operations without a where clause."

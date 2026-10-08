@@ -17,7 +17,7 @@ export const DOC_TASK_FILES = {
 
 /** Scope membership follows authored project boundaries. */
 export const DOC_TASK_SCOPES =
-    '[agent_rules]\nenabled = false\n[[scope]]\npath = "app"\nconfigurations = []\n[[scope]]\npath = "app/nested"\nconfigurations = []\n[[scope]]\npath = "app/empty"\nconfigurations = []\n[[scope]]\npath = "sibling"\nconfigurations = []\n';
+    '[agent_rules]\nenabled = false\n[scope."app"]\nconfigurations = []\n[scope."app/nested"]\nconfigurations = []\n[scope."app/empty"]\nconfigurations = []\n[scope."sibling"]\nconfigurations = []\n';
 
 /** Each rejected command identifies its own source document and line. */
 export const DOC_TASK_FINDINGS = [
@@ -29,4 +29,16 @@ export const DOC_TASK_FINDINGS = [
     { file: 'app/empty/guide.md', line: 1, command: 'npm run child-js' },
     { file: 'sibling/guide.md', line: 2, command: 'pnpm run child-js' },
     { file: 'sibling/guide.md', line: 2, command: 'mise run child-mise' },
+];
+
+/** Only a real title attribute and the established free-text language hide example paths. */
+export const DOC_FENCE_PATH_CASES = [
+    { metadata: 'title="example.sh"', language: 'sh', reported: false },
+    { metadata: 'title="example.sql"', language: 'sql', reported: false },
+    { metadata: 'title="example.custom"', language: 'custom', reported: false },
+    { metadata: 'start=1\ttitle="example.sh"', language: 'sh', reported: false },
+    { metadata: '', language: 'text', reported: false },
+    { metadata: '', language: 'sh', reported: true },
+    { metadata: 'notitle="example.sh"', language: 'sh', reported: true },
+    { metadata: 'description="title=example.sh"', language: 'sh', reported: true },
 ];
