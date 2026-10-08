@@ -2,10 +2,10 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { textContaining } from '#tests/harness/expectations.ts';
+import { selectForScope } from '#cli/repository/selection/public.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { GOOD_IGNORE } from '#tests/config/cli/policy/read/recovery.ts';
-import { selectForScope } from '#cli/configurations/selection/public.ts';
 import { readPolicyText, parseStrictPolicy } from '#cli/policy/public.ts';
 import { scopeView, knownSettings } from '#cli/policy/settings/public.ts';
 

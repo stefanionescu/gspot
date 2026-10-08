@@ -1,13 +1,14 @@
 // The selected tool files in one scope, with the pointers that lead tools to them.
 import { posix } from 'node:path';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
+import { ownedBy } from '#cli/repository/selection/public.ts';
 import { targetInScope } from '#cli/configurations/contracts.ts';
 import { emitTarget } from '#cli/generation/compilation/public.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { isConfigurationSelected } from '#cli/configurations/public.ts';
 import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/paths/public.ts';
 import type { GeneratedToolFile, ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { ownedBy, isConfigurationSelected } from '#cli/configurations/selection/public.ts';
 import { fillTarget, bodyPointer, collectRules } from '#cli/generation/documents/contracts.ts';
 
 import type {

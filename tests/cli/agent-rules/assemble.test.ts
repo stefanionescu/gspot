@@ -6,9 +6,8 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readAsset } from '#cli/platform/root/public.ts';
 import { FIRST_READ } from '#cli/config/policy/settings.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
-import { everyManifest } from '#cli/configurations/selection/public.ts';
 import { textAtLevel, selectRuleFiles } from '#cli/agent-rules/public.ts';
+import { everyManifest, configurationManifests } from '#cli/configurations/public.ts';
 import { UPSTREAM_GUIDES, CHECKED_RULE_LINES, RULE_CONFIGURATIONS } from '#tests/config/cli/agent-rules.ts';
 
 describe('[agent_rules] exclude', () => {

@@ -9,7 +9,7 @@ import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import { sharePythonTools } from '#tests/harness/python-installation.ts';
-import { detectConfigurations } from '#cli/configurations/selection/contracts.ts';
+import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
 import { CLEAN, SHELLED } from '#tests/config/tools/configurations/tool/ansible.ts';
 
 test.skipIf(!hasToolBuild('ansible-lint')).each(levelSchema.options)(

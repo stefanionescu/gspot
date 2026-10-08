@@ -20,16 +20,15 @@ import type { NpmProjectInputs } from '#cli/types/generation/npm.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/files.ts';
 import { assertMutationTarget } from '#cli/platform/root/contracts.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
 import { hookFiles, pythonProject } from '#cli/generation/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { githubFile, gitlabFile } from '#cli/generation/documents/public.ts';
 import type { Generated, GeneratedFile } from '#cli/types/generation/files.ts';
 import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN } from '#cli/config/parsers/packages.ts';
 import { JSON_INDENT, YARN_TOOL_PROJECT_SETTINGS } from '#cli/config/generation/eta.ts';
-import { everyManifest, isConfigurationSelected } from '#cli/configurations/selection/public.ts';
 import { configuredChecks, requiredToolNames, applicableManifests } from '#cli/planning/public.ts';
 import { isYarnBerry, parseToolProject, getPackageInstallerMajor } from '#cli/parsers/packages/contracts.ts';
+import { everyManifest, configurationManifests, isConfigurationSelected } from '#cli/configurations/public.ts';
 
 import {
     DOT_GSPOT,

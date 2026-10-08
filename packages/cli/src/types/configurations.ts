@@ -3,7 +3,6 @@ import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import type { levelSchema } from '#cli/parsers/schema/contracts.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { INSTALLATION_KINDS } from '#cli/config/configurations.ts';
 import type { manifestSchema } from '#cli/parsers/schema/configurations.ts';
 
@@ -12,16 +11,6 @@ export type ConfigurationEvidence = {
     evidence: string;
     kind: Manifest['configuration']['kind'];
     count?: number;
-};
-
-/** What detection reads from a scope's tree once, for every manifest to look at. */
-export type Layout = {
-    candidates: TrackedFile[];
-    extensionCounts: Map<string, number>;
-    shebangs: Set<string>;
-    runtimes: Map<string, string>;
-    dependencies: Map<string, string>;
-    scope: string;
 };
 
 export type SelectionWalk = {

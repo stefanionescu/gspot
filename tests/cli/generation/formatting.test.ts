@@ -13,12 +13,11 @@ import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
 import { scopeView, knownSettings } from '#cli/policy/settings/public.ts';
 import { prettierConfiguration } from '#cli/generation/documents/public.ts';
-import { selectConfigurations } from '#cli/configurations/selection/public.ts';
 import { prepareCommand, commandEnvironment } from '#cli/execution/command/public.ts';
 import { FORMAT_CASES, FORMAT_OVERRIDES_POLICY } from '#tests/config/samples/formatting.ts';
+import { selectConfigurations, configurationManifests } from '#cli/configurations/public.ts';
 import type { YamllintConfiguration, MarkdownlintConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {

@@ -4,7 +4,7 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import { toolName } from '#cli/configurations/contracts.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { ownedBy } from '#cli/configurations/selection/public.ts';
+import { ownedBy } from '#cli/repository/selection/public.ts';
 import { isReasonAccepted } from '#cli/policy/errors/contracts.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { SourceComment } from '#cli/types/parsers/comments.ts';

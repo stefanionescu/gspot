@@ -8,9 +8,8 @@ import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { parseRuffRuleSummary } from '#cli/parsers/tool/contracts.ts';
 import { toolName, allChecks } from '#cli/configurations/contracts.ts';
 import type { RepositoryDefinition } from '#cli/types/policy/settings.ts';
-import { isConfigurationSelected } from '#cli/configurations/selection/public.ts';
-import { configurationFiles, configurationManifests } from '#cli/configurations/public.ts';
 import type { Found, CheckFacts, Explanation, RuleSummarizer } from '#cli/types/commands/explain.ts';
+import { configurationFiles, configurationManifests, isConfigurationSelected } from '#cli/configurations/public.ts';
 import { ESLINT_RULE_PACKAGES, SWIFTLINT_LINE_LIMIT, RULE_LOOKUP_TIMEOUT_MS } from '#cli/config/commands/explain.ts';
 
 const RULE_SUMMARIZERS: Record<string, RuleSummarizer> = {

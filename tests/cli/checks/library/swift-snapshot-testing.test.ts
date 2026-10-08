@@ -9,7 +9,7 @@ import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { detectUnselected } from '#cli/configurations/selection/contracts.ts';
+import { detectUnselected } from '#cli/repository/selection/contracts.ts';
 import { PACKAGE_PROJECTS, DOCUMENTATION_LEVELS } from '#tests/config/cli/checks/library/swift-snapshot-testing.ts';
 
 test.each([

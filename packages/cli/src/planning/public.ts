@@ -1,6 +1,8 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 // Tool requirements derived from the same applicable check plan used by execution.
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
+import { everyManifest } from '#cli/configurations/public.ts';
+import { ownedBy } from '#cli/repository/selection/public.ts';
 import { GspotError, hostPlatform } from '#cli/platform/public.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -9,7 +11,6 @@ import { declaredArchitectures } from '#cli/policy/settings/contracts.ts';
 import { filesFor, runsAtRoot, childScopes } from '#cli/planning/files.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
-import { ownedBy, everyManifest } from '#cli/configurations/selection/public.ts';
 import { isOutsideChildren, isToolProjectPath } from '#cli/repository/paths/public.ts';
 import { toolPin, toolName, checkToolPin, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { skipFor, selectionStatus, coverageArguments, restrictIgnoredPaths } from '#cli/planning/contracts.ts';

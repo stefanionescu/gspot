@@ -1,20 +1,15 @@
 import type { z } from 'zod';
 import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import type { ToolPin } from '#cli/types/parsers/tool.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { compact, isRecord } from '#cli/platform/contracts.ts';
 import type { NamingTerms } from '#cli/types/parsers/naming.ts';
-import { hasToolSection } from '#cli/parsers/tool/contracts.ts';
 import { shippedNamingSchema } from '#cli/parsers/schema/naming.ts';
-import type { PackageManifest } from '#cli/types/parsers/packages.ts';
-import { manifestErrors } from '#cli/configurations/errors/public.ts';
+import { readAsset, listAssets } from '#cli/platform/root/public.ts';
 import { manifestSchema } from '#cli/parsers/schema/configurations.ts';
-import { surveyRepository } from '#cli/repository/discovery/public.ts';
-import { readText, readAsset, listAssets } from '#cli/platform/root/public.ts';
 import { declaredTools, manifestError } from '#cli/configurations/errors/contracts.ts';
-import { isGlob, pathMatcher, isToolProjectPath } from '#cli/repository/paths/public.ts';
-import type { Tooling, ToolFile, TrackedFile, FileDeclaration } from '#cli/types/repository/inventory.ts';
-import { pinOf, allChecks, pythonPins, collectPins, npmToolNames } from '#cli/configurations/contracts.ts';
+import { pinOf, allChecks, pythonPins, collectPins } from '#cli/configurations/contracts.ts';
+import { manifestErrors, unknownConfigurationDiagnostic } from '#cli/configurations/errors/public.ts';
 import { CONFIG_PREFIX, NAMING_TERMS_FILE, CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
 
 import type {
@@ -22,54 +17,11 @@ import type {
     Manifest,
     RuleSource,
     ManifestCache,
+    SelectionWalk,
     CheckDeclaration,
     ManifestDeclaration,
+    SelectedConfigurations,
 } from '#cli/types/configurations.ts';
-
-function hasSection(root: string, path: string, replace: NonNullable<ToolPin['replace']>[number]): boolean {
-    const source = readText(root, path);
-    if (source === undefined) return false;
-    if (replace.table === undefined && replace.key === undefined) return true;
-    return hasToolSection(source, path, replace);
-}
-
-// The tool configurations one replace row finds among the tracked files.
-function planTakeoverConfigs(
-    root: string,
-    inventory: Set<string>,
-    tool: string,
-    replace: NonNullable<ToolPin['replace']>[number],
-): ToolFile[] {
-    const matches = pathMatcher([replace.file, `**/${replace.file}`]);
-    const candidates = new Set(inventory);
-    if (!isGlob(replace.file) && !candidates.has(replace.file) && readText(root, replace.file) !== undefined)
-        candidates.add(replace.file);
-    return [...candidates]
-        .filter((candidate) => matches(candidate))
-        .filter((path) => hasSection(root, path, replace))
-        .map((path) => ({
-            tool,
-            path,
-            shared: replace.shared,
-            ...(replace.table === undefined ? {} : { table: replace.table }),
-            ...(replace.key === undefined ? {} : { key: replace.key }),
-        }));
-}
-
-/**
- * Discover configuration sections declared by the tools that own them.
- * @param root the repository root
- * @param paths the tracked file paths
- * @returns tool configurations with their containing files and sections
- */
-function getToolConfigs(root: string, paths: Iterable<string>): ToolFile[] {
-    const inventory = new Set([...paths].filter((path) => !isToolProjectPath(path)));
-    return [...configurationManifests().values()].flatMap((manifest) =>
-        manifest.tools.flatMap((tool) =>
-            (tool.replace ?? []).flatMap((replace) => planTakeoverConfigs(root, inventory, tool.name, replace)),
-        ),
-    );
-}
 
 function issueLines(issue: z.core.$ZodIssue): string[] {
     const line = `${issue.path.map(String).join('.')}: ${issue.message}`;
@@ -106,29 +58,29 @@ function registerManifest(manifests: Map<string, ManifestDeclaration>, path: str
     manifests.set(manifest.configuration.name, manifest);
 }
 
-/**
- * Find the tool configuration the configurations replace, with the hooks, CI, agent files, lint folders, and runner found.
- * @param root the repository root
- * @param files the tracked files
- * @param packageManifests the parsed package manifests
- * @returns the configuration files, hooks, CI, agent files, lint folders, and runner found
- */
-export function getTooling(root: string, files: TrackedFile[], packageManifests: PackageManifest[]): Tooling {
-    const configurations = getToolConfigs(
-        root,
-        files.filter((file) => file.kind === 'source').map((file) => file.path),
-    );
-    return {
-        toolFiles: [
-            ...new Map(
-                configurations.map((entry) => [
-                    JSON.stringify([entry.tool, entry.path, entry.table, entry.key]),
-                    entry,
-                ]),
-            ).values(),
-        ],
-        ...surveyRepository(root, files, packageManifests, npmToolNames(configurationManifests().values())),
-    };
+// Selection: the configurations named plus every configuration they require, dependencies first, in order of first mention.
+
+function visit(walk: SelectionWalk, configurationName: string): void {
+    if (walk.seen.has(configurationName)) return;
+    if (walk.visiting.includes(configurationName)) {
+        const chain = [...walk.visiting.slice(walk.visiting.indexOf(configurationName)), configurationName];
+        walk.errors.push(
+            `The configurations require each other in a circle: ${chain.join(' -> ')}. This is a bug in a configuration manifest.`,
+        );
+        return;
+    }
+    const manifest = walk.manifests.get(configurationName);
+    if (!manifest) {
+        const known = walk.manifests.keys().toArray();
+        walk.errors.push(unknownConfigurationDiagnostic(configurationName, known));
+        walk.seen.add(configurationName);
+        return;
+    }
+    walk.visiting.push(configurationName);
+    for (const required of manifest.configuration.requires) visit(walk, required);
+    walk.visiting.pop();
+    walk.seen.add(configurationName);
+    walk.order.push(manifest);
 }
 
 /**
@@ -270,34 +222,6 @@ export function configurationFiles(manifest: Manifest): RuleSource[] {
 }
 
 /**
- * Resolve authored declarations and generated paths of the configurations each scope selects.
- * @param declarations the authored file declarations
- * @param selected the actual manifests selected by each authored scope
- * @returns file declarations with internal configuration origins retained
- */
-export function fileDeclarations(
-    declarations: FileDeclaration[],
-    selected: Map<string, Manifest[]>,
-): FileDeclaration[] {
-    return [
-        ...declarations.filter((entry) => entry.kind !== 'generated' || entry.configuration === undefined),
-        ...selected.entries().flatMap(([path, manifests]) =>
-            manifests.flatMap(({ generated, configuration }) =>
-                generated.length === 0
-                    ? []
-                    : [
-                          {
-                              kind: 'generated' as const,
-                              configuration: configuration.name,
-                              paths: generated.map((file) => posix.join(path, file)),
-                          },
-                      ],
-            ),
-        ),
-    ];
-}
-
-/**
  * The bundled Python bootstrap pin, including its required installer version.
  * @returns the declared uv mise pin
  */
@@ -320,4 +244,74 @@ export function misePins(manifests: Manifest[]): MisePin[] {
     const pins = tools.flatMap((tool) => pinOf(tool) ?? []);
     if (pythonPins(manifests).length > 0 && !tools.some((tool) => tool.name === 'uv')) pins.push(pythonInstallerPin());
     return pins;
+}
+
+/**
+ * The chain of requirements from one configuration to another, without revisiting a declaration.
+ * @param target the required configuration.
+ * @param from the configuration the chain starts at.
+ * @param manifests every configuration manifest.
+ * @returns the configuration names along the chain from the starting configuration to the target, or undefined when no chain exists.
+ */
+export function requireChain(target: string, from: string, manifests: Map<string, Manifest>): string[] | undefined {
+    const seen = new Set<string>();
+    function search(current: string): string[] | undefined {
+        if (current === target) return [current];
+        if (seen.has(current)) return undefined;
+        seen.add(current);
+        for (const required of manifests.get(current)?.configuration.requires ?? []) {
+            const rest = search(required);
+            if (rest !== undefined) return [current, ...rest];
+        }
+        return undefined;
+    }
+    return search(from);
+}
+
+/**
+ * Resolves configuration names to ordered manifests. Throws GspotError('selection') for unknown configurations or circular requirements.
+ * @param configurationNames the requested configuration names.
+ * @param manifests every configuration manifest.
+ * @returns the manifests, requirements first, in order of first mention.
+ */
+export function selectConfigurations(configurationNames: string[], manifests: Map<string, Manifest>): Manifest[] {
+    const walk: SelectionWalk = { manifests, errors: [], order: [], seen: new Set(), visiting: [] };
+    for (const configurationName of configurationNames) visit(walk, configurationName);
+    const { errors } = walk;
+    if (errors.length > 0) throw new GspotError('selection', [...new Set(errors)]);
+    return walk.order;
+}
+
+/**
+ * Language and framework configurations that contribute source to shared checks.
+ * @param selected the selected manifests.
+ * @returns the source policy owners.
+ */
+export function sourceConfigurations(selected: Manifest[]): Manifest[] {
+    return selected.filter(
+        (manifest) => manifest.configuration.kind === 'language' || manifest.configuration.kind === 'framework',
+    );
+}
+
+/**
+ * Every distinct manifest across the scopes, in first-seen order.
+ * @param scopes the selected scopes.
+ * @returns the manifests.
+ */
+export function everyManifest(scopes: SelectedConfigurations[]): Manifest[] {
+    const seen = new Map<string, Manifest>();
+    for (const scope of scopes)
+        for (const manifest of scope.selected)
+            if (!seen.has(manifest.configuration.name)) seen.set(manifest.configuration.name, manifest);
+    return seen.values().toArray();
+}
+
+/**
+ * Tests whether any resolved scope selects a configuration.
+ * @param scopes the validated scope selections
+ * @param name the configuration name
+ * @returns whether the configuration is selected in at least one scope
+ */
+export function isConfigurationSelected(scopes: SelectedConfigurations[], name: string): boolean {
+    return scopes.some((selection) => selection.selected.some((manifest) => manifest.configuration.name === name));
 }

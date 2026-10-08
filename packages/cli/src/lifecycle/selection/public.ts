@@ -4,10 +4,10 @@ import { isInScope } from '#cli/repository/paths/public.ts';
 import { buildScope } from '#cli/repository/paths/contracts.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/inventory.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
+import { selectConfigurations } from '#cli/configurations/public.ts';
 import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
 import { unknownConfigurations } from '#cli/configurations/errors/public.ts';
-import { selectConfigurations } from '#cli/configurations/selection/public.ts';
-import { detectConfigurations } from '#cli/configurations/selection/contracts.ts';
+import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
 
 import type {

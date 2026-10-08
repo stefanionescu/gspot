@@ -1,7 +1,7 @@
 // Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
 import { kindOf } from '#cli/repository/public.ts';
+import { ownedBy } from '#cli/repository/selection/public.ts';
 import { toolFileName } from '#cli/configurations/contracts.ts';
-import { ownedBy } from '#cli/configurations/selection/public.ts';
 import { tagEntry } from '#cli/repository/discovery/contracts.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';

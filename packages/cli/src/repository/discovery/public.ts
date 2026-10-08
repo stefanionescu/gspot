@@ -1,16 +1,21 @@
 import { parse as parseYaml } from 'yaml';
 import { isInside } from '#cli/platform/contracts.ts';
 import { readText } from '#cli/platform/root/public.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { join, dirname, basename, relative } from 'node:path';
+import { hasToolSection } from '#cli/parsers/tool/contracts.ts';
+import { npmToolNames } from '#cli/configurations/contracts.ts';
 import { runnerSchema } from '#cli/parsers/schema/contracts.ts';
 import { readPackageManifest } from '#cli/repository/contracts.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { isLintOnlyManifest } from '#cli/repository/paths/contracts.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git/public.ts';
 import { statSync, lstatSync, existsSync, readdirSync, realpathSync } from 'node:fs';
-import type { Tooling, TrackedFile, RunnerSelection } from '#cli/types/repository/inventory.ts';
+import { isGlob, pathMatcher, isToolProjectPath } from '#cli/repository/paths/public.ts';
+import type { Tooling, ToolFile, TrackedFile, RunnerSelection } from '#cli/types/repository/inventory.ts';
 
 import {
     LEFTHOOK_NAMES,
@@ -110,6 +115,51 @@ function lintJobs(path: string, document: unknown): string[] {
         if (name.startsWith('.')) return [];
         return isLintJob(name, job) ? [`${path}: ${name}`] : [];
     });
+}
+
+function hasSection(root: string, path: string, replace: NonNullable<ToolPin['replace']>[number]): boolean {
+    const source = readText(root, path);
+    if (source === undefined) return false;
+    if (replace.table === undefined && replace.key === undefined) return true;
+    return hasToolSection(source, path, replace);
+}
+
+// The tool configurations one replace row finds among the tracked files.
+function planTakeoverConfigs(
+    root: string,
+    inventory: Set<string>,
+    tool: string,
+    replace: NonNullable<ToolPin['replace']>[number],
+): ToolFile[] {
+    const matches = pathMatcher([replace.file, `**/${replace.file}`]);
+    const candidates = new Set(inventory);
+    if (!isGlob(replace.file) && !candidates.has(replace.file) && readText(root, replace.file) !== undefined)
+        candidates.add(replace.file);
+    return [...candidates]
+        .filter((candidate) => matches(candidate))
+        .filter((path) => hasSection(root, path, replace))
+        .map((path) => ({
+            tool,
+            path,
+            shared: replace.shared,
+            ...(replace.table === undefined ? {} : { table: replace.table }),
+            ...(replace.key === undefined ? {} : { key: replace.key }),
+        }));
+}
+
+/**
+ * Discover configuration sections declared by the tools that own them.
+ * @param root the repository root
+ * @param paths the tracked file paths
+ * @returns tool configurations with their containing files and sections
+ */
+function getToolConfigs(root: string, paths: Iterable<string>): ToolFile[] {
+    const inventory = new Set([...paths].filter((path) => !isToolProjectPath(path)));
+    return [...configurationManifests().values()].flatMap((manifest) =>
+        manifest.tools.flatMap((tool) =>
+            (tool.replace ?? []).flatMap((replace) => planTakeoverConfigs(root, inventory, tool.name, replace)),
+        ),
+    );
 }
 
 /**
@@ -222,4 +272,29 @@ export function getLintJobs(root: string, paths: string[]): string[] {
             }
             return lintJobs(path, document);
         });
+}
+
+/**
+ * Find the tool configuration the configurations replace, with the hooks, CI, agent files, lint folders, and runner found.
+ * @param root the repository root
+ * @param files the tracked files
+ * @param packageManifests the parsed package manifests
+ * @returns the configuration files, hooks, CI, agent files, lint folders, and runner found
+ */
+export function getTooling(root: string, files: TrackedFile[], packageManifests: PackageManifest[]): Tooling {
+    const configurations = getToolConfigs(
+        root,
+        files.filter((file) => file.kind === 'source').map((file) => file.path),
+    );
+    return {
+        toolFiles: [
+            ...new Map(
+                configurations.map((entry) => [
+                    JSON.stringify([entry.tool, entry.path, entry.table, entry.key]),
+                    entry,
+                ]),
+            ).values(),
+        ],
+        ...surveyRepository(root, files, packageManifests, npmToolNames(configurationManifests().values())),
+    };
 }

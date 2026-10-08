@@ -95,3 +95,13 @@ export type FileClassification = { root: string; entry: RawEntry; prefix: Buffer
 
 /** Authored declarations and effective Git attributes used for classification. */
 export type FileClassificationRules = { declarations: FileDeclaration[]; attributes: Repository['attributes'] };
+
+/** What detection reads from a scope's tree once, for every manifest to look at. */
+export type Layout = {
+    candidates: TrackedFile[];
+    extensionCounts: Map<string, number>;
+    shebangs: Set<string>;
+    runtimes: Map<string, string>;
+    dependencies: Map<string, string>;
+    scope: string;
+};

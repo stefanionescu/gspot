@@ -119,73 +119,72 @@ reason = "This selection contract uses the public TOML key for manual configurat
 
 # A CLI layer imports itself and the layers named in its imports_allowed entry. Its config and types files belong to the same layer.
 [[architecture.modules]]
-may_import = ["main", "commands", "platform"]
+may_import = ["platform", "commands", "main"]
 name = "main"
 paths = ["packages/cli/src/main.ts"]
 
 [[architecture.modules]]
-may_import = ["planning", "commands", "checks", "terminal", "execution", "lifecycle", "generation", "tools", "policy", "agent-rules", "configurations", "repository", "parsers", "platform"]
+may_import = ["platform", "parsers", "configurations", "repository", "policy", "agent-rules", "planning", "generation", "tools", "lifecycle", "execution", "checks", "terminal", "commands"]
 name = "commands"
 paths = ["packages/cli/src/public.ts", "packages/cli/src/commands/**", "packages/cli/src/config/commands/**", "packages/cli/src/types/commands/**"]
 
 [[architecture.modules]]
-may_import = ["planning", "checks", "execution", "lifecycle", "generation", "tools", "policy", "configurations", "repository", "parsers", "platform"]
+may_import = ["platform", "parsers", "configurations", "repository", "policy", "planning", "generation", "tools", "lifecycle", "execution", "checks"]
 name = "checks"
 paths = ["packages/cli/src/checks/**", "packages/cli/src/config/checks/**", "packages/cli/src/types/checks/**"]
 
 [[architecture.modules]]
-may_import = ["terminal", "execution", "parsers", "platform"]
+may_import = ["platform", "parsers", "execution", "terminal"]
 name = "terminal"
 paths = ["packages/cli/src/terminal/**", "packages/cli/src/config/terminal.ts", "packages/cli/src/types/terminal.ts"]
 
 [[architecture.modules]]
-may_import = ["planning", "execution", "lifecycle", "tools", "policy", "configurations", "repository", "parsers", "platform"]
+may_import = ["platform", "parsers", "configurations", "repository", "policy", "planning", "tools", "lifecycle", "execution"]
 name = "execution"
 paths = ["packages/cli/src/execution/**", "packages/cli/src/config/execution/**", "packages/cli/src/types/execution/**"]
 
 [[architecture.modules]]
-may_import = ["planning", "parsers", "lifecycle", "generation", "tools", "policy", "configurations", "repository", "platform"]
+may_import = ["platform", "parsers", "configurations", "repository", "policy", "planning", "generation", "tools", "lifecycle"]
 name = "lifecycle"
 paths = ["packages/cli/src/lifecycle/**", "packages/cli/src/config/lifecycle/**", "packages/cli/src/types/lifecycle/**"]
 
 [[architecture.modules]]
-may_import = ["planning", "parsers", "generation", "policy", "agent-rules", "configurations", "repository", "platform"]
+may_import = ["platform", "parsers", "configurations", "repository", "policy", "agent-rules", "planning", "generation"]
 name = "generation"
 paths = ["packages/cli/src/generation/**", "packages/cli/src/config/generation/**", "packages/cli/src/types/generation/**"]
 
 [[architecture.modules]]
-may_import = ["planning", "policy", "repository", "configurations", "parsers", "platform"]
+may_import = ["platform", "parsers", "configurations", "repository", "policy", "planning"]
 name = "planning"
 paths = ["packages/cli/src/planning/**", "packages/cli/src/config/planning.ts", "packages/cli/src/types/planning.ts"]
 
 [[architecture.modules]]
-may_import = ["planning", "parsers", "generation", "tools", "policy", "configurations", "repository", "platform"]
+may_import = ["platform", "parsers", "configurations", "repository", "policy", "planning", "generation", "tools"]
 name = "tools"
 paths = ["packages/cli/src/tools/**", "packages/cli/src/config/tools/!(vale).ts", "packages/cli/src/types/tools/**"]
-reason = "Tool installation prepares generated lockfiles and consumes the generated-file contract owned by generation."
 
 [[architecture.modules]]
-may_import = ["parsers", "policy", "configurations", "repository", "platform"]
+may_import = ["platform", "parsers", "configurations", "repository", "policy"]
 name = "policy"
 paths = ["packages/cli/src/policy/**", "packages/cli/src/config/policy/**", "packages/cli/src/types/policy/**"]
 
 [[architecture.modules]]
-may_import = ["agent-rules", "policy", "parsers", "configurations", "repository", "platform"]
+may_import = ["platform", "parsers", "configurations", "repository", "policy", "agent-rules"]
 name = "agent-rules"
 paths = ["packages/cli/src/agent-rules/**", "packages/cli/src/config/agent-rules.ts", "packages/cli/src/types/agent-rules.ts"]
 
 [[architecture.modules]]
-may_import = ["parsers", "configurations", "repository", "platform"]
+may_import = ["platform", "parsers", "configurations"]
 name = "configurations"
 paths = ["packages/cli/src/configurations/**", "packages/cli/src/parsers/schema/configurations.ts", "packages/cli/src/config/configurations.ts", "packages/cli/src/config/tools/vale.ts", "packages/cli/src/types/configurations.ts"]
 
 [[architecture.modules]]
-may_import = ["repository", "parsers", "platform"]
+may_import = ["platform", "parsers", "configurations", "repository"]
 name = "repository"
 paths = ["packages/cli/src/repository/**", "packages/cli/src/config/repository/**", "packages/cli/src/types/repository/**"]
 
 [[architecture.modules]]
-may_import = ["parsers", "configurations", "platform"]
+may_import = ["platform", "parsers"]
 name = "parsers"
 paths = ["packages/cli/src/parsers/*.ts", "packages/cli/src/parsers/!(schema)/**", "packages/cli/src/parsers/schema/!(configurations).ts", "packages/cli/src/parsers/schema/python/**", "packages/cli/src/config/parsers/**", "packages/cli/src/types/parsers/**"]
 reason = "Tool-output parsing consumes validated configuration declarations to interpret native versions without copying the tool metadata contract."

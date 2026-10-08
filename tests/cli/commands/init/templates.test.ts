@@ -10,9 +10,8 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
 import { alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
-import { selectConfigurations } from '#cli/configurations/selection/public.ts';
+import { selectConfigurations, configurationManifests } from '#cli/configurations/public.ts';
 
 test('templates > init validates a template in a dry run without changing the repository', async () => {
     await using sandbox = await testdir();

@@ -11,10 +11,9 @@ import type { RunReport } from '#cli/types/execution/check.ts';
 import { knownSettings } from '#cli/policy/settings/public.ts';
 import type { KnownSettings } from '#cli/types/policy/settings.ts';
 import { nameFindings } from '#cli/checks/general/naming/public.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/contracts.ts';
-import { selectConfigurations } from '#cli/configurations/selection/public.ts';
 import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
+import { selectConfigurations, configurationManifests } from '#cli/configurations/public.ts';
 
 import {
     NAME_WORDS,

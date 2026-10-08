@@ -7,7 +7,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { readRepository } from '#cli/repository/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
-import { detectConfigurations } from '#cli/configurations/selection/contracts.ts';
+import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
 
 import {
     NODE_EMBEDS,

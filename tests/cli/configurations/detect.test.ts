@@ -11,7 +11,7 @@ import { buildTrackedFile } from '#tests/harness/tracked.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
 import { runtimeEvidenceCases } from '#tests/harness/repository.ts';
 import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
-import { detectUnselected, detectConfigurations } from '#cli/configurations/selection/contracts.ts';
+import { detectUnselected, detectConfigurations } from '#cli/repository/selection/contracts.ts';
 import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/public.ts';
 
 import {

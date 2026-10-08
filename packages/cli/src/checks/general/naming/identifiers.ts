@@ -6,9 +6,9 @@ import type { Identifier } from '#cli/types/parsers/naming.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { isInScope, pathMatcher } from '#cli/repository/paths/public.ts';
 import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
+import { isOwned, selectForScope } from '#cli/repository/selection/public.ts';
 import { everyTable, harnessFolders } from '#cli/policy/settings/contracts.ts';
 import { CASE_NAMES, nameFindings } from '#cli/checks/general/naming/public.ts';
-import { isOwned, selectForScope } from '#cli/configurations/selection/public.ts';
 import type { FileNames, NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
 import {

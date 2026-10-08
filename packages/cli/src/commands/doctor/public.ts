@@ -7,6 +7,7 @@ import { selectRuleFiles } from '#cli/agent-rules/public.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
 import { colors, printResult } from '#cli/terminal/public.ts';
+import { everyManifest } from '#cli/configurations/public.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { collectPins } from '#cli/configurations/contracts.ts';
 import { EXIT_FINDINGS } from '#cli/config/platform/runtime.ts';
@@ -17,7 +18,6 @@ import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import { commandHelp, openSession } from '#cli/commands/public.ts';
 import { getSuggestions } from '#cli/commands/doctor/contracts.ts';
 import { inspectTool, isToolAvailable } from '#cli/tools/public.ts';
-import { everyManifest } from '#cli/configurations/selection/public.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/selection/contracts.ts';
 

@@ -3,18 +3,17 @@ import { emitAll } from '#cli/generation/public.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { duplicateMisePins } from '#cli/tools/public.ts';
 import { readPrefix } from '#cli/platform/root/public.ts';
-import { getTooling } from '#cli/configurations/public.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
+import { everyManifest } from '#cli/configurations/public.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
-import { getLintJobs } from '#cli/repository/discovery/public.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
-import { everyManifest } from '#cli/configurations/selection/public.ts';
+import { detectUnselected } from '#cli/repository/selection/contracts.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
-import { detectUnselected } from '#cli/configurations/selection/contracts.ts';
+import { getTooling, getLintJobs } from '#cli/repository/discovery/public.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/doctor.ts';
 
 function suggestedConfigurations(session: Session, selected: Set<string>): Suggestions['suggested'] {

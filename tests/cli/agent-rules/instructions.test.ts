@@ -6,7 +6,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { allChecks } from '#cli/configurations/contracts.ts';
 import { managedBlock } from '#cli/agent-rules/contracts.ts';
 import { selectRuleFiles } from '#cli/agent-rules/public.ts';
-import { everyManifest } from '#cli/configurations/selection/public.ts';
+import { everyManifest } from '#cli/configurations/public.ts';
 
 describe('the managed block', () => {
     test('an empty manual language list retains general check instructions', async () => {

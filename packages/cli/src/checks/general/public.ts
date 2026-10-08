@@ -2,6 +2,7 @@ import { statSync, writeFileSync } from 'node:fs';
 import { findingAt } from '#cli/checks/finding.ts';
 import { parseJsonRecord } from '#cli/parsers/public.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import { ownedBy } from '#cli/repository/selection/public.ts';
 import { parseAlerts } from '#cli/parsers/output/contracts.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
@@ -11,6 +12,7 @@ import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { JSCPD } from '#cli/config/checks/general/duplication.ts';
 import { toPosix, extensionOf } from '#cli/platform/contracts.ts';
 import { openRoot, readSource } from '#cli/platform/root/public.ts';
+import { sourceConfigurations } from '#cli/configurations/public.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { hasValePackages } from '#cli/lifecycle/install/contracts.ts';
 import type { Finding, ValeAlert } from '#cli/types/parsers/output.ts';
@@ -21,7 +23,6 @@ import { fileBatches } from '#cli/execution/command/arguments/contracts.ts';
 import { VALE_STDIN, SCRIPT_GRAMMAR } from '#cli/config/checks/general/prose.ts';
 import type { ProseRoute, ProseRouteGroup } from '#cli/types/checks/general/prose.ts';
 import type { CloneScope, CloneReport } from '#cli/types/checks/general/duplication.ts';
-import { ownedBy, sourceConfigurations } from '#cli/configurations/selection/public.ts';
 import { VALE_CONFIG, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 // Vale runs with --no-exit, so alerts leave the exit code at 0; any other code means Vale itself failed, and that is never a pass.

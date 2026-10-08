@@ -5,9 +5,9 @@ import type { TomlTable } from '#cli/types/policy/settings.ts';
 import { defaultValue } from '#cli/policy/schema/contracts.ts';
 import { knownSettings } from '#cli/policy/settings/public.ts';
 import { valueAt, isRecord } from '#cli/platform/contracts.ts';
+import { selectForScope } from '#cli/repository/selection/public.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import type { DefaultPolicyTable } from '#cli/types/policy/defaults.ts';
-import { selectForScope } from '#cli/configurations/selection/public.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/paths/public.ts';
 import { mergeValue, declarationFor, settingCandidates } from '#cli/policy/settings/contracts.ts';
 

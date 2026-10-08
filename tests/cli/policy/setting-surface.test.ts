@@ -4,9 +4,8 @@ import { knownSettings } from '#cli/policy/settings/public.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { validateAgainstSurface } from '#cli/policy/errors/public.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
-import { selectConfigurations } from '#cli/configurations/selection/public.ts';
 import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
+import { selectConfigurations, configurationManifests } from '#cli/configurations/public.ts';
 
 const selected = selectConfigurations(['structure', 'bash', 'naming', 'format', 'spelling'], configurationManifests());
 const surface = knownSettings(selected);

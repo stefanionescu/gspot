@@ -3,10 +3,9 @@ import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { getTooling } from '#cli/configurations/public.ts';
 import { readRepository } from '#cli/repository/public.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { getLintJobs } from '#cli/repository/discovery/public.ts';
+import { getTooling, getLintJobs } from '#cli/repository/discovery/public.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 import {

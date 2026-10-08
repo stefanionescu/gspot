@@ -11,9 +11,9 @@ import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { knownSettings } from '#cli/policy/settings/public.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { settingValue } from '#cli/policy/settings/contracts.ts';
+import { selectForScope } from '#cli/repository/selection/public.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { selectForScope } from '#cli/configurations/selection/public.ts';
 import { TAPLO_REASON, TAPLO_OPTIONS } from '#tests/config/samples/taplo.ts';
 
 import {

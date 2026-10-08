@@ -6,13 +6,13 @@ import { Argument } from '@commander-js/extra-typings';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import { selectionStatus } from '#cli/planning/contracts.ts';
 import type { Program } from '#cli/types/commands/program.ts';
+import { everyManifest } from '#cli/configurations/public.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import { commandHelp, openSession } from '#cli/commands/public.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/list.ts';
-import { everyManifest } from '#cli/configurations/selection/public.ts';
+import { detectUnselected } from '#cli/repository/selection/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { everyTable, listSettings } from '#cli/policy/settings/contracts.ts';
-import { detectUnselected } from '#cli/configurations/selection/contracts.ts';
 import type { SettingsListing, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 function scopeTag(scope: string | undefined): string {

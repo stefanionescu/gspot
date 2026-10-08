@@ -3,7 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
-import { detectConfigurations } from '#cli/configurations/selection/contracts.ts';
+import { detectConfigurations } from '#cli/repository/selection/contracts.ts';
 
 test.each(['@testing-library/react', '@testing-library/dom', '@testing-library/custom-adapter'])(
     'Testing Library detects %s only in the project scope that declares it',

@@ -14,8 +14,7 @@ import { defaultValue } from '#cli/policy/schema/contracts.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import { getScopeTable } from '#cli/policy/document/contracts.ts';
 import type { RemoveOptions } from '#cli/types/commands/remove.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
-import { requireChain } from '#cli/configurations/selection/public.ts';
+import { requireChain, configurationManifests } from '#cli/configurations/public.ts';
 
 /**
  * gspot remove: drops one configuration from the root list or from one scope's list.

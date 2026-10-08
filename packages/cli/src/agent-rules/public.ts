@@ -7,8 +7,8 @@ import { FRONT_MATTER } from '#cli/config/agent-rules.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import type { RuleFile, AgentRules } from '#cli/types/agent-rules.ts';
+import { detectConditions } from '#cli/repository/selection/contracts.ts';
 import { CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
-import { detectConditions } from '#cli/configurations/selection/contracts.ts';
 import type { Level, Manifest, RuleSource } from '#cli/types/configurations.ts';
 import { configurationFiles, configurationManifests } from '#cli/configurations/public.ts';
 

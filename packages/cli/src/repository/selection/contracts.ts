@@ -4,13 +4,12 @@ import { extensionOf } from '#cli/platform/contracts.ts';
 import { npmToolNames } from '#cli/configurations/contracts.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { Layout, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
 import { projectFolder, isLintOnlyManifest } from '#cli/repository/paths/contracts.ts';
 import { isInScope, pathMatcher, filenameMatcher, isToolProjectPath } from '#cli/repository/paths/public.ts';
 
 import type {
-    Layout,
     Manifest,
     DetectionEvidence,
     ConfigurationEvidence,
