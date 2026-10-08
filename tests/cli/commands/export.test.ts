@@ -4,13 +4,10 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply.ts';
-import { writePolicyFile } from '#cli/policy/file.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { exportCommand } from '#cli/commands/export.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { setKey, preparePolicy } from '#cli/policy/edit.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { stat, chmod, symlink, readFile } from 'node:fs/promises';
 import { getTemplate, exportTemplate } from '#cli/policy/templates.ts';
 
@@ -73,7 +70,7 @@ test.each(['C:outside.toml', String.raw`C:\outside.toml`, 'linked.toml'])(
     },
 );
 
-test('template export replaces an unowned destination and refuses the managed repository policy', async () => {
+test('template export replaces an unowned destination and preserves its read-only mode', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy([], { tables: '[agent_rules]\nenabled = false\n' }),
@@ -86,26 +83,6 @@ test('template export replaces an unowned destination and refuses the managed re
     expect(await readFile(occupied, 'utf8')).toContain('template = "occupied"');
     const attributes = await stat(occupied);
     expect(attributes.mode & 0o200).toBe(0);
-    // Commit a real policy edit so this refusal exercises a managed policy destination.
-    const plan = preparePolicy(directory.path, (raw) => {
-        setKey(raw, 'level', 'all');
-    });
-    {
-        using log = openOwnership(directory.path);
-        writePolicyFile({
-            files: log.files,
-            text: plan.text,
-            original: plan.original,
-            publish: (next, expected) => {
-                log.files.write('gspot.toml', next, expected);
-            },
-        });
-    }
-    const original = await readFile(join(directory.path, 'gspot.toml'));
-    expect(await rejection(exportCommand({ cwd: directory.path, file: 'gspot.toml', isDryRun: false }))).toContain(
-        'Template export cannot replace managed gspot.toml. Choose another destination.',
-    );
-    expect(await readFile(join(directory.path, 'gspot.toml'))).toStrictEqual(original);
 });
 
 test('export refuses the managed policy with the same policy diagnostic in human and JSON output', async () => {

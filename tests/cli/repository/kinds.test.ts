@@ -19,16 +19,26 @@ describe('kinds', () => {
     test('declarations win, then .gitattributes, then banners, then vendored directories, then the sniff', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            '.gitattributes': 'generated/* linguist-generated\nassets/** -text\n',
+            '.gitattributes':
+                'generated/* linguist-generated\ngenerated/declared.ts linguist-vendored\nassets/** -text\n',
             'types.ts': '// This file was automatically generated\nexport type A = 1;\n',
-            'generated/x.ts': 'export const x = 1;\n',
+            'generated/x.ts': '// This file was automatically generated\nexport const x = 1;\n',
+            'generated/declared.ts': '// This file was automatically generated\nexport const declared = 1;\n',
+            'vendor/types.ts': '// This file was automatically generated\nexport type Vendor = 1;\n',
             'vendor/lib.js': 'x',
             'assets/a.bin': 'x',
             'src/a.ts': 'export const a = 1;\n',
         });
-        const declarations = [{ paths: ['src/a.ts'], generator: 'gen', kind: 'generated' as const }];
+        const declarations = [
+            { paths: ['src/a.ts', 'generated/declared.ts'], generator: 'gen', kind: 'generated' as const },
+        ];
         const declared = await readRepository(sandbox.path, declarations, [], []);
         expect(declared.files.find((file) => file.path === 'src/a.ts')).toMatchObject({
+            kind: 'generated',
+            kindSource: 'generated',
+            producedBy: 'gen',
+        });
+        expect(declared.files.find((file) => file.path === 'generated/declared.ts')).toMatchObject({
             kind: 'generated',
             kindSource: 'generated',
             producedBy: 'gen',
@@ -36,10 +46,11 @@ describe('kinds', () => {
         const repository = await readRepository(sandbox.path, [], [], []);
         const files = new Map(repository.files.map((file) => [file.path, file]));
         expect(files.get('generated/x.ts')?.kindSource).toBe('.gitattributes');
-        expect(files.get('types.ts')?.kind).toBe('generated');
-        expect(files.get('vendor/lib.js')?.kind).toBe('vendored');
-        expect(files.get('assets/a.bin')?.kind).toBe('binary');
-        expect(files.get('src/a.ts')?.kind).toBe('source');
+        expect(files.get('types.ts')).toMatchObject({ kind: 'generated', kindSource: 'banner' });
+        expect(files.get('vendor/types.ts')).toMatchObject({ kind: 'generated', kindSource: 'banner' });
+        expect(files.get('vendor/lib.js')).toMatchObject({ kind: 'vendored', kindSource: 'directory' });
+        expect(files.get('assets/a.bin')).toMatchObject({ kind: 'binary', kindSource: '.gitattributes' });
+        expect(files.get('src/a.ts')).toMatchObject({ kind: 'source', kindSource: 'default' });
     });
 
     test('readRepository lists files without git through the gitignore walk', async () => {

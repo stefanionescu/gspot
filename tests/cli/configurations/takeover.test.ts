@@ -37,7 +37,7 @@ test('hook discovery preserves path whitespace and refuses malformed Git configu
     ]);
 });
 
-test('tool discovery reads an external hook directory only through the Git-resolved boundary', async () => {
+test('a hooks folder outside the repository that core.hooksPath names is listed', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'project/README.md': 'project\n',
@@ -63,17 +63,7 @@ for (const value of PACKAGE_HOOK_CONFIGURATIONS)
 test('pre-commit is detected from its native configuration', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { '.pre-commit-config.yaml': 'repos: []\n' });
-    const files = [
-        {
-            path: '.pre-commit-config.yaml',
-            kind: 'source' as const,
-            tags: [],
-            prefix: Buffer.from('repos: []'),
-            kindSource: 'default' as const,
-            executable: false,
-            size: 10,
-        },
-    ];
+    const { files } = await readRepository(sandbox.path, [], [], []);
     expect(getTooling(sandbox.path, files, []).hooks).toStrictEqual([
         { kind: 'pre-commit', path: '.pre-commit-config.yaml', files: [] },
     ]);

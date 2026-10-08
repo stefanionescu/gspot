@@ -69,41 +69,6 @@ test.each([
     expect(readPrefix(root, 'linked.ts', 64).toString('utf8')).toBe('export const local = true;\n');
 });
 
-// Windows file names cannot hold a newline or a quote.
-test.skipIf(!isPosix)(
-    'a non-Git walk preserves newline directories, nested negations, pruning, and link boundaries',
-    async () => {
-        await using sandbox = await testdir();
-        const root = join(sandbox.path, 'project');
-        await createFileTree(sandbox.path, {
-            'project/.gitignore': '*.log\npruned/\n',
-            'project/source\nfiles/.gitignore': '!keep.log\nlocal.ts\n',
-            'project/source\nfiles/keep.log': 'retained',
-            'project/source\nfiles/drop.log': 'ignored',
-            'project/source\nfiles/local.ts': 'ignored',
-            'project/source\nfiles/code.ts': 'export {};\n',
-            'project/pruned/.gitignore': '!keep.ts\n',
-            'project/pruned/keep.ts': 'ignored with its parent',
-            'outside/private.ts': 'external bytes',
-        });
-        await symlink('../../outside', join(root, 'pruned', 'external'));
-        await symlink('source\nfiles', join(root, 'linked-directory'));
-        const entries = await trackedEntries(root);
-        expect(entries.map((entry) => entry.path).toSorted((left, right) => left.localeCompare(right))).toStrictEqual([
-            '.gitignore',
-            'source\nfiles/.gitignore',
-            'source\nfiles/code.ts',
-            'source\nfiles/keep.log',
-        ]);
-        await symlink('../outside/private.ts', join(root, 'external.ts'));
-        const linked = await trackedEntries(root);
-        expect(linked.map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
-        await unlink(join(root, 'external.ts'));
-        const unlinked = await trackedEntries(root);
-        expect(unlinked.map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
-    },
-);
-
 test.skipIf(!isPosix)('a non-Git walk omits named pipes from readable source files', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });

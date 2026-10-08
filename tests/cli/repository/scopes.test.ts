@@ -66,13 +66,13 @@ test('workspace discovery stays within the requested root', async () => {
 
 test.each(INVALID_WORKSPACE_CASES)(
     'invalid or unreadable $path cannot become an empty workspace',
-    async ({ path, content }) => {
+    async ({ path, content, parseError }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'package.json': '{}', [path]: '{' });
-        expect(() => packageWorkspaces(sandbox.path)).toThrow();
+        expect(() => packageWorkspaces(sandbox.path)).toThrow(parseError);
         await Bun.file(join(sandbox.path, path)).delete();
         await mkdir(join(sandbox.path, path));
-        expect(() => packageWorkspaces(sandbox.path)).toThrow();
+        expect(() => packageWorkspaces(sandbox.path)).toThrow('EISDIR: illegal operation on a directory, read');
         await rm(join(sandbox.path, path), { recursive: true });
         await createFileTree(sandbox.path, {
             [path]: content,

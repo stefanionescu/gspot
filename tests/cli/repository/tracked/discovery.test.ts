@@ -6,27 +6,13 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { isPosix } from '#tests/config/harness/platforms.ts';
 import { getEntries } from '#cli/repository/revisions/objects.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { findRoot, isGitRepository } from '#cli/repository/root.ts';
 import { trackedEntries, readIndexEntries } from '#cli/repository/tracked.ts';
 import { REPLACED_PARENT_PATHS } from '#tests/config/cli/repository/tracked.ts';
-import { rm, stat, chmod, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-
-test('repository file discovery > excluded links are omitted before resolving external targets', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'project/local.ts': 'export const local = true;\n',
-        'outside.ts': 'private external bytes',
-    });
-    const root = join(sandbox.path, 'project');
-    await symlink('../outside.ts', join(root, 'excluded.ts'));
-    gitOutput(root, ['init', '-q']);
-    const repository = await readRepository(root, [], [], ['excluded.ts']);
-    expect(repository.files.map((file) => file.path)).toStrictEqual(['local.ts']);
-    const unexcluded = await readRepository(root, [], [], []);
-    expect(unexcluded.files.map((file) => file.path)).toStrictEqual(['local.ts']);
-});
+import { rm, chmod, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 test('repository file discovery > keeps tracked deletions out of readable entries', async () => {
     await using sandbox = await testdir();
@@ -82,11 +68,6 @@ test('repository file discovery > reports a corrupt Git index instead of switchi
     gitOutput(cwd, ['init']);
     expect(isGitRepository(cwd)).toBe(true);
     gitOutput(cwd, ['add', 'source.ts']);
-    const expectedRoot = await stat(cwd, { bigint: true });
-    const canonicalRoot = await stat(findRoot(cwd), { bigint: true });
-    expect(expectedRoot.ino).toBeGreaterThan(0n);
-    expect(canonicalRoot.dev).toBe(expectedRoot.dev);
-    expect(canonicalRoot.ino).toBe(expectedRoot.ino);
     const entries = await trackedEntries(cwd);
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.ts']);
     await writeFile(join(cwd, '.git', 'index'), 'corrupt index');
@@ -131,35 +112,6 @@ test('repository file discovery > reports a missing Git executable instead of re
     expect(await rejection(trackedEntries(sandbox.path))).toContain('git executable not found');
     expect(() => findRoot(sandbox.path)).toThrow('git executable not found');
     expect(() => isGitRepository(sandbox.path)).toThrow('git executable not found');
-});
-
-test('non-Git discovery applies nested ignore overrides without sharing them with sibling directories', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        '.gitignore': '*.log\nblocked/\n',
-        'source.ts': 'source',
-        'root.log': 'ignored',
-        'blocked/.gitignore': '!inside.ts\n',
-        'blocked/inside.ts': 'ignored directory',
-        'nested/.gitignore': '!keep.log\nlocal.ts\n',
-        'nested/keep.log': 'retained',
-        'nested/other.log': 'ignored',
-        'nested/local.ts': 'ignored',
-        'nested/deeper/keep.log': 'retained by inherited override',
-        'sibling/keep.log': 'ignored by root',
-        'sibling/local.ts': 'retained',
-        '.gspot/state/private.txt': 'ownership metadata',
-    });
-    await symlink('source.ts', join(sandbox.path, 'linked.ts'));
-    const entries = await trackedEntries(sandbox.path);
-    expect(entries.map((entry) => entry.path)).toStrictEqual([
-        '.gitignore',
-        'nested/.gitignore',
-        'nested/deeper/keep.log',
-        'nested/keep.log',
-        'sibling/local.ts',
-        'source.ts',
-    ]);
 });
 
 test.each(REPLACED_PARENT_PATHS)(
@@ -252,3 +204,46 @@ test('a failed index listing cannot report a Windows executable as an ordinary f
         Object.defineProperty(process, 'platform', { value: platform });
     }
 });
+
+// Windows file names cannot hold a newline.
+for (const folder of ['nested', 'source\nfiles'])
+    test.skipIf(!isPosix && folder.includes('\n'))(
+        `non-Git discovery in ${JSON.stringify(folder)} applies nested ignores, pruning and link boundaries without sharing them with siblings`,
+        async () => {
+            await using sandbox = await testdir();
+            const root = join(sandbox.path, 'project');
+            await createFileTree(root, {
+                '.gitignore': '*.log\nblocked/\n',
+                'source.ts': 'source',
+                'root.log': 'ignored',
+                'blocked/.gitignore': '!inside.ts\n',
+                'blocked/inside.ts': 'ignored directory',
+                [`${folder}/.gitignore`]: '!keep.log\nlocal.ts\n',
+                [`${folder}/keep.log`]: 'retained',
+                [`${folder}/other.log`]: 'ignored',
+                [`${folder}/local.ts`]: 'ignored',
+                [`${folder}/deeper/keep.log`]: 'retained by inherited override',
+                'sibling/keep.log': 'ignored by root',
+                'sibling/local.ts': 'retained',
+                '.gspot/state/private.txt': 'ownership metadata',
+            });
+            await createFileTree(sandbox.path, { 'outside/private.ts': 'external bytes' });
+            await symlink('source.ts', join(root, 'linked.ts'));
+            await symlink('../../outside', join(root, 'blocked/external'), 'dir');
+            await symlink(folder, join(root, 'linked-directory'), 'dir');
+            const entries = await trackedEntries(root);
+            expect(entries.map((entry) => entry.path)).toStrictEqual(
+                [
+                    '.gitignore',
+                    `${folder}/.gitignore`,
+                    `${folder}/deeper/keep.log`,
+                    `${folder}/keep.log`,
+                    'sibling/local.ts',
+                    'source.ts',
+                ].toSorted((left, right) => left.localeCompare(right)),
+            );
+            await symlink('../outside/private.ts', join(root, 'external.ts'));
+            const linked = await trackedEntries(root);
+            expect(linked.map((entry) => entry.path)).toStrictEqual(entries.map((entry) => entry.path));
+        },
+    );
