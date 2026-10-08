@@ -11,7 +11,7 @@ import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import { createPackageRegistry } from '#tests/harness/registry.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { stat, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { open, mkdir, readFile, writeFile } from 'node:fs/promises';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
@@ -69,11 +69,12 @@ async function prepareToolProject(root: string): Promise<void> {
 export async function readPackageInputs(root: string, installer: PackageInstaller['name']): Promise<PackageInputs> {
     const lockfilePath = join(root, '.gspot', packageLockfile(installer));
     const ownershipPath = join(root, '.gspot/state/ownership.json');
-    const attributes = await stat(lockfilePath);
+    await using lockfile = await open(lockfilePath, 'r');
+    const attributes = await lockfile.stat();
     return {
         manifest: await readFile(join(root, '.gspot/package.json')),
         lockfilePath,
-        lockfile: await readFile(lockfilePath),
+        lockfile: await lockfile.readFile(),
         mode: attributes.mode,
         ownershipPath,
         ownership: await readFile(ownershipPath),

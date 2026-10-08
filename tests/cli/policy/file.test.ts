@@ -7,7 +7,7 @@ import { setKey, preparePolicy } from '#cli/policy/edit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { emitPolicy, parseTomlText, writePolicyFile } from '#cli/policy/file.ts';
-import { link, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { link, open, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { AUTHORED_POLICY, POLICY_FILE_CASES, EMPTY_PROJECT_POLICY } from '#tests/config/cli/policy/file.ts';
 
 test.each(POLICY_FILE_CASES)(
@@ -141,7 +141,8 @@ test('policy inspection accepts hardlinked authored text while edits preserve bo
     const original = join(sandbox.path, 'settings/policy.toml');
     const path = join(sandbox.path, 'gspot.toml');
     await link(original, path);
-    const attributes = await stat(path);
+    await using file = await open(path, 'r');
+    const attributes = await file.stat();
     expect(attributes.nlink).toBe(2);
     expect(hasPolicy(sandbox.path)).toBe(true);
     expect(readPolicy(sandbox.path).text).toBe(policy);

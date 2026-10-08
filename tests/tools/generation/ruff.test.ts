@@ -1,8 +1,9 @@
+import { z } from 'zod';
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
-import { test, expect } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { emitAll } from '#cli/generation/files.ts';
+import { test, expect, beforeAll } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -27,6 +28,17 @@ import {
     DUPLICATE_SOURCE,
     DOCSTRING_CONVENTIONS,
 } from '#tests/config/tools/generation/ruff.ts';
+
+let previewCodes: string[];
+beforeAll(() => {
+    const result = runTestCommandBlocking(['ruff', 'rule', '--all', '--output-format', 'json'], { cwd: process.cwd() });
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const rules = z
+        .array(z.object({ code: z.string().nullable(), preview: z.boolean() }))
+        .parse(JSON.parse(result.stdout));
+    previewCodes = rules.flatMap(({ code, preview }) => (code !== null && preview ? [code] : []));
+    expect(previewCodes.length).toBeGreaterThan(0);
+});
 
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
     await using sandbox = await testdir();
@@ -89,19 +101,21 @@ test.each(['recommended', 'all'] as const)(
         const session = await openSession(sandbox.path);
         using log = openOwnership(sandbox.path);
         writeGeneratedFiles(session, log);
-        const result = runTestCommandBlocking(
-            [
-                'ruff',
-                'check',
-                '--config',
-                '.gspot/config/ruff.toml',
-                '--no-cache',
-                '--output-format',
-                'json',
-                'sample.py',
-            ],
-            { cwd: sandbox.path },
-        );
+        const command = [
+            'ruff',
+            'check',
+            '--config',
+            '.gspot/config/ruff.toml',
+            '--no-cache',
+            '--output-format',
+            'json',
+            'sample.py',
+        ];
+        const config = z
+            .object({ lint: z.object({ select: z.array(z.string()) }) })
+            .parse(parse(await Bun.file(join(sandbox.path, '.gspot/config/ruff.toml')).text()));
+        expect(config.lint.select.filter((code) => previewCodes.includes(code))).toStrictEqual([]);
+        const result = runTestCommandBlocking(command, { cwd: sandbox.path });
         expect(result.code, result.stdout + result.stderr).toBe(1);
         const findings = JSON.parse(result.stdout) as RuffFinding[];
         expect(
@@ -117,19 +131,7 @@ test.each(['recommended', 'all'] as const)(
                 : [['F821', 1]],
         );
         await Bun.write(join(sandbox.path, 'sample.py'), '"""An arithmetic example."""\n\nanswer = 42\n');
-        const corrected = runTestCommandBlocking(
-            [
-                'ruff',
-                'check',
-                '--config',
-                '.gspot/config/ruff.toml',
-                '--no-cache',
-                '--output-format',
-                'json',
-                'sample.py',
-            ],
-            { cwd: sandbox.path },
-        );
+        const corrected = runTestCommandBlocking(command, { cwd: sandbox.path });
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect(JSON.parse(corrected.stdout)).toStrictEqual([]);
     },

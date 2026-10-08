@@ -1,11 +1,12 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
+import { chmod } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import * as policyFile from '#cli/policy/file.ts';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openRoot } from '#cli/platform/root/open.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { stat, chmod, readFile } from 'node:fs/promises';
 import { rejection } from '#tests/harness/expectations.ts';
 import { emitPolicy, parseTomlText } from '#cli/policy/file.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
@@ -24,7 +25,8 @@ test.each(POLICY_LAYOUT_CASES)(
         await createFileTree(sandbox.path, { 'gspot.toml': source, 'notes.txt': 'Authored source.\n' });
         const path = join(sandbox.path, 'gspot.toml');
         await chmod(path, 0o640);
-        const { mode } = await stat(path);
+        using files = openRoot(sandbox.path);
+        const { mode } = files.read('gspot.toml')!;
         const before = await readTree(sandbox.path);
         const command = ['check', '--only', 'gspot/policy-layout'];
         const checked = await runGspot(sandbox.path, command);
@@ -36,15 +38,15 @@ test.each(POLICY_LAYOUT_CASES)(
         expect(await readTree(sandbox.path)).toStrictEqual(before);
         const corrected = await runGspot(sandbox.path, [...command, '--fix']);
         expect(corrected.code, corrected.stderr + corrected.stdout).toBe(0);
-        expect(await readFile(path, 'utf8')).toBe(expected);
-        const attributes = await stat(path);
-        expect(attributes.mode).toBe(mode);
-        expect(await readFile(join(sandbox.path, 'notes.txt'), 'utf8')).toBe('Authored source.\n');
+        const written = files.read('gspot.toml')!;
+        expect(written.bytes.toString('utf8')).toBe(expected);
+        expect(written.mode).toBe(mode);
+        expect(files.read('notes.txt')!.bytes.toString('utf8')).toBe('Authored source.\n');
         expect(await pathExists(join(sandbox.path, '.gspot/config'))).toBe(false);
         expect(await pathExists(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
         const unchanged = await runGspot(sandbox.path, [...command, '--fix']);
         expect(unchanged.code, unchanged.stderr + unchanged.stdout).toBe(0);
-        expect(await readFile(path, 'utf8')).toBe(expected);
+        expect(files.read('gspot.toml')!.bytes.toString('utf8')).toBe(expected);
         expect(emitPolicy(expected, parseTomlText(expected, 'gspot.toml', 'policy'))).toBe(expected);
     },
 );
@@ -62,13 +64,14 @@ test('a native policy-layout correction preserves an external replacement before
         if (text === source) writeFileSync(path, POLICY_LAYOUT_EXTERNAL_EDIT);
         return canonical;
     });
-    const { mode } = await stat(path);
+    using files = openRoot(sandbox.path);
+    const { mode } = files.read('gspot.toml')!;
     const options = buildRunOptions({ only: ['gspot/policy-layout'], fix: true });
     expect(await rejection(executeRun(session, options))).toContain('changed while gspot was running');
     expect(emission).toHaveBeenCalledTimes(1);
-    expect(await readFile(path, 'utf8')).toBe(POLICY_LAYOUT_EXTERNAL_EDIT);
-    const attributes = await stat(path);
-    expect(attributes.mode).toBe(mode);
+    const replacement = files.read('gspot.toml')!;
+    expect(replacement.bytes.toString('utf8')).toBe(POLICY_LAYOUT_EXTERNAL_EDIT);
+    expect(replacement.mode).toBe(mode);
     expect(await pathExists(join(sandbox.path, '.gspot/version'))).toBe(false);
 });
 
@@ -89,20 +92,21 @@ test('canceling a native policy-layout correction keeps authored bytes', async (
         changed: [],
         note: 'The fix was canceled.',
     });
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
+    using files = openRoot(sandbox.path);
+    expect(files.read('gspot.toml')!.bytes.toString('utf8')).toBe(source);
     expect(await pathExists(join(sandbox.path, '.gspot/version'))).toBe(false);
 });
 
 test('the policy-layout command refuses an unrepresentable field comment before any policy write', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': POLICY_LAYOUT_UNREPRESENTABLE });
-    const path = join(sandbox.path, 'gspot.toml');
-    const { mode } = await stat(path);
+    using files = openRoot(sandbox.path);
+    const { mode } = files.read('gspot.toml')!;
     const result = await runGspot(sandbox.path, ['check', '--only', 'gspot/policy-layout', '--fix']);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stderr).toContain('tools.prettier.verbatim.mixed.0.first cannot be represented in TOML 1.0');
-    expect(await readFile(path, 'utf8')).toBe(POLICY_LAYOUT_UNREPRESENTABLE);
-    const attributes = await stat(path);
-    expect(attributes.mode).toBe(mode);
+    const unchanged = files.read('gspot.toml')!;
+    expect(unchanged.bytes.toString('utf8')).toBe(POLICY_LAYOUT_UNREPRESENTABLE);
+    expect(unchanged.mode).toBe(mode);
     expect(await pathExists(join(sandbox.path, '.gspot/version'))).toBe(false);
 });

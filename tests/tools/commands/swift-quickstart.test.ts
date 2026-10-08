@@ -1,14 +1,15 @@
 // Replay the tutorial through native bootstrap, setup, checks, and Git hooks.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { mkdir } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { openRoot } from '#cli/platform/root/open.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { prepareQuickstart } from '#tests/harness/quickstart.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { stat, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { SETUP_COMMANDS } from '#tests/config/samples/quickstart.ts';
 
 import {
@@ -48,12 +49,11 @@ test.skipIf(!isMacos)(
             const result = await runTestCommand(command, { cwd: root, env: environment });
             expect(result.code, result.stdout + result.stderr).toBe(code);
         }
-        const source = join(root, SOURCE_PATH);
-        const original = await readFile(source, 'utf8');
-        const { mode } = await stat(source);
+        using files = openRoot(root);
+        const original = files.read(SOURCE_PATH)!;
         gitOutput(root, ['add', '-A']);
         expect(git(root, ['commit', '-qm', 'chore: Set up gspot'], environment)).toMatchObject({ code: 0 });
-        await writeFile(source, INVALID_SOURCE);
+        files.write(SOURCE_PATH, { bytes: Buffer.from(INVALID_SOURCE), mode: original.mode }, original);
         const rejected = await runTestCommand(['mise', 'exec', '--', 'gspot', 'check', '--only', 'swift/swiftlint'], {
             cwd: root,
             env: environment,
@@ -67,8 +67,9 @@ test.skipIf(!isMacos)(
         expect(refused.code).not.toBe(0);
         expect(refused.stdout + refused.stderr).toContain('force_cast');
         gitOutput(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', SOURCE_PATH]);
-        expect(await readFile(source, 'utf8')).toBe(original);
-        expect(await stat(source)).toMatchObject({ mode });
+        const restored = files.read(SOURCE_PATH)!;
+        expect(restored.bytes).toStrictEqual(original.bytes);
+        expect(restored.mode).toBe(original.mode);
         const corrected = await runTestCommand(['mise', 'exec', '--', 'gspot', 'check', '--only', 'swift/swiftlint'], {
             cwd: root,
             env: environment,

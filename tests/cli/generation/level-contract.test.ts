@@ -8,7 +8,6 @@ import { emitFile } from '#tests/harness/generated.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { RUFF_PREVIEW_RULES } from '#tests/config/cli/generation/level-contract.ts';
 import type { RuffConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 test('a scope resolves its own tool settings over the root defaults', async () => {
@@ -35,7 +34,6 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
         },
     );
     const config = parseToml(text) as RuffConfiguration;
-    expect(config.lint.select.filter((code) => RUFF_PREVIEW_RULES.has(code))).toStrictEqual([]);
     expect(config.lint.select.includes('N')).toBe(level === 'all');
     expect(config.lint.select.includes('PT001')).toBe(level === 'all');
     expect(config.lint.select).toContain('PT009');

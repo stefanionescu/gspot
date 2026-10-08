@@ -10,7 +10,6 @@ import type { FindingScenario } from '#tests/types/cli/checks/cases.ts';
 import { BASH_CASES, TOOL_CHECKS } from '#tests/config/samples/bash.ts';
 import * as siteOutput from '#tests/config/cli/checks/general/site/output.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
-import * as xctestSource from '#tests/config/cli/checks/tool/xctest/source.ts';
 import * as bashStructure from '#tests/config/cli/checks/language/bash/structure.ts';
 import * as libraryConventions from '#tests/config/cli/checks/library/conventions.ts';
 import * as pythonStructure from '#tests/config/cli/checks/language/python/structure.ts';
@@ -82,7 +81,6 @@ for (const scenario of [
         },
         cases: BASH_CASES.filter((entry) => !TOOL_CHECKS.includes(entry.check)),
     },
-    { name: 'the xctest configuration', repository: xctestSource.REPOSITORY, cases: xctestSource.CASES },
     { name: 'the Swift snapshot checks', repository: swiftSnapshots.REPOSITORY, cases: swiftSnapshots.CASES },
     { name: 'the built-output site checks', repository: siteOutput.REPOSITORY, cases: siteOutput.CASES },
 ] satisfies FindingScenario[]) {

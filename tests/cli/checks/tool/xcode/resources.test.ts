@@ -3,10 +3,11 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openRoot } from '#cli/platform/root/open.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { rm, stat, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { ASSET_SETTING_CASES } from '#tests/config/cli/checks/tool/xcode/resources.ts';
 
 test.each([
@@ -24,25 +25,28 @@ test.each([
         });
         const session = await openSession(sandbox.path);
         const options = buildRunOptions({ stage: 'commit', only: [check] });
+        using files = openRoot(sandbox.path);
         const target = join(sandbox.path, path);
+        const { mode } = files.read(path)!;
         await rm(target);
         await mkdir(target);
         const unreadable = await executeRun(session, options);
         expect(unreadable.report.exitCode).toBe(2);
         expect(unreadable.report.checks).toMatchObject([{ check, status: 'error', findings: [] }]);
         expect(unreadable.report.checks[0]?.note).toContain('EISDIR');
-        const directory = await stat(target);
+        const directory = files.stat(path)!;
         expect(directory.isDirectory()).toBe(true);
         await rm(target, { recursive: true });
-        await writeFile(target, '{');
+        files.write(path, { bytes: Buffer.from('{'), mode }, undefined);
         const malformed = await executeRun(session, options);
         expect(malformed.report.exitCode).toBe(1);
         expect(malformed.report.checks[0]?.findings).toMatchObject([{ file: path, line: 1, rule: 'syntax' }]);
-        expect(await readFile(target, 'utf8')).toBe('{');
-        await writeFile(target, content);
+        const invalid = files.read(path)!;
+        expect(invalid.bytes.toString('utf8')).toBe('{');
+        files.write(path, { bytes: Buffer.from(content), mode: invalid.mode }, invalid);
         const corrected = await executeRun(session, options);
         expect(corrected.report.exitCode).toBe(0);
-        expect(await readFile(target, 'utf8')).toBe(content);
+        expect(files.read(path)!.bytes.toString('utf8')).toBe(content);
     },
 );
 

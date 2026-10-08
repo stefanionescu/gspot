@@ -2,12 +2,13 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { mkdir } from 'node:fs/promises';
+import { openRoot } from '#cli/platform/root/open.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { prepareQuickstart } from '#tests/harness/quickstart.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { stat, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { SETUP_COMMANDS } from '#tests/config/samples/quickstart.ts';
 import { INITIALIZE, INVALID_SOURCE, PROJECT_COMMANDS } from '#tests/config/tools/commands/python-quickstart.ts';
 
@@ -34,12 +35,12 @@ test('the Python tutorial reports its finding through the installed hook and pas
         expect(result.code, result.stdout + result.stderr).toBe(code);
     }
 
-    const source = join(root, 'src/orders_python/__init__.py');
-    const original = await readFile(source, 'utf8');
-    const { mode } = await stat(source);
+    using files = openRoot(root);
+    const source = 'src/orders_python/__init__.py';
+    const original = files.read(source)!;
     gitOutput(root, ['add', '-A']);
     expect(git(root, ['commit', '-qm', 'chore: Set up gspot'], environment)).toMatchObject({ code: 0 });
-    await writeFile(source, INVALID_SOURCE);
+    files.write(source, { bytes: Buffer.from(INVALID_SOURCE), mode: original.mode }, original);
     const rejected = await runTestCommand(['mise', 'exec', '--', 'gspot', 'check', '--only', 'python/ruff'], {
         cwd: root,
         env: environment,
@@ -53,8 +54,9 @@ test('the Python tutorial reports its finding through the installed hook and pas
     expect(refused.code).not.toBe(0);
     expect(refused.stdout + refused.stderr).toContain('invalid-syntax');
     gitOutput(root, ['restore', '--source=HEAD', '--staged', '--worktree', '--', 'src/orders_python/__init__.py']);
-    expect(await readFile(source, 'utf8')).toBe(original);
-    expect(await stat(source)).toMatchObject({ mode });
+    const restored = files.read(source)!;
+    expect(restored.bytes).toStrictEqual(original.bytes);
+    expect(restored.mode).toBe(original.mode);
     const corrected = await runTestCommand(['mise', 'exec', '--', 'gspot', 'check', '--only', 'python/ruff'], {
         cwd: root,
         env: environment,

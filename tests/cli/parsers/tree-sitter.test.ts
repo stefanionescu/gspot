@@ -7,8 +7,9 @@ import { rejection } from '#tests/harness/expectations.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { readPython, disposePython } from '#cli/parsers/python.ts';
 import { readSwift, disposeSwift } from '#cli/parsers/swift/source.ts';
-import { TYPED_DECLARATION } from '#tests/config/cli/parsers/tree-sitter.ts';
 import { parserFor, parseSource, visitParsed } from '#cli/parsers/tree-sitter.ts';
+import type { ObservationReader, ParsedObservation } from '#tests/types/cli/parsers.ts';
+import { TYPED_DECLARATION, PARSER_OBSERVATIONS } from '#tests/config/cli/parsers/tree-sitter.ts';
 
 test('run-owned parses separate grammars and copied trees survive cache cleanup', async () => {
     const reads: ReadCache = { root: '/repository', sources: new Map(), memo: new Map() };
@@ -99,3 +100,84 @@ test('observation caches separate readers and retain selected path order', async
     expect(python.value.modules.map(({ path }) => path)).toStrictEqual(['first.py', 'second.py']);
     expect(reversed.value.modules.map(({ path }) => path)).toStrictEqual(['second.py', 'first.py']);
 });
+
+// The native visit callback releases the selected reader's trees.
+function disposeObservations(parsed: ParsedObservation): void {
+    if ('modules' in parsed) disposePython(parsed);
+    else disposeSwift(parsed);
+}
+
+const observations = [
+    { ...PARSER_OBSERVATIONS[0]!, read: readPython },
+    { ...PARSER_OBSERVATIONS[1]!, read: readSwift },
+];
+
+test.each(observations)(
+    '$language observations reuse selected paths while isolating scopes and resource owners',
+    async ({ read, files, paths, functions }) => {
+        const reader: ObservationReader = read;
+        await using sandbox = await testdir(files);
+        const reads: ReadCache = { root: sandbox.path, sources: new Map(), memo: new Map() };
+        using resources = new DisposableStack();
+        const input = { root: sandbox.path, reads, resources, files: [{ path: paths[0], kind: 'source' }] };
+        using first = await visitParsed(input, reader, disposeObservations);
+        const sources = 'modules' in first.value ? first.value.modules : first.value.sources;
+        using deletion = spyOn(sources[0]!.tree, 'delete');
+        expect(first.value.functions.map(({ path, name }) => ({ path, name }))).toStrictEqual(functions);
+        const selectedFiles = input.files.map((file) => ({ ...file, prefix: Buffer.from('changed metadata') }));
+        using repeated = await visitParsed({ ...input, files: selectedFiles }, reader, disposeObservations);
+        expect(repeated.value).toBe(first.value);
+        expect(sources[0]!.tree.rootNode.text).toBe(files[paths[0]]!);
+        using scoped = await visitParsed(
+            { ...input, files: [{ path: paths[1], kind: 'source' }] },
+            reader,
+            disposeObservations,
+        );
+        expect(scoped.value).not.toBe(first.value);
+        expect(scoped.value.functions.map(({ path, name }) => ({ path, name }))).toStrictEqual([
+            { path: paths[1], name: 'deliver' },
+        ]);
+        first[Symbol.dispose]();
+        expect(deletion).not.toHaveBeenCalled();
+        resources.dispose();
+        expect(deletion).toHaveBeenCalledTimes(1);
+        using nextResources = new DisposableStack();
+        using next = await visitParsed({ ...input, resources: nextResources }, reader, disposeObservations);
+        expect(next.value).not.toBe(first.value);
+        const nextSources = 'modules' in next.value ? next.value.modules : next.value.sources;
+        expect(nextSources[0]!.tree.rootNode.text).toBe(files[paths[0]]!);
+    },
+);
+test.each(observations)(
+    'standalone $language readers dispose selected trees after both success and failure',
+    async ({ read, files, paths, names, language }) => {
+        const reader: ObservationReader = read;
+        await using sandbox = await testdir(files);
+        const reads: ReadCache = { root: sandbox.path, sources: new Map(), memo: new Map() };
+        const input = {
+            root: sandbox.path,
+            reads,
+            files: paths.map((path, position) => ({ path, kind: position === 2 ? 'generated' : 'source' })),
+        };
+        using deletion = spyOn(Tree.prototype, 'delete');
+        {
+            using parsed = await visitParsed(input, reader, disposeObservations);
+            await Promise.resolve();
+            expect(parsed.value.functions.map(({ name }) => name)).toStrictEqual(names);
+            expect(deletion).not.toHaveBeenCalled();
+        }
+        expect(deletion).toHaveBeenCalledTimes(2);
+        deletion.mockClear();
+        expect(
+            await rejection(
+                (async () => {
+                    using parsed = await visitParsed(input, reader, disposeObservations);
+                    const sources = 'modules' in parsed.value ? parsed.value.modules : parsed.value.sources;
+                    expect(sources.map(({ path }) => path)).toStrictEqual(paths.slice(0, 2));
+                    throw new Error(`The ${language} reader failed.`);
+                })(),
+            ),
+        ).toBe(`The ${language} reader failed.`);
+        expect(deletion).toHaveBeenCalledTimes(2);
+    },
+);

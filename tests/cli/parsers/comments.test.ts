@@ -3,6 +3,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { commentText, parseComments } from '#cli/parsers/comments.ts';
+import { COMMENT_BOUNDARIES } from '#tests/config/cli/parsers/comments.ts';
 import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
 
 // The lines of the comments in a source that open with the marker; a marker inside a string or a block value is no comment.
@@ -90,51 +91,6 @@ test.each(["'", "E'", '"'])('an unterminated SQL %s value hides the comment text
     expect(await markedLines('source.sql', source.join('\n'))).toStrictEqual([1]);
 });
 
-test.each([
-    [
-        'source.toml',
-        'value = """\n# marker: Literal fixture text.\n"""\n# marker: Required interface.\nactual = 1\n',
-        4,
-    ],
-    [
-        'source.toml',
-        "value = '''\n# marker: Literal fixture text.\n'''\n# marker: Required interface.\nactual = 1\n",
-        4,
-    ],
-    [
-        'source.sql',
-        'select $body$\n-- marker: Literal fixture text.\n$body$;\n-- marker: Required interface.\nselect 1;\n',
-        4,
-    ],
-    ['source.sql', "select '\n-- marker: Literal fixture text.\n';\n-- marker: Required interface.\nselect 1;\n", 4],
-    [
-        'source.pgsql',
-        '/* Example directive:\n-- marker: Literal fixture text.\n*/\n-- marker: Required interface.\nselect 1;\n',
-        4,
-    ],
-    ['source.psql', '\\echo -- marker: Literal fixture text.\n-- marker: Required interface.\nselect 1;\n', 2],
-    [
-        'source.md',
-        '```html\n<!-- marker: Literal fixture text. -->\n```\n<!-- marker: Required interface. -->\nText.\n',
-        4,
-    ],
-    ['source.md', '`<!-- marker: Literal fixture text. -->`\n<!-- marker: Required interface. -->\nText.\n', 2],
-    ['source.md', 'Example 😀\n\n<!-- marker: Required interface. -->\nText.\n', 3],
-    ['source.yaml', 'value: |\n  # marker: Literal fixture text.\n# marker: Required interface.\nactual: 1\n', 3],
-    ['source.yml', 'value: >-\n  # marker: Literal fixture text.\n# marker: Required interface.\nactual: 1\n', 3],
-    ['source.yaml', 'value: "\n  # marker: Literal fixture text.\n  "\n# marker: Required interface.\nactual: 1\n', 4],
-    ['source.py', 'value = """\n# marker: Literal fixture text.\n"""\n# marker: Required interface.\nvalue = 1\n', 4],
-    ['source.sh', 'cat <<EOF\n# marker: Literal fixture text.\nEOF\n# marker: Required interface.\nvalue=1\n', 4],
-    [
-        'source.swift',
-        'let value = """\n// marker: Literal fixture text.\n"""\n// marker: Required interface.\nlet actual = 1\n',
-        4,
-    ],
-    [
-        'source.html',
-        '<script>\nconst value = "<!-- marker: Literal fixture text. -->";\n</script>\n<!-- marker: Required interface. -->\n<div></div>\n',
-        4,
-    ],
-] as const)('multiline source values in %s do not become comments', async (path, source, line) => {
+test.each(COMMENT_BOUNDARIES)('%s preserves the comment boundary', async (_label, path, source, line) => {
     expect(await markedLines(path, source)).toStrictEqual([line]);
 });

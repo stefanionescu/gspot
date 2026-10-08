@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
+import { gitOutput } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -11,6 +12,8 @@ import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { sleeps, disabled } from '#cli/checks/tool/xctest.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { XCTEST_FILES } from '#tests/config/cli/checks/tool/xctest/sources.ts';
+import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
 
 test('Swift Testing outside test folders reports a sleep and passes after the fix', async () => {
     await using sandbox = await testdir();
@@ -123,4 +126,55 @@ test('a sleep path ignore excludes an unreadable file before source parsing', as
     expect(findings.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual([
         { file: 'integration/Blocked.swift', rule: 'sleep', line: 2 },
     ]);
+});
+
+test('the commit stage leaves the coverage run to its own stage', async () => {
+    await using repository = await createTestRepository(
+        { configurations: ['xctest'], files: XCTEST_FILES },
+        runGspot,
+        prepareCliRepository,
+    );
+    const { root, environment } = repository;
+    gitOutput(root, ['add', '--all']);
+    const selected = ['xctest/skip-reasons', 'xctest/coverage'];
+    const checked = await runGspot(
+        root,
+        ['check', '--hook', 'pre-commit', '--only', ...selected, '--json'],
+        environment,
+    );
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
+    expect(ids).toStrictEqual(['xctest/skip-reasons']);
+    const pushed = planRun(await openSession(root), { stage: 'push', skips: [], only: selected });
+    expect(pushed.map(({ check }) => check.name)).toStrictEqual(['xctest/coverage']);
+});
+
+test('Swift checks report each scope independently and file-list inputs omit sibling sources', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['swift', 'xctest'], { tables: '[scope."apps/second"]\n' }),
+        'Tests/RootTests.swift': 'import XCTest\nfunc testRoot() throws { throw XCTSkip() }\n',
+        'apps/second/Tests/SecondTests.swift': 'import XCTest\nfunc testSecond() throws { throw XCTSkip() }\n',
+    });
+    const failed = await runGspot(sandbox.path, ['check', '--only', 'xctest/skip-reasons', '--json']);
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect(
+        (JSON.parse(failed.stdout) as RunReport).checks.map((check) => ({
+            scope: check.scope,
+            files: check.findings.map((finding) => finding.file),
+        })),
+    ).toStrictEqual([
+        { scope: '', files: ['Tests/RootTests.swift'] },
+        { scope: 'apps/second', files: ['apps/second/Tests/SecondTests.swift'] },
+    ]);
+    await Bun.write(
+        `${sandbox.path}/Tests/RootTests.swift`,
+        'import XCTest\nfunc testRoot() throws { throw XCTSkip("Requires a physical device") }\n',
+    );
+    await Bun.write(
+        `${sandbox.path}/apps/second/Tests/SecondTests.swift`,
+        'import XCTest\nfunc testSecond() throws { throw XCTSkip("Requires a physical device") }\n',
+    );
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'xctest/skip-reasons', '--json']);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });

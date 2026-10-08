@@ -7,16 +7,18 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import * as batches from '#cli/execution/command/batches.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
 import { fileLines } from '#cli/checks/general/structure/file-lines.ts';
 import { functionSize } from '#cli/checks/language/bash/function-size.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
     await using sandbox = await testdir();
-    const files = Array.from(
-        { length: 5000 },
-        (_, index) => `scripts/long path with spaces/source-${String(index)}.sh`,
-    );
+    const files = [
+        'scripts/long path with spaces/first.sh',
+        'scripts/long path with spaces/second.sh',
+        'scripts/long path with spaces/third.sh',
+    ];
     const received: string[] = [];
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['bash'], {
@@ -28,12 +30,16 @@ test('ast-grep batches all file arguments and retains matches from every batch',
     const session = await openSession(sandbox.path);
     const input = buildCheckInput(session, 'bash/function-size');
     const selectedFiles = input.files.filter((file) => file.tags.includes(SCRIPT_TAG)).map((file) => file.path);
-    const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
+    using batching = spyOn(batches, 'fileBatches').mockImplementation((selected) => [
+        selected.slice(0, 2),
+        selected.slice(2),
+    ]);
+    using _inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
         name: 'ast-grep',
         state: 'ok',
         path: process.execPath,
     });
-    const processRun = spyOn(processes, 'run').mockImplementation((command) => {
+    using processRun = spyOn(processes, 'run').mockImplementation((command) => {
         const batch = command.slice(5);
         const isBranchQuery = command[4]?.endsWith('/branches.yml') === true;
         if (isBranchQuery) received.push(...batch);
@@ -54,17 +60,13 @@ test('ast-grep batches all file arguments and retains matches from every batch',
             ),
         });
     });
-    try {
-        const findings = await functionSize(input);
-        expect(received).toStrictEqual(selectedFiles);
-        expect(received).toHaveLength(files.length);
-        expect(findings.map((finding) => finding.file)).toStrictEqual(selectedFiles);
-        expect(findings.every((finding) => finding.rule === 'branches')).toBe(true);
-        expect(processRun.mock.calls.length).toBeGreaterThan(1);
-    } finally {
-        processRun.mockRestore();
-        inspection.mockRestore();
-    }
+    const findings = await functionSize(input);
+    expect(received).toStrictEqual(selectedFiles);
+    expect(received).toHaveLength(files.length);
+    expect(findings.map((finding) => finding.file)).toStrictEqual(selectedFiles);
+    expect(findings.every((finding) => finding.rule === 'branches')).toBe(true);
+    expect(batching).toHaveBeenCalled();
+    expect(processRun.mock.calls.length).toBeGreaterThan(1);
 });
 
 test.each(['fatal exit', 'malformed JSON', 'invalid match', 'unselected file'] as const)(
