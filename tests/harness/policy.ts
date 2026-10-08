@@ -17,7 +17,7 @@ export function buildPolicy(configurations: string[], options: PolicyOptions = {
 }
 
 /**
- * Parses a policy text and returns its problems, or none when it parses.
+ * Parses a policy text and returns its errors, or none when it parses.
  * @param text the gspot.toml text
  * @param root the repository the policy describes, when a problem depends on the tree
  * @returns the problem messages

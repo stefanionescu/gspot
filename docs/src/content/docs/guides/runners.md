@@ -29,7 +29,7 @@ Applicable Python tools live in `.gspot/pyproject.toml`; uv installs them into `
 
 ## No runner
 
-`gspot init --no-task` selects `runner = "none"`. Hooks call `gspot` on `PATH`, so install the pinned CLI globally. Native tools still need mise or a separate installation. `gspot doctor` prints acquisition commands.
+`gspot init --no-task` selects `runner = "none"`. Hooks call `gspot` on `PATH`, so install the pinned CLI globally. Native tools still need mise or a separate installation. `gspot doctor` prints install commands.
 
 `hooks.enabled = false` disables hooks; an absent `[ci]` disables CI. `--no-hooks` and `--no-ci` select those choices during initialization.
 

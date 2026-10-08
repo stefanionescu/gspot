@@ -5,24 +5,26 @@ description: Install a new CLI version and regenerate the repository pin and con
 
 Start with a clean working tree and read the release notes. Keep the previous commit so you can restore its policy and lockfiles if verification fails.
 
+Replace `<version>` with the exact version from the [npm package page](https://www.npmjs.com/package/@gspothq/cli).
+
 ## Install the new version
 
 For npm, install the intended exact version, for example:
 
 ```shell
-npm install --save-dev --save-exact @gspothq/cli@0.1.0
+npm install --save-dev --save-exact '@gspothq/cli@<version>'
 ```
 
-Use the equivalent exact install with pnpm, Yarn, or Bun. With a global installation, use `npm install --global @gspothq/cli@0.1.0`.
+Use the equivalent exact install with pnpm, Yarn, or Bun. With a global installation, use `npm install --global '@gspothq/cli@<version>'`.
 
 For mise, first run the new version explicitly so the old repository pin does not choose the old executable:
 
 ```shell
-mise exec npm:@gspothq/cli@0.1.0 -- gspot apply --dry-run
-mise exec npm:@gspothq/cli@0.1.0 -- gspot apply
+mise exec npm:'@gspothq/cli@<version>' -- gspot apply --dry-run
+mise exec npm:'@gspothq/cli@<version>' -- gspot apply
 ```
 
-Replace the example version with the release you reviewed. `apply` updates `.gspot/version` and the generated mise pin from the running CLI.
+Use the release you reviewed. `apply` updates `.gspot/version` and the generated mise pin from the running CLI.
 
 ## Regenerate and verify
 

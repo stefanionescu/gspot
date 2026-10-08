@@ -98,7 +98,7 @@ test('a proposed Python project overrides invalid recorded bytes without writing
     ).toThrow(TomlError);
 });
 
-test('a repository without a Python tool project plans no acquisition or installation', async () => {
+test('a repository without a Python tool project plans no installation or installation', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.py': 'print("authored")\n' });
     expect(

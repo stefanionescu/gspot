@@ -7,17 +7,12 @@ use it on its own with Node.js 22 or newer and ESLint 9.38.0 or newer.
 
 ## Contents
 
-- [Status](#status)
 - [Install](#install)
 - [Configure](#configure)
 - [Example](#example-a-private-variable-in-client-code)
-- [Rules that need options](#rules-that-need-options)
+- [Rule reference](#rule-reference)
 - [Check TypeScript](#check-typescript)
 - [License](#license)
-
-## Status
-
-The plugin is not published on npm yet. The following installation applies after publication.
 
 ## Install
 
@@ -37,16 +32,8 @@ export default [gspot.configs.recommended];
 
 `recommended` turns on `gspot/no-client-env` as an error.
 
-`gspot.configs.all` adds the rules for imports, layout, trivial files, and
-trivial functions. It also forbids re-exports. The instance rule requires registry file paths
-from the project.
-`require-server-only` needs server file paths; `max-barrel-reexports` needs a project limit;
-`import-extensions` needs the project's import conventions. The CLI supplies these project
-settings where they apply.
-
-Use `eslint-plugin-import-x` for duplicate exports (`import-x/export`) and declarations
-before exports (`import-x/exports-last`). TypeScript also reports ambiguous star exports
-through compiler error TS2308.
+`gspot.configs.all` also turns on the rules selected at level `all`. The CLI supplies
+project options where they apply.
 
 ## Example: a private variable in client code
 
@@ -78,58 +65,14 @@ export const endpoint = "/api/search";
 
 The corrected module has no finding. Your server still needs to answer `/api/search`.
 
-## Rules that need options
+## Rule reference
 
-`require-server-only` needs to know which files hold server code, so select them yourself:
+The [generated rule reference](https://generativespotting.com/reference/plugin/) lists each
+rule's preset, options, defaults, and examples. It identifies rules that need project options
+before they report findings.
 
-```javascript
-import gspot from '@gspothq/eslint-plugin';
-
-export default [{
-    files: ['server/**/*.js'],
-    plugins: { gspot },
-    rules: { 'gspot/require-server-only': 'error' },
-}];
-```
-
-The rule reports a selected module without `import 'server-only'`. Add that import at the top
-of the module.
-
-For client files without a `use client` directive, set `isClient: true` in a block that selects
-those files. `publicPrefixes` and `allowed` name values intended for the browser. Keep private
-values out of both options:
-
-```javascript
-import gspot from '@gspothq/eslint-plugin';
-
-export default [{
-    files: ['browser/**/*.js'],
-    plugins: { gspot },
-    languageOptions: { globals: { process: 'readonly' } },
-    rules: {
-        'gspot/no-client-env': ['error', {
-            isClient: true,
-            publicPrefixes: ['PUBLIC_'],
-            allowed: ['APP_MODE'],
-        }],
-    },
-}];
-```
-
-This block permits `process.env.PUBLIC_URL` and `process.env.APP_MODE`. A read of
-`process.env.PRIVATE_KEY` in a selected file reports a private environment finding.
-
-The rules about where code lives have no default folders, because the folders of a project are
-its own. Without options they report nothing:
-
-- `import-direction` takes `roles`: the globs of your types, tests, harness, config, env, and
-  runtime files.
-- `env-owner` takes `owners`: the files that may read `process.env` or `import.meta.env`.
-- `no-helpers-beside-tests` takes `harness`: the folder the shared test helpers move to.
-- `import-boundaries` takes `folders`: boundary folders or folder globs, relative to the repository root. It defaults to `*/*`, which selects folders such as `src/turn` or `packages/cli`. The nearest matching ancestor owns each file. Set `aliases` to map import prefixes to repository folders for automatic fixes.
-
-These paths start at `settings.gspot.root`, or at the working directory of ESLint when you omit
-the setting. To set the root explicitly, add this block to your configuration:
+Repository-relative paths start at `settings.gspot.root`, or at the working directory of
+ESLint when you omit the setting:
 
 ```javascript
 {

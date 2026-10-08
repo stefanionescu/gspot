@@ -139,8 +139,10 @@ function describeCheck(
         ...(check.run_in_copy === true
             ? ['Runs with selected files and declared configuration in an isolated directory.']
             : []),
-        ...(settings.length === 0 ? [] : [`Settings that change it: ${settings.join(', ')} (gspot set <key> <value>)`]),
-        ...(agentRules.length === 0 ? [] : [`Guides that state it: ${agentRules.join(', ')}`]),
+        ...(settings.length === 0
+            ? []
+            : [`Settings that change it: ${settings.join(', ')} (gspot set <setting> <value>)`]),
+        ...(agentRules.length === 0 ? [] : [`Agent rules that state it: ${agentRules.join(', ')}`]),
         ...repositoryLines(session, declared, configuration),
     ];
     return `${lines.join('\n')}\n`;

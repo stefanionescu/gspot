@@ -83,7 +83,7 @@ function disabledRuleErrors(tool: string, table: ToolTable, path: KeyPath): Poli
     return disabled.map(([rule]) => {
         return {
             path: [...path, 'rules', rule],
-            message: `Disable a lint rule with an ignore. Run: gspot ignore ${name} --rule ${quoteArgument(rule)} --reason "..."`,
+            message: `Disable a rule with an ignore. Run: gspot ignore ${name} --rule ${quoteArgument(rule)} --reason "..."`,
         };
     });
 }
@@ -163,7 +163,7 @@ export function reasonErrors(policy: Policy): PolicyError[] {
 }
 
 /**
- * Reports lint rules disabled outside the ignore policy.
+ * Reports rules disabled outside the ignore policy.
  * @param policy the normalized policy
  * @returns the prohibited changes, at both check levels
  */

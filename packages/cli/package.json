@@ -4,7 +4,7 @@
     "publishConfig": {
         "access": "public"
     },
-    "description": "Lint AI-generated code and install rules for AI coding agents.",
+    "description": "gspot sets up linters and checks for the languages in your repository.",
     "license": "Apache-2.0",
     "author": "Stefan Ionescu",
     "repository": {

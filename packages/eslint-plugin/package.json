@@ -29,8 +29,8 @@
         "dist"
     ],
     "dependencies": {
-        "@typescript-eslint/utils": "8.70.0",
-        "picomatch": "4.0.7"
+        "@typescript-eslint/utils": "^8.70.0",
+        "picomatch": "^4.0.7"
     },
     "devDependencies": {
         "@types/picomatch": "4.0.2",

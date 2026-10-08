@@ -5,10 +5,10 @@ import type { lockfileSchema } from '#cli/parsers/schema/python/tools.ts';
 export type PythonPreparation = {
     root: string;
     cancelSignal?: AbortSignal | undefined;
-    /** One lazily acquired installer shared by this command's Python operations. */
+    /** One lazily installed installer shared by this command's Python operations. */
     pythonInstaller: (cancelSignal?: AbortSignal) => Promise<string>;
 };
-/** The repository and acquired uv executable used by the native installation. */
+/** The repository and installed uv executable used by the native installation. */
 export type PythonExecution = { root: string; executable: string; cancelSignal?: AbortSignal | undefined };
 
 /** The validated uv lockfile of the Python tool project. */

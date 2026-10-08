@@ -1,8 +1,9 @@
+import { access } from 'node:fs/promises';
+import { COMMAND_OWNERS } from '../../config/reference.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import { buildProgram } from '@gspothq/cli/src/commands/program.ts';
 import type { CommandUnknownOpts } from '@commander-js/extra-typings';
-import { COMMAND_OWNERS, COMMAND_EXAMPLES } from '../../config/reference.ts';
 
 // The help after the options as Markdown: the levels of set, then the exit codes and an example of every command.
 function helpSections(name: string, help: string): string {
@@ -11,19 +12,17 @@ function helpSections(name: string, help: string): string {
     if (exits === -1 || example === -1) throw new Error(`Command ${name} has no exits or example documentation.`);
     const levels = help.indexOf('\nLevels:\n');
     const levelText = levels === -1 ? '' : section('Levels', help.slice(levels + '\nLevels:\n'.length, exits).trim());
-    const second = COMMAND_EXAMPLES[name];
-    const examples =
-        help.slice(example + '\n\nExample:\n'.length).trim() + (second === undefined ? '' : '\n\n' + second);
     return (
-        section('Examples', `\`\`\`shell\n${examples}\n\`\`\``) +
+        section('Examples', `\`\`\`shell\n${help.slice(example + '\n\nExample:\n'.length).trim()}\n\`\`\``) +
         section('Exit codes', help.slice(exits + '\nExit codes:\n'.length, example).trim()) +
         levelText
     );
 }
 
-function commandPage(command: CommandUnknownOpts, name: string): ReferencePage {
+async function commandPage(command: CommandUnknownOpts, name: string): Promise<ReferencePage> {
     const [rootCommand = name] = name.split(' ', 1);
     const owner = COMMAND_OWNERS[rootCommand] ?? `commands/${rootCommand}.ts`;
+    await access(new URL(`../../../../packages/cli/src/${owner}`, import.meta.url));
     const helpFormat = command.createHelp();
     helpFormat.showGlobalOptions = false;
     const usage = helpFormat.commandUsage(command);
@@ -64,20 +63,20 @@ function commandPage(command: CommandUnknownOpts, name: string): ReferencePage {
  * The commands index and one reference page per visible command, keyed by Markdown path under commands/.
  * @returns the pages by identity
  */
-export function commandPages(): Map<string, ReferencePage> {
+export async function commandPages(): Promise<Map<string, ReferencePage>> {
     const pages = new Map<string, ReferencePage>();
     const program = buildProgram();
-    const commands = (parent: CommandUnknownOpts, ancestors: string[]): void => {
+    const commands = async (parent: CommandUnknownOpts, ancestors: string[]): Promise<void> => {
         for (const command of parent.createHelp().visibleCommands(parent)) {
             if (!parent.commands.includes(command)) continue;
             const path = [...ancestors, command.name()];
             const id = `commands/${path.join('/')}.md`;
             if (pages.has(id)) throw new Error(`Duplicate reference identity: ${id}`);
-            pages.set(id, commandPage(command, path.join(' ')));
-            commands(command, path);
+            pages.set(id, await commandPage(command, path.join(' ')));
+            await commands(command, path);
         }
     };
-    commands(program, []);
+    await commands(program, []);
     const rows = program.commands.map((command) => [
         `[\`gspot ${command.name()}\`](/reference/commands/${command.name()}/)`,
         cell(command.summary()),

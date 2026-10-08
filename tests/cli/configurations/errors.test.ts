@@ -140,7 +140,7 @@ describe('assertManifests native version prerequisites', () => {
     );
 });
 
-describe('assertManifests acquisition and guide declarations', () => {
+describe('assertManifests installation and guide declarations', () => {
     test.each([
         ['[[tool]]\nname = "unpinned"\nnpm = "unpinned"\n', 'has no version and no floor'],
         ['[[tool]]\nname = "low"\nversion = "1.0.0"\nmin_version = "2.0.0"\nnpm = "low"\n', 'below its floor 2.0.0'],

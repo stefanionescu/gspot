@@ -42,7 +42,7 @@ source disappears and returns. Removed choices are visible in `removed_configura
 and `all` control check coverage.
 
 Initialization detects `react-native` from React Native dependencies and `expo` from Expo
-dependencies. The Expo configuration requires React Native and adds Expo lint rules and
+dependencies. The Expo configuration requires React Native and adds Expo rules and
 `expo/doctor`. A bare React Native project does not require either Expo tool. React web
 projects that depend on `react-dom` also select the React DOM configuration, which supplies
 the DOM accessibility plugin. Native sources retain React's hooks and component rules.
@@ -72,7 +72,7 @@ This example lets scripts print to the terminal:
 gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results to the terminal."
 ```
 
-The ignore turns off the lint rule `no-console` for the paths under `scripts/`. Leave out
+The ignore turns off the rule `no-console` for the paths under `scripts/`. Leave out
 `--rule` to turn off the whole check. With `require_reasons = true`, gspot refuses an ignore
 without a reason. Add `--until YYYY-MM-DD` for a temporary acceptance. It stops applying at 00:00 UTC on that date; the saved entry remains for review. Dependency advisory exceptions use the same `[[ignore]]` table with `check = "dependencies/osv"` and the advisory ID in `rule`.
 
@@ -165,13 +165,13 @@ for server code inside a browser or native project.
 Runtime names follow the pinned [globals package](https://github.com/sindresorhus/globals);
 `service-worker` names its service-worker
 set. Web Workers and service workers have different APIs. Browser and native files do not
-receive Node.js lint rules. React Native retains the `process` and `require` globals its
+receive Node.js rules. React Native retains the `process` and `require` globals its
 runtime supports, and does not receive Node.js globals such as `Buffer` and `__dirname`.
 Unknown runtime names fail policy validation before configuration is generated.
 
 ## Custom native text components
 
-If a component wraps React Native's `Text`, include its name in the lint rule's `skip` option:
+If a component wraps React Native's `Text`, include its name in the rule's `skip` option:
 
 ```toml
 [tools.eslint.rules]

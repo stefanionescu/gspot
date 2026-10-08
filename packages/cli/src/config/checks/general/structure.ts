@@ -98,3 +98,12 @@ export const COMMENT_STYLE_BY_EXTENSION: Record<string, CommentStyle> = {
     '.pgsql': ['sql', '--'],
     '.psql': ['sql', '--'],
 };
+
+/** Test-file suffixes understood by JavaScript and TypeScript runners. */
+export const TEST_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/u;
+
+/** Imported assertion bindings belong with test code. */
+export const ASSERTION_MODULES = new Set(['bun:test', 'vitest', '@jest/globals']);
+
+/** Conventional test folders can contain test files and assertion modules. */
+export const TEST_DIRECTORIES = ['**/tests/**', '**/__tests__/**', '**/test/**'];

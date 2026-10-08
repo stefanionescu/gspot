@@ -173,11 +173,11 @@ async function setCommand(options: SetOptions): Promise<CommandResult> {
 export function registerSet(program: Program): void {
     program
         .command('set')
-        .argument('<key>', 'Dotted setting name from gspot list settings')
+        .argument('<setting>', 'Dotted setting name from gspot list settings')
         .argument('[value...]', 'Setting value or list items; omit with --default')
         .summary('Change a setting')
         .description(
-            'Write one setting to gspot.toml and apply it. gspot checks the value first. The key is the dotted name gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. Use only one of --replace, --remove, and --default. --default takes no value. set installs no tools: run gspot install for that. --dry-run prints the change and writes nothing.',
+            'Write one setting to gspot.toml and apply it. gspot checks the value first. The setting is the dotted name that gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. Use only one of --replace, --remove, and --default. --default takes no value. set installs no tools: run gspot install for that. --dry-run prints the change and writes nothing.',
         )
         .addHelpText(
             'after',
@@ -194,7 +194,7 @@ export function registerSet(program: Program): void {
             ).conflicts(['replace', 'remove']),
         )
         .option('--dry-run', 'Print the change and write nothing')
-        .action(async (key, items, flags, command) => {
+        .action(async (setting, items, flags, command) => {
             if (flags.default === true && items.length > 0)
                 command.error('--default cannot be used with setting values.', { exitCode: EXIT_ERROR });
             const global = command.optsWithGlobals();
@@ -202,7 +202,7 @@ export function registerSet(program: Program): void {
             printResult(
                 await setCommand({
                     cwd,
-                    key,
+                    key: setting,
                     items,
                     replace: flags.replace === true,
                     remove: flags.remove === true,

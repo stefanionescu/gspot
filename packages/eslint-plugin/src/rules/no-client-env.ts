@@ -21,9 +21,20 @@ export const noClientEnv = createRule<ClientEnvOptions, 'private'>({
         },
         schema: [
             optionsSchema({
-                isClient: { type: 'boolean' },
-                publicPrefixes: { type: 'array', items: { type: 'string' } },
-                allowed: { type: 'array', items: { type: 'string' } },
+                isClient: {
+                    description: 'Treat selected files as client code without a use-client directive.',
+                    type: 'boolean',
+                },
+                publicPrefixes: {
+                    description: 'Prefixes allowed for public environment variables.',
+                    type: 'array',
+                    items: { type: 'string' },
+                },
+                allowed: {
+                    description: 'Environment variable names allowed in client code.',
+                    type: 'array',
+                    items: { type: 'string' },
+                },
             }),
         ],
         messages: {

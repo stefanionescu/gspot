@@ -5,6 +5,6 @@ export const COMMITS_INIT = [
     'commits',
     '--no-task',
     '--no-ci',
-    '--no-rules',
+    '--no-agent-rules',
     '--no-install',
 ];

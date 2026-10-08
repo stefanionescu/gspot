@@ -366,6 +366,7 @@ export default [
         "**/*Tests.swift"
     ]
 }, 'import/resolver': { typescript: { project: [
+    "tsconfig.json",
     "docs/tsconfig.json",
     "packages/cli/tsconfig.json",
     "packages/eslint-plugin/tsconfig.json",
@@ -523,6 +524,7 @@ export default [
         "docs/**/*Tests.swift"
     ]
 }, 'import/resolver': { typescript: { project: [
+    "tsconfig.json",
     "docs/tsconfig.json",
     "packages/cli/tsconfig.json",
     "packages/eslint-plugin/tsconfig.json",
@@ -680,6 +682,7 @@ export default [
         "packages/cli/**/*Tests.swift"
     ]
 }, 'import/resolver': { typescript: { project: [
+    "tsconfig.json",
     "docs/tsconfig.json",
     "packages/cli/tsconfig.json",
     "packages/eslint-plugin/tsconfig.json",
@@ -837,6 +840,7 @@ export default [
         "packages/eslint-plugin/**/*Tests.swift"
     ]
 }, 'import/resolver': { typescript: { project: [
+    "tsconfig.json",
     "docs/tsconfig.json",
     "packages/cli/tsconfig.json",
     "packages/eslint-plugin/tsconfig.json",
@@ -994,6 +998,7 @@ export default [
         "tests/**/*Tests.swift"
     ]
 }, 'import/resolver': { typescript: { project: [
+    "tsconfig.json",
     "docs/tsconfig.json",
     "packages/cli/tsconfig.json",
     "packages/eslint-plugin/tsconfig.json",
@@ -1144,9 +1149,6 @@ stripRuntimeGlobals({plugins: { zod: zodPlugin }, "rules": {"zod/no-any-schema":
 
 stripRuntimeGlobals({plugins: { jest }, languageOptions: { globals: jest.environments.globals.globals }, settings: { jest: { globalPackage: '@jest/globals' } }, "rules": {"jest/no-focused-tests":"error","jest/no-disabled-tests":"error","jest/no-identical-title":"error","jest/no-standalone-expect":"error","jest/no-commented-out-tests":"error","jest/expect-expect":"error","jest/valid-describe-callback":"error","jest/no-conditional-expect":"error","jest/valid-expect":["error",{"maxArgs":1}],"jest/prefer-strict-equal":"error"}, "ignores": [], files: [["tests/**/test/**", "tests/**/*"], ["tests/**/tests/**", "tests/**/*"], ["tests/**/__tests__/**", "tests/**/*"], ["tests/**/*.test.*", "tests/**/*"], ["tests/**/*.spec.*", "tests/**/*"], ["tests/**/test_*.py", "tests/**/*"], ["tests/**/*_test.py", "tests/**/*"], ["tests/**/conftest.py", "tests/**/*"], ["tests/**/Tests/**", "tests/**/*"], ["tests/**/*Tests.swift", "tests/**/*"]]}),
 
-stripRuntimeGlobals({"rules": {"gspot/no-helpers-beside-tests":["error",{"harness":"tests/harness"}]}, "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["scripts/gspot", "tests/**/*"]]}),
-
-
 
 stripRuntimeGlobals({"rules": {"@typescript-eslint/no-extraneous-class":["error",{"allowWithDecorator":true}]}, "ignores": [], files: [["**/*.{ts,mts,cts,tsx}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", componentMatches(svelteParser, "svelte"), "tests/**/*"]]}),
 
@@ -1173,9 +1175,6 @@ stripRuntimeGlobals({languageOptions: { parser: svelteParser, parserOptions: { p
 
 
 stripRuntimeGlobals({plugins: { vitest }, "rules": {"vitest/expect-expect":"error","vitest/no-identical-title":"error","vitest/no-commented-out-tests":"error","vitest/valid-title":"error","vitest/valid-expect":"error","vitest/valid-describe-callback":"error","vitest/require-local-test-context-for-concurrent-snapshots":"error","vitest/no-import-node-test":"error","vitest/no-focused-tests":["error",{"fixable":false}],"vitest/no-disabled-tests":"error","vitest/no-standalone-expect":"error","vitest/no-conditional-expect":"error","vitest/prefer-strict-equal":"error"}, "ignores": [], files: [["tests/**/test/**", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["tests/**/test/**", "**/*.astro", "tests/**/*"], ["tests/**/test/**", "**/*.svelte", "tests/**/*"], ["tests/**/test/**", "scripts/gspot", "tests/**/*"], ["tests/**/tests/**", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["tests/**/tests/**", "**/*.astro", "tests/**/*"], ["tests/**/tests/**", "**/*.svelte", "tests/**/*"], ["tests/**/tests/**", "scripts/gspot", "tests/**/*"], ["tests/**/__tests__/**", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["tests/**/__tests__/**", "**/*.astro", "tests/**/*"], ["tests/**/__tests__/**", "**/*.svelte", "tests/**/*"], ["tests/**/__tests__/**", "scripts/gspot", "tests/**/*"], ["tests/**/*.test.*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["tests/**/*.test.*", "**/*.astro", "tests/**/*"], ["tests/**/*.test.*", "**/*.svelte", "tests/**/*"], ["tests/**/*.test.*", "scripts/gspot", "tests/**/*"], ["tests/**/*.spec.*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["tests/**/*.spec.*", "**/*.astro", "tests/**/*"], ["tests/**/*.spec.*", "**/*.svelte", "tests/**/*"], ["tests/**/*.spec.*", "scripts/gspot", "tests/**/*"], ["tests/**/test_*.py", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["tests/**/test_*.py", "**/*.astro", "tests/**/*"], ["tests/**/test_*.py", "**/*.svelte", "tests/**/*"], ["tests/**/test_*.py", "scripts/gspot", "tests/**/*"], ["tests/**/*_test.py", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["tests/**/*_test.py", "**/*.astro", "tests/**/*"], ["tests/**/*_test.py", "**/*.svelte", "tests/**/*"], ["tests/**/*_test.py", "scripts/gspot", "tests/**/*"], ["tests/**/conftest.py", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["tests/**/conftest.py", "**/*.astro", "tests/**/*"], ["tests/**/conftest.py", "**/*.svelte", "tests/**/*"], ["tests/**/conftest.py", "scripts/gspot", "tests/**/*"], ["tests/**/Tests/**", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["tests/**/Tests/**", "**/*.astro", "tests/**/*"], ["tests/**/Tests/**", "**/*.svelte", "tests/**/*"], ["tests/**/Tests/**", "scripts/gspot", "tests/**/*"], ["tests/**/*Tests.swift", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["tests/**/*Tests.swift", "**/*.astro", "tests/**/*"], ["tests/**/*Tests.swift", "**/*.svelte", "tests/**/*"], ["tests/**/*Tests.swift", "scripts/gspot", "tests/**/*"]]}),
-
-stripRuntimeGlobals({"rules": {"gspot/no-helpers-beside-tests":["error",{"harness":"tests/harness"}]}, "ignores": [], files: [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*"], ["**/*.astro", "tests/**/*"], ["**/*.svelte", "tests/**/*"], ["scripts/gspot", "tests/**/*"]]}),
-
 
 
 stripRuntimeGlobals({plugins: { 'jsx-a11y': accessibility }, "rules": {"jsx-a11y/alt-text":"error","jsx-a11y/anchor-ambiguous-text":"off","jsx-a11y/anchor-has-content":"error","jsx-a11y/anchor-is-valid":"error","jsx-a11y/aria-activedescendant-has-tabindex":"error","jsx-a11y/aria-props":"error","jsx-a11y/aria-proptypes":"error","jsx-a11y/aria-role":"error","jsx-a11y/aria-unsupported-elements":"error","jsx-a11y/autocomplete-valid":"error","jsx-a11y/click-events-have-key-events":"error","jsx-a11y/control-has-associated-label":["off",{"ignoreElements":["audio","canvas","embed","input","textarea","tr","video"],"ignoreRoles":["grid","listbox","menu","menubar","radiogroup","row","tablist","toolbar","tree","treegrid"],"includeRoles":["alert","dialog"]}],"jsx-a11y/heading-has-content":"error","jsx-a11y/html-has-lang":"error","jsx-a11y/iframe-has-title":"error","jsx-a11y/img-redundant-alt":"error","jsx-a11y/interactive-supports-focus":["error",{"tabbable":["button","checkbox","link","searchbox","spinbutton","switch","textbox"]}],"jsx-a11y/label-has-associated-control":"error","jsx-a11y/label-has-for":"off","jsx-a11y/media-has-caption":"error","jsx-a11y/mouse-events-have-key-events":"error","jsx-a11y/no-access-key":"error","jsx-a11y/no-autofocus":"error","jsx-a11y/no-distracting-elements":"error","jsx-a11y/no-interactive-element-to-noninteractive-role":["error",{"tr":["none","presentation"],"canvas":["img"]}],"jsx-a11y/no-noninteractive-element-interactions":["error",{"handlers":["onClick","onError","onLoad","onMouseDown","onMouseUp","onKeyPress","onKeyDown","onKeyUp"],"alert":["onKeyUp","onKeyDown","onKeyPress"],"body":["onError","onLoad"],"dialog":["onKeyUp","onKeyDown","onKeyPress"],"iframe":["onError","onLoad"],"img":["onError","onLoad"]}],"jsx-a11y/no-noninteractive-element-to-interactive-role":["error",{"ul":["listbox","menu","menubar","radiogroup","tablist","tree","treegrid"],"ol":["listbox","menu","menubar","radiogroup","tablist","tree","treegrid"],"li":["menuitem","menuitemradio","menuitemcheckbox","option","row","tab","treeitem"],"table":["grid"],"td":["gridcell"],"fieldset":["radiogroup","presentation"]}],"jsx-a11y/no-noninteractive-tabindex":["error",{"tags":[],"roles":["tabpanel"],"allowExpressionValues":true}],"jsx-a11y/no-redundant-roles":"error","jsx-a11y/no-static-element-interactions":["error",{"allowExpressionValues":true,"handlers":["onClick","onMouseDown","onMouseUp","onKeyPress","onKeyDown","onKeyUp"]}],"jsx-a11y/role-has-required-aria-props":"error","jsx-a11y/role-supports-aria-props":"error","jsx-a11y/scope":"error","jsx-a11y/tabindex-no-positive":"error"}, "ignores": [], files: [["**/*.{js,jsx,ts,tsx}", "tests/**/*"]]}),
@@ -1288,5 +1287,9 @@ stripRuntimeGlobals({plugins: { 'jsx-a11y': accessibility }, "rules": {"jsx-a11y
     {"rules": {}, files: [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", policyMatches({"scope":"","includes":["^(?:packages\\/cli\\/package\\.json)$","^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"","includes":["^(?:packages\\/cli\\/package\\.json)$","^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"","includes":["^(?:packages\\/cli\\/package\\.json)$","^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})], ["scripts/gspot", policyMatches({"scope":"","includes":["^(?:packages\\/cli\\/package\\.json)$","^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})]]},
 
     {"rules": {"package-json/require-exports":"off"}, files: [["**/package.json", policyMatches({"scope":"","includes":["^(?:packages\\/cli\\/package\\.json)$","^(?:packages\\/cli\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {}, files: [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", policyMatches({"scope":"","includes":["^(?:packages\\/eslint-plugin\\/package\\.json)$","^(?:packages\\/eslint-plugin\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})], ["**/*.astro", policyMatches({"scope":"","includes":["^(?:packages\\/eslint-plugin\\/package\\.json)$","^(?:packages\\/eslint-plugin\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})], ["**/*.svelte", policyMatches({"scope":"","includes":["^(?:packages\\/eslint-plugin\\/package\\.json)$","^(?:packages\\/eslint-plugin\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})], ["scripts/gspot", policyMatches({"scope":"","includes":["^(?:packages\\/eslint-plugin\\/package\\.json)$","^(?:packages\\/eslint-plugin\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})]]},
+
+    {"rules": {"package-json/restrict-dependency-ranges":"off"}, files: [["**/package.json", policyMatches({"scope":"","includes":["^(?:packages\\/eslint-plugin\\/package\\.json)$","^(?:packages\\/eslint-plugin\\/package\\.json(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)|$))$"],"excludes":[],"flags":"s"})]]},
 
 ];

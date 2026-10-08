@@ -124,8 +124,8 @@
       "name": "@gspothq/eslint-plugin",
       "version": "0.1.0",
       "dependencies": {
-        "@typescript-eslint/utils": "8.70.0",
-        "picomatch": "4.0.7",
+        "@typescript-eslint/utils": "^8.70.0",
+        "picomatch": "^4.0.7",
       },
       "devDependencies": {
         "@types/picomatch": "4.0.2",

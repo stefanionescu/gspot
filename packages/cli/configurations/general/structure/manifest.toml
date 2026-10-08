@@ -339,3 +339,14 @@ items = { name = "string", paths = { type = "list", items = "path" }, may_import
 direction = "tightening"
 default = []
 summary = "The named parts of the code and the paths each covers."
+
+[[check]]
+name = "test-placement"
+title = "Keep test support in its declared folder"
+example = "With architecture.roles.test_harness = 'tests/support', tests/unit/builders.ts beside order.spec.ts reports misplaced. Move builders.ts to tests/support. Tests, declarations, and assertion modules may stay."
+runs = "scope"
+level = "all"
+stage = "commit"
+summary = "Finds support files beside JavaScript and TypeScript tests outside their declared harness."
+why = "Keep shared setup in its declared folder and assertions with tests."
+help = "Move support into the declared test harness, or use gspot ignore structure/test-placement with paths and a reason."

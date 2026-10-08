@@ -7,7 +7,7 @@ import { parseTemplate } from '#cli/policy/templates.ts';
 import { writeSetup } from '#cli/commands/init/write.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { SYNCPACK_TAKEOVERS } from '#tests/config/tools/generation/takeover.ts';
+import { SYNCPACK_TAKEOVERS } from '#tests/config/tools/generation/dependencies.ts';
 
 test.each(SYNCPACK_TAKEOVERS)(
     'initialization retires native Syncpack configuration $file',

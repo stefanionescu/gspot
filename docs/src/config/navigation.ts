@@ -64,7 +64,7 @@ export const SIDEBAR: Sidebar = [
             { label: 'Checks', collapsed: true, items: [{ autogenerate: { directory: 'reference/checks' } }] },
             { label: 'ESLint plugin', collapsed: true, items: [{ autogenerate: { directory: 'reference/plugin' } }] },
             { label: 'Settings', slug: 'reference/settings' },
-            { label: 'gspot.toml schema', slug: 'reference/configuration' },
+            { label: 'gspot.toml schema', slug: 'reference/gspot-toml' },
             { label: 'Exit codes and environment variables', slug: 'reference/runtime' },
         ],
     },

@@ -3,14 +3,16 @@ title: Remove gspot
 description: Remove a configuration or remove gspot from a repository.
 ---
 
-To remove one built-in configuration, run:
+Preview the removal of a language or framework configuration, then apply it:
 
 ```shell
+gspot remove nextjs --dry-run
 gspot remove nextjs
-gspot apply --dry-run
 ```
 
-Required configurations stay selected while another active configuration needs them. Removal records a visible `removed_configurations` choice, so later detection keeps Next.js removed. Use `gspot add nextjs` to restore it.
+Removal writes the name into `removed_configurations` in `gspot.toml`, so it survives later detection. Use `gspot add nextjs` to restore it. Remove a configuration that requires another before removing its dependency; otherwise, removal is refused. General configurations follow repository inputs and the selected level.
+
+`remove` installs nothing. When the required tools change, it tells you to run `gspot install`.
 
 ## Remove the repository setup
 

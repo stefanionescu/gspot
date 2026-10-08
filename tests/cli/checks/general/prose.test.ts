@@ -15,7 +15,7 @@ import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { vale, routeFor, routeGroups } from '#cli/checks/general/prose.ts';
 import { DIAGNOSTIC, EXECUTION_FAILURES } from '#tests/config/cli/checks/general/prose.ts';
 
-test('an outdated Vale executable reports its missing acquisition without scanning', async () => {
+test('an outdated Vale executable reports its missing installation without scanning', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy(['prose', 'markdown'], { tables: 'runner = "mise"\n' }),

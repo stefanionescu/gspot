@@ -15,7 +15,6 @@ import { importExtensions } from '#plugin/rules/import-extensions.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
-import { noHelpersBesideTests } from '#plugin/rules/no-helpers-beside-tests.ts';
 
 const rules = {
     'env-owner': envOwner,
@@ -33,7 +32,6 @@ const rules = {
     'no-trivial-files': noTrivialFiles,
     'no-trivial-functions': noTrivialFunctions,
     'require-server-only': requireServerOnly,
-    'no-helpers-beside-tests': noHelpersBesideTests,
 };
 
 const allRules = Object.fromEntries(

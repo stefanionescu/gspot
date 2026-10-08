@@ -120,11 +120,11 @@ export function registerInit(program: Program): void {
         .command('init')
         .summary('Set up gspot in a repository')
         .description(
-            'Read the repository, show a plan, and write it when you accept. The plan covers the policy file, the tool configuration, the rules for coding agents, the Git hooks, and the tool installation. With --yes or your answer, gspot writes the plan and installs the tools. It replaces the configuration files of the selected tools; Git keeps the replaced files. init runs no check. --dry-run writes nothing.',
+            'Read the repository, show a plan, and write it when you accept. The plan covers gspot.toml, the tool files, the agent rules, the Git hooks, and the tool installation. With --yes or your answer, gspot writes the plan and installs the tools. It replaces the tool files the selected tools already have; Git keeps the replaced files. init runs no check. --dry-run writes nothing.',
         )
         .addHelpText(
             'after',
-            '\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --configurations bash',
+            '\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --configurations bash\ngspot init --dry-run --yes',
         )
         .option('--yes', 'Accept the plan without asking')
         .option('--from <template>', 'Start from a template: a path, an https URL, or github:owner/repo')
@@ -146,7 +146,7 @@ export function registerInit(program: Program): void {
         )
         .option('--no-hooks', 'Install no Git hooks')
         .option('--no-ci', 'Write no CI workflow')
-        .option('--no-rules', 'Install no rules for coding agents')
+        .option('--no-agent-rules', 'Write no agent rules')
         .option('--no-task', 'Set up no task runner')
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags, command) => {
@@ -169,7 +169,7 @@ export function registerInit(program: Program): void {
                         hooks: flags.hooks ? undefined : false,
                         ci: flags.ci === false ? ('none' as const) : flags.ci,
                         runner: flags.task ? undefined : ('none' as const),
-                        agentRules: flags.rules ? undefined : false,
+                        agentRules: flags.agentRules ? undefined : false,
                     }),
                 }),
             );

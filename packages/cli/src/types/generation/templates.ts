@@ -72,8 +72,6 @@ export type TemplateInputs = {
         settings: Record<string, unknown>;
         dependencies: string[];
         verbatim: ScopeView['verbatim'];
-        /** The first repository-relative harness folder of the scope, when the policy names one. */
-        harness: string | undefined;
     }[];
     ignoredPaths: string[];
     configurations: string[];

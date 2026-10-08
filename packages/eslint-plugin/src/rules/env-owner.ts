@@ -10,6 +10,7 @@ export const envOwner = createRule<EnvOwnerOptions, 'owner'>({
         defaultOptions: [{ owners: [], allowed: ENVIRONMENT_ALLOWED }],
         type: 'suggestion',
         docs: {
+            requiresOptions: true,
             level: 'all',
             title: 'Environment access owner',
             example:
@@ -21,8 +22,16 @@ export const envOwner = createRule<EnvOwnerOptions, 'owner'>({
         },
         schema: [
             optionsSchema({
-                owners: { type: 'array', items: { type: 'string' } },
-                allowed: { type: 'array', items: { type: 'string' } },
+                owners: {
+                    description: 'File patterns allowed to read environment variables.',
+                    type: 'array',
+                    items: { type: 'string' },
+                },
+                allowed: {
+                    description: 'Environment variable names allowed outside those files.',
+                    type: 'array',
+                    items: { type: 'string' },
+                },
             }),
         ],
         messages: { owner: 'Environment variables are read in {{owners}} only. Read it there and pass the value in.' },

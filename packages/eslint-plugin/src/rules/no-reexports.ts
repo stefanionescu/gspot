@@ -17,7 +17,7 @@ export const noReexports = createRule<ReexportsOptions, 'from' | 'star' | 'local
             why: 'A re-export exists to shorten an import path; it hides the owner and lets the same value arrive by two routes.',
             fix: 'Import values from their declaring modules. Set `allowIndex: true` if a library exposes its API through index files.',
         },
-        schema: [optionsSchema({ allowIndex: { type: 'boolean' } })],
+        schema: [optionsSchema({ allowIndex: { description: 'Allow re-exports in index files.', type: 'boolean' } })],
         messages: {
             from: 'Import from the owning module instead of re-exporting "{{source}}".',
             star: 'Import from the owning module instead of an export-all barrel of "{{source}}".',

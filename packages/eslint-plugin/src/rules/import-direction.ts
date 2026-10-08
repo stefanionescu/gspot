@@ -94,6 +94,7 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         defaultOptions: [{ roles: NO_ROLES, aliases: {}, scope: '' }],
         type: 'suggestion',
         docs: {
+            requiresOptions: true,
             level: 'all',
             title: 'Import direction',
             example:
@@ -105,16 +106,27 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         },
         schema: [
             optionsSchema({
-                roles: optionsSchema({
-                    types: { type: 'array', items: { type: 'string' } },
-                    tests: { type: 'array', items: { type: 'string' } },
-                    harness: { type: 'array', items: { type: 'string' } },
-                    config: { type: 'array', items: { type: 'string' } },
-                    env: { type: 'array', items: { type: 'string' } },
-                    runtime: { type: 'array', items: { type: 'string' } },
-                }),
-                aliases: { type: 'object', additionalProperties: { type: 'string' } },
-                scope: { type: 'string' },
+                roles: {
+                    description: 'Repository-relative file patterns identifying each architectural role.',
+                    ...optionsSchema({
+                        types: { description: 'Type declarations.', type: 'array', items: { type: 'string' } },
+                        tests: { description: 'Tests.', type: 'array', items: { type: 'string' } },
+                        harness: { description: 'Test support.', type: 'array', items: { type: 'string' } },
+                        config: { description: 'Static configuration.', type: 'array', items: { type: 'string' } },
+                        env: { description: 'Environment readers.', type: 'array', items: { type: 'string' } },
+                        runtime: { description: 'Runtime code.', type: 'array', items: { type: 'string' } },
+                    }),
+                },
+                aliases: {
+                    description: 'Import alias prefixes mapped to folders within scope.',
+                    type: 'object',
+                    additionalProperties: { type: 'string' },
+                },
+                scope: {
+                    description:
+                        'Folder used for import aliases and diagnostic paths. Role patterns remain repository-relative.',
+                    type: 'string',
+                },
             }),
         ],
         messages: {

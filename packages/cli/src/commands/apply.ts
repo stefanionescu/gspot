@@ -70,13 +70,13 @@ function reportText(report: ApplyReport): string {
 export function registerApply(program: Program): void {
     program
         .command('apply')
-        .summary('Write the configuration from gspot.toml')
+        .summary('Write the generated files from gspot.toml')
         .description(
-            'Reconcile configurations with the repository, then regenerate tool config files, coding-agent rules, Git hooks, and the CI workflow from gspot.toml. A generated file you edited stays as it is, and apply names it. --dry-run shows every change, including each rule that changes, without writing project files. apply installs no tools: run gspot install after it.',
+            'Reconcile configurations with the repository, then write the tool files, agent rules, Git hooks, and CI workflow from gspot.toml. A generated file you edited stays as it is, and apply names it. --dry-run shows every change, including each rule that changes, without writing project files. apply installs no tools: run gspot install after it.',
         )
         .addHelpText(
             'after',
-            '\nExit codes:\n- 0: the configuration was written, or the preview finished.\n- 2: the input was invalid, or apply could not finish.\n\nExample:\ngspot apply --dry-run',
+            '\nExit codes:\n- 0: the generated files were written, or the preview finished.\n- 2: the input was invalid, or apply could not finish.\n\nExample:\ngspot apply --dry-run\ngspot apply',
         )
         .option('--dry-run', 'Show the changes without writing project files')
         .action(async (flags, command) => {

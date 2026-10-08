@@ -60,17 +60,3 @@ export const REGEX_FINDINGS = [
 ];
 
 export const REGEX_CORRECTION = 'export const pattern = /^a+$/;\n';
-
-export const REGEX_SCRIPT = `import { basename } from 'node:path';
-import { ESLint } from 'eslint';
-const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
-const names = ["regexp/no-super-linear-backtracking", "sonarjs/slow-regex", "security/detect-unsafe-regex"];
-const config = await eslint.calculateConfigForFile("regex-exponential.js");
-const results = await eslint.lintFiles(["regex-exponential.js", "regex-exponential.ts", "regex-polynomial.js", "regex-polynomial.ts", "regex-safe.js", "regex-safe.ts", "regex-bounded.js", "regex-bounded.ts", "regex-constructor.js", "regex-constructor.ts", "regex-template.js", "regex-template.ts", "regex-unicode.js", "regex-unicode.ts"].sort());
-process.stdout.write(JSON.stringify({ severities: names.map((name) => config.rules[name][0]),
-    files: results.map(({ filePath, messages }) => ({ file: basename(filePath),
-        findings: messages.filter(({ ruleId, fatal }) => names.includes(ruleId) || fatal)
-            .map(({ ruleId, line, column, severity }) => ({ ruleId, line, column, severity })),
-    })),
-}));
-`;

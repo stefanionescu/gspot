@@ -1,5 +1,3 @@
-import type { HelpersBesideTestsOptions } from '#plugin/types/test-placement.ts';
-
 /** Files that distinguish test siblings, declaration files, and support directories. */
 export const TEST_FILES = {
     'tests/unit/a.test.ts': '',
@@ -19,9 +17,6 @@ export const TEST_FILES = {
     'tests/mocks/a.test.ts': '',
     'tests/mocks/factory.ts': '',
 };
-
-/** The declared owner of support code. */
-export const OPTIONS: [HelpersBesideTestsOptions[0]] = [{ harness: 'tests/support' }];
 
 /** Assertion modules belong with tests, including an aliased framework import. */
 export const ASSERTION_SOURCES = [

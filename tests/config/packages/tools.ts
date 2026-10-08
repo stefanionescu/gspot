@@ -8,7 +8,7 @@ export const FORMATTER_INIT = [
     'format',
     '--no-ci',
     '--no-hooks',
-    '--no-rules',
+    '--no-agent-rules',
     '--no-install',
 ];
 

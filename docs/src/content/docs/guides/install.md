@@ -3,8 +3,6 @@ title: Install gspot
 description: Choose an installation method for your repository and prepare its checks.
 ---
 
-gspot is not published on npm yet. The installation procedures below apply after release.
-
 Read the [requirements](/guides/requirements/) first. Choose one installation method:
 
 | Repository                                         | Install method                                               | Prefix for later commands                                     |
@@ -14,6 +12,8 @@ Read the [requirements](/guides/requirements/) first. Choose one installation me
 | Uses neither a JavaScript package manager nor mise | Exact global npm installation                                | `gspot` on `PATH`                                             |
 
 Commands in the guides start with `gspot`. Add the prefix from this table for your installation.
+
+Replace `<version>` with the exact version from the [npm package page](https://www.npmjs.com/package/@gspothq/cli).
 
 ## Repository with package.json
 
@@ -43,10 +43,10 @@ Commit that manager's manifest and lockfile before initialization.
 In a clean Git repository, run:
 
 ```shell
-mise exec npm:@gspothq/cli@0.1.0 -- gspot init
+mise exec npm:'@gspothq/cli@<version>' -- gspot init
 ```
 
-Choose mise at the runner question. The generated mise file pins the CLI through the npm backend (`npm:@gspothq/cli`) and pins required executable tools. gspot needs Node.js 24.2 or newer, or Bun 1.4.2 or newer, with mise too. Trust the file before installing its tools:
+Choose mise at the runner question. The generated mise file pins the CLI through the npm backend (`npm:@gspothq/cli`) and pins required executable tools. Trust the file before installing its tools:
 
 ```shell
 mise trust .mise/conf.d/gspot-tools.toml
@@ -60,7 +60,7 @@ mise exec -- gspot doctor
 Install the exact version you intend to use:
 
 ```shell
-npm install --global @gspothq/cli@0.1.0
+npm install --global '@gspothq/cli@<version>'
 gspot init
 ```
 

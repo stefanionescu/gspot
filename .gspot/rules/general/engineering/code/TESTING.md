@@ -45,10 +45,10 @@ effects as well as successful results.
 
 <!-- level: all -->
 
-- Tests live under `tests/` or beside the unit they test. The directory is `tests/`, never `__tests__`, `test/`, or `spec/`.
+- Follow the test layout of the repository's framework or runner, such as `*.spec.ts` files for NestJS or `__tests__` folders for Jest. Keep one layout in each repository.
 - Support code (builders, fakes, servers, database helpers) lives in the declared test support folder. No `mocks/`, `helpers/`, or `utils/` directory exists.
 - Support code is not test code: it has no assertions and no `describe`, `it`, or `test` blocks.
-- File names follow the language: `<name>.test.ts`, never `.spec`; `test_<behavior>.py`, grouped by behavior; `<Type>Tests.swift`; pgTAP files under `tests/` named for the table or function under test.
+- File names follow the language and runner: `test_<behavior>.py`, grouped by behavior; `<Type>Tests.swift`; pgTAP files named for the table or function under test.
 - A test name is a sentence that states the scenario and the expected outcome. Never `test1`, `works`, `edge cases`, `happy path`.
 - Group with `describe` (or the language equivalent) by unit, then by scenario.
 

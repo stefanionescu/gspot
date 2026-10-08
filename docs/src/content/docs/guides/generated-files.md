@@ -23,11 +23,13 @@ run `gspot apply` to write them again.
 | `.swiftlint.yml` inside test folders | Swift test overrides, when applicable.                                                     |
 | Keys in shared files                 | Install settings in files such as `bunfig.toml`. The other keys stay yours.                |
 
-The root files are `eslint.config.mjs`, `.prettierrc.json`, `.prettierignore`,
-`.stylelintrc.json`, `.editorconfig`, `.semgrepignore`, `pyrightconfig.json`, and
-`.swiftlint.yml`, depending on your configurations. Most point at the file under `.gspot/config/`. The
-other tools get their configuration path from gspot. To use such a tool in your editor, point
-the editor at the file under `.gspot/config/`.
+Pointers include `eslint.config.mjs`, `prettier.config.mjs`, `.prettierignore`,
+`.stylelintrc.json`, `.editorconfig`, `.semgrepignore`, `pyrightconfig.json`,
+`.swiftlint.yml`, `.markdownlint-cli2.mjs`, and `ruff.toml`, depending on the selected
+configurations. Pointers can also land in scopes and subfolders: for example,
+`.markdownlint-cli2.mjs` can appear both at the root and in `docs/`. Most point to
+a configuration under `.gspot/config/`. For other tools, point your editor at the
+configuration under `.gspot/config/`; gspot supplies that path when it runs them.
 
 Do not edit a generated file. Change `gspot.toml`, then run `gspot apply`. If you do edit a
 generated file, `apply` keeps your edit and names the file, so you can move the change into the

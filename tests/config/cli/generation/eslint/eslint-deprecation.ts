@@ -37,17 +37,3 @@ export const DEPRECATION_FINDINGS = [
 ];
 
 export const DEPRECATION_CORRECTION = "import { current } from './api.js';\nexport const result = current;\n";
-
-export const DEPRECATION_SCRIPT = `import { basename } from 'node:path';
-import { ESLint } from 'eslint';
-const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
-const names = ["@typescript-eslint/no-deprecated", "sonarjs/deprecation"];
-const config = await eslint.calculateConfigForFile("deprecated.ts");
-const results = await eslint.lintFiles(["api.ts", "deprecated.ts", "type-reference.ts", "overload-deprecated.ts", "overload-current.ts", "current.ts"].sort());
-process.stdout.write(JSON.stringify({ severities: names.map((name) => config.rules[name][0]),
-    files: results.map(({ filePath, messages }) => ({ file: basename(filePath),
-        findings: messages.filter(({ ruleId, fatal }) => names.includes(ruleId) || fatal)
-            .map(({ ruleId, line, column, severity }) => ({ ruleId, line, column, severity })),
-    })),
-}));
-`;

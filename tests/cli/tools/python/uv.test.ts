@@ -60,7 +60,7 @@ test('one command acquires its pinned uv once and creates lockfiles through that
     expect(await pathExists(join(repository.path, '.gspot/uv.lock'))).toBe(false);
 });
 
-test('failed mise acquisition names the pinned uv repair and preserves repository files', async () => {
+test('failed mise installation names the pinned uv repair and preserves repository files', async () => {
     const uv = pythonInstallerPin();
     const pin = `${uv.name}@${uv.version}`;
     await using repository = await testdir();

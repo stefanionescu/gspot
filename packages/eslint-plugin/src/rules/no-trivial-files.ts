@@ -122,7 +122,19 @@ export const noTrivialFiles = createRule<TrivialFilesOptions, 'trivial'>({
             why: 'A file that only forwards to another module adds a step to every import and hides where the code lives.',
             fix: 'Import re-exported values from the modules that define them. Move aliases and small functions into the modules that use them, then delete the forwarding file.',
         },
-        schema: [optionsSchema({ maxStatements: { type: 'integer', minimum: 1 }, allowIndex: { type: 'boolean' } })],
+        schema: [
+            optionsSchema({
+                maxStatements: {
+                    description: 'Statement limit used when identifying trivial functions in a file.',
+                    type: 'integer',
+                    minimum: 1,
+                },
+                allowIndex: {
+                    description: 'Allow an index file when it serves the configured library export contract.',
+                    type: 'boolean',
+                },
+            }),
+        ],
         messages: {
             trivial:
                 'This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file.',

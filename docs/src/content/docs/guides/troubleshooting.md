@@ -62,7 +62,7 @@ gspot refuses drive-relative paths, reserved device names, Universal Naming Conv
 paths, and output folders that are links. In `gspot.toml`, write paths relative to the
 repository with forward slashes, then run `gspot apply`.
 
-## “The working tree has uncommitted changes”
+## The working tree has
 
 Commit or stash authored work before `init`. If you just added the CLI dependency, include its manifest and lockfile in that commit.
 
@@ -76,7 +76,7 @@ Read `.gspot/version` and install that exact version through the repository's ru
 
 ## A hook cannot find a native tool
 
-Run `gspot doctor`, install the tool using the acquisition command it prints, and rerun the hook. For mise, trust the generated pins and run `mise install`. An execution error exits `2` and blocks the Git operation.
+Run `gspot doctor`, install the tool using the install command it prints, and rerun the hook. For mise, trust the generated pins and run `mise install`. An execution error exits `2` and blocks the Git operation.
 
 ## npm exec cannot find gspot
 

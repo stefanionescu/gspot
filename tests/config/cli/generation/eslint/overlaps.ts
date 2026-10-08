@@ -77,25 +77,6 @@ export const OVERLAP_FINDINGS = {
     transformed: [],
 };
 
-export const OVERLAP_SCRIPT = `import { basename } from 'node:path';
-import { ESLint } from 'eslint';
-const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
-const names = ['no-empty-character-class', 'regexp/no-empty-character-class', 'sonarjs/no-empty-character-class',
-    'no-useless-catch', 'sonarjs/no-useless-catch', 'unicorn/no-lonely-if', 'sonarjs/no-collapsible-if'];
-const configurations = {};
-for (const file of ['literal.js', 'literal.ts']) {
-    const config = await eslint.calculateConfigForFile(file);
-    configurations[file] = Object.fromEntries(names.map((name) => [name, config.rules[name]]));
-}
-const results = await eslint.lintFiles(['*.js', '*.ts']);
-process.stdout.write(JSON.stringify({ configurations,
-    files: results.map(({ filePath, messages }) => ({ file: basename(filePath),
-        findings: messages.filter(({ ruleId, fatal }) => names.includes(ruleId) || fatal)
-            .map(({ ruleId, line, column, severity }) => ({ ruleId, line, column, severity })),
-    })),
-}));
-`;
-
 export const BINDING_SOURCES = {
     dependency: 'export class Widget {}\nexport const value = 1;\n',
     local: 'export function run() { const unused = 1; return 2; }\n',
@@ -171,25 +152,6 @@ export const EXECUTION_PROJECT = {
     'shadow-eval.cjs': EXECUTION_SOURCES.shadowEval,
     'shadow-eval.cts': EXECUTION_SOURCES.shadowEval,
 };
-
-export const BINDING_SCRIPT = `import { basename } from 'node:path';
-import { ESLint } from 'eslint';
-const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
-const names = ['no-unused-vars', '@typescript-eslint/no-unused-vars', 'sonarjs/no-unused-vars', 'sonarjs/unused-import',
-    'security/detect-eval-with-expression', 'sonarjs/code-eval', 'security/detect-new-buffer', 'n/no-deprecated-api'];
-const configurations = {};
-for (const file of ['local.js', 'local.ts']) {
-    const config = await eslint.calculateConfigForFile(file);
-    configurations[file] = Object.fromEntries(names.map((name) => [name, config.rules[name]?.[0] ?? null]));
-}
-const results = await eslint.lintFiles(['*.js', '*.ts', '*.cjs', '*.cts']);
-process.stdout.write(JSON.stringify({ configurations,
-    files: results.map(({ filePath, messages }) => ({ file: basename(filePath),
-        findings: messages.filter(({ ruleId, fatal }) => names.includes(ruleId) || fatal)
-            .map(({ ruleId, line, column, severity }) => ({ ruleId, line, column, severity })),
-    })),
-}));
-`;
 
 export const BINDING_FINDINGS = {
     'dependency.js': [],

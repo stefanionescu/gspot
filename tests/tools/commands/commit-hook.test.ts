@@ -47,7 +47,7 @@ test('installed and freshly cloned repositories enforce staged defects through r
         'bash',
         '--no-task',
         '--no-ci',
-        '--no-rules',
+        '--no-agent-rules',
         '--no-install',
     ]);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);

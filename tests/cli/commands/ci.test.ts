@@ -45,7 +45,7 @@ test.each([
             'none',
             '--no-task',
             '--no-hooks',
-            '--no-rules',
+            '--no-agent-rules',
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);

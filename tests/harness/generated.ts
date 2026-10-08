@@ -1,5 +1,4 @@
-// What a test repository's policy generates: the files its selected configurations write, and the ESLint instance its
-// configuration produces.
+import { z } from 'zod';
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
@@ -8,18 +7,27 @@ import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
+// What a test repository's policy generates: the files its selected configurations write, and the ESLint instance its
+// configuration produces.
+
+export const eslintConfigurationSchema = z.object({
+    rules: z.record(z.string(), z.tuple([z.union([z.literal(0), z.literal(1), z.literal(2)])], z.unknown())),
+    plugins: z.record(z.string(), z.unknown()),
+    settings: z.record(z.string(), z.unknown()),
+    linterOptions: z.object({ reportUnusedDisableDirectives: z.union([z.literal(0), z.literal(1), z.literal(2)]) }),
+});
 
 /**
  * Links installed test packages, writes outputs through the managed lifecycle, and loads the ESLint configuration.
  * @param root the test repository with its gspot.toml
  * @returns ESLint reading the generated configuration
  */
-export async function createEslint(root: string): Promise<ESLint> {
+export async function createEslint(root: string, options: ESLint.Options = {}): Promise<ESLint> {
     await linkInstalledModules(join(root, 'node_modules'));
     const session = await openSession(root);
     using log = openOwnership(root);
     writeOutputs(session, log);
-    return new ESLint({ cwd: root, overrideConfigFile: join(root, '.gspot/config/eslint.config.mjs') });
+    return new ESLint({ ...options, cwd: root, overrideConfigFile: join(root, '.gspot/config/eslint.config.mjs') });
 }
 
 /**

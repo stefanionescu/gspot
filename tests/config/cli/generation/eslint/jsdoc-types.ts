@@ -41,21 +41,11 @@ export const JSDOC_FINDINGS = [
     { file: 'typed.ts', findings: [] },
 ];
 
-export const JSDOC_SCRIPT = `import { basename } from 'node:path';
-import { ESLint } from 'eslint';
-const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
-const names = ['jsdoc/require-param-type', 'jsdoc/require-returns-type', 'jsdoc/valid-types',
-    'jsdoc/check-types', 'jsdoc/no-undefined-types'];
-const configurations = {};
-for (const file of ['missing.js', 'typed.ts']) {
-    const config = await eslint.calculateConfigForFile(file);
-    configurations[file] = Object.fromEntries(names.map((name) => [name, config.rules[name]]));
-}
-const results = await eslint.lintFiles(['missing.js', 'malformed.js', 'capitalized.js', 'undefined.js', 'typed.ts']);
-process.stdout.write(JSON.stringify({ configurations,
-    files: results.map(({ filePath, messages }) => ({ file: basename(filePath),
-        findings: messages.filter(({ ruleId, fatal }) => names.includes(ruleId) || fatal)
-            .map(({ ruleId, line, column, severity }) => ({ ruleId, line, column, severity })),
-    })),
-}));
-`;
+export const JSDOC_COMPILER_ARGV = [
+    'node',
+    'node_modules/typescript/lib/tsc.js',
+    '--project',
+    '.gspot/config/jsconfig.json',
+    '--pretty',
+    'false',
+];

@@ -62,12 +62,10 @@ test('the compiler-owned schema equals a fresh declaration compilation', async (
     const sources = settingSchemaSources(declarations);
     for (const [path, source] of sources) {
         const target = fileURLToPath(new URL('../../../packages/cli/' + path, import.meta.url));
-        const formatting = await resolveConfig(target);
-        const fresh = await format(source, { ...formatting, filepath: target });
+        const options = { ...(await resolveConfig(target)), filepath: target };
+        const fresh = await format(await format(source, options), options);
         expect(await readFile(target, 'utf8')).toBe(fresh);
-        expect(await format(settingSchemaSources(declarations).get(path)!, { ...formatting, filepath: target })).toBe(
-            fresh,
-        );
+        expect(await format(fresh, options)).toBe(fresh);
     }
 });
 

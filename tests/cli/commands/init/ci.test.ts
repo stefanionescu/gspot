@@ -29,7 +29,7 @@ test.each(INIT_CI_CASES)(
                 'none',
                 '--no-task',
                 '--no-hooks',
-                '--no-rules',
+                '--no-agent-rules',
                 '--no-install',
                 '--ci',
                 provider,

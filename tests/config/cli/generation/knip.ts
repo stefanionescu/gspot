@@ -29,7 +29,7 @@ export const KNIP_ENTRY_TABLES = `
 entry = ["main.js"]
 [scope."child"]
 configurations = ["javascript"]
-[scope.tools.knip]
+[scope."child".tools.knip]
 entry = ["main.js"]
 `;
 

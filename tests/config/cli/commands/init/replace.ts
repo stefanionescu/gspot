@@ -8,7 +8,7 @@ export const PLAN_INIT = [
     'markdown',
     '--no-task',
     '--no-ci',
-    '--no-rules',
+    '--no-agent-rules',
     '--no-install',
 ];
 

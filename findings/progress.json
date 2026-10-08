@@ -1,5 +1,5 @@
 {
-    "openRecords": 951,
+    "openRecords": 947,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -216,7 +216,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 951,
+        "openRecords": 947,
         "records": 1092,
         "batches": [
             {
@@ -522,8 +522,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 44,
-                "unresolvedAssignments": 247
+                "completedAssignments": 46,
+                "unresolvedAssignments": 245
             },
             {
                 "id": "python",
@@ -766,8 +766,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 2,
-                "unresolvedAssignments": 80
+                "completedAssignments": 3,
+                "unresolvedAssignments": 79
             },
             {
                 "id": "frameworks-platforms",
@@ -905,8 +905,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 1,
-                "unresolvedAssignments": 130
+                "completedAssignments": 2,
+                "unresolvedAssignments": 129
             },
             {
                 "id": "test-quality",
@@ -1966,8 +1966,8 @@
                     "review/glossary/028",
                     "review/glossary/029"
                 ],
-                "completedAssignments": 1,
-                "unresolvedAssignments": 27
+                "completedAssignments": 2,
+                "unresolvedAssignments": 26
             }
         ],
         "overlapPolicy": "Each starting record retains its ID and original quotation. Overlapping records appear in every applicable batch. Batch assignment does not close a finding. Second-pass slice corrections precede area and main-summary reconciliation."
@@ -4169,24 +4169,25 @@
             "remaining": ["Playwright, NextIntl and Node rule applicability records remain."]
         },
         "main/097": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
             "verification": [
                 "Evidence 6ba11121d8730575.",
                 "Evidence 6495aa2721aec77b.",
                 "Evidence 8ce35f2a13905491.",
-                "Evidence 373c2975e1d4f646."
+                "Evidence 373c2975e1d4f646.",
+                "Swift packages run swift test with coverage and consume its reported coverage path without Xcode project. Actual macOS native source-CLI probe: Core83percent below explicit100floor, Auxiliary100percent passes; added missing branch then both targets pass. Eleven assertions preserve authored bytes/mode. Native unrestricted probe log and evidence refs retained. Integrated staged137pass14skip0findings and normal hooks passed; broader Linux/platform acceptance remains in its own records."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
                     "verification": ["Evidence 6ba11121d8730575.", "Evidence 6495aa2721aec77b."]
                 },
                 {
                     "evidence": "/tmp/gspot-swift-package-coverage-unrestricted-probe-v2.ts",
-                    "commit": null,
+                    "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
                     "verification": ["Evidence 8ce35f2a13905491.", "Evidence 373c2975e1d4f646."]
                 }
             ]
@@ -4273,14 +4274,17 @@
             ]
         },
         "review/code-commands/005": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence aff4846a40f6b9f4."],
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "verification": [
+                "Evidence aff4846a40f6b9f4.",
+                "Deleted recordPreserved and ApplyReport.preserved; conflicts throw with paths from plans. Native113tests476assertions11files; root/CLI types0. Integrated staged137pass14skip0findings, normal commit and push hooks passed."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-writable-prerequisites-main-intake/freeze.json",
-                    "commit": null,
+                    "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
                     "verification": ["Evidence aff4846a40f6b9f4."]
                 }
             ]
@@ -4446,14 +4450,17 @@
             ]
         },
         "review/code-commands/019": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 58ba6327acfda569."],
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "verification": [
+                "Evidence 58ba6327acfda569.",
+                "Generated files are writable. Deleted readOnly,0444 handling,OWNER_WRITABLE_FILE,preserveMode and identity.mode; drift retains hand-edit detection. Native120tests629assertions19files plus mode6tests28assertions; actual strict158-entry private state transition under ownership claim/CAS passed. Bun1.4.2/Node24.2/24.20 contract probes passed. Integrated staged137pass14skip0findings and normal hooks passed."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-generated-writable-main-intake/freeze.json",
-                    "commit": null,
+                    "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
                     "verification": ["Evidence 58ba6327acfda569."]
                 }
             ]
@@ -6495,10 +6502,12 @@
             ]
         },
         "review/glossary/024": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "2288458c1d894771f72142a378f662ebd453912a",
+            "verification": [
+                "Repository package-manifests/readPackageManifests/PackageManifest/PackageJson/PACKAGE_MANIFESTS and Session.packageManifests have one owner and name. No compatibility aliases. Mechanical AST comparisons equivalent; native83tests275assertions5files; root types0; staged96pass12skip0findings and normal commit/push hooks passed."
+            ]
         },
         "review/glossary/025": {
             "status": "partial",
@@ -14896,6 +14905,22 @@
             "evidence": "/tmp/gspot-record-native-round4.py",
             "validation": [
                 "No original IDs/quotations/memberships/closed records changed; no live publication, release tag or deployment."
+            ]
+        },
+        {
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "completedRecords": [
+                "review/code-commands/005",
+                "review/code-commands/019",
+                "main/097",
+                "review/glossary/024"
+            ],
+            "unresolvedRecords": 947,
+            "validation": [
+                "Actual per-record native acceptance and previously passed integration staged/normal Git hooks; separate glossary mechanical commit2288458c1 identified per record."
+            ],
+            "limitations": [
+                "Whole repository CI has real failures being corrected; no cross-platform completion claim. main/001 external publication/setup stays partial."
             ]
         }
     ],

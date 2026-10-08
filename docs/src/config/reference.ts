@@ -13,7 +13,7 @@ Environment ownership and barrel limits apply at level \`all\`. Barrel limits ap
 /** Introduce setting inheritance and the reason requirements of each direction. */
 export const SETTINGS_INTRO = `Settings exposed by \`gspot set\` and \`gspot list settings\`, with defaults from their owners. Any limit can be set for one language as \`limits.<language>.<name>\`. A scope inherits the root and every scope that contains it: scalar values replace inherited values, and lists add to them. See [monorepos](/guides/monorepos/).
 
-Direction describes whether a change needs a reason when \`require_reasons = true\`:
+Direction describes which changes weaken enforcement and need an entry in \`[reasons]\`:
 
 - \`neutral\`: neither direction weakens enforcement.
 - \`tightening\`: increasing or enabling the value strengthens enforcement.
@@ -85,66 +85,11 @@ export const POLICY_EXAMPLES: Record<string, string> = {
     vendored: '[[vendored]]\npaths = ["vendor/**"]\nreason = "Copied from the reviewed upstream library."',
 };
 
-/** Plain meanings of plugin options, alongside definition-owned types and defaults. */
-export const PLUGIN_OPTIONS: Record<string, Record<string, string>> = {
-    'no-client-env': {
-        isClient: 'Treat selected files as client code without a use-client directive.',
-        publicPrefixes: 'Prefixes allowed for public environment variables.',
-        allowed: 'Environment variable names allowed in client code.',
-    },
-    'import-extensions': {
-        style: 'Required suffix for internal code imports.',
-        internalPrefixes: 'Prefixes that identify internal imports.',
-    },
-    'import-direction': {
-        roles: 'File patterns identifying each architectural role.',
-        aliases: 'Import alias prefixes mapped to repository folders.',
-        scope: 'Folder used as the root for role patterns.',
-    },
-    'no-helpers-beside-tests': {
-        harness: 'Test support directory where non-test files belong.',
-    },
-    'env-owner': {
-        owners: 'File patterns allowed to read environment variables.',
-        allowed: 'Environment variable names allowed outside those files.',
-    },
-    'import-boundaries': {
-        folders: 'Boundary folders or folder globs. The nearest matching ancestor owns each file. Defaults to */*.',
-        aliases: 'Import alias prefixes mapped to folders for fixes.',
-    },
-    'no-reexports': { allowIndex: 'Allow re-exports in index files.' },
-    'max-barrel-reexports': { max: 'Maximum number of re-export declarations in an index file.' },
-    'no-trivial-functions': { maxStatements: 'Functions with this many statements or fewer are reported.' },
-    'no-trivial-files': {
-        allowIndex: 'Allow an index file when it serves the configured library export contract.',
-        maxStatements: 'Statement limit used when identifying trivial functions in a file.',
-    },
-};
-
-/** Rules that need project-owned selectors before they can report findings. */
-export const PLUGIN_REQUIRES_OPTIONS = ['env-owner', 'import-direction', 'no-helpers-beside-tests'];
-
 /** Configuration details that explain interactions between tools. */
 export const CONFIGURATION_NOTES: Record<string, string> = {
     javascript: ESLINT_POLICY_OPTIONS,
     typescript: ESLINT_POLICY_OPTIONS,
     python: 'An explicit [tool.pydoclint] style in pyproject.toml takes precedence. Otherwise, pydoclint follows the project Ruff pydocstyle convention, then tools.ruff.docstring_convention when it is google or numpy. Other conventions leave the native pydoclint default unchanged.',
-};
-
-/** A second task example for command reference pages, beyond definition-owned help. */
-export const COMMAND_EXAMPLES: Record<string, string> = {
-    init: 'gspot init --dry-run --yes',
-    apply: 'gspot apply',
-    add: 'gspot add pytest --scope services/api',
-    remove: 'gspot remove nextjs --scope apps/web',
-    export: 'gspot --json export team.gspot.template.toml',
-    install: 'gspot install --dry-run',
-    check: 'gspot check --changed --base origin/main',
-    doctor: 'gspot --json doctor',
-    explain: 'gspot explain ./src/app.ts',
-    ignore: 'gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results."',
-    set: 'gspot set level all',
-    list: 'gspot list configurations',
 };
 
 /** Plain labels for JSON schema types presented in policy tables. */

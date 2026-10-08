@@ -75,7 +75,7 @@ export async function askQuestions(root: string, options: InitOptions, tooling: 
             ? 'none'
             : await askChoice('Write a CI workflow?', '--ci', CI_CHOICES, proposeCi(root, tooling), options.yes));
     const agentRules =
-        options.agentRules ?? (await askConfirmation('Install the agent rules?', '--no-rules', true, options.yes));
+        options.agentRules ?? (await askConfirmation('Write agent rules?', '--no-agent-rules', true, options.yes));
     const runner =
         options.runner ??
         (await askChoice(

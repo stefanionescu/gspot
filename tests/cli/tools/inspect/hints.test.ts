@@ -26,7 +26,7 @@ function installerHint(tool: ToolPin, platform: string): string {
 }
 
 test.each([...OPERATING_SYSTEMS])(
-    'a missing host XML reader reports $node acquisition guidance without requesting a managed install',
+    'a missing host XML reader reports $node installation guidance without requesting a managed install',
     async ({ node: platform }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {

@@ -9,7 +9,7 @@ import { writeSetup } from '#cli/commands/init/write.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/samples/commitlint.ts';
-import { COMMITLINT_TAKEOVERS } from '#tests/config/tools/generation/takeover.ts';
+import { COMMITLINT_TAKEOVERS } from '#tests/config/tools/generation/commits.ts';
 
 test.each(COMMITLINT_TAKEOVERS)(
     'initialization retires the native Commitlint configuration $file',

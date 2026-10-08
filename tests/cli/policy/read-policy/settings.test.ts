@@ -177,7 +177,7 @@ test('schema defaults preserve absent and explicitly authored empty policy table
 });
 
 test.each(DISABLED_RULES)(
-    'native $tool rule disabling names its actual ignore command: $value',
+    'native $rule disabling names its actual ignore command: $value',
     ({ tool, configuration, rule, value, check }) => {
         const source = stringify({ configurations: [configuration], tools: { [tool]: { rules: { [rule]: value } } } });
         expect(() => parseStrictPolicy(source)).toThrow(`gspot ignore ${check} --rule ${rule}`);

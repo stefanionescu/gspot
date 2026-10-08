@@ -67,11 +67,11 @@ export function registerRemove(program: Program): void {
         .argument('<configuration>', 'Built-in configuration name to remove')
         .summary('Remove a configuration')
         .description(
-            'Remove a configuration from the root selection or from one scope, apply the configuration. Run gspot install when the remaining configuration needs tools. gspot refuses to remove a configuration that another selected configuration requires. --dry-run prints the change and writes nothing.',
+            'Remove a configuration from the root selection or from one scope, apply the policy. Run gspot install when the remaining configuration needs tools. gspot refuses to remove a configuration that another selected configuration requires. --dry-run prints the change and writes nothing.',
         )
         .addHelpText(
             'after',
-            '\nExit codes:\n- 0: the configuration was removed, or the preview finished.\n- 2: the input was invalid, or remove could not finish.\n\nExample:\ngspot remove bash --dry-run',
+            '\nExit codes:\n- 0: the configuration was removed, or the preview finished.\n- 2: the input was invalid, or remove could not finish.\n\nExample:\ngspot remove bash --dry-run\ngspot remove nextjs --scope apps/web',
         )
         .option('--scope <path>', 'Remove the configuration from this scope')
         .option('--dry-run', 'Print the change and write nothing')

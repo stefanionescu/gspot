@@ -10,7 +10,7 @@ export const ACTIONS_INIT = [
     'actions',
     '--no-task',
     '--no-ci',
-    '--no-rules',
+    '--no-agent-rules',
     '--no-install',
 ];
 

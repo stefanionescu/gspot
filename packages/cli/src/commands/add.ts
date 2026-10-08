@@ -63,11 +63,11 @@ export function registerAdd(program: Program): void {
         .argument('<configuration...>', 'Built-in configuration names to add')
         .summary('Add configurations')
         .description(
-            'Add configurations to the root selection or to one scope, apply the configuration. Run gspot install when the change needs tools. Required configurations are added with them. --dry-run prints the change and writes nothing.',
+            'Add configurations to the root selection or to one scope, apply the policy. Run gspot install when the change needs tools. Required configurations are added with them. --dry-run prints the change and writes nothing.',
         )
         .addHelpText(
             'after',
-            '\nExit codes:\n- 0: the configurations were added, or the preview finished.\n- 2: the input was invalid, or add could not finish.\n\nExample:\ngspot add bash --dry-run',
+            '\nExit codes:\n- 0: the configurations were added, or the preview finished.\n- 2: the input was invalid, or add could not finish.\n\nExample:\ngspot add bash --dry-run\ngspot add pytest --scope services/api',
         )
         .option('--scope <path>', 'Add the configurations to this scope')
         .option('--dry-run', 'Print the change and write nothing')

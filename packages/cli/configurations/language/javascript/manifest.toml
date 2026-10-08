@@ -301,7 +301,7 @@ name = "tools.eslint.overrides"
 type = "list"
 direction = "rule-options"
 default = []
-summary = "Lint rule options for selected paths, in order. A scope's overrides apply inside that scope only. Explicit ignores apply last."
+summary = "Rule options for selected paths, in order. A scope's overrides apply inside that scope only. Explicit ignores apply last."
 
 [[setting]]
 name = "tools.eslint.import_extensions"

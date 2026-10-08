@@ -114,12 +114,6 @@ allowed = ["removed_configurations"]
 paths = ["packages/cli/src/types/configurations.ts"]
 reason = "This selection contract uses the public TOML key for manual configuration removals."
 
-[naming.allowed]
-HelpersBesideTestsOptions = "This type describes the options of the published ESLint rule no-helpers-beside-tests."
-no-helpers-beside-tests = "This filename identifies the published ESLint rule no-helpers-beside-tests."
-"no-helpers-beside-tests.test" = "This test filename identifies its published ESLint rule no-helpers-beside-tests."
-noHelpersBesideTests = "This binding owns the published ESLint rule no-helpers-beside-tests."
-
 # A CLI layer imports itself and the layers named in its imports_allowed entry. Its config and types files belong to the same layer.
 [[architecture.modules]]
 may_import = ["main", "commands", "platform"]
@@ -416,7 +410,7 @@ scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
 "**/*" = "ts"
 
 [tools.knip]
-entry = ["packages/eslint-plugin/src/plugin.ts", "docs/src/content/reference/collection.ts", "docs/src/route-metadata.ts", "scripts/setting-values.ts"]
+entry = ["packages/eslint-plugin/src/plugin.ts", "docs/src/content/reference/collection.ts", "scripts/setting-values.ts"]
 
 [tools.knip.ignore_dependencies]
 "^@fontsource-variable/" = "The site imports the fonts from docs/src/theme.css, outside the TypeScript import graph."
@@ -476,6 +470,12 @@ check = "javascript/eslint"
 paths = ["packages/cli/package.json"]
 reason = "The gspot package exposes a command through bin and has no importable module API. Remove this exception if the package gains a module API."
 rule = "package-json/require-exports"
+
+[[ignore]]
+check = "javascript/eslint"
+paths = ["packages/eslint-plugin/package.json"]
+reason = "A published library keeps ranges for runtime dependencies and peers."
+rule = "package-json/restrict-dependency-ranges"
 
 [[ignore]]
 check = "jest/coverage"

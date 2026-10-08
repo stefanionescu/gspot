@@ -1,8 +1,8 @@
 [configuration]
-title = "Configuration Files"
+title = "JSON, YAML, TOML, and XML files"
 always_selected = true
 requires = ["format"]
-description = "Checks JSON, YAML, TOML, XML, and related formats. Its templates configure the tools that inspect these files."
+description = "Checks JSON, YAML, TOML, XML, and related formats. Its tool files configure the tools that read these files."
 
 [files]
 extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".plist", ".entitlements", ".xcconfig", ".xcstrings", ".xml", ".storyboard", ".xib"]

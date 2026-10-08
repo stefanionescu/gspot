@@ -78,7 +78,7 @@ export function registerExport(program: Program): void {
         )
         .addHelpText(
             'after',
-            '\nExit codes:\n- 0: the template was written.\n- 2: the input was invalid, or export could not finish.\n\nExample:\ngspot export team.gspot.template.toml',
+            '\nExit codes:\n- 0: the template was written.\n- 2: the input was invalid, or export could not finish.\n\nExample:\ngspot export team.template.toml\ngspot --json export team.template.toml',
         )
         .option('--dry-run', 'Print the template without writing its destination')
         .action(async (file, flags, command) => {

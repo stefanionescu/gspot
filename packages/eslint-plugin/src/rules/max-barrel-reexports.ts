@@ -18,7 +18,15 @@ export const maxBarrelReexports = createRule<MaxBarrelReexportsOptions, 'tooMany
             why: 'A barrel that grows without bound becomes the import everyone reaches for, and every change to any file behind it touches every importer.',
             fix: 'Import from the declaring modules or split the index by area. Set `max` if the public API needs a different limit.',
         },
-        schema: [optionsSchema({ max: { type: 'integer', minimum: 1 } })],
+        schema: [
+            optionsSchema({
+                max: {
+                    description: 'Maximum number of re-export declarations in an index file.',
+                    type: 'integer',
+                    minimum: 1,
+                },
+            }),
+        ],
         messages: {
             tooMany:
                 'This index has {{count}} re-exports; the limit is {{max}}. Import from the owning modules or split the index.',

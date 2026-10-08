@@ -5,15 +5,21 @@ import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
 import { DETECTION_LABELS, CONFIGURATION_NOTES } from '../../config/reference.ts';
 import { configurationFiles } from '@gspothq/cli/src/configurations/declarations.ts';
 
-// A rule file of the configuration, with the condition that installs it when it has one.
-function ruleSelection(manifest: Manifest, path: string): string {
-    const condition =
-        manifest.agent_rules[posix.relative(`${manifest.configuration.kind}/${manifest.configuration.name}`, path)];
-    if (condition === undefined) return `\`${path}\``;
-    const conditions = Object.entries(condition).flatMap(([kind, patterns]) =>
-        patterns.map((pattern) => `${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS]} \`${pattern}\``),
-    );
-    return `\`${path}\` when the repository matches any of: ${conditions.join(', ')}.`;
+// The configuration's rule files and the conditions that install them.
+function ruleSelection(manifest: Manifest): string {
+    return configurationFiles(manifest)
+        .map(({ path }) => {
+            const condition =
+                manifest.agent_rules[
+                    posix.relative(`${manifest.configuration.kind}/${manifest.configuration.name}`, path)
+                ];
+            if (condition === undefined) return `- \`${path}\``;
+            const conditions = Object.entries(condition).flatMap(([kind, patterns]) =>
+                patterns.map((pattern) => `${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS]} \`${pattern}\``),
+            );
+            return `- \`${path}\` when the repository matches any of: ${conditions.join(', ')}.`;
+        })
+        .join('\n');
 }
 
 function ruleExclusions(manifest: Manifest): string {
@@ -52,9 +58,10 @@ function configurationChecks(manifest: Manifest): string {
 /**
  * Describe a built-in configuration from its selection, settings, and check owners.
  * @param manifest the validated configuration manifest
+ * @param manifests the validated built-in catalog
  * @returns its public reference page
  */
-export function configurationPage(manifest: Manifest): ReferencePage {
+export function configurationPage(manifest: Manifest, manifests: Manifest[]): ReferencePage {
     const { configuration } = manifest;
     const tools = manifest.tools.map((tool) =>
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
@@ -70,9 +77,15 @@ export function configurationPage(manifest: Manifest): ReferencePage {
             return `- ${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS]}: ${spellings}`;
         })
         .join('\n');
+    const requiredBy = manifests
+        .filter((owner) => owner.configuration.requires.includes(configuration.name))
+        .map((owner) => `\`${owner.configuration.name}\``)
+        .join(', ');
     const selection = configuration.always_selected
         ? 'Selected by default. Tool requirements depend on applicable checks.'
-        : selected || `Select explicitly with \`gspot add ${configuration.name}\`.`;
+        : [selected, requiredBy === '' ? '' : `Selected when required by: ${requiredBy}.`]
+              .filter(Boolean)
+              .join('\n\n') || `Select explicitly with \`gspot add ${configuration.name}\`.`;
     const defaults = [
         ...Object.entries(manifest.set).map(
             ([name, value]) => `\`${name}\`: \`${JSON.stringify(value)}\` at level recommended`,
@@ -84,11 +97,9 @@ export function configurationPage(manifest: Manifest): ReferencePage {
     const hostTools = manifest.tools
         .filter((tool) => Object.keys(tool.installers).length === 0)
         .map((tool) => tool.name);
-    const installation =
-        'Install the project runtime and application dependencies. Run `gspot install` for applicable pinned tools. Native tools use mise or the commands from `gspot doctor`. Declared pins are installed only when an applicable check, fixer, or generator requires them.';
     const sections: [string, string][] = [
         ['Selected when', selection],
-        ['You install', installation + (hostTools.length === 0 ? '' : ` Host tools: ${hostTools.join(', ')}.`)],
+        ['You install', hostTools.join(', ')],
         ['Declared tool pins', tools.map((item) => '- ' + item).join('\n')],
         ['Generated tool files', targets.map((item) => '- ' + item).join('\n')],
         ['Kept out of Git', manifest.ignored.map((path) => '- `' + path + '`').join('\n')],
@@ -97,12 +108,7 @@ export function configurationPage(manifest: Manifest): ReferencePage {
         ['Settings', manifest.settings.map((setting) => `- \`${setting.name}\`: ${setting.summary}`).join('\n')],
         ['Defaults set for other configurations', defaults.map((item) => '- ' + item).join('\n')],
         ['Rule exclusions', ruleExclusions(manifest)],
-        [
-            'Rules for coding agents',
-            configurationFiles(manifest)
-                .map((file) => '- ' + ruleSelection(manifest, file.path))
-                .join('\n'),
-        ],
+        ['Rules for coding agents', ruleSelection(manifest)],
     ];
     const required = configuration.requires.map((id) => '`' + id + '`').join(', ');
     const opening = configuration.description + (required === '' ? '' : `\n\nRequires: ${required}.`);

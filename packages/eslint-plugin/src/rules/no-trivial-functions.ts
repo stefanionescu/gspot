@@ -186,7 +186,15 @@ export const noTrivialFunctions = createRule<TrivialFunctionsOptions, 'trivial'>
             why: 'An unnecessary function adds another name and another place to read.',
             fix: 'Inline the function at its call sites and delete it. A required external API keeps the function under a narrow suppression with a reason.',
         },
-        schema: [optionsSchema({ maxStatements: { type: 'integer', minimum: 1 } })],
+        schema: [
+            optionsSchema({
+                maxStatements: {
+                    description: 'Functions with this many statements or fewer are reported.',
+                    type: 'integer',
+                    minimum: 1,
+                },
+            }),
+        ],
         messages: {
             trivial:
                 'This function has {{statements}}. Functions with {{max}} or fewer are reported. Inline it into its callers, or explain the API it serves in a narrow suppression.',

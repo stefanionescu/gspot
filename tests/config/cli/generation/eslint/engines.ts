@@ -1,18 +1,5 @@
-import type { EnginePhase } from '#tests/types/tools/generation/engines.ts';
-
-export const ENGINE_LINT_SOURCE = String.raw`import { ESLint } from 'eslint';
-const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
-const results = await eslint.lintFiles(JSON.parse(process.argv[1]));
-process.stdout.write(JSON.stringify(results.map(({ filePath, messages }) => ({
-    file: filePath.slice(process.cwd().length + 1).replaceAll('\\', '/'),
-    findings: messages.filter(({ ruleId }) => ruleId === 'n/no-unsupported-features/es-builtins' || ruleId === 'n/no-unsupported-features/node-builtins' || ruleId === null)
-        .map(({ ruleId, line, severity }) => ({ ruleId, line, severity }))
-        .toSorted((left, right) => left.ruleId.localeCompare(right.ruleId)),
-})).toSorted((left, right) => left.file.localeCompare(right.file))));
-`;
-
 export const ENGINE_SCOPES =
-    '[agent_rules]\nenabled = false\n[scope."old"]\n[scope."new"]\n[scope."forced"]\n[scope."old/legacy"]\n[scope."browser"]\n[scope.tools.eslint.runtimes]\n"**/*" = "browser"\n';
+    '[agent_rules]\nenabled = false\n[scope."old"]\n[scope."new"]\n[scope."forced"]\n[scope."old/legacy"]\n[scope."browser"]\n[scope."browser".tools.eslint.runtimes]\n"**/*" = "browser"\n';
 
 export const ENGINE_PACKAGES = {
     'package.json': '{"private":true,"type":"module","engines":{"node":">=18.0.0"}}',
@@ -39,9 +26,9 @@ export const ENGINE_FINDINGS = [
 ];
 
 /** Apply overrides, replace them with an inherited root override, then remove it and correct unsupported calls. */
-export const ENGINE_PHASES: EnginePhase[] = [
+export const ENGINE_PHASES = [
     {
-        tables: '[agent_rules]\nenabled = false\n[scope."old"]\n[scope."new"]\n[scope."forced"]\n[scope.tools.eslint]\nnode_version = ">=22.0.0"\n[scope."old/legacy"]\n[scope.tools.eslint]\nnode_version = ">=18.0.0"\n[scope."browser"]\n[scope.tools.eslint.runtimes]\n"**/*" = "browser"\n',
+        tables: '[agent_rules]\nenabled = false\n[scope."old"]\n[scope."new"]\n[scope."forced"]\n[scope."forced".tools.eslint]\nnode_version = ">=22.0.0"\n[scope."old/legacy"]\n[scope."old/legacy".tools.eslint]\nnode_version = ">=18.0.0"\n[scope."browser"]\n[scope."browser".tools.eslint.runtimes]\n"**/*" = "browser"\n',
         reported: ['old/source.js', 'old/source.cjs', 'old/legacy/source.js'],
         corrections: [],
     },

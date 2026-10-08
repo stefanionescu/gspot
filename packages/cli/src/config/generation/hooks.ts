@@ -7,7 +7,7 @@ export const HOOK_ARGS = {
     'commit-msg': 'check --hook commit-msg --message-file "$1"',
 } as const;
 
-/** Hook commands and the installation needed when their executable is absent. */
+/** Hook commands and the install command used when their executable is absent. */
 export const HOOK_RUNNERS = {
     gspot: { command: 'gspot', install: 'Install gspot and add it to PATH, then run: gspot install.' },
     mise: { command: 'mise exec -- gspot', install: 'Install mise, then run: mise install.' },

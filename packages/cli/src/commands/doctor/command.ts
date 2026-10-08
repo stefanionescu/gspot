@@ -1,6 +1,5 @@
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { findRoot } from '#cli/repository/root.ts';
-import { inspectTool } from '#cli/tools/inspect.ts';
 import { missingBuild } from '#cli/planning/skips.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { collectPins } from '#cli/configurations/pins.ts';
@@ -18,10 +17,17 @@ import { colors, printResult } from '#cli/terminal/messages.ts';
 import type { ToolInspection } from '#cli/types/tools/install.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
+import { inspectTool, isToolAvailable } from '#cli/tools/inspect.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
 import type { Suggestions, DoctorReport } from '#cli/types/commands/doctor.ts';
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
-import { VERSION_GAP, COLUMN_WIDTHS, TOOL_STATE_COLORS, SUGGESTION_SECTIONS } from '#cli/config/commands/doctor.ts';
+
+import {
+    VERSION_GAP,
+    COLUMN_WIDTHS,
+    CI_REPORT_PATHS,
+    TOOL_STATE_COLORS,
+    SUGGESTION_SECTIONS,
+} from '#cli/config/commands/doctor.ts';
 
 function versionText(tool: ToolInspection): string {
     const found = tool.found ?? '';
@@ -34,10 +40,8 @@ function versionText(tool: ToolInspection): string {
 function toolLines(tools: ToolInspection[]): string[] {
     const width = Math.max(...tools.map((tool) => versionText(tool).length)) + VERSION_GAP;
     return tools.map((tool) => {
-        const isBroken = tool.state !== 'ok' && tool.state !== 'host';
-        const tail = isBroken
-            ? [tool.note, tool.hint].filter((part) => part !== undefined).join(' ')
-            : (tool.path ?? '');
+        const isBroken = !isToolAvailable(tool);
+        const tail = isBroken ? [tool.note, tool.hint].filter((part) => part !== undefined).join(' ') : tool.path;
         const label = colors[TOOL_STATE_COLORS[tool.state]](tool.state.padEnd(COLUMN_WIDTHS.label));
         return `  ${label} ${versionText(tool).padEnd(width)} ${tail}`.trimEnd();
     });
@@ -75,21 +79,27 @@ function versionLine(report: DoctorReport): string {
 function buildDoctorReport(session: ToolSession, pinned: string | undefined): DoctorReport {
     const platform = hostPlatform();
     // A tool with no build for this host is left out: the checks that need it skip here.
-    const tools = collectPins(applicableManifests(session))
-        .filter((tool) => missingBuild(tool, platform, process.arch) === undefined)
-        .map((tool) => inspectTool(session, tool));
+    const inspections = new Map<string, ToolInspection>();
+    const pins = collectPins(applicableManifests(session)).filter(
+        (tool) => missingBuild(tool, platform, process.arch) === undefined,
+    );
+    for (const { scope, selected } of session.scopes) {
+        const declared = new Set(selected.flatMap((manifest) => manifest.tools).map((tool) => tool.name));
+        for (const tool of pins.filter((pin) => declared.has(pin.name))) {
+            const inspection = inspectTool({ ...session, cwd: join(session.root, scope.path) }, tool);
+            inspections.set(JSON.stringify(inspection), inspection);
+        }
+    }
+    const tools = [...inspections.values()].toSorted((left, right) => left.name.localeCompare(right.name));
     const { policy } = session.policyFiles;
     const hooks = hookStatus({ policy: session.policyFiles.policy, repository: session.repository });
-    const isBroken = !hooks.ready || tools.some((tool) => tool.state !== 'ok' && tool.state !== 'host');
-    let ci = 'none';
-    if (policy.ci !== undefined)
-        ci = policy.ci.provider === 'github' ? GITHUB_WORKFLOW : `${GITLAB_WORKFLOW} (include from .gitlab-ci.yml)`;
+    const isBroken = !hooks.ready || tools.some((tool) => !isToolAvailable(tool));
     return {
         submodules: getSubmodulePaths(session.repository.index),
         tools,
         suggestions: getSuggestions(session),
         hooks: hooks.text,
-        ci,
+        ci: policy.ci === undefined ? 'none' : CI_REPORT_PATHS[policy.ci.provider],
         rules: {
             files: policy.agent_rules.enabled
                 ? selectRuleFiles(policy.agent_rules, everyManifest(session.scopes), session.repository, policy.level)
@@ -125,7 +135,7 @@ function formatDoctorReport(report: DoctorReport): string {
 }
 
 /**
- * Reports configuration and tool problems.
+ * Reports configuration and tool errors.
  * @param directory the working directory
  * @returns the command result
  */
@@ -154,7 +164,7 @@ export function registerDoctor(program: Program): void {
         )
         .addHelpText(
             'after',
-            '\nExit codes:\n- 0: the selected tools and hooks are ready.\n- 1: a selected tool is missing, invalid, newer, or outdated, or a hook is not ready.\n- 2: doctor could not finish.\n\nExample:\ngspot doctor',
+            '\nExit codes:\n- 0: the selected tools and hooks are ready.\n- 1: a selected tool is missing, invalid, newer, or outdated, or a hook is not ready.\n- 2: doctor could not finish.\n\nExample:\ngspot doctor\ngspot --json doctor',
         )
         .action(async (_flags, command) => {
             const global = command.optsWithGlobals();

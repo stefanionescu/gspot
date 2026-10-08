@@ -174,7 +174,7 @@ export function registerCheck(program: Program): void {
         )
         .addHelpText(
             'after',
-            '\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged',
+            '\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged\ngspot check --base origin/main',
         )
         .option('--only <checks...>', 'Run only these checks')
         .option('--staged', 'Check staged files in an exact copy of the index')

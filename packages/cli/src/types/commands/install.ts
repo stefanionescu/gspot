@@ -1,6 +1,6 @@
 export type InstallOptions = { cwd: string; isDryRun: boolean; refreshLockfiles?: boolean };
 
-/** The JSON the install command prints: the planned steps of a dry run, or whether the installation completed. */
+/** The JSON gspot install prints: the planned steps of a dry run, or whether the installation completed. */
 export type InstallJson = {
     dryRun?: true;
     installed?: boolean;

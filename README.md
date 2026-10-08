@@ -12,13 +12,11 @@ gspot is not published on npm yet.
 
 ## Requirements
 
-You need Git. gspot requires Node.js 24.2 or newer, or Bun 1.4.2 or newer, under every runner, including mise.
-
-Requirements follow applicable checks. Python tools need uv. npm tools need their package manager and runtime. Native tools need mise or the pinned executables on `PATH`. Shared files count: a Python project with Markdown can need npm-based Markdown checks. `gspot doctor` prints missing tools and acquisition commands.
+Read [Requirements](docs/src/content/docs/guides/requirements.md) for the runtimes and tools each check needs.
 
 ## Install
 
-After publication, choose by repository:
+Choose by repository:
 
 | Repository                                   | Install                                                        | Run commands with                                             |
 | -------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------- |
@@ -36,11 +34,7 @@ npx gspot init
 npx gspot doctor
 ```
 
-Commit the install first because initialization requires a clean working tree. For other package managers, use their exact install command and commit their lockfile.
-
-Without `package.json`, use `mise exec npm:@gspothq/cli@0.1.0 -- gspot init` and choose mise. The generated mise file pins the CLI and applicable native tools. Without mise, install `npm install --global @gspothq/cli@0.1.0` and run `gspot init`. A global installation supplies one CLI version per machine; each repository pins its version in `.gspot/version`.
-
-Read the initialization plan before accepting it. `--no-install` writes setup without resolving tool lockfiles; run `gspot install` later. Guides use `gspot` as shorthand for the prefix in the table.
+Follow [Install gspot](docs/src/content/docs/guides/install.md) for other package managers, mise, global installation, and setup verification.
 
 ## What it catches
 
@@ -71,7 +65,7 @@ root  javascript/eslint                   failed     2 files     1.0s
   reproduce: gspot check --only javascript/eslint --staged
 root  naming/paths                        failed     2 files     0.0s
   src/utils.ts:1:1  banned-term  typescript file "utils": "utils" is banned (roles group).
-    help: Rename the file or folder, or add a path rule under [[naming.paths]] with a reason.
+    help: Rename the file or folder, or add a path rule under [[naming.overrides]] with a reason.
   reproduce: gspot check --only naming/paths --staged
 
 ```

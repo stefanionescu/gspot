@@ -1,4 +1,4 @@
-// Explain a check, tool rule, configuration, setting, or file path.
+// Explain a check, rule, configuration, setting, or file path.
 import { resolve } from 'node:path';
 import { hasPolicy } from '#cli/policy/read.ts';
 import { findRoot } from '#cli/repository/root.ts';
@@ -62,7 +62,7 @@ function explainConfiguration(configurationName: string): Explanation | undefine
             ),
         ),
         ...formatList('Settings', row.settings),
-        ...formatList('Guides', row.agentRules),
+        ...formatList('Agent rules', row.agentRules),
     ];
     return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, data: row };
 }
@@ -149,7 +149,7 @@ function buildUnknownSubjectDiagnostic(session: ToolSession | undefined, subject
     return `There is no configuration called \`${subject}\`.${buildSubjectSuggestion(subject, configurationManifests().keys().toArray())} Run \`gspot list configurations\` to see the available configurations.`;
 }
 
-// A check retains its meaning; a tracked path precedes a tool rule with the same first folder.
+// A check retains its meaning; a tracked path precedes a rule with the same first folder.
 function explainSlashed(
     session: ToolSession | undefined,
     subject: string,
@@ -198,11 +198,11 @@ export function registerExplain(program: Program): void {
         .argument('<subject>', 'Check ID, rule, configuration, setting, or file path')
         .summary('Explain a check, rule, configuration, setting, or file')
         .description(
-            'Explain a check, a tool rule, a configuration, a setting, or a file path: what it is and what to do about it. A rule also gets the gspot ignore and gspot set lines that change it. A setting gets its value, its default, and where the value comes from. A file gets the checks that read it. explain changes nothing.',
+            'Explain a check, a rule, a configuration, a setting, or a file path: what it is and what to do about it. A rule also gets the gspot ignore and gspot set lines that change it. A setting gets its value, its default, and where the value comes from. A file gets the checks that read it. explain changes nothing.',
         )
         .addHelpText(
             'after',
-            '\nExit codes:\n- 0: the explanation was printed.\n- 2: the subject is unknown, or the input was invalid.\n\nExample:\ngspot explain bash/syntax',
+            '\nExit codes:\n- 0: the explanation was printed.\n- 2: the subject is unknown, or the input was invalid.\n\nExample:\ngspot explain bash/syntax\ngspot explain ./src/app.ts',
         )
         .action(async (subject, _flags, command) => {
             const global = command.optsWithGlobals();

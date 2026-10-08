@@ -21,7 +21,7 @@ import {
 } from '#tests/config/cli/tools/vale.ts';
 
 test.each(VALE_ACQUISITION_FAILURES)(
-    'Vale acquisition preserves installed styles after %s and succeeds after correction',
+    'Vale installation preserves installed styles after %s and succeeds after correction',
     async (failure, script, expected, tables) => {
         await using directory = await testdir();
         const installed = '.gspot/config/vale/styles/Google/terms.yml';
@@ -123,7 +123,7 @@ test.each(VALE_PACKAGE_FOLDERS)(
 );
 
 test.each([false, true])(
-    'recommended acquisition checks config presence=%s without native sync',
+    'recommended installation checks config presence=%s without native sync',
     async (configured) => {
         await using directory = await testdir();
         await createFileTree(directory.path, {

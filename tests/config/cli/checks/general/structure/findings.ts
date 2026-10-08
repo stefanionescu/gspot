@@ -8,7 +8,7 @@ export const REPOSITORY: RepositoryScenario = {
     configurations: ['bash', 'javascript'],
     modules: false,
     without: [],
-    init: ['--no-ci', '--no-rules', '--no-install'],
+    init: ['--no-ci', '--no-agent-rules', '--no-install'],
     installs: false,
     files: {
         'scripts/a.sh': CLEAN,

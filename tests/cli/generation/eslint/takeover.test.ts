@@ -1,6 +1,8 @@
-import { join, posix } from 'node:path';
+import { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
+import { toPosix } from '#cli/platform/paths.ts';
 import { commitAll } from '#tests/harness/git.ts';
+import { join, posix, relative } from 'node:path';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { prepare } from '#cli/commands/init/prepare.ts';
@@ -9,7 +11,7 @@ import { buildInitOptions } from '#tests/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { VALID_CSS, INVALID_CSS, TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
-import { KNIP_TAKEOVERS, ESLINT_DISCOVERY, STYLELINT_DISCOVERY } from '#tests/config/tools/generation/takeover.ts';
+import { KNIP_TAKEOVERS, STYLELINT_DISCOVERY } from '#tests/config/cli/generation/eslint/takeover.ts';
 
 test.each(['', 'app'])('native Stylelint discovery uses owned package fields at both levels in %s', async (scope) => {
     await using sandbox = await testdir();
@@ -105,10 +107,8 @@ test.each(['eslint.config.mts', 'eslint.config.cts'])(
         });
         commitAll(sandbox.path);
         await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
-        const command = ['node', '--input-type=module', '-e', ESLINT_DISCOVERY, 'main.js'];
-        const before = await runTestCommand(command, { cwd: sandbox.path });
-        expect(before.code, before.stdout + before.stderr).toBe(0);
-        expect(before.stdout).toBe(file);
+        const before = await new ESLint({ cwd: sandbox.path }).findConfigFile('main.js');
+        expect(toPosix(relative(sandbox.path, before!))).toBe(file);
         const options = buildInitOptions(sandbox.path, { configurations: ['javascript'] });
         const prepared = await prepare(sandbox.path, options);
         expect(prepared.plan.remove).toContainEqual({
@@ -118,9 +118,8 @@ test.each(['eslint.config.mts', 'eslint.config.cts'])(
         const initialized = await writeSetup(sandbox.path, options, prepared);
         expect(initialized.exitCode).toBe(0);
         expect(await Bun.file(join(sandbox.path, file)).exists()).toBe(false);
-        const after = await runTestCommand(command, { cwd: sandbox.path });
-        expect(after.code, after.stdout + after.stderr).toBe(0);
-        expect(after.stdout).toBe('eslint.config.mjs');
+        const after = await new ESLint({ cwd: sandbox.path }).findConfigFile('main.js');
+        expect(toPosix(relative(sandbox.path, after!))).toBe('eslint.config.mjs');
     },
 );
 

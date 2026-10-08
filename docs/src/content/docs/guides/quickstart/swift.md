@@ -3,7 +3,9 @@ title: "Quickstart: Swift"
 description: Initialize a Swift project and correct a source finding.
 ---
 
-You need macOS with Swift, Git, and mise; SwiftFormat supports macOS and Linux, and Xcode checks require Xcode. See [Requirements](/guides/requirements/) and [Install](/guides/install/). gspot is not released yet; use the source checkout until publication.
+Read [Requirements](/guides/requirements/) and [Install](/guides/install/) first. This example runs on macOS.
+
+Replace `<version>` with the exact version from the [npm package page](https://www.npmjs.com/package/@gspothq/cli).
 
 ## Create the project
 
@@ -42,7 +44,7 @@ git commit -m "feat: Create the project"
 From a clean working tree, initialize and choose mise as the runner:
 
 ```shell
-mise exec npm:@gspothq/cli@0.1.0 -- gspot init --configurations swift
+mise exec npm:@gspothq/cli@<version> -- gspot init --configurations swift
 ```
 
 Read the plan and accept it. Initialization prepares lockfiles and installs applicable tools. Trust the generated mise file, then prepare and diagnose the setup:
@@ -55,7 +57,7 @@ mise exec -- gspot doctor
 mise exec -- gspot check
 ```
 
-Resolve findings in the initial project before committing. If the `licenses` configuration is selected, choose your [dependency license policy](/guides/dependency-licenses/) explicitly. Its `licenses/packages` check remains skipped until `licenses.allowed` is set.
+Resolve findings in the initial project before committing. If the repository also has npm or Python dependency manifests, those select the general `licenses` configuration automatically. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly; the check remains skipped until an allowed license or exception is set.
 
 Format the scaffold's package manifest and rerun the checks:
 
@@ -85,7 +87,13 @@ Run the source check:
 mise exec -- gspot check --only swift/swiftlint
 ```
 
-The check reports `force_cast` and exits nonzero. Stage the changed file and attempt a commit to see the pre-commit hook reject it. The report names the file and explains the correction.
+The check exits nonzero and reports:
+
+```text
+Sources/orders-swift/orders_swift.swift:2:11  force_cast  Force casts should be avoided
+```
+
+Stage the changed file and attempt a commit to see the pre-commit hook reject it. The report names the file and explains the correction.
 
 ## Correct the source
 

@@ -1,28 +1,37 @@
-import { join } from 'node:path';
+import { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
+import { join, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { parseOutput } from '#cli/parsers/output/parse.ts';
-import { runTestCommand } from '#tests/harness/command.ts';
-import { installedModules } from '#tests/harness/environment.ts';
 import { eslintFilePatterns } from '#cli/generation/eslint/serialize.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 import {
+    NODE_SCRIPT_CASES,
     NODE_SCRIPT_FILES,
-    NODE_SCRIPT_PATHS,
+    NODE_SCRIPT_RULES,
     NODE_SCRIPT_SOURCE,
     NODE_SCRIPT_TABLES,
+    NODE_CONTRACT_RULES,
     NODE_SCRIPT_CONTROLS,
     NODE_SCRIPT_CONTRACTS,
     NODE_SCRIPT_CORRECTED,
-    NODE_SCRIPT_LINT_SOURCE,
     NODE_SCRIPT_NATIVE_ROOTS,
-    NODE_SCRIPT_PATH_COVERAGE,
-    NODE_SCRIPT_REPORT_SOURCE,
-    NODE_SCRIPT_CONTRACT_SOURCE,
-} from '#tests/config/tools/generation/node-scripts.ts';
+} from '#tests/config/cli/generation/eslint/node-scripts.ts';
+
+async function nodeFindings(eslint: ESLint, root: string, paths: string[], rules: string[]) {
+    const results = await eslint.lintFiles(paths);
+    return results.map(({ filePath, messages }) => ({
+        file: toPosix(relative(root, filePath)),
+        findings: messages
+            .filter(({ ruleId, fatal }) => fatal || ruleId === null || rules.includes(ruleId))
+            .map(({ ruleId, line, severity }) => ({ ruleId, line, severity }))
+            .toSorted((left, right) => (left.ruleId ?? '').localeCompare(right.ruleId ?? '') || left.line - right.line),
+    }));
+}
 
 test.each(['recommended', 'all'] as const)(
     '%s native ESLint checks tagged Node files and retains typed and excluded file ownership',
@@ -32,34 +41,27 @@ test.each(['recommended', 'all'] as const)(
             ...NODE_SCRIPT_FILES,
             'gspot.toml': buildPolicy(['typescript'], { level, tables: NODE_SCRIPT_TABLES }),
         });
-        await createEslint(sandbox.path);
-        const command = [
-            'node',
-            '--input-type=module',
-            '-e',
-            NODE_SCRIPT_LINT_SOURCE,
-            JSON.stringify([NODE_SCRIPT_PATHS, NODE_SCRIPT_CONTROLS]),
-        ];
+        const eslint = await createEslint(sandbox.path);
+        const paths = NODE_SCRIPT_CASES.map(({ file }) => file);
         for (const corrected of [false, true]) {
             if (corrected)
-                for (const path of NODE_SCRIPT_PATHS) await Bun.write(join(sandbox.path, path), NODE_SCRIPT_CORRECTED);
-            const native = await runTestCommand(command, { cwd: sandbox.path });
-            expect(native.code, native.stdout + native.stderr).toBe(0);
-            expect(native.stdout).toBe(
+                for (const { file, corrected } of NODE_SCRIPT_CASES)
+                    await Bun.write(join(sandbox.path, file), corrected);
+            const configurations = await Promise.all(
+                NODE_SCRIPT_CONTROLS.map(async (file) => ({
+                    file,
+                    matched: (await eslint.calculateConfigForFile(file)) !== undefined,
+                })),
+            );
+            const native = {
+                results: await nodeFindings(eslint, sandbox.path, paths, NODE_SCRIPT_RULES),
+                configurations,
+            };
+            expect(JSON.stringify(native)).toBe(
                 JSON.stringify({
-                    results: NODE_SCRIPT_PATHS.map((file) => ({
+                    results: NODE_SCRIPT_CASES.map(({ file, unused, strict }) => ({
                         file,
-                        findings: corrected
-                            ? []
-                            : [
-                                  {
-                                      ruleId: file.endsWith('.ts')
-                                          ? '@typescript-eslint/no-unused-vars'
-                                          : 'no-unused-vars',
-                                      line: 2,
-                                      severity: 2,
-                                  },
-                              ],
+                        findings: corrected ? [] : [unused, ...(level === 'all' ? strict : [])],
                     })),
                     configurations: NODE_SCRIPT_CONTROLS.map((file) => ({ file, matched: false })),
                 }),
@@ -80,21 +82,14 @@ test.each(['recommended', 'all'] as const)(
             ...Object.fromEntries(NODE_SCRIPT_CONTRACTS.map(({ file, source }) => [file, source])),
             'source.js': 'export const value = 1;\n',
         });
-        await createEslint(sandbox.path);
-        const command = [
-            'node',
-            '--input-type=module',
-            '-e',
-            NODE_SCRIPT_CONTRACT_SOURCE,
-            JSON.stringify(NODE_SCRIPT_CONTRACTS.map(({ file }) => file)),
-        ];
+        const eslint = await createEslint(sandbox.path);
         for (const corrected of [false, true]) {
             if (corrected)
                 for (const contract of NODE_SCRIPT_CONTRACTS)
                     await Bun.write(join(sandbox.path, contract.file), contract.corrected);
-            const native = await runTestCommand(command, { cwd: sandbox.path });
-            expect(native.code, native.stdout + native.stderr).toBe(0);
-            expect(native.stdout).toBe(
+            const paths = NODE_SCRIPT_CONTRACTS.map(({ file }) => file);
+            const native = await nodeFindings(eslint, sandbox.path, paths, NODE_CONTRACT_RULES);
+            expect(JSON.stringify(native)).toBe(
                 JSON.stringify(
                     NODE_SCRIPT_CONTRACTS.map(({ file, routine, strict }) => ({
                         file,
@@ -118,36 +113,24 @@ test.skipIf(process.platform === 'win32').each(NODE_SCRIPT_NATIVE_ROOTS)(
             [file]: NODE_SCRIPT_SOURCE,
             [control]: '#!/usr/bin/env bash\necho ready\n',
         });
-        const configuration = JSON.stringify([
-            {
-                files: eslintFilePatterns({ components: [], tests: [], scripts: [], nodeFiles: [file] }).code,
-                rules: { 'no-unused-vars': 'error' },
-            },
-        ]);
-        const nativePackage = join(installedModules, 'eslint/package.json');
-        const coverage = await runTestCommand(
-            ['node', '--input-type=module', '-e', NODE_SCRIPT_PATH_COVERAGE, control, configuration, nativePackage],
-            { cwd: root },
-        );
-        expect(coverage.code, coverage.stdout + coverage.stderr).toBe(0);
-        expect(coverage.stdout).toBe('false');
-        const command = [
-            'node',
-            '--input-type=module',
-            '-e',
-            NODE_SCRIPT_REPORT_SOURCE,
-            JSON.stringify([file]),
-            configuration,
-            nativePackage,
-        ];
+        const eslint = new ESLint({
+            cwd: root,
+            overrideConfigFile: true,
+            overrideConfig: [
+                {
+                    files: eslintFilePatterns({ components: [], tests: [], scripts: [], nodeFiles: [file] }).code,
+                    rules: { 'no-unused-vars': 'error' },
+                },
+            ],
+        });
+        expect(await eslint.calculateConfigForFile(control)).toBeUndefined();
         const check = configurationManifests()
             .get('javascript')!
             .checks.find(({ name }) => name === 'javascript/eslint')!;
         for (const corrected of [false, true]) {
             if (corrected) await Bun.write(join(root, file), NODE_SCRIPT_CORRECTED);
-            const native = await runTestCommand(command, { cwd: root });
-            expect(native.code, native.stdout + native.stderr).toBe(0);
-            const findings = parseOutput(check, native.stdout, native.stderr, { root, cwd: root });
+            const results = await eslint.lintFiles([file]);
+            const findings = parseOutput(check, JSON.stringify(results), '', { root, cwd: root });
             expect(findings).toStrictEqual(
                 corrected
                     ? []

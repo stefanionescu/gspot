@@ -35,7 +35,7 @@ Select platforms that support the applicable checks. Manual checks run separatel
 
 The generated mise job installs the committed tool pins. Without mise, native tools and any Python runtime requirements need explicit setup on your runner. Use your own pipeline when those prerequisites are not supplied by the generated job.
 
-When initialization detects an existing lint job or Bitbucket Pipelines, it prints integration steps instead of creating a second pipeline. Preserve your existing job and add gspot after its tool setup.
+When initialization detects an existing lint job, Bitbucket Pipelines, Jenkins, CircleCI, Azure Pipelines, or Buildkite, it prints integration steps instead of creating a second pipeline. Preserve your existing job and add gspot after its tool setup.
 
 ## Your own pipeline
 

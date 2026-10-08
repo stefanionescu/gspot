@@ -1,4 +1,4 @@
-// Locate declared tools, inspect their versions, and report an actionable installation command.
+// Locate declared tools, inspect their versions, and report an actionable install command.
 import semver from 'semver';
 import { join, relative } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
@@ -22,7 +22,7 @@ import type {
 } from '#cli/types/tools/install.ts';
 
 /**
- * The installation command for managed tools, or platform guidance for a host tool.
+ * The install command for managed tools, or platform guidance for a host tool.
  * @param tool the pin
  * @param runner the declared installation integration
  * @returns the hint
@@ -257,7 +257,7 @@ export function isToolAvailable(inspection: ToolInspection): inspection is Avail
 /**
  * Resolve a usable executable or an actionable inspection failure.
  * @param tool the selected pin
- * @param inspection the resolved path, version, and installation details
+ * @param inspection the resolved path, version, and install command
  * @returns the executable path or its unavailable status and diagnostic
  */
 export function toolAvailability(tool: ToolPin, inspection: ToolInspection): ToolAvailability {

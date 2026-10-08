@@ -1,7 +1,6 @@
 // What the selected fragments add to a generated target: rendered text, imports, file globs, and selectors.
 import { eta } from '#cli/generation/templates.ts';
 import { readAsset } from '#cli/platform/assets.ts';
-import { harnessFolders } from '#cli/policy/settings/lookup.ts';
 import type { Fragment } from '#cli/types/generation/fragments.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
@@ -48,7 +47,6 @@ function renderedFragments(fragments: Fragment[], inputs: TemplateInputs, scopes
                 ...inputs,
                 ...selection.view,
                 scope,
-                harness: harnessFolders(inputs.policy, scope)[0],
                 scopeDependencies: inputs
                     .configurationScopes(manifest.configuration.name)
                     .flatMap((entry) => (entry.path === scope ? entry.dependencies : [])),

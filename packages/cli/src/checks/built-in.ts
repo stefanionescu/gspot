@@ -35,6 +35,7 @@ import { tsc, checkjs, tsconfig } from '#cli/checks/language/typescript.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
 import { sleeps, disabled, xctestCoverage } from '#cli/checks/tool/xctest.ts';
 import { migrationDocs } from '#cli/checks/database/postgres/migration-docs.ts';
+import { testPlacement } from '#cli/checks/general/structure/test-placement.ts';
 import { unreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
 import { unusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
 import { ats, xcconfig, entitlements } from '#cli/checks/tool/xcode/settings.ts';
@@ -222,6 +223,7 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'structure/prefix-collisions': { run: runBuiltInCheck(prefixCollisions) },
     'structure/stem-collisions': { run: runBuiltInCheck(stemCollisions) },
     'structure/folder-names': { run: runBuiltInCheck(folderNames) },
+    'structure/test-placement': { run: runBuiltInCheck(testPlacement) },
     'bash/function-size': { run: runBuiltInCheck(bashFunctionSize) },
     'bash/doc-comments': { run: runBuiltInCheck(docComments) },
     'bash/unused-functions': { run: runBuiltInCheck(unusedFunctions) },

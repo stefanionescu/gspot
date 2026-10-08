@@ -1,9 +1,10 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { join, relative } from 'node:path';
+import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { runTestCommand } from '#tests/harness/command.ts';
+import type { EnginePhase } from '#tests/types/cli/generation/eslint/engines.ts';
 
 import {
     ENGINE_PATHS,
@@ -11,8 +12,7 @@ import {
     ENGINE_SOURCE,
     ENGINE_FINDINGS,
     ENGINE_PACKAGES,
-    ENGINE_LINT_SOURCE,
-} from '#tests/config/tools/generation/engines.ts';
+} from '#tests/config/cli/generation/eslint/engines.ts';
 
 test.each(['recommended', 'all'] as const)(
     '%s native Node checks follow package engines and scoped authored overrides',
@@ -29,8 +29,8 @@ test.each(['recommended', 'all'] as const)(
                 ]),
             ),
         });
-        const command = ['node', '--input-type=module', '-e', ENGINE_LINT_SOURCE, JSON.stringify(ENGINE_PATHS)];
-        for (const phase of ENGINE_PHASES) {
+        const phases: EnginePhase[] = ENGINE_PHASES;
+        for (const phase of phases) {
             await Bun.write(
                 join(sandbox.path, 'gspot.toml'),
                 buildPolicy(['javascript'], { level, tables: phase.tables }),
@@ -44,10 +44,22 @@ test.each(['recommended', 'all'] as const)(
                         .replace('process.loadEnvFile()', 'process.cwd()'),
                 );
             }
-            await createEslint(sandbox.path);
-            const native = await runTestCommand(command, { cwd: sandbox.path });
-            expect(native.code, native.stdout + native.stderr).toBe(0);
-            expect(native.stdout).toBe(
+            const eslint = await createEslint(sandbox.path);
+            const results = await eslint.lintFiles(ENGINE_PATHS);
+            const native = results
+                .map(({ filePath, messages }) => ({
+                    file: toPosix(relative(sandbox.path, filePath)),
+                    findings: messages
+                        .filter(
+                            ({ ruleId, fatal }) =>
+                                ruleId === 'n/no-unsupported-features/es-builtins' ||
+                                ruleId === 'n/no-unsupported-features/node-builtins' ||
+                                fatal,
+                        )
+                        .map(({ ruleId, line, severity }) => ({ ruleId, line, severity })),
+                }))
+                .toSorted((left, right) => left.file.localeCompare(right.file));
+            expect(JSON.stringify(native)).toBe(
                 JSON.stringify(
                     ENGINE_PATHS.toSorted((left, right) => left.localeCompare(right)).map((file) => ({
                         file,

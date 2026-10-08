@@ -56,7 +56,7 @@ function printFailure(error: unknown, isJson: boolean): number {
  */
 export function buildProgram(): Program {
     const program: Program = new GspotProgram('gspot')
-        .description('Lint AI-generated code and install rules for coding agents')
+        .description('gspot sets up linters and checks for the languages in your repository.')
         .version(RUNNING_VERSION, '--version', 'Print the version')
         .option('--json', 'Print the result as JSON')
         .option('--quiet', 'Print only failures')

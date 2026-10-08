@@ -40,7 +40,7 @@ test.each(
 test.each([
     ['a scope-only key without --scope', ['set', 'bash.safety_owners', 'scripts'], '--scope api'],
     [
-        'a tool rule turned off',
+        'a rule turned off',
         ['set', 'tools.markdownlint.rules', '{"MD013": false}'],
         'gspot ignore markdown/markdownlint --rule <rule> --reason',
     ],

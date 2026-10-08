@@ -86,7 +86,7 @@ test('disabled agent rules preserve authored instructions during init, preview, 
     await using sandbox = await testdir();
     const authored = '# Claude notes\n';
     await createFileTree(sandbox.path, { 'CLAUDE.md': authored });
-    const args = [...INIT, '--no-rules'];
+    const args = [...INIT, '--no-agent-rules'];
     const preview = await runGspot(sandbox.path, [...args, '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const { plan } = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'plan'>>;

@@ -1,4 +1,1 @@
 <%~ eslintModule.block({ files: test_files, rules: { 'jest/no-focused-tests': 'error', 'jest/no-disabled-tests': 'error', 'jest/no-identical-title': 'error', 'jest/no-standalone-expect': 'error', 'jest/no-commented-out-tests': 'error', 'jest/expect-expect': 'error', 'jest/valid-describe-callback': 'error', 'jest/no-conditional-expect': 'error', 'jest/valid-expect': ['error', { maxArgs: 1 }], ...(isAll ? { 'jest/prefer-strict-equal': 'error' } : {}) } }, `plugins: { jest }, languageOptions: { globals: jest.environments.globals.globals }, settings: { jest: { globalPackage: '@jest/globals' } }`) %>,
-<% if (isAll && harness !== undefined) { %>
-<%~ eslintModule.block({ files: eslintFiles.code, rules: { 'gspot/no-helpers-beside-tests': ['error', { harness: harness }] } }) %>,
-<% } %>

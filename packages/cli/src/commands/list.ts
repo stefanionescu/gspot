@@ -144,7 +144,7 @@ export function registerList(program: Program): void {
         )
         .addHelpText(
             'after',
-            '\nExit codes:\n- 0: the list was printed.\n- 2: the input was invalid, or list could not finish.\n\nExample:\ngspot list settings',
+            '\nExit codes:\n- 0: the list was printed.\n- 2: the input was invalid, or list could not finish.\n\nExample:\ngspot list settings\ngspot list configurations',
         )
         .addArgument(
             new Argument('[kind]', 'List configurations or effective settings').choices(['configurations', 'settings']),

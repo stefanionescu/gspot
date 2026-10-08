@@ -9,18 +9,24 @@ import { SETTINGS_INTRO, POLICY_EXAMPLES, SCHEMA_TYPE_LABELS } from '../../confi
 
 function acceptedValue(node: JSONSchema.JSONSchema | boolean): string {
     if (typeof node === 'boolean') return node ? 'Any value' : 'Not accepted';
+    if (node.const !== undefined)
+        return [`\`${JSON.stringify(node.const)}\``, node.description]
+            .filter((entry) => entry !== undefined)
+            .map((entry) => cell(entry))
+            .join(': ');
     if (node.enum !== undefined) return node.enum.map((value) => `\`${JSON.stringify(value)}\``).join(', ');
     if (node.anyOf !== undefined) return [...new Set(node.anyOf.map((entry) => acceptedValue(entry)))].join(' or ');
-    if (Array.isArray(node.type)) return node.type.join(' or ');
-    const type = node.type ?? 'Value';
-    return SCHEMA_TYPE_LABELS[type] ?? type;
+    return [node.type ?? 'Value']
+        .flat()
+        .map((type) => SCHEMA_TYPE_LABELS[type] ?? type)
+        .join(' or ');
 }
 
 function schemaProperties(node: JSONSchema.JSONSchema | boolean): Array<[string, JSONSchema.JSONSchema | boolean]> {
-    let shape = node;
-    if (typeof node !== 'boolean' && node.type === 'array' && !Array.isArray(node.items) && node.items !== undefined)
-        shape = node.items;
-    if (typeof shape === 'boolean' || shape.properties === undefined) return [];
+    if (typeof node === 'boolean') return [];
+    const child = node.items ?? node.additionalProperties;
+    const shape = typeof child === 'object' && !Array.isArray(child) ? child : node;
+    if (shape.properties === undefined) return [];
     return Object.entries(shape.properties);
 }
 
@@ -34,13 +40,18 @@ export function policyReference(): string {
         const properties = schemaProperties(node);
         const entries = properties.length === 0 ? [[name, node] as const] : properties;
         const topic = name === 'tools' ? 'tool options' : 'settings and defaults';
-        const rows = entries.map(([key, value]) => [
-            `\`${key}\``,
-            acceptedValue(value),
-            typeof value !== 'boolean' && value.description !== undefined
-                ? cell(value.description)
-                : `See the [settings reference](/reference/settings/) for ${topic}.`,
-        ]);
+        const rows = entries
+            .flatMap(([key, value]) => [
+                [key, value] as const,
+                ...schemaProperties(value).map(([child, schema]) => [`${key}.${child}`, schema] as const),
+            ])
+            .map(([key, value]) => [
+                `\`${key}\``,
+                acceptedValue(value),
+                typeof value !== 'boolean' && value.description !== undefined
+                    ? cell(value.description)
+                    : `See the [settings reference](/reference/settings/) for ${topic}.`,
+            ]);
         const example = POLICY_EXAMPLES[name];
         return section(
             name,

@@ -92,13 +92,15 @@ run.
     message = "message"
     ```
 
-- `sarif`, `grouped`, `lines`, and `none` support other output contracts described in the reference.
+- `sarif`, `grouped`, `lines`, and `none` support other output contracts described in the [policy reference](/reference/gspot-toml/#check).
+- `format = "semgrep"` reads Semgrep JSON.
+- `format = "trufflehog-json"` reads TruffleHog JSON without exposing secret values.
 - `format = "typos"` reads the JSON of typos. It turns byte offsets into character columns.
 - `format = "markdownlint"` reads the results of markdownlint.
 - `format = "knip"` reads Knip JSON and preserves issue categories and source positions.
 
 Malformed output counts as a failed run, exit code `2`. The
-[policy reference](/reference/configuration/#check) lists every field.
+[policy reference](/reference/gspot-toml/#check) lists every field.
 
 ## Count failures in the output
 

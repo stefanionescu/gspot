@@ -1,6 +1,7 @@
 import type { Colors } from 'picocolors/types';
 import type { ToolInspection } from '#cli/types/tools/install.ts';
 import type { SuggestionSection } from '#cli/types/commands/doctor.ts';
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 
 export const COLUMN_WIDTHS = { label: 9, path: 40, name: 34, note: 30 } as const;
 
@@ -23,3 +24,5 @@ export const TOOL_STATE_COLORS = {
     newer: 'red',
     host: 'dim',
 } as const satisfies Record<ToolInspection['state'], keyof Colors>;
+
+export const CI_REPORT_PATHS = { github: GITHUB_WORKFLOW, gitlab: `${GITLAB_WORKFLOW} (include from .gitlab-ci.yml)` };

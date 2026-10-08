@@ -23,7 +23,7 @@ Paths are relative to the repository root. gspot writes the block to `AGENTS.md`
 
 ## Working with findings
 
-The managed block names the selected rules and the command to run before committing. It directs the agent to change policy with `gspot set` or `gspot ignore`, then apply the policy. Generated files under `.gspot/` are not edited by hand.
+The managed block names the selected rules and the command to run before committing. Change policy with `gspot set` or `gspot ignore`. After a hand edit of `gspot.toml`, run `gspot apply`. Generated files under `.gspot/` are not edited by hand.
 
 Run the check with your [runner's prefix](/guides/install/) and read each finding's `help:` line. When you accept a finding, record the required reason in policy.
 

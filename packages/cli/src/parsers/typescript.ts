@@ -14,3 +14,25 @@ export function typescriptNodes(root: ts.Node): ts.Node[] {
     visit(root);
     return nodes;
 }
+
+/**
+ * Bind selected syntax without reading dependencies or native library files.
+ * @param sources the already captured source files by path
+ * @returns the native program with lexical symbols for those sources
+ */
+export function typescriptProgram(sources: Map<string, ts.SourceFile>): ts.Program {
+    const options: ts.CompilerOptions = { noLib: true, noResolve: true, allowJs: true };
+    const host: ts.CompilerHost = {
+        getSourceFile: (path) => sources.get(path),
+        getDefaultLibFileName: () => '',
+        writeFile: () => {},
+        getCurrentDirectory: () => '',
+        getDirectories: () => [],
+        fileExists: (path) => sources.has(path),
+        readFile: (path) => sources.get(path)?.text,
+        getCanonicalFileName: (path) => path,
+        useCaseSensitiveFileNames: () => true,
+        getNewLine: () => '\n',
+    };
+    return ts.createProgram([...sources.keys()], options, host);
+}

@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { explain } from '#cli/commands/explain/command.ts';
 
-test('a tool rule is explained with the page its manifest declares', () => {
+test('a rule is explained with the page its manifest declares', () => {
     const shellcheck = explain(undefined, 'shellcheck/SC2086');
     expect(shellcheck).toMatchObject({
         kind: 'tool-rule',

@@ -4,7 +4,7 @@ description: Set up gspot in a small TypeScript project, and see it reject an ag
 ---
 
 In this example, a coding agent adds a helper that only forwards to another function. The
-commit hook rejects the forwarding helper. Read [Requirements](/guides/requirements/) first. You need Git, Node.js 24.2 or newer, uv when applicable Python tools require it, and mise or the pinned native tools. The npm CLI is not published yet; use the source checkout until publication.
+commit hook rejects the forwarding helper. Read [Requirements](/guides/requirements/) first.
 
 ## Create the project
 
@@ -125,9 +125,9 @@ commit hook rejects the forwarding helper. Read [Requirements](/guides/requireme
 
     `init` detects TypeScript, Markdown, and npm, writes `gspot.toml` and the configuration
     under `.gspot/`, installs the tools, and installs the Git hooks. The level `all` adds the
-    house style, which includes the checks for trivial functions and files.
+    level `all` conventions, including the checks for trivial functions and files.
 
-3. Run `npx gspot check` and resolve any findings before committing the setup. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly; `licenses/packages` remains skipped until `licenses.allowed` is set:
+3. Run `npx gspot check` and resolve any findings before committing the setup. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly; `licenses/packages` remains skipped until an allowed license or exception is set:
 
     ```bash
     git add -A
@@ -186,7 +186,7 @@ commit hook rejects the forwarding helper. Read [Requirements](/guides/requireme
       reproduce: gspot check --only javascript/eslint --staged
     root  naming/paths                        failed     2 files     0.0s
       src/utils.ts:1:1  banned-term  typescript file "utils": "utils" is banned (roles group).
-        help: Rename the file or folder, or add a path rule under [[naming.paths]] with a reason.
+        help: Rename the file or folder, or add a path rule under [[naming.overrides]] with a reason.
       reproduce: gspot check --only naming/paths --staged
 
     ```

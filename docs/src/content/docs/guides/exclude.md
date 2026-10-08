@@ -15,28 +15,28 @@ Patterns are relative to the repository root. Keep the list narrow so authored s
 
 ## Generated and vendored files
 
-Record the generator or upstream owner along with its paths. The [policy reference](/reference/configuration/#generated) shows the accepted fields. Use `generated` for reproducible output and `vendored` for upstream files. These declarations remain repository-specific and are omitted from exported templates.
+Record the generator or upstream owner along with its paths. The [policy reference](/reference/gspot-toml/#generated) shows the accepted fields. Use `generated` for reproducible output and `vendored` for upstream files. Exported templates retain these declarations; review their paths in each destination.
 
 ## Test files
 
 ```shell
-gspot set tests "tests/**/*.test.ts"
+gspot set test_files "tests/**/*.test.ts"
 ```
 
-`tests` identifies test files for test-specific lint rules. It does not exclude those files. A scope can declare its own test patterns.
+`test_files` identifies test files for test-specific rules. It does not exclude those files. A scope can declare its own test patterns.
 
 ## Accept a finding
 
 ```shell
-gspot ignore naming/paths --paths "vendor/**" --reason "These upstream paths must match the published package."
+gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results to the terminal."
 ```
 
-The command writes an `[[ignore]]` entry and applies the policy. Add `--rule <id>` to accept one rule instead of the whole check. `require_reasons = true` requires a reason.
+The command writes an `[[ignore]]` entry and applies the policy. Add `--rule <id>` to accept one rule instead of the whole check. Every ignore needs a reason.
 
-For a naming convention rather than a check exclusion, use `[[naming.paths]]`:
+For a naming convention rather than a check exclusion, use `[[naming.overrides]]`:
 
 ```toml
-[[naming.paths]]
+[[naming.overrides]]
 paths = ["migrations/**"]
 categories = ["file"]
 allow_digits = true

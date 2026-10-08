@@ -1,12 +1,10 @@
-import type { ArchitectureToolCase } from '#tests/types/generation/configuration-files.ts';
-
-export const ARCHITECTURE_CASES: ArchitectureToolCase[] = [
-    { level: 'recommended', declarations: 'none' },
-    { level: 'recommended', declarations: 'root' },
-    { level: 'recommended', declarations: 'scoped' },
-    { level: 'all', declarations: 'none' },
-    { level: 'all', declarations: 'root' },
-    { level: 'all', declarations: 'scoped' },
+export const ARCHITECTURE_CASES = [
+    { level: 'recommended', declarations: 'none' } as const,
+    { level: 'recommended', declarations: 'root' } as const,
+    { level: 'recommended', declarations: 'scoped' } as const,
+    { level: 'all', declarations: 'none' } as const,
+    { level: 'all', declarations: 'root' } as const,
+    { level: 'all', declarations: 'scoped' } as const,
 ];
 
 export const ARCHITECTURE_POLICIES = {
@@ -30,21 +28,3 @@ export const ARCHITECTURE_PROJECT = {
 };
 
 export const ARCHITECTURE_CORRECTION = "import { value } from './value.js';\nexport const result = value;\n";
-
-export const ARCHITECTURE_SCRIPT = `import { ESLint } from 'eslint';
-const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
-const files = ['app/source.ts', 'apps/api/app/source.ts'];
-const configured = [];
-for (const file of files) {
-    const config = await eslint.calculateConfigForFile(file);
-    configured.push({ plugin: Object.hasOwn(config.plugins, 'boundaries'),
-        classic: Object.hasOwn(config.settings, 'import/resolver'),
-        modern: Object.hasOwn(config.settings, 'import-x/resolver-next') });
-}
-const results = await eslint.lintFiles(files);
-process.stdout.write(JSON.stringify({ configured,
-    findings: results.map(({ messages }) => messages
-        .filter(({ ruleId, fatal }) => ruleId === 'boundaries/dependencies' || fatal)
-        .map(({ ruleId, line, column, severity }) => ({ ruleId, line, column, severity }))),
-}));
-`;

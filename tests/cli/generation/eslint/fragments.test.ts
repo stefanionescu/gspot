@@ -44,12 +44,6 @@ for (const level of ['recommended', 'all'] as const)
             expect(lint.flatMap(({ messages }) => messages).filter(({ ruleId }) => ruleId === row.rule)).toHaveLength(
                 2,
             );
-            expect(first.rules['gspot/no-helpers-beside-tests']?.[1]).toEqual(
-                level === 'all' ? { harness: 'first/support' } : undefined,
-            );
-            expect(second.rules['gspot/no-helpers-beside-tests']?.[1]).toEqual(
-                level === 'all' ? { harness: 'second/fixtures' } : undefined,
-            );
         }
     });
 

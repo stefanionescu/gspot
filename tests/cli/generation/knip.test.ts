@@ -15,7 +15,7 @@ import {
     KNIP_COMPONENT_FILES,
     KNIP_DIAGNOSTIC_FILES,
     KNIP_DEPENDENCY_PACKAGE,
-} from '#tests/config/tools/generation/knip.ts';
+} from '#tests/config/cli/generation/knip.ts';
 
 const check = configurationManifests()
     .get('javascript')!

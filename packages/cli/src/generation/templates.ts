@@ -18,10 +18,10 @@ import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
 import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
 import { eslintInputs } from '#cli/generation/eslint/configuration.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
+import { tablesFor, policyValue } from '#cli/policy/settings/lookup.ts';
 import { styleRules, proseFormats } from '#cli/generation/vale-styles.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
-import { tablesFor, policyValue, harnessFolders } from '#cli/policy/settings/lookup.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting.ts';
 import type { TemplateInputs, ScopeTemplateInputs } from '#cli/types/generation/templates.ts';
 import { scopeIgnorePatterns, selectedIgnorePaths } from '#cli/generation/ignore-patterns.ts';
@@ -96,7 +96,6 @@ function scopeInputs(input: ScopeTemplateInputs) {
                     settings: entry.view.settings,
                     dependencies: Object.keys(getProjectDependencies(projects, entry.scope.path)),
                     verbatim: entry.view.verbatim,
-                    harness: harnessFolders(policy, entry.scope.path)[0],
                 })),
         ignoredPaths: selectedIgnorePaths(scopes),
         configurations: view.configurations,

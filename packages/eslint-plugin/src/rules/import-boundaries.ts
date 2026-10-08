@@ -46,8 +46,16 @@ export const importBoundaries = createRule<ImportBoundariesOptions, 'alias' | 'e
         },
         schema: [
             optionsSchema({
-                folders: { type: 'array', items: { type: 'string' } },
-                aliases: { type: 'object', additionalProperties: { type: 'string' } },
+                folders: {
+                    description: 'Boundary folders or folder globs. The nearest matching ancestor owns each file.',
+                    type: 'array',
+                    items: { type: 'string' },
+                },
+                aliases: {
+                    description: 'Import alias prefixes mapped to repository folders for fixes.',
+                    type: 'object',
+                    additionalProperties: { type: 'string' },
+                },
             }),
         ],
         messages: {

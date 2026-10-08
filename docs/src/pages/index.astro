@@ -1,7 +1,8 @@
 ---
 import { FEATURES } from '../config/home.ts';
+import HomeHero from '../components/home/Hero.astro';
 import Features from '../components/home/Features.astro';
-import ThemeSelect from '../components/starlight/ThemeSelect.astro';
+import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 ---
 
@@ -9,13 +10,13 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
     frontmatter={{
         title: 'Check code before it ships',
         description: 'gspot sets up linters and checks for your repository and installs rules for coding agents.',
-        hero: { title: 'Check code before it ships' },
         template: 'splash',
         editUrl: false,
         lastUpdated: false,
     }}
 >
     <div class="landing">
+        <HomeHero />
         <Features
             title="What gspot does"
             description="It configures the linters of your languages, adds checks of its own, and runs them on every commit."

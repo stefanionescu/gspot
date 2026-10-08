@@ -5,4 +5,5 @@ export type RuleDocs = {
     why: string;
     fix: string;
     example: string;
+    requiresOptions?: boolean;
 };

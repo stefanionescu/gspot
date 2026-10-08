@@ -104,26 +104,35 @@ test('doctor reports the private Python project for an applicable duplicate with
 });
 
 test.each([
-    ['4.12.0', 0],
-    ['4.0.0', 1],
-])('doctor exits by the installed library version %s: an outdated tool exits 1', async (version, code) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['zod'], { tables: '[agent_rules]\nenabled = false\n' }),
-        'source.js': 'export const value = 1;\n',
-        '.gspot/node_modules/eslint-plugin-zod/package.json': JSON.stringify({ name: 'eslint-plugin-zod', version }),
-    });
-    const original = inspect.inspectTool;
-    // Every other tool reads as ready, so the exit code follows the one test library alone.
-    using inspected = spyOn(inspect, 'inspectTool').mockImplementation((context, tool) =>
-        tool.name === 'eslint-plugin-zod' ? original(context, tool) : { name: tool.name, state: 'ok' },
-    );
-    const result = await doctorCommand(sandbox.path);
-    expect(inspected).toHaveBeenCalled();
-    const report = result.json as DoctorReport;
-    expect(report.tools.find((tool) => tool.name === 'eslint-plugin-zod')?.state).toBe(code === 0 ? 'ok' : 'outdated');
-    expect(result.exitCode).toBe(code);
-});
+    ['4.12.0', 0, 'ok'],
+    ['4.13.0', 0, 'newer'],
+    ['4.0.0', 1, 'outdated'],
+] as const)(
+    'doctor exits by the installed library version %s: an outdated tool exits 1',
+    async (version, code, state) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['zod'], { tables: '[agent_rules]\nenabled = false\n' }),
+            'source.js': 'export const value = 1;\n',
+            '.gspot/node_modules/eslint-plugin-zod/package.json': JSON.stringify({
+                name: 'eslint-plugin-zod',
+                version,
+            }),
+        });
+        const original = inspect.inspectTool;
+        // Every other tool reads as ready, so the exit code follows the one test library alone.
+        using inspected = spyOn(inspect, 'inspectTool').mockImplementation((context, tool) =>
+            tool.name === 'eslint-plugin-zod'
+                ? original(context, tool)
+                : { name: tool.name, state: 'ok', path: `/fixture/${tool.name}` },
+        );
+        const result = await doctorCommand(sandbox.path);
+        expect(inspected).toHaveBeenCalled();
+        const report = result.json as DoctorReport;
+        expect(report.tools.find((tool) => tool.name === 'eslint-plugin-zod')?.state).toBe(state);
+        expect(result.exitCode).toBe(code);
+    },
+);
 
 test('doctor detects installed test frameworks instead of recommending a different runner', async () => {
     await using sandbox = await testdir();

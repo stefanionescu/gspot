@@ -1,9 +1,8 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import starlightLlmsTxt from 'starlight-llms-txt';
-import { mkdirSync, copyFileSync } from 'node:fs';
+import { mkdir, copyFile } from 'node:fs/promises';
 import { SIDEBAR } from './src/config/navigation.ts';
-import { sourceRevision } from './src/content/revision.ts';
 
 export default defineConfig({
     site: 'https://generativespotting.com',
@@ -13,11 +12,11 @@ export default defineConfig({
         {
             name: 'font-licenses',
             hooks: {
-                'astro:build:done': ({ dir }) => {
+                'astro:build:done': async ({ dir }) => {
                     const licenses = new URL('licenses/', dir);
-                    mkdirSync(licenses, { recursive: true });
+                    await mkdir(licenses, { recursive: true });
                     for (const font of ['geist', 'geist-mono']) {
-                        copyFileSync(
+                        await copyFile(
                             new URL(`node_modules/@fontsource-variable/${font}/LICENSE`, import.meta.url),
                             new URL(`${font}.txt`, licenses),
                         );
@@ -49,15 +48,11 @@ export default defineConfig({
             ],
             components: {
                 Header: './src/components/starlight/Header.astro',
-                Footer: './src/components/starlight/Footer.astro',
-                ThemeSelect: './src/components/starlight/ThemeSelect.astro',
-                Hero: './src/components/starlight/Hero.astro',
                 SiteTitle: './src/components/starlight/SiteTitle.astro',
                 Search: './src/components/starlight/Search.astro',
             },
             expressiveCode: { defaultProps: { frame: 'code' } },
-            routeMiddleware: './src/route-metadata.ts',
-            editLink: { baseUrl: `https://github.com/stefanionescu/gspot/edit/${sourceRevision}/docs/` },
+            editLink: { baseUrl: 'https://github.com/stefanionescu/gspot/edit/main/docs/' },
             description:
                 'gspot sets up linters and checks for the languages in your repository and installs rules for coding agents',
             customCss: ['./src/theme.css'],

@@ -180,7 +180,7 @@ test('a project check without its own inputs is inactive even when its scope con
     expect(outcome.report.exitCode).toBe(0);
     expect(outcome.report.checks).toStrictEqual([]);
     expect(outcome.report.skips).toStrictEqual([
-        { check: 'swift/build', cause: process.platform === 'darwin' ? 'inputs' : 'platform' },
+        { check: 'swift/build', cause: ['darwin', 'linux'].includes(process.platform) ? 'inputs' : 'platform' },
         { check: 'swift/periphery', cause: process.platform === 'darwin' ? 'inputs' : 'platform' },
         { check: 'python/ruff', cause: 'inputs' },
     ]);

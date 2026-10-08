@@ -4,7 +4,7 @@ import { defaultValue, relativePath, authoredDefault } from '#cli/policy/schema/
 
 export const agentRulesSchema = z.strictObject({
     enabled: authoredDefault(z.boolean().default(true)).meta({
-        description: 'Install the rules for coding agents and the agent instructions.',
+        description: 'Write the agent rules and agent instructions.',
     }),
     folder: authoredDefault(relativePath.default(RULES_DIRECTORY)).describe(
         'Repository-relative folder the rules install into.',

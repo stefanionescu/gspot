@@ -31,8 +31,16 @@ export const importExtensions = createRule<ImportExtensionsOptions, 'js' | 'ts' 
         },
         schema: [
             optionsSchema({
-                style: { type: 'string', enum: ['js', 'ts', 'extensionless'] },
-                internalPrefixes: { type: 'array', items: { type: 'string' } },
+                style: {
+                    description: 'Required suffix for internal code imports.',
+                    type: 'string',
+                    enum: ['js', 'ts', 'extensionless'],
+                },
+                internalPrefixes: {
+                    description: 'Prefixes that identify internal imports.',
+                    type: 'array',
+                    items: { type: 'string' },
+                },
             }),
         ],
         messages: {

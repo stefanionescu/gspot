@@ -1,4 +1,1 @@
 <%~ eslintModule.block({ files: test_files.flatMap((test) => eslintFiles.code.map((pattern) => [test, pattern])), rules: { ...eslintPresets('vitest').recommended.blocks[0].rules, 'vitest/no-focused-tests': ['error', { fixable: false }], 'vitest/no-disabled-tests': 'error', 'vitest/no-identical-title': 'error', 'vitest/no-standalone-expect': 'error', 'vitest/no-commented-out-tests': 'error', 'vitest/expect-expect': 'error', 'vitest/valid-describe-callback': 'error', 'vitest/no-conditional-expect': 'error', 'vitest/valid-expect': 'error', ...(isAll ? { 'vitest/prefer-strict-equal': 'error' } : {}) } }, 'plugins: { vitest }') %>,
-<% if (isAll && harness !== undefined) { %>
-<%~ eslintModule.block({ files: eslintFiles.code, rules: { 'gspot/no-helpers-beside-tests': ['error', { harness: harness }] } }) %>,
-<% } %>

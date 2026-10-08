@@ -2,9 +2,8 @@ import plugin from '#plugin/plugin.ts';
 import { cell, table, referencePage } from './page.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { isRecord } from '@gspothq/cli/src/platform/objects.ts';
-import { PLUGIN_OPTIONS, PLUGIN_REQUIRES_OPTIONS } from '../../config/reference.ts';
 
-function pluginOptions(name: string, schemas: unknown, defaults: unknown): string {
+function pluginOptions(schemas: unknown, defaults: unknown): string {
     const entries: unknown[] = Array.isArray(schemas) ? schemas : [schemas];
     const rows = entries.flatMap((schema) => {
         if (!isRecord(schema) || !isRecord(schema['properties'])) return [];
@@ -16,7 +15,9 @@ function pluginOptions(name: string, schemas: unknown, defaults: unknown): strin
                 `\`${option}\``,
                 type,
                 `\`${displayed}\``,
-                PLUGIN_OPTIONS[name]?.[option] ?? 'See the rule example.',
+                isRecord(shape) && typeof shape['description'] === 'string'
+                    ? cell(shape['description'])
+                    : 'See the rule example.',
             ];
         });
     });
@@ -43,10 +44,8 @@ export function pluginReferencePages(): Map<string, ReferencePage> {
                     ? 'No preset turns this rule on. Add it to your ESLint configuration for the files it should check.'
                     : `Enabled by ${configurations.join(' and ')}.`;
             const defaults: unknown = rule.meta.defaultOptions?.[0];
-            const optionsBody = pluginOptions(name, rule.meta.schema, defaults);
-            const required = PLUGIN_REQUIRES_OPTIONS.includes(name)
-                ? ' Reports nothing until you set its project options.'
-                : '';
+            const optionsBody = pluginOptions(rule.meta.schema, defaults);
+            const required = docs.requiresOptions === true ? ' Reports nothing until you set its project options.' : '';
             const description = docs.description.split('\n\n', 1).join('');
             const body = `Rule: \`gspot/${name}\`.\n\n${docs.description}\n\n${selected}${required}\n\n## Why\n\n${docs.why}\n\n## What to do\n\n${docs.fix}\n\n## Example\n\n${docs.example}\n\n## Options\n\n${optionsBody}\n`;
             return [

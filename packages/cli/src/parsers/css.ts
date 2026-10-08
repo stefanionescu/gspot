@@ -2,6 +2,7 @@ import ts from 'typescript';
 import { parse } from 'postcss';
 import { posix } from 'node:path';
 import selectorParser from 'postcss-selector-parser';
+import { typescriptProgram } from '#cli/parsers/typescript.ts';
 import type { CssClass, Importer, CssImporterSource } from '#cli/types/parsers/css.ts';
 
 // CSS module objects use default or namespace bindings. Type-only and named imports do not carry the object.
@@ -124,20 +125,7 @@ export function moduleImporters(code: CssImporterSource[], sheets: Set<string>):
     const sources = new Map(
         code.map(({ path, text }) => [path, ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true)]),
     );
-    const options: ts.CompilerOptions = { noLib: true, noResolve: true, allowJs: true };
-    const host: ts.CompilerHost = {
-        getSourceFile: (path) => sources.get(path),
-        getDefaultLibFileName: () => '',
-        writeFile: () => {},
-        getCurrentDirectory: () => '',
-        getDirectories: () => [],
-        fileExists: (path) => sources.has(path),
-        readFile: (path) => sources.get(path)?.text,
-        getCanonicalFileName: (path) => path,
-        useCaseSensitiveFileNames: () => true,
-        getNewLine: () => '\n',
-    };
-    const program = ts.createProgram([...sources.keys()], options, host);
+    const program = typescriptProgram(sources);
     const checker = program.getTypeChecker();
     const importers = new Map<string, Importer[]>();
     for (const [path, source] of sources)

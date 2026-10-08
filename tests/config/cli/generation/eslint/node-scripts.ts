@@ -2,12 +2,67 @@ export const NODE_SCRIPT_SOURCE =
     '#!/usr/bin/env node\nconst unused = 1;\nconsole.log(process.cwd());\nprocess.exit(0);\n';
 export const NODE_SCRIPT_CORRECTED = '#!/usr/bin/env node\nconsole.log(process.cwd());\nprocess.exit(0);\n';
 
-export const NODE_SCRIPT_PATHS = [
-    'scripts/run[one]',
-    'scripts/run{one,two}',
-    'scripts/run.task',
-    'child/scripts/run',
-    'scripts/run.ts',
+export const NODE_SCRIPT_OUTPUT = 'console.log("result");\nprocess.exit(0);\n';
+
+export const NODE_SCRIPT_CASES = [
+    {
+        file: 'scripts/run[one]',
+        unused: { ruleId: 'no-unused-vars', line: 2, severity: 2 },
+        corrected: NODE_SCRIPT_CORRECTED,
+        strict: [],
+    },
+    {
+        file: 'scripts/run{one,two}',
+        unused: { ruleId: 'no-unused-vars', line: 2, severity: 2 },
+        corrected: NODE_SCRIPT_CORRECTED,
+        strict: [],
+    },
+    {
+        file: 'scripts/run.task',
+        unused: { ruleId: 'no-unused-vars', line: 2, severity: 2 },
+        corrected: NODE_SCRIPT_CORRECTED,
+        strict: [],
+    },
+    {
+        file: 'child/scripts/run',
+        unused: { ruleId: 'no-unused-vars', line: 2, severity: 2 },
+        corrected: NODE_SCRIPT_CORRECTED,
+        strict: [],
+    },
+    {
+        file: 'scripts/run.ts',
+        unused: { ruleId: '@typescript-eslint/no-unused-vars', line: 2, severity: 2 },
+        corrected: NODE_SCRIPT_CORRECTED,
+        strict: [],
+    },
+    {
+        file: 'scripts/typed.ts',
+        unused: { ruleId: '@typescript-eslint/no-unused-vars', line: 1, severity: 2 },
+        corrected: NODE_SCRIPT_OUTPUT,
+        strict: [],
+    },
+    {
+        file: 'scripts/run.js',
+        unused: { ruleId: 'no-unused-vars', line: 1, severity: 2 },
+        corrected: NODE_SCRIPT_OUTPUT,
+        strict: [],
+    },
+    {
+        file: 'build.config.ts',
+        unused: { ruleId: '@typescript-eslint/no-unused-vars', line: 1, severity: 2 },
+        corrected: NODE_SCRIPT_OUTPUT,
+        strict: [],
+    },
+    {
+        file: 'src/source.ts',
+        unused: { ruleId: '@typescript-eslint/no-unused-vars', line: 1, severity: 2 },
+        corrected: 'export const result = 1;\n',
+        strict: [
+            { ruleId: 'n/no-process-exit', line: 3, severity: 2 },
+            { ruleId: 'no-console', line: 2, severity: 2 },
+            { ruleId: 'unicorn/no-process-exit', line: 3, severity: 2 },
+        ],
+    },
 ];
 export const NODE_SCRIPT_CONTROLS = [
     'scripts/runo',
@@ -21,11 +76,15 @@ export const NODE_SCRIPT_CONTROLS = [
 export const NODE_SCRIPT_FILES = {
     'package.json': '{"private":true,"type":"module","engines":{"node":">=22.0.0"}}',
     'child/package.json': '{"private":true,"type":"module","engines":{"node":">=18.0.0"}}',
-    'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["scripts/*.ts"]}',
+    'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["scripts/*.ts","build.config.ts","src/*.ts"]}',
     'scripts/run[one]': NODE_SCRIPT_SOURCE,
     'scripts/run{one,two}': NODE_SCRIPT_SOURCE,
     'scripts/run.task': NODE_SCRIPT_SOURCE,
     'child/scripts/run': NODE_SCRIPT_SOURCE,
+    'scripts/typed.ts': 'const unused: number = 1;\nconsole.log("result");\nprocess.exit(0);\n',
+    'scripts/run.js': 'const unused = 1;\nconsole.log("result");\nprocess.exit(0);\n',
+    'build.config.ts': 'const unused: number = 1;\nconsole.log("result");\nprocess.exit(0);\n',
+    'src/source.ts': 'const unused: number = 1;\nconsole.log("result");\nprocess.exit(0);\n',
     'scripts/run.ts': '#!/usr/bin/env node\nconst unused: number = 1;\nconsole.log(process.cwd());\nprocess.exit(0);\n',
     'scripts/runo': '#!/usr/bin/env bash\necho ready\n',
     'scripts/runone': '#!/usr/bin/env bash\necho ready\n',
@@ -37,8 +96,8 @@ export const NODE_SCRIPT_FILES = {
 
 export const NODE_SCRIPT_TABLES = `[agent_rules]
 enabled = false
-[tools.eslint]
-script_files = ["scripts/**", "child/scripts/**"]
+[architecture.roles]
+scripts = ["scripts/**", "child/scripts/**", "build.config.ts"]
 [[generated]]
 paths = ["emitted/**"]
 reason = "The build owns these outputs."
@@ -47,41 +106,15 @@ paths = ["vendor/**"]
 reason = "These scripts belong to a dependency."
 [scope."child"]
 configurations = ["javascript"]
-[scope.limits.javascript]
+[scope."child".reasons]
+"limits.javascript.min_function_statements" = "The child exercises the scoped structural floor."
+[scope."child".limits.javascript]
 min_function_statements = 1
 [limits.javascript]
 min_function_statements = 3
 function_parameters = 2
 [limits.typescript]
 function_parameters = 5
-`;
-
-export const NODE_SCRIPT_LINT_SOURCE = `import { ESLint } from 'eslint';
-import { sep } from 'node:path';
-const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
-const [paths, controls] = JSON.parse(process.argv[1]);
-const results = await eslint.lintFiles(paths);
-const configurations = await Promise.all(controls.map(async (file) => ({ file, matched: await eslint.calculateConfigForFile(file) !== undefined })));
-process.stdout.write(JSON.stringify({ results: results.map(({ filePath, messages }) => ({
-    file: filePath.slice(process.cwd().length + 1).split(sep).join('/'),
-    findings: messages.filter(({ ruleId }) => ruleId === null || ['no-unused-vars', '@typescript-eslint/no-unused-vars',
-        'sonarjs/no-unused-vars', 'n/no-process-exit', 'unicorn/no-process-exit', 'no-console'].includes(ruleId))
-        .map(({ ruleId, line, severity }) => ({ ruleId, line, severity }))
-        .toSorted((left, right) => left.ruleId.localeCompare(right.ruleId)),
-})), configurations }));
-`;
-
-export const NODE_SCRIPT_CONTRACT_SOURCE = `import { ESLint } from 'eslint';
-import { sep } from 'node:path';
-const eslint = new ESLint({ overrideConfigFile: '.gspot/config/eslint.config.mjs' });
-const results = await eslint.lintFiles(JSON.parse(process.argv[1]));
-process.stdout.write(JSON.stringify(results.map(({ filePath, messages }) => ({
-    file: filePath.slice(process.cwd().length + 1).split(sep).join('/'),
-    findings: messages.filter(({ ruleId }) => ruleId === null || ['no-undef', 'max-params', 'gspot/no-trivial-functions',
-        'n/no-unsupported-features/es-builtins', 'gspot/import-extensions'].includes(ruleId))
-        .map(({ ruleId, line, severity }) => ({ ruleId, line, severity }))
-        .toSorted((left, right) => left.ruleId.localeCompare(right.ruleId) || left.line - right.line),
-}))));
 `;
 
 export const NODE_SCRIPT_CONTRACTS = [
@@ -145,19 +178,24 @@ export const NODE_SCRIPT_CONTRACTS = [
 ];
 
 /** Raw native reports retain every diagnostic and the host's filename spelling. */
-export const NODE_SCRIPT_REPORT_SOURCE = `import { createRequire } from 'node:module';
-const { ESLint } = createRequire(process.argv[3])('eslint');
-const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: JSON.parse(process.argv[2]) });
-const results = await eslint.lintFiles(JSON.parse(process.argv[1]));
-process.stdout.write(JSON.stringify(results));
-`;
 
 /** Native configuration applicability exposes unintended neighboring filename matches. */
-export const NODE_SCRIPT_PATH_COVERAGE = `import { createRequire } from 'node:module';
-const { ESLint } = createRequire(process.argv[3])('eslint');
-const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: JSON.parse(process.argv[2]) });
-process.stdout.write(JSON.stringify(await eslint.calculateConfigForFile(process.argv[1]) !== undefined));
-`;
 
 /** POSIX report roots exercise filename normalization with and without literal backslashes. */
 export const NODE_SCRIPT_NATIVE_ROOTS = ['project', String.raw`project\files`];
+
+export const NODE_SCRIPT_RULES = [
+    'no-unused-vars',
+    '@typescript-eslint/no-unused-vars',
+    'sonarjs/no-unused-vars',
+    'n/no-process-exit',
+    'unicorn/no-process-exit',
+    'no-console',
+];
+export const NODE_CONTRACT_RULES = [
+    'no-undef',
+    'max-params',
+    'gspot/no-trivial-functions',
+    'n/no-unsupported-features/es-builtins',
+    'gspot/import-extensions',
+];

@@ -1,6 +1,6 @@
 # Vocabulary
 
-27 unresolved review records remain.
+26 unresolved review records remain.
 
 One name for each concept, and one concept for each name. The owner decision of October 7, 2026 in `findings/progress.json` makes this file the reference for every name in the ledger, as `findings/review/glossary.md`. When a record proposes a name that this table does not use, the table wins.
 
@@ -186,3 +186,11 @@ The original records above are retained. These records are complete at `c6aa35af
 | ID                    | Status   | Implementation and verification evidence                                                                                                                                          |
 | --------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/glossary/014` | complete | Copy folders, FileCopy/FileCopies, copyFiles and copyIntoScratch replace old snapshot/workspace names; callers and comments updated. Focused copy tests and staged checks passed. |
+
+## Verified implementation status on October 8, 2026
+
+Original IDs and quotations remain above.
+
+| ID                    | Status   | Implementation and verification                                                                                                                                                                                                                                                                                                                                                           |
+| --------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/glossary/024` | complete | Repository package-manifests/readPackageManifests/PackageManifest/PackageJson/PACKAGE_MANIFESTS and Session.packageManifests have one owner and name. No compatibility aliases. Mechanical AST comparisons equivalent; native83tests275assertions5files; root types0; staged96pass12skip0findings and normal commit/push hooks passed. Commit `2288458c1d894771f72142a378f662ebd453912a`. |

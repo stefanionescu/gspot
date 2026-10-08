@@ -30,13 +30,13 @@ function configurationSections(manifests: Manifest[]): string {
  * Every generated reference page, keyed by its Markdown path: commands, configurations, checks, plugin rules, settings, and the policy file.
  * @returns the pages by identity
  */
-export function referencePages(): Map<string, ReferencePage> {
+export async function referencePages(): Promise<Map<string, ReferencePage>> {
     const pages = new Map<string, ReferencePage>();
     const add = (path: string, content: ReferencePage): void => {
         if (pages.has(path)) throw new Error(`Duplicate reference identity: ${path}`);
         pages.set(path, content);
     };
-    for (const [path, page] of commandPages()) add(path, page);
+    for (const [path, page] of await commandPages()) add(path, page);
     const manifests = configurationManifests()
         .values()
         .toArray()
@@ -51,7 +51,7 @@ export function referencePages(): Map<string, ReferencePage> {
         ),
     );
     for (const manifest of manifests)
-        add(`configurations/${manifest.configuration.name}.md`, configurationPage(manifest));
+        add(`configurations/${manifest.configuration.name}.md`, configurationPage(manifest, manifests));
     const checks = allChecks(configurationManifests().values());
     const checkRows = [...checks.values()]
         .toSorted((a, b) => a.check.name.localeCompare(b.check.name))
@@ -78,7 +78,7 @@ export function referencePages(): Map<string, ReferencePage> {
         add(`checks/${check.name}.md`, checkPage(check, configuration));
     add('settings.md', settingsPage(manifests));
     add(
-        'configuration.md',
+        'gspot-toml.md',
         referencePage(
             'gspot.toml schema',
             'Policy tables, examples, and accepted fields.',
@@ -102,7 +102,7 @@ export function referenceCollection(): Loader {
             for (const id of previous) context.store.delete(id);
             await docsLoader().load(context);
             const entries = [];
-            for (const [path, page] of referencePages()) {
+            for (const [path, page] of await referencePages()) {
                 const id = `reference/${path.slice(0, -'.md'.length)}`;
                 if (context.store.has(id)) throw new Error(`Duplicate reference identity: ${id}`);
                 const { body } = page;

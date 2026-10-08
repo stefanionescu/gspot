@@ -1,4 +1,4 @@
-<% const config = eslint(); const projects = scopes.map((scope) => `${scope.path === '' ? '' : `${scope.path}/`}tsconfig.json`); %>
+<% const config = eslint(); const projects = ['tsconfig.json', ...scopes.map((scope) => `${scope.path}/tsconfig.json`)]; %>
 import { join, relative, sep } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';

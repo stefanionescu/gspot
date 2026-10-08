@@ -21,14 +21,14 @@ export async function installUv(
     if (runner !== 'mise') return 'uv';
     const uv = pythonInstallerPin();
     const pin = `${uv.name}@${uv.version}`;
-    const acquired = await runTool(['mise', 'install', pin], { cwd: root, cancelSignal });
+    const installed = await runTool(['mise', 'install', pin], { cwd: root, cancelSignal });
     cancelSignal?.throwIfAborted();
-    if (acquired.missing) throw new GspotError('tool', 'mise is unavailable. Install mise, then rerun the command.');
-    if (acquired.code !== 0)
+    if (installed.missing) throw new GspotError('tool', 'mise is unavailable. Install mise, then rerun the command.');
+    if (installed.code !== 0)
         throw new GspotError(
             'installation',
             `mise did not install ${pin}. Run mise install ${pin} and read its error.
-${installationDiagnostics(acquired, [])}`,
+${installationDiagnostics(installed, [])}`,
         );
     const located = await runTool(['mise', 'which', 'uv', '--tool', pin], { cwd: root, cancelSignal });
     cancelSignal?.throwIfAborted();

@@ -3,7 +3,9 @@ title: "Quickstart: Python"
 description: Initialize a Python project and correct a source finding.
 ---
 
-You need Python, uv, Git, and mise; install the applicable tools from the requirements page. See [Requirements](/guides/requirements/) and [Install](/guides/install/). gspot is not released yet; use the source checkout until publication.
+Read [Requirements](/guides/requirements/) and [Install](/guides/install/) first.
+
+Replace `<version>` with the exact version from the [npm package page](https://www.npmjs.com/package/@gspothq/cli).
 
 ## Create the project
 
@@ -20,7 +22,7 @@ git commit -m "feat: Create the project"
 From a clean working tree, initialize and choose mise as the runner:
 
 ```shell
-mise exec npm:@gspothq/cli@0.1.0 -- gspot init --configurations python
+mise exec npm:@gspothq/cli@<version> -- gspot init --configurations python
 ```
 
 Read the plan and accept it. Initialization prepares lockfiles and installs applicable tools. Trust the generated mise file, then prepare and diagnose the setup:
@@ -33,7 +35,7 @@ mise exec -- gspot doctor
 mise exec -- gspot check
 ```
 
-Resolve findings in the initial project before committing. If the `licenses` configuration is selected, choose your [dependency license policy](/guides/dependency-licenses/) explicitly. Its `licenses/packages` check remains skipped until `licenses.allowed` is set.
+Resolve findings in the initial project before committing. `pyproject.toml` selects the general `licenses` configuration automatically. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. Its `licenses/packages` check remains skipped until an allowed license or exception is set.
 
 ```shell
 git add -A
@@ -55,7 +57,13 @@ Run the source check:
 mise exec -- gspot check --only python/ruff
 ```
 
-The check reports the unfinished syntax and exits nonzero. Stage the invalid file and attempt a commit to see the pre-commit hook reject it. The report names the file and explains the correction.
+The check exits nonzero and reports:
+
+```text
+src/orders_python/__init__.py:3:1  invalid-syntax  unexpected EOF while parsing
+```
+
+Stage the invalid file and attempt a commit to see the pre-commit hook reject it. The report names the file and explains the correction.
 
 ## Correct the source
 

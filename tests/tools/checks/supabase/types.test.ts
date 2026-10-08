@@ -30,7 +30,7 @@ test.skipIf(!runsDatabase)(
         const { options, configPath, authored } = database;
         const stale = await executeRun(
             await openSession(sandbox.path),
-            buildRunOptions({ stage: 'push', only: ['supabase/types-fresh'], isDryRun: true }),
+            buildRunOptions({ stage: 'push', only: ['supabase/types-fresh'] }),
         );
         expect(stale.report.exitCode, JSON.stringify(stale.report)).toBe(1);
         expect(stale.report.checks).toMatchObject([
@@ -41,13 +41,16 @@ test.skipIf(!runsDatabase)(
             },
         ]);
         expect(await readFile(join(sandbox.path, 'database.ts'), 'utf8')).toBe('export type Database = {};\n');
-        const generated = await runTestCommand(['supabase', 'gen', 'types', 'typescript', '--local'], options);
+        const generated = await runTestCommand(
+            ['supabase', 'gen', 'types', 'typescript', '--local', '--schema', 'public'],
+            options,
+        );
         expect(generated.code, generated.stderr).toBe(0);
         expect(generated.stdout).toContain('export type Database');
         await Bun.write(join(sandbox.path, 'database.ts'), generated.stdout);
         const corrected = await executeRun(
             await openSession(sandbox.path),
-            buildRunOptions({ stage: 'push', only: ['supabase/types-fresh'], isDryRun: true }),
+            buildRunOptions({ stage: 'push', only: ['supabase/types-fresh'] }),
         );
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
@@ -62,13 +65,16 @@ test.skipIf(!runsDatabase)(
         await createFileTree(sandbox.path, { 'apps/api': {}, 'apps/web': {}, 'gspot.toml': NESTED_POLICY });
         await using api = await prepareSupabaseDatabase(join(sandbox.path, 'apps/api'), API_MIGRATIONS);
         await using web = await prepareSupabaseDatabase(join(sandbox.path, 'apps/web'), WEB_MIGRATIONS);
-        const options = buildRunOptions({ stage: 'push', only: ['supabase/types-fresh'], isDryRun: true });
+        const options = buildRunOptions({ stage: 'push', only: ['supabase/types-fresh'] });
         const stale = await executeRun(await openSession(sandbox.path), options);
         expect(stale.report.checks.map((check) => [check.scope, check.status])).toStrictEqual([
             ['apps/api', 'failed'],
             ['apps/web', 'failed'],
         ]);
-        const generatedApi = await runTestCommand(['supabase', 'gen', 'types', 'typescript', '--local'], api.options);
+        const generatedApi = await runTestCommand(
+            ['supabase', 'gen', 'types', 'typescript', '--local', '--schema', 'public'],
+            api.options,
+        );
         expect(generatedApi.code, generatedApi.stderr).toBe(0);
         expect(generatedApi.stdout).toContain('api_records');
         expect(generatedApi.stdout).not.toContain('web_records');
@@ -78,7 +84,10 @@ test.skipIf(!runsDatabase)(
             ['apps/api', 'passed'],
             ['apps/web', 'failed'],
         ]);
-        const generatedWeb = await runTestCommand(['supabase', 'gen', 'types', 'typescript', '--local'], web.options);
+        const generatedWeb = await runTestCommand(
+            ['supabase', 'gen', 'types', 'typescript', '--local', '--schema', 'public'],
+            web.options,
+        );
         expect(generatedWeb.code, generatedWeb.stderr).toBe(0);
         expect(generatedWeb.stdout).toContain('web_records');
         expect(generatedWeb.stdout).not.toContain('api_records');
