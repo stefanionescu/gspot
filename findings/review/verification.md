@@ -1,6 +1,6 @@
 # Found While Verifying the Open Records
 
-8 unresolved review records remain.
+7 unresolved review records remain.
 
 Six read-only verifiers checked every open record against commit `3e1445a2d` on October 6, 2026. These are the new problems they found on the way. The status of each older record is in the "Status on October 6, 2026" section of its own file.
 
@@ -36,3 +36,11 @@ Original records and quotations remain above. These records are complete at `0a7
 | ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/verification/025` | complete | RepositoryScenario separates InProcessScenario and InstalledScenario. Twelve native type refusal cases reject CLI installation fields; three valid controls pass. CLI preparation creates no modules or tool projects. Native installed preparation and failure cleanup pass; main root/CLI types and 135 focused tests pass. Commit `0a7108489e8091269f2cf615ff9985e13f5d9199`. |
 | `review/verification/018` | complete | Removed all eleven no-op isDryRun fields from nine remaining owners when fix is false. Genuine fixer previews remain. Main: 75 tests, 275 assertions; all affected native checks pass. No native executable XCTest run is credited. Commit `0a7108489e8091269f2cf615ff9985e13f5d9199`.                                                                                           |
+
+## Implementation checkpoint 74fcf0645 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `74fcf06452f0a0b0293130e5cff69d42e5ddd620`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                         |
+| ------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/verification/026` | complete | Windows cmd test shim uses quoted process.execPath, preserving runtime identity without requiring node in PATH. Native argument selection tests pass. This is source/caller evidence; Windows execution is still required in final cross-platform acceptance. Commit `74fcf06452f0a0b0293130e5cff69d42e5ddd620`. |

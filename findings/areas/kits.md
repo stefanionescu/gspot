@@ -1,6 +1,6 @@
 # Kits, Settings, and Names
 
-47 unresolved review records remain.
+45 unresolved review records remain.
 
 ## Findings
 
@@ -225,3 +225,12 @@ Original records and quotations remain above. These records are complete at `9a3
 | ID               | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ---------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/kits/083` | complete | The sole handle-prefix declaration is in the JavaScript manifest. Express, NestJS, NextJS and React copies and CALLBACK_VERB are deleted. Naming reads the verb from the declaration. Native framework/naming evidence corpus106pass1215assert8files; Main staged gate152passed14skippedzero findings, root types pass. Main replay47pass659assert5files4.78s verifies the current source and metadata. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. |
+
+## Implementation checkpoint 74fcf0645 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `74fcf06452f0a0b0293130e5cff69d42e5ddd620`.
+
+| ID               | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/kits/106` | complete | Native check IDs renamed to commits/commitlint-pushed and secrets/gitleaks-pushed in manifests, built-in check table and all test callers at c79cc9356a34fc31a43e768ebdcf8a3cd3bd4fbd. No old active aliases remain. Behavior integration and actual native history checks pass at this commit. Commit `74fcf06452f0a0b0293130e5cff69d42e5ddd620`.                           |
+| `areas/kits/101` | complete | No secrets/gitleaks-baseline check, baseline filename or baseline_reasons setting remains. Reviewed historical secrets use reasoned ignore rule fingerprints on secrets/gitleaks-pushed. Actual native exact fingerprint, nonmatching, expiry, child/no-Git and redaction controls pass. No old-findings recording added. Commit `74fcf06452f0a0b0293130e5cff69d42e5ddd620`. |

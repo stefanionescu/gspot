@@ -1,5 +1,5 @@
 {
-    "openRecords": 645,
+    "openRecords": 594,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -258,7 +258,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 645,
+        "openRecords": 594,
         "records": 1092,
         "batches": [
             {
@@ -564,8 +564,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 106,
-                "unresolvedAssignments": 185
+                "completedAssignments": 134,
+                "unresolvedAssignments": 157
             },
             {
                 "id": "python",
@@ -611,8 +611,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 19,
-                "unresolvedAssignments": 20
+                "completedAssignments": 20,
+                "unresolvedAssignments": 19
             },
             {
                 "id": "javascript-web",
@@ -947,8 +947,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 28,
-                "unresolvedAssignments": 103
+                "completedAssignments": 31,
+                "unresolvedAssignments": 100
             },
             {
                 "id": "test-quality",
@@ -1424,8 +1424,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 179,
-                "unresolvedAssignments": 290
+                "completedAssignments": 180,
+                "unresolvedAssignments": 289
             },
             {
                 "id": "scripts-repository",
@@ -1564,8 +1564,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 37,
-                "unresolvedAssignments": 95
+                "completedAssignments": 38,
+                "unresolvedAssignments": 94
             },
             {
                 "id": "installation-docs",
@@ -1808,8 +1808,8 @@
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
                 ],
-                "completedAssignments": 2,
-                "unresolvedAssignments": 89
+                "completedAssignments": 16,
+                "unresolvedAssignments": 75
             },
             {
                 "id": "layout",
@@ -1905,8 +1905,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 48,
-                "unresolvedAssignments": 41
+                "completedAssignments": 49,
+                "unresolvedAssignments": 40
             },
             {
                 "id": "configurations",
@@ -1972,8 +1972,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 52,
-                "unresolvedAssignments": 7
+                "completedAssignments": 55,
+                "unresolvedAssignments": 4
             },
             {
                 "id": "names",
@@ -2051,10 +2051,12 @@
             ]
         },
         "areas/checks/009": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "verification": [
+                "Drift remains in its own general/gspot check. Three native history manifest checks declare runs=history; planner reads that value for root selection, activity and shallow-history refusal. Hard-coded HISTORY_CHECKS and callers deleted. Native selection tests and actual shallow push refusal/fetch correction pass."
+            ]
         },
         "areas/checks/010": {
             "status": "partial",
@@ -2143,16 +2145,21 @@
             ]
         },
         "areas/checks/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "56795d632a7927b16049a23953173a8b1d99d9db",
+            "verification": [
+                "Dedicated Jest engine, types, constants, schema and registry entry deleted; manifest declares native text-summary coverage thresholds and regex diagnostics. Existing command execution owns scratch copying, failed runs and cleanup.",
+                "31 focused tests and 144 assertions passed in the exact implementation checkout; native Jest acceptance passed five cases and 42 assertions. Staged gate: 78 checks, no failures; normal push: 68 passed, 10 skipped, no findings."
+            ]
         },
         "areas/checks/027": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "verification": [
+                "One substantive pushedCommits in repository/revisions/public consumes native root, explicit commits and cancellation. All three native history runners use it and shared historyResult for empty result/no-Git refusal. Optimized gitleaks range body retained. Node and Bun revision-selection controls pass; actual commitlint and gitleaks history tests pass."
+            ]
         },
         "areas/checks/030": {
             "status": "complete",
@@ -3663,14 +3670,19 @@
             ]
         },
         "areas/kits/101": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "No secrets/gitleaks-baseline check, baseline filename or baseline_reasons setting remains. Reviewed historical secrets use reasoned ignore rule fingerprints on secrets/gitleaks-pushed. Actual native exact fingerprint, nonmatching, expiry, child/no-Git and redaction controls pass. No old-findings recording added."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -3709,10 +3721,12 @@
             ]
         },
         "areas/kits/106": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "verification": [
+                "Native check IDs renamed to commits/commitlint-pushed and secrets/gitleaks-pushed in manifests, built-in check table and all test callers at c79cc9356a34fc31a43e768ebdcf8a3cd3bd4fbd. No old active aliases remain. Behavior integration and actual native history checks pass at this commit."
+            ]
         },
         "areas/kits/107": {
             "status": "partial",
@@ -4558,14 +4572,20 @@
             ]
         },
         "review/code-commands/001": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "setCommand reads knownSettings(selectForScope(policy,...), policy.level) and calls native savePolicy; savePolicy has one post-preparePolicy openSession for a real edit. Existing set/refusal/preview/scoped controls pass. This is native source call-graph evidence; no runtime repository-read-count spy claim. No policy/writer change.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -4592,14 +4612,21 @@
             ]
         },
         "review/code-commands/003": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Hook outputs now prune; disabled installation unsets only exact own hooksPath; apply prints install note for removed hooks.",
+                "Root and app disable\u2192dry-run\u2192prune\u2192install controls, foreign path preservation; actual own root/app native install cases pass.",
+                "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -4609,14 +4636,21 @@
             ]
         },
         "review/code-commands/004": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Single public isStray uses recorded installed identity, expected generated/move paths and retained paths; write pruning and drift call it; deleted isStrayCandidate/kind filter/dead Policy argument.",
+                "Native disabled agent-rule case asserts each recorded path appears in drift and is actually removed; generic CAS/pruning/source-preservation controls pass.",
+                "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -4754,16 +4788,22 @@
             ]
         },
         "review/code-commands/013": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Export genuine isSourceKind calculation in configurations/selection/public.ts. Replace the two remaining equivalent language-or-framework comparisons (sourceConfigurations and exact-template suggestion exclusion); keep language-only/general-only checks distinct. Historic removed callers/deleted ownership history are evidence, not resurrected.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/014": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence only: InitInputs.options and InitDetection.options already Pick three real selection fields; reconcile caller options={} already carries no invented flags. No source churn.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/015": {
             "status": "partial",
@@ -4816,10 +4856,13 @@
             ]
         },
         "review/code-commands/020": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Delete never-produced GeneratedFile.kind managed-block union member. Native generated.blocks remains its real independent contract; no runtime block/removal change.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/021": {
             "status": "pending",
@@ -4828,10 +4871,14 @@
             "verification": []
         },
         "review/code-commands/022": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "verification": [
+                "generated mandatory second argument; log follows, reviewedOriginals named options; no emitter fallback. All direct callers migrated.",
+                "Original29-case mechanical corpus passes; final62 CLI and existing root/app native hooks installation cases pass; root+CLI types0; whole caller grep captured.",
+                "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
+            ]
         },
         "review/code-commands/023": {
             "status": "pending",
@@ -4849,14 +4896,21 @@
             ]
         },
         "review/code-commands/025": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "getHookPlan returns native path; existing hook preview and installation aggregate carry hooks metadata, install consumes it directly; deleted argv search.",
+                "Native root/app dry-run JSON paths unchanged in installed tool cases; disabling preview contains exact git unset command without modifying setting.",
+                "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -4883,16 +4937,22 @@
             ]
         },
         "review/code-commands/027": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "One manifest-declared emitter replaces Commitlint/Stylelint generators. Native redirect=true package.json/nonempty key contract. Commitlint array\u2192string intentional; nearest Stylelint scope preserved. Native emitted loaders Node24/Bun both levels/root+app.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "One literalGlob and native nestedScopes replace three differing escapers/duplicate child calculation. Git attributes unchanged. Five native special-character/path vectors pass Node24+Bun.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/029": {
             "status": "pending",
@@ -4907,22 +4967,31 @@
             "verification": []
         },
         "review/code-commands/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Scoped node selector filtering delegated once; structural source extension selectors use native shared owner. Captured emitted TS regex changes alternative order only, native existing selectors pass.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/032": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "scope_fragments Boolean at native tool-file schema; JavaScript declaration opts in. Fragment calculations consult native metadata; renamed target+fragments emits identical bytes at both levels.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/033": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Omit<ScopeView, options> is genuine Eta input contract; destructured options remains internal JS/Swift resolver. Rules048 exact prerequisite retained. Spread actual view once, delete duplicated transport/type leaves.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/035": {
             "status": "complete",
@@ -4949,26 +5018,38 @@
             "verification": []
         },
         "review/code-commands/038": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "gitignoreBlock requires actual manifests, supplied selected manifests by real producer; Python acquisition test helper explicitly supplies Python manifest. Existing native custom-manifest case asserts excluded unselected prose patterns. Failed new prose-unselection precondition retained; removed only those new registrations.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/039": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Compute generated once for takeover+init plan, derive outside owned paths from generated files/blocks; preserve change rows and CI include instructions.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/040": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "one unknownCheckDiagnostic in existing configurations/errors/public owner; existing setting/configuration diagnostics called from explain with genuine union-selected manifests and level; check/ignore/explain unknown-check errors all selection. Scratch acceptance checks same suggested check message, unselected valid check still refuses, nested-only setting surface and native configuration suggestions. Existing native tool-rule explanation unchanged.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -4978,14 +5059,20 @@
             ]
         },
         "review/code-commands/041": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "one native commandRoot calculation, all12 registrations use it; GlobalCommand is the existing native optsWithGlobals capability. Redundant one-use cwd locals removed. Doctor source change registration/import only; actual doctor body and reserved tests unchanged.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -4995,14 +5082,20 @@
             ]
         },
         "review/code-commands/042": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "one noteLines with four real original callers; exact55 original/final byte/JSON/report comparisons cover empty notes, empty messages, multiline/unicode, written/updated/removed combinations and final-newline/fallback behavior.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5012,14 +5105,20 @@
             ]
         },
         "review/code-commands/043": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "dry-run JSON configurations\u2192reconciled only; actual CLI has reconciled and refuses old alias by absence. Native policy/configuration arrays, drift, pin and notes preserved. One allowed JSON field mapping explicitly normalized in extracted-function proof.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5035,10 +5134,13 @@
             "verification": []
         },
         "review/code-commands/046": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Stray diagnostic says gspot wrote the file and no selected configuration writes it now; prove actual native ownership-log source, not marker-based eligibility.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/code-commands/047": {
             "status": "partial",
@@ -5058,14 +5160,21 @@
             ]
         },
         "review/code-commands/052": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Native foreign hook descriptors preserve files and provider paths; readiness reads their regular-file bytes and requires gspot check --hook; absent registration reports not installed plus native instructions. Native Git hooksDirectory preserves below-Git-root coordinates.",
+                "All4 existing foreign provider vectors now verify absent\u2192actual line\u2192ready and original bytes before mutation; extra nested-core.hooksPath positive/negative case passes.",
+                "Implementation 5586a3c910149fdf156765db99779e372a2b8b09; canonical hook fixture and actual native acceptance 74fcf06452f0a0b0293130e5cff69d42e5ddd620. Four actual hook tests pass within 18 native tool cases and 192 assertions. Combined command tests519/3744, types, normal staged/commit/push gates pass. Native platform macOS; no other-platform claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5219,19 +5328,23 @@
             ]
         },
         "review/code-execution/016": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
             "verification": [
                 "Evidence 7d5a7e28cdd5834c.",
                 "Evidence ccbae0f6d4f25198.",
                 "Evidence 3142ce44f04114bf.",
-                "Evidence ed935fc24cd36735."
+                "Evidence ed935fc24cd36735.",
+                "JSON fields.fixable is schema-owned and mapped by generic JSON reader.",
+                "JavaScript output is json with messages children and fix mapping.",
+                "eslintFindings/eslintReportSchema/eslintDiagnosticSchema absent.",
+                "Focused native acceptance passed on the exact pushed tree."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-output-contract-final-freeze.json",
-                    "commit": null,
+                    "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
                     "verification": [
                         "Evidence 7d5a7e28cdd5834c.",
                         "Evidence ccbae0f6d4f25198.",
@@ -5242,19 +5355,23 @@
             ]
         },
         "review/code-execution/017": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
             "verification": [
                 "Evidence 7d5a7e28cdd5834c.",
                 "Evidence ccbae0f6d4f25198.",
                 "Evidence 3142ce44f04114bf.",
-                "Evidence ed935fc24cd36735."
+                "Evidence ed935fc24cd36735.",
+                "One outputFormats descriptor per native format owns read/namesFiles/verifyFiles/withholdOutput.",
+                "Execution consumes descriptors for filename verification, broken-tool checks and withheld sensitive output.",
+                "Existing empty/invalid/JSON/native exit and secret privacy assertions retained.",
+                "Focused native acceptance passed on the exact pushed tree."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-output-contract-final-freeze.json",
-                    "commit": null,
+                    "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
                     "verification": [
                         "Evidence 7d5a7e28cdd5834c.",
                         "Evidence ccbae0f6d4f25198.",
@@ -5374,10 +5491,16 @@
             ]
         },
         "review/code-execution/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
+            "verification": [
+                "Native package-json/restrict-dependency-ranges uses rangeType pin.",
+                "version-range/EXACT_VERSION/ranges_allowed absent.",
+                "Package-manager and lockfile checks retained.",
+                "Root/child/both-level exact path ignore plus registry alias controls pass.",
+                "Focused native acceptance passed on the exact pushed tree."
+            ]
         },
         "review/code-execution/032": {
             "status": "complete",
@@ -5504,19 +5627,23 @@
             ]
         },
         "review/code-execution/046": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
             "verification": [
                 "Evidence 7d5a7e28cdd5834c.",
                 "Evidence ccbae0f6d4f25198.",
                 "Evidence 3142ce44f04114bf.",
-                "Evidence ed935fc24cd36735."
+                "Evidence ed935fc24cd36735.",
+                "No charOffset/sourceText/offsetPosition/newlineSequences/encoding decoding branch.",
+                "SARIF startLine absent keeps file and omits line/column.",
+                "Generic SARIF command file-only and repository findings remain supported.",
+                "Focused native acceptance passed on the exact pushed tree."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-output-contract-final-freeze.json",
-                    "commit": null,
+                    "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
                     "verification": [
                         "Evidence 7d5a7e28cdd5834c.",
                         "Evidence ccbae0f6d4f25198.",
@@ -5770,14 +5897,20 @@
             ]
         },
         "review/commands-templates/020": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "native remove, ignore --remove and set --remove all exit0 on no-op and preserve full canonical repository tree. remove/set exact text nothing to remove; ignore retains existing explanation nothing to remove: no matching ignore entry. No historical string churn or universal exact-text assertion.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5787,14 +5920,20 @@
             ]
         },
         "review/commands-templates/022": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Commander variadic names and typed configurations array; all requested removals excluded from surviving selections before each requireChain check; one native mutation publishes only after all refusals validated. Root/reversed-order/scoped positive cases, dependency refusal after a removable first name, automatic-general refusal, exact removed_configurations, preview/final policy equality and absence of npm installation artifacts all pass.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5804,14 +5943,20 @@
             ]
         },
         "review/commands-templates/023": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Actual --runner choices and --no-runner registration replaces --no-task. Full caller strings migrated. Native labels name hook commands; prompt/manual/default/cancel controls preserved. Native old flag refusal preserved. none remains --no-runner, not --runner none.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5821,14 +5966,20 @@
             ]
         },
         "review/commands-templates/025": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Hooks pass explicit --hook; remove obsolete GSPOT_HOOK environment prefix/reader/preload clearing. Inherited environment has no selection effect.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5838,14 +5989,20 @@
             ]
         },
         "review/commands-templates/026": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Check hook choices derive from authoritative HOOK_ARGS keys; delete duplicated HOOKS list.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5855,14 +6012,20 @@
             ]
         },
         "review/commands-templates/028": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Delete list duplicate detected calculation/text/JSON field + detected-only filtering of available; list selected+available. Preserve former SQL detection assertion through actual doctor getSuggestions call in same CLI test, with new SQL available assertion; doctor production untouched.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5872,16 +6035,22 @@
             ]
         },
         "review/commands-templates/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "GitLab workflow/include label is shared by init/doctor. Preserve native plan include instruction and workflow rows.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/commands-templates/030": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Shared actual CI npm install command serves GitHub, GitLab, and init fallback setup. Native shell argv equivalent despite narrower version quoting.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/commands-templates/031": {
             "status": "complete",
@@ -5894,20 +6063,29 @@
             ]
         },
         "review/commands-templates/033": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Mechanical move PUSH_ARGUMENTS to check config, number/structured regexes to set config, HELP_CODES to program config, widths to list config; delete options.ts and update four actual direct imports. No literals/runtime conditions changed.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/commands-templates/034": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "existing export --dry-run prints template and report and preserves destination/source; all export publication/provenance/outside/native mode/link/refusal/correction cases pass. No export guard/body changed.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5917,14 +6095,20 @@
             ]
         },
         "review/commands-templates/035": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Only add help description sentence corrected to required selections, authored names unchanged.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -5934,26 +6118,38 @@
             ]
         },
         "review/commands-templates/038": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Delete Choice.hint, orphan InitDetected comment, and native select object mapping. Pass actual choices; prove Clack conditional generic typing before deleting existing native type projection, no new runtime callback/guard/coercion.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/commands-templates/039": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Meaningful CLI --no-color text control at actual terminal TTY boundary, restore descriptors/environment. Preserve separate NO_COLOR controls and all actual output values.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ]
         },
         "review/commands-templates/040": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Only init --from help path/ref grammar corrected; actual token/fetch behavior remains current Root.",
+                "Combined native tests, types and normal staged/commit/push gates pass at the implementation commit."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -6266,12 +6462,17 @@
             ]
         },
         "review/configurations-plugin/036": {
-            "status": "partial",
-            "owner": "root",
-            "commit": "48298e0be89d77c0778acbc63382381a26ef202d",
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
             "verification": [
                 "One full named tool declaration; name-only references, duplicate/missing-owner refusal and order-independent metadata pass native143 cases318 assertions. Main combined223 CLI cases734 assertions, types, policy lint, build/schema/preset-idempotence/apply/install and staged/normal commit/push pass.",
-                "Mandatory simplification remains: production grows1991 bytes44 lines268 AST nodes in the immutable functional packet. This record remains outstanding; current full-platform acceptance is not claimed."
+                "Mandatory simplification remains: production grows1991 bytes44 lines268 AST nodes in the immutable functional packet. This record remains outstanding; current full-platform acceptance is not claimed.",
+                "One complete tool owner and name-only references.",
+                "Missing named owner and duplicate full declaration refused for same/different pins and registry order.",
+                "Actions ShellCheck gets owner suppression/refused_options/rule_url at both levels/root-child.",
+                "No last-wins repeated full-tool acceptance.",
+                "Focused native acceptance passed on the exact pushed tree."
             ]
         },
         "review/configurations-plugin/038": {
@@ -6402,13 +6603,20 @@
             ]
         },
         "review/configurations-plugin/053": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
+            "verification": [
+                "Thirteen topic assets at naming/secrets/security/dependencies/commits/prose/gspot owners; original engineering topic paths absent.",
+                "Engineering and gspot always_selected declarations remain.",
+                "Assembly reads always_selected flag; no engineering lookup.",
+                "TALKING remains engineering and selected at both levels.",
+                "Native root-child/manual/dependency-absent/conditional and duplicate selection controls pass.",
+                "Focused native acceptance passed on the exact pushed tree."
+            ],
             "additionalChanges": [
                 {
-                    "commit": null,
+                    "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
                     "scope": "Fourteen byte-identical authored rule asset moves and Playwright dependency condition integrated; original92 native cases391 assertions. Production\u221227 bytes; normal apply regenerates owned instructions."
                 }
             ]
@@ -6431,10 +6639,15 @@
             ]
         },
         "review/configurations-plugin/056": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
+            "verification": [
+                "All three final filenames exist as committed assets.",
+                "FORM.md/QUERY.md/I18N.md former filenames absent.",
+                "Native selected assets/dependency absence/root-child and both levels controls pass.",
+                "Focused native acceptance passed on the exact pushed tree."
+            ]
         },
         "review/configurations-plugin/057": {
             "status": "complete",
@@ -8311,10 +8524,14 @@
             ]
         },
         "review/source-layout/001": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
+            "verification": [
+                "Actual declaration selection stays in configurations; repository inventory, source ownership and detection move into repository selection. Planning coverage and ToolPin parser-type dependencies precede this move; static release pins have their generation owner. Old source files and imports are deleted, with no compatibility exports.",
+                "All fifteen CLI module permission lists follow the adopted bottom-up order and no higher dependency remains; the obsolete tools generation-edge reason is removed. Native graph: 492 sources each have exactly one module, 1664 cross-module edges have zero type or value reversals, and 1722 runtime value edges have zero cycles.",
+                "The final native AST proof preserves all 452 non-import statements. Focused tests passed 175 cases and 388 assertions. Staged and normal commit/push gates passed 152 checks with 14 documented skips and no findings."
+            ]
         },
         "review/source-layout/002": {
             "status": "complete",
@@ -11250,10 +11467,12 @@
             ]
         },
         "review/verification/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "verification": [
+                "Windows cmd test shim uses quoted process.execPath, preserving runtime identity without requiring node in PATH. Native argument selection tests pass. This is source/caller evidence; Windows execution is still required in final cross-platform acceptance."
+            ]
         },
         "review/verification/029": {
             "status": "pending",
@@ -11585,16 +11804,22 @@
             ]
         },
         "slices/kits-frameworks-tools/050": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "56795d632a7927b16049a23953173a8b1d99d9db",
+            "verification": [
+                "Jest manifest why describes untested-code risk, serial flag is removed, and shared native argument calculation removes recognized coverage flags only when every floor is zero. Authored command overrides remain intact.",
+                "Native zero-floor and nonzero-threshold controls passed alongside the five native Jest cases; mandatory staged and normal hook gates passed."
+            ]
         },
         "slices/kits-frameworks-tools/051": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "4f9bd5e2939e83b6784d0c76ad37eddee2f2d448",
+            "verification": [
+                "Native pytest-cov and Vitest coverage-v8 metadata declare host project libraries; zero floors omit coverage flags and companions, while nonzero floors and explicit commands retain providers. Doctor names missing host libraries without installing them.",
+                "Exact checkpoint passed 71 tests and 370 assertions; isolated native pytest/Vitest acceptance passed 11 tests and 72 assertions. Node 24.20.0 and Bun 1.4.2 each passed 20 native resolution assertions. Staged gate: 152 passed, 14 skipped, no findings; normal commit and non-force push hooks passed."
+            ]
         },
         "slices/kits-frameworks-tools/053": {
             "status": "partial",
@@ -17079,6 +17304,139 @@
                 "Next upstream report and historical comments-binding discrepancy remain partial",
                 "main001 publication/live setup remains outside release boundary"
             ]
+        },
+        {
+            "commit": "56795d632a7927b16049a23953173a8b1d99d9db",
+            "completedRecords": ["areas/checks/026", "slices/kits-frameworks-tools/050"],
+            "unresolvedRecords": 643,
+            "validation": [
+                "Exact committed mechanical type moves preceded native coverage behavior.",
+                "31 focused tests, 144 assertions; native Jest five cases, 42 assertions; 78 staged checks and normal commit/push hooks passed."
+            ],
+            "limitations": [
+                "CI run 37837307511 is pending; no Linux, macOS or Windows result inferred.",
+                "Provider metadata and doctor obligations for slices/kits-frameworks-tools/051 remain separate until their implementation checkpoint."
+            ],
+            "ci": {
+                "run": 37837307511,
+                "status": "pending"
+            }
+        },
+        {
+            "commit": "4f9bd5e2939e83b6784d0c76ad37eddee2f2d448",
+            "completedRecords": ["slices/kits-frameworks-tools/051"],
+            "unresolvedRecords": 642,
+            "validation": [
+                "Shared coverage implementation replaces the dedicated Jest engine and native provider calculation, a net reduction of 1987 production bytes across the same coverage contract.",
+                "Exact committed provider checkpoint staged checks passed, followed by normal commit and push hooks."
+            ],
+            "limitations": [
+                "Native executable acceptance was Darwin arm64; current CI remains pending, so Linux and Windows are not inferred.",
+                "Release publication and live site setup remain outside the authorized release boundary."
+            ]
+        },
+        {
+            "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
+            "completedRecords": ["review/source-layout/001"],
+            "unresolvedRecords": 641,
+            "validation": [
+                "Mechanical source moves preserve actual current command/template/lifecycle behavior.",
+                "Native source-owner and graph audits, affected code ceilings, focused tests and normal hooks passed."
+            ],
+            "limitations": [
+                "The first push reproduced an intermittent Pagefind asset mismatch; retained failure and two exact byte-capture probes each compared 319 assets equal, including concurrent site builds. The next normal push hook passed; no root-cause fix or CI/platform claim is inferred.",
+                "Source055 filename-prefix conflict remains separate pending owner disposition; no policy exception is introduced."
+            ]
+        },
+        {
+            "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
+            "completedRecords": [
+                "review/code-execution/016",
+                "review/code-execution/017",
+                "review/code-execution/046",
+                "review/code-execution/031",
+                "review/configurations-plugin/036",
+                "review/configurations-plugin/053",
+                "review/configurations-plugin/056"
+            ],
+            "unresolvedRecords": 634,
+            "validation": [
+                "review/code-execution/016: /tmp/gspot-code-execution016017046-pushed-native.log",
+                "review/code-execution/017: /tmp/gspot-code-execution016017046-pushed-native.log",
+                "review/code-execution/046: /tmp/gspot-code-execution016017046-pushed-native.log",
+                "review/code-execution/031: /tmp/gspot-code-execution031-pushed-native.log",
+                "review/configurations-plugin/036: /tmp/gspot-code-execution036-pushed-native.log",
+                "review/configurations-plugin/053: /tmp/gspot-code-execution053056-pushed-native.log",
+                "review/configurations-plugin/056: /tmp/gspot-code-execution053056-pushed-native.log"
+            ],
+            "limitations": [
+                "Native evidence runs on Darwin; no Linux or Windows behavior is inferred. This audit adds evidence to existing implementations and makes no new implementation claim."
+            ]
+        },
+        {
+            "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
+            "completedRecords": [
+                "review/code-commands/040",
+                "review/code-commands/041",
+                "review/code-commands/042",
+                "review/code-commands/043",
+                "review/commands-templates/022",
+                "review/code-commands/001",
+                "review/commands-templates/020",
+                "review/commands-templates/034",
+                "review/code-commands/027",
+                "review/code-commands/028",
+                "review/code-commands/031",
+                "review/code-commands/032",
+                "review/code-commands/033",
+                "review/code-commands/038",
+                "review/code-commands/039",
+                "review/commands-templates/023",
+                "review/commands-templates/025",
+                "review/commands-templates/026",
+                "review/commands-templates/029",
+                "review/commands-templates/030",
+                "review/code-commands/013",
+                "review/code-commands/014",
+                "review/code-commands/020",
+                "review/code-commands/046",
+                "review/commands-templates/028",
+                "review/commands-templates/033",
+                "review/commands-templates/035",
+                "review/commands-templates/038",
+                "review/commands-templates/039",
+                "review/commands-templates/040"
+            ],
+            "unresolvedRecords": 604,
+            "validation": [
+                "Focused combined command/lifecycle run: 519 cases, 3744 assertions, 68 files, zero failures;112.03s.",
+                "Workspace types passed. Native staged gate151pass15skip0findings;52.6s. Normal corrected commit/push hooks passed; push54.1s.",
+                "Related production source and assets net decrease937bytes before documentation corrections. Native loader and packed-consumer receipts retained in the record audit."
+            ],
+            "limitations": [
+                "CI run37845019451 pending, no jobs/platform behavior proved.",
+                "Five lifecycle rows remain open until the canonical native hook fixture follow-up is committed; CC045 remaining message fixes are in a separate uncommitted packet."
+            ]
+        },
+        {
+            "commit": "74fcf06452f0a0b0293130e5cff69d42e5ddd620",
+            "completedRecords": [
+                "review/code-commands/003",
+                "review/code-commands/004",
+                "review/code-commands/022",
+                "review/code-commands/025",
+                "review/code-commands/052",
+                "areas/checks/009",
+                "areas/checks/027",
+                "areas/kits/106",
+                "areas/kits/101",
+                "review/verification/026"
+            ],
+            "unresolvedRecords": 594,
+            "validation": [
+                "48 CLI cases/366 assertions/3 files;18 actual tool cases/192 assertions/3 files; root types0. Staged gate68pass10skip0findings; normal commit and push pass."
+            ],
+            "limitations": ["CI37847867614 pending; native platform macOS. Skips do not prove platform behavior."]
         }
     ],
     "verificationEvidence": {
