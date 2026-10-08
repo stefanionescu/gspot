@@ -17,7 +17,7 @@ export const REPOSITORY: RepositoryScenario = {
 
 export const CASES: FindingCase[] = [
     {
-        check: 'xctest/disabled',
+        check: 'xctest/skip-reasons',
         files: {
             [XCTEST_TESTS]:
                 'import XCTest\n\n/// Tests of the home screen.\nfinal class HomeTests: XCTestCase {\n    /// The title is shown.\n    func testTitle() throws {\n        throw XCTSkip()\n    }\n}\n',

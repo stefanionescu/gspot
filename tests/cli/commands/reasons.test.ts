@@ -11,18 +11,23 @@ test('ignores and loosened settings always require reasons and refusals preserve
     await using directory = await testdir();
     const policy = `configurations = ["bash"]\n[agent_rules]\nenabled = false\n`;
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'if then\n' });
-    const ignored = await runGspot(directory.path, ['ignore', 'bash/syntax']);
+    const ignored = await runGspot(directory.path, ['ignore', 'bash/bash-syntax']);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(2);
     const loosened = await runGspot(directory.path, ['set', 'limits.file_lines', '400']);
     expect(loosened.code, loosened.stdout + loosened.stderr).toBe(2);
     // A refused write leaves the policy as it was; the ignore then needs its reason.
     expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
-    const explained = await runGspot(directory.path, ['ignore', 'bash/syntax', '--reason', 'Reviewed independently.']);
+    const explained = await runGspot(directory.path, [
+        'ignore',
+        'bash/bash-syntax',
+        '--reason',
+        'Reviewed independently.',
+    ]);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    const checked = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const checked = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     const report = JSON.parse(checked.stdout) as RunReport;
-    expect(report.ignores[0]?.check).toBe('bash/syntax');
+    expect(report.ignores[0]?.check).toBe('bash/bash-syntax');
     expect(report.ignores[0]?.matched).toBe(0);
     expect(report.ignores[0]?.reason).toBe('Reviewed independently.');
     expect(ignored.stdout + ignored.stderr).not.toContain('undefined');
@@ -60,7 +65,7 @@ test('placeholder reasons and omitted tool-option reasons are refused without a 
         'entry.sh': 'echo example\n',
     });
     const before = await readFile(join(directory.path, 'gspot.toml'), 'utf8');
-    const ignored = await runGspot(directory.path, ['ignore', 'bash/syntax', '--reason', 'TBD']);
+    const ignored = await runGspot(directory.path, ['ignore', 'bash/bash-syntax', '--reason', 'TBD']);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(2);
     expect(ignored.stdout + ignored.stderr).toContain('needs a reason that says something');
     expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(before);
@@ -69,7 +74,7 @@ test('placeholder reasons and omitted tool-option reasons are refused without a 
     const policyPath = join(directory.path, 'gspot.toml');
     const written = await readFile(policyPath, 'utf8');
     await Bun.write(policyPath, written + '\n[tools.shellcheck.verbatim]\nexternal_sources = true\n');
-    const checked = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const checked = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const findings = (JSON.parse(checked.stdout) as RunReport).checks
         .filter((check) => check.check === 'gspot/policy')

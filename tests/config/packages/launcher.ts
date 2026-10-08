@@ -13,10 +13,10 @@ export const LAUNCHER_FILES = {
 /** Exact Bash diagnostics for the launcher's syntax sample. */
 export const SYNTAX_FINDINGS = [
     {
-        check: 'bash/syntax',
+        check: 'bash/bash-syntax',
         file: 'broken.sh',
         line: 1,
         message: "syntax error near unexpected token `then'",
     },
-    { check: 'bash/syntax', file: 'broken.sh', line: 1, message: "`if then'" },
+    { check: 'bash/bash-syntax', file: 'broken.sh', line: 1, message: "`if then'" },
 ];

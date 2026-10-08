@@ -4,8 +4,12 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { CLEAN_SWIFT, ACCESSOR_DECLARATIONS } from '#tests/config/samples/swift/source.ts';
-import { trivialFunctions as swiftTrivial } from '#cli/checks/language/swift/functions.ts';
-import { PROPERTY_READERS, TRIVIAL_FUNCTION_CASES } from '#tests/config/cli/checks/language/swift/functions.ts';
+import { trivialFunctions as swiftTrivial } from '#cli/checks/general/structure/trivial-functions.ts';
+
+import {
+    PROPERTY_READERS,
+    TRIVIAL_FUNCTION_CASES,
+} from '#tests/config/cli/checks/general/structure/trivial-functions.ts';
 
 test('Swift reports constructors, accessors, decorated methods, nested functions, and leaves closures in place', async () => {
     const text = ACCESSOR_DECLARATIONS;

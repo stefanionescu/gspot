@@ -30,7 +30,7 @@ function renderedRule(stem: string, text: string, view: ScopeView): string {
 export function styleFiles(policy: Policy, view: ScopeView): GeneratedFile[] {
     const rules = styleRules().map((stem): GeneratedFile => {
         const name = `${stem}.yml`;
-        const asset = `${STYLE_ASSETS}${name}`;
+        const asset = `${STYLE_ASSETS}${name}.eta`;
         return {
             path: `${STYLES_DIRECTORY}/${GSPOT_STYLE}/${name}`,
             content:
@@ -41,7 +41,7 @@ export function styleFiles(policy: Policy, view: ScopeView): GeneratedFile[] {
             kind: 'tool_file',
         };
     });
-    const shipped = readAsset(`configurations/general/prose/vocabularies/${GSPOT_STYLE}/accept.txt`)
+    const shipped = readAsset(`configurations/general/prose/vocabularies/${GSPOT_STYLE}/accept.txt.eta`)
         .trim()
         .split(/\r?\n/u);
     const authored = Object.keys(policy.words);
@@ -62,7 +62,7 @@ export function styleFiles(policy: Policy, view: ScopeView): GeneratedFile[] {
  * @returns the rule names.
  */
 export function styleRules(): string[] {
-    return listAssets(STYLE_ASSETS).map((asset) => asset.slice(STYLE_ASSETS.length).replace(/\.yml$/u, ''));
+    return listAssets(STYLE_ASSETS).map((asset) => asset.slice(STYLE_ASSETS.length).replace(/\.yml\.eta$/u, ''));
 }
 
 /**

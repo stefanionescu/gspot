@@ -106,12 +106,12 @@ export const POLICY_PREVIEW_CASES = [
     },
     {
         name: 'a global ignore',
-        argv: ['ignore', 'bash/syntax', '--reason', 'The checked file demonstrates invalid syntax.'] as const,
+        argv: ['ignore', 'bash/bash-syntax', '--reason', 'The checked file demonstrates invalid syntax.'] as const,
         expected: {
             ignore: [
                 { check: 'bash/shellcheck', rule: 'SC2034' },
                 { check: 'bash/shellcheck', rule: 'SC2086' },
-                { check: 'bash/syntax', reason: 'The checked file demonstrates invalid syntax.' },
+                { check: 'bash/bash-syntax', reason: 'The checked file demonstrates invalid syntax.' },
             ],
         },
         absent: [],
@@ -146,10 +146,10 @@ export const POLICY_PREVIEW_REFUSALS = [
     { name: 'a placeholder reason', argv: ['set', 'limits.bash.file_lines', '200', '--reason', '...'] },
     { name: 'an unknown scope', argv: ['set', 'limits.file_lines', '100', '--scope', 'web'] },
     { name: 'an unknown check', argv: ['ignore', 'bash/shelcheck', '--reason', 'Check the authored sample.'] },
-    { name: 'a missing ignore reason', argv: ['ignore', 'bash/syntax'] },
+    { name: 'a missing ignore reason', argv: ['ignore', 'bash/bash-syntax'] },
     {
         name: 'an invalid ignore expiry',
-        argv: ['ignore', 'bash/syntax', '--until', 'later', '--reason', 'Check the authored sample.'],
+        argv: ['ignore', 'bash/bash-syntax', '--until', 'later', '--reason', 'Check the authored sample.'],
     },
 ];
 

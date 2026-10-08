@@ -96,7 +96,7 @@ test.each([
     },
     {
         configuration: 'html',
-        check: 'html/literals',
+        check: 'html/template-text',
         setting: '[html]\ntemplates = ["public/**/*.html"]\n',
         path: 'trusted/page.html',
         source: '<p>Private template copy</p>\n',

@@ -15,7 +15,7 @@ test.skipIf(!isPosix)('Bash findings retain newline and colon directory names wi
         'gspot.toml': buildPolicy(['bash']),
         ...Object.fromEntries(paths.map((path) => [path, 'if then\n'])),
     });
-    const options = buildRunOptions({ only: ['bash/syntax'] });
+    const options = buildRunOptions({ only: ['bash/bash-syntax'] });
     const broken = await executeRun(await openSession(sandbox.path), options);
     expect(broken.report.exitCode).toBe(1);
     expect(

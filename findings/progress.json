@@ -1,5 +1,5 @@
 {
-    "openRecords": 898,
+    "openRecords": 878,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 898,
+        "openRecords": 878,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 46,
-                "unresolvedAssignments": 245
+                "completedAssignments": 53,
+                "unresolvedAssignments": 238
             },
             {
                 "id": "python",
@@ -589,8 +589,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 1,
-                "unresolvedAssignments": 38
+                "completedAssignments": 10,
+                "unresolvedAssignments": 29
             },
             {
                 "id": "javascript-web",
@@ -786,8 +786,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 3,
-                "unresolvedAssignments": 79
+                "completedAssignments": 7,
+                "unresolvedAssignments": 75
             },
             {
                 "id": "frameworks-platforms",
@@ -1402,8 +1402,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 41,
-                "unresolvedAssignments": 428
+                "completedAssignments": 47,
+                "unresolvedAssignments": 422
             },
             {
                 "id": "scripts-repository",
@@ -1542,8 +1542,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 11,
-                "unresolvedAssignments": 121
+                "completedAssignments": 16,
+                "unresolvedAssignments": 116
             },
             {
                 "id": "installation-docs",
@@ -1687,8 +1687,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 36,
-                "unresolvedAssignments": 101
+                "completedAssignments": 41,
+                "unresolvedAssignments": 96
             },
             {
                 "id": "policy-file",
@@ -1950,8 +1950,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 6,
-                "unresolvedAssignments": 53
+                "completedAssignments": 8,
+                "unresolvedAssignments": 51
             },
             {
                 "id": "names",
@@ -1986,8 +1986,8 @@
                     "review/glossary/028",
                     "review/glossary/029"
                 ],
-                "completedAssignments": 10,
-                "unresolvedAssignments": 18
+                "completedAssignments": 11,
+                "unresolvedAssignments": 17
             }
         ],
         "overlapPolicy": "Each starting record retains its ID and original quotation. Overlapping records appear in every applicable batch. Batch assignment does not close a finding. Second-pass slice corrections precede area and main-summary reconciliation."
@@ -2209,10 +2209,13 @@
             ]
         },
         "areas/checks/037": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Already implemented: deleted stale-exclusions implementation, manifest check, registry entry and obsolete correction data. No compatibility alias.",
+                "Native evidence: /tmp/gspot-python-leaf-contracts-final-freeze.json."
+            ]
         },
         "areas/checks/040": {
             "status": "pending",
@@ -2313,10 +2316,12 @@
             "verification": []
         },
         "areas/checks/060": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Deleted all nine language folder bans and the repository allowance; retained vague-name bans. Native structure tests: 27 pass, 92 assertions."
+            ]
         },
         "areas/checks/061": {
             "status": "partial",
@@ -2364,10 +2369,12 @@
             "verification": []
         },
         "areas/checks/071": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "site/dead-assets runs at all only. Native source assets: 21 tests, 43 assertions; exact lower-level exclusion verified."
+            ]
         },
         "areas/checks/072": {
             "status": "partial",
@@ -2456,10 +2463,12 @@
             "verification": []
         },
         "areas/developer-experience/030": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Init prints active checks and counts checks turned off by the selected level. Native init selection and plan tests pass."
+            ]
         },
         "areas/developer-experience/032": {
             "status": "pending",
@@ -3246,14 +3255,19 @@
             ]
         },
         "areas/kits/056": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Evidence 9048c67a3d621f62.",
+                "Evidence 42194dcb89d937cf.",
+                "Already implemented: no PTH entries in pytest ruff_rules.all. Python conventions retain their own PTH rules.",
+                "Native evidence: /tmp/gspot-python-leaf-contracts-native-probe.log."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
-                    "commit": null,
+                    "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
                     "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."]
                 }
             ]
@@ -3403,14 +3417,20 @@
             ]
         },
         "areas/kits/095": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Already implemented: no singleton allowance declaration/schema. Explicit python/singletons path ignores retain other files in root and child.",
+                "Native evidence: /tmp/gspot-python-leaf-contracts-cli-corrected.log, /tmp/gspot-python-leaf-contracts-schema-values.json."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -3553,40 +3573,55 @@
             ]
         },
         "areas/kits/116": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Evidence 9048c67a3d621f62.",
+                "Evidence 42194dcb89d937cf.",
+                "Already implemented: no positional_arguments declaration/reader. Both native max-args and max-positional-args read limits.python.function_parameters.",
+                "Native evidence: /tmp/gspot-python-leaf-contracts-native-values.json, /tmp/gspot-python-leaf-contracts-schema-values.json."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
-                    "commit": null,
+                    "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
                     "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."]
                 }
             ]
         },
         "areas/kits/117": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Evidence 9048c67a3d621f62.",
+                "Evidence 42194dcb89d937cf.",
+                "Already implemented: branches/returns declared and read under limits.python. Old global fields rejected by strict mutation boundary.",
+                "Native evidence: /tmp/gspot-python-leaf-contracts-native-values.json, /tmp/gspot-python-leaf-contracts-schema-values.json."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
-                    "commit": null,
+                    "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
                     "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."]
                 }
             ]
         },
         "areas/kits/118": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Evidence 9048c67a3d621f62.",
+                "Evidence 42194dcb89d937cf.",
+                "Already implemented: structure.reexports retained; one limits.index_exports drives actual generated JS ESLint and Python package exports. Old aliases rejected.",
+                "Native evidence: /tmp/gspot-python-leaf-contracts-index-values.json, /tmp/gspot-python-leaf-contracts-cli-corrected.log, /tmp/gspot-python-leaf-contracts-schema-values.json."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
-                    "commit": null,
+                    "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
                     "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."]
                 }
             ]
@@ -5766,10 +5801,12 @@
             "verification": []
         },
         "review/configurations-plugin/025": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Seven Semgrep packs are inferred from their owned Eta files; repeated manual tool-file blocks deleted. Native root/child packs and declaration tests pass."
+            ]
         },
         "review/configurations-plugin/026": {
             "status": "pending",
@@ -5790,10 +5827,12 @@
             "verification": []
         },
         "review/configurations-plugin/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Every manifest setting declares a default; redundant native Eta and source-reader defaults deleted. Native declarations and tool settings pass."
+            ]
         },
         "review/configurations-plugin/030": {
             "status": "pending",
@@ -6082,13 +6121,14 @@
             ]
         },
         "review/docs-site/011": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
             "verification": [
                 "Site selected and native duplicate link checker deleted. Actual309page docs build and native internal links/fragments/sitemap pass.",
                 "Native HTML file formatter preserves large reports;400-native-finding regression passes. Source placeholders corrected so all native HTML syntax/table findings disappear.",
-                "Native source assets and independent same-root build reproducibility pass; upstream component markup and dynamic unused-CSS validation remain active, no broad exemptions."
+                "Native source assets and independent same-root build reproducibility pass; upstream component markup and dynamic unused-CSS validation remain active, no broad exemptions.",
+                "Deleted duplicate built-site link checker, its config/types/dependency/task and tsconfig include. Docs uses native scoped site checks. Staged HTML, CSS, internal links, sitemap, source assets and reproducibility pass with zero findings."
             ]
         },
         "review/docs-site/013": {
@@ -6537,10 +6577,12 @@
             ]
         },
         "review/glossary/012": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Coverage is used for test coverage; levels and ESLint rule applicability use their own names. Old worker coverage schemas and client are deleted."
+            ]
         },
         "review/glossary/013": {
             "status": "pending",
@@ -7749,10 +7791,12 @@
             "verification": []
         },
         "review/repository-root/038": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Grammar copy function is private and executes unconditionally. Native cold, cached, corrupt-cache and EISDIR checks pass."
+            ]
         },
         "review/repository-root/040": {
             "status": "pending",
@@ -11619,14 +11663,19 @@
             "verification": []
         },
         "slices/tests-integration-checks/027": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Evidence 9048c67a3d621f62.",
+                "Evidence 42194dcb89d937cf.",
+                "General cases set file_kb=1 and plant 1025 bytes; Python cases set file_lines=12 and function_lines=6 with thirteen and seven lines. All defect/correction cases pass.",
+                "Native evidence: /tmp/gspot-python-leaf-contracts-cases.log, /tmp/gspot-explicit-file-size-main-test.log."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
-                    "commit": null,
+                    "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
                     "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."]
                 }
             ]
@@ -12456,10 +12505,12 @@
             "verification": []
         },
         "slices/tests-tools-samples/020": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Renamed the results after commitAll to committed. All three references updated; full staged native lint and types pass."
+            ]
         },
         "slices/tests-tools-samples/021": {
             "status": "pending",
@@ -12576,10 +12627,12 @@
             "verification": []
         },
         "slices/tests-tools-samples/043": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Renamed sample to PER_SCOPE_SEMGREP_POLICY in its config mirror and actual callers. Native Semgrep generation passes."
+            ]
         },
         "slices/tests-tools-samples/044": {
             "status": "pending",
@@ -12600,22 +12653,28 @@
             "verification": []
         },
         "slices/tests-tools-samples/048": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Recommended asserts the Swift documentation rule is off; all runs actual native diagnostics, correction and policy ignore. Native Swift documentation tests: eight pass, 51 assertions."
+            ]
         },
         "slices/tests-tools-samples/049": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Shared native SwiftFormat command is a config constant; obsolete SwiftLint commands and policy text replacement are deleted. Native correction and ignores pass."
+            ]
         },
         "slices/tests-tools-samples/050": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "verification": [
+                "Nested Swift findings assert file, line and column at native root/child source positions. Native Swift documentation tests pass."
+            ]
         },
         "slices/tests-tools-samples/051": {
             "status": "pending",
@@ -15205,6 +15264,40 @@
                 "status": "pending at inspection",
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37731304381"
             }
+        },
+        {
+            "commit": "1ec77e444bb586fa8418344c1d124230bb6e48c8",
+            "completedRecords": [
+                "areas/checks/060",
+                "areas/checks/071",
+                "review/repository-root/038",
+                "areas/developer-experience/030",
+                "review/glossary/012",
+                "review/configurations-plugin/025",
+                "review/configurations-plugin/029",
+                "review/docs-site/011",
+                "slices/tests-tools-samples/020",
+                "slices/tests-tools-samples/043",
+                "slices/tests-tools-samples/048",
+                "slices/tests-tools-samples/049",
+                "slices/tests-tools-samples/050",
+                "areas/kits/056",
+                "areas/kits/095",
+                "areas/kits/116",
+                "areas/kits/117",
+                "areas/kits/118",
+                "areas/checks/037",
+                "slices/tests-integration-checks/027"
+            ],
+            "unresolvedRecords": 878,
+            "validation": [
+                "Full staged check: 165 checks, zero findings, 126.943 seconds.",
+                "Root/CLI types and affected native tests pass."
+            ],
+            "limitations": [
+                "CI on all three platforms and final suite timeout measurement remain pending.",
+                "main/001 external publication, accounts and deployment remain partial."
+            ]
         }
     ],
     "verificationEvidence": {

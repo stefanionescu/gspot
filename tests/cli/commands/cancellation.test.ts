@@ -100,7 +100,7 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'] as const)(
         const environment = await fakeGit(bin, { operation, marker, pauseOnCall: 1, executable: nativeGit! });
         const child = startGspot(
             sandbox.path,
-            ['check', '--staged', '--only', 'bash/syntax', '--json'],
+            ['check', '--staged', '--only', 'bash/bash-syntax', '--json'],
             {
                 ...environment,
                 TMPDIR: scratch,
@@ -125,7 +125,7 @@ test.skipIf(!isPosix).each(['diff', 'clone', 'cat-file'] as const)(
         expect(await readdir(scratch)).toStrictEqual([]);
         expect(git(sandbox.path, ['ls-files', '--stage', '-z']).stdout).toBe(indexed);
         expect(await readFile(join(sandbox.path, 'source.sh'), 'utf8')).toBe('echo authored\n');
-        const retry = await runGspot(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
+        const retry = await runGspot(sandbox.path, ['check', '--staged', '--only', 'bash/bash-syntax', '--json']);
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
         expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('passed');
     },
@@ -155,7 +155,7 @@ test.skipIf(!isPosix)('push cancellation retains completed reports and names ref
     const protocol = `refs/heads/first ${first} refs/heads/first ${'0'.repeat(first.length)}\nrefs/heads/second ${second} refs/heads/second ${'0'.repeat(second.length)}\n`;
     const child = startGspot(
         sandbox.path,
-        ['check', '--hook', 'pre-push', '--only', 'bash/syntax', '--json'],
+        ['check', '--hook', 'pre-push', '--only', 'bash/bash-syntax', '--json'],
         await fakeGit(binaryDirectory, { operation: 'clone', marker, pauseOnCall: 2, executable: nativeGit! }),
         { stdin: protocol },
     );
@@ -221,7 +221,7 @@ await import(${JSON.stringify(gspot)});
             const protocol = `${ref} ${revision} ${ref} ${'0'.repeat(revision.length)}\n`;
             const retry = await runGspot(
                 root,
-                ['check', '--hook', 'pre-push', '--only', 'bash/syntax', '--json'],
+                ['check', '--hook', 'pre-push', '--only', 'bash/bash-syntax', '--json'],
                 {},
                 { stdin: protocol },
             );
@@ -230,7 +230,7 @@ await import(${JSON.stringify(gspot)});
                 {
                     object: revision,
                     refs: [ref],
-                    report: { exitCode: 0, checks: [{ check: 'bash/syntax', status: 'passed' }] },
+                    report: { exitCode: 0, checks: [{ check: 'bash/bash-syntax', status: 'passed' }] },
                 },
             ]);
         } finally {
@@ -266,7 +266,7 @@ mock.module('node:fs/promises',()=>({...filesystem,async cp(source,destination,o
 await Bun.write(${JSON.stringify(marker)},JSON.stringify({destination}));
 return copy(source,destination,options);
 }}));
-process.argv=[process.execPath,${JSON.stringify(gspot)},'check','--staged','--only','bash/syntax','--json'];
+process.argv=[process.execPath,${JSON.stringify(gspot)},'check','--staged','--only','bash/bash-syntax','--json'];
 await import(${JSON.stringify(gspot)});
 `;
         const command = [process.execPath, '-e', program];
@@ -291,7 +291,7 @@ await import(${JSON.stringify(gspot)});
         expect(await readdir(dependencies)).toHaveLength(4000);
         expect(await readFile(join(dependencies, '0.js'), 'utf8')).toBe('export const value=0;\n');
         expect(await readFile(join(dependencies, '3999.js'), 'utf8')).toBe('export const value=3999;\n');
-        const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/syntax', '--json']);
+        const retry = await spawnGspot(sandbox.path, ['check', '--staged', '--only', 'bash/bash-syntax', '--json']);
         expect(retry.code, retry.stdout + retry.stderr).toBe(0);
         expect((JSON.parse(retry.stdout) as RunReport).checks[0]!.status).toBe('passed');
     },

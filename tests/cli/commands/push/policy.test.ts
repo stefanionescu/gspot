@@ -29,7 +29,7 @@ test('full-tree pre-push policy checks unchanged files in the pushed object', as
     const pushedCommit = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
     const all = await spawnGspot(
         sandbox.path,
-        ['check', '--hook', 'pre-push', '--only', 'bash/syntax', '--json', '--', 'origin', 'unused'],
+        ['check', '--hook', 'pre-push', '--only', 'bash/bash-syntax', '--json', '--', 'origin', 'unused'],
         {},
         {
             stdin: `refs/heads/main ${pushedCommit} refs/heads/main ${base}\n`,

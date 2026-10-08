@@ -56,7 +56,7 @@ why = "A content security policy that allows inline script allows an injected on
 help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
 
 [[check]]
-name = "literals"
+name = "template-text"
 title = "Use placeholders in HTML templates"
 example = "Text written into a file listed in html.templates reports a literal. Move the text to its content file and use a placeholder in the template."
 level = "all"

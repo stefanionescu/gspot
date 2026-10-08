@@ -22,14 +22,14 @@ test('nested scopes inherit parent configurations and settings and check each fi
     const rows = (JSON.parse(settings.stdout) as SettingsListJson).settings;
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'format.indent_width')?.value).toBe(2);
     expect(rows.find((row) => row.scope === 'api/worker' && row.key === 'limits.function_lines')?.value).toBe(30);
-    const checked = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const checked = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const checks = (JSON.parse(checked.stdout) as RunReport).checks;
     expect(
         checks.map((check) => ({ check: check.check, scope: check.scope, fileCount: check.fileCount })),
     ).toStrictEqual([
-        { check: 'bash/syntax', scope: 'api', fileCount: 1 },
-        { check: 'bash/syntax', scope: 'api/worker', fileCount: 1 },
+        { check: 'bash/bash-syntax', scope: 'api', fileCount: 1 },
+        { check: 'bash/bash-syntax', scope: 'api/worker', fileCount: 1 },
     ]);
     expect(new Set(checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(new Set(['api/entry.sh']));
     expect(new Set(checks[1]?.findings.map((finding) => finding.file))).toStrictEqual(new Set(['api/worker/entry.sh']));
@@ -38,14 +38,14 @@ test('nested scopes inherit parent configurations and settings and check each fi
     const corrected = await runGspot(directory.path, [
         'check',
         '--only',
-        'bash/syntax',
+        'bash/bash-syntax',
         'sql/trivial-functions',
         '--json',
     ]);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/syntax', scope: 'api', status: 'passed', findings: [] },
-        { check: 'bash/syntax', scope: 'api/worker', status: 'passed', findings: [] },
+        { check: 'bash/bash-syntax', scope: 'api', status: 'passed', findings: [] },
+        { check: 'bash/bash-syntax', scope: 'api/worker', status: 'passed', findings: [] },
         { check: 'sql/trivial-functions', scope: 'api/worker', status: 'passed', findings: [] },
     ]);
 });

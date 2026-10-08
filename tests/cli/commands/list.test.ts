@@ -11,7 +11,7 @@ import type { SettingsListJson, ConfigurationsListJson } from '#cli/types/comman
 test('list shows selected policy states, detected configurations, and setting values without writing', async () => {
     await using directory = await testdir();
     const policy = buildPolicy(['bash', 'nextjs'], {
-        tables: '[[ignore]]\ncheck = "bash/syntax"\nreason = "Review this separately."\n',
+        tables: '[[ignore]]\ncheck = "bash/bash-syntax"\nreason = "Review this separately."\n',
     });
     await createFileTree(directory.path, {
         'gspot.toml': policy,
@@ -25,7 +25,7 @@ test('list shows selected policy states, detected configurations, and setting va
     expect(Object.keys(result)).toStrictEqual(['selected', 'detected', 'available']);
     const checks = result.selected.flatMap((configuration) => configuration.checks);
     expect(checks).toContainEqual({ name: 'bash/shellcheck', scope: '', state: 'on' });
-    expect(checks).toContainEqual({ name: 'bash/syntax', scope: '', state: 'off (ignore)' });
+    expect(checks).toContainEqual({ name: 'bash/bash-syntax', scope: '', state: 'off (ignore)' });
     expect(checks).toContainEqual({ name: 'bash/shfmt', scope: '', state: 'on' });
     expect(checks).toContainEqual({ name: 'structure/prefix-collisions', scope: '', state: 'off (level)' });
     expect(checks).toContainEqual({ name: 'nextjs/build', scope: '', state: 'off (level)' });
@@ -70,7 +70,7 @@ test('human check listings combine scope states into one row without losing JSON
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy(['bash'], {
-            tables: '[[ignore]]\ncheck = "bash/syntax"\npaths = ["api/**"]\nreason = "Review scoped syntax separately."\n[scope."api"]\n[scope."api/worker"]\n',
+            tables: '[[ignore]]\ncheck = "bash/bash-syntax"\npaths = ["api/**"]\nreason = "Review scoped syntax separately."\n[scope."api"]\n[scope."api/worker"]\n',
         }),
         'entry.sh': 'echo root\n',
         'api/entry.sh': 'echo api\n',
@@ -82,15 +82,15 @@ test('human check listings combine scope states into one row without losing JSON
     expect(structured.stderr).toBe('');
     const { selected } = JSON.parse(structured.stdout) as ConfigurationsListJson;
     const checks = selected.flatMap((configuration) => configuration.checks);
-    expect(checks.filter((check) => check.name === 'bash/syntax')).toStrictEqual([
-        { name: 'bash/syntax', scope: '', state: 'on' },
-        { name: 'bash/syntax', scope: 'api', state: 'off (ignore)' },
-        { name: 'bash/syntax', scope: 'api/worker', state: 'off (ignore)' },
+    expect(checks.filter((check) => check.name === 'bash/bash-syntax')).toStrictEqual([
+        { name: 'bash/bash-syntax', scope: '', state: 'on' },
+        { name: 'bash/bash-syntax', scope: 'api', state: 'off (ignore)' },
+        { name: 'bash/bash-syntax', scope: 'api/worker', state: 'off (ignore)' },
     ]);
     const human = await runGspot(directory.path, ['list']);
     expect(human.code, human.stdout + human.stderr).toBe(0);
     expect(human.stderr).toBe('');
-    expect(human.stdout).toContain('    bash/syntax  root: on, api: off (ignore), api/worker: off (ignore)\n');
+    expect(human.stdout).toContain('    bash/bash-syntax  root: on, api: off (ignore), api/worker: off (ignore)\n');
     for (const name of new Set(checks.map((check) => check.name)))
         expect(human.stdout.split('\n').filter((line) => line.trimStart().startsWith(`${name} `))).toHaveLength(1);
     expect(await readTree(directory.path)).toStrictEqual(before);

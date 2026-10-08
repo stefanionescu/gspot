@@ -46,7 +46,9 @@ test('Vale preserves ESLint delimiters while checking punctuation inside reasons
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy(['prose', 'typescript']),
         '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
-        '.gspot/config/styles/Example/Dashes.yml': readAsset('configurations/general/prose/styles/gspot/dashes.yml'),
+        '.gspot/config/styles/Example/Dashes.yml': readAsset(
+            'configurations/general/prose/styles/gspot/dashes.yml.eta',
+        ),
         'source.ts': [
             '// eslint-disable -- reason: The external declaration requires this signature.',
             '// eslint-enable no-x, @scope/no-y -- reason: Checks resume here.',
@@ -118,7 +120,7 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
         'gspot.toml': buildPolicy(['prose', 'markdown']),
         '.gspot/config/vale.ini': 'StylesPath = styles\nMinAlertLevel = suggestion\n[*]\nBasedOnStyles = Example\n',
         '.gspot/config/styles/Example/Versions.yml': readAsset(
-            'configurations/general/prose/styles/gspot/version-range.yml',
+            'configurations/general/prose/styles/gspot/version-range.yml.eta',
         ),
         'versions.md': [
             'Use Node.js 24.2.0 or later.',
@@ -147,7 +149,7 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
 test('heading capitalization distinguishes ordinary edge from the browser name and rejects title case', async () => {
     await using directory = await testdir();
     const rule = await readFile(
-        join(workspaceRoot, 'packages/cli/configurations/general/prose/styles/gspot/heading-case.yml'),
+        join(workspaceRoot, 'packages/cli/configurations/general/prose/styles/gspot/heading-case.yml.eta'),
         'utf8',
     );
     await createFileTree(directory.path, {
@@ -175,7 +177,7 @@ test.each([...CURRENCY_CASES])(
         await createFileTree(directory.path, {
             '.vale.ini':
                 'StylesPath = styles\nMinAlertLevel = suggestion\n[formats]\nsh = py\nts = md\n[*]\nBasedOnStyles = gspot\n',
-            'styles/gspot/currency.yml': readAsset('configurations/general/prose/styles/gspot/currency.yml'),
+            'styles/gspot/currency.yml': readAsset('configurations/general/prose/styles/gspot/currency.yml.eta'),
             [entry.path]: entry.source,
         });
         const native = await runTestCommand(
@@ -223,7 +225,9 @@ test.each([...STYLE_CASES])('Vale $rule checks report prose findings and accept 
     await using directory = await testdir();
     await createFileTree(directory.path, {
         '.vale.ini': 'StylesPath = styles\n[formats]\nts = md\n[*]\nBasedOnStyles = gspot\n',
-        [`styles/gspot/${entry.rule}.yml`]: readAsset(`configurations/general/prose/styles/gspot/${entry.rule}.yml`),
+        [`styles/gspot/${entry.rule}.yml`]: readAsset(
+            `configurations/general/prose/styles/gspot/${entry.rule}.yml.eta`,
+        ),
         [entry.path]: entry.source,
     });
     const native = await runTestCommand(

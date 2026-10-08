@@ -271,7 +271,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
     });
     const ignored = await runGspot(directory.path, [
         'ignore',
-        'bash/syntax',
+        'bash/bash-syntax',
         '--reason',
         'The legacy files retain malformed syntax.',
         '--paths',
@@ -279,7 +279,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
         '!legacy scripts/required.sh',
     ]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-    const command = ['check', '--only', 'bash/syntax', '--json'];
+    const command = ['check', '--only', 'bash/bash-syntax', '--json'];
     const checked = await runGspot(directory.path, command);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;
@@ -292,7 +292,7 @@ test('an ignored folder includes descendants while a negated file remains enforc
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     const removed = await runGspot(directory.path, [
         'ignore',
-        'bash/syntax',
+        'bash/bash-syntax',
         '--reason',
         'The legacy files retain malformed syntax.',
         '--paths',

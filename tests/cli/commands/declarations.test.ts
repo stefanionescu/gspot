@@ -25,26 +25,26 @@ test('generated and vendored settings classify directories and removal returns f
         ]);
         expect(changed.code, changed.stdout + changed.stderr).toBe(0);
     }
-    const before = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const before = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(before.code, before.stdout + before.stderr).toBe(0);
     expect((JSON.parse(before.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/syntax', status: 'passed', fileCount: 1, findings: [] },
+        { check: 'bash/bash-syntax', status: 'passed', fileCount: 1, findings: [] },
     ]);
     const removed = await runGspot(directory.path, ['set', 'generated', 'output types', '--remove']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-    const after = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const after = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(after.code, after.stdout + after.stderr).toBe(1);
     const checked = (JSON.parse(after.stdout) as RunReport).checks[0];
-    expect(checked).toMatchObject({ check: 'bash/syntax', status: 'failed' });
+    expect(checked).toMatchObject({ check: 'bash/bash-syntax', status: 'failed' });
     expect(checked?.fileCount).toBe(2);
     expect(new Set(checked?.findings.map((finding) => finding.file))).toStrictEqual(
         new Set(['output types/broken.sh']),
     );
     await writeFile(join(directory.path, 'output types/broken.sh'), 'echo corrected\n');
-    const corrected = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const corrected = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/syntax', status: 'passed', fileCount: 2, findings: [] },
+        { check: 'bash/bash-syntax', status: 'passed', fileCount: 2, findings: [] },
     ]);
 });
 
@@ -95,25 +95,25 @@ test('excluded directories stay out of checks until the policy removes their exc
         'entry.sh': 'echo example\n',
         'legacy scripts/broken.sh': 'if then\n',
     });
-    const before = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const before = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(before.code, before.stdout + before.stderr).toBe(0);
     expect((JSON.parse(before.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/syntax', status: 'passed', fileCount: 1, findings: [] },
+        { check: 'bash/bash-syntax', status: 'passed', fileCount: 1, findings: [] },
     ]);
     const changed = await runGspot(directory.path, ['set', 'exclude', 'legacy scripts', '--remove']);
     expect(changed.code, changed.stdout + changed.stderr).toBe(0);
-    const after = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const after = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(after.code, after.stdout + after.stderr).toBe(1);
     const checked = (JSON.parse(after.stdout) as RunReport).checks[0];
-    expect(checked).toMatchObject({ check: 'bash/syntax', status: 'failed' });
+    expect(checked).toMatchObject({ check: 'bash/bash-syntax', status: 'failed' });
     expect(checked?.fileCount).toBe(2);
     expect(new Set(checked?.findings.map((finding) => finding.file))).toStrictEqual(
         new Set(['legacy scripts/broken.sh']),
     );
     await writeFile(join(directory.path, 'legacy scripts/broken.sh'), 'echo corrected\n');
-    const corrected = await runGspot(directory.path, ['check', '--only', 'bash/syntax', '--json']);
+    const corrected = await runGspot(directory.path, ['check', '--only', 'bash/bash-syntax', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'bash/syntax', status: 'passed', fileCount: 2, findings: [] },
+        { check: 'bash/bash-syntax', status: 'passed', fileCount: 2, findings: [] },
     ]);
 });

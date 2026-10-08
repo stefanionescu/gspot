@@ -7,7 +7,7 @@ import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 test.each([
     {
         name: 'a missing ignore reason',
-        text: '[[ignore]]\ncheck = "bash/syntax"\n',
+        text: '[[ignore]]\ncheck = "bash/bash-syntax"\n',
         where: 'ignore.0.reason',
         before: '',
         after: 'reason = "The native shell is checked by the project command."\n',

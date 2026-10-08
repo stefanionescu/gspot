@@ -31,7 +31,7 @@ export const COMMAND_HELP: Record<string, CommandHelp> = {
         exitCodes:
             '- 0: the ignore was written and applied, or the dry run finished.\n- 2: the input was invalid, or ignore could not finish.',
         examples:
-            'gspot ignore bash/syntax --paths scripts/example.sh --reason "The file tests a syntax error."\ngspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results."',
+            'gspot ignore bash/bash-syntax --paths scripts/example.sh --reason "The file tests a syntax error."\ngspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results."',
     },
     set: {
         exitCodes:
@@ -55,7 +55,7 @@ export const COMMAND_HELP: Record<string, CommandHelp> = {
     },
     explain: {
         exitCodes: '- 0: the explanation was printed.\n- 2: the subject is unknown, or the input was invalid.',
-        examples: 'gspot explain bash/syntax\ngspot explain ./src/app.ts',
+        examples: 'gspot explain bash/bash-syntax\ngspot explain ./src/app.ts',
     },
     doctor: {
         exitCodes:

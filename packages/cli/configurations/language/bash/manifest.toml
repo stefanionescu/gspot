@@ -60,7 +60,7 @@ rule_keys = ["enable", "disable"]
 scoped = true
 
 [[check]]
-name = "syntax"
+name = "bash-syntax"
 title = "Check Bash syntax"
 example = "In `greet.sh`, `if then` has no condition. Use a real test: `if [ -f \"$file\" ]; then printf \"%s\\n\" \"$file\"; fi`, then rerun the syntax check."
 level = "recommended"
@@ -74,7 +74,7 @@ why = "A script with a syntax error stops at the broken line, sometimes after it
 help = "Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about."
 
 [[check]]
-name = "zsh"
+name = "zsh-syntax"
 title = "Check Zsh syntax"
 example = "In a Zsh script, `if then` has no condition. Use a real test: `if [[ -f \"$file\" ]]; then print -r -- \"$file\"; fi`, then rerun with Zsh installed."
 level = "recommended"
@@ -88,7 +88,7 @@ why = "Zsh syntax differs from Bash, so a Bash parser rejects valid Zsh programs
 help = "Fix the syntax at the line Zsh reports. Install zsh when the command is missing."
 
 [[check]]
-name = "bats"
+name = "bats-syntax"
 title = "Check Bats syntax"
 example = "In a `.bats` file, an unterminated `@test \"greeting\" {` block fails parsing. Complete the test body and close it with `}` before rerunning with Bats installed."
 level = "recommended"
@@ -280,7 +280,7 @@ why = "A remote command block with no name is the hardest thing in a script to t
 help = "Move the block into a named function and write \"# name: what it does\" above it."
 
 [[check]]
-name = "defaults"
+name = "variable-defaults"
 title = "Keep defaults in configuration owners"
 example = "A default such as `${PORT:-8080}` outside a declared configuration owner reports a misplaced default. Set the default in a path listed in `architecture.roles.env` and consume the configured value elsewhere."
 level = "all"

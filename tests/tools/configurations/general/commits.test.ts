@@ -216,7 +216,7 @@ test('a shallow push checks source content but refuses incomplete required histo
     };
     expect(git(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]).code).toBe(0);
     await installToolProjects(checkout);
-    const content = await spawnGspot(checkout, [...command, 'bash/syntax', ...remote], env, input);
+    const content = await spawnGspot(checkout, [...command, 'bash/bash-syntax', ...remote], env, input);
     expect(content.code, content.stdout + content.stderr).toBe(0);
     expect((JSON.parse(content.stdout) as PushReport).revisions[0]).toMatchObject({
         historyComplete: false,

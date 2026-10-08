@@ -26,7 +26,7 @@ test('staged checks use index bytes and policy on an unborn branch while preserv
     const index = git(directory.path, ['ls-files', '--stage', '-z']).stdout;
     await writeFile(join(directory.path, 'script with spaces.sh'), 'echo repaired only in the working tree\n');
     await writeFile(join(directory.path, 'gspot.toml'), 'invalid working policy');
-    const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
+    const args = ['check', '--staged', '--only', 'bash/bash-syntax', '--json'];
     const failed = await runGspot(directory.path, args);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     const failedReport = JSON.parse(failed.stdout) as RunReport;
@@ -59,7 +59,7 @@ test('staged checks read an indexed file when its working file is missing', asyn
     });
     gitOutput(directory.path, ['init', '-q']);
     gitOutput(directory.path, ['add', '-A']);
-    const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
+    const args = ['check', '--staged', '--only', 'bash/bash-syntax', '--json'];
     await unlink(join(directory.path, 'script with spaces.sh'));
     const ran = await runGspot(directory.path, args);
     expect(ran.code, ran.stdout + ran.stderr).toBe(0);
@@ -77,7 +77,7 @@ test('staged checks validate the index version pin instead of the working pin', 
     expect(git(directory.path, ['init', '-q']).code).toBe(0);
     expect(git(directory.path, ['add', '-A']).code).toBe(0);
     await writeFile(join(directory.path, '.gspot/version'), `${RUNNING_VERSION}\n`);
-    const args = ['check', '--staged', '--only', 'bash/syntax', '--json'];
+    const args = ['check', '--staged', '--only', 'bash/bash-syntax', '--json'];
     const refused = await runGspot(directory.path, args);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
     expect((JSON.parse(refused.stdout) as CommandFailureJson).error).toBe('pin');

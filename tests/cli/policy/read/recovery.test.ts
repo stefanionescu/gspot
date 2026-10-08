@@ -16,7 +16,7 @@ test('forbidden ShellCheck settings in a scope are reported and removed at the s
     expect(result.policy.configurations).toStrictEqual(['bash']);
 });
 test('an ignore without a reason is a finding at its key path, and the other ignore stands', () => {
-    const text = `${buildPolicy(['bash'])}${GOOD_IGNORE}[[ignore]]\ncheck = "bash/syntax"\n`;
+    const text = `${buildPolicy(['bash'])}${GOOD_IGNORE}[[ignore]]\ncheck = "bash/bash-syntax"\n`;
     const { policy, errors } = readPolicyText(text);
     expect(errors).toMatchObject([{ path: ['ignore', 1, 'reason'], message: textContaining('needs a reason') }]);
     expect(policy.ignore.map((entry) => entry.check)).toStrictEqual(['bash/shellcheck']);

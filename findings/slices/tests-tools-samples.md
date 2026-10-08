@@ -1,6 +1,6 @@
 # Tests: Native-Tool Tests and Samples
 
-46 unresolved review records remain.
+41 unresolved review records remain.
 
 ## Open findings
 
@@ -118,3 +118,15 @@ Original records and quotations remain above.
 | -------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-tools-samples/028` | complete | Permission-error test restores permissions and stops; separate SQLFluff case retains correction coverage and passes. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |
 | `slices/tests-tools-samples/029` | complete | Fixer cases use one buildRunOptions call instead of three spreads. Repeated-fix acceptance passes. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`.                   |
+
+## Implementation checkpoint 1ec77e444 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `1ec77e444bb586fa8418344c1d124230bb6e48c8`.
+
+| ID                               | Status   | Evidence                                                                                                                                                                                                                                   |
+| -------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `slices/tests-tools-samples/020` | complete | Renamed the results after commitAll to committed. All three references updated; full staged native lint and types pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`.                                                                 |
+| `slices/tests-tools-samples/043` | complete | Renamed sample to PER_SCOPE_SEMGREP_POLICY in its config mirror and actual callers. Native Semgrep generation passes. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`.                                                                   |
+| `slices/tests-tools-samples/048` | complete | Recommended asserts the Swift documentation rule is off; all runs actual native diagnostics, correction and policy ignore. Native Swift documentation tests: eight pass, 51 assertions. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`. |
+| `slices/tests-tools-samples/049` | complete | Shared native SwiftFormat command is a config constant; obsolete SwiftLint commands and policy text replacement are deleted. Native correction and ignores pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`.                        |
+| `slices/tests-tools-samples/050` | complete | Nested Swift findings assert file, line and column at native root/child source positions. Native Swift documentation tests pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`.                                                        |

@@ -59,7 +59,7 @@ test.each([
         'Examples/Checks.swift': `import Testing\nfunc checks() throws {\n    ${body}\n}\n`,
     });
     const session = await openSession(sandbox.path);
-    const findings = await disabled(buildCheckInput(session, 'xctest/disabled'));
+    const findings = await disabled(buildCheckInput(session, 'xctest/skip-reasons'));
     expect(findings.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual(
         missing ? [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }] : [],
     );

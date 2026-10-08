@@ -85,7 +85,7 @@ test('generated Gradle and Maven launchers do not select Bash or receive source 
     const checked = await runGspot(sandbox.path, [
         'check',
         '--only',
-        'bash/syntax',
+        'bash/bash-syntax',
         'bash/shellcheck',
         'bash/shfmt',
         '--json',

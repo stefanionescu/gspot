@@ -12,7 +12,7 @@ import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { buildFolder } from '#cli/checks/language/swift/cache.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/cli/checks/language/swift/build.ts';
+import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/cli/checks/language/swift.ts';
 
 test.each([...SWIFT_PROJECT_SELECTION_CASES])(
     'Swift build selection $name',

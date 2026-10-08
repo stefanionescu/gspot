@@ -1,6 +1,6 @@
 # Configurations and the ESLint Plugin
 
-53 unresolved review records remain.
+51 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -157,3 +157,12 @@ Original records and quotations remain above. These records are complete at `f3a
 | `review/configurations-plugin/008` | complete | Filesystem test-placement enforcement moved from ESLint to native structure/test-placement. Deleted plugin source/config/types/tests and Jest/Vitest rule delivery. Actual lexical TypeScript symbol ownership distinguishes assertion imports/shadowing; framework-specific layouts retained. ROOT21tests41assertions plus CSSDoctor31tests88assertions pass; plugin/build/apply/staged0. Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint. Commit `f3a8a0d5c99de531a78612f2ec395b54f59a7ebd`. |
 | `review/configurations-plugin/064` | complete | Framework-native Jest **tests** and Nest .spec layouts remain allowed; assertion-bearing tests and support ownership enforced through native path check. Shipped TESTING guidance and generated configurations agree; integrated placement/scoped/Jest/Vitest cases pass. Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint. Commit `f3a8a0d5c99de531a78612f2ec395b54f59a7ebd`.                                                                                                                  |
 | `review/configurations-plugin/012` | complete | Published ESLint library runtime dependencies use ^8.70.0 and ^4.0.7 ranges, peers retain ranges. Normal Bun lockfile regeneration changes no installed versions; exact justified published-library range exception recorded through gspot ignore, canonical writer/native apply. Plugin build and staged gate pass. Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint. Commit `f3a8a0d5c99de531a78612f2ec395b54f59a7ebd`.                                                                       |
+
+## Implementation checkpoint 1ec77e444 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `1ec77e444bb586fa8418344c1d124230bb6e48c8`.
+
+| ID                                 | Status   | Evidence                                                                                                                                                                                                      |
+| ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/configurations-plugin/025` | complete | Seven Semgrep packs are inferred from their owned Eta files; repeated manual tool-file blocks deleted. Native root/child packs and declaration tests pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`. |
+| `review/configurations-plugin/029` | complete | Every manifest setting declares a default; redundant native Eta and source-reader defaults deleted. Native declarations and tool settings pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`.            |

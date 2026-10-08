@@ -5,7 +5,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { privateBeforePublic } from '#cli/checks/language/swift/private-before-public.ts';
+import { privateBeforePublic } from '#cli/checks/general/structure/private-before-public.ts';
 
 test('a private Swift setter leaves its getter visible to other files', async () => {
     const text = 'private(set) var count = 0\nprivate func hidden() {}\n';

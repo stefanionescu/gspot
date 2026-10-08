@@ -97,12 +97,12 @@ test('disabled tests and snapshot recording report through the CLI and pass afte
         'Examples/Checks.swift':
             'import Testing\n@Test func checks() throws {\n    try XCTSkip("")\n    SnapshotTesting.isRecording = true\n}\n',
     });
-    const command = ['check', '--only', 'xctest/disabled', 'swift-snapshot-testing/recording', '--json'];
+    const command = ['check', '--only', 'xctest/skip-reasons', 'swift-snapshot-testing/recording', '--json'];
     const broken = await runGspot(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
         {
-            check: 'xctest/disabled',
+            check: 'xctest/skip-reasons',
             status: 'failed',
             findings: [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }],
         },
@@ -119,7 +119,7 @@ test('disabled tests and snapshot recording report through the CLI and pass afte
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'xctest/disabled', status: 'passed', findings: [] },
+        { check: 'xctest/skip-reasons', status: 'passed', findings: [] },
         { check: 'swift-snapshot-testing/recording', status: 'passed', findings: [] },
     ]);
 });

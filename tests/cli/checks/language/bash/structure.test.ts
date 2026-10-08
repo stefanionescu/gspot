@@ -50,7 +50,7 @@ test.skipIf(!isPosix)('shell reads distinguish filename lists containing newline
         ),
     });
     const session = await openSession(sandbox.path);
-    const request = buildCheckInput(session, 'bash/syntax');
+    const request = buildCheckInput(session, 'bash/bash-syntax');
     const files = names.map((path) => session.repository.files.find((file) => file.path === path)!);
     const first = await getScriptIndex({ ...request, files: files.slice(0, 2) });
     const second = await getScriptIndex({ ...request, files: files.slice(2) });

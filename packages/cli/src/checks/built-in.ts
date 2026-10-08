@@ -50,10 +50,10 @@ import { lockfileFresh } from '#cli/checks/general/dependencies/lockfile/fresh.t
 import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile/hosts.ts';
 import { sourceOrder, sourceComments } from '#cli/checks/language/bash/sources.ts';
 import { bunReleaseAge } from '#cli/checks/general/dependencies/bun-release-age.ts';
-import { envOwner as swiftEnvOwner } from '#cli/checks/language/swift/env-owner.ts';
 import { prefixCollisions } from '#cli/checks/general/structure/prefix-collisions.ts';
 import { recording, references } from '#cli/checks/library/swift-snapshot-testing.ts';
 import { trivialFunctions as sqlTrivialFunctions } from '#cli/checks/language/sql.ts';
+import { envOwner as swiftEnvOwner } from '#cli/checks/general/structure/env-owner.ts';
 import { symlinks, testPlans, orphanSources } from '#cli/checks/tool/xcode/project.ts';
 import { rls, grants, definerSearchPath } from '#cli/checks/database/postgres/access.ts';
 import { singletons as pythonSingletons } from '#cli/checks/language/python/singletons.ts';
@@ -72,15 +72,15 @@ import { swiftBuild, swiftPeriphery, swiftlintAnalyze } from '#cli/checks/langua
 import { envFiles, trufflehog, envTemplate, gitleaksHistory } from '#cli/checks/general/secrets.ts';
 import { gspotDrift, fixPolicyLayout, gspotPolicyLayout } from '#cli/checks/general/gspot/drift.ts';
 import { svgo, deadAssets, webManifest, securityHeaders } from '#cli/checks/general/site/source.ts';
-import { trivialFunctions as swiftTrivialFunctions } from '#cli/checks/language/swift/functions.ts';
 import { NEXT_VERSION_PAIRS, REACT_VERSION_PAIRS } from '#cli/config/checks/general/dependencies.ts';
-import { importComments as swiftImportComments } from '#cli/checks/language/swift/import-comments.ts';
 import { importComments as pythonImportComments } from '#cli/checks/language/python/imports/comments.ts';
+import { importComments as swiftImportComments } from '#cli/checks/general/structure/import-comments.ts';
 import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { nextBuild, nextjsTsc, routeSegments, nextConfiguration } from '#cli/checks/framework/nextjs.ts';
 import { sitemap, purgecss, siteSize, linkinator, htmlValidate } from '#cli/checks/general/site/output.ts';
+import { trivialFunctions as swiftTrivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
 import { relations as drizzleRelations, migrations as drizzleMigrationsFresh } from '#cli/checks/library/drizzle.ts';
-import { privateBeforePublic as swiftPrivateBeforePublic } from '#cli/checks/language/swift/private-before-public.ts';
+import { privateBeforePublic as swiftPrivateBeforePublic } from '#cli/checks/general/structure/private-before-public.ts';
 
 import {
     trivialFunctions as pythonTrivialFunctions,
@@ -167,7 +167,7 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'site/webmanifest': { run: runBuiltInCheck(webManifest) },
     'site/security-headers': { run: runBuiltInCheck(securityHeaders) },
     'html/scripts': { run: runBuiltInCheck(htmlScripts) },
-    'html/literals': { run: runBuiltInCheck(htmlLiterals) },
+    'html/template-text': { run: runBuiltInCheck(htmlLiterals) },
     'python/function-size': { run: runBuiltInCheck(pythonFunctionSize) },
     'python/trivial-functions': { run: runBuiltInCheck(pythonTrivialFunctions) },
     'python/placeholder-docstrings': { run: runBuiltInCheck(pythonPlaceholderDocstrings) },
@@ -181,7 +181,7 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'python/singletons': { run: runBuiltInCheck(pythonSingletons) },
     'python/import-linter': { run: runBuiltInCheck(pythonImportLinter) },
     'python/pip-installs': { run: runBuiltInCheck(pythonPipInstalls) },
-    'xctest/disabled': { run: runBuiltInCheck(disabled) },
+    'xctest/skip-reasons': { run: runBuiltInCheck(disabled) },
     'xctest/sleep': { run: runBuiltInCheck(sleeps) },
     'swift-snapshot-testing/recording': { run: runBuiltInCheck(recording) },
     'swift-snapshot-testing/references': { run: runBuiltInCheck(references) },
@@ -237,7 +237,7 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'bash/wrappers': { run: runBuiltInCheck(wrappers) },
     'bash/embeds': { run: runBuiltInCheck(embeds) },
     'bash/ssh-blocks': { run: runBuiltInCheck(sshBlocks) },
-    'bash/defaults': { run: runBuiltInCheck(guardDefaults) },
+    'bash/variable-defaults': { run: runBuiltInCheck(guardDefaults) },
     'bash/guards': { run: runBuiltInCheck(guards) },
     'bash/safety': { run: runBuiltInCheck(safety) },
     'bash/source-comments': { run: runBuiltInCheck(sourceComments) },

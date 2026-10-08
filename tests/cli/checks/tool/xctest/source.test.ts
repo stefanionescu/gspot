@@ -24,7 +24,7 @@ describe('the xctest configuration', () => {
     test('the commit stage leaves the coverage run to its own stage', async () => {
         const { root, environment } = testRepository;
         gitOutput(root, ['add', '--all']);
-        const selected = ['xctest/disabled', 'xctest/coverage'];
+        const selected = ['xctest/skip-reasons', 'xctest/coverage'];
         const checked = await spawnGspot(
             root,
             ['check', '--hook', 'pre-commit', '--only', ...selected, '--json'],
@@ -32,7 +32,7 @@ describe('the xctest configuration', () => {
         );
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
         const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
-        expect(ids).toStrictEqual(['xctest/disabled']);
+        expect(ids).toStrictEqual(['xctest/skip-reasons']);
         const pushed = planRun(await openSession(root), { stage: 'push', skips: [], only: selected });
         expect(pushed.map(({ check }) => check.name)).toStrictEqual(['xctest/coverage']);
     });
@@ -45,7 +45,7 @@ test('Swift checks report each scope independently and file-list inputs omit sib
         'Tests/RootTests.swift': 'import XCTest\nfunc testRoot() throws { throw XCTSkip() }\n',
         'apps/second/Tests/SecondTests.swift': 'import XCTest\nfunc testSecond() throws { throw XCTSkip() }\n',
     });
-    const failed = await runGspot(sandbox.path, ['check', '--only', 'xctest/disabled', '--json']);
+    const failed = await runGspot(sandbox.path, ['check', '--only', 'xctest/skip-reasons', '--json']);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(
         (JSON.parse(failed.stdout) as RunReport).checks.map((check) => ({
@@ -64,6 +64,6 @@ test('Swift checks report each scope independently and file-list inputs omit sib
         `${sandbox.path}/apps/second/Tests/SecondTests.swift`,
         'import XCTest\nfunc testSecond() throws { throw XCTSkip("Requires a physical device") }\n',
     );
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'xctest/disabled', '--json']);
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'xctest/skip-reasons', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });

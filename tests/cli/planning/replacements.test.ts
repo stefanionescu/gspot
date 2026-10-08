@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { planRun, configuredChecks } from '#cli/planning/plan.ts';
 import { REPLACEMENTS } from '#tests/config/cli/planning/replacements.ts';
 
 test.each(REPLACEMENTS)(
@@ -47,5 +47,22 @@ test('Vue without TypeScript reports its configuration prerequisite during plann
             check: 'vue/vue-tsc',
             skip: { cause: 'condition', note: 'Needs the typescript configuration, which this scope does not select.' },
         },
+    ]);
+});
+
+test('a nested Next.js check replaces TypeScript only in its own scope', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['typescript'], {
+            tables: '[scope."app"]\nconfigurations = ["typescript", "nextjs"]',
+        }),
+        'source.ts': 'export const port = 8080;\n',
+        'app/source.ts': 'export const port = 3000;\n',
+    });
+    const configured = configuredChecks(await openSession(sandbox.path), true)
+        .filter((entry) => ['typescript/tsc', 'nextjs/tsc'].includes(entry.check.name))
+        .map((entry) => [entry.scope.scope.path, entry.check.name]);
+    expect(configured).toStrictEqual([
+        ['', 'typescript/tsc'],
+        ['app', 'nextjs/tsc'],
     ]);
 });

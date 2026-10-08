@@ -3,8 +3,8 @@ import { test, expect } from 'bun:test';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { envOwner } from '#cli/checks/language/swift/env-owner.ts';
-import { ENVIRONMENT_SOURCE } from '#tests/config/cli/checks/language/swift/env-owner.ts';
+import { envOwner } from '#cli/checks/general/structure/env-owner.ts';
+import { ENVIRONMENT_SOURCE } from '#tests/config/cli/checks/general/structure/env-owner.ts';
 
 test('Swift environment reads require an owner and ignore comments and string literals', async () => {
     await using sandbox = await testdir({

@@ -96,7 +96,7 @@ test('init replaces formatter files, moves authored instructions, and check repo
             ...consumer.command,
             'check',
             '--only',
-            'bash/syntax',
+            'bash/bash-syntax',
             'dependencies/lockfile-hosts',
             'format/prettier',
             '--json',
@@ -120,14 +120,14 @@ test('init replaces formatter files, moves authored instructions, and check repo
             findings.map(({ file, line }) => ({ check, status, file, line })),
         ),
     ).toEqual(containingAll([{ check: 'format/prettier', status: 'failed', file: 'source.js', line: undefined }]));
-    expect(checks.find(({ check }) => check === 'bash/syntax')).toMatchObject({
+    expect(checks.find(({ check }) => check === 'bash/bash-syntax')).toMatchObject({
         status: 'failed',
         fileCount: 1,
         findings: SYNTAX_FINDINGS,
     });
     await writeFile(join(root, 'broken.sh'), 'echo example\n');
     const corrected = await runTestCommand(
-        [...consumer.command, 'check', '--only', 'bash/syntax', '--json'],
+        [...consumer.command, 'check', '--only', 'bash/bash-syntax', '--json'],
         consumer.offlineOptions,
     );
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
@@ -135,6 +135,6 @@ test('init replaces formatter files, moves authored instructions, and check repo
     expect(clean.exitCode).toBe(0);
     expect(clean.skips).toStrictEqual([]);
     expect(clean.checks).toHaveLength(1);
-    expect(clean.checks[0]).toMatchObject({ check: 'bash/syntax', status: 'passed', fileCount: 1, findings: [] });
+    expect(clean.checks[0]).toMatchObject({ check: 'bash/bash-syntax', status: 'passed', fileCount: 1, findings: [] });
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe(LAUNCHER_FILES['authored.txt']);
 });

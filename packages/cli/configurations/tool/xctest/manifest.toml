@@ -21,7 +21,7 @@ fragment = true
 pointer = { path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
 
 [[check]]
-name = "disabled"
+name = "skip-reasons"
 title = "Explain skipped and disabled tests"
 example = "In a Swift test, `throw XCTSkip()` reports a missing reason. Restore the test, or supply a nonempty reason such as `throw XCTSkip(\"Requires the hardware test device\")`. The check requires a reason; it does not validate when the test will be enabled."
 level = "recommended"

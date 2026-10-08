@@ -52,10 +52,10 @@ test('check explanations add no absent metadata', () => {
 });
 
 test('native version prerequisites belong to their consuming check', () => {
-    const bats = explain(undefined, 'bash/bats');
+    const bats = explain(undefined, 'bash/bats-syntax');
     expect(bats).toMatchObject({ data: { min_versions: { bash: '4.4.0' } } });
     expect(bats.text).toContain('Required native version: bash >= 4.4.0');
-    const syntax = explain(undefined, 'bash/syntax');
+    const syntax = explain(undefined, 'bash/bash-syntax');
     expect(syntax).not.toHaveProperty('data.min_versions');
     expect(syntax.text).not.toContain('Required native version:');
 });

@@ -84,7 +84,7 @@ reason = "The SwiftLint JSON diagnostic key."
 
 [[naming.overrides]]
 allowed = ["allowed", "exceptions"]
-paths = ["tests/cli/generation/selection.test.ts"]
+paths = ["tests/cli/generation/licenses.test.ts"]
 reason = "The license scanner policy keys."
 
 [[naming.overrides]]
@@ -516,7 +516,7 @@ rule = "js/incomplete-sanitization"
 
 [[ignore]]
 check = "spelling/typos"
-paths = ["packages/cli/configurations/general/prose/styles/gspot/us-english.yml"]
+paths = ["packages/cli/configurations/general/prose/styles/gspot/us-english.yml.eta"]
 reason = "The Vale substitution list names the British spellings it corrects."
 
 [[ignore]]

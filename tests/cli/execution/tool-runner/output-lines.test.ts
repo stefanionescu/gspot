@@ -12,7 +12,7 @@ test('a check command hands its built-in check LF line endings when the tool pri
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['bash']) });
     const session = await openSession(sandbox.path);
-    const input = buildCheckInput(session, 'bash/syntax');
+    const input = buildCheckInput(session, 'bash/bash-syntax');
     const printed = String.raw`process.stdout.write('one\r\ntwo\r\n'); process.stderr.write('three\r\n');`;
     const result = await runCheckTool(input, [process.execPath, '-e', printed], { cwd: sandbox.path });
     expect(result.stdout).toBe('one\ntwo\n');

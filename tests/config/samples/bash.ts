@@ -6,14 +6,14 @@ export const HEAD =
 export const BASH_CASES_MAIN = '# main: runs the script.\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
 
 /** The checks of the table that run a tool, ShellCheck, shfmt, Bash, or ast-grep, rather than gspot alone. */
-export const TOOL_CHECKS = ['bash/shellcheck', 'bash/shfmt', 'bash/syntax', 'bash/function-size'];
+export const TOOL_CHECKS = ['bash/shellcheck', 'bash/shfmt', 'bash/bash-syntax', 'bash/function-size'];
 
 /** A clean bash script every sandbox starts from. Its main holds enough statements not to be trivial. */
 export const CLEAN_BASH_SCRIPT = `${HEAD}main() {\n    local name="$1"\n    local greeting="hello \${name}"\n    echo "\${greeting}"\n}\n\nmain "$@"\n`;
 
 export const BASH_CASES: FindingCase[] = [
     {
-        check: 'bash/syntax',
+        check: 'bash/bash-syntax',
         files: { 'scripts/broken.sh': `${HEAD}main() {\n    if then\n}\n\nmain "$@"\n` },
         expected: { file: 'scripts/broken.sh', line: 9 },
     },
@@ -139,7 +139,7 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/remote.sh', rule: 'undocumented-block', line: 10 },
     },
     {
-        check: 'bash/defaults',
+        check: 'bash/variable-defaults',
         files: {
             'scripts/defaults.sh': `${HEAD}# main: runs the script.\nmain() {\n    local port="\${PORT:-8080}"\n    echo "\${port} $1"\n}\n\nmain "$@"\n`,
         },
