@@ -7,11 +7,11 @@ import { vale, jscpd } from '#cli/checks/general/public.ts';
 import { embeds } from '#cli/checks/language/bash/embeds.ts';
 import { safety } from '#cli/checks/language/bash/safety.ts';
 import { sshBlocks } from '#cli/checks/language/bash/ssh.ts';
-import { commitlintRange } from '#cli/checks/general/commits.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { svelteCheck } from '#cli/checks/framework/contracts.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
 import { codeql, semgrep } from '#cli/checks/general/security.ts';
+import { commitlintPushed } from '#cli/checks/general/commits.ts';
 import type { BuiltInChecks } from '#cli/types/execution/check.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { nginxTest, actionlint } from '#cli/checks/tool/public.ts';
@@ -63,7 +63,7 @@ import { scripts as htmlScripts, literals as htmlLiterals } from '#cli/checks/la
 import { xcstrings, orphanAssets, contentsFindings } from '#cli/checks/tool/xcode/resources.ts';
 import { deptry, pipInstalls as pythonPipInstalls } from '#cli/checks/language/python/deptry.ts';
 import { functionSize as pythonFunctionSize } from '#cli/checks/language/python/function-size.ts';
-import { envFiles, trufflehog, envTemplate, gitleaksHistory } from '#cli/checks/general/secrets.ts';
+import { envFiles, trufflehog, envTemplate, gitleaksPushed } from '#cli/checks/general/secrets.ts';
 import { NEXT_VERSION_PAIRS, REACT_VERSION_PAIRS } from '#cli/config/checks/general/dependencies.ts';
 import { swiftBuild, swiftPeriphery, swiftlintAnalyze } from '#cli/checks/language/swift/contracts.ts';
 import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
@@ -224,8 +224,8 @@ export const BUILT_IN_CHECKS = {
     'naming/paths': { input: namingPaths },
     'naming/policy': { input: namingPolicy },
     'secrets/trufflehog': { run: trufflehog },
-    'secrets/gitleaks-history': { run: gitleaksHistory },
-    'commits/commitlint-range': { run: commitlintRange },
+    'secrets/gitleaks-pushed': { run: gitleaksPushed },
+    'commits/commitlint-pushed': { run: commitlintPushed },
     'vue/vue-tsc': { run: tsc },
     'typescript/tsc': { run: tsc },
     'javascript/tsc': { run: checkjs },

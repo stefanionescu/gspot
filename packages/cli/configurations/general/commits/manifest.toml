@@ -38,7 +38,7 @@ why = "A history of typed, scoped subjects is what release notes, blame and bise
 help = "Write `<type>`: `<subject>` or `<type>`(`<scope>`): `<subject>`, with an accepted type and optional scope. Keep the whole first line at 72 characters or fewer. Change accepted types with gspot set tools.commitlint.types."
 
 [[check]]
-name = "commitlint-range"
+name = "commitlint-pushed"
 title = "Check pushed commit messages"
 example = "A new commit with message `changed stuff` causes the checked range to fail its message rules. Reword that commit to an accepted message such as `fix(cli): report missing configuration`. Rewriting commits changes their IDs; coordinate before rewriting shared history."
 level = "all"

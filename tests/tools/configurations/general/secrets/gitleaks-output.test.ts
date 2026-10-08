@@ -103,7 +103,7 @@ test('native history reports retain mixed redacted rules and comma filenames onl
     await using sandbox = await testdir();
     const environment = { PATH: buildToolsPath(['gitleaks']) };
     const { base, leaked, removed } = await prepareHistory(sandbox.path, environment);
-    const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-history', '--json'];
+    const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-pushed', '--json'];
     const history = await spawnGspot(sandbox.path, command, environment, {
         stdin: `refs/heads/main ${removed} refs/heads/main ${base}\n`,
     });
@@ -123,9 +123,9 @@ test('native history accepts only the exact reviewed fingerprints without disclo
     await using sandbox = await testdir();
     const environment = { PATH: buildToolsPath(['gitleaks']) };
     const { base, leaked } = await prepareHistory(sandbox.path, environment);
-    const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-history', '--json'];
+    const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-pushed', '--json'];
     const policy = buildPolicy(['secrets'], { tables: '[agent_rules]\nenabled = false\n' });
-    const identityIgnore = `\n[[ignore]]\ncheck = "secrets/gitleaks-history"\nrule = "${leaked}:identity.py:aws-access-token:1"\nreason = "The exact historical token is an inert example."\n`;
+    const identityIgnore = `\n[[ignore]]\ncheck = "secrets/gitleaks-pushed"\nrule = "${leaked}:identity.py:aws-access-token:1"\nreason = "The exact historical token is an inert example."\n`;
     await Bun.write(join(sandbox.path, 'gspot.toml'), policy + identityIgnore);
     gitOutput(sandbox.path, ['add', 'gspot.toml']);
     gitOutput(sandbox.path, ['commit', '-qm', 'docs: review historical token']);
@@ -143,7 +143,7 @@ test('native history accepts only the exact reviewed fingerprints without disclo
         join(sandbox.path, 'gspot.toml'),
         policy +
             identityIgnore +
-            `\n[[ignore]]\ncheck = "secrets/gitleaks-history"\nrule = "${leaked}:credential,é.py:generic-api-key:1"\nreason = "The other exact historical token is an inert example."\n`,
+            `\n[[ignore]]\ncheck = "secrets/gitleaks-pushed"\nrule = "${leaked}:credential,é.py:generic-api-key:1"\nreason = "The other exact historical token is an inert example."\n`,
     );
     gitOutput(sandbox.path, ['add', 'gspot.toml']);
     gitOutput(sandbox.path, ['commit', '-qm', 'docs: review other historical token']);

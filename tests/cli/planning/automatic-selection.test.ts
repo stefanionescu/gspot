@@ -55,7 +55,7 @@ test('an explicitly authored Git configuration reports its repository prerequisi
     const planned = planRun(await openSession(sandbox.path), {
         stage: 'push',
         skips: [],
-        only: ['commits/commitlint-range'],
+        only: ['commits/commitlint-pushed'],
     });
     expect(planned.map((check) => check.skip)).toStrictEqual([
         { cause: 'condition', note: 'This folder is not a Git repository, so the check has no history to read.' },
