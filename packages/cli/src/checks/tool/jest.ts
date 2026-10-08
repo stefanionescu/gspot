@@ -9,15 +9,10 @@ import { toPosix, isInside } from '#cli/platform/contracts.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
+import { COVERAGE_DIMENSIONS } from '#cli/config/execution/command.ts';
 import { reportSchema, coverageSchema } from '#cli/parsers/schema/jest.ts';
 import type { Suite, JestRun, TestReport, JestSettings } from '#cli/types/checks/tool/jest.ts';
-
-import {
-    TEST_REPORT,
-    COVERAGE_SUMMARY,
-    COVERAGE_DIRECTORY,
-    COVERAGE_DIMENSIONS,
-} from '#cli/config/checks/tool/jest.ts';
+import { TEST_REPORT, COVERAGE_SUMMARY, COVERAGE_DIRECTORY } from '#cli/config/checks/tool/jest.ts';
 
 // Read the Jest report and refuse a run that cannot execute its suites.
 function readReport(work: string, stderr: string): TestReport {
