@@ -1,6 +1,6 @@
 # Kits, Settings, and Names
 
-45 unresolved review records remain.
+40 unresolved review records remain.
 
 ## Findings
 
@@ -234,3 +234,15 @@ Original records and quotations remain above. These records are complete at `74f
 | ---------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/kits/106` | complete | Native check IDs renamed to commits/commitlint-pushed and secrets/gitleaks-pushed in manifests, built-in check table and all test callers at c79cc9356a34fc31a43e768ebdcf8a3cd3bd4fbd. No old active aliases remain. Behavior integration and actual native history checks pass at this commit. Commit `74fcf06452f0a0b0293130e5cff69d42e5ddd620`.                           |
 | `areas/kits/101` | complete | No secrets/gitleaks-baseline check, baseline filename or baseline_reasons setting remains. Reviewed historical secrets use reasoned ignore rule fingerprints on secrets/gitleaks-pushed. Actual native exact fingerprint, nonmatching, expiry, child/no-Git and redaction controls pass. No old-findings recording added. Commit `74fcf06452f0a0b0293130e5cff69d42e5ddd620`. |
+
+## Implementation checkpoint 0df1cdc36 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `0df1cdc36291c763f19144ca70af9725dd8b4476`.
+
+| ID               | Status   | Evidence                                                                                                                                                                                                                                                               |
+| ---------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/kits/018` | complete | Consumer Vale defaults retain upstream rules. Repository-only native failing owners have explicit reasoned ignores; immutable ledger quotations remain unchanged. Native staged gate and focused prose checks pass. Commit `0df1cdc36291c763f19144ca70af9725dd8b4476`. |
+| `areas/kits/020` | complete | Removed the Harper.RoadMap consumer disable. The existing complete banned vocabulary contract remains enforced at all. Native emitted configurations and staged gate pass. Commit `0df1cdc36291c763f19144ca70af9725dd8b4476`.                                          |
+| `areas/kits/021` | complete | One prose.locale setting feeds scoped Vale spelling and Typos, including US rules only for en-us. Root, child, deep and sibling native checks cover rejected old settings and strict schema parity. Commit `0df1cdc36291c763f19144ca70af9725dd8b4476`.                 |
+| `areas/kits/022` | complete | The three limits.docs declarations belong to the prose manifest and retain their adopted names. Mechanical move f8397a745 and behavioral producer/schema validation pass. Commit `0df1cdc36291c763f19144ca70af9725dd8b4476`.                                           |
+| `areas/kits/023` | complete | One generation-owned BANNED_HEADINGS list combines shipped and authored headings and excludes Contents. Native both-level scoped checks cover only applicable banned headings. Commit `0df1cdc36291c763f19144ca70af9725dd8b4476`.                                      |

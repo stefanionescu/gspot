@@ -1,5 +1,5 @@
 {
-    "openRecords": 594,
+    "openRecords": 589,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -258,7 +258,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 594,
+        "openRecords": 589,
         "records": 1092,
         "batches": [
             {
@@ -564,8 +564,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 134,
-                "unresolvedAssignments": 157
+                "completedAssignments": 137,
+                "unresolvedAssignments": 154
             },
             {
                 "id": "python",
@@ -1564,8 +1564,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 38,
-                "unresolvedAssignments": 94
+                "completedAssignments": 39,
+                "unresolvedAssignments": 93
             },
             {
                 "id": "installation-docs",
@@ -1709,8 +1709,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 61,
-                "unresolvedAssignments": 76
+                "completedAssignments": 63,
+                "unresolvedAssignments": 74
             },
             {
                 "id": "policy-file",
@@ -3060,34 +3060,44 @@
             "verification": []
         },
         "areas/kits/018": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0df1cdc36291c763f19144ca70af9725dd8b4476",
+            "verification": [
+                "Consumer Vale defaults retain upstream rules. Repository-only native failing owners have explicit reasoned ignores; immutable ledger quotations remain unchanged. Native staged gate and focused prose checks pass."
+            ]
         },
         "areas/kits/020": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0df1cdc36291c763f19144ca70af9725dd8b4476",
+            "verification": [
+                "Removed the Harper.RoadMap consumer disable. The existing complete banned vocabulary contract remains enforced at all. Native emitted configurations and staged gate pass."
+            ]
         },
         "areas/kits/021": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0df1cdc36291c763f19144ca70af9725dd8b4476",
+            "verification": [
+                "One prose.locale setting feeds scoped Vale spelling and Typos, including US rules only for en-us. Root, child, deep and sibling native checks cover rejected old settings and strict schema parity."
+            ]
         },
         "areas/kits/022": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0df1cdc36291c763f19144ca70af9725dd8b4476",
+            "verification": [
+                "The three limits.docs declarations belong to the prose manifest and retain their adopted names. Mechanical move f8397a745 and behavioral producer/schema validation pass."
+            ]
         },
         "areas/kits/023": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0df1cdc36291c763f19144ca70af9725dd8b4476",
+            "verification": [
+                "One generation-owned BANNED_HEADINGS list combines shipped and authored headings and excludes Contents. Native both-level scoped checks cover only applicable banned headings."
+            ]
         },
         "areas/kits/026": {
             "status": "complete",
@@ -17437,6 +17447,22 @@
                 "48 CLI cases/366 assertions/3 files;18 actual tool cases/192 assertions/3 files; root types0. Staged gate68pass10skip0findings; normal commit and push pass."
             ],
             "limitations": ["CI37847867614 pending; native platform macOS. Skips do not prove platform behavior."]
+        },
+        {
+            "commit": "0df1cdc36291c763f19144ca70af9725dd8b4476",
+            "completedRecords": [
+                "areas/kits/018",
+                "areas/kits/020",
+                "areas/kits/021",
+                "areas/kits/022",
+                "areas/kits/023"
+            ],
+            "unresolvedRecords": 589,
+            "validation": [
+                "CLI66/400/4files, native tools41/170/3files, workspace/docs types0, schema producer freshness0, focused prose/Taplo0, full staged170 checks exit0, normal commit/push hooks pass."
+            ],
+            "limitations": ["CI run pending; no live publication or deployment."],
+            "ci": "/tmp/gspot-prose-behavior-checkpoint-ci.json"
         }
     ],
     "verificationEvidence": {
