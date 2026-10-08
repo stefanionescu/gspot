@@ -19,15 +19,15 @@ Apart from this move, gspot changes only its managed blocks in instruction files
 gspot set agent_rules.instruction_files .github/copilot-instructions.md
 ```
 
-Paths are relative to the repository root. gspot writes the block to `AGENTS.md` and the files you list; review the plan before applying it.
+Paths are relative to the repository root. gspot writes the block to `AGENTS.md` and the files you list. Review the plan before applying it.
 
-## Working with findings
+## Resolve findings
 
 The managed block names the selected rules and the command to run before committing. Change policy with `gspot set` or `gspot ignore`. After a hand edit of `gspot.toml`, run `gspot apply`. Generated files under `.gspot/` are not edited by hand.
 
 Run the check with your [runner's prefix](/guides/install/) and read each finding's `help:` line. When you accept a finding, record the required reason in policy.
 
-## Disable agent rules
+## Turn off agent rules
 
 ```shell
 gspot set agent_rules.enabled false

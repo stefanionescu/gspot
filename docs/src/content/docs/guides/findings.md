@@ -54,7 +54,7 @@ gspot check --changed --base origin/main
 gspot check --skip security/semgrep
 ```
 
-`--changed` is boolean; `--base` names the comparison reference. `--staged` selects staged files only.
+`--changed` is boolean. `--base` names the comparison reference. `--staged` selects staged files only.
 
 ## Fix findings automatically
 

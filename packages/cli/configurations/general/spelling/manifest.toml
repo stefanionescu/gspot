@@ -35,11 +35,3 @@ output = { format = "typos" }
 summary = "Finds misspelled words in code, comments, and documentation."
 why = "A typo in an identifier spreads to every caller; in prose it costs the reader a second look."
 help = "Fix the spelling, or write the real name and its reason in [words]."
-
-[[setting]]
-name = "tools.typos.locale"
-type = "string"
-direction = "neutral"
-default = "en-us"
-summary = "The English locale typos checks against: en, en-us, en-gb, en-ca, or en-au."
-validation = { enum = ["en", "en-us", "en-gb", "en-ca", "en-au"] }

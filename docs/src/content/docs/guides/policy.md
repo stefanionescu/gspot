@@ -37,7 +37,7 @@ configuration list. To make a manual language or framework choice, run `gspot ad
 dependencies change. It keeps manual language and framework additions and removals at the root
 and in scopes, including choices from `init --configurations`, `--scope-configurations`, and
 edits to authored configuration lists. A manual removal stays removed when its detection
-source disappears and returns. Removed choices are visible in `removed_configurations`. These manual choices select project configurations; `recommended`
+source disappears and returns. Removed choices are visible in `removed_configurations`. These manual choices select project configurations. `recommended`
 and `all` are the levels.
 
 The [level descriptions](/guides/overview/#levels) define `recommended` and `all`. Neither enables experimental or preview rules. To change the level:
@@ -61,7 +61,9 @@ gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "
 
 The ignore turns off the rule `no-console` for the paths under `scripts/`. Leave out
 `--rule` to turn off the whole check. gspot refuses an ignore
-without a reason. Add `--until YYYY-MM-DD` for a temporary acceptance. It stops applying at 00:00 UTC on that date; the saved entry remains for review. Dependency advisory exceptions use the same `[[ignore]]` table with `check = "dependencies/osv"` and the advisory ID in `rule`.
+without a reason. Add `--until YYYY-MM-DD` for a temporary acceptance. It stops applying at 00:00 UTC on that date. The saved entry remains for review.
+
+Dependency advisory exceptions use the same `[[ignore]]` table with `check = "dependencies/osv"` and the advisory ID in `rule`.
 
 When the cause is gone, remove the ignore and run the check again:
 
@@ -97,10 +99,12 @@ More ways to write a setting:
 - For a list, `--replace` replaces the list authored at that scope, and `--remove` removes items from it. Inherited lists and shipped defaults still apply, except command argument lists, which replace inherited arguments intact.
 
 Adding formatter exclusions, sitemap exclusions, registry
-hosts, or project vocabulary needs a reason. Values stay in their concern tables; `[reasons]`
+hosts, or project vocabulary needs a reason. Values stay in their concern tables. `[reasons]`
 records reasons by setting name. List edits preserve the reason. Replacing an exception list
-with an empty list tightens the policy and needs no reason. Turning `docs.require_license`
-off needs a reason; turning it back on does not.
+with an empty list tightens the policy and needs no reason.
+
+Turning `docs.require_license`
+off needs a reason. Turning it back on does not.
 
 Lockfile downloads use `registry.npmjs.org` and `registry.yarnpkg.com` by default. Add another
 reviewed host with `gspot set dependencies.registry_hosts <HOST> --reason "<WHY>"`.

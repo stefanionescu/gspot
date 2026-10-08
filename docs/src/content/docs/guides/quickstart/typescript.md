@@ -129,7 +129,7 @@ commit hook rejects the forwarding helper. Read [Requirements](/guides/requireme
     under `.gspot/`, installs the tools, and installs the Git hooks. The level `all` adds the
     level `all` conventions, including the checks for trivial functions and files.
 
-3. Run `npx gspot check` and resolve any findings before committing the setup. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly; `licenses/packages` remains skipped until an allowed license or exception is set:
+3. Run `npx gspot check` and resolve any findings before committing the setup. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. `licenses/packages` remains skipped until an allowed license or exception is set:
 
     ```bash
     git add -A
@@ -176,7 +176,7 @@ commit hook rejects the forwarding helper. Read [Requirements](/guides/requireme
     git commit -m "feat: Add receipt lines"
     ```
 
-    The hook rejects the commit. This excerpt highlights the findings; timings and check counts depend on the repository:
+    The hook rejects the commit. This excerpt highlights the findings. Timings and check counts depend on the repository:
 
     ```text
     root  javascript/eslint                   failed     2 files     1.0s

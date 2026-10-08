@@ -11,7 +11,7 @@ gspot sets up linters and checks for the languages in your repository. Git hooks
 
 `recommended`, the default, checks correctness, security, accessibility, type safety, routine formatting, and declared project contracts.
 
-`all` adds word choice, architecture, naming, doc comments, declaration order, API style, and complexity; neither level enables experimental or preview lint rules.
+`all` adds word choice, architecture, naming, doc comments, declaration order, API style, and complexity. Neither level enables experimental or preview lint rules.
 
 Use `gspot set level all` to select the additional conventions. The [level reference](/reference/gspot-toml/#level) defines the setting.
 

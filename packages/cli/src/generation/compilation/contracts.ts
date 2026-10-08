@@ -6,7 +6,6 @@ import { toolsSchema } from '#cli/policy/schema/tools.ts';
 import { namingLists } from '#cli/parsers/schema/naming.ts';
 import type { EtaInputs } from '#cli/types/generation/eta.ts';
 import { TOOL_KEY_DEPTH } from '#cli/config/policy/settings.ts';
-import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { allowlistSchema } from '#cli/parsers/schema/licenses.ts';
 import { selectForScope } from '#cli/repository/selection/public.ts';
 import { SETTING_DEFAULT_FIELDS } from '#cli/config/configurations.ts';
@@ -16,6 +15,7 @@ import { tablesFor, policyValue } from '#cli/policy/settings/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/config/generation/eta.ts';
 import type { Manifest, SettingDeclaration } from '#cli/types/configurations.ts';
+import { PROSE_GRAMMARS, BANNED_HEADINGS } from '#cli/config/generation/prose.ts';
 import { formatSchema, architectureRolesSchema, environmentReadersSchema } from '#cli/policy/schema/contracts.ts';
 
 function prefixed(path: string, pattern: string): string {
@@ -72,6 +72,7 @@ export function proseInputs(session: Session, manifests: Manifest[]): EtaInputs[
     const words = Object.keys(session.policyFiles.policy.words);
     return {
         packages: VALE_PACKAGES,
+        bannedHeadings: BANNED_HEADINGS,
         words: words,
         products: [
             ...new Set([

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Eta } from 'eta';
-import { relative } from 'node:path/posix';
 import { stringify as stringifyYaml } from 'yaml';
+import { dirname, relative } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
 import { extensionOf } from '#cli/platform/contracts.ts';
 import { readAsset } from '#cli/platform/root/public.ts';
@@ -95,6 +95,7 @@ function scopeInputs(input: ScopeEtaInputs) {
         prettierConfig: (targetPath: string) => prettierConfiguration({ ...formatting, targetPath }),
         scope: selection.scope.path,
         relative,
+        dirname,
         scopeDependencies: Object.keys(getProjectDependencies(projects, selection.scope.path)),
         scopes: scopes
             .filter((entry) => entry.scope.path !== '')

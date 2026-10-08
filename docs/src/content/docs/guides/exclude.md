@@ -15,7 +15,7 @@ Patterns are relative to the repository root. Keep the list narrow so authored s
 
 ## Generated and vendored files
 
-Record the generator or upstream owner along with its paths. The [policy reference](/reference/gspot-toml/#generated) shows the accepted fields. Use `generated` for reproducible output and `vendored` for upstream files. Exported templates retain these declarations; review their paths in each destination.
+Record the generator or upstream owner along with its paths. The [policy reference](/reference/gspot-toml/#generated) shows the accepted fields. Use `generated` for reproducible output and `vendored` for upstream files. Exported templates retain these declarations. Review their paths in each destination.
 
 ## Test files
 

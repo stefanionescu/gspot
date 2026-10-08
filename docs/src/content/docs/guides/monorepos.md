@@ -27,7 +27,7 @@ function_lines = 80
 configurations = ["swift", "xcode"]
 ```
 
-Use the project path as the key under `[scope]`. Nested tables belong to that project;
+Use the project path as the key under `[scope]`. Nested tables belong to that project.
 `[scope.api.limits]` changes the API limit only. Quote a key that contains slashes.
 
 After you change the scopes, apply the policy, install the tools, and check one project:
@@ -88,7 +88,7 @@ If a project disappears, `apply` preserves authored scope policy and deactivates
 
 ## A policy below the Git root
 
-The nearest `gspot.toml` above the current folder is the policy. To use a policy in a subfolder
+The nearest `gspot.toml` in the current folder or a parent folder is the policy. To use a policy in a subfolder
 from anywhere, pass `-C`:
 
 ```bash

@@ -115,21 +115,24 @@ test('each stdin route scans the bytes held by the run and maps its own alerts',
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'vale')]));
     const scanned: string[] = [];
+    const nativePaths: string[] = [];
     resources.use(
         spyOn(processes, 'run').mockImplementation((command, options) => {
             expect(command).toContain('--ext=.ts');
+            nativePaths.push(...command.filter((argument) => argument.startsWith('--path=')));
             scanned.push(options.stdin!);
             return Promise.resolve({
                 code: 0,
                 missing: false,
                 duration: 1,
                 stderr: '',
-                stdout: JSON.stringify({ stdin: [DIAGNOSTIC] }),
+                stdout: JSON.stringify({ 'source.mts.ts': [DIAGNOSTIC] }),
             });
         }),
     );
     const findings = await BUILT_IN_CHECKS['prose/vale'].input(input);
     expect(scanned).toStrictEqual(original);
+    expect(nativePaths).toStrictEqual(paths.map((path) => `--path=${path}.ts`));
     expect(findings.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual(
         paths.map((file) => ({ file, line: 1, column: 3, rule: 'gspot.Example' })),
     );

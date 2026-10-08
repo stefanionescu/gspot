@@ -34,7 +34,7 @@ function commentBlocks(source: TSESLint.SourceCode): TSESTree.Comment[] {
     return blocks;
 }
 
-// The parser starts an exported decorated class at export; its leading comment belongs above the first decorator.
+// The parser starts an exported decorated class at export. Its leading comment belongs preceding the first decorator.
 function startOf(node: TSESTree.Node): StatementStart {
     const declared =
         node.type === AST_NODE_TYPES.ExportNamedDeclaration || node.type === AST_NODE_TYPES.ExportDefaultDeclaration

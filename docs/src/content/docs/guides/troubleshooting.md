@@ -22,7 +22,7 @@ run the command again. An unknown configuration or setting names the entry. When
 ## A tool is missing
 
 Run `gspot install` to install the locked npm and Python tools. Native tools come from mise, or
-from your own install; see [runners](/guides/runners/). A check whose tool is
+from your own install. See [runners](/guides/runners/). A check whose tool is
 missing fails, and `doctor` names the tool.
 
 ## A GitHub download returns HTTP 403
@@ -32,7 +32,7 @@ missing fails, and `doctor` names the tool.
 
 ## The policy and the lockfiles disagree
 
-`gspot install` prepares missing or outdated required lockfiles in scratch copies before installing. If a package install fails, the previous lockfiles and installed tool projects remain. Repair package-manager or registry errors and retry. To resolve the declared pins again intentionally, run `gspot install --refresh-lockfiles`; an integrity failure alone does not change a committed lockfile. See [Join a repository](/guides/join/).
+`gspot install` prepares missing or outdated required lockfiles in scratch copies before installing. If a package install fails, the previous lockfiles and installed tool projects remain. Repair package-manager or registry errors and retry. To resolve the declared pins again intentionally, run `gspot install --refresh-lockfiles`. An integrity failure alone does not change a committed lockfile. See [Join a repository](/guides/join/).
 
 ## The gspot version differs from the pin
 

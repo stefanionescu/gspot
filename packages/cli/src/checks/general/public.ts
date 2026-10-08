@@ -8,10 +8,12 @@ import type { CheckInput } from '#cli/types/execution/check.ts';
 import { runCheckTool } from '#cli/execution/command/public.ts';
 import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
+import { targetInScope } from '#cli/configurations/contracts.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { JSCPD } from '#cli/config/checks/general/duplication.ts';
 import { toPosix, extensionOf } from '#cli/platform/contracts.ts';
 import { openRoot, readSource } from '#cli/platform/root/public.ts';
+import { SCRIPT_GRAMMAR } from '#cli/config/checks/general/prose.ts';
 import { sourceConfigurations } from '#cli/configurations/public.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { hasValePackages } from '#cli/lifecycle/install/contracts.ts';
@@ -20,12 +22,11 @@ import { cloneReportSchema } from '#cli/parsers/schema/duplication.ts';
 import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
 import { fileBatches } from '#cli/execution/command/arguments/contracts.ts';
-import { VALE_STDIN, SCRIPT_GRAMMAR } from '#cli/config/checks/general/prose.ts';
 import type { ProseRoute, ProseRouteGroup } from '#cli/types/checks/general/prose.ts';
 import type { CloneScope, CloneReport } from '#cli/types/checks/general/duplication.ts';
 import { VALE_CONFIG, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
-// Vale runs with --no-exit, so alerts leave the exit code at 0; any other code means Vale itself failed, and that is never a pass.
+// Vale runs with --no-exit, so alerts leave the exit code at 0. Any other code means Vale itself failed, and that is never a pass.
 function assertValeRan(result: SpawnResult): void {
     if (result.code === 0 && !result.missing) return;
     const lines = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
@@ -34,7 +35,15 @@ function assertValeRan(result: SpawnResult): void {
 }
 
 function valeCommand(input: CheckInput): string[] {
-    return ['vale', '--config', join(input.root, VALE_CONFIG), '--output', 'JSON', '--no-exit'];
+    let configuration = VALE_CONFIG;
+    if (input.scope !== '') {
+        const declaration = input.selection.selected
+            .find((manifest) => manifest.configuration.name === 'prose')
+            ?.toolFiles.find((file) => file.source === 'vale.ini.eta' && file.per_scope);
+        if (declaration === undefined) throw new Error('The prose configuration has no scoped Vale tool file.');
+        configuration = targetInScope(input.scope, declaration);
+    }
+    return ['vale', '--config', join(input.root, configuration), '--output', 'JSON', '--no-exit'];
 }
 
 async function pathAlerts(input: CheckInput, routes: ProseRoute[]): Promise<ValeAlert[]> {
@@ -57,14 +66,18 @@ async function pathAlerts(input: CheckInput, routes: ProseRoute[]): Promise<Vale
 
 async function stdinAlerts(input: CheckInput, route: ProseRoute): Promise<ValeAlert[]> {
     const text = readSource(input.root, route.path, input.reads).toString('utf8');
-    const result = await runCheckTool(input, [...valeCommand(input), `--ext=${route.extension}`], {
-        cwd: input.root,
-        stdin: text,
-    });
+    const result = await runCheckTool(
+        input,
+        [...valeCommand(input), `--ext=${route.extension}`, `--path=${route.path}${route.extension}`],
+        {
+            cwd: input.root,
+            stdin: text,
+        },
+    );
     assertValeRan(result);
     return parseAlerts(result.stdout).map((alert) => ({
         ...alert,
-        file: alert.file.startsWith(VALE_STDIN) ? route.path : alert.file,
+        file: route.path,
     }));
 }
 

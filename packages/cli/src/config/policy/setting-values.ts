@@ -5,7 +5,7 @@ export const SETTING_VALUES_COMMAND = 'bun scripts/setting-values.ts';
 export const SETTING_VALUES_FILE = 'src/policy/schema/native/public.ts';
 
 /** Root policy tables have their own public schema owners. */
-export const POLICY_TABLE_NAMES = ['tools', 'limits', 'naming', 'format', 'structure', 'architecture', 'prose'];
+export const POLICY_TABLE_NAMES = ['tools', 'limits', 'naming', 'format', 'structure', 'architecture'];
 
 /** Nested concern validators compiled from the same setting declarations. */
 export const SETTING_NAMESPACES_FILE = 'src/policy/schema/native/contracts.ts';

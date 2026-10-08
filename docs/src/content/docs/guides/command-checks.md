@@ -69,7 +69,7 @@ Run the same check again. It exits with `0` and reports no findings.
 
 `command` is a list of arguments, and gspot runs it without a shell. `{files}` expands to the
 selected files, one argument each. File names with spaces need no extra quoting. To run the
-command once for each file, use `{file}` instead. Then a regex match without a `file` group
+command once for each file, use `{file}` instead. Then a regular expression match without a `file` group
 uses the file of that run.
 
 By default, any nonzero exit fails the check. When your tool uses one exit code for findings,

@@ -145,6 +145,12 @@ export const settingNamespaceSchemas = {
         frozen_through: z.string().optional(),
         migrations_folder: z.string().optional(),
     }),
+    prose: z.strictObject({
+        locale: z
+            .string()
+            .and(z.literal(['en', 'en-us', 'en-gb', 'en-ca', 'en-au'], {}))
+            .optional(),
+    }),
     secrets: z.strictObject({
         env_examples: z.array(relativePath).optional(),
         reader_functions: z
@@ -234,12 +240,6 @@ export const settingNamespaceSchemas = {
     }),
     'tools.swiftlint': z.strictObject({ keep_imports: z.array(z.string()).optional() }),
     'tools.trivy': z.strictObject({ severity: z.array(z.string()).optional() }),
-    'tools.typos': z.strictObject({
-        locale: z
-            .string()
-            .and(z.literal(['en', 'en-us', 'en-gb', 'en-ca', 'en-au'], {}))
-            .optional(),
-    }),
     'tools.v8r': z.strictObject({ schemas: toolsSchema.shape['v8r'].unwrap().shape['schemas'].unwrap().optional() }),
     'tools.yamllint': z.strictObject({
         rules: toolsSchema.shape['yamllint'].unwrap().shape['rules'].unwrap().optional(),
@@ -268,7 +268,7 @@ export const publicToolsSchema = z.strictObject({
     swiftlint: settingNamespaceSchemas['tools.swiftlint'].optional(),
     taplo: toolsSchema.shape['taplo'],
     trivy: settingNamespaceSchemas['tools.trivy'].optional(),
-    typos: toolsSchema.shape['typos'].unwrap().extend(settingNamespaceSchemas['tools.typos'].shape).optional(),
+    typos: toolsSchema.shape['typos'],
     v8r: toolsSchema.shape['v8r'],
     yamllint: toolsSchema.shape['yamllint'],
 });
@@ -285,6 +285,7 @@ export const configurationSettingSchemas = {
     links: settingNamespaceSchemas['links'].optional(),
     openapi: settingNamespaceSchemas['openapi'].optional(),
     postgres: settingNamespaceSchemas['postgres'].optional(),
+    prose: settingNamespaceSchemas['prose'].optional(),
     secrets: settingNamespaceSchemas['secrets'].optional(),
     site: settingNamespaceSchemas['site'].optional(),
     supabase: settingNamespaceSchemas['supabase'].optional(),

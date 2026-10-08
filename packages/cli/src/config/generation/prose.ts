@@ -27,10 +27,13 @@ export const PROSE_GRAMMARS: Record<string, ProseGrammar> = {
 };
 
 export const BANNED_HEADINGS = [
-    'table of contents',
     'project structure',
+    'project layout',
     'repository layout',
+    'repository structure',
     'directory structure',
+    'folder structure',
     'file map',
     'codebase map',
+    'source tree',
 ];

@@ -57,7 +57,7 @@ mise exec -- gspot doctor
 mise exec -- gspot check
 ```
 
-Resolve findings in the initial project before committing. If the repository also has npm or Python dependency manifests, those select the general `licenses` configuration automatically. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly; the check makes no license comparison until you set an allowed license or exception.
+Resolve findings in the initial project before committing. If the repository also has npm or Python dependency manifests, those select the general `licenses` configuration automatically. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. The check makes no license comparison until you set an allowed license or exception.
 
 Format the scaffold's package manifest and rerun the checks:
 

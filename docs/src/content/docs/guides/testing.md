@@ -30,7 +30,7 @@ gspot set tools.jest.coverage.functions 100
 Add `--scope app` to set it for the scope `app` only. The
 [settings reference](/reference/settings/) lists every coverage setting.
 
-The Jest configuration reports focused, disabled, and invalid Jest tests at both levels.
+The Jest configuration reports focused, off, and invalid Jest tests at both levels.
 It reads test functions from `@jest/globals` and runs Jest for coverage.
 
 ## Vitest
@@ -56,7 +56,7 @@ gspot check --only pytest/coverage
 
 `tools.pytest.coverage.lines` sets the line coverage floor. The check runs pytest with strict markers
 and strict configuration. The Ruff rules for pytest apply to your test files, and your
-application code keeps its own rules.
+app code keeps its own rules.
 
 ## Swift tests
 
@@ -66,7 +66,7 @@ source files keep those rules. `gspot check --only swift/swiftlint` reads these 
 
 The swift-snapshot-testing dependency selects its own configuration. It checks snapshot recording
 and the library's `__Snapshots__/{file}/{test}.*` references beside each test source. The
-[SnapshotTesting configuration](/reference/configurations/swift-snapshot-testing/) owns these checks;
+[SnapshotTesting configuration](/reference/configurations/swift-snapshot-testing/) owns these checks.
 [xctest](/reference/configurations/xctest/) owns test reasons, sleeps, and coverage.
 
 To enable Swift coverage for a configured Xcode project and scheme:

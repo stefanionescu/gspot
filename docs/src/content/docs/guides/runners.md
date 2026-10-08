@@ -3,7 +3,7 @@ title: Runners
 description: Run gspot through mise, npm, pnpm, Yarn, Bun, or PATH.
 ---
 
-The `runner` setting determines how hooks and CI launch gspot. A runner choice does not add the CLI to your application dependencies. Install the CLI using the [installation guide](/guides/install/).
+The `runner` setting determines how hooks and CI launch gspot. A runner choice does not add the CLI to your app dependencies. Install the CLI using the [installation guide](/guides/install/).
 
 ## mise
 
@@ -21,17 +21,17 @@ gspot init --configurations python
 
 Hooks use the selected manager to launch the locally installed CLI. Guides use `gspot` as shorthand for `npx gspot`, `pnpm exec gspot`, `yarn gspot`, or `bunx gspot`.
 
-Applicable npm tools live in `.gspot/package.json`, separate from application dependencies. They use the package manager declared by your repository. If no JavaScript manager is declared, gspot uses npm even when Bun is on `PATH`.
+Applicable npm tools live in `.gspot/package.json`, separate from app dependencies. They use the package manager declared by your repository. If no JavaScript manager is declared, gspot uses npm even when Bun is on `PATH`.
 
-Yarn Classic installs committed lockfiles with `--frozen-lockfile`. Yarn Berry uses `--immutable`. gspot selects the matching command from the declared Yarn version. Use the same distinction when installing your application dependencies after cloning; see [Join a repository](/guides/join/).
+Yarn Classic installs committed lockfiles with `--frozen-lockfile`. Yarn Berry uses `--immutable`. gspot selects the matching command from the declared Yarn version. Use the same distinction when installing your app dependencies after cloning. See [Join a repository](/guides/join/).
 
-Applicable Python tools live in `.gspot/pyproject.toml`; uv installs them into `.gspot/.venv`. `apply` generates the required manifests. `init` and `install` prepare missing or outdated lockfiles without downloading tool packages during configuration generation.
+Applicable Python tools live in `.gspot/pyproject.toml`. uv installs them into `.gspot/.venv`. `apply` generates the required manifests. `init` and `install` prepare missing or outdated lockfiles without downloading tool packages during configuration generation.
 
 ## No runner
 
 `gspot init --no-runner` omits the `runner` setting. Hooks call `gspot` on `PATH`, so install the pinned CLI globally. Executable tools need mise or a separate installation. `gspot doctor` prints install commands.
 
-`hooks.enabled = false` disables hooks; an absent `[ci]` disables CI. `--no-hooks` and `--no-ci` select those choices during initialization. Apply prunes recorded hook files and prints `run gspot install`. Install unsets `core.hooksPath` when the path belongs to gspot and hooks are disabled.
+`hooks.enabled = false` disables hooks. An absent `[ci]` disables CI. `--no-hooks` and `--no-ci` select those choices during initialization. Apply prunes recorded hook files and prints `run gspot install`. Install unsets `core.hooksPath` when the path belongs to gspot and hooks are off.
 
 ## Private registries
 

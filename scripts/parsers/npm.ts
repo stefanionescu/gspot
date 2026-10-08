@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import type { NpmPackageIdentity } from '#automation/types/npm.ts';
 
-// Packing writes one archive into the requested destination; a reported path must remain a local filename.
+// Packing writes one archive into the requested destination. A reported path must remain a local filename.
 export const npmPackSchema = z.tuple([z.object({ filename: z.string().regex(/^[^/\\]+\.tgz$/u) })]).rest(z.unknown());
 
 export const npmPackageIdentitySchema = z.object({ name: z.string(), version: z.string() });

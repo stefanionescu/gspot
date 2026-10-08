@@ -29,7 +29,7 @@ GitHub can run operating-system jobs selected with `ci.platforms`:
 gspot set ci.platforms linux macos windows --replace
 ```
 
-Select platforms that support the applicable checks. Manual checks run separately when selected by the generated job.
+Select platforms that support the applicable checks. Manual checks run when selected by the generated job.
 
 ## Tool setup
 

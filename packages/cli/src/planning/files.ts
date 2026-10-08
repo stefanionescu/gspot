@@ -132,7 +132,8 @@ export function runsAtRoot(manifest: Manifest | undefined, check: CheckDeclarati
         (config) =>
             config.per_scope &&
             !config.fragment &&
-            command.some((part) => part.includes(`{tool_file:${toolFileName(config.target)}}`)),
+            (config.check.includes(check.name) ||
+                command.some((part) => part.includes(`{tool_file:${toolFileName(config.target)}}`))),
     );
 }
 

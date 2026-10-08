@@ -3,7 +3,7 @@ title: Generated files
 description: Which files gspot writes, which to commit, and which to leave alone.
 ---
 
-You customize gspot in `gspot.toml`. gspot writes its managed configuration from that policy; application configuration remains authored. After you change the policy,
+You customize gspot in `gspot.toml`. gspot writes its managed configuration from that policy. App configuration remains authored. After you change the policy,
 run `gspot apply` to write them again.
 
 ## What gspot writes
@@ -35,7 +35,7 @@ Tests/.swiftlint.yml
 ```
 
 Most point to a configuration under `.gspot/config/`. For other tools, point your editor at the
-configuration under `.gspot/config/`; gspot supplies that path when it runs them.
+configuration under `.gspot/config/`. gspot supplies that path when it runs them.
 
 Do not edit a generated file. Change `gspot.toml`, then run `gspot apply`. If you do edit a
 generated file, `apply` keeps your edit and names the file, so you can move the change into the
@@ -54,4 +54,4 @@ The managed block in `.gitignore` keeps these out of Git: the installed tools (`
 `.gspot/state/` holds the record of what gspot wrote. Without it, gspot cannot tell your edits
 from its own files. Do not delete the whole `.gspot/` folder to clean up.
 
-A fresh clone has no local ownership record. gspot compares tracked generated files with the planned output before recording ownership; differing files remain conflicts. Run `gspot install` to prepare tools and hooks in the clone.
+A fresh clone has no local ownership record. gspot compares tracked generated files with the planned output before recording ownership. Differing files remain conflicts. Run `gspot install` to prepare tools and hooks in the clone.

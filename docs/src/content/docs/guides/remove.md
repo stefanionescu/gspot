@@ -10,7 +10,7 @@ gspot remove nextjs --dry-run
 gspot remove nextjs
 ```
 
-Removal writes the name into `removed_configurations` in `gspot.toml`, so it survives later detection. Use `gspot add nextjs` to restore it. Remove a configuration that requires another before removing its dependency; otherwise, removal is refused. General configurations follow repository inputs and the selected level.
+Removal writes the name into `removed_configurations` in `gspot.toml`, so it survives later detection. Use `gspot add nextjs` to restore it. Remove a configuration that requires another before removing its dependency. Otherwise, removal is refused. General configurations follow repository inputs and the selected level.
 
 `remove` installs nothing. When the required tools change, it tells you to run `gspot install`.
 
@@ -24,4 +24,4 @@ gspot provides no uninstall command. Review Git history to identify the setup fi
 4. If Git uses `.gspot/hooks`, run `git config --unset core.hooksPath`. If a hook manager owns the hooks, remove only its gspot integration lines.
 5. Remove the CLI dependency using your package manager, then remove `gspot.toml` and `.gspot/` after reviewing them for authored files you need to keep.
 
-Run your remaining checks and review the diff before committing. Restoring the setup commit restores the tracked configuration; run `gspot install` again to restore installed tools and hooks.
+Run your remaining checks and review the diff before committing. Restoring the setup commit restores the tracked configuration. Run `gspot install` again to restore installed tools and hooks.

@@ -1,4 +1,4 @@
-/* Starlight owns menu behavior; these rules align its mobile controls. */
+/* Starlight owns menu behavior. These rules align its mobile controls. */
 @media (width < 50rem) {
     :where(.page) > .header {
         padding-block: 0;

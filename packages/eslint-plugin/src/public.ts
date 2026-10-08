@@ -7,7 +7,7 @@ import { FILE_SCHEME, STDIN_NAMES, INDEX_BASENAMES } from '#plugin/config/files.
 const globCache = new Map<string, (path: string) => boolean>();
 
 /**
- * True when a root-relative posix path matches a glob (`**`, `*`, `?`, `{a,b}`).
+ * True when a root-relative POSIX path matches a glob (`**`, `*`, `?`, `{a,b}`).
  * @param path the path
  * @param glob the glob
  * @returns whether the glob matches the whole path
@@ -66,7 +66,7 @@ export function relativeImportPath(importer: string, source: string): string | u
 
 /**
  * True for an index module.
- * @param path a file path
+ * @param path a path
  * @returns whether the base name is an index file
  */
 export function isIndexFile(path: string): boolean {
@@ -86,7 +86,7 @@ export function isAnyGlobMatch(path: string, globs: readonly string[]): boolean 
 }
 
 /**
- * Read the linted file's absolute path, root, and root-relative path once. Standard-input names have no file path.
+ * Read the linted file's absolute path, root, and root-relative path once. Standard-input names have no path.
  * @param context the ESLint rule context
  * @returns the file paths, or undefined for standard input
  */

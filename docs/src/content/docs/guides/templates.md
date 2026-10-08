@@ -11,7 +11,7 @@ A template is an exported setup another repository can reuse. It carries authore
 gspot export team.template.toml
 ```
 
-A template carries every `gspot.toml` entry except scopes, including command checks. Empty authored tables stay in the export. It copies authored values without adding defaults. The destination's `gspot/unmatched-paths` check reports carried paths that match no tracked file or folder. Review path choices for the destination; commands that name local executables produce a warning.
+A template carries every `gspot.toml` entry except scopes, including command checks. Empty authored tables stay in the export. It copies authored values without adding defaults. The destination's `gspot/unmatched-paths` check reports carried paths that match no tracked file or folder. Review path choices for the destination. Commands that name local executables produce a warning.
 
 A template carries hooks, CI, agent-rule, and runner settings, but no generated hook scripts, lockfiles, or installed tools. `hooks.enabled` controls hook setup.
 
@@ -26,7 +26,9 @@ configurations = ["typescript", "markdown"]
 `exact` keeps the template's language and framework choices during initialization. Change
 `selection` to `detect` to add project configurations detected in the destination. Both
 selections include automatic general checks at the chosen level. An empty exact list omits
-language and framework choices; it still includes general checks. Template configurations stay selected even when no files match them. Use `gspot remove`
+language and framework choices. It still includes general checks.
+
+Template configurations stay selected even when no files match them. Use `gspot remove`
 to drop a language or framework choice.
 
 Export can write outside the repository atomically. It refuses the policy file and managed output destinations. Use `gspot export team.template.toml --dry-run` to print the template without writing it.

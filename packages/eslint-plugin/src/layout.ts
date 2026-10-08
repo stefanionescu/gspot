@@ -119,7 +119,7 @@ export function reportRun(context: TSESLint.RuleContext<LayoutMessages, unknown[
 }
 
 /**
- * Report names inside braces that are not sorted by length. The fix moves each name with the comments above it and
+ * Report names inside braces that are not sorted by length. The fix moves each name with the comments preceding it and
  * keeps the commas and line breaks where they are.
  * @param context the rule context
  * @param specifiers the named specifiers of one statement

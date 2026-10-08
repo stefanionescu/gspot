@@ -1,5 +1,5 @@
-import type { relative } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
+import type { dirname, relative } from 'node:path/posix';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
@@ -57,6 +57,7 @@ export type EtaInputs = Omit<ScopeView, 'options'> & {
     typescriptConfig: (targetPath: string) => Record<string, unknown>;
     prose: {
         packages: string[];
+        bannedHeadings: string[];
         words: string[];
         products: string[];
         blockIgnores: string[];
@@ -69,6 +70,7 @@ export type EtaInputs = Omit<ScopeView, 'options'> & {
     swiftVersion: () => string | undefined;
     scope: string;
     relative: typeof relative;
+    dirname: typeof dirname;
     scopes: Pick<ScopeEntry, 'path' | 'configurations'>[];
     /** Dependencies declared by the nearest npm project that contains this scope. */
     scopeDependencies: string[];
@@ -81,7 +83,7 @@ export type EtaInputs = Omit<ScopeView, 'options'> & {
     ignoredPaths: string[];
     policy: Policy;
     fragments: string;
-    /** Separately emitted fragments for targets that consume structured configuration. */
+    /** emitted fragments for targets that consume structured configuration. */
     fragmentParts: string[];
     fragmentImports: string;
     fragmentFiles: string[];

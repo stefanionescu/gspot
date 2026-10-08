@@ -25,8 +25,6 @@ const rules = isAll
           'RedHat.Definitions': 'NO',
           'alex.ProfanityUnlikely': 'NO',
           'Harper.ExpandConfiguration': 'NO',
-          'Google.Semicolons': 'NO',
-          'Microsoft.Semicolon': 'NO',
           'Vale.Terms': 'NO',
           'write-good.TooWordy': 'NO',
           'write-good.Weasel': 'NO',
@@ -34,12 +32,9 @@ const rules = isAll
           'RedHat.TermsWarnings': 'NO',
           'RedHat.TermsErrors': 'NO',
           'RedHat.SimpleWords': 'NO',
-          'RedHat.CaseSensitiveTerms': 'NO',
           'RedHat.DoNotUseTerms': 'NO',
           'RedHat.Hyphens': 'NO',
-          'RedHat.Slash': 'NO',
           'RedHat.GitLinks': 'NO',
-          'RedHat.NoGerundsInTitles': 'NO',
           'RedHat.ReadabilityGrade': 'NO',
           'RedHat.UserReplacedValues': 'NO',
           'RedHat.Using': 'NO',
@@ -52,8 +47,6 @@ const rules = isAll
           'Microsoft.Vocab': 'NO',
           'Microsoft.Terms': 'NO',
           'Microsoft.GeneralURL': 'NO',
-          'Microsoft.QuestionMarks': 'NO',
-          'Microsoft.Adverbs': 'NO',
           'Microsoft.Accessibility': 'NO',
           'Microsoft.HeadingAcronyms': 'NO',
           'Microsoft.HeadingColons': 'NO',
@@ -70,8 +63,6 @@ const rules = isAll
           'Microsoft.Spacing': 'NO',
           'Microsoft.Avoid': 'NO',
           'Microsoft.UIVerbs': 'NO',
-          'Microsoft.Auto': 'NO',
-          'Google.WordListCase': 'NO',
           'Google.WordList': 'NO',
           'Google.Colons': 'NO',
           'Google.Anthropomorphism': 'NO',
@@ -87,11 +78,7 @@ const rules = isAll
           'alex.Suicide': 'NO',
           'proselint.Typography': 'NO',
           'proselint.Needless': 'NO',
-          'Harper.RoadMap': 'NO',
           'Harper.ExpandMemoryShorthands': 'NO',
-          'Harper.ExpandPerformance': 'NO',
-          'Harper.ExpandMinimum': 'NO',
-          'Harper.OkToOkay': 'NO',
           'Harper.MoreAdjective2': 'NO',
           'Harper.MoreAdjective4': 'NO',
           'gspot.alt-text': 'NO',
@@ -103,10 +90,13 @@ const rules = isAll
               .map((style) => ['gspot.' + style, 'NO']),
       );
 rules['gspot.alt-text'] = 'NO';
+rules['gspot.us-english'] = isAll && settings['prose.locale'] === 'en-us' ? 'YES' : 'NO';
 const document = {
     DEFAULT: {
         options: {
-            StylesPath: 'vale/styles',
+            StylesPath: relative(dirname(targetPath), '.gspot/config/vale/styles') === 'vale/styles'
+                ? 'vale/styles'
+                : ['vale/styles', '.gspot/config/vale/styles'],
             MinAlertLevel: 'suggestion',
             SkippedScopes: 'script, style, pre, figure, table',
             ...(isAll ? { Packages: prose.packages.join(', ') } : {}),
@@ -123,6 +113,11 @@ const document = {
         rules: { 'gspot.alt-text': 'YES', ...(isAll ? { 'RedHat.MergeConflictMarkers': 'YES' } : {}) },
     },
 };
+for (const entry of configurationScopes('prose')) {
+    if (entry.path !== '') document[entry.path + '/**'] = {
+        rules: { 'gspot.us-english': isAll && entry.settings['prose.locale'] === 'en-us' ? 'YES' : 'NO' },
+    };
+}
 const comments = {
     'Vale.Spelling': '# "typos owns spelling"',
     'Google.Spelling': '# "typos owns spelling"',
@@ -148,8 +143,6 @@ const comments = {
     'RedHat.Definitions': '# "gspot.acronyms owns the first use of an acronym"',
     'alex.ProfanityUnlikely': '# "it flags execute, kill and abort, which are the words for those actions"',
     'Harper.ExpandConfiguration': '# "config is a reserved word in the naming policy and a path in every repository"',
-    'Google.Semicolons': '# "the rule files join clauses with semicolons"',
-    'Microsoft.Semicolon': '# "the rule files join clauses with semicolons"',
     'Vale.Terms':
         '# "the vocabulary accepts spellings; it does not fix case, because configuration ids are the lowercase tool names"',
     'write-good.TooWordy': '# "it flags validate, multiple and it is, which are plain words"',
@@ -158,12 +151,9 @@ const comments = {
     'RedHat.TermsWarnings': '# "Red Hat product terminology: might for may, tool for tooling"',
     'RedHat.TermsErrors': '# "Red Hat product terminology: typographical error for typo"',
     'RedHat.SimpleWords': '# "Red Hat word list: many for multiple, has for contains"',
-    'RedHat.CaseSensitiveTerms': '# "configuration ids are the lowercase tool names: postgres, ssh"',
     'RedHat.DoNotUseTerms': '# "Red Hat word list: it bans overhead and colors"',
     'RedHat.Hyphens': '# "Red Hat spellings: nonzero, noninteractive"',
-    'RedHat.Slash': '# "check ids are written check/name"',
     'RedHat.GitLinks': '# "links to GitHub are how tools are cited"',
-    'RedHat.NoGerundsInTitles': '# "gspot.heading-case owns headings; the rule files title sections with gerunds"',
     'RedHat.ReadabilityGrade': '# "text about tools scores as hard reading; the length rules own readability"',
     'RedHat.UserReplacedValues': '# "placeholders are written <kebab-case>"',
     'RedHat.Using': '# "a Red Hat grammar preference"',
@@ -176,8 +166,6 @@ const comments = {
     'Microsoft.Vocab': '# "it asks the writer to verify a word against a list instead of stating a rule"',
     'Microsoft.Terms': '# "Microsoft product terminology: personal digital assistant for agent"',
     'Microsoft.GeneralURL': '# "URL is the word"',
-    'Microsoft.QuestionMarks': '# "the rule files ask questions in review checklists"',
-    'Microsoft.Adverbs': '# "the rule files use adverbs to mark intent: deliberately, silently"',
     'Microsoft.Accessibility': '# "it flags disabled, as in a disabled rule"',
     'Microsoft.HeadingAcronyms': '# "headings name tools by their acronyms"',
     'Microsoft.HeadingColons': '# "gspot.heading-case owns heading case"',
@@ -194,8 +182,6 @@ const comments = {
     'Microsoft.Spacing': '# "Google.Spacing reports the same spacing"',
     'Microsoft.Avoid': '# "Microsoft word list: it bans backend"',
     'Microsoft.UIVerbs': '# "click and swipe are the verbs for a touch screen and a mouse"',
-    'Microsoft.Auto': '# "auto-mocks and auto-retry are the names of the features"',
-    'Google.WordListCase': '# "Google product terminology: app for application, preceding for above"',
     'Google.WordList': '# "Google product terminology: command-line tool for CLI"',
     'Google.Colons': '# "it lowercases acronyms after a colon"',
     'Google.Anthropomorphism': '# "a check sees, a tool tells; the rule files describe tools as actors"',
@@ -211,11 +197,7 @@ const comments = {
     'alex.Suicide': '# "a process hangs"',
     'proselint.Typography': '# "three dots stay ASCII"',
     'proselint.Needless': '# "oversized and extensible are the words"',
-    'Harper.RoadMap': '# "roadmap is one word here"',
     'Harper.ExpandMemoryShorthands': '# "MB and GB are the units"',
-    'Harper.ExpandPerformance': '# "perf and min name flags and files"',
-    'Harper.ExpandMinimum': '# "perf and min name flags and files"',
-    'Harper.OkToOkay': '# "ok is the check status"',
     'Harper.MoreAdjective2': '# "it reports that an inflected form exists, which is not an error"',
     'Harper.MoreAdjective4': '# "it reports that an inflected form exists, which is not an error"',
     'gspot.alt-text':
@@ -224,8 +206,8 @@ const comments = {
 recordRules(document);
 %><% for (const [name, section] of Object.entries(document)) { if (name !== 'DEFAULT') { %>[<%= name %>]
 <% } if (section.BasedOnStyles) { %>BasedOnStyles = <%= section.BasedOnStyles.join(', ') %>
-<% } for (const [key, value] of Object.entries(section.options ?? {})) { %><%= key %> = <%= value %>
-<% } for (const [rule, value] of Object.entries(section.rules ?? {})) { if (name === '*' && comments[rule]) { %><%= comments[rule] %>
+<% } for (const [key, values] of Object.entries(section.options ?? {})) { for (const value of [values].flat()) { %><%= key %> = <%= value %>
+<% } } for (const [rule, value] of Object.entries(section.rules ?? {})) { if (name === '*' && comments[rule]) { %><%= comments[rule] %>
 <% } %><%= rule %> = <%= value %>
 <% } %>
 <% } %>

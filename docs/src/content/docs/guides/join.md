@@ -7,7 +7,7 @@ Use the version recorded in `.gspot/version`. Do not run `init` in a repository 
 
 ## With a JavaScript package manager
 
-Install application dependencies from the committed lockfile, then run the matching commands:
+Install app dependencies from the committed lockfile, then run the matching commands:
 
 | Manager      | Dependencies                     | Prepare checks            | Check                   |
 | ------------ | -------------------------------- | ------------------------- | ----------------------- |
@@ -17,7 +17,7 @@ Install application dependencies from the committed lockfile, then run the match
 | Yarn Berry   | `yarn install --immutable`       | `yarn gspot install`      | `yarn gspot check`      |
 | Bun          | `bun install --frozen-lockfile`  | `bunx gspot install`      | `bunx gspot check`      |
 
-Install native tools separately when the repository does not use mise. `gspot doctor` names missing requirements.
+Install native tools when the repository does not use mise. `gspot doctor` names missing requirements.
 
 ## With mise
 
@@ -42,4 +42,4 @@ gspot check
 
 In PowerShell, read the same pin with `Get-Content .gspot/version` and supply it to `npm install --global`.
 
-`install` prepares required missing or outdated lockfiles in tool projects, then installs the tools and sets up hooks in this clone. If installation fails, repair the registry, credentials, or package manager and run `install` again. Commit any updated lockfiles with the policy. When another hook manager owns the hooks, add the three integration lines printed by `install`; otherwise gspot checks will not run on commit or push.
+`install` prepares required missing or outdated lockfiles in tool projects, then installs the tools and sets up hooks in this clone. If installation fails, repair the registry, credentials, or package manager and run `install` again. Commit any updated lockfiles with the policy. When another hook manager owns the hooks, add the three integration lines printed by `install`. Otherwise, gspot checks will not run on commit or push.

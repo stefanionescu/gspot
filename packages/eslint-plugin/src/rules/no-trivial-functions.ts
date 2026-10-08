@@ -114,7 +114,7 @@ function isRecursive(node: ImplementedFunction, source: TSESLint.SourceCode): bo
         );
 }
 
-// An exported API may have callers in other modules; a local helper must have at least two reads.
+// An exported API may have callers in other modules. A local helper must have at least two reads.
 function isSharedFunction(node: ImplementedFunction, source: TSESLint.SourceCode): boolean {
     const owner = node.parent.type === AST_NODE_TYPES.VariableDeclarator ? node.parent.parent : node;
     if (

@@ -51,3 +51,11 @@ export const REFERENCE_JSON_INDENT = 2;
 
 /** Plain labels for JSON schema types presented in policy tables. */
 export const SCHEMA_TYPE_LABELS: Record<string, string> = { array: 'List', object: 'Table' };
+
+/** Labels for the manifest check run frequency. */
+export const CHECK_RUN_LABELS = {
+    once: 'once for the repository',
+    scope: 'once per scope',
+    files: 'per file',
+    history: 'once for pushed history',
+};

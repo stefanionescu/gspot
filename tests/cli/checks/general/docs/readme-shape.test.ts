@@ -35,7 +35,7 @@ describe('readme shape', () => {
         const lines = BUILT_IN_CHECKS['docs/headings']
             .input(buildCheckInput(await openSession(sandbox.path), 'docs/headings', { paths: ['README.md'] }))
             .map((finding) => finding.line);
-        expect(lines).toStrictEqual([3]);
+        expect(lines).toStrictEqual([]);
     });
     test('setext and formatted headings count, while fenced headings do not', async () => {
         await using sandbox = await testdir();

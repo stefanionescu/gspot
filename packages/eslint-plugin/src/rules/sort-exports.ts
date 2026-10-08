@@ -3,7 +3,7 @@ import type { LayoutMessages } from '#plugin/types/layout.ts';
 import { runsOf, reportRun, reportNames } from '#plugin/layout.ts';
 import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
-// An export block is made of export lists and re-exports; an exported declaration is code, not a block member.
+// An export block is made of export lists and re-exports. An exported declaration is code, not a block member.
 function isExportList(node: TSESTree.Statement): boolean {
     if (node.type === AST_NODE_TYPES.ExportAllDeclaration) return true;
     return node.type === AST_NODE_TYPES.ExportNamedDeclaration && node.declaration === null;

@@ -35,7 +35,7 @@ if (import.meta.main) {
 /**
  * Select one registry request per released package version across configuration owners.
  * @param manifests the configurations declaring tool releases
- * @returns distinct released versions; system tools and the workspace plugin have no registry request
+ * @returns distinct released versions. System tools and the workspace plugin have no registry request
  */
 export function releasedPins(manifests: Manifest[]): RegistryPin[] {
     const pins = new Map<string, RegistryPin>();
