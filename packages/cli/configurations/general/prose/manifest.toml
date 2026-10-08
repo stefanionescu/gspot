@@ -219,3 +219,24 @@ stage = "commit"
 summary = "Checks ambiguous dates, link text, and alternative text with bundled Vale styles at level `recommended`. Level `all` adds the complete style and upstream packages."
 why = "Prose that hedges, markets or wanders is read by everyone who reads the code, and nothing else checks it."
 help = "Rewrite the sentence the alert names, write a real name and its reason in [words], or use gspot ignore prose/vale --rule `<rule>` --reason \"`<why>`\"."
+
+[[setting]]
+name = "limits.docs.sentence_words"
+type = "number"
+direction = "ceiling"
+default = 30
+summary = "The most words one sentence of documentation may have."
+
+[[setting]]
+name = "limits.docs.list_item_words"
+type = "number"
+direction = "ceiling"
+default = 45
+summary = "The most words one list item may have."
+
+[[setting]]
+name = "limits.docs.paragraph_sentences"
+type = "number"
+direction = "ceiling"
+default = 6
+summary = "The most sentences one paragraph may have."

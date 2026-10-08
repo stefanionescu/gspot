@@ -336,27 +336,6 @@ default = 60
 summary = "The most lines one Swift closure may have."
 
 [[setting]]
-name = "limits.docs.sentence_words"
-type = "number"
-direction = "ceiling"
-default = 30
-summary = "The most words one sentence of documentation may have."
-
-[[setting]]
-name = "limits.docs.list_item_words"
-type = "number"
-direction = "ceiling"
-default = 45
-summary = "The most words one list item may have."
-
-[[setting]]
-name = "limits.docs.paragraph_sentences"
-type = "number"
-direction = "ceiling"
-default = 6
-summary = "The most sentences one paragraph may have."
-
-[[setting]]
 name = "structure.reexports"
 type = "string"
 direction = "tightening"

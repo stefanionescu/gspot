@@ -14,19 +14,13 @@ import { globPaths } from '#cli/platform/root/contracts.ts';
 import type { ProseLine } from '#cli/types/parsers/source.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { runnerSchema } from '#cli/parsers/schema/contracts.ts';
+import { BANNED_HEADINGS } from '#cli/config/generation/prose.ts';
 import { parsePackageManifest } from '#cli/parsers/packages/public.ts';
 import { scopeOf, scopeAncestors } from '#cli/repository/paths/contracts.ts';
 import { MISE_FILES, LICENSE_FILE } from '#cli/config/repository/inventory.ts';
 import type { PathIndex, TaskSources } from '#cli/types/checks/general/docs.ts';
 import { pathTokens, proseLines, cleanPathToken } from '#cli/parsers/public.ts';
-
-import {
-    START_WORDS,
-    SECTION_DEPTH,
-    CONTENTS_TITLE,
-    FILE_EXTENSION,
-    BANNED_HEADINGS,
-} from '#cli/config/checks/general/docs.ts';
+import { START_WORDS, SECTION_DEPTH, CONTENTS_TITLE, FILE_EXTENSION } from '#cli/config/checks/general/docs.ts';
 
 function knownPaths(input: CheckInput): Set<string> {
     if (input.repositoryFiles === undefined)

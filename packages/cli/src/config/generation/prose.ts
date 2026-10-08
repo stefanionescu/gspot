@@ -25,3 +25,12 @@ export const PROSE_GRAMMARS: Record<string, ProseGrammar> = {
     '.pgsql': { mode: 'path', extension: '.pgsql', format: 'lua' },
     '.psql': { mode: 'path', extension: '.psql', format: 'lua' },
 };
+
+export const BANNED_HEADINGS = [
+    'table of contents',
+    'project structure',
+    'repository layout',
+    'directory structure',
+    'file map',
+    'codebase map',
+];
