@@ -9,9 +9,9 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { parseManifest } from '#cli/configurations/public.ts';
+import { coverageArguments } from '#cli/planning/contracts.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
-import { coverageArguments } from '#cli/execution/command/contracts.ts';
 import { SAMPLE, OUTCOMES, ZERO_COMMANDS } from '#tests/config/cli/checks/tool/jest-execution.ts';
 
 test.each(OUTCOMES)(

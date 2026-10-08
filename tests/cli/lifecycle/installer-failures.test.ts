@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
-import { CLI_PINS } from '#cli/config/pins.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
+import { CLI_PINS } from '#cli/config/generation/pins.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { initCommand } from '#cli/commands/init/public.ts';
 import { installCommand } from '#cli/commands/contracts.ts';

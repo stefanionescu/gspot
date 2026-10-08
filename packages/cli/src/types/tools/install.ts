@@ -1,6 +1,7 @@
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
+import type { InstallationKind } from '#cli/types/configurations.ts';
 import type { Policy, PolicyFile } from '#cli/types/policy/settings.ts';
-import type { ToolPin, InstallationKind } from '#cli/types/configurations.ts';
 
 export type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
 

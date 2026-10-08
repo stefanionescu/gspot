@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import semver from 'semver';
 import { compact } from '#cli/platform/contracts.ts';
+import type { InstallerPin } from '#cli/types/parsers/tool.ts';
 import { commandSchema } from '#cli/parsers/schema/command.ts';
 import { MAX_EXIT_CODE } from '#cli/config/platform/runtime.ts';
-import type { InstallerPin } from '#cli/types/configurations.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
 import { VERSION_FLOOR } from '#cli/config/parsers/tool/version.ts';
 import { PYTHON_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';

@@ -1,4 +1,4 @@
-import { CLI_PINS } from '#cli/config/pins.ts';
+import { CLI_PINS } from '#cli/config/generation/pins.ts';
 
 export const FORMATTER_INIT = [
     'init',

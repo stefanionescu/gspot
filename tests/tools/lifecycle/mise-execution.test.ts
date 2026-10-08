@@ -1,10 +1,10 @@
-import { CLI_PINS } from '#cli/config/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { misePins } from '#cli/configurations/public.ts';
+import { CLI_PINS } from '#cli/config/generation/pins.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';

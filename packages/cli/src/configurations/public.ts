@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import { posix } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { compact, isRecord } from '#cli/platform/contracts.ts';
 import type { NamingTerms } from '#cli/types/parsers/naming.ts';
 import { hasToolSection } from '#cli/parsers/tool/contracts.ts';
@@ -18,7 +19,6 @@ import { CONFIG_PREFIX, NAMING_TERMS_FILE, CONFIGURATION_RULES_FOLDER } from '#c
 
 import type {
     MisePin,
-    ToolPin,
     Manifest,
     RuleSource,
     ManifestCache,

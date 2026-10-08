@@ -1,12 +1,13 @@
 // Explain a check, or one rule of the tool a check runs.
 import { inspectTool } from '#cli/tools/public.ts';
 import { runBlocking } from '#cli/platform/public.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { compact, quoteArgument } from '#cli/platform/contracts.ts';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { parseRuffRuleSummary } from '#cli/parsers/tool/contracts.ts';
 import { toolName, allChecks } from '#cli/configurations/contracts.ts';
 import type { RepositoryDefinition } from '#cli/types/policy/settings.ts';
-import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
 import { isConfigurationSelected } from '#cli/configurations/selection/public.ts';
 import { configurationFiles, configurationManifests } from '#cli/configurations/public.ts';
 import type { Found, CheckFacts, Explanation, RuleSummarizer } from '#cli/types/commands/explain.ts';

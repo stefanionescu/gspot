@@ -1,4 +1,4 @@
-import type { ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { MISE_CONFIG_PATH, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 
 export const DECLARED_TOOLS: ToolPin[] = [

@@ -1,6 +1,6 @@
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/types/platform/runtime.ts';

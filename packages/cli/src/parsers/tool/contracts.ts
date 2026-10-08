@@ -4,13 +4,12 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { stripVTControlCharacters } from 'node:util';
 import { isRecord } from '#cli/platform/contracts.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import type { DirectiveScan } from '#cli/types/parsers/nginx.ts';
 import { NO_VERSION } from '#cli/config/parsers/tool/version.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { ruffRuleSchema } from '#cli/parsers/schema/tool-rule.ts';
 import { TOOL_FILE_FORMATS } from '#cli/config/parsers/tool/tool-file.ts';
-import type { ParsedToolVersion } from '#cli/types/parsers/tool-version.ts';
+import type { ToolPin, ParsedToolVersion } from '#cli/types/parsers/tool.ts';
 
 import {
     WORD_STOPS,

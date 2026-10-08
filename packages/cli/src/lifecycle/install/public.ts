@@ -1,8 +1,8 @@
 // Git runs the gspot hooks through core.hooksPath. A repository that already runs hooks keeps them, and gets the
 // lines to add to them instead.
 import semver from 'semver';
-import { CLI_PINS } from '#cli/config/pins.ts';
 import { GspotError } from '#cli/platform/public.ts';
+import { CLI_PINS } from '#cli/config/generation/pins.ts';
 import { rootView } from '#cli/policy/settings/public.ts';
 import { prepareToolProjects } from '#cli/tools/public.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';

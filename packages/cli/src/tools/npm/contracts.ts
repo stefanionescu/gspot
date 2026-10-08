@@ -4,7 +4,7 @@ import Config from '@npmcli/config';
 import { join, dirname, resolve } from 'node:path';
 import { SETUP } from '#cli/config/tools/install.ts';
 import { yarnSettings } from '#cli/tools/npm/yarn.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { parseVersionOutput } from '#cli/parsers/tool/contracts.ts';
 import npmDefinitions from '@npmcli/config/lib/definitions/index.js';

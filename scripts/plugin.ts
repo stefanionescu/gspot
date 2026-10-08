@@ -2,9 +2,9 @@
 import { testdir } from 'testdirs';
 import { stringify } from 'smol-toml';
 import { writeFileSync } from 'node:fs';
-import { CLI_PINS } from '#cli/config/pins.ts';
 import { join, resolve, delimiter } from 'node:path';
 import { workspaceRoot } from '#automation/workspace.ts';
+import { CLI_PINS } from '#cli/config/generation/pins.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { ARGUMENT_START } from '#automation/config/paths.ts';

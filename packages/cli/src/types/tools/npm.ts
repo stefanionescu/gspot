@@ -1,4 +1,4 @@
-import type { ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 

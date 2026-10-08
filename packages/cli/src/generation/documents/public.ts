@@ -1,8 +1,8 @@
 // Generate provider workflows from the same installation, version, and check selections.
 // The Prettier and EditorConfig settings a policy generates, with authored overrides carried along.
 import { dirname, relative } from 'node:path';
-import { CLI_PINS } from '#cli/config/pins.ts';
 import { Scalar, Document, stringify } from 'yaml';
+import { CLI_PINS } from '#cli/config/generation/pins.ts';
 import { compact, toPosix } from '#cli/platform/contracts.ts';
 import { HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 import { everyTable } from '#cli/policy/settings/contracts.ts';

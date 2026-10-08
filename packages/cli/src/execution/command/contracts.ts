@@ -2,17 +2,18 @@ import { statSync } from 'node:fs';
 import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/platform/public.ts';
 import { toolPath } from '#cli/platform/contracts.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
+import { TAIL_LINES } from '#cli/config/execution/command.ts';
 import type { ScopeView } from '#cli/types/policy/settings.ts';
+import type { CheckResult } from '#cli/types/execution/check.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import type { ExecutionFailure } from '#cli/types/tools/install.ts';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { DEFAULT_OUTPUT_FORMAT } from '#cli/config/parsers/output.ts';
 import type { Finding, OutputPaths } from '#cli/types/parsers/output.ts';
 import { parseOutput, outputFormats } from '#cli/parsers/output/public.ts';
-import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
-import type { CheckResult, CheckRunOptions } from '#cli/types/execution/check.ts';
-import { TAIL_LINES, COVERAGE_FLAGS, COVERAGE_DIMENSIONS } from '#cli/config/execution/command.ts';
 
 import type {
     OutputCheck,
@@ -271,21 +272,4 @@ export function toolOutputDetail(result: SpawnResult, placeholder: string): stri
  */
 export function toolDeadline(view: Pick<ScopeView, 'settings'>): number {
     return Number(view.settings['tool_timeout_seconds']);
-}
-
-/**
- * Keep authored commands and omit shipped coverage arguments when no floor requires them.
- * @param planned the selected declaration and its scope settings
- * @param options the supplied command and workspace
- * @returns the command with coverage enabled only when a floor requires it
- */
-export function coverageArguments(planned: PlannedCheck, options: CheckRunOptions): string[] | undefined {
-    const command = options.command ?? planned.check.command;
-    if (command === undefined || options.command !== undefined || planned.manifest === undefined) return command;
-    const flags = command.map((part) => COVERAGE_FLAGS.has(part.replace(/=.*/su, '')));
-    if (!flags.some(Boolean)) return command;
-    const coverage = planned.scope.view.options('coverage');
-    return COVERAGE_DIMENSIONS.every((name) => coverage[name] === 0)
-        ? command.filter((_, index) => flags[index] !== true)
-        : command;
 }

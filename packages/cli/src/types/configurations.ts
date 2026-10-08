@@ -1,11 +1,11 @@
 import type { z } from 'zod';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import type { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { INSTALLATION_KINDS } from '#cli/config/configurations.ts';
 import type { manifestSchema } from '#cli/parsers/schema/configurations.ts';
-import type { toolSchema, installerPinSchema } from '#cli/parsers/schema/public.ts';
 
 export type ConfigurationEvidence = {
     configuration: string;
@@ -33,11 +33,6 @@ export type SelectionWalk = {
 };
 
 export type CheckRule = { applies: (check: ParsedCheck) => boolean; error: (check: ParsedCheck) => string };
-
-export type InstallerPin = z.output<typeof installerPinSchema>;
-
-/** Resolved tool metadata derives from the validated manifest; installer declarations become named pins. */
-export type ToolPin = z.output<typeof toolSchema>;
 
 /** manifest.toml as the schema accepts it. */
 export type ParsedManifest = z.infer<typeof manifestSchema>;

@@ -4,7 +4,7 @@ import executables from 'which';
 import { spyOn } from 'bun:test';
 import { join, basename } from 'node:path';
 import * as processes from '#cli/platform/public.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 
 /**
  * Replace executable lookup and version processes while a test owns native command output.

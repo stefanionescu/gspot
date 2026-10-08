@@ -1,4 +1,4 @@
-import type { ToolPin } from '#cli/types/configurations.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import type { PackageInstaller } from '#cli/types/parsers/packages.ts';
 import type { PackageRegistry } from '#tests/types/harness/registry.ts';
 

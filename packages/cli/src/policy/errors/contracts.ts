@@ -1,11 +1,12 @@
 import { isDeepStrictEqual } from 'node:util';
 import { openRoot } from '#cli/platform/root/public.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { allChecks } from '#cli/configurations/contracts.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import { everyTable } from '#cli/policy/settings/contracts.ts';
 import { REASON_WORDS_MIN } from '#cli/config/policy/settings.ts';
+import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import type { ToolPin, SettingDeclaration } from '#cli/types/configurations.ts';
 import type { Policy, ToolTable, PolicyError } from '#cli/types/policy/settings.ts';
 import { pathKey, valueAt, isRecord, quoteArgument, trimTrailingSlashes } from '#cli/platform/contracts.ts';
 

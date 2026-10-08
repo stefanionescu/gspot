@@ -1,12 +1,12 @@
 import semver from 'semver';
 import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/public.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { listAssets } from '#cli/platform/root/public.ts';
 import { allChecks } from '#cli/configurations/contracts.ts';
 import { SETTING_PLACEHOLDER, SETTING_DEFAULT_FIELDS, CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
 
 import type {
-    ToolPin,
     Manifest,
     SettingMeaning,
     CheckDeclaration,

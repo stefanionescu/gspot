@@ -1,6 +1,6 @@
-import { CLI_PINS } from '#cli/config/pins.ts';
 import { BARE_KEY } from '#cli/config/parsers/toml.ts';
 import { misePins } from '#cli/configurations/public.ts';
+import { CLI_PINS } from '#cli/config/generation/pins.ts';
 import { GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
 import { headerFor } from '#cli/generation/documents/contracts.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';

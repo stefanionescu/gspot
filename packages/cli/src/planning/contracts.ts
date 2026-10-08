@@ -1,12 +1,14 @@
 // Why a planned check does not run: an ignore, a waiting setting, a rule, the platform, or a flag.
 import ignore from 'ignore';
 import { readText } from '#cli/platform/root/public.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { coversScope } from '#cli/repository/paths/public.ts';
 import { semgrepRuleFiles } from '#cli/configurations/contracts.ts';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { getProjectDependencies } from '#cli/repository/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
-import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
+import { COVERAGE_FLAGS, COVERAGE_DIMENSIONS } from '#cli/config/planning.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
 import type {
@@ -168,4 +170,24 @@ export function missingBuild(tool: ToolPin, platform: string, arch: string): str
     const label = OPERATING_SYSTEMS.find((system) => system.name === platform)?.label ?? platform;
     // A pin that names the operating system with another architecture lacks this architecture only.
     return named.some((entry) => entry.startsWith(`${platform}-`)) ? `${arch} ${label}` : label;
+}
+
+/**
+ * Keep authored commands and omit shipped coverage arguments when no floor requires them.
+ * @param planned the selected declaration and its scope settings
+ * @param options the supplied command and workspace
+ * @returns the command with coverage enabled only when a floor requires it
+ */
+export function coverageArguments(
+    planned: Pick<PlannedCheck, 'check' | 'scope' | 'manifest'>,
+    options: Pick<CheckDeclaration, 'command'>,
+): string[] | undefined {
+    const command = options.command ?? planned.check.command;
+    if (command === undefined || options.command !== undefined || planned.manifest === undefined) return command;
+    const flags = command.map((part) => COVERAGE_FLAGS.has(part.replace(/=.*/su, '')));
+    if (!flags.some(Boolean)) return command;
+    const coverage = planned.scope.view.options('coverage');
+    return COVERAGE_DIMENSIONS.every((name) => coverage[name] === 0)
+        ? command.filter((_, index) => flags[index] !== true)
+        : command;
 }

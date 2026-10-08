@@ -4,7 +4,6 @@ import { isDeepStrictEqual } from 'node:util';
 import type { Root } from '#cli/types/platform/root.ts';
 import { openRoot } from '#cli/platform/root/public.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import type { ToolRunOptions } from '#cli/types/tools/run.ts';
 import { TOOL_DEADLINE } from '#cli/config/policy/settings.ts';
 import { MS_PER_SECOND } from '#cli/config/platform/runtime.ts';
@@ -12,7 +11,9 @@ import { installedPackage } from '#cli/repository/contracts.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { getGitEnvironment } from '#cli/platform/git/contracts.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
+import { parseVersionOutput } from '#cli/parsers/tool/contracts.ts';
 import { join, dirname, basename, relative, isAbsolute } from 'node:path';
+import type { ToolPin, ParsedToolVersion } from '#cli/types/parsers/tool.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 import { statSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { misePin, toolProjectPackage } from '#cli/configurations/contracts.ts';
@@ -414,4 +415,23 @@ export function installationDiagnostics(result: Pick<SpawnResult, 'stdout' | 'st
     return output.length > INSTALL_OUTPUT_LIMIT
         ? `[Earlier output omitted]\n${output.slice(-INSTALL_OUTPUT_LIMIT)}`
         : output;
+}
+
+/**
+ * Read native version output, using installed npm metadata when the declared package supplies the executable.
+ * @param root the installation root
+ * @param cwd the project working folder
+ * @param path the resolved native executable
+ * @param tool the declared version query and package
+ * @returns the version or the native query failure
+ */
+export function readToolVersion(root: string, cwd: string, path: string, tool: ToolPin): ParsedToolVersion {
+    const npm = tool.installers['npm'];
+    const installedVersion = packageVersion(root, path, npm?.name);
+    const result = runBlocking([path, ...(tool.version_command ?? ['--version'])], {
+        cwd,
+        timeoutMs: VERSION_TIMEOUT_MS,
+        env: { NO_COLOR: '1', ...tool.env },
+    });
+    return parseVersionOutput(tool, result, installedVersion);
 }

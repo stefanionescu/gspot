@@ -1,11 +1,12 @@
 import { runTool } from '#cli/tools/contracts.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { emptyResult } from '#cli/execution/report.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { checkCompanions } from '#cli/planning/public.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import type { ToolPin } from '#cli/types/configurations.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
+import { coverageArguments } from '#cli/planning/contracts.ts';
 import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
@@ -18,20 +19,19 @@ import { batchedCommands } from '#cli/execution/command/arguments/contracts.ts';
 import type { CheckInput, CheckResult, CheckRunOptions } from '#cli/types/execution/check.ts';
 
 import {
+    finishResult,
+    toolDeadline,
+    commandOutcome,
+    executionFailure,
+    recordInvocation,
+} from '#cli/execution/command/contracts.ts';
+import {
     substitute,
     isolatedFiles,
     perFileCommands,
     substituteValue,
     commandConfigurations,
 } from '#cli/execution/command/arguments/public.ts';
-import {
-    finishResult,
-    toolDeadline,
-    commandOutcome,
-    executionFailure,
-    recordInvocation,
-    coverageArguments,
-} from '#cli/execution/command/contracts.ts';
 import type {
     CheckTool,
     CommandRun,

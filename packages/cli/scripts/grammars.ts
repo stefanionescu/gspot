@@ -1,8 +1,8 @@
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
-import { CLI_PINS } from '#cli/config/pins.ts';
 import { createHash, randomUUID } from 'node:crypto';
+import { CLI_PINS } from '#cli/config/generation/pins.ts';
 import type { PinnedDownload } from '#cli/types/platform/assets.ts';
 import { rm, mkdir, rename, copyFile, readFile, writeFile } from 'node:fs/promises';
 import { RUNTIME_WASM, GRAMMAR_PACKAGES, DOWNLOAD_TIMEOUT_MS } from '#cli/config/platform/assets.ts';

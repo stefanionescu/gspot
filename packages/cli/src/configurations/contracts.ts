@@ -3,15 +3,14 @@ import semver from 'semver';
 import { posix } from 'node:path';
 import { GspotError } from '#cli/platform/public.ts';
 import { compact } from '#cli/platform/contracts.ts';
+import type { ToolPin, InstallerPin } from '#cli/types/parsers/tool.ts';
 import { CONFIG_PREFIX, MISE_BACKENDS } from '#cli/config/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
 import type {
     MisePin,
-    ToolPin,
     Manifest,
     OwnedCheck,
-    InstallerPin,
     PinRequirement,
     CheckDeclaration,
     ToolProjectPackage,

@@ -1,27 +1,24 @@
 import { join, relative } from 'node:path';
-import { runBlocking } from '#cli/platform/public.ts';
 import { misePins } from '#cli/configurations/public.ts';
 import { parseMiseToolKeys } from '#cli/parsers/mise.ts';
+import type { ToolPin } from '#cli/types/parsers/tool.ts';
+import type { Manifest } from '#cli/types/configurations.ts';
 import { MISE_BACKENDS } from '#cli/config/configurations.ts';
 import { packageToolProject } from '#cli/tools/npm/public.ts';
 import type { ToolProject } from '#cli/types/tools/project.ts';
 import { TOOL_PROJECT_FILES } from '#cli/config/tools/mise.ts';
 import { installedPackage } from '#cli/repository/contracts.ts';
 import { pythonToolProject } from '#cli/tools/python/public.ts';
-import { VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
 import { openRoot, readText } from '#cli/platform/root/public.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { PythonPreparation } from '#cli/types/tools/python.ts';
-import { parseVersionOutput } from '#cli/parsers/tool/contracts.ts';
-import type { ToolPin, Manifest } from '#cli/types/configurations.ts';
-import type { ParsedToolVersion } from '#cli/types/parsers/tool-version.ts';
 import { misePin, collectPins, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { DOT_GSPOT, YARN_SETTINGS, MISE_CONFIG_PATH, NODE_MODULES_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 import {
     installHint,
     isBelowFloor,
-    packageVersion,
+    readToolVersion,
     unavailableNote,
     locateCandidates,
     toolVersionState,
@@ -39,18 +36,6 @@ import type {
     LockfilePreparation,
     AvailableToolInspection,
 } from '#cli/types/tools/install.ts';
-
-// An npm tool is the version its package says. For example, `license-checker-rseidelsohn@5.0.1` prints `4.4.2`.
-function readToolVersion(root: string, cwd: string, path: string, tool: ToolPin): ParsedToolVersion {
-    const npm = tool.installers['npm'];
-    const installedVersion = packageVersion(root, path, npm?.name);
-    const result = runBlocking([path, ...(tool.version_command ?? ['--version'])], {
-        cwd,
-        timeoutMs: VERSION_TIMEOUT_MS,
-        env: { NO_COLOR: '1', ...tool.env },
-    });
-    return parseVersionOutput(tool, result, installedVersion);
-}
 
 // The inspection of a library whose tool-project package.json declares a version.
 function libraryInspection(root: string, tool: ToolPin, path: string, found: string, hint: string): ToolInspection {
