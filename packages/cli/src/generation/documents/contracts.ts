@@ -5,13 +5,13 @@ import { jsonText } from '#cli/generation/json-format.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { toPosix, extensionOf } from '#cli/platform/contracts.ts';
+import { TARGET_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { JsonFormat } from '#cli/types/generation/formatting.ts';
 import { ruleSettingsSchema } from '#cli/parsers/schema/tool-rule.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { TARGET_PLACEHOLDER } from '#cli/config/generation/pointers.ts';
 import { GENERATED_JSON_KEY } from '#cli/config/parsers/generated-header.ts';
 
 import {

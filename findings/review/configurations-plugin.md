@@ -1,6 +1,6 @@
 # Configurations and the ESLint Plugin
 
-4 unresolved review records remain.
+3 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -290,3 +290,11 @@ Original records and quotations remain above. These records are complete at `f3b
 | `review/configurations-plugin/036` | complete | One complete tool owner and name-only references. Missing named owner and duplicate full declaration refused for same/different pins and registry order. Actions ShellCheck gets owner suppression/refused_options/rule_url at both levels/root-child. No last-wins repeated full-tool acceptance. Focused native acceptance passed on the exact pushed tree. Commit `f3b216f87c910bf1fc1aeedeb20cea49358c508e`.                                                                                                               |
 | `review/configurations-plugin/053` | complete | Thirteen topic assets at naming/secrets/security/dependencies/commits/prose/gspot owners; original engineering topic paths absent. Engineering and gspot always_selected declarations remain. Assembly reads always_selected flag; no engineering lookup. TALKING remains engineering and selected at both levels. Native root-child/manual/dependency-absent/conditional and duplicate selection controls pass. Focused native acceptance passed on the exact pushed tree. Commit `f3b216f87c910bf1fc1aeedeb20cea49358c508e`. |
 | `review/configurations-plugin/056` | complete | All three final filenames exist as committed assets. FORM.md/QUERY.md/I18N.md former filenames absent. Native selected assets/dependency absence/root-child and both levels controls pass. Focused native acceptance passed on the exact pushed tree. Commit `f3b216f87c910bf1fc1aeedeb20cea49358c508e`.                                                                                                                                                                                                                       |
+
+## Implementation checkpoint 0abcd119f of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `0abcd119f0603a522953586168f68c45cfc767e6`.
+
+| ID                                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/configurations-plugin/046` | complete | Microsoft and Red Hat packages are removed. Native source-rule probes retain 32 unique concerns, omit five complete Google duplicates, and preserve native Tengo behavior and MIT notices. Actual root/child/deep/sibling checks at both levels pass. Current authored ignores use the replacement native rule IDs. Installed styles decrease by 61 files and 170,482 bytes; tracked authored assets grow as required by the replacement. Commit `0abcd119f0603a522953586168f68c45cfc767e6`. |

@@ -54,6 +54,8 @@ export const FILES_PLACEHOLDER = '{files}';
 
 export const FILE_PLACEHOLDER = '{file}';
 
+export const TARGET_PLACEHOLDER = /\{target(?:_json|_module)?\}/gu;
+
 /** Authored manifest sections follow their dependency and generation order. Nested values stay inline. */
 export const MANIFEST_TABLE_ORDER = [
     'configuration',

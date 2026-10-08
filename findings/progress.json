@@ -1,5 +1,5 @@
 {
-    "openRecords": 589,
+    "openRecords": 587,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -258,7 +258,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 589,
+        "openRecords": 587,
         "records": 1092,
         "batches": [
             {
@@ -564,8 +564,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 137,
-                "unresolvedAssignments": 154
+                "completedAssignments": 138,
+                "unresolvedAssignments": 153
             },
             {
                 "id": "python",
@@ -1972,8 +1972,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 55,
-                "unresolvedAssignments": 4
+                "completedAssignments": 56,
+                "unresolvedAssignments": 3
             },
             {
                 "id": "names",
@@ -4891,10 +4891,12 @@
             ]
         },
         "review/code-commands/023": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0abcd119f0603a522953586168f68c45cfc767e6",
+            "verification": [
+                "Vale installation uses the existing installTree/deleteInstallation journal and removes the separate swap/replace/remove tree writers. Native ownership, recovery, unowned-style, link and pruning cases pass. Staged checks read the real installedRoot journal. Production installer code is reduced by 1,473 bytes."
+            ]
         },
         "review/code-commands/024": {
             "status": "complete",
@@ -6558,10 +6560,12 @@
             ]
         },
         "review/configurations-plugin/046": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0abcd119f0603a522953586168f68c45cfc767e6",
+            "verification": [
+                "Microsoft and Red Hat packages are removed. Native source-rule probes retain 32 unique concerns, omit five complete Google duplicates, and preserve native Tengo behavior and MIT notices. Actual root/child/deep/sibling checks at both levels pass. Current authored ignores use the replacement native rule IDs. Installed styles decrease by 61 files and 170,482 bytes; tracked authored assets grow as required by the replacement."
+            ]
         },
         "review/configurations-plugin/048": {
             "status": "complete",
@@ -17463,6 +17467,18 @@
             ],
             "limitations": ["CI run pending; no live publication or deployment."],
             "ci": "/tmp/gspot-prose-behavior-checkpoint-ci.json"
+        },
+        {
+            "commit": "0abcd119f0603a522953586168f68c45cfc767e6",
+            "completedRecords": ["review/code-commands/023", "review/configurations-plugin/046"],
+            "unresolvedRecords": 587,
+            "validation": [
+                "Checkpoint CLI68/706/6files, native Vale37/467/4files, workspace types and producer freshness pass. Staged gate156passed/14skipped/0findings/53.5s. Normal commit and push hooks pass; push gate156passed/14skipped/0findings/54.4s."
+            ],
+            "limitations": [
+                "Native executable proof covers macOS ARM64. Whole-repository Linux, macOS and Windows acceptance remains in the final verification wave. CI37855822748 is pending; no live publication or deployment."
+            ],
+            "ci": "/tmp/gspot-vale-logged-replacement-ci.json"
         }
     ],
     "verificationEvidence": {

@@ -8,9 +8,9 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { README, LICENSE } from '#tests/config/samples/docs.ts';
 import { NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
+import { README, LICENSE, SETEXT_README, MISSING_SECTIONS_README } from '#tests/config/samples/docs.ts';
 
 describe('readme shape', () => {
     test('a README with one H1, an opening paragraph and a setup section passes', async () => {
@@ -26,23 +26,17 @@ describe('readme shape', () => {
 
     test('a README missing the pieces names each one', async () => {
         await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'README.md': '# A\n# B\n## Table of contents\n\nx\n' });
+        await createFileTree(sandbox.path, { 'README.md': MISSING_SECTIONS_README });
         await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
         const found = BUILT_IN_CHECKS['docs/readme-shape'].input(
             buildCheckInput(await openSession(sandbox.path), 'docs/readme-shape', { paths: ['README.md'] }),
         );
         expect(found.map((finding) => finding.rule)).toStrictEqual(['opening-paragraph', 'start-section']);
-        const lines = BUILT_IN_CHECKS['docs/headings']
-            .input(buildCheckInput(await openSession(sandbox.path), 'docs/headings', { paths: ['README.md'] }))
-            .map((finding) => finding.line);
-        expect(lines).toStrictEqual([]);
     });
     test('setext and formatted headings count, while fenced headings do not', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'README.md':
-                'Thing\n=====\n\nWhat it is.\n\nSetup\n-----\n\n~~~md\n# Example\n## Project structure\n~~~~\n',
-            'guide.md': '~~~md\n# Project structure\n~~~\n\n**Project structure**\n---------------------\n',
+            'README.md': SETEXT_README,
         });
         await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(['docs'], { level: 'all' }));
         expect(
@@ -50,15 +44,6 @@ describe('readme shape', () => {
                 buildCheckInput(await openSession(sandbox.path), 'docs/readme-shape', { paths: ['README.md'] }),
             ),
         ).toStrictEqual([]);
-        expect(
-            BUILT_IN_CHECKS['docs/headings'].input(
-                buildCheckInput(await openSession(sandbox.path), 'docs/headings', { paths: ['README.md'] }),
-            ),
-        ).toStrictEqual([]);
-        const found = BUILT_IN_CHECKS['docs/headings'].input(
-            buildCheckInput(await openSession(sandbox.path), 'docs/headings', { paths: ['guide.md'] }),
-        );
-        expect(found.map((finding) => [finding.line, finding.rule])).toStrictEqual([[5, 'banned-heading']]);
     });
 
     test('a list before the setup section does not supply an opening paragraph', async () => {

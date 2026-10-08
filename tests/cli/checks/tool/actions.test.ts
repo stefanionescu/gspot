@@ -1,10 +1,16 @@
 import { test, expect } from 'bun:test';
-import { chmod } from 'node:fs/promises';
 import { join, delimiter } from 'node:path';
+import { stat, chmod } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { checkRun } from '#cli/execution/contracts.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
+import { getKeptMode } from '#tests/harness/platforms.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { actionlintSource } from '#cli/checks/tool/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
@@ -73,3 +79,44 @@ test('an alias resolves to the anchored reference, which changes where it is wri
 test('text that is not a YAML mapping stays as written', () => {
     expect(actionlintSource('uses: [$/unclosed\n')).toBe('uses: [$/unclosed\n');
 });
+
+test.each([
+    { code: 0, status: 'passed', findings: [], note: undefined },
+    {
+        code: 1,
+        status: 'failed',
+        findings: [{ file: '.github/workflows/caller.yml', rule: 'workflow-call' }],
+        note: undefined,
+    },
+    { code: 3, status: 'error', findings: [], note: 'exit 3' },
+])(
+    'Actionlint removes its prepared project after adapter exit $code without changing source permissions',
+    async ({ code, status, findings, note }) => {
+        await using sandbox = await testdir();
+        const record = join(sandbox.path, 'workspace.txt');
+        const executable = join(sandbox.path, 'actionlint');
+        const workflow = 'on: workflow_dispatch\njobs:\n  caller:\n    uses: $/.github/workflows/called.yml\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['actions']),
+            '.github/workflows/caller.yml': workflow,
+            actionlint: `#!${process.execPath}\nif (process.argv.includes('--version')) console.log('1.7.12'); else { await Bun.write(${JSON.stringify(record)}, process.cwd()); if (${String(code)} !== 0) console.log('.github/workflows/caller.yml:4:11: located defect [workflow-call]'); process.exitCode = ${String(code)}; }\n`,
+        });
+        await chmod(executable, 0o755);
+        await chmod(join(sandbox.path, '.github/workflows/caller.yml'), 0o444);
+        const session = await openSession(sandbox.path);
+        const plans = planRun(session, { stage: 'commit', skips: [], only: ['actions/actionlint'] });
+        const planned = plans[0]!;
+        planned.tool = { ...planned.tool!, name: executable };
+        const result = await checkRun(planned.check, BUILT_IN_CHECKS)(session, planned);
+        expect(result.status, JSON.stringify(result)).toBe(status);
+        const workspace = await Bun.file(record).text();
+        expect(workspace).not.toBe(sandbox.path);
+        expect(await pathExists(workspace)).toBe(false);
+        expect(await Bun.file(join(sandbox.path, '.github/workflows/caller.yml')).text()).toBe(workflow);
+        const attributes = await stat(join(sandbox.path, '.github/workflows/caller.yml'));
+        expect(attributes.mode & 0o777).toBe(getKeptMode(0o444));
+        expect(await pathExists(join(sandbox.path, '.git'))).toBe(false);
+        if (note !== undefined) expect(result.note).toContain(note);
+        expect(result.findings).toMatchObject(findings);
+    },
+);
