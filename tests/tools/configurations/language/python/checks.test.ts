@@ -72,7 +72,7 @@ test('the python configuration > init replaces an authored Pyright configuration
         [MODULE_PATH]: typed,
     });
     commitAll(sandbox.path);
-    const environment = { PATH: buildToolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
+    const environment = { PATH: buildToolsPath(['ruff', 'basedpyright', 'typos', 'editorconfig-checker']) };
     await initRepository(sandbox.path, buildInitArguments(['python']), environment, {});
     // The authored file is gone; the pointer stands in its place, and the policy carries none of its settings.
     const pointer = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();

@@ -27,7 +27,7 @@ async function prepareProject(root: string): Promise<Record<string, string>> {
     });
     await linkInstalledModules(join(root, 'node_modules'));
     commitAll(root);
-    return { PATH: buildSandboxPath(['typos', 'ec', 'ast-grep']) };
+    return { PATH: buildSandboxPath(['typos', 'editorconfig-checker', 'ast-grep']) };
 }
 
 test('adding an ESLint fragment exposes its finding on the next explicit check, and removing it drops its plugin', async () => {

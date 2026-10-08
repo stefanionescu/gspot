@@ -59,17 +59,17 @@ describe('readme shape', () => {
 
 test('required repository documents identify a missing license and accept its restoration', async () => {
     await using sandbox = await testdir({ 'gspot.toml': buildPolicy(['docs'], { level: 'all' }), 'README.md': README });
-    const failed = await runGspot(sandbox.path, ['check', '--only', 'docs/readme-present', '--json']);
+    const failed = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect((JSON.parse(failed.stdout) as RunReport).checks).toMatchObject([
         {
-            check: 'docs/readme-present',
+            check: 'docs/required-files',
             status: 'failed',
             findings: [{ file: 'LICENSE', message: 'The root has no LICENSE file.' }],
         },
     ]);
     await Bun.write(join(sandbox.path, 'LICENSE'), LICENSE);
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'docs/readme-present', '--json']);
+    const corrected = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
@@ -83,8 +83,8 @@ test.each(['COPYING', 'LICENCE', 'LICENSE-MIT', 'LICENSE-APACHE', 'LICENSE.rst']
             [name]: LICENSE,
         });
         expect(
-            BUILT_IN_CHECKS['docs/readme-present'].input(
-                buildCheckInput(await openSession(sandbox.path), 'docs/readme-present'),
+            BUILT_IN_CHECKS['docs/required-files'].input(
+                buildCheckInput(await openSession(sandbox.path), 'docs/required-files'),
             ),
         ).toStrictEqual([]);
     },
@@ -97,8 +97,8 @@ test('a NOTICE file does not supply the repository license', async () => {
         NOTICE: 'Copyright Example',
     });
     expect(
-        BUILT_IN_CHECKS['docs/readme-present'].input(
-            buildCheckInput(await openSession(sandbox.path), 'docs/readme-present'),
+        BUILT_IN_CHECKS['docs/required-files'].input(
+            buildCheckInput(await openSession(sandbox.path), 'docs/required-files'),
         ),
     ).toMatchObject([{ file: 'LICENSE', rule: 'missing-license' }]);
 });

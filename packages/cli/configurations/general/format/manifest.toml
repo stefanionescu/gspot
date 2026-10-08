@@ -26,11 +26,11 @@ key = "prettier"
 shared = true
 
 [[tool]]
-name = "ec"
+name = "editorconfig-checker"
 version = "3.4.0"
 env = { EC_VERSION = "v3.4.0" }
 npm = { name = "editorconfig-checker", version = "7.0.0" }
-mise = "aqua:editorconfig-checker/editorconfig-checker"
+mise = { name = "npm:editorconfig-checker", version = "7.0.0" }
 brew = "editorconfig-checker"
 github = { name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0" }
 replaces = [".editorconfig"]
@@ -38,7 +38,7 @@ replaces = [".editorconfig"]
 [[tool_file]]
 source = "editorconfig.eta"
 target = ".editorconfig"
-tool = ["ec", "prettier"]
+tool = ["editorconfig-checker", "prettier"]
 
 [[tool_file]]
 target = ".gspot/config/prettier.json"
@@ -78,8 +78,8 @@ title = "Check EditorConfig formatting"
 example = "A file containing CRLF line endings when `.editorconfig` requires LF reports a line-ending finding. Save it with LF endings and rerun. Use the exact configured indentation and final-newline settings as well."
 level = "recommended"
 stage = "commit"
-command = ["ec", "-no-color", "-disable-indent-size", "{files}"]
-tool = "ec"
+command = ["editorconfig-checker", "-no-color", "-disable-indent-size", "{files}"]
+tool = "editorconfig-checker"
 files = { paths = ["**"] }
 output = { format = "grouped", file_pattern = "^(?<file>.+):$", pattern = "^\\s+(?:(?<line>\\d+)(?:-\\d+)?: )?(?<message>\\S.*)$" }
 summary = "Checks line endings, final newlines and trailing whitespace in every file against .editorconfig."

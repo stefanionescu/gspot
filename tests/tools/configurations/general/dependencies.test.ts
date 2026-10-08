@@ -31,7 +31,7 @@ test('the dependencies configuration > an outdated Bun lockfile fails, regenerat
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': CLEAN });
     commitAll(sandbox.path);
-    const environment = { PATH: buildToolsPath(['typos', 'ec']) };
+    const environment = { PATH: buildToolsPath(['typos', 'editorconfig-checker']) };
     await initRepository(sandbox.path, DEPENDENCIES_INIT, environment, { level: 'all' });
     await createFileTree(sandbox.path, {
         'package.json': JSON.stringify({

@@ -166,7 +166,7 @@ test.each(['recommended', 'all'] as const)(
         const manifests = configurationManifests();
         const fileManifest = manifests.get('files')!;
         const expected = npmPins(
-            [{ ...fileManifest, tools: [...fileManifest.tools, toolPin(manifests.values(), 'ec')] }],
+            [{ ...fileManifest, tools: [...fileManifest.tools, toolPin(manifests.values(), 'editorconfig-checker')] }],
             undefined,
         );
         expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(Object.keys(expected));

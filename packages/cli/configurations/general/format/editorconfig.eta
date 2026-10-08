@@ -13,7 +13,7 @@ trim_trailing_whitespace = false
 
 [Makefile]
 indent_style = tab
-<% const extras = verbatim('editorconfig'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (typeof value === 'object' && value !== null) { %>
+<% const extras = verbatim('editorconfig-checker'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (typeof value === 'object' && value !== null) { %>
 [<%= key %>]
 <% for (const [option, setting] of Object.entries(value)) { %><%= option %> = <%= setting %>
 <% } } } } %>

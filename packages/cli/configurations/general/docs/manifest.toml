@@ -68,7 +68,7 @@ why = "A path in the docs that nothing tracks sends the reader to a file that is
 help = "Fix the path or the task name. Give an example code block a title= attribute."
 
 [[check]]
-name = "readme-present"
+name = "required-files"
 title = "Require a README and a license"
 example = "A configured scope without `README.md` reports the missing README. Add one that explains its purpose and setup. The repository root also needs a license when license presence is required."
 level = "all"

@@ -249,7 +249,7 @@ export const settingNamespaceSchemas = {
 export const publicToolsSchema = z.strictObject({
     codeql: settingNamespaceSchemas['tools.codeql'].optional(),
     commitlint: toolsSchema.shape['commitlint'],
-    editorconfig: toolsSchema.shape['editorconfig'],
+    'editorconfig-checker': toolsSchema.shape['editorconfig-checker'],
     eslint: toolsSchema.shape['eslint'].unwrap().extend(settingNamespaceSchemas['tools.eslint'].shape).optional(),
     hadolint: settingNamespaceSchemas['tools.hadolint'].optional(),
     knip: toolsSchema.shape['knip'].unwrap().extend(settingNamespaceSchemas['tools.knip'].shape).optional(),

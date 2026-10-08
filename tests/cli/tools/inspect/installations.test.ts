@@ -178,15 +178,15 @@ test.each(['mise', 'npm'])(
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy([], { tables: `runner = "${runner}"\n` }),
             'node_modules/.bin/teller': '#!/bin/sh\necho 3.8.1\n',
-            'node_modules/.bin/ec': '#!/bin/sh\necho 3.4.0\n',
+            'node_modules/.bin/editorconfig-checker': '#!/bin/sh\necho 3.4.0\n',
             '.gspot/node_modules/.bin/teller': `#!/bin/sh\necho ${runner === 'mise' ? '1.0.0' : '3.8.1'}\n`,
-            '.gspot/node_modules/.bin/ec': '#!/bin/sh\nexit 99\n',
+            '.gspot/node_modules/.bin/editorconfig-checker': '#!/bin/sh\nexit 99\n',
             '.gspot/node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
         });
         await chmod(join(sandbox.path, 'node_modules/.bin/teller'), EXECUTABLE_FILE);
-        await chmod(join(sandbox.path, 'node_modules/.bin/ec'), EXECUTABLE_FILE);
+        await chmod(join(sandbox.path, 'node_modules/.bin/editorconfig-checker'), EXECUTABLE_FILE);
         await chmod(join(sandbox.path, '.gspot/node_modules/.bin/teller'), EXECUTABLE_FILE);
-        await chmod(join(sandbox.path, '.gspot/node_modules/.bin/ec'), EXECUTABLE_FILE);
+        await chmod(join(sandbox.path, '.gspot/node_modules/.bin/editorconfig-checker'), EXECUTABLE_FILE);
         {
             using log = openOwnership(sandbox.path);
             log.state.installing = ['npm'];
@@ -202,11 +202,13 @@ test.each(['mise', 'npm'])(
         tool.installers['mise'] = { name: 'teller', version: '3.8.1' };
         expect(inspectTool(context, tool).state).toBe(runner === 'mise' ? 'ok' : 'error');
         expect(inspectTool(context, buildLibraryPin('globals', '17.12.0')).state).toBe('error');
-        const discovered = inspectTool(context, toolPin(configurationManifests().values(), 'ec'));
+        const discovered = inspectTool(context, toolPin(configurationManifests().values(), 'editorconfig-checker'));
         expect(discovered.note).toBe(
             runner === 'mise' ? undefined : 'Tool installation is incomplete. Run: gspot install',
         );
-        expect(discovered.path).toBe(runner === 'mise' ? join(sandbox.path, 'node_modules/.bin/ec') : undefined);
+        expect(discovered.path).toBe(
+            runner === 'mise' ? join(sandbox.path, 'node_modules/.bin/editorconfig-checker') : undefined,
+        );
         expect(discovered.state).toBe(runner === 'mise' ? 'ok' : 'error');
         {
             using log = openOwnership(sandbox.path);

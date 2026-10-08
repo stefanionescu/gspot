@@ -21,7 +21,7 @@ test.skipIf(!hasToolBuild('swiftlint'))(
             'README.md': '# test\n',
         });
         commitAll(sandbox.path);
-        const environment = { PATH: buildToolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
+        const environment = { PATH: buildToolsPath(['swiftlint', 'swiftformat', 'typos', 'editorconfig-checker']) };
         const argv = ['init', '--yes', '--scope-configurations', 'ios=swift', ...QUIET_INIT];
         await initRepository(sandbox.path, argv, environment, { level: 'all' });
         for (const id of ['swift/swiftlint', 'swift/swiftformat']) {

@@ -36,7 +36,7 @@ test('native license scanning accepts allowed alternatives and rejects a disallo
         }),
     });
     commitAll(root);
-    const environment = { PATH: buildSandboxPath(['typos', 'ec']) };
+    const environment = { PATH: buildSandboxPath(['typos', 'editorconfig-checker']) };
     for (const command of [buildInitArguments(['licenses']), ['set', 'licenses.allowed', '["MIT","Apache-2.0"]']]) {
         const prepared = await spawnGspot(root, command, environment);
         expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);

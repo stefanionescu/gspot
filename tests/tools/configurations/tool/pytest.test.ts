@@ -23,7 +23,7 @@ test('the pytest configuration > naming accepts the test_ prefix of a test funct
         'tests/__init__.py': '"""Arithmetic tests."""\n',
         'tests/test_math.py': ARITHMETIC_TESTS,
     });
-    const environment = { PATH: buildToolsPath(['ruff', 'typos', 'ec']) };
+    const environment = { PATH: buildToolsPath(['ruff', 'typos', 'editorconfig-checker']) };
     const project = await runTestCommand(['uv', 'sync'], { cwd: sandbox.path, env: environment });
     expect(project.code, project.stdout + project.stderr).toBe(0);
     commitAll(sandbox.path);

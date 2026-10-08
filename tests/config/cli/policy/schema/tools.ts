@@ -140,7 +140,15 @@ export const TOOL_SCHEMA_CASES: RuntimeSchemaCase[] = [
 export const TOOL_SCHEMA_SCOPES = ['', 'app'];
 
 /** Only these native writers consume a reviewed verbatim table. */
-export const VERBATIM_TOOL_NAMES = ['eslint', 'prettier', 'editorconfig', 'typos', 'shellcheck', 'knip', 'taplo'];
+export const VERBATIM_TOOL_NAMES = [
+    'eslint',
+    'prettier',
+    'editorconfig-checker',
+    'typos',
+    'shellcheck',
+    'knip',
+    'taplo',
+];
 
 /** These tools must refuse verbatim even when a reason is supplied. */
 export const NO_VERBATIM_TOOL_NAMES = [

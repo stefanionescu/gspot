@@ -71,7 +71,7 @@ describe('the nginx configuration', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'proxy/nginx.conf': CLEAN });
         commitAll(sandbox.path);
-        const environment = { PATH: buildToolsPath(['gixy', 'typos', 'ec']) };
+        const environment = { PATH: buildToolsPath(['gixy', 'typos', 'editorconfig-checker']) };
         await initRepository(sandbox.path, NGINX_INIT, environment, { level: 'all' });
         const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);

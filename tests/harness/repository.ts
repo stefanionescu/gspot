@@ -64,7 +64,9 @@ export async function prepareTestRepository(root: string, sandbox: InstalledScen
     await linkInstalledModules(join(root, 'node_modules'));
     await sandbox.before?.(root);
     commitAll(root);
-    const environment = { PATH: buildSandboxPath(['typos', 'ec', 'ast-grep', ...(sandbox.tools ?? [])]) };
+    const environment = {
+        PATH: buildSandboxPath(['typos', 'editorconfig-checker', 'ast-grep', ...(sandbox.tools ?? [])]),
+    };
     const argv = ['init', '--yes', '--configurations', ...sandbox.configurations, ...(sandbox.init ?? QUIET_INIT)];
     await initRepository(root, argv, environment, {
         without: sandbox.without ?? [],

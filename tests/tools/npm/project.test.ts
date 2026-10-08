@@ -96,7 +96,7 @@ test.each(PACKAGE_PROJECTS)(
         const reinstalled = await installTools(session, log, emitAll(session), { refreshLockfiles: false });
         expect(reinstalled.exitCode, reinstalled.note).toBe(0);
         expect(await readFile(readmePath)).toStrictEqual(readme);
-        const readyTools = runner === 'none' ? ['prettier', 'ec'] : ['prettier'];
+        const readyTools = runner === 'none' ? ['prettier', 'editorconfig-checker'] : ['prettier'];
         expect(
             readyTools.map(
                 (name) =>

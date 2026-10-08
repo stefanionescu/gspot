@@ -57,7 +57,7 @@ import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/
 import { trackedDependencies } from '#cli/checks/general/structure/tracked-dependencies.ts';
 import { privateBeforePublic } from '#cli/checks/general/structure/private-before-public.ts';
 import { functionSize as bashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
-import { headings, stalePaths, readmeShape, readmePresent } from '#cli/checks/general/docs.ts';
+import { headings, stalePaths, readmeShape, requiredFiles } from '#cli/checks/general/docs.ts';
 import { lazyExports as pythonLazyExports } from '#cli/checks/language/python/lazy-exports.ts';
 import { scripts as htmlScripts, literals as htmlLiterals } from '#cli/checks/language/html.ts';
 import { xcstrings, orphanAssets, contentsFindings } from '#cli/checks/tool/xcode/resources.ts';
@@ -117,7 +117,7 @@ export const BUILT_IN_CHECKS = {
     'typescript/tsconfig': { input: tsconfig },
     'docs/headings': { input: headings },
     'docs/stale-paths': { input: stalePaths },
-    'docs/readme-present': { input: readmePresent },
+    'docs/required-files': { input: requiredFiles },
     'docs/readme-shape': { input: readmeShape },
     'markdown/fences': { input: fences },
     'duplication/jscpd': { input: jscpd },

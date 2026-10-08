@@ -176,7 +176,7 @@ export function stalePaths(input: CheckInput): Finding[] {
  * @param input the check input
  * @returns the findings
  */
-export function readmePresent(input: CheckInput): Finding[] {
+export function requiredFiles(input: CheckInput): Finding[] {
     const isLicenseRequired = input.view.options('docs').require_license;
     const findings: Finding[] = [];
     const readme = input.scope === '' ? 'README.md' : `${input.scope}/README.md`;

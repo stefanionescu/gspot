@@ -74,7 +74,7 @@
         "codeql",
         "commitlint",
         "deptry",
-        "ec",
+        "editorconfig-checker",
         "eslint",
         "gitleaks",
         "html-validate",

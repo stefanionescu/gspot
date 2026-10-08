@@ -38,7 +38,7 @@ async function expectFormatterCorrection(root: string): Promise<void> {
         root,
         ['check', '--only', 'format/editorconfig-checker', '--json', '--', ...files],
         {
-            PATH: buildToolsPath(['ec']),
+            PATH: buildToolsPath(['editorconfig-checker']),
         },
     );
     expect(editor.code, editor.stdout + editor.stderr).toBe(0);

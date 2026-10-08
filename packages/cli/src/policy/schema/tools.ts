@@ -123,7 +123,7 @@ export const toolsSchema = z.object({
     stylelint: z.strictObject({ rules: stylelintRules.optional() }).optional(),
     squawk: z.strictObject({ assume_in_transaction: z.boolean().optional() }).optional(),
     prettier: toolOptionsSchema.optional(),
-    editorconfig: toolOptionsSchema.optional(),
+    'editorconfig-checker': toolOptionsSchema.optional(),
     typos: toolOptionsSchema.optional(),
     shellcheck: toolOptionsSchema.optional(),
     knip: toolOptionsSchema

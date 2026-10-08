@@ -41,7 +41,7 @@ describe('the duplication configuration', () => {
         });
         commitAll(sandbox.path);
         const environment = {
-            PATH: buildSandboxPath(['typos', 'ec']),
+            PATH: buildSandboxPath(['typos', 'editorconfig-checker']),
         };
         await initRepository(sandbox.path, DUPLICATION_INIT, environment, { level: 'all' });
         await checkDuplication(sandbox.path, environment, 0);

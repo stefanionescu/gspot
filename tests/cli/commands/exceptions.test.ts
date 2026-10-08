@@ -169,11 +169,11 @@ test('license presence needs a reason only when its declared requirement is weak
     expect(parseToml(await Bun.file(join(sandbox.path, 'gspot.toml')).text())['reasons']).toMatchObject({
         'docs.require_license': EXCEPTION_REASON,
     });
-    const relaxed = await runGspot(sandbox.path, ['check', '--only', 'docs/readme-present', '--json']);
+    const relaxed = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
     expect(relaxed.code, relaxed.stdout + relaxed.stderr).toBe(0);
     const tightened = await runGspot(sandbox.path, ['set', 'docs.require_license', 'true']);
     expect(tightened.code, tightened.stdout + tightened.stderr).toBe(0);
-    const missing = await runGspot(sandbox.path, ['check', '--only', 'docs/readme-present', '--json']);
+    const missing = await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']);
     expect(missing.code, missing.stdout + missing.stderr).toBe(1);
     expect((JSON.parse(missing.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toMatchObject([
         { file: 'LICENSE', rule: 'missing-license' },
