@@ -1,42 +1,46 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
+import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { suppressionComments } from '#cli/checks/general/structure/public.ts';
+import { SUPPRESSION_COMMENTS } from '#tests/config/cli/checks/general/structure/suppressions.ts';
 
-test.each([
-    ['// Example eslint-disable-next-line no-console', false],
-    ['// eslint-disable no-console', false],
-    ['/* Example eslint-disable no-console */', false],
-    ['/** Documentation\n * eslint-disable no-console\n */', false],
-    ['// eslint-disable-next-line no-console', true],
-    ['/* eslint-disable no-console */', true],
-    ['/*\n eslint-disable no-console\n */', true],
-    ['/*eslint-disable*/', true],
-    ['/*eslint-disable-next-line*/', true],
-    ['// eslint-disable-next-line*/', false],
-    ['/*eslint-disable-unknown*/', false],
-] as const)('suppression comments agree with ESLint for %s', async (comment, active) => {
-    await using sandbox = await testdir();
-    const source = `${comment}\nconsole.log(1);\n`;
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['javascript'], { level: 'all' }),
-        'source.js': source,
+describe('suppression comments match native ESLint', () => {
+    const sources = SUPPRESSION_COMMENTS.map(([comment, active], index) => ({
+        comment,
+        active,
+        path: `source-${index.toString()}.js`,
+        source: `${comment}\nconsole.log(1);\n`,
+    }));
+    let sandbox: Awaited<ReturnType<typeof testdir>>;
+    let comments: Awaited<ReturnType<typeof suppressionComments>>;
+    let eslint: ESLint;
+    beforeAll(async () => {
+        sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['javascript'], { level: 'all' }),
+            ...Object.fromEntries(sources.map(({ path, source }) => [path, source])),
+        });
+        const session = await openSession(sandbox.path);
+        comments = await suppressionComments(session.root, session.scopes, session.reads, session.repository.files);
+        eslint = new ESLint({ overrideConfigFile: true, overrideConfig: { rules: { 'no-console': 'error' } } });
     });
-    const session = await openSession(sandbox.path);
-    const comments = await suppressionComments(session.root, session.scopes, session.reads, session.repository.files);
-    const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: { rules: { 'no-console': 'error' } } });
-    const native = await eslint.lintText(source, { filePath: 'source.js' });
-    expect(native[0]!.suppressedMessages).toHaveLength(active ? 1 : 0);
-    expect(comments.map(({ line, form }) => ({ line, form }))).toStrictEqual(
-        active ? [{ line: 1, form: 'eslint' }] : [],
-    );
+    afterAll(async () => {
+        await sandbox[Symbol.asyncDispose]();
+    });
+    test.each(sources)('recognizes $comment', async ({ active, path, source }) => {
+        const native = await eslint.lintText(source, { filePath: path });
+        expect(native[0]!.suppressedMessages).toHaveLength(active ? 1 : 0);
+        expect(comments.filter((entry) => entry.file === path).map(({ line, form }) => ({ line, form }))).toStrictEqual(
+            active ? [{ line: 1, form: 'eslint' }] : [],
+        );
+    });
 });
 
 test.each([

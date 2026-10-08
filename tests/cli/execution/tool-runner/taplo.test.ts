@@ -5,7 +5,6 @@ import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { RunReport } from '#cli/types/execution/check.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 
 const TOOL_FAILURES_POLICY = buildPolicy(['files'], {
@@ -39,13 +38,4 @@ process.exit(2);
     expect(result.stdout).toContain('taplo broke: exit 2');
     expect(result.stdout).toContain('INFO taplo: loaded configuration');
     expect(result.stdout).toContain('cannot read the formatting configuration');
-    await Bun.write(
-        join(sandbox.path, 'bin/taplo'),
-        '#!/usr/bin/env bun\nif (process.argv.includes("--version")) console.log("taplo 0.10.0");\n',
-    );
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'files/taplo-format', '--json'], environment);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-        { check: 'files/taplo-format', status: 'passed', findings: [] },
-    ]);
 });

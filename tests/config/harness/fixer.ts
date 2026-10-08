@@ -3,6 +3,6 @@ export const FIXER_POLICY = `configurations = []
 [check."sandbox/fixer"]
 command = [EXECUTABLE, "-e", "process.exitCode = 0"]
 fix = [EXECUTABLE, "-e", "process.exitCode = 3"]
-paths = ["source.txt"]
+paths = PATHS
 stage = "commit"
 `;

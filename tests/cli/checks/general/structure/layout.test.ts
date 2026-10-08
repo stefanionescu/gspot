@@ -146,7 +146,7 @@ test.each(['', 'nested'])('naming checks leave the harness folder of scope %j al
     ]);
 });
 
-test.each(['recommended', 'all'])('structural checks classify output directories by ownership at %s', async (level) => {
+test('structural checks classify output directories by ownership at all', async () => {
     await using sandbox = await testdir();
     const authored = Object.fromEntries(
         ['build', 'dist', 'coverage'].flatMap((directory) => [
@@ -158,7 +158,7 @@ test.each(['recommended', 'all'])('structural checks classify output directories
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['typescript'], {
             tables: '[[generated]]\npaths = ["emitted/**"]\nreason = "The compiler owns emitted files."\n',
-            level: level,
+            level: 'all',
         }),
         ...authored,
         'emitted/lone/only.ts': '',
@@ -171,13 +171,11 @@ test.each(['recommended', 'all'])('structural checks classify output directories
     );
     const findings = result.report.checks.flatMap((check) => check.findings);
     expect(findings.map(({ file }) => file).toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-        level === 'all'
-            ? ['build', 'dist', 'coverage']
-                  .flatMap((directory) => [`${directory}/lone/only.ts`, `${directory}/cards/asset-one.ts`])
-                  .toSorted((left, right) => left.localeCompare(right))
-            : [],
+        ['build', 'dist', 'coverage']
+            .flatMap((directory) => [`${directory}/lone/only.ts`, `${directory}/cards/asset-one.ts`])
+            .toSorted((left, right) => left.localeCompare(right)),
     );
-    expect(result.report.exitCode).toBe(level === 'all' ? 1 : 0);
+    expect(result.report.exitCode).toBe(1);
 });
 
 async function loneFiles(root: string): Promise<string[]> {

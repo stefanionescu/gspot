@@ -1,7 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
-import { test, expect, describe } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { unlink, writeFile } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
@@ -11,22 +12,32 @@ import { readVersionPin, writeVersionPin, assertVersionPin } from '#cli/lifecycl
 
 const { version: RUNNING_VERSION } = packageManifest;
 
-describe('the version pin', () => {
-    test('is written, read, and refused when it differs', async () => {
-        await using sandbox = await testdir();
-        expect(readVersionPin(sandbox.path)).toBeUndefined();
-        {
-            using log = openOwnership(sandbox.path);
-            writeVersionPin(log);
-        }
-        expect(readVersionPin(sandbox.path)).toBe(RUNNING_VERSION);
-        expect(() => {
-            assertVersionPin(sandbox.path);
-        }).not.toThrow();
-        await writeFile(join(sandbox.path, '.gspot/version'), '9.9.9\n');
-        expect(() => {
-            assertVersionPin(sandbox.path);
-        }).toThrow('gspot apply');
+test('the version pin is written, read, and refused when it differs', async () => {
+    await using sandbox = await testdir();
+    expect(readVersionPin(sandbox.path)).toBeUndefined();
+    {
+        using log = openOwnership(sandbox.path);
+        writeVersionPin(log);
+    }
+    expect(readVersionPin(sandbox.path)).toBe(RUNNING_VERSION);
+    expect(() => {
+        assertVersionPin(sandbox.path);
+    }).not.toThrow();
+    await writeFile(join(sandbox.path, '.gspot/version'), '9.9.9\n');
+    let refused: unknown;
+    try {
+        assertVersionPin(sandbox.path);
+    } catch (error) {
+        refused = error;
+    }
+    expect(refused).toBeInstanceOf(GspotError);
+    expect(refused).toMatchObject({
+        code: 'pin',
+        message: [
+            `This repository pins gspot 9.9.9 and this binary is ${RUNNING_VERSION}.`,
+            "Two ways forward: install the pinned version (mise install, or your package manager's install),",
+            'or move the pin to this version: gspot apply',
+        ].join('\n'),
     });
 });
 

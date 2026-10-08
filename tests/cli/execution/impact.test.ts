@@ -1,21 +1,22 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { mkdir } from 'node:fs/promises';
 import { planRun } from '#cli/planning/public.ts';
-import { mkdir, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import type { Session } from '#cli/types/planning.ts';
+import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
+import { projectChecks } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
-import { executeRun, applyFixers } from '#cli/execution/public.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { getStaged, getChanged } from '#cli/repository/revisions/public.ts';
 import { BASE_CHECK } from '#tests/config/cli/execution/command/findings.ts';
-import { NESTED_POLICY, PROJECT_OPTIONS, PROJECT_PATH_IGNORES } from '#tests/config/cli/execution/impact.ts';
+import { PROJECT_PATH_IGNORES } from '#tests/config/cli/execution/impact.ts';
+import { NESTED_POLICY, PROJECT_OPTIONS, PROJECT_TRIGGERS } from '#tests/config/samples/commands.ts';
 
 test('command checks retain nested inputs and report their findings once at the root', async () => {
     await using sandbox = await testdir();
@@ -42,71 +43,46 @@ test('command checks retain nested inputs and report their findings once at the 
     ]);
 });
 
-function projectChecks(session: Session): void {
-    const manifest = session.manifests.get('typescript')!;
-    const check: CheckDeclaration = {
-        ...BASE_CHECK,
-        name: 'sandbox/project',
-        runs: 'scope',
-        summary: 'Reports the test project finding.',
-        why: 'Changed files trigger the complete project check.',
-        help: 'Fix the test project finding.',
-        cwd: 'root' as const,
-        command: [process.execPath, '-e', "console.log('Project finding'); process.exitCode = 1"],
-        output: { format: 'lines' as const },
-        files: manifest.files,
-        fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
-    };
-    const fileCheck = { ...check, name: 'sandbox/files', runs: 'files' as const };
-    for (const scope of session.scopes) {
-        if (scope.scope.path !== '') scope.selected = [{ ...manifest, tools: [], checks: [check, fileCheck] }];
-    }
-}
-
-test.each([
-    ['delete', 'staged'],
-    ['rename', 'changed'],
-])('a last-file %s triggers the affected project with %s selection', async (operation, selection) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': NESTED_POLICY,
-        'api/source.ts': 'export {};\n',
-        'web/kept.ts': 'export {};\n',
-    });
-    commitAll(sandbox.path);
-    if (operation === 'delete') gitOutput(sandbox.path, ['rm', 'api/source.ts']);
-    else gitOutput(sandbox.path, ['mv', 'api/source.ts', 'web/source.ts']);
-    await mkdir(join(sandbox.path, 'api'), { recursive: true });
-    const session = await openSession(sandbox.path);
-    projectChecks(session);
-    const revision =
-        selection === 'staged'
-            ? await getStaged(sandbox.path).then(({ staged }) => ({ staged }))
-            : await getChanged(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
-    const planned = planRun(session, { ...PROJECT_OPTIONS, ...revision });
-    const api = planned.find((check) => check.scope.scope.path === 'api')!;
-    expect(api.files).toStrictEqual([]);
-    expect(api.triggerPaths).toContain('api/source.ts');
-    const fileChecks = planRun(session, { ...PROJECT_OPTIONS, only: ['sandbox/files'], ...revision });
-    expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
-    expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
-        operation === 'delete' ? [] : ['web/source.ts'],
-    );
-    const outcome = await executeRun(session, buildRunOptions({ ...PROJECT_OPTIONS, ...revision }));
-    expect(outcome.report.exitCode).toBe(1);
-    expect(outcome.report.checks.map((check) => check.scope)).toStrictEqual(
-        operation === 'delete' ? ['api'] : ['api', 'web'],
-    );
-    expect(
-        outcome.report.checks.every((check) => check.findings.some((finding) => finding.message === 'Project finding')),
-    ).toBe(true);
-    const preview = await applyFixers(session, [api], { checks: BUILT_IN_CHECKS, isDryRun: true });
-    expect(preview.changed).toStrictEqual(['api/source.ts']);
-    expect(await pathExists(join(sandbox.path, 'api/source.ts'))).toBe(false);
-    const applied = await applyFixers(session, [api], { checks: BUILT_IN_CHECKS, isDryRun: false });
-    expect(applied.changed).toStrictEqual(['api/source.ts']);
-    expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
-});
+test.each(PROJECT_TRIGGERS)(
+    'a last-file %s triggers the affected project with %s selection',
+    async (operation, selection) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': NESTED_POLICY,
+            'api/source.ts': 'export {};\n',
+            'web/kept.ts': 'export {};\n',
+        });
+        commitAll(sandbox.path);
+        if (operation === 'delete') gitOutput(sandbox.path, ['rm', 'api/source.ts']);
+        else gitOutput(sandbox.path, ['mv', 'api/source.ts', 'web/source.ts']);
+        await mkdir(join(sandbox.path, 'api'), { recursive: true });
+        const session = await openSession(sandbox.path);
+        projectChecks(session);
+        const revision =
+            selection === 'staged'
+                ? await getStaged(sandbox.path).then(({ staged }) => ({ staged }))
+                : await getChanged(sandbox.path, 'HEAD').then(({ paths }) => ({ changed: paths }));
+        const planned = planRun(session, { ...PROJECT_OPTIONS, ...revision });
+        const api = planned.find((check) => check.scope.scope.path === 'api')!;
+        expect(api.files).toStrictEqual([]);
+        expect(api.triggerPaths).toContain('api/source.ts');
+        const fileChecks = planRun(session, { ...PROJECT_OPTIONS, only: ['sandbox/files'], ...revision });
+        expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
+        expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
+            operation === 'delete' ? [] : ['web/source.ts'],
+        );
+        const outcome = await executeRun(session, buildRunOptions({ ...PROJECT_OPTIONS, ...revision }));
+        expect(outcome.report.exitCode).toBe(1);
+        expect(outcome.report.checks.map((check) => check.scope)).toStrictEqual(
+            operation === 'delete' ? ['api'] : ['api', 'web'],
+        );
+        expect(
+            outcome.report.checks.every((check) =>
+                check.findings.some((finding) => finding.message === 'Project finding'),
+            ),
+        ).toBe(true);
+    },
+);
 
 test('a positional file trigger preserves project-wide input and findings', async () => {
     await using sandbox = await testdir();

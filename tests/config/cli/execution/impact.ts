@@ -1,12 +1,3 @@
-export const PROJECT_OPTIONS = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
-
-export const NESTED_POLICY = `configurations = []
-[scope."api"]
-configurations = []
-[scope."web"]
-configurations = []
-`;
-
 /** A path ignore selects one check and preserves rule-specific findings for the others. */
 export const PROJECT_PATH_IGNORES = [
     {

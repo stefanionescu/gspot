@@ -1,10 +1,13 @@
 // Build one check input from the session and inventory owned by its test.
+import type { Session } from '#cli/types/planning.ts';
 import { toolPath } from '#cli/platform/contracts.ts';
 import { checkInput } from '#cli/execution/contracts.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import type { CheckInputOptions } from '#tests/types/harness/input.ts';
+import { BASE_CHECK } from '#tests/config/cli/execution/command/findings.ts';
 
 /**
  * Select one check and its source files while retaining the repository inventory for references.
@@ -30,4 +33,29 @@ export function buildCheckInput(session: ToolSession, checkId: string, options: 
         repositoryFiles: session.repository.files,
         ...(options.resources === undefined ? {} : { resources: options.resources }),
     };
+}
+
+/**
+ * Plant project and file checks on the real selected child scopes.
+ * @param session the test-owned session whose selected checks to replace
+ */
+export function projectChecks(session: Session): void {
+    const manifest = session.manifests.get('typescript')!;
+    const check: CheckDeclaration = {
+        ...BASE_CHECK,
+        name: 'sandbox/project',
+        runs: 'scope',
+        summary: 'Reports the test project finding.',
+        why: 'Changed files trigger the complete project check.',
+        help: 'Fix the test project finding.',
+        cwd: 'root' as const,
+        command: [process.execPath, '-e', "console.log('Project finding'); process.exitCode = 1"],
+        output: { format: 'lines' as const },
+        files: manifest.files,
+        fix: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
+    };
+    const fileCheck = { ...check, name: 'sandbox/files', runs: 'files' as const };
+    for (const scope of session.scopes) {
+        if (scope.scope.path !== '') scope.selected = [{ ...manifest, tools: [], checks: [check, fileCheck] }];
+    }
 }

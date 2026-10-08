@@ -5,18 +5,23 @@ import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 
-const policy = `configurations = []
+function identityPolicy(pattern: string | undefined, format: string, exitCode: number, paths: string[]): string {
+    return `configurations = []
 [check."sandbox/identity"]
-command = ${JSON.stringify([process.execPath, '-e', 'process.stdout.write("A sandbox finding."); process.exitCode = 1'])}
-paths = ["source.txt"]
+command = ${JSON.stringify([process.execPath, '-e', `process.stdout.write("A sandbox finding."); process.exitCode = ${exitCode.toString()}`])}
+paths = ${JSON.stringify(paths)}
 stage = "commit"
-[check."sandbox/identity".output]
-format = "lines"
+${pattern === undefined ? '' : `finding_count_pattern = ${JSON.stringify(pattern)}\n`}[check."sandbox/identity".output]
+format = ${JSON.stringify(format)}
 `;
+}
 
 test('a check keeps its name in the report and in its findings', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.txt': 'original' });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': identityPolicy(undefined, 'lines', 1, ['source.txt']),
+        'source.txt': 'original',
+    });
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, buildRunOptions({ only: ['sandbox/identity'] }));
     expect(session.policyFiles.policy.check['sandbox/identity']?.name).toBe('sandbox/identity');
@@ -27,13 +32,7 @@ test('a check keeps its name in the report and in its findings', async () => {
 test('counted failures survive final filtering without diagnostic locations', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': policy
-            .replace(
-                '[check."sandbox/identity".output]',
-                'finding_count_pattern = "A sandbox finding"\n[check."sandbox/identity".output]',
-            )
-            .replace('format = "lines"', 'format = "none"')
-            .replace('process.exitCode = 1', 'process.exitCode = 0'),
+        'gspot.toml': identityPolicy('A sandbox finding', 'none', 0, ['source.txt']),
         'source.txt': 'original',
     });
     const session = await openSession(sandbox.path);
@@ -41,11 +40,7 @@ test('counted failures survive final filtering without diagnostic locations', as
     const failed = await executeRun(session, options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks[0]).toMatchObject({ status: 'failed', findings: [] });
-    const text = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-    await Bun.write(
-        join(sandbox.path, 'gspot.toml'),
-        text.replace('finding_count_pattern = "A sandbox finding"', 'finding_count_pattern = "No matching output"'),
-    );
+    await Bun.write(join(sandbox.path, 'gspot.toml'), identityPolicy('No matching output', 'none', 0, ['source.txt']));
     const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
 });

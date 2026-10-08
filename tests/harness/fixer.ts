@@ -17,8 +17,12 @@ export function planFixer(session: Session, script: string): PlannedCheck {
 
 /**
  * Build the shared fixer policy with the executable of the current test process.
+ * @param paths the source paths owned by the fixer
  * @returns the policy for an isolated fixer scenario
  */
-export function buildFixerPolicy(): string {
-    return FIXER_POLICY.replaceAll('EXECUTABLE', JSON.stringify(process.execPath));
+export function buildFixerPolicy(paths: string[] = ['source.txt']): string {
+    return FIXER_POLICY.replaceAll('EXECUTABLE', JSON.stringify(process.execPath)).replaceAll(
+        'PATHS',
+        JSON.stringify(paths),
+    );
 }

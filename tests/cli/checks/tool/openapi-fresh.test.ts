@@ -49,7 +49,7 @@ async function applyChanges(schema: string, scope: string): Promise<OpenapiProje
     const edited = '{"version":2}\n';
     await writeFile(document, edited);
     await chmod(document, 0o640);
-    await writeFile(join(directory.path, scope, '0009_manual.sql'), '-- Untracked manual migration\n');
+    await writeFile(join(directory.path, scope, 'notes.txt'), 'Untracked project notes\n');
     const session = await openSession(directory.path);
     const check = session.manifests.get('openapi')!.checks.find((entry) => entry.name === 'openapi/stale-document')!;
     const input = buildCheckInput(session, check.name, { scope });
@@ -62,9 +62,7 @@ async function expectPreserved({ directory, document, edited, mode, input }: Ope
     expect(await readFile(document, 'utf8')).toBe(edited);
     const current = await stat(document);
     expect(current.mode).toBe(mode);
-    expect(await readFile(join(directory.path, input.scope, '0009_manual.sql'), 'utf8')).toBe(
-        '-- Untracked manual migration\n',
-    );
+    expect(await readFile(join(directory.path, input.scope, 'notes.txt'), 'utf8')).toBe('Untracked project notes\n');
     expect(await pathExists(join(directory.path, input.scope, 'side-effect.txt'))).toBe(false);
 }
 

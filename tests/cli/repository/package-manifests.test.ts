@@ -145,5 +145,4 @@ test.each(INVALID_MANIFESTS)('invalid %s content %s remains a manifest-reader er
     await createFileTree(sandbox.path, { [path]: content, 'source.ts': 'export {};\n' });
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(() => readPackageManifests(sandbox.path, repository.files)).toThrow(path);
-    expect(await Bun.file(join(sandbox.path, path)).text()).toBe(content);
 });

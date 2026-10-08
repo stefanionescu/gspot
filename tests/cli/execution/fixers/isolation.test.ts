@@ -74,7 +74,7 @@ test.each([false, true])(
 test('isolated correction refuses to overwrite source changed during execution and cleans up', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildFixerPolicy().replace('paths = ["source.txt"]', 'paths = ["*.txt"]'),
+        'gspot.toml': buildFixerPolicy(['*.txt']),
         'source.txt': 'original',
         'z-last.txt': 'last original',
     });
