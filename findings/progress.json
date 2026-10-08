@@ -2990,10 +2990,20 @@
             ]
         },
         "areas/kits/034": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "verification": [
+                "OpenAPI suggestions replace requirements for Express and FastAPI.",
+                "Selection controls passed in the combined210-test CLI corpus."
+            ],
+            "additionalChanges": [
+                {
+                    "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+                    "behavior": "OpenAPI suggestions replace requirements for Express and FastAPI.",
+                    "remaining": "Whole shared packet reduction and remaining broader configuration acceptance remain."
+                }
+            ]
         },
         "areas/kits/036": {
             "status": "partial",
@@ -3013,16 +3023,36 @@
             ]
         },
         "areas/kits/037": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "verification": [
+                "Workers checks no longer use the functions-only source filter.",
+                "Native root/child both-level platform cases passed in Main7/34 tool corpus."
+            ],
+            "additionalChanges": [
+                {
+                    "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+                    "behavior": "Workers checks no longer use the functions-only source filter.",
+                    "remaining": "Whole shared packet growth and final all-platform verification remain."
+                }
+            ]
         },
         "areas/kits/041": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "verification": [
+                "Supabase checks use the configured functions folder for scoped native include paths.",
+                "Native both-level root/child Deno path defects and fixes passed in Main7/34 tool corpus."
+            ],
+            "additionalChanges": [
+                {
+                    "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+                    "behavior": "Supabase checks use the configured functions folder for scoped native include paths.",
+                    "remaining": "Whole shared packet growth and remaining configuration acceptance remain."
+                }
+            ]
         },
         "areas/kits/042": {
             "status": "pending",
@@ -3329,10 +3359,20 @@
             ]
         },
         "areas/kits/068": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "verification": [
+                "Apple plist validation now belongs to Xcode, including declared selectors and native tool checks.",
+                "Native macOS plutil and scoped plan controls passed."
+            ],
+            "additionalChanges": [
+                {
+                    "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+                    "behavior": "Apple plist validation now belongs to Xcode, including declared selectors and native tool checks.",
+                    "remaining": "Old native plist tests/data and the recorded example still name files/plutil and need migration."
+                }
+            ]
         },
         "areas/kits/069": {
             "status": "pending",
@@ -3347,10 +3387,20 @@
             "verification": []
         },
         "areas/kits/071": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "verification": [
+                "Supabase supplies public client schemas while generic Postgres defaults to an empty list; configured function folders select native paths.",
+                "Native inherited root/child schema and Deno path controls passed."
+            ],
+            "additionalChanges": [
+                {
+                    "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+                    "behavior": "Supabase supplies public client schemas while generic Postgres defaults to an empty list; configured function folders select native paths.",
+                    "remaining": "Remaining configuration obligations and whole packet growth remain explicit."
+                }
+            ]
         },
         "areas/kits/074": {
             "status": "partial",
@@ -5433,8 +5483,14 @@
         "review/commands-templates/016": {
             "status": "partial",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "The two prescribed linked destinations and drive-relative C: path are refused; real absolute/external destinations remain permitted.",
+                "Export tests retained atomic publication, exact diagnostics and original external bytes in Main210/492."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
@@ -5444,6 +5500,11 @@
                         "Evidence 249c0b15a5538cd5.",
                         "Evidence f706f04fbb49307e."
                     ]
+                },
+                {
+                    "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+                    "behavior": "The two prescribed linked destinations and drive-relative C: path are refused; real absolute/external destinations remain permitted.",
+                    "remaining": "Whole command record remains partial pending all remaining obligations and final platform execution."
                 }
             ]
         },
@@ -6051,6 +6112,15 @@
             "commit": "29585ba69df9b37b5e0bfcb9ac1a58f693533c19",
             "verification": [
                 "Zustand native diagnostic now instructs provider-owned factory creation, matching the authored rule. Native diagnostic and preserved store exemption tests pass."
+            ],
+            "additionalChanges": [
+                {
+                    "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+                    "behavior": "Postgres dependency/content detection and root-first callers integrated; manual sessions read only general detection.",
+                    "verification": [
+                        "Focused CLI210/492; native Bun and Node content probe46 assertions each; docs renderer/build corrected and gated."
+                    ]
+                }
             ]
         },
         "review/configurations-plugin/064": {
@@ -15651,6 +15721,34 @@
             "limitations": [
                 "macOS native; final whole-suites and Linux/macOS/Windows CI outstanding. Original failures retained."
             ]
+        },
+        {
+            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "implementedPartialRecords": [
+                "review/configurations-plugin/063",
+                "areas/kits/034",
+                "areas/kits/037",
+                "areas/kits/041",
+                "areas/kits/068",
+                "areas/kits/071",
+                "review/commands-templates/016"
+            ],
+            "completedRecords": [],
+            "unresolvedRecords": 806,
+            "validation": [
+                "Main CLI210/492/11files13.90s; native tools7/34/3files141.47s; native Swift response reader16/60 plus Bun/Node drive and UNC lexical controls.",
+                "Initial staged gate142 passed/19 skipped; docs callers and Vale parameter corrected. Affected staged12 passed; normal push152 passed/14 skipped/0findings82.5s.",
+                "Native Semgrep registry original unsafe SSH sample reports one upstream finding; the retained safe sample reports zero. Original startup failures preserved."
+            ],
+            "limitations": [
+                "macOS native results; no Windows filesystem execution claim.",
+                "Release publication and deployment were not run. Growth and remaining consumer migrations remain explicit."
+            ],
+            "ci": {
+                "run": 37762468013,
+                "status": "in_progress",
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37762468013"
+            }
         }
     ],
     "verificationEvidence": {

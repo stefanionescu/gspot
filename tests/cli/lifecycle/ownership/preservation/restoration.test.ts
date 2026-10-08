@@ -3,16 +3,21 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
+import { getCliSourcePath } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
-import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
-import { stat, chmod, lstat, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
+import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { planBlock, planReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
+import { BLOCK_CASES, ADOPTED_FILE_CASES } from '#tests/config/cli/lifecycle/ownership/preservation/restoration.ts';
 
 // Later user edits remain intact across replacement and giving the file back.
+const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
+
 async function expectEditedLinkPreserved(log: Log, path: string, absolute: string, next: FileCopy): Promise<void> {
     expect(applyPlan(log, planReplacement(log, { path: path, next: next, kind: 'tool_file', canReplace: true }))).toBe(
         'changed',
@@ -129,3 +134,128 @@ if (isPosix) {
         }
     });
 }
+
+test.each(BLOCK_CASES)(
+    'removing a managed block restores the original state when $name',
+    async ({ files, isCreated, kept }) => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, files);
+        {
+            using log = openOwnership(directory.path);
+
+            applyPlan(log, planBlock(log, 'NOTES.md', 'managed text', 'markdown'));
+            expect(getOwnership(directory.path).files[0]).toMatchObject({ block: { created: isCreated } });
+            expect(applyPlan(log, planRestoration(log, 'NOTES.md'))).toBe('changed');
+        }
+        const path = join(directory.path, 'NOTES.md');
+        expect((await pathExists(path)) ? await readFile(path, 'utf8') : undefined).toBe(kept);
+    },
+);
+
+test('giving back the last file of a folder removes the folders it leaves empty', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'guides/kept.md': 'authored\n' });
+    {
+        using log = openOwnership(directory.path);
+
+        applyPlan(
+            log,
+            planReplacement(log, {
+                path: 'guides/agent/rules/WORKING.md',
+                next: { bytes: Buffer.from('guide\n'), mode: 0o644 },
+                kind: 'tool_file',
+                canReplace: true,
+            }),
+        );
+        expect(applyPlan(log, planRestoration(log, 'guides/agent/rules/WORKING.md'))).toBe('changed');
+    }
+    expect(await pathExists(join(directory.path, 'guides/agent'))).toBe(false);
+    expect(await readdir(join(directory.path, 'guides'))).toStrictEqual(['kept.md']);
+});
+
+test.each(ADOPTED_FILE_CASES)(
+    'restoring an adopted file retains only authored bytes: $name',
+    async ({ path, isChanged, isKept }) => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, { [path]: '{"v":1}\n' });
+        {
+            using log = openOwnership(directory.path);
+
+            const mode = log.files.read(path)!.mode;
+            expect(
+                applyPlan(
+                    log,
+                    planReplacement(log, {
+                        path: path,
+                        next: { bytes: Buffer.from('{"v":1}\n'), mode },
+                        kind: 'tool_file',
+                    }),
+                ),
+            ).toBe('unchanged');
+            expect(getOwnership(directory.path).files[0]?.adopted).toBe(true);
+            if (isChanged)
+                applyPlan(
+                    log,
+                    planReplacement(log, {
+                        path: path,
+                        next: { bytes: Buffer.from('{"v":2}\n'), mode },
+                        kind: 'tool_file',
+                    }),
+                );
+            expect(applyPlan(log, planRestoration(log, path))).toBe('changed');
+        }
+        expect(await pathExists(join(directory.path, path))).toBe(isKept);
+        expect(getOwnership(directory.path).files).toStrictEqual([]);
+    },
+);
+
+test('Windows permission projection supports repeated log writes, idempotent replacement, and removal', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'config.txt': 'authored bytes' });
+    const program = `
+Object.defineProperty(process, 'platform', {value: 'win32'});
+const {openOwnership} = await import(${JSON.stringify(implementation)});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
+const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
+const {planRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/restoration.ts'))});
+let log = openOwnership(process.cwd());
+try {
+    const first = applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'tool_file', canReplace: true}));
+    const repeated = applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'tool_file'}));
+    log[Symbol.dispose]();
+    log = openOwnership(process.cwd());
+    const restored = applyPlan(log, planRestoration(log, 'config.txt'));
+    console.log(JSON.stringify({first, repeated, restored, isRemoved: log.files.read('config.txt') === undefined}));
+} finally {log[Symbol.dispose]();}
+`;
+    const child = runTestCommandBlocking([process.execPath, '-e', program], { cwd: directory.path });
+    expect(child.code, child.stderr).toBe(0);
+    expect(JSON.parse(child.stdout)).toStrictEqual({
+        first: 'changed',
+        repeated: 'unchanged',
+        restored: 'changed',
+        isRemoved: true,
+    });
+});
+
+test('a replaced file keeps no copy, and giving it back deletes it', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'config.txt': 'authored\n' });
+    {
+        using log = openOwnership(directory.path);
+
+        applyPlan(
+            log,
+            planReplacement(log, {
+                path: 'config.txt',
+                next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
+                kind: 'tool_file',
+                canReplace: true,
+            }),
+        );
+        expect(await readdir(join(directory.path, '.gspot/state'))).toContain('ownership.json');
+        expect(await readdir(join(directory.path, '.gspot/state'))).not.toContain('recovery');
+        expect(applyPlan(log, planRestoration(log, 'config.txt'))).toBe('changed');
+    }
+    expect(await pathExists(join(directory.path, 'config.txt'))).toBe(false);
+});

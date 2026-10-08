@@ -10,43 +10,7 @@ import { planBlock, planMerge } from '#cli/lifecycle/ownership/plans.ts';
 import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { MALFORMED_BLOCKS } from '#tests/config/cli/platform/managed-blocks.ts';
-
-test('managed block updates and removal preserve authored bytes and subsequent surrounding edits', async () => {
-    await using directory = await testdir();
-    const original = '# Authored\r\n\r\nKeep these trailing lines.\r\n\r\n';
-    await createFileTree(directory.path, { 'AGENTS.md': original });
-    let log = openOwnership(directory.path);
-    try {
-        expect(applyPlan(log, planBlock(log, 'AGENTS.md', 'first instructions', 'markdown'))).toBe('changed');
-        const installed = log.files.read('AGENTS.md')!.bytes.toString('utf8');
-        expect(installed.startsWith(original)).toBe(true);
-        const prefix = 'Additional instructions.\n';
-        const suffix = '\nLater authored instructions.\n';
-        await writeFile(join(directory.path, 'AGENTS.md'), prefix + installed + suffix);
-        expect(applyPlan(log, planBlock(log, 'AGENTS.md', 'updated instructions', 'markdown'))).toBe('changed');
-        expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(
-            prefix + applyBlock(original, 'updated instructions', { path: 'AGENTS.md', style: 'markdown' }) + suffix,
-        );
-        log[Symbol.dispose]();
-        log = openOwnership(directory.path);
-        expect(applyPlan(log, planRestoration(log, 'AGENTS.md'))).toBe('changed');
-        expect(log.files.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + original + suffix);
-    } finally {
-        log[Symbol.dispose]();
-    }
-});
-
-test('removing a block restores an originally empty file instead of deleting it', async () => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, { 'AGENTS.md': '' });
-    {
-        using log = openOwnership(directory.path);
-
-        expect(applyPlan(log, planBlock(log, 'AGENTS.md', 'instructions', 'markdown'))).toBe('changed');
-        expect(applyPlan(log, planRestoration(log, 'AGENTS.md'))).toBe('changed');
-        expect(log.files.read('AGENTS.md')?.bytes).toStrictEqual(Buffer.alloc(0));
-    }
-});
+import { TASK_RESTORATION_CASES } from '#tests/config/cli/lifecycle/ownership/preservation/configuration.ts';
 
 test('shared TOML updates preserve comments and later authored settings through removal', async () => {
     await using directory = await testdir();
@@ -289,3 +253,36 @@ test('restoration names malformed files and preserves their bytes and ownership 
     expect(await readFile(join(directory.path, 'bunfig.toml'), 'utf8')).toBe(toml);
     expect(log.state).toStrictEqual(records);
 });
+
+test.each(TASK_RESTORATION_CASES)(
+    'TOML task ownership restores original tasks with $name',
+    async ({ appended, environment, isOriginal }) => {
+        await using directory = await testdir();
+        const original =
+            '# Authored tasks\n[tasks]\nlint = "authored lint"\n[tasks.format]\n# Keep this description\ndescription = "Format the app"\nrun = ["authored format", "authored verify"]\n';
+        await createFileTree(directory.path, { 'mise.toml': original });
+        {
+            using log = openOwnership(directory.path);
+
+            const changes = [
+                { path: ['tasks', 'lint'], value: 'gspot check' },
+                { path: ['tasks', 'format', 'run'], value: 'gspot check --fix' },
+            ];
+            expect(applyPlan(log, planMerge(log, 'mise.toml', changes, true))).toBe('changed');
+            const installed = await readFile(join(directory.path, 'mise.toml'), 'utf8');
+            expect(installed).toContain('# Authored tasks');
+            expect(installed).toContain('# Keep this description');
+            expect(parseToml(installed)).toMatchObject({
+                tasks: { lint: 'gspot check', format: { description: 'Format the app', run: 'gspot check --fix' } },
+            });
+            expect(applyPlan(log, planMerge(log, 'mise.toml', changes))).toBe('unchanged');
+            await writeFile(join(directory.path, 'mise.toml'), installed + appended);
+            expect(applyPlan(log, planRestoration(log, 'mise.toml'))).toBe('changed');
+            const restored = await readFile(join(directory.path, 'mise.toml'), 'utf8');
+            expect(parseToml(restored)['tasks']).toStrictEqual(parseToml(original)['tasks']);
+            // An authored edit survives the restore; without one the file is byte for byte the original.
+            expect(parseToml(restored)['env']).toStrictEqual(environment);
+            expect(restored === original).toBe(isOriginal);
+        }
+    },
+);
