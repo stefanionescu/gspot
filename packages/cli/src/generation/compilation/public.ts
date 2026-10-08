@@ -113,7 +113,6 @@ function scopeInputs(input: ScopeEtaInputs) {
         format: view.format,
         roles: view.roles,
         settings: view.settings,
-        options: view.options,
         entryFiles: (scope: string) => entryFiles(policy, scopes, scope),
         limit: view.limit,
         rulesOff: view.rulesOff,

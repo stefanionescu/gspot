@@ -20,7 +20,7 @@ import {
     JAVASCRIPT_AUTHORED_FILES,
 } from '#tests/config/tools/configurations/language/javascript/projects.ts';
 
-test('JavaScript checking includes authored build directories at all', async () => {
+test('JavaScript checking includes authored build directories at level all', async () => {
     await using sandbox = await testdir();
     const paths = ['source/build/value.js', 'source/dist/value.js', 'coverage/value.js'];
     await createFileTree(sandbox.path, {

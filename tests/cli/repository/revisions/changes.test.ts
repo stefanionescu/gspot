@@ -61,13 +61,15 @@ test('Git change read > push comparison distinguishes an absent upstream from a 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
     commitAll(sandbox.path);
-    const first = await getPushBase(sandbox.path);
-    gitOutput(sandbox.path, ['branch', 'upstream']);
-    gitOutput(sandbox.path, ['branch', '--set-upstream-to=upstream']);
+    const first = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    expect(await getPushBase(sandbox.path)).toBe(first);
     await Bun.write(join(sandbox.path, 'source.ts'), 'export const changed = true;\n');
     gitOutput(sandbox.path, ['add', '.']);
     gitOutput(sandbox.path, ['commit', '-qm', 'Second']);
-    expect(await getPushBase(sandbox.path)).toBe(first);
+    const second = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
+    gitOutput(sandbox.path, ['branch', 'upstream']);
+    gitOutput(sandbox.path, ['branch', '--set-upstream-to=upstream']);
+    expect(await getPushBase(sandbox.path)).toBe(second);
     gitOutput(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
     expect(await rejection(getPushBase(sandbox.path))).toContain('Git merge-base failed');
 });
@@ -95,9 +97,17 @@ test('Git change read > a new branch compares with the remote default without lo
     expect(await getPushBase(sandbox.path)).toBe(published);
     const { reference, commits } = await getChanged(sandbox.path, '');
     expect(reference).toBe('refs/remotes/origin/main');
-    // Only the unpublished commit is new after the remote default, so only its message is checked.
+    // Only the unpublished commit is new after the remote default; the comparison returns its commit id.
     expect(commits).toStrictEqual([gitOutput(sandbox.path, ['rev-parse', 'HEAD'])]);
+});
+
+test('Git change read > a branch with an upstream at HEAD compares with that exact commit', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'source.ts': 'export {};\n' });
+    commitAll(sandbox.path);
+    gitOutput(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
+    const head = gitOutput(sandbox.path, ['rev-parse', 'HEAD']);
     gitOutput(sandbox.path, ['branch', 'upstream', 'HEAD']);
     gitOutput(sandbox.path, ['branch', '--set-upstream-to=upstream']);
-    expect(await getPushBase(sandbox.path)).not.toBe(published);
+    expect(await getPushBase(sandbox.path)).toBe(head);
 });

@@ -56,3 +56,22 @@ test('Next.js route rules resolve two project roots and disable route lookup in 
         warnings.mockRestore();
     }
 });
+
+test('Next.js App Router links leave the Pages Router rule off', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['nextjs'], { level: 'all' }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'app/about/page.jsx': 'export default function About() { return <a href="/about">About</a>; }\n',
+    });
+    const eslint = await createEslint(sandbox.path);
+    const config = (await eslint.calculateConfigForFile(join(sandbox.path, 'app/about/page.jsx'))) as Linter.Config;
+    expect(config.rules!['@next/next/no-html-link-for-pages']).toStrictEqual([0]);
+    const findings = await eslint.lintFiles(['app/about/page.jsx']);
+    expect(findings.flatMap(({ messages }) => messages.filter(({ fatal }) => fatal === true))).toStrictEqual([]);
+    expect(
+        findings.flatMap(({ messages }) =>
+            messages.filter(({ ruleId }) => ruleId === '@next/next/no-html-link-for-pages'),
+        ),
+    ).toStrictEqual([]);
+});

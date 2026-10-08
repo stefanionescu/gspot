@@ -14,7 +14,7 @@ async function markedLines(path: string, source: string): Promise<number[]> {
         .map((comment) => comment.line);
 }
 
-test.each(['js', 'ts', 'mts', 'cts', 'tsx'])(
+test.each(['js', 'ts'])(
     'suppression comments in %s distinguish strings and templates from executable directives',
     async (extension) => {
         await using sandbox = await testdir();

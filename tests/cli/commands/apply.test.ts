@@ -14,7 +14,7 @@ import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { stat, chmod, unlink, readdir, readFile, writeFile } from 'node:fs/promises';
+import { open, chmod, unlink, readdir, readFile, writeFile } from 'node:fs/promises';
 
 const INIT = buildInitArguments(['bash']);
 
@@ -24,7 +24,8 @@ test('apply preserves a policy replaced after session opening and publishes no g
     const replacement = `${original}[scope.worker]\nconfigurations = ["python"]\n`;
     await createFileTree(directory.path, { 'gspot.toml': original, 'entry.sh': 'echo example\n' });
     const policyPath = join(directory.path, 'gspot.toml');
-    const originalPolicyAttributes = await stat(policyPath);
+    await using originalPolicy = await open(policyPath, 'r');
+    const originalPolicyAttributes = await originalPolicy.stat();
     const read = fs.readFileSync;
     let replaced = false;
     const observer = spyOn(fs, 'readFileSync').mockImplementation(((path, options) => {
@@ -47,8 +48,9 @@ test('apply preserves a policy replaced after session opening and publishes no g
         observer.mockRestore();
     }
     expect(replaced).toBe(true);
-    expect(await readFile(policyPath, 'utf8')).toBe(replacement);
-    const policyAttributes = await stat(policyPath);
+    await using updatedPolicy = await open(policyPath, 'r');
+    expect(await updatedPolicy.readFile('utf8')).toBe(replacement);
+    const policyAttributes = await updatedPolicy.stat();
     expect(policyAttributes.mode).toBe(originalPolicyAttributes.mode);
     expect(await pathExists(join(directory.path, '.gspot/version'))).toBe(false);
     expect(await pathExists(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(false);

@@ -205,15 +205,19 @@ test('init refuses an unsafe output ancestor before attempting installation', as
     await createFileTree(outside.path, { 'authored.toml': 'untouched = true\n' });
     await createFileTree(sandbox.path, { 'typos.toml': '[default.extend-words]\nAuthored = "Authored"\n' });
     await symlink(outside.path, join(sandbox.path, '.mise'));
-    await rejection(
-        initCommand(
-            buildInitOptions(sandbox.path, {
-                configurations: ['spelling'],
-                runner: 'mise',
-                install: true,
-            }),
+    using run = spyOn(processes, 'run');
+    expect(
+        await rejection(
+            initCommand(
+                buildInitOptions(sandbox.path, {
+                    configurations: ['spelling'],
+                    runner: 'mise',
+                    install: true,
+                }),
+            ),
         ),
-    );
+    ).toContain('Unsafe lifecycle');
+    expect(run.mock.calls.some(([command]) => command[0] === 'mise')).toBe(false);
     expect(await readFile(join(outside.path, 'authored.toml'), 'utf8')).toBe('untouched = true\n');
     expect(await pathExists(join(outside.path, 'conf.d/gspot-tools.toml'))).toBe(false);
     expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(

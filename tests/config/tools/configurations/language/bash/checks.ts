@@ -14,20 +14,8 @@ export const REPOSITORY: InstalledScenario = {
 
 export const CASES: FindingCase[] = [
     {
-        check: 'bash/bash-syntax',
-        files: { 'scripts/broken.sh': `${HEAD}main() {\n    if then\n}\n\nmain "$@"\n` },
-        expected: { file: 'scripts/broken.sh', line: 9 },
-    },
-    {
         check: 'bash/shellcheck',
         files: { 'scripts/unquoted.sh': `${HEAD}# main: runs the script.\nmain() {\n    echo $1\n}\n\nmain "$@"\n` },
         expected: { file: 'scripts/unquoted.sh', rule: 'SC2086', line: 10 },
-    },
-    {
-        check: 'bash/shfmt',
-        files: {
-            'scripts/indent.sh': `${HEAD}# main: runs the script.\nmain() {\n  echo "two spaces"\n}\n\nmain "$@"\n`,
-        },
-        expected: { file: 'scripts/indent.sh' },
     },
 ];

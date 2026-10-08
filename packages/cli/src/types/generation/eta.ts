@@ -90,7 +90,6 @@ export type EtaInputs = {
     fragmentImports: string;
     fragmentFiles: string[];
     fragmentSelectors: SelectorGroup[];
-    options: ScopeView['options'];
     entryFiles: (scope: string) => string[];
     limit: (key: string, language?: string) => number | undefined;
     /** Shared native HTML rules with target overrides, then level and finding ignores. */

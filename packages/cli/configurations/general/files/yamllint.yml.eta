@@ -15,7 +15,7 @@ const document = {
         indentation: { spaces: 'consistent', 'indent-sequences': 'consistent' },
     },
 };
-for (const [rule, chosen] of Object.entries(options('tools.yamllint').rules))
+for (const [rule, chosen] of Object.entries(settings['tools.yamllint.rules']))
     if (Object.hasOwn(document.rules, rule)) Object.assign(document.rules[rule], chosen);
 Object.assign(document.rules, Object.fromEntries(rulesOff('files/yamllint').map((name) => [name, 'disable'])));
 recordRules(document);

@@ -22,7 +22,7 @@ if (allowed.length > 0) {
     // The exact enum owns case, including Pascal-case project folder names.
     rules['scope-case'] = [0];
 }
-const custom = options('tools.commitlint').rules;
+const custom = settings['tools.commitlint.rules'];
 for (const [name, value] of Object.entries(custom))
     if (Object.hasOwn(rules, name) && rules[name][0] !== 0) rules[name] = [2, ...value];
 for (const name of off) rules[name] = [0];

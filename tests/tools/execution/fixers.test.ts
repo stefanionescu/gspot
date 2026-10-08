@@ -7,10 +7,10 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
-import { textContaining } from '#tests/harness/expectations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { sharePythonTools } from '#tests/harness/python-installation.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { toolPin, toolName, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { PARTIAL_FIX_CASES, SHFMT_FORMATTED_SCRIPT } from '#tests/config/tools/fixers.ts';
 
@@ -75,6 +75,12 @@ test.each(PARTIAL_FIX_CASES)(
         const repeated = await executeRun(await openSession(sandbox.path), options);
         expect(repeated.report.exitCode).toBe(1);
         expect(repeated.fixes?.results).toMatchObject([{ check, status: 'unchanged', changed: [] }]);
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(partial);
+        if (check === 'spelling/typos')
+            for (const result of [failed, repeated])
+                expect(result.report.checks.flatMap(({ findings }) => findings)).toContainEqual(
+                    containing({ file: path, fixable: false }),
+                );
         await Bun.write(join(sandbox.path, path), corrected);
         const passed = await executeRun(await openSession(sandbox.path), options);
         expect(passed.report.exitCode, JSON.stringify(passed.report)).toBe(0);

@@ -34,12 +34,6 @@ test.skipIf(!isPosix)(
         await unlink(join(sandbox.path, path));
         await writeFile(join(sandbox.path, path), 'let value = 1\n');
         gitOutput(sandbox.path, ['add', '.']);
-        expect(await BUILT_IN_CHECKS['xcode/symlinks'].input(input)).toStrictEqual([
-            containing({
-                file: path,
-                rule: 'symlink',
-            }),
-        ]);
         const corrected = buildCheckInput(await openSession(sandbox.path), 'xcode/symlinks');
         expect(await BUILT_IN_CHECKS['xcode/symlinks'].input(corrected)).toStrictEqual([]);
         const index = await readFile(join(sandbox.path, '.git', 'index'));

@@ -13,7 +13,7 @@ import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 
-test('native spelling file-type allowances preserve unrelated findings and neighboring files at all', async () => {
+test('native spelling file-type allowances preserve unrelated findings and neighboring files at level all', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['spelling'], {
@@ -65,7 +65,7 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
     );
 });
 
-test('spelling locales and word allowances remain scoped in generated configurations at all', async () => {
+test('spelling locales and word allowances remain scoped in generated configurations at level all', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['spelling'], {

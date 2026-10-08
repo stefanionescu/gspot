@@ -5,12 +5,12 @@ import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { toPosix } from '#cli/platform/contracts.ts';
-import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { checkjs } from '#cli/checks/language/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { VALID } from '#tests/config/samples/typescript.ts';
+import { openSession, applyCommand } from '#cli/commands/public.ts';
 
 const TSCONFIG_OPTIONS_POLICY = buildPolicy(['typescript']);
 
@@ -161,7 +161,8 @@ test('a scope whose project lists no JavaScript file passes with nothing to comp
     const session = await openSession(sandbox.path);
     const projects = emitAll(session).files.filter(({ path }) => path.endsWith('jsconfig.json'));
     expect(projects.map(({ path }) => path)).toStrictEqual(['.gspot/config/jsconfig.json']);
-    for (const project of projects) await Bun.write(join(sandbox.path, project.path), project.content);
+    const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(applied.exitCode).toBe(0);
     const reopened = await openSession(sandbox.path);
     const [root] = planRun(reopened, { stage: 'push', skips: [], only: ['javascript/tsc'] });
     // Saved scope policy can outlive its JavaScript inputs and generated compiler configuration.

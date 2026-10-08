@@ -12,9 +12,9 @@ const document = {
     MD041: isAll,
     MD025: isAll ? { front_matter_title: '' } : false,
 };
-for (const [rule, settings] of Object.entries(options('tools.markdownlint').rules))
+for (const [rule, chosen] of Object.entries(settings['tools.markdownlint.rules']))
     if (document[rule] !== false)
-        document[rule] = { ...(document[rule] === true ? {} : document[rule]), ...settings };
+        document[rule] = { ...(document[rule] === true ? {} : document[rule]), ...chosen };
 Object.assign(document, Object.fromEntries(rulesOff('markdown/markdownlint').map((rule) => [rule, false])));
 recordRules(document);
 %><%= json(document) %>

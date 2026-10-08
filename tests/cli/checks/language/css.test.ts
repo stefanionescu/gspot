@@ -17,7 +17,7 @@ test('global CSS classes are not module exports and explicitly local classes sti
             ':global(.external) .card { color: red; }\n:global .external-child { color: blue; }\n:global .external :local(.local) { color: green; }\n',
         'view.ts': 'import styles from "./styles.module.css";\nexport const card = styles.card;\n',
     });
-    const failed = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.checks[0]?.findings).toMatchObject([
         { file: 'styles.module.css', line: 3, rule: 'unused-class', message: 'No importer reads the class local.' },
     ]);
@@ -25,7 +25,7 @@ test('global CSS classes are not module exports and explicitly local classes sti
         join(sandbox.path, 'view.ts'),
         'import styles from "./styles.module.css";\nexport const card = [styles.card, styles.local];\n',
     );
-    const corrected = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
 });
 
@@ -40,14 +40,14 @@ test.each(['card-title', 'card_title', 'card--title'])(
             'theme.module.scss': '.panel { color: red; }\n',
             'panel.tsx': "import styles from './theme.module.scss';\nexport const panel = styles.missing;\n",
         });
-        const result = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+        const result = await executeRun(await openSession(sandbox.path), options);
         expect(result.report.exitCode).toBe(0);
         expect(result.report.checks).toMatchObject([{ check: 'css/module-classes', status: 'passed', findings: [] }]);
         await Bun.write(
             join(sandbox.path, 'panel.tsx'),
             "import styles from './styles.module.css';\nexport const panel = styles.missing;\n",
         );
-        const failed = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+        const failed = await executeRun(await openSession(sandbox.path), options);
         expect(failed.report.checks[0]?.findings).toMatchObject([{ file: 'panel.tsx', rule: 'undefined-class' }]);
     },
 );
@@ -67,7 +67,7 @@ test.each([
         'styles.module.css': '.card { color: red; }\n',
         'view.ts': `import styles from './styles.module.css';\nexport const card = styles.card;\n${verbatim}`,
     });
-    const result = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    const result = await executeRun(await openSession(sandbox.path), options);
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks).toMatchObject([{ check: 'css/module-classes', status: 'passed', findings: [] }]);
 });
@@ -81,7 +81,7 @@ test('identically named stylesheets keep their own bindings and correct exact fi
         'left/view.ts': "import styles from './styles.module.css';\nexport const value = styles.right;\n",
         'right/view.ts': "import styles from './styles.module.css';\nexport const value = styles.right;\n",
     });
-    const failed = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks).toMatchObject([
         {
@@ -97,7 +97,7 @@ test('identically named stylesheets keep their own bindings and correct exact fi
         join(sandbox.path, 'left/view.ts'),
         "import styles from './styles.module.css';\nexport const value = styles.left;\n",
     );
-    const corrected = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
@@ -112,7 +112,7 @@ test('ignored importers cannot satisfy a selected stylesheet class', async () =>
         'ignored.ts':
             "import styles from './styles.module.css';\nexport const hidden = [styles.unused, styles.missing];\n",
     });
-    const failed = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks).toMatchObject([
         {
@@ -129,7 +129,7 @@ test('ignored importers cannot satisfy a selected stylesheet class', async () =>
         },
     ]);
     await Bun.write(join(sandbox.path, 'styles.module.css'), '.card { color: red; }\n');
-    const corrected = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check: 'css/module-classes', status: 'passed', findings: [] }]);
 });
@@ -173,7 +173,7 @@ test.each([
         'styles.module.css': '.card { color: red; }\n',
         'view.ts': `${declaration}\nexport const value = styles.missing;\n`,
     });
-    const result = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    const result = await executeRun(await openSession(sandbox.path), options);
     expect(result.report.exitCode).toBe(bound ? 1 : 0);
     expect(
         result.report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule }))),
@@ -196,13 +196,13 @@ test.each(DYNAMIC_READS)(
             'styles.module.css': '.card { color: red; }\n.unused { color: blue; }\n',
             'view.ts': `import styles from './styles.module.css';\n${source}\nexport const absent = styles.missing;\n`,
         });
-        const failed = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+        const failed = await executeRun(await openSession(sandbox.path), options);
         expect(failed.report.exitCode).toBe(1);
         expect(failed.report.checks[0]?.findings).toMatchObject([
             { file: 'view.ts', line: 3, rule: 'undefined-class' },
         ]);
         await Bun.write(join(sandbox.path, 'view.ts'), `import styles from './styles.module.css';\n${source}\n`);
-        const corrected = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+        const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
     },
@@ -215,7 +215,7 @@ test('CSS destructuring resolves aliases and reports unused definitions and miss
         'styles.module.css': '\n.card { color: red; }\n.unused { color: blue; }\n',
         'view.ts': "import styles from './styles.module.css';\nexport const { card: label, missing } = styles;\n",
     });
-    const failed = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks[0]?.findings).toMatchObject([
         { file: 'styles.module.css', line: 3, rule: 'unused-class' },
@@ -225,7 +225,7 @@ test('CSS destructuring resolves aliases and reports unused definitions and miss
         join(sandbox.path, 'view.ts'),
         "import styles from './styles.module.css';\nexport const { card: label, unused } = styles;\n",
     );
-    const corrected = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+    const corrected = await executeRun(await openSession(sandbox.path), options);
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
@@ -240,7 +240,7 @@ test.each(['mts', 'cts'])(
             'styles.module.css': '.card { color: red; }\n',
             [path]: 'import styles from "./styles.module.css";\nexport const card = styles.missing;\n',
         });
-        const failed = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+        const failed = await executeRun(await openSession(sandbox.path), options);
         expect(failed.report.exitCode).toBe(1);
         expect(failed.report.checks[0]?.findings.find((finding) => finding.file === path)).toMatchObject({
             file: path,
@@ -250,7 +250,7 @@ test.each(['mts', 'cts'])(
             join(sandbox.path, path),
             'import styles from "./styles.module.css";\nexport const card = styles.card;\n',
         );
-        const corrected = await executeRun(await openSession(sandbox.path), { ...options, skips: [] });
+        const corrected = await executeRun(await openSession(sandbox.path), options);
         expect(corrected.report.exitCode).toBe(0);
         expect(corrected.report.checks[0]?.findings).toStrictEqual([]);
     },

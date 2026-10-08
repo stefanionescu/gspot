@@ -113,7 +113,7 @@ test('source reads refuse an escape introduced after inventory and accept an int
     await unlink(join(root, 'source.ts'));
     await symlink('../outside.ts', join(root, 'source.ts'));
     expect(() => readSource(root, repository.files[0]!.path)).toThrow('Source link leaves the repository');
-    expect(() => readSource(root, '../outside.ts')).toThrow();
+    expect(() => readSource(root, '../outside.ts')).toThrow('Unsafe lifecycle path');
     await unlink(join(root, 'source.ts'));
     await Bun.write(join(root, 'owned.ts'), 'export const value = 2;\n');
     await symlink('owned.ts', join(root, 'source.ts'));

@@ -89,7 +89,12 @@ function tokenize(text: string): string[] {
 function parseToolFile(text: string, extension: string, path: string): unknown {
     switch (TOOL_FILE_FORMATS[extension]) {
         case 'json': {
-            return JSON.parse(text) as unknown;
+            try {
+                return JSON.parse(text) as unknown;
+            } catch (error) {
+                if (!(error instanceof SyntaxError)) throw error;
+                throw new SyntaxError(`Cannot read tool configuration ${path}: ${error.message}`, { cause: error });
+            }
         }
         case 'yaml': {
             return parseYaml(text) as unknown;

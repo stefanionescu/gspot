@@ -4,7 +4,6 @@ import * as spawn from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
@@ -36,7 +35,7 @@ test.skipIf(!isMacos)('XCTest reports a timed-out native command as an error and
         isTimedOut: true,
     });
     try {
-        const failed = await executeRun(session, { ...XCTEST_EXECUTION_OPTIONS, checks: BUILT_IN_CHECKS });
+        const failed = await executeRun(session, XCTEST_EXECUTION_OPTIONS);
         expect(failed.report.exitCode).toBe(2);
         expect(failed.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'error' }]);
         expect(failed.report.checks[0]?.note).toContain('xcodebuild ran past');
@@ -44,10 +43,7 @@ test.skipIf(!isMacos)('XCTest reports a timed-out native command as an error and
     } finally {
         run.mockRestore();
     }
-    const corrected = await executeRun(await openSession(sandbox.path), {
-        ...XCTEST_EXECUTION_OPTIONS,
-        checks: BUILT_IN_CHECKS,
-    });
+    const corrected = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
     expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'passed', findings: [] }]);
 });
@@ -64,10 +60,7 @@ test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
             'node_modules/.bin/xcrun': `${SHEBANG}await Bun.write('viewed.txt', 'viewed'); console.log(${JSON.stringify(coverage === undefined ? '{}' : JSON.stringify({ targets: [{ name: 'Example', lineCoverage: coverage }] }))});\n`,
         });
         for (const tool of ['xcodebuild', 'xcrun']) await chmod(join(sandbox.path, 'node_modules/.bin', tool), 0o755);
-        const outcome = await executeRun(await openSession(sandbox.path), {
-            ...XCTEST_EXECUTION_OPTIONS,
-            checks: BUILT_IN_CHECKS,
-        });
+        const outcome = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
         expect(outcome.report.exitCode).toBe(code);
         expect(outcome.report.checks[0]!.status).toBe(status);
         expect(await pathExists(join(sandbox.path, 'viewed.txt'))).toBe(false);
@@ -82,10 +75,7 @@ test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
             join(sandbox.path, 'node_modules/.bin/xcrun'),
             `${SHEBANG}console.log(${JSON.stringify(JSON.stringify({ targets: [{ name: 'Example', lineCoverage: 1 }] }))});\n`,
         );
-        const corrected = await executeRun(await openSession(sandbox.path), {
-            ...XCTEST_EXECUTION_OPTIONS,
-            checks: BUILT_IN_CHECKS,
-        });
+        const corrected = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
         expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'passed', findings: [] }]);
     },
@@ -110,20 +100,14 @@ test.skipIf(!isMacos)(
         await mkdir(cache, { recursive: true });
         const bundle = join(cache, 'coverage.xcresult');
         await symlink(outside.path, bundle, process.platform === 'win32' ? 'junction' : 'dir');
-        const refused = await executeRun(await openSession(sandbox.path), {
-            ...XCTEST_EXECUTION_OPTIONS,
-            checks: BUILT_IN_CHECKS,
-        });
+        const refused = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
         expect(refused.report.exitCode).toBe(2);
         expect(await readFile(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
         expect(await pathExists(join(cache, 'source/tested.txt'))).toBe(false);
         await rm(bundle);
         await mkdir(join(bundle, 'data'), { recursive: true });
         await writeFile(join(bundle, 'data/previous'), 'old result', { mode: 0o444 });
-        const corrected = await executeRun(await openSession(sandbox.path), {
-            ...XCTEST_EXECUTION_OPTIONS,
-            checks: BUILT_IN_CHECKS,
-        });
+        const corrected = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
         expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
         expect(await pathExists(bundle)).toBe(false);
         expect(await readFile(join(cache, 'source/tested.txt'), 'utf8')).toBe('tested');

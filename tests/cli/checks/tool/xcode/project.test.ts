@@ -6,6 +6,11 @@ import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { PBXPROJ_PROJECT } from '#tests/config/samples/xcode.ts';
 
+const project = (name: string) =>
+    PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
+        .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
+        .replace('path = Root.swift;', `path = ${name}.swift;`);
+
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -45,17 +50,11 @@ test('membership combines projects in a scope and checks nested scopes independe
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['xcode'], { tables: '[scope."nested"]\n' }),
-        'One.xcodeproj/project.pbxproj': PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
-            .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
-            .replace('path = Root.swift;', `path = One.swift;`),
-        'Two.xcodeproj/project.pbxproj': PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
-            .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
-            .replace('path = Root.swift;', `path = Two.swift;`),
+        'One.xcodeproj/project.pbxproj': project('One'),
+        'Two.xcodeproj/project.pbxproj': project('Two'),
         'One.swift': 'let one = 1\n',
         'Two.swift': 'let two = 2\n',
-        'nested/App.xcodeproj/project.pbxproj': PBXPROJ_PROJECT.replace('files = (B1, B2,);', 'files = (B2,);')
-            .replace('fileSystemSynchronizedGroups = (SYNC,);', '')
-            .replace('path = Root.swift;', `path = Nested.swift;`),
+        'nested/App.xcodeproj/project.pbxproj': project('Nested'),
         'nested/Nested.swift': 'let nested = 1\n',
         'nested/Extra.swift': 'let verbatim = 1\n',
     });

@@ -101,6 +101,17 @@ function isLintJob(name: string, job: unknown): boolean {
     );
 }
 
+// The lint jobs in the parsed CI document, using the workflow's native jobs table.
+function lintJobs(path: string, document: unknown): string[] {
+    if (typeof document !== 'object' || document === null) return [];
+    const jobs = path.startsWith('.github/workflows/') && 'jobs' in document ? document.jobs : document;
+    if (typeof jobs !== 'object' || jobs === null) return [];
+    return Object.entries(jobs as Record<string, unknown>).flatMap(([name, job]) => {
+        if (name.startsWith('.')) return [];
+        return isLintJob(name, job) ? [`${path}: ${name}`] : [];
+    });
+}
+
 /**
  * The hooks a clone already runs: another hooks folder, a hook folder a tool keeps, and hook manager settings.
  * @param root the repository root
@@ -202,13 +213,13 @@ export function getLintJobs(root: string, paths: string[]): string[] {
         .flatMap((path) => {
             const source = readText(root, path);
             if (source === undefined) return [];
-            const document: unknown = parseYaml(source);
-            if (typeof document !== 'object' || document === null) return [];
-            const jobs = path.startsWith('.github/workflows/') && 'jobs' in document ? document.jobs : document;
-            if (typeof jobs !== 'object' || jobs === null) return [];
-            return Object.entries(jobs as Record<string, unknown>).flatMap(([name, job]) => {
-                if (name.startsWith('.')) return [];
-                return isLintJob(name, job) ? [`${path}: ${name}`] : [];
-            });
+            let document: unknown;
+            try {
+                document = parseYaml(source);
+            } catch (error) {
+                const detail = error instanceof Error ? error.message : String(error);
+                throw new Error(`Cannot read CI configuration ${path}: ${detail}`, { cause: error });
+            }
+            return lintJobs(path, document);
         });
 }
