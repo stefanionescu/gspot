@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
@@ -21,7 +21,7 @@ test.each(POLICY_FILE_CASES)(
     },
 );
 
-test('writePolicyFile > policy edits retain invalid UTF-8 bytes and refuse a mode change after read', async () => {
+const refusesBytes = async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     const invalid = Buffer.concat([Buffer.from(AUTHORED_POLICY), Buffer.from([0xff])]);
@@ -41,6 +41,11 @@ test('writePolicyFile > policy edits retain invalid UTF-8 bytes and refuse a mod
         });
     }).toThrow('valid UTF-8');
     expect(await readFile(path)).toStrictEqual(invalid);
+};
+
+const refusesMode = async () => {
+    await using sandbox = await testdir();
+    const path = join(sandbox.path, 'gspot.toml');
     await writeFile(path, AUTHORED_POLICY);
     await chmod(path, 0o644);
     const plan = preparePolicy(sandbox.path, (raw) => {
@@ -64,6 +69,11 @@ test('writePolicyFile > policy edits retain invalid UTF-8 bytes and refuse a mod
     expect(attributes.mode & 0o222).toBe(0);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     await chmod(path, 0o644);
+};
+
+describe('writePolicyFile', () => {
+    test('policy edits retain invalid UTF-8 bytes', refusesBytes);
+    test('policy edits refuse a mode change after read', refusesMode);
 });
 
 test('a prepared policy edit refuses stale bytes and accepts a fresh plan', async () => {

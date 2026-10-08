@@ -6,21 +6,14 @@ import { parseTemplate, exportTemplate } from '#cli/policy/templates.ts';
 import { ESLINT_OVERRIDE_POLICY } from '#tests/config/samples/javascript.ts';
 import { FORMAT_OVERRIDES_POLICY } from '#tests/config/samples/formatting.ts';
 
-test('template export preserves ESLint rules and authored path overrides', () => {
-    const exported = exportTemplate(ESLINT_OVERRIDE_POLICY, 'project.template.toml');
+test.each([
+    ['preserves ESLint rules and authored path', ESLINT_OVERRIDE_POLICY, 'project.template.toml'],
+    ['retains authored formatter path', FORMAT_OVERRIDES_POLICY, 'format.template.toml'],
+])('template export %s overrides', (_name, policy, filename) => {
+    const exported = exportTemplate(policy, filename);
     expect(exported.text).toContain('overrides');
-    expect(parseTemplate(exported.text, 'project.template.toml').tables.tools?.eslint?.rules?.['eqeqeq']).toStrictEqual(
-        ['smart'],
-    );
-    expect(exported.leftOut).toStrictEqual([
-        'scope."apps/web": belongs to this repository',
-        'scope."apps/web/admin": belongs to this repository',
-    ]);
-});
-
-test('template export retains authored formatter path overrides', () => {
-    const exported = exportTemplate(FORMAT_OVERRIDES_POLICY, 'format.template.toml');
-    expect(exported.text).toContain('overrides');
+    if (policy === ESLINT_OVERRIDE_POLICY)
+        expect(parseTemplate(exported.text, filename).tables.tools?.eslint?.rules?.['eqeqeq']).toStrictEqual(['smart']);
     expect(exported.leftOut).toStrictEqual([
         'scope."apps/web": belongs to this repository',
         'scope."apps/web/admin": belongs to this repository',

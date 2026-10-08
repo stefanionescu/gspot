@@ -7,18 +7,10 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { runFindingCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { detectUnselected } from '#cli/configurations/detect.ts';
 import { recording } from '#cli/checks/library/swift-snapshot-testing.ts';
-import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
-
-import {
-    CASES,
-    REPOSITORY,
-    PACKAGE_PROJECTS,
-    DOCUMENTATION_LEVELS,
-} from '#tests/config/cli/checks/library/swift-snapshot-testing.ts';
+import { PACKAGE_PROJECTS, DOCUMENTATION_LEVELS } from '#tests/config/cli/checks/library/swift-snapshot-testing.ts';
 
 test.each([
     { body: 'let example = "isRecording = true"', count: 0 },
@@ -122,16 +114,6 @@ test('disabled tests and snapshot recording report through the CLI and pass afte
         { check: 'xctest/skip-reasons', status: 'passed', findings: [] },
         { check: 'swift-snapshot-testing/recording', status: 'passed', findings: [] },
     ]);
-});
-
-test.each(CASES)('$check reports its finding and passes after the fix', async (entry) => {
-    await using repository = await createTestRepository(REPOSITORY, runGspot, prepareCliRepository);
-    const { failed, passed } = await runFindingCase(repository, entry, REPOSITORY);
-    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-    expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
-    expect(failed.report.checks[0]?.findings).toContainEqual(containing({ check: entry.check, ...entry.expected }));
-    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-    expect(passed.report.checks).toMatchObject([{ check: entry.check, status: 'passed', findings: [] }]);
 });
 
 test.each(PACKAGE_PROJECTS)(

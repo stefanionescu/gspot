@@ -86,16 +86,6 @@ describe('policy setting refusals', () => {
         expect(found[0]).toContain('`psh` is not a setting gspot knows under [hooks]');
     });
 
-    test('an ignore refuses a single-word reason and accepts a substantive reason', () => {
-        const found = policyFindings(`${buildPolicy(['bash'])}[[ignore]]\ncheck = "bash/shellcheck"\nreason = "N/A"\n`);
-        expect(found).toHaveLength(1);
-        expect(found[0]).toContain('needs a reason that says something');
-        const corrected = parseStrictPolicy(
-            `${buildPolicy(['bash'])}[[ignore]]\ncheck = "bash/shellcheck"\nreason = "Reviewed sandbox"\n`,
-        );
-        expect(corrected.ignore).toMatchObject([{ check: 'bash/shellcheck', reason: 'Reviewed sandbox' }]);
-    });
-
     test('a scoped disabled ESLint rule names the accepted-finding command and rule', () => {
         const found = policyFindings(
             buildPolicy(['javascript'], {

@@ -18,6 +18,7 @@ import { createTestRepository, prepareCliRepository } from '#tests/harness/repos
 import * as supabaseSettings from '#tests/config/cli/checks/platform/supabase/settings.ts';
 import * as dependencyPolicy from '#tests/config/cli/checks/general/dependencies/policy.ts';
 import * as structureFindings from '#tests/config/cli/checks/general/structure/findings.ts';
+import * as swiftSnapshots from '#tests/config/cli/checks/library/swift-snapshot-testing.ts';
 import * as cloudflareConfiguration from '#tests/config/cli/checks/platform/cloudflare/configuration.ts';
 
 // What a check accepts beside the clean scripts: a guarded settings file and the environment owner.
@@ -82,6 +83,7 @@ for (const scenario of [
         cases: BASH_CASES.filter((entry) => !TOOL_CHECKS.includes(entry.check)),
     },
     { name: 'the xctest configuration', repository: xctestSource.REPOSITORY, cases: xctestSource.CASES },
+    { name: 'the Swift snapshot checks', repository: swiftSnapshots.REPOSITORY, cases: swiftSnapshots.CASES },
     { name: 'the built-output site checks', repository: siteOutput.REPOSITORY, cases: siteOutput.CASES },
 ] satisfies FindingScenario[]) {
     describe(scenario.name, () => {

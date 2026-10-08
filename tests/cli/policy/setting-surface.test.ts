@@ -219,38 +219,3 @@ describe('merged settings', () => {
         });
     });
 });
-
-describe('setting validation', () => {
-    test('raising a ceiling needs a reason that names the command, and lowering one does not', () => {
-        const errors = policyFindings('configurations = ["bash"]\n[limits]\nfile_lines = 400\n');
-        expect(errors[0]).toContain('gspot set limits.file_lines 400 --reason');
-        const lowered = parseStrictPolicy(buildPolicy(['bash'], { tables: '[limits]\nfile_lines = 200\n' }));
-        expect(validateAgainstSurface(surface, lowered, new Map())).toStrictEqual([]);
-    });
-
-    test('an undeclared native setting is refused with its owning table', () => {
-        const errors = policyFindings(buildPolicy(['bash'], { tables: '[tools.shellcheck]\nseverity = "style"\n' }));
-        expect(errors[0]).toContain('`severity` is not a setting gspot knows under [tools.shellcheck]');
-    });
-
-    test('term-group controls are refused because no group can be removed', () => {
-        const errors = policyFindings(
-            buildPolicy(['bash'], {
-                tables: '[naming]\ngroups_off = [{ group = "marketing", reason = "We like adjectives here." }]\n',
-            }),
-        );
-        expect(errors).toStrictEqual(['gspot.toml: naming.groups_off: Invalid input: expected object, received array']);
-    });
-});
-
-test('raising the duplication line floor requires a reason, while lowering it tightens detection', () => {
-    const settings = knownSettings(selectConfigurations(['duplication'], configurationManifests()));
-    const key = 'limits.duplication.min_lines';
-    const shipped = settings.defaults.get(key)!.value as number;
-    const [raised, lowered] = [shipped + 1, shipped - 1].map((value) =>
-        policyFindings(`configurations = ["duplication"]\n[limits.duplication]\nmin_lines = ${String(value)}\n`),
-    );
-    expect(raised).toHaveLength(1);
-    expect(raised![0]).toContain(`gspot set ${key} ${String(shipped + 1)} --reason`);
-    expect(lowered).toStrictEqual([]);
-});

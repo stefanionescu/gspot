@@ -51,7 +51,7 @@ test('the deepest scope sets a limit and a scalar setting, and a scope list adds
     expect(read('web')).toStrictEqual([100, '5.0', ['Foundation']]);
 });
 
-test('a scoped generic limit overrides a root language limit in both explanations and checks', async () => {
+test('a per-scope generic limit overrides a root language limit in the scope view', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml':

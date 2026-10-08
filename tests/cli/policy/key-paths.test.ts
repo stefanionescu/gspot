@@ -2,7 +2,6 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
-import { textContaining } from '#tests/harness/expectations.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { readPolicyText, parseStrictPolicy } from '#cli/policy/read.ts';
 
@@ -13,13 +12,6 @@ test.each([
         where: 'ignore.0.reason',
         before: '',
         after: 'reason = "The native shell is checked by the project command."\n',
-    },
-    {
-        name: 'a grouped limit reason',
-        text: '[limits.python]\nfile_lines = 300\n[reasons]\n"limits.python.file_lines" = "N/A"\n',
-        where: 'reasons.limits.python.file_lines',
-        before: 'N/A',
-        after: 'The generated route table is reviewed as one file.',
     },
     {
         name: 'a scoped disabled rule',
@@ -42,45 +34,77 @@ test.each([
     {
         name: 'a multiline array value',
         text: 'configurations = [\n"bash",\n12\n]\n',
-        where: 'configurations.1',
+        where: ['configurations.1'],
         correction: ['12', '"files"'],
     },
     {
         name: 'a quoted key',
         text: '[hooks]\n"enabled" = "wrong"\n',
-        where: 'hooks.enabled',
+        where: ['hooks.enabled'],
         correction: ['"wrong"', 'true'],
     },
     {
         name: 'an inline table value',
         text: 'coverage = { lines = "wrong" }\n',
-        where: 'coverage.lines',
+        where: ['coverage.lines'],
         correction: ['"wrong"', '90'],
     },
     {
         name: 'a repeated scope table',
         text: '[scope."api"]\n[scope."web"]\n[scope."web".coverage]\nlines = "wrong"\n',
-        where: 'scope.web.coverage.lines',
+        where: ['scope.web.coverage.lines'],
         correction: ['"wrong"', '90'],
     },
     {
         name: 'an unknown nested key',
         text: '[scope."api"]\nkitz = []\n',
-        where: '`kitz` is not a setting gspot knows under [scope.api]',
+        where: ['`kitz` is not a setting gspot knows under [scope.api]'],
         correction: ['kitz', 'configurations'],
     },
     {
         name: 'a nested array of tables under a second scope',
         text: '[scope."api"]\n[[scope."api".tools.eslint.overrides]]\npaths = ["src"]\nrules = {eqeqeq = ["always"]}\n[scope."web"]\n[[scope."web".tools.eslint.overrides]]\npaths = []\nrules = {eqeqeq = ["always"]}\n',
-        where: 'scope.web.tools.eslint.overrides.0.paths',
+        where: ['scope.web.tools.eslint.overrides.0.paths'],
         correction: ['paths = []', 'paths = ["src"]'],
     },
+    ...[
+        {
+            correction: ['paths = []', 'paths = ["src"]'] as const,
+            where: ['tools.eslint.overrides.0.paths:'],
+            source: 'paths = []\nrules = {eqeqeq = ["always"]}',
+        },
+        {
+            correction: ['eqeqeq = 0', 'eqeqeq = ["always"]'] as const,
+            where: ['tools.eslint.overrides.0.rules.eqeqeq:'],
+            source: 'paths = ["src"]\nrules = {eqeqeq = 0}',
+        },
+        {
+            correction: ['eqeqeq = true', 'eqeqeq = ["always"]'] as const,
+            where: ['tools.eslint.overrides.0.rules.eqeqeq:'],
+            source: 'paths = ["src"]\nrules = {eqeqeq = true}',
+        },
+        {
+            correction: ['rulez', 'rules'] as const,
+            where: [
+                'tools.eslint.overrides.0.rules:',
+                '`rulez` is not a setting gspot knows under [tools.eslint.overrides.0]',
+            ],
+            source: 'paths = ["src"]\nrulez = {eqeqeq = ["always"]}',
+        },
+    ].map(({ source, correction, where }) => ({
+        name: where.join(', '),
+        text: buildPolicy(['javascript'], { tables: `[[tools.eslint.overrides]]\n${source}\n` }),
+        where,
+        correction,
+    })),
 ])(
     'parseStrictPolicy > schema errors name the key path of $name and pass after the fix',
     ({ name, text, where, correction }) => {
         const found = policyFindings(text);
-        expect(found).toHaveLength(1);
-        expect(found[0]).toStartWith(`gspot.toml: ${where}`);
+        expect(found).toHaveLength(where.length);
+        for (const [index, path] of where.entries()) {
+            expect(found[index]).toStartWith(`gspot.toml: ${path}`);
+        }
         // The quoted key keeps its type message beside the key path.
         expect(name !== 'a quoted key' || found[0]!.includes('expected boolean, received string')).toBe(true);
         expect(policyFindings(text.replace(correction[0], correction[1]))).toStrictEqual([]);
@@ -114,22 +138,6 @@ test.each(['linked', 'linked/nested'])(
 
 test('parseStrictPolicy > invalid TOML is reported as such', () => {
     expect(policyFindings('level = \n')[0]).toContain('is not valid TOML');
-});
-
-test.each([
-    { source: 'paths = []\nrules = {eqeqeq = ["always"]}', message: 'gspot.toml: tools.eslint.overrides.0.paths:' },
-    { source: 'paths = ["src"]\nrules = {eqeqeq = 0}', message: 'gspot.toml: tools.eslint.overrides.0.rules.eqeqeq:' },
-    {
-        source: 'paths = ["src"]\nrules = {eqeqeq = true}',
-        message: 'gspot.toml: tools.eslint.overrides.0.rules.eqeqeq:',
-    },
-    {
-        source: 'paths = ["src"]\nrulez = {eqeqeq = ["always"]}',
-        message: 'gspot.toml: `rulez` is not a setting gspot knows under [tools.eslint.overrides.0]',
-    },
-])('invalid ESLint override names its refusal: $message', ({ source, message: diagnostic }) => {
-    const errors = policyFindings(buildPolicy(['javascript'], { tables: `[[tools.eslint.overrides]]\n${source}\n` }));
-    expect(errors).toContainEqual(textContaining(diagnostic));
 });
 
 test.each([false, true])(

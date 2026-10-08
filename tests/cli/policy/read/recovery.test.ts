@@ -1,10 +1,14 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { scopeView } from '#cli/policy/settings/view.ts';
+import { knownSettings } from '#cli/policy/settings/known.ts';
+import { selectForScope } from '#cli/configurations/select.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { GOOD_IGNORE } from '#tests/config/cli/policy/read/recovery.ts';
 import { readPolicyText, parseStrictPolicy } from '#cli/policy/read.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 test('forbidden ShellCheck settings in a scope are reported and removed at the scoped key', async () => {
     await using sandbox = await testdir();
@@ -51,6 +55,21 @@ test('a loosening without a reason and an unknown nested setting are findings, a
     ]);
     expect(policy.limits.root['file_lines']).toBeUndefined();
     expect(policy.scopeTables['api']?.limits?.root).toStrictEqual({});
+    const defaults = parseStrictPolicy(buildPolicy(['duplication']));
+    const selected = selectForScope(defaults, '', configurationManifests());
+    const key = 'limits.duplication.min_lines';
+    const shipped = scopeView(
+        knownSettings(selected),
+        parseStrictPolicy(buildPolicy(['duplication'])),
+        selected,
+        '',
+    ).limit('min_lines', 'duplication')!;
+    const [raised, lowered] = [shipped + 1, shipped - 1].map((value) =>
+        policyFindings(`configurations = ["duplication"]\n[limits.duplication]\nmin_lines = ${String(value)}\n`),
+    );
+    expect(raised).toHaveLength(1);
+    expect(raised![0]).toContain(`gspot set ${key} ${String(shipped + 1)} --reason`);
+    expect(lowered).toStrictEqual([]);
 });
 
 test('an unknown configuration stops reading and names a matching configuration', () => {

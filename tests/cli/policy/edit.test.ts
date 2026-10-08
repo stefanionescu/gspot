@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
+import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
 import { writePolicyFile } from '#cli/policy/file.ts';
@@ -45,122 +45,68 @@ test('preparePolicy rejects an external symlink before evaluating its mutation',
     expect(await pathExists(join(root, '.gspot'))).toBe(false);
 });
 
-test('writePolicyFile > sets a nested key, then deletes it and the empty table', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': AUTHORED_POLICY });
-    {
-        const plan = preparePolicy(sandbox.path, (raw) => {
-            setKey(raw, 'limits.bash.file_lines', 100);
-        });
-        using log = openOwnership(sandbox.path);
-        writePolicyFile({
-            files: log.files,
-            text: plan.text,
-            original: plan.original,
-            publish: (next, expected) => {
-                log.files.write('gspot.toml', next, expected);
-            },
-        });
-    }
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain('[limits.bash]');
-    {
-        const plan = preparePolicy(sandbox.path, (raw) => {
-            deleteKey(raw, 'limits.bash.file_lines');
-        });
-        using log = openOwnership(sandbox.path);
-        writePolicyFile({
-            files: log.files,
-            text: plan.text,
-            original: plan.original,
-            publish: (next, expected) => {
-                log.files.write('gspot.toml', next, expected);
-            },
-        });
-    }
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).not.toContain('file_lines');
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).not.toContain('[limits');
-});
+const changesKey = () => {
+    const written = editPolicy('.', AUTHORED_POLICY, (raw) => {
+        setKey(raw, 'limits.bash.file_lines', 100);
+    }).text;
+    expect(written).toContain('[limits.bash]');
+    const removed = editPolicy('.', written, (raw) => {
+        deleteKey(raw, 'limits.bash.file_lines');
+    }).text;
+    expect(removed).not.toContain('file_lines');
+    expect(removed).not.toContain('[limits');
+};
 
-test('writePolicyFile > deduplicates scalar list values and record entries with reordered keys', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': AUTHORED_POLICY });
-    {
-        const plan = preparePolicy(sandbox.path, (raw) => {
-            addToList(raw, 'naming.banned', ['dispatcher', 'orchestrator']);
-        });
-        using log = openOwnership(sandbox.path);
-        writePolicyFile({
-            files: log.files,
-            text: plan.text,
-            original: plan.original,
-            publish: (next, expected) => {
-                log.files.write('gspot.toml', next, expected);
-            },
-        });
-    }
-    {
-        const plan = preparePolicy(sandbox.path, (raw) => {
-            addToList(raw, 'naming.banned', ['dispatcher']);
-        });
-        using log = openOwnership(sandbox.path);
-        writePolicyFile({
-            files: log.files,
-            text: plan.text,
-            original: plan.original,
-            publish: (next, expected) => {
-                log.files.write('gspot.toml', next, expected);
-            },
-        });
-    }
-    const written = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
+const deduplicatesEntries = () => {
+    const added = editPolicy('.', AUTHORED_POLICY, (raw) => {
+        addToList(raw, 'naming.banned', ['dispatcher', 'orchestrator']);
+    }).text;
+    const written = editPolicy('.', added, (raw) => {
+        addToList(raw, 'naming.banned', ['dispatcher']);
+    }).text;
     expect(written.match(/dispatcher/g)).toHaveLength(1);
-    {
-        const plan = preparePolicy(sandbox.path, (raw) => {
-            addToList(raw, 'format.overrides', [
-                { paths: ['legacy/**'], indent_style: 'tab' },
-                { indent_style: 'tab', paths: ['legacy/**'] },
-            ]);
-        });
-        using log = openOwnership(sandbox.path);
-        writePolicyFile({
-            files: log.files,
-            text: plan.text,
-            original: plan.original,
-            publish: (next, expected) => {
-                log.files.write('gspot.toml', next, expected);
-            },
-        });
-    }
-    const formatted = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
+    const formatted = editPolicy('.', written, (raw) => {
+        addToList(raw, 'format.overrides', [
+            { paths: ['legacy/**'], indent_style: 'tab' },
+            { indent_style: 'tab', paths: ['legacy/**'] },
+        ]);
+    }).text;
     expect(formatted.match(/legacy\/\*\*/g)).toHaveLength(1);
+};
+
+describe('editPolicy', () => {
+    test('sets a nested key, then deletes it and the empty table', changesKey);
+
+    test('deduplicates scalar list values and record entries with reordered keys', deduplicatesEntries);
 });
 
-test.each([
-    ['a sub-table', '[scope."api"]\n[scope."api".limits]\nfile_lines = 100\n'],
-    ['an inline table', '[scope."api"]\nlimits = { file_lines = 100 }\n'],
-])('writePolicyFile > a scope setting written into %s loads with the ones already there', async (_form, scope) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': `${AUTHORED_POLICY}\n${scope}`, 'api/run.sh': '' });
-    const result = preparePolicy(sandbox.path, (raw) => {
-        setKey(getScopeTable(raw, 'api'), 'limits.function_lines', 20);
-    });
-    {
-        const plan = result;
-        using log = openOwnership(sandbox.path);
-        writePolicyFile({
-            files: log.files,
-            text: plan.text,
-            original: plan.original,
-            publish: (next, expected) => {
-                log.files.write('gspot.toml', next, expected);
-            },
+describe('writePolicyFile', () => {
+    test.each([
+        ['a sub-table', '[scope."api"]\n[scope."api".limits]\nfile_lines = 100\n'],
+        ['an inline table', '[scope."api"]\nlimits = { file_lines = 100 }\n'],
+    ])('a scope setting written into %s loads with the ones already there', async (_form, scope) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': `${AUTHORED_POLICY}\n${scope}`, 'api/run.sh': '' });
+        const result = preparePolicy(sandbox.path, (raw) => {
+            setKey(getScopeTable(raw, 'api'), 'limits.function_lines', 20);
         });
-    }
-    expect(result.policy.scopeTables['api']?.limits?.root).toStrictEqual({
-        file_lines: 100,
-        function_lines: 20,
-    });
-    expect(preparePolicy(sandbox.path, () => {}).policy.scopeTables['api']?.limits?.root).toMatchObject({
-        function_lines: 20,
+        {
+            using log = openOwnership(sandbox.path);
+            writePolicyFile({
+                files: log.files,
+                text: result.text,
+                original: result.original,
+                publish: (next, expected) => {
+                    log.files.write('gspot.toml', next, expected);
+                },
+            });
+        }
+        expect(result.policy.scopeTables['api']?.limits?.root).toStrictEqual({
+            file_lines: 100,
+            function_lines: 20,
+        });
+        expect(preparePolicy(sandbox.path, () => {}).policy.scopeTables['api']?.limits?.root).toMatchObject({
+            function_lines: 20,
+        });
     });
 });
