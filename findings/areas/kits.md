@@ -1,6 +1,6 @@
 # Kits, Settings, and Names
 
-53 unresolved review records remain.
+52 unresolved review records remain.
 
 ## Findings
 
@@ -191,3 +191,11 @@ Original records and quotations remain above. These records are complete at `7e7
 | `areas/kits/114` | complete | Two-owner packet removes Bash/SQL language metadata from generic leaf and documents140/400/300; dedicated language settings remain. Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim. Commit `7e7008abcdbc3fd23638084f785c345c611382c1`.                                                                       |
 | `areas/kits/127` | complete | bash.doc_style absent; colon-comment contract and SSH help retained; existing native CLI doc-comment cases pass. Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim. Commit `7e7008abcdbc3fd23638084f785c345c611382c1`.                                                                                          |
 | `areas/kits/143` | complete | Bash title/configuration vocabulary is correct; external native shell language tag stays. Exact current binding and original quotations retained. Isolated focused17/69 plus126/326 reconciliation, Bun/Node native YAML/default probes and public six root/child file-ceiling defects corrected to zero; current Main101/362 integrated cases pass. Evidence scope recorded in detailed source report, no Linux/Windows or independent native build claim. Commit `7e7008abcdbc3fd23638084f785c345c611382c1`.                                                                                                                 |
+
+## Implementation checkpoint 063b0a5e6 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `063b0a5e68d28952a7960fdc69fae7cf1216407a`.
+
+| ID               | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `areas/kits/079` | complete | Binding implemented at its current native declaration owner; exact source and quotation preserved in gspot-preset-role-root-merged-main-intake.json. Integrated Main234 CLI cases759 assertions; source/types/current-policy lint, owned generation and staged hook verification. Detailed native controls preserved in immutable owner handoff evidence. Final full suites, cross-platform CI and release preparation remain separate obligations. Commit `063b0a5e68d28952a7960fdc69fae7cf1216407a`. |

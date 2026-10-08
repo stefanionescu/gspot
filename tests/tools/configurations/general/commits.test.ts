@@ -14,9 +14,13 @@ import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
-import { COMMITS_INIT } from '#tests/config/tools/commands/commits.ts';
 import { buildToolsPath, buildSandboxPath, installToolProjects } from '#tests/harness/install.ts';
-import { COMMIT_MESSAGES, DERIVED_SCOPE_POLICY } from '#tests/config/tools/configurations/general/commits.ts';
+
+import {
+    COMMITS_INIT,
+    COMMIT_MESSAGES,
+    DERIVED_SCOPE_POLICY,
+} from '#tests/config/tools/configurations/general/commits.ts';
 
 // The message check refuses a bad message, and a later range check rejects a bypassed hook.
 async function expectCommitChecks(root: string, environment: Record<string, string>): Promise<void> {

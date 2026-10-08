@@ -15,3 +15,14 @@ export const COMMIT_MESSAGES = [
     { message: 'fix(Core): xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', rule: undefined },
     { message: 'fix(Core): xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', rule: 'header-max-length' },
 ];
+
+export const COMMITS_INIT = [
+    'init',
+    '--yes',
+    '--configurations',
+    'commits',
+    '--no-task',
+    '--no-ci',
+    '--no-agent-rules',
+    '--no-install',
+];

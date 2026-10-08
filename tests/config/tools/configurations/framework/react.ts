@@ -3,6 +3,7 @@ import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 import {
+    COUNTER,
     WEB_TSCONFIG,
     CLEAN_COMPONENT,
     NATIVE_TSCONFIG,
@@ -10,9 +11,6 @@ import {
     EXPO_DEPENDENCIES,
     NATIVE_DEPENDENCIES,
 } from '#tests/config/samples/react.ts';
-
-export const COUNTER =
-    '// A test component.\nimport { useState } from "react";\nimport type { ReactNode } from "react";\n\n/**\n * Counts, some of the time.\n * @param props whether to count\n * @param props.isOn whether to count\n * @returns the count\n */\nexport function Counter({ isOn }: Readonly<{ isOn: boolean }>): ReactNode {\n    if (isOn) {\n        const [count] = useState(0);\n        return <p>{count}</p>;\n    }\n    return <p>off</p>;\n}\n';
 
 /** Text directly inside a native View instead of a Text component. */
 export const RAW_NATIVE_TEXT =

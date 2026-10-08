@@ -8,11 +8,13 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
-import { readTree } from '#tests/harness/preservation.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
+import { PREVIEW } from '#tests/config/cli/commands/init/refusals.ts';
+import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { COMPONENT, SELECTION_INIT } from '#tests/config/cli/commands/init/selection.ts';
 
@@ -221,4 +223,42 @@ test.each(['recommended', 'all'] as const)('init counts active and disabled chec
     expect(text.code, text.stdout + text.stderr).toBe(0);
     expect(text.stdout).toContain(`${String(total.length - off)} checks (${String(off)} off at ${level})`);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
+});
+
+test('a named configuration brings its suggested configurations, and one --scope-configurations flag proposes both scopes', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'tools/a.sh': CLEAN_BASH_SCRIPT, 'jobs/b.sh': CLEAN_BASH_SCRIPT });
+    commitAll(sandbox.path);
+    const named = await runGspot(sandbox.path, [...PREVIEW, '--configurations', 'bash']);
+    expect(named.code, named.stdout + named.stderr).toBe(0);
+    const { plan } = JSON.parse(named.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const configurations = plan.configurations.map(({ configuration }) => configuration);
+    for (const configuration of ['bash', 'format', 'naming']) expect(configurations).toContain(configuration);
+    const twoScopes = await runGspot(sandbox.path, [...PREVIEW, '--scope-configurations', 'tools=bash', 'jobs=bash']);
+    expect(twoScopes.code, twoScopes.stdout + twoScopes.stderr).toBe(0);
+    const parsed = parseStrictPolicy((JSON.parse(twoScopes.stdout) as Required<Pick<InitJson, 'policy'>>).policy);
+    expect(parsed.scope['tools']?.configurations).toContain('bash');
+    expect(parsed.scope['jobs']?.configurations).toContain('bash');
+});
+
+test('initialization flags control integrations, and the plan names the formatter file init deletes', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'source.js': 'export const port = 8080;\n',
+        '.prettierrc.json': '{"semi":false,"tabWidth":8}\n',
+    });
+    const preview = await runGspot(sandbox.path, [...PREVIEW, '--configurations', 'javascript']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    const plan = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;
+    const policy = parseStrictPolicy(plan.policy);
+    expect(policy).not.toHaveProperty('hooks');
+    expect(policy).not.toHaveProperty('ci');
+    expect(policy).not.toHaveProperty('runner');
+    expect(policy.format).toStrictEqual({});
+    expect(plan.plan.remove).toContainEqual({
+        path: '.prettierrc.json',
+        note: 'replaced by the generated prettier configuration',
+    });
+    expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
+    expect(await Bun.file(join(sandbox.path, '.prettierrc.json')).text()).toBe('{"semi":false,"tabWidth":8}\n');
 });

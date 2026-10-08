@@ -1,5 +1,5 @@
 {
-    "openRecords": 738,
+    "openRecords": 718,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 738,
+        "openRecords": 718,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 75,
-                "unresolvedAssignments": 216
+                "completedAssignments": 77,
+                "unresolvedAssignments": 214
             },
             {
                 "id": "python",
@@ -1950,8 +1950,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 29,
-                "unresolvedAssignments": 30
+                "completedAssignments": 47,
+                "unresolvedAssignments": 12
             },
             {
                 "id": "names",
@@ -3480,10 +3480,14 @@
             ]
         },
         "areas/kits/079": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented at its current native declaration owner; exact source and quotation preserved in gspot-preset-role-root-merged-main-intake.json.",
+                "Integrated Main234 CLI cases759 assertions; source/types/current-policy lint, owned generation and staged hook verification. Detailed native controls preserved in immutable owner handoff evidence.",
+                "Final full suites, cross-platform CI and release preparation remain separate obligations."
+            ]
         },
         "areas/kits/082": {
             "status": "pending",
@@ -5919,46 +5923,74 @@
             ]
         },
         "review/configurations-plugin/017": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Delete the field and the 25 values.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/018": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Set `off_values` on the five `tools.<tool>.rules` settings, so a rule turned off there is refused and pointed to `[[ignore]]`: ESLint `\"off\"` and `0` (javascript), markdownlint `false` (markdown), yamllint `\"disable\"` (files), and commitlint level `0` (commits). stylelint turns a rule off with `null`, which TOML cannot write, so it needs none.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/019": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Delete the field and the borrowing code paths.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/020": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Delete the 56 default-equal lines and make `title` required.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/021": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Delete them.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/022": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Let `[detect]` default to the `[files]` matchers, and keep `[detect]` only where it differs.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/023": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Move `project_files = [\"package.json\"]` to `language/javascript/manifest.toml` and delete `[detect]` from dependencies.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/024": {
             "status": "pending",
@@ -5975,22 +6007,34 @@
             ]
         },
         "review/configurations-plugin/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Derive the globs from `tool.eslint.extensions`, and delete `component_globs` from the schema (`manifest.ts:89`).",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/027": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Use a list, `replaces = [\".prettierrc\", \".prettierrc.json\", \u2026]`, and keep tables only for the 11 `shared` key and table rows.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Use one table order in every manifest: top-level keys, `[configuration]`, `[detect]`, `[files]`, `[set]`, `[[tool]]` with its `[[tool.replace]]` rows, `[[tool_file]]`, `[[check]]`, `[[setting]]`, `[required_eslint_rules]`, `[[eslint_rules_off]]`, `[ruff_rules]`, `[[naming.overrides]]`, `[agent_rules]`. Write nested values as inline tables: `validation = {...}`, `pointer = {...}`, and `selectors = [...]`. Add a manifest error in `configurations/errors.ts` that refuses any other order.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/029": {
             "status": "complete",
@@ -6001,16 +6045,24 @@
             ]
         },
         "review/configurations-plugin/030": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Add `validation = {enum = [\u2026]}` to each.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Rename the manifest key `scoped` to `per_scope` in the schema, in `generation/configurations.ts`, and in the 33 manifest lines.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/033": {
             "status": "pending",
@@ -6019,10 +6071,14 @@
             "verification": []
         },
         "review/configurations-plugin/035": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Write it from the installed `globals` in `scripts/eslint-presets.ts`.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "review/configurations-plugin/036": {
             "status": "pending",
@@ -6047,23 +6103,34 @@
             ]
         },
         "review/configurations-plugin/040": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented at its current native declaration owner; exact source and quotation preserved in gspot-preset-role-root-merged-main-intake.json.",
+                "Integrated Main234 CLI cases759 assertions; source/types/current-policy lint, owned generation and staged hook verification. Detailed native controls preserved in immutable owner handoff evidence.",
+                "Final full suites, cross-platform CI and release preparation remain separate obligations."
+            ]
         },
         "review/configurations-plugin/041": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented at its current native declaration owner; exact source and quotation preserved in gspot-preset-role-root-merged-main-intake.json.",
+                "Integrated Main234 CLI cases759 assertions; source/types/current-policy lint, owned generation and staged hook verification. Detailed native controls preserved in immutable owner handoff evidence.",
+                "Final full suites, cross-platform CI and release preparation remain separate obligations."
+            ]
         },
         "review/configurations-plugin/042": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
-                "Owner authorizes native HTML5 built-output valid-id error/relaxed true, retaining invalid empty/whitespace checks. Common base consolidation and final emitted/native acceptance remain pending."
+                "Owner authorizes native HTML5 built-output valid-id error/relaxed true, retaining invalid empty/whitespace checks. Common base consolidation and final emitted/native acceptance remain pending.",
+                "Binding implemented: Share one base and let the built-site config add its five overrides.",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
             ]
         },
         "review/configurations-plugin/043": {
@@ -6104,16 +6171,24 @@
             "verification": []
         },
         "review/configurations-plugin/049": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented at its current native declaration owner; exact source and quotation preserved in gspot-preset-role-root-merged-main-intake.json.",
+                "Integrated Main234 CLI cases759 assertions; source/types/current-policy lint, owned generation and staged hook verification. Detailed native controls preserved in immutable owner handoff evidence.",
+                "Final full suites, cross-platform CI and release preparation remain separate obligations."
+            ]
         },
         "review/configurations-plugin/050": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented at its current native declaration owner; exact source and quotation preserved in gspot-preset-role-root-merged-main-intake.json.",
+                "Integrated Main234 CLI cases759 assertions; source/types/current-policy lint, owned generation and staged hook verification. Detailed native controls preserved in immutable owner handoff evidence.",
+                "Final full suites, cross-platform CI and release preparation remain separate obligations."
+            ]
         },
         "review/configurations-plugin/051": {
             "status": "pending",
@@ -11487,10 +11562,14 @@
             ]
         },
         "slices/kits-general/055": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "verification": [
+                "Binding implemented: Say \"reports a missing icon when no such file sits beside the manifest.\" Replace the `site/webmanifest` example at `packages/cli/configurations/general/site/manifest.toml:170` with: \"reports a missing icon when no such file sits beside the manifest.\"",
+                "Integrated Main234 CLI cases759 assertions11files23.39s; root types0 and actual ESLint0. Native HTML18configs90controls, Markdown before/after both-level diagnostics, manifest58catalog equality and198generated outputs, component/root-child rule applicability preserved. Owned preset maintenance, schema freshness and apply pass.",
+                "Original prescribed fixes and owner HTML5 relaxed-ID override retained. Native Stylelint82-name set and globals59 runtime list proven; source parser public method type has no alias wrapper. Related manifest-contract production is smaller overall; required regression tests and captured native data growth recorded separately. No current cross-platform/full-suite claim."
+            ]
         },
         "slices/kits-general/056": {
             "status": "pending",
@@ -16140,6 +16219,39 @@
             "limitations": [
                 "SDK duplicate/trailing text follows adopted native parser semantics. Aggregate other049/plugin066 and language064/032/034/128/framework059 remain partial with precise obligations.",
                 "Final full suites/platforms/release boundary remain outstanding."
+            ]
+        },
+        {
+            "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
+            "completedRecords": [
+                "review/configurations-plugin/040",
+                "review/configurations-plugin/041",
+                "review/configurations-plugin/049",
+                "review/configurations-plugin/050",
+                "areas/kits/079",
+                "review/configurations-plugin/017",
+                "review/configurations-plugin/019",
+                "review/configurations-plugin/020",
+                "review/configurations-plugin/021",
+                "review/configurations-plugin/022",
+                "review/configurations-plugin/023",
+                "review/configurations-plugin/030",
+                "review/configurations-plugin/027",
+                "review/configurations-plugin/028",
+                "review/configurations-plugin/031",
+                "review/configurations-plugin/018",
+                "review/configurations-plugin/042",
+                "slices/kits-general/055",
+                "review/configurations-plugin/026",
+                "review/configurations-plugin/035"
+            ],
+            "unresolvedRecords": 718,
+            "validation": [
+                "Main234 cases759assertions, types0, actual ESLint0, native HTML90 and Markdown equality controls, canonical manifest/catalog/generation equivalence; normal preset/schema producers and apply.",
+                "113 commit hook checks0 and152 push hook checks0; source production including captured data\u2212419bytes."
+            ],
+            "limitations": [
+                "Related production contract deletes more source than it adds; generated catalog and required regression test growth retained explicitly. Final suites/platforms and release-boundary work remain outstanding."
             ]
         }
     ],
