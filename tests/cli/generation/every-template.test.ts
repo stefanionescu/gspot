@@ -4,12 +4,12 @@ import { test, expect } from 'bun:test';
 import { join, extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { PROJECT_FILES } from '#tests/config/cli/generation/every-template.ts';
 
 const PARSERS: Record<string, (text: string, path: string) => void> = {

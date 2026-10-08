@@ -1,20 +1,22 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
 import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
-import { singletons } from '#cli/checks/language/python/singletons.ts';
 
 test('a module-level instance is a singleton until its composition file has a policy ignore', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildPolicy(['python'], { level: 'all' }),
         'example/shared.py': `${PYTHON_MODULE_HEADER}class Store:\n    """Holds things."""\n\n\nstore = Store()\n`,
     });
-    const unallowed = await singletons(buildCheckInput(await openSession(sandbox.path), 'python/singletons'));
+    const unallowed = await BUILT_IN_CHECKS['python/singletons'].input(
+        buildCheckInput(await openSession(sandbox.path), 'python/singletons'),
+    );
     expect(unallowed.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'example/shared.py', line: 8, rule: 'singleton' },
     ]);
@@ -36,7 +38,9 @@ test('FastAPI composition objects use the same explicit file ignores as other Py
         'api.py': 'app = FastAPI()\nrouter = APIRouter()\nsettings = Settings()\n',
         'outside.py': 'settings = Settings()\n',
     });
-    const native = await singletons(buildCheckInput(await openSession(sandbox.path), 'python/singletons'));
+    const native = await BUILT_IN_CHECKS['python/singletons'].input(
+        buildCheckInput(await openSession(sandbox.path), 'python/singletons'),
+    );
     expect(native.map(({ file, line }) => ({ file, line }))).toStrictEqual([
         { file: 'api.py', line: 1 },
         { file: 'api.py', line: 2 },

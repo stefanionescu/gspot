@@ -137,7 +137,7 @@ name = "postgres.migrations_folder"
 type = "string"
 direction = "neutral"
 default = ""
-summary = "The migrations folder relative to the scope; empty searches supabase/migrations, db/migrations, and migrations within that scope."
+summary = "The migrations folder relative to the scope; empty selects the migration files owned by this configuration."
 
 [[setting]]
 name = "postgres.client_schemas"

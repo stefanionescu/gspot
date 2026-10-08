@@ -4,17 +4,17 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
-import { knownSettings } from '#cli/policy/settings/known.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
+import { allChecks } from '#cli/configurations/contracts.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { allChecks } from '#cli/configurations/declarations.ts';
+import { knownSettings } from '#cli/policy/settings/public.ts';
 import type { KnownSettings } from '#cli/types/policy/settings.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
-import { nameFindings } from '#cli/checks/general/naming/findings.ts';
-import { effectivePolicy } from '#cli/checks/general/naming/policy.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { settingValue, declarationFor } from '#cli/policy/settings/lookup.ts';
+import { nameFindings } from '#cli/checks/general/naming/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { effectivePolicy } from '#cli/checks/general/naming/contracts.ts';
+import { selectConfigurations } from '#cli/configurations/selection/public.ts';
+import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
 
 import {
     NAME_WORDS,
@@ -88,7 +88,7 @@ test.each([...NAMING_LANGUAGES])('%s accepts its exact ceilings and reports the 
     const { settings, effective } = defaultNamingContext();
     const characters = namingCeiling(settings, `naming.${language}.max_chars`);
     const words = namingCeiling(settings, `naming.${language}.max_words`);
-    const context = { check, policy: effective, isTestFile: false, isReactFile: false };
+    const context = { check, policy: effective, isTestFile: false };
     const category = language === 'swift' ? 'functions' : 'variables';
     const declaration: Identifier = {
         file: 'source',
@@ -120,7 +120,6 @@ test('technical digit words remain words in every identifier category without ex
     const context = {
         check,
         policy: { ...effective, limitsFor: () => ({ caseNames: [], maxChars: 35, maxWords: 4 }) },
-        isReactFile: false,
         isTestFile: false,
     };
     for (const category of NAMING_CATEGORIES) {
@@ -221,7 +220,7 @@ test.each(NATIVE_NAME_CATEGORIES)(
             }),
         );
         const effective = effectivePolicy(settings, policy, '', selected);
-        const context = { check, policy: effective, isTestFile: false, isReactFile: false };
+        const context = { check, policy: effective, isTestFile: false };
         const identifier: Identifier = {
             file: 'source',
             language,
@@ -237,5 +236,75 @@ test.each(NATIVE_NAME_CATEGORIES)(
         expect(nameFindings({ ...identifier, name: NAME_WORDS.join('_') }, context).map(({ rule }) => rule)).toContain(
             'words',
         );
+    },
+);
+
+test.each(['nextjs', 'svelte', 'astro'])(
+    '%s path containers stay in the selected child scope at both levels',
+    async (framework) => {
+        for (const level of ['recommended', 'all'] as const) {
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
+                'gspot.toml': buildPolicy(['javascript', 'typescript', 'naming'], {
+                    level,
+                    tables: `[scope.app]\nconfigurations = ["${framework}"]\n`,
+                }),
+                '(group)/[id]/@slot/_private/page.ts': 'export function handleSubmit() {}\n',
+                'app/(group)/[id]/@slot/_private/page.ts':
+                    'export function handleSubmit() {}\nexport class Form { handleSubmit() {} }\nexport const handleCancel = 1;\n',
+                'app/[...slug].ts': 'export function handleClick() {}\n',
+                'root.js': 'export const handleCancel = 1;\n',
+            });
+            const result = await runGspot(sandbox.path, [
+                'check',
+                '--only',
+                'naming/identifiers',
+                'naming/paths',
+                '--json',
+            ]);
+            const report = JSON.parse(result.stdout) as RunReport;
+            expect(result.code, result.stdout + result.stderr).toBe(level === 'all' ? 1 : 0);
+            const findings = report.checks.flatMap(({ findings }) => findings);
+            if (level === 'recommended') expect(findings).toStrictEqual([]);
+            else {
+                expect(
+                    findings
+                        .filter(({ rule }) => rule === 'callback-verb')
+                        .map(({ file }) => file)
+                        .toSorted((left, right) => left.localeCompare(right)),
+                ).toStrictEqual(['app/(group)/[id]/@slot/_private/page.ts', 'root.js']);
+                expect(findings.filter(({ check }) => check === 'naming/paths').map(({ file }) => file)).toContain(
+                    '(group)/[id]/@slot/_private/page.ts',
+                );
+                expect(
+                    findings.filter(({ check, file }) => check === 'naming/paths' && file.startsWith('app/')),
+                ).toStrictEqual([]);
+            }
+        }
+    },
+);
+
+test.each(['nextjs', 'svelte', 'astro'])(
+    '%s root containers also apply to inherited child selections',
+    async (framework) => {
+        for (const level of ['recommended', 'all'] as const) {
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
+                'gspot.toml': buildPolicy(['typescript', 'naming', framework], { level, tables: '[scope.app]\n' }),
+                '(group)/[id]/@slot/_private/page.ts': 'export function handleSubmit() {}\n',
+                'app/(group)/[id]/@slot/_private/page.ts': 'export class Form { handleSubmit() {} }\n',
+            });
+            const result = await runGspot(sandbox.path, [
+                'check',
+                '--only',
+                'naming/identifiers',
+                'naming/paths',
+                '--json',
+            ]);
+            expect(result.code, result.stdout + result.stderr).toBe(0);
+            expect((JSON.parse(result.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual(
+                [],
+            );
+        }
     },
 );

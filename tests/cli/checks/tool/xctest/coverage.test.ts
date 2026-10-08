@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { coverageShortfalls } from '#cli/checks/tool/xctest.ts';
+import { coverageShortfalls } from '#cli/checks/tool/contracts.ts';
 
 test('the coverage check compares each named target with its floor', () => {
     const report = { targets: [{ name: 'App.app', lineCoverage: 0.617 }] };

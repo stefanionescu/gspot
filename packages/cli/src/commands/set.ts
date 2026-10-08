@@ -1,29 +1,28 @@
 // Preview or publish setting changes with the same validation and mutation.
 import { resolve } from 'node:path';
-import { readPolicy } from '#cli/policy/read.ts';
-import { findRoot } from '#cli/repository/root.ts';
-import { commandHelp } from '#cli/commands/help.ts';
-import { parseTomlText } from '#cli/policy/file.ts';
-import { GspotError } from '#cli/platform/errors.ts';
+import { readPolicy } from '#cli/policy/public.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { Option } from '@commander-js/extra-typings';
-import { quoteArgument } from '#cli/platform/text.ts';
-import { printResult } from '#cli/terminal/messages.ts';
-import { savePolicy } from '#cli/commands/save-policy.ts';
+import { commandHelp } from '#cli/commands/public.ts';
+import { printResult } from '#cli/terminal/public.ts';
+import { savePolicy } from '#cli/commands/contracts.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
+import { assertVersionPin } from '#cli/lifecycle/public.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
-import { compact, isRecord } from '#cli/platform/objects.ts';
 import type { Program } from '#cli/types/commands/program.ts';
-import { knownSettings } from '#cli/policy/settings/known.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
-import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
-import { unknownSettingDiagnostic } from '#cli/policy/errors/keys.ts';
+import { knownSettings } from '#cli/policy/settings/public.ts';
+import { parseTomlText } from '#cli/policy/document/public.ts';
+import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import type { SettingDeclaration } from '#cli/types/configurations.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { settingValue, declarationFor } from '#cli/policy/settings/lookup.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { unknownSettingDiagnostic } from '#cli/policy/errors/public.ts';
+import { selectForScope } from '#cli/configurations/selection/public.ts';
+import { compact, isRecord, quoteArgument } from '#cli/platform/contracts.ts';
 import { DECIMAL, INTEGER, STRUCTURED } from '#cli/config/commands/options.ts';
 import type { SetOptions, ParsedSettingValue } from '#cli/types/commands/set.ts';
+import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
 import type { Policy, Mutation, KnownSettings } from '#cli/types/policy/settings.ts';
-import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/edit.ts';
+import { setKey, addToList, deleteKey, getScopeTable, removeFromList } from '#cli/policy/document/contracts.ts';
 
 // Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
 function parseStructured(text: string): unknown {

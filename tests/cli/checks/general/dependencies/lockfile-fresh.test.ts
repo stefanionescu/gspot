@@ -1,11 +1,11 @@
 import { join, basename } from 'node:path';
-import * as tools from '#cli/tools/inspect.ts';
+import * as tools from '#cli/tools/public.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
+import * as processes from '#cli/platform/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -24,7 +24,7 @@ test.each(['missing', 'deadline', 'cancellation', 'unexpected'] as const)(
         const options = buildRunOptions({
             stage: 'push',
             skips: [],
-            only: ['dependencies/lockfile-fresh'],
+            only: ['dependencies/stale-lockfile'],
         });
         const copies: string[] = [];
         const spawn = spyOn(processes, 'run').mockImplementation(async (_command, options) => {
@@ -84,7 +84,7 @@ test('Yarn Berry validates metadata locks with install --immutable and preserves
         buildRunOptions({
             stage: 'push',
             skips: [],
-            only: ['dependencies/lockfile-fresh'],
+            only: ['dependencies/stale-lockfile'],
         }),
     );
     expect(outcome.report.checks[0]!.status).toBe('passed');

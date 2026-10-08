@@ -3,12 +3,12 @@ import globals from 'globals';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { readAsset } from '#cli/platform/assets.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { readAsset } from '#cli/platform/root/public.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { eslintGlobalsSchema } from '#cli/parsers/schema/eslint.ts';
+import { eslintGlobalsSchema } from '#cli/parsers/schema/public.ts';
 import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {

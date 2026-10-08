@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES } from '#cli/config/checks/language/bash.ts';
 
 /**

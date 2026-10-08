@@ -3,10 +3,10 @@ import { join, dirname } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { getLintJobs } from '#cli/repository/survey.ts';
-import { readRepository } from '#cli/repository/read.ts';
-import { getTooling } from '#cli/configurations/takeover.ts';
+import { getTooling } from '#cli/configurations/public.ts';
+import { readRepository } from '#cli/repository/public.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { getLintJobs } from '#cli/repository/discovery/public.ts';
 import { mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 import {

@@ -6,9 +6,9 @@ import { gspot, runGspot } from '#tests/harness/gspot.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
 import type { CiDocument } from '#tests/types/generation/workflow.ts';
 import type { CiProject, CiInstallation } from '#tests/types/tools/ci.ts';
 

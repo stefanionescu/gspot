@@ -1,15 +1,15 @@
 import { isDeepStrictEqual } from 'node:util';
 import { settingPaths } from '#cli/policy/paths.ts';
-import { defaultValue } from '#cli/policy/schema/fields.ts';
-import { policySchema } from '#cli/policy/schema/policy.ts';
-import { valueAt, isRecord } from '#cli/platform/objects.ts';
-import { knownSettings } from '#cli/policy/settings/known.ts';
+import { policySchema } from '#cli/policy/schema/public.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
-import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
+import { defaultValue } from '#cli/policy/schema/contracts.ts';
+import { knownSettings } from '#cli/policy/settings/public.ts';
+import { valueAt, isRecord } from '#cli/platform/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import type { DefaultPolicyTable } from '#cli/types/policy/defaults.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { mergeValue, declarationFor, settingCandidates } from '#cli/policy/settings/lookup.ts';
+import { selectForScope } from '#cli/configurations/selection/public.ts';
+import { isInScope, byScopeDepth } from '#cli/repository/paths/public.ts';
+import { mergeValue, declarationFor, settingCandidates } from '#cli/policy/settings/contracts.ts';
 
 function configurationSelection(table: TomlTable) {
     return {
@@ -53,6 +53,8 @@ function omitTableDefaults(
         const declaration = declarationFor(owner.surface, key)?.declaration;
         if (declaration === undefined)
             return [[name, isRecord(value) ? omitTableDefaults(value, owner, tables, segments) : value]];
+        // Project-derived defaults cannot prove that an authored command is redundant.
+        if (declaration.name === 'site.build_command') return [[name, value]];
         // An authored empty path is a manual choice; omission permits project inference.
         if (declaration.type === 'path' && value === '') return [[name, value]];
         const consumers = tables.filter(({ scope }) => isInScope(scope, owner.scope));

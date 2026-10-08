@@ -2,15 +2,15 @@
 import { parse } from 'smol-toml';
 import { posix, basename } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readText } from '#cli/platform/source.ts';
-import { GspotError } from '#cli/platform/errors.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { readText } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { getIniSection } from '#cli/parsers/tool/tool-file.ts';
-import { pythonProjectCommand } from '#cli/tools/python/uv.ts';
-import { runCheckTool } from '#cli/execution/command/check.ts';
+import { getIniSection } from '#cli/parsers/tool/contracts.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { toolOutputDetail } from '#cli/execution/command/failures.ts';
+import { runCheckTool } from '#cli/execution/command/public.ts';
+import { pythonProjectCommand } from '#cli/tools/python/public.ts';
+import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import { importLinterSchema } from '#cli/parsers/schema/python/imports.ts';
 import { BROKEN_CONTRACT, PYTHON_MANIFEST, IMPORT_CONTRACT_FILES } from '#cli/config/checks/language/python.ts';
 

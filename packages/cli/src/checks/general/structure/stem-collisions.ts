@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { stemOf, directoryOf, directoryTree } from '#cli/platform/paths.ts';
+import { stemOf, directoryOf, directoryTree } from '#cli/platform/contracts.ts';
 import { structureSources } from '#cli/checks/general/structure/source-files.ts';
 
 /**

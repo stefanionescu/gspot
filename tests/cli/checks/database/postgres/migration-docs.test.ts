@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { parseMigration } from '#tests/harness/migrations.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { docFindings } from '#cli/checks/database/postgres/migration-docs.ts';
+import { docFindings } from '#cli/checks/database/postgres/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 
 import {
     NAME,

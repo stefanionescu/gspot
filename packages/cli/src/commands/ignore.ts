@@ -1,22 +1,21 @@
 import { resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { readPolicy } from '#cli/policy/read.ts';
-import { compact } from '#cli/platform/objects.ts';
-import { findRoot } from '#cli/repository/root.ts';
-import { commandHelp } from '#cli/commands/help.ts';
-import { GspotError } from '#cli/platform/errors.ts';
-import { printResult } from '#cli/terminal/messages.ts';
-import { savePolicy } from '#cli/commands/save-policy.ts';
+import { readPolicy } from '#cli/policy/public.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { commandHelp } from '#cli/commands/public.ts';
+import { printResult } from '#cli/terminal/public.ts';
+import { savePolicy } from '#cli/commands/contracts.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
+import { assertVersionPin } from '#cli/lifecycle/public.ts';
+import { knownChecks } from '#cli/configurations/public.ts';
 import type { Program } from '#cli/types/commands/program.ts';
-import { knownChecks } from '#cli/configurations/manifests.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
-import { reasonDiagnostic } from '#cli/policy/errors/reasons.ts';
+import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import type { IgnoreOptions } from '#cli/types/commands/ignore.ts';
-import { similar, codeList, quoteArgument } from '#cli/platform/text.ts';
+import { reasonDiagnostic } from '#cli/policy/errors/contracts.ts';
 import type { Policy, Mutation, TomlTable } from '#cli/types/policy/settings.ts';
-import { emitPolicy, mergeIgnore, parseTomlText, parseExpiryDate } from '#cli/policy/file.ts';
+import { compact, similar, codeList, quoteArgument } from '#cli/platform/contracts.ts';
+import { emitPolicy, mergeIgnore, parseTomlText, parseExpiryDate } from '#cli/policy/document/public.ts';
 
 function assertKnownCheck(checkName: string, policy: Policy): void {
     const known = knownChecks(Object.values(policy.check));

@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { explain } from '#cli/commands/explain/command.ts';
+import { explain } from '#cli/commands/explain/public.ts';
 
 test('a rule is explained with the page its manifest declares', () => {
     const shellcheck = explain(undefined, 'shellcheck/SC2086');

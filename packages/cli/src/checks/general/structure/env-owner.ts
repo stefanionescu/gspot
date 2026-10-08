@@ -1,9 +1,9 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
-import { visitParsed } from '#cli/parsers/tree-sitter.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
-import { rolePaths } from '#cli/policy/settings/lookup.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { visitParsed } from '#cli/parsers/source/public.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
+import { rolePaths } from '#cli/policy/settings/contracts.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { IMPORTS } from '#cli/config/checks/language/python.ts';
 import { ENVIRONMENT_READ } from '#cli/config/checks/language/swift.ts';

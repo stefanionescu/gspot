@@ -3,15 +3,15 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { emitAll } from '#cli/generation/files.ts';
+import { emitAll } from '#cli/generation/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { installTools } from '#cli/lifecycle/install.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { installTools } from '#cli/lifecycle/install/public.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { preparePythonInstallation } from '#tests/harness/python-installation.ts';
 
 // A Windows virtual environment has launchers and no interpreter links; the install tests stay POSIX-only.

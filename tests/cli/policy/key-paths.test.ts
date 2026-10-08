@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
-import { readPolicyText, parseStrictPolicy } from '#cli/policy/read.ts';
+import { readPolicyText, parseStrictPolicy } from '#cli/policy/public.ts';
 
 test.each([
     {

@@ -1,16 +1,15 @@
 import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import * as inspections from '#cli/tools/inspect.ts';
+import * as inspections from '#cli/tools/public.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import * as batches from '#cli/execution/command/batches.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
-import { fileLines } from '#cli/checks/general/structure/file-lines.ts';
-import { functionSize } from '#cli/checks/language/bash/function-size.ts';
+import * as batches from '#cli/execution/command/arguments/contracts.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
     await using sandbox = await testdir();
@@ -61,7 +60,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
             ),
         });
     });
-    const findings = await functionSize(input);
+    const findings = await BUILT_IN_CHECKS['bash/function-size'].input(input);
     expect(received).toStrictEqual(selectedFiles);
     expect(received).toHaveLength(files.length);
     expect(findings.map((finding) => finding.file)).toStrictEqual(selectedFiles);
@@ -102,7 +101,7 @@ test.each(['fatal exit', 'malformed JSON', 'invalid match', 'unselected file'] a
             stdout: output,
             stderr: 'cannot read source.sh',
         });
-        expect(await rejection(Promise.resolve(functionSize(input)))).toContain(
+        expect(await rejection(Promise.resolve(BUILT_IN_CHECKS['bash/function-size'].input(input)))).toContain(
             {
                 'fatal exit': 'cannot read source.sh',
                 'malformed JSON': 'JSON',
@@ -130,9 +129,11 @@ test('ast-grep accepts a clean native report', async () => {
         stdout: '[]',
         stderr: '',
     });
-    expect(await functionSize(buildCheckInput(await openSession(sandbox.path), 'bash/function-size'))).toStrictEqual(
-        [],
-    );
+    expect(
+        await BUILT_IN_CHECKS['bash/function-size'].input(
+            buildCheckInput(await openSession(sandbox.path), 'bash/function-size'),
+        ),
+    ).toStrictEqual([]);
 });
 
 test.each(['.sh', '.bats', ''])(
@@ -144,14 +145,18 @@ test.each(['.sh', '.bats', ''])(
             'gspot.toml': buildPolicy(['bash'], { level: 'all', tables: '[limits.bash]\nfile_lines = 5\n' }),
             [file]: source,
         });
-        const found = await fileLines(buildCheckInput(await openSession(sandbox.path), 'structure/file-lines'));
+        const found = await BUILT_IN_CHECKS['structure/file-lines'].input(
+            buildCheckInput(await openSession(sandbox.path), 'structure/file-lines'),
+        );
         expect(found).toMatchObject([
             { file, line: 1, rule: 'file-lines', message: 'This file has 6 code lines, over the ceiling of 5.' },
         ]);
         expect(await Bun.file(join(sandbox.path, file)).text()).toBe(source);
         await Bun.write(join(sandbox.path, file), source.replace('# literal\nEOF', 'EOF'));
-        expect(await fileLines(buildCheckInput(await openSession(sandbox.path), 'structure/file-lines'))).toStrictEqual(
-            [],
-        );
+        expect(
+            await BUILT_IN_CHECKS['structure/file-lines'].input(
+                buildCheckInput(await openSession(sandbox.path), 'structure/file-lines'),
+            ),
+        ).toStrictEqual([]);
     },
 );

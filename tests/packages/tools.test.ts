@@ -1,6 +1,6 @@
 // Installed tools preserve authored metadata and report findings and pass after fixes.
 import { test, expect } from 'bun:test';
-import { toPosix } from '#cli/platform/paths.ts';
+import { toPosix } from '#cli/platform/contracts.ts';
 import { join, relative, delimiter } from 'node:path';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';

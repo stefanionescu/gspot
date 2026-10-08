@@ -1,9 +1,9 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { visitParsed } from '#cli/parsers/source/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { DEFINITIONS, PACKAGE_FILE } from '#cli/config/checks/language/python.ts';
-import { readPython, disposePython, exportedNames } from '#cli/parsers/python.ts';
+import { readPython, disposePython, exportedNames } from '#cli/parsers/source/contracts.ts';
 
 /**
  * In a module with __all__: every definition the list leaves out starts with an underscore, and the list holds no such name.

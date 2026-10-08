@@ -1,14 +1,17 @@
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { valueAt } from '#cli/platform/objects.ts';
-import { readAsset } from '#cli/platform/assets.ts';
+import { valueAt } from '#cli/platform/contracts.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { eta, etaInputs } from '#cli/generation/eta.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { readAsset } from '#cli/platform/root/public.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
+import { emitPolicy } from '#cli/policy/document/public.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { eta, etaInputs } from '#cli/generation/compilation/public.ts';
 
 import type {
     KnipConfiguration,
@@ -20,7 +23,9 @@ import {
     KNIP,
     RUFF,
     STYLELINT,
+    SITE_BUILD_COMMANDS,
     TAILWIND_PROJECT_FILES,
+    SITE_PACKAGE_INSTALLERS,
     PATH_IGNORE_CONFIGURATIONS,
 } from '#tests/config/cli/generation/shared-settings.ts';
 
@@ -187,4 +192,41 @@ test.each(['', 'api'])('Semgrep editor discovery in scope "%s" uses only local c
     expect(content.split('\n')).toContain(scope === '' ? 'api/local/**' : '/local/**');
     expect(content).not.toContain('rule-only');
     expect(content).not.toContain('registry-only');
+});
+
+test.each(
+    SITE_PACKAGE_INSTALLERS.flatMap(([name, files, installer]) =>
+        ['', 'app'].map((scope) => ({ name, files, installer, scope })),
+    ),
+)('site build uses $name in "$scope" and retains explicit authored argv', async ({ files, installer, scope }) => {
+    await using sandbox = await testdir();
+    const policy =
+        scope === '' ? buildPolicy(['site']) : buildPolicy([], { tables: '[scope.app]\nconfigurations = ["site"]\n' });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': policy,
+        [join(scope, 'index.html')]: '<!doctype html><title>Site</title>',
+        ...Object.fromEntries(Object.entries(files).map(([path, text]) => [join(scope, path), text])),
+    });
+    const session = await openSession(sandbox.path);
+    const selected = session.scopes.find((entry) => entry.scope.path === scope)!;
+    expect(selected.view.options('site').build_command).toStrictEqual([installer, 'run', 'build']);
+    for (const argv of SITE_BUILD_COMMANDS) {
+        const authored =
+            policy + (scope === '' ? '[site]\n' : '[scope.app.site]\n') + stringify({ build_command: argv });
+        await writeFile(join(sandbox.path, 'gspot.toml'), authored);
+        const manual = await openSession(sandbox.path);
+        expect(
+            manual.scopes.find((entry) => entry.scope.path === scope)!.view.options('site').build_command,
+        ).toStrictEqual(argv);
+        expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(authored);
+        const canonical = emitPolicy(authored, parseToml(authored));
+        expect(emitPolicy(canonical, parseToml(canonical))).toBe(canonical);
+        await writeFile(join(sandbox.path, 'gspot.toml'), canonical);
+        const reopened = await openSession(sandbox.path);
+        expect(
+            reopened.scopes.find((entry) => entry.scope.path === scope)!.view.options('site').build_command,
+        ).toStrictEqual(argv);
+    }
+    for (const [path, text] of Object.entries(files))
+        expect(await readFile(join(sandbox.path, scope, path), 'utf8')).toBe(text);
 });

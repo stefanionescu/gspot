@@ -1,19 +1,19 @@
 import { join, posix } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
 import { commitAll } from '#tests/harness/git.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { openapiFresh } from '#cli/checks/tool/openapi.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import type { OpenapiProject } from '#tests/types/cli/checks/tool/openapi.ts';
 
@@ -51,7 +51,7 @@ async function applyChanges(schema: string, scope: string): Promise<OpenapiProje
     await chmod(document, 0o640);
     await writeFile(join(directory.path, scope, '0009_manual.sql'), '-- Untracked manual migration\n');
     const session = await openSession(directory.path);
-    const check = session.manifests.get('openapi')!.checks.find((entry) => entry.name === 'openapi/fresh')!;
+    const check = session.manifests.get('openapi')!.checks.find((entry) => entry.name === 'openapi/stale-document')!;
     const input = buildCheckInput(session, check.name, { scope });
     const { mode } = await stat(document);
     return { directory, document, edited, mode, check, input };
@@ -73,7 +73,9 @@ test.each(['', 'apps/api'])(
     async (scope) => {
         const testRepository = await applyChanges('{"fail":true}\n', scope);
         await using _directory = testRepository.directory;
-        expect(await rejection(openapiFresh(testRepository.input))).toContain('Generation failed');
+        expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input))).toContain(
+            'Generation failed',
+        );
         await expectPreserved(testRepository);
     },
 );
@@ -83,18 +85,19 @@ test.each(['', 'apps/api'])(
     async (scope) => {
         const testRepository = await applyChanges('{"version":3}\n', scope);
         await using directory = testRepository.directory;
-        expect(await openapiFresh(testRepository.input)).toStrictEqual([
+        expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([
             {
                 check: testRepository.check.name,
                 file: posix.join(scope, 'openapi.json'),
                 line: 1,
                 rule: 'stale',
-                message: 'Running ["bun","generate.ts","","two words"] changes this document; commit what it writes.',
+                message:
+                    'Running ["bun","generate.ts","","two words"] changes this generated file; commit what it writes.',
                 fixable: false,
             },
         ]);
         await writeFile(join(directory.path, scope, 'schema.json'), testRepository.edited);
-        expect(await openapiFresh(testRepository.input)).toStrictEqual([]);
+        expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([]);
         await expectPreserved(testRepository);
     },
 );
@@ -111,9 +114,9 @@ test.each(['', 'apps/api'])(
             }),
             [posix.join(scope, 'generate.ts')]: 'export {};',
         });
-        const input = buildCheckInput(await openSession(sandbox.path), 'openapi/fresh', { scope });
+        const input = buildCheckInput(await openSession(sandbox.path), 'openapi/stale-document', { scope });
         using spawn = spyOn(processes, 'run');
-        expect(await rejection(openapiFresh(input))).toBe(
+        expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(input))).toBe(
             `The openapi.document setting names ${posix.join(scope, 'openapi.json')}, which does not exist.`,
         );
         expect(spawn).not.toHaveBeenCalled();

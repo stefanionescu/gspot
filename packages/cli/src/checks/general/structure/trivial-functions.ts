@@ -1,12 +1,12 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
-import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { visitParsed } from '#cli/parsers/source/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { swiftFunctionName } from '#cli/parsers/swift/source.ts';
+import { swiftFunctionName } from '#cli/parsers/swift/public.ts';
 import type { CountedLanguage } from '#cli/types/parsers/statements.ts';
 import { readHouseSources, disposeHouseSources } from '#cli/checks/general/structure/conventions.ts';
-import { isDocstring, trivialText, isTrivialFile, executableStatements } from '#cli/parsers/statements.ts';
+import { isDocstring, trivialText, isTrivialFile, executableStatements } from '#cli/parsers/source/contracts.ts';
 
 // Native executable bodies exclude Python docstrings and Swift declarations without bodies.
 function functionBody(node: Node, language: CountedLanguage): Node[] {

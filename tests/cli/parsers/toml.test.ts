@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { containing } from '#tests/harness/expectations.ts';
-import { openTomlDocument } from '#cli/parsers/toml/document.ts';
+import { openTomlDocument } from '#cli/parsers/toml/public.ts';
 
 test('adding a root key retains leading comments on their authored tool table', () => {
     const document = openTomlDocument({

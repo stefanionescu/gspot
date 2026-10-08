@@ -3,7 +3,8 @@ export const GIT_HOOK_SCRIPT = String.raw`
 import { join, resolve } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
 const { checkOutRevision } = await import(process.argv[2]);
-const { runGit, runGitBlocking, runGitBinary, gitText } = await import(process.argv[3]);
+const { runGit, runGitBinary, gitText } = await import(process.argv[3]);
+const { runGitBlocking } = await import(new URL('./contracts.ts', process.argv[3]));
 const { runTool } = await import(process.argv[4]);
 const root = process.cwd();
 const nested = join(root, 'nested');

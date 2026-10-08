@@ -3,7 +3,7 @@ import semver from 'semver';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { ARGUMENT_START } from '#automation/config/paths.ts';
 import pluginPackage from '#plugin-package' with { type: 'json' };
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 
 const tag = process.argv[ARGUMENT_START];
 const version = semver.parse(cliPackage.version);

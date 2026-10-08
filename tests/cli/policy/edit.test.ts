@@ -2,12 +2,20 @@ import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
-import { writePolicyFile } from '#cli/policy/file.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { Mutation } from '#cli/types/policy/settings.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { writePolicyFile } from '#cli/policy/document/public.ts';
 import { AUTHORED_POLICY } from '#tests/config/cli/policy/file.ts';
-import { setKey, addToList, deleteKey, editPolicy, getScopeTable, preparePolicy } from '#cli/policy/edit.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+
+import {
+    setKey,
+    addToList,
+    deleteKey,
+    editPolicy,
+    getScopeTable,
+    preparePolicy,
+} from '#cli/policy/document/contracts.ts';
 
 test('policy edits keep a trailing array comma and write inline tables without one', () => {
     const original = '# Authored selection.\nconfigurations = ["security",]\n';

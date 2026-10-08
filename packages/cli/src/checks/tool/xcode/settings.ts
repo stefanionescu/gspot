@@ -1,5 +1,5 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/platform/source.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { scopeSourcesByEnding } from '#cli/checks/tool/xcode/project.ts';

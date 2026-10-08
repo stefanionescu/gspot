@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { BUILT_HTML_RULES, DISABLED_TOOL_RULES } from '#tests/config/cli/generation/html.ts';
 
 test.each(['recommended', 'all'] as const)(

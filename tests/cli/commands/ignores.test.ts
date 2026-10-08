@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { unlink, readFile, writeFile } from 'node:fs/promises';

@@ -3,13 +3,13 @@ import * as filesystem from 'node:fs';
 import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { applyCommand } from '#cli/commands/apply.ts';
+import { applyCommand } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
-import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
+import { getOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { RULE_PREVIEW_CASES } from '#tests/config/cli/lifecycle/rule-preview.ts';
 
 test.each(RULE_PREVIEW_CASES)('apply compares rules with its last successful write: $name', async (entry) => {

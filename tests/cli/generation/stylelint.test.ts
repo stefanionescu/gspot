@@ -2,15 +2,15 @@ import { join } from 'node:path';
 import stylelint from 'stylelint';
 import type { Config } from 'stylelint';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
+import { getSuggestions } from '#cli/commands/doctor/contracts.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { STYLELINT_SCOPES, STYLELINT_PROJECT, STYLELINT_SUGGESTIONS } from '#tests/config/cli/generation/stylelint.ts';
 
 test.each(['recommended', 'all'] as const)(

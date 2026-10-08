@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import * as spawn from '#cli/platform/spawn.ts';
+import * as spawn from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
+import { buildPlan } from '#cli/checks/language/swift/public.ts';
 import { useCacheDirectory } from '#tests/harness/environment.ts';
 import { SWIFT_PACKAGE } from '#tests/config/samples/swift/source.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { stat, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { swiftBuild, swiftPeriphery } from '#cli/checks/language/swift/build.ts';
 
 test('Swift build side effects stay in the source copy and do not become later inputs', async () => {
     await using sandbox = await testdir();
@@ -43,8 +43,8 @@ test('Swift build side effects stay in the source copy and do not become later i
         await writeFile(join(cwd, 'Sources/Value.swift'), 'modified by build');
         return { code: 0, stdout: '', stderr: '', missing: false, duration: 1 };
     });
-    expect(await swiftBuild(initial)).toStrictEqual([]);
-    expect(await swiftBuild(next)).toStrictEqual([]);
+    expect(await BUILT_IN_CHECKS['swift/build'].input(initial)).toStrictEqual([]);
+    expect(await BUILT_IN_CHECKS['swift/build'].input(next)).toStrictEqual([]);
     expect(sources).toStrictEqual(['let value = 1\n', 'let value = 1\n']);
     expect(artifacts).toStrictEqual([
         [false, false],
@@ -83,7 +83,9 @@ test('Periphery build side effects stay in its source copy and findings name ori
             duration: 1,
         };
     });
-    expect(await swiftPeriphery(input)).toMatchObject([{ file: 'Main.swift', line: 1, column: 5, rule: 'unused' }]);
+    expect(await BUILT_IN_CHECKS['swift/periphery'].input(input)).toMatchObject([
+        { file: 'Main.swift', line: 1, column: 5, rule: 'unused' },
+    ]);
     expect(sources).toStrictEqual(['let unused = 1\n']);
     expect(run.mock.calls[0]?.[1].cwd).not.toBe(sandbox.path);
     expect(await pathExists(join(sandbox.path, 'Package.resolved'))).toBe(false);
@@ -109,7 +111,12 @@ test('concurrent Swift compilation and Periphery retain separate source and arti
         return { code: 0, stdout: '', stderr: '', missing: false, duration: 1 };
     });
     try {
-        expect(await Promise.all([swiftBuild(compile), swiftPeriphery(periphery)])).toStrictEqual([[], []]);
+        expect(
+            await Promise.all([
+                BUILT_IN_CHECKS['swift/build'].input(compile),
+                BUILT_IN_CHECKS['swift/periphery'].input(periphery),
+            ]),
+        ).toStrictEqual([[], []]);
         expect(new Set(directories).size).toBe(2);
         const compilePlan = buildPlan(compile);
         const peripheryPlan = buildPlan(periphery, 'periphery');
@@ -159,6 +166,6 @@ test.each(['../External.xcodeproj', 'C:External.xcodeproj'])(
             missing: false,
             duration: 1,
         });
-        expect(await swiftBuild(corrected)).toStrictEqual([]);
+        expect(await BUILT_IN_CHECKS['swift/build'].input(corrected)).toStrictEqual([]);
     },
 );

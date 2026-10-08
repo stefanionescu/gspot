@@ -29,4 +29,4 @@ jobs:
             - name: Install workspace dependencies
               run: bun install --frozen-lockfile
             - name: Run the Supabase freshness test
-              run: mise run test:tools -- -- tools/checks/supabase/types.test.ts
+              run: mise run test:tools -- -- tools/configurations/platform/supabase/types.test.ts

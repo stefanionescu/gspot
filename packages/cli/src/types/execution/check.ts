@@ -4,7 +4,7 @@ import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { ToolSearch } from '#cli/types/tools/install.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { resultSchema } from '#cli/parsers/schema/report.ts';
+import type { resultSchema } from '#cli/parsers/schema/contracts.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 import type { PlanOptions, StageFilter, PlannedCheck } from '#cli/types/planning.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -19,8 +19,11 @@ export type SuppressionComment = {
     forbidden: boolean;
 };
 
-/** Checks by ID, each running through the same session and planned-check callback. */
-export type BuiltInChecks = Record<string, { run: Executable['run']; fix?: BuiltInFix }>;
+/** Native input implementations or session callbacks, keyed by the declared check ID. */
+export type BuiltInChecks = Record<
+    string,
+    ({ input: BuiltInCheck } | { run: Executable['run'] }) & { fix?: BuiltInFix }
+>;
 
 /** A native correction publishes through the same repository or disposable-copy boundary as command fixes. */
 export type BuiltInFix = (planned: PlannedCheck, root: string) => FixResult | Promise<FixResult>;

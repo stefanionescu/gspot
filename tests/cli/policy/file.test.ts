@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { hasPolicy, readPolicy } from '#cli/policy/read.ts';
-import { setKey, preparePolicy } from '#cli/policy/edit.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { hasPolicy, readPolicy } from '#cli/policy/public.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
-import { emitPolicy, parseTomlText, writePolicyFile } from '#cli/policy/file.ts';
+import { setKey, preparePolicy } from '#cli/policy/document/contracts.ts';
 import { link, open, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { emitPolicy, parseTomlText, writePolicyFile } from '#cli/policy/document/public.ts';
 import { AUTHORED_POLICY, POLICY_FILE_CASES, EMPTY_PROJECT_POLICY } from '#tests/config/cli/policy/file.ts';
 
 test.each(POLICY_FILE_CASES)(

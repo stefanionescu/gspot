@@ -1,10 +1,10 @@
-import { compact } from '#cli/platform/objects.ts';
-import { readSource } from '#cli/platform/source.ts';
+import { compact } from '#cli/platform/contracts.ts';
 import { emptyResult } from '#cli/execution/report.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckCommand } from '#cli/execution/command/public.ts';
 
 /**
  * Preserve each script's shebang and supply a dialect only for scripts without one.

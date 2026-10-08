@@ -11,10 +11,7 @@ export const RULE_PREVIEW_CASES: RulePreviewCase[] = [
         proposedLevel: 'all',
         initialTables:
             '[[ignore]]\ncheck = "swift/swiftlint"\nrule = "empty_count"\nreason = "The sandbox verifies enabling a previously ignored rule."\n',
-        changes: [
-            { path: 'opt_in_rules', added: ['empty_count'], removed: [], changed: [] },
-            { path: 'disabled_rules', added: [], removed: ['empty_count'], changed: [] },
-        ],
+        changes: [{ path: 'opt_in_rules', added: ['empty_count'], removed: [], changed: [] }],
     },
     {
         name: 'ShellCheck removes a suppression',

@@ -3,7 +3,7 @@ import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { readIndexEntries } from '#cli/repository/tracked.ts';
+import { readIndexEntries } from '#cli/repository/contracts.ts';
 
 test('the index keeps deleted tracked paths, encoded names, and excludes untracked files', async () => {
     const path = 'folder % café/file.env';

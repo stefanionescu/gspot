@@ -4,17 +4,17 @@ import { join, delimiter } from 'node:path';
 import { rm, chmod } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { readGitSetting } from '#cli/platform/git.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { installCommand } from '#cli/commands/install.ts';
+import { installCommand } from '#cli/commands/contracts.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { readGitSetting } from '#cli/platform/git/public.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
-import { hookStatus, installHooks } from '#cli/lifecycle/hooks-path.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { HOOK_REPOSITORIES } from '#tests/config/cli/lifecycle/hooks.ts';
+import { hookStatus, installHooks } from '#cli/lifecycle/install/contracts.ts';
 
 // The policy and repository of a session: what install and doctor both read.
 

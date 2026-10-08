@@ -1,8 +1,8 @@
 import { test, expect, describe } from 'bun:test';
 import { stripVTControlCharacters } from 'node:util';
 import { REPORT } from '#tests/config/cli/terminal.ts';
-import { configureOutput } from '#cli/terminal/messages.ts';
-import { runText, progress } from '#cli/terminal/reporter.ts';
+import { configureOutput } from '#cli/terminal/public.ts';
+import { runText, progress } from '#cli/terminal/contracts.ts';
 import type { ComparisonCase } from '#tests/types/cli/terminal.ts';
 import type { RunReport, CheckResult } from '#cli/types/execution/check.ts';
 

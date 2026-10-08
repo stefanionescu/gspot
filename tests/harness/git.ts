@@ -3,10 +3,10 @@ import { createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { stat, chmod, writeFile } from 'node:fs/promises';
 import { PUSH_CONTENT } from '#tests/config/samples/git.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 import type { PushRepository } from '#tests/types/harness/git.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
 
 /**
  * Runs git with a throwaway identity, keeping the line endings the sandbox specifies.

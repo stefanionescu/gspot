@@ -1,13 +1,13 @@
 // Resolving and reading paths inside one root: every parent must be a real directory and every file private.
 import type { Stats } from 'node:fs';
-import { isInside } from '#cli/platform/paths.ts';
 import { join, posix, relative } from 'node:path';
-import { GspotError } from '#cli/platform/errors.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { isInside } from '#cli/platform/contracts.ts';
 import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { PORTABLE_LINK_TARGET } from '#cli/config/platform/root.ts';
 import type { Bounds, FileCopy, PathFormat, PlannedFiles } from '#cli/types/platform/root.ts';
 import { lstatSync, mkdirSync, existsSync, readFileSync, readlinkSync, realpathSync } from 'node:fs';
-import { fileMode, nativeSegments, assertNotPrivate, portableSegments } from '#cli/platform/root/rules.ts';
+import { fileMode, nativeSegments, assertNotPrivate, portableSegments } from '#cli/platform/root/contracts.ts';
 
 // A missing parent is created; a competing creator may finish before this one does.
 function preparedDirectory(directory: string): Stats {

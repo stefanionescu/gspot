@@ -4,13 +4,13 @@ import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, symlink } from 'node:fs/promises';
-import * as processes from '#cli/platform/spawn.ts';
-import { readPrefix } from '#cli/platform/source.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { readRepository } from '#cli/repository/read.ts';
-import { trackedEntries } from '#cli/repository/tracked.ts';
+import { readPrefix } from '#cli/platform/root/public.ts';
+import { readRepository } from '#cli/repository/public.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { trackedEntries } from '#cli/repository/contracts.ts';
 
 test('opening a session reads less than one megabyte with a two-megabyte source', async () => {
     const megabyte = 1024 * 1024;

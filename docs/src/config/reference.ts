@@ -14,10 +14,13 @@ Direction describes which changes weaken enforcement and need an entry in \`[rea
 
 /** The files that register commands with dedicated command folders. */
 export const COMMAND_OWNERS: Record<string, string> = {
-    init: 'commands/init/command.ts',
-    doctor: 'commands/doctor/command.ts',
+    init: 'commands/init/public.ts',
+    doctor: 'commands/doctor/public.ts',
     check: 'commands/check/command.ts',
-    explain: 'commands/explain/command.ts',
+    apply: 'commands/public.ts',
+    install: 'commands/contracts.ts',
+    export: 'commands/contracts.ts',
+    explain: 'commands/explain/public.ts',
 };
 
 /** Configuration groups in the public index. */

@@ -38,7 +38,10 @@ why = "Clients are written from this document, so an operation with no id or an 
 help = "Change the document the way the rule says, or the code that writes it."
 
 [[check]]
-name = "fresh"
+name = "stale-document"
+command = ["{setting:openapi.generate_command}"]
+when = { setting = "openapi.generate_command" }
+generated_paths = [{ path = "{setting:openapi.document}" }]
 title = "Keep the OpenAPI document current"
 example = "A committed OpenAPI document that differs from the configured generator output reports drift. Run the declared generator, inspect the changed document, and retain the corrected output before rerunning."
 level = "recommended"

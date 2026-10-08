@@ -1,18 +1,19 @@
 import { join } from 'node:path';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { readSource } from '#cli/platform/source.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
+import * as processes from '#cli/platform/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { readSource } from '#cli/platform/root/public.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { vale, routeFor, routeGroups } from '#cli/checks/general/prose.ts';
+import { routeFor, routeGroups } from '#cli/checks/general/public.ts';
 import { DIAGNOSTIC, EXECUTION_FAILURES } from '#tests/config/cli/checks/general/prose.ts';
 
 test('an outdated Vale executable reports its missing installation without scanning', async () => {
@@ -127,7 +128,7 @@ test('each stdin route scans the bytes held by the run and maps its own alerts',
             });
         }),
     );
-    const findings = await vale(input);
+    const findings = await BUILT_IN_CHECKS['prose/vale'].input(input);
     expect(scanned).toStrictEqual(original);
     expect(findings.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual(
         paths.map((file) => ({ file, line: 1, column: 3, rule: 'gspot.Example' })),

@@ -1,15 +1,14 @@
 // What each scope's view reads from nested tables: the rules an ignore turns off, and the value of each setting.
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { test, expect, setSystemTime } from 'bun:test';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
-import { knownSettings } from '#cli/policy/settings/known.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
-import { emitPolicy, parseExpiryDate } from '#cli/policy/file.ts';
-import { rootView, scopeView } from '#cli/policy/settings/view.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { selectForScope } from '#cli/configurations/selection/public.ts';
+import { emitPolicy, parseExpiryDate } from '#cli/policy/document/public.ts';
+import { rootView, scopeView, knownSettings } from '#cli/policy/settings/public.ts';
 import { POLICY, OPENAPI_DOCUMENTS, OPENAPI_PATH_CASES } from '#tests/config/cli/policy/scope-views.ts';
 
 // The validated selections of a repository with inherited and overridden scope policy.

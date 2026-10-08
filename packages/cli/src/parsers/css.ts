@@ -2,7 +2,7 @@ import ts from 'typescript';
 import { parse } from 'postcss';
 import { posix } from 'node:path';
 import selectorParser from 'postcss-selector-parser';
-import { typescriptProgram } from '#cli/parsers/typescript.ts';
+import { typescriptProgram } from '#cli/parsers/source/contracts.ts';
 import type { CssClass, Importer, CssImporterSource } from '#cli/types/parsers/css.ts';
 
 // CSS module objects use default or namespace bindings. Type-only and named imports do not carry the object.

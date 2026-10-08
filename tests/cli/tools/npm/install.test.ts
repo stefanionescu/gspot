@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
-import * as spawn from '#cli/platform/spawn.ts';
+import * as spawn from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { YARN_MANAGERS } from '#tests/config/samples/npm.ts';
 import { fakeCommand, prepareTestCommand } from '#tests/harness/command.ts';
-import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/client.ts';
+import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/public.ts';
 
 import {
     PACKAGE_FAILURES,
@@ -21,7 +21,7 @@ import {
     githubRefusalNote,
     installPackageLockfile,
     preparePackageLockfile,
-} from '#cli/tools/npm/install.ts';
+} from '#cli/tools/npm/contracts.ts';
 
 test.each(GITHUB_DOWNLOAD_FAILURES)('a refused GitHub download names the token to set: %s', (line) => {
     expect(githubRefusalNote(`postinstall failed\n${line}\n`)).toContain('GITHUB_TOKEN');

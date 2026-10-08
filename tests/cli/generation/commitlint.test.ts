@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { getSuggestions } from '#cli/commands/doctor/contracts.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/samples/commitlint.ts';
 import { COMMITLINT_SCOPES, COMMITLINT_PROJECT } from '#tests/config/cli/generation/commitlint.ts';
 

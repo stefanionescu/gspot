@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { captureEslintPreset } from '#cli/parsers/schema/eslint.ts';
+import { captureEslintPreset } from '#cli/parsers/schema/public.ts';
 
 test('preset capture retains ordered options, file intersections, ignores, and the exact public export', () => {
     const preset = captureEslintPreset('example-plugin', '1.2.3', 'configs.flat/recommended', {

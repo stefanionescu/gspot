@@ -4,9 +4,9 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { unmatchedPaths } from '#cli/checks/general/gspot/unmatched-paths.ts';
 import { AUTHORED_PATH_CASES } from '#tests/config/cli/checks/general/gspot.ts';
 
 test('check path ignores must match tracked paths even when documentation mentions them', async () => {
@@ -32,7 +32,7 @@ test('check path ignores must match tracked paths even when documentation mentio
     const selected = buildCheckInput(await openSession(sandbox.path), 'gspot/unmatched-paths', {
         paths: ['docs/guide.md'],
     });
-    const findings = await unmatchedPaths(selected);
+    const findings = await BUILT_IN_CHECKS['gspot/unmatched-paths'].input(selected);
     expect(findings.map(({ message: description }) => description)).toStrictEqual([
         '.reports/output.json under [[ignore]] matches no tracked file or folder.',
         '.reports/unused.json under [[ignore]] matches no tracked file or folder.',
@@ -46,7 +46,9 @@ test.each(AUTHORED_PATH_CASES)('$name', async ({ files, policy, unmatched }) => 
     commitAll(sandbox.path);
     const session = await openSession(sandbox.path);
     expect(session.policyFiles.errors).toStrictEqual([]);
-    const findings = await unmatchedPaths(buildCheckInput(session, 'gspot/unmatched-paths'));
+    const findings = await BUILT_IN_CHECKS['gspot/unmatched-paths'].input(
+        buildCheckInput(session, 'gspot/unmatched-paths'),
+    );
     expect(findings.map((finding) => finding.message.split(' under ', 1)[0])).toStrictEqual(unmatched);
     expect(findings).toMatchObject(
         unmatched.map(() => ({

@@ -126,7 +126,7 @@ paths = ["packages/cli/src/main.ts"]
 [[architecture.modules]]
 may_import = ["planning", "commands", "checks", "terminal", "execution", "lifecycle", "generation", "tools", "policy", "agent-rules", "configurations", "repository", "parsers", "platform"]
 name = "commands"
-paths = ["packages/cli/src/commands/**", "packages/cli/src/config/commands/**", "packages/cli/src/types/commands/**"]
+paths = ["packages/cli/src/public.ts", "packages/cli/src/commands/**", "packages/cli/src/config/commands/**", "packages/cli/src/types/commands/**"]
 
 [[architecture.modules]]
 may_import = ["planning", "checks", "execution", "lifecycle", "generation", "tools", "policy", "configurations", "repository", "parsers", "platform"]
@@ -177,7 +177,7 @@ paths = ["packages/cli/src/agent-rules/**", "packages/cli/src/config/agent-rules
 [[architecture.modules]]
 may_import = ["parsers", "configurations", "repository", "platform"]
 name = "configurations"
-paths = ["packages/cli/src/configurations/**", "packages/cli/src/parsers/schema/configurations/**", "packages/cli/src/config/configurations.ts", "packages/cli/src/config/tools/vale.ts", "packages/cli/src/types/configurations.ts"]
+paths = ["packages/cli/src/configurations/**", "packages/cli/src/parsers/schema/configurations.ts", "packages/cli/src/config/configurations.ts", "packages/cli/src/config/tools/vale.ts", "packages/cli/src/types/configurations.ts"]
 
 [[architecture.modules]]
 may_import = ["repository", "parsers", "platform"]
@@ -187,7 +187,7 @@ paths = ["packages/cli/src/repository/**", "packages/cli/src/config/repository/*
 [[architecture.modules]]
 may_import = ["parsers", "configurations", "platform"]
 name = "parsers"
-paths = ["packages/cli/src/parsers/*.ts", "packages/cli/src/parsers/naming/**", "packages/cli/src/parsers/output/**", "packages/cli/src/parsers/sql/**", "packages/cli/src/parsers/toml/**", "packages/cli/src/parsers/tool/**", "packages/cli/src/parsers/schema/*.ts", "packages/cli/src/parsers/schema/python/**", "packages/cli/src/config/parsers/**", "packages/cli/src/types/parsers/**", "packages/cli/src/parsers/swift/**"]
+paths = ["packages/cli/src/parsers/*.ts", "packages/cli/src/parsers/!(schema)/**", "packages/cli/src/parsers/schema/!(configurations).ts", "packages/cli/src/parsers/schema/python/**", "packages/cli/src/config/parsers/**", "packages/cli/src/types/parsers/**"]
 reason = "Tool-output parsing consumes validated configuration declarations to interpret native versions without copying the tool metadata contract."
 
 [[architecture.modules]]
@@ -203,7 +203,7 @@ paths = ["packages/eslint-plugin/src/**", "packages/eslint-plugin/build.ts"]
 
 [architecture.roles]
 config = ["packages/*/src/config/**", "tests/config/**", "scripts/config/**", "docs/src/config/**"]
-env = ["packages/cli/src/platform/environment.ts", "tests/harness/environment.ts"]
+env = ["packages/cli/src/platform/public.ts", "tests/harness/environment.ts"]
 runtime = ["packages/*/src/**"]
 scripts = ["scripts/**", "packages/*/scripts/**", "docs/src/content/reference/**"]
 test_harness = "tests/harness"
@@ -411,7 +411,7 @@ scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
 "**/*" = "ts"
 
 [tools.knip]
-entry = ["packages/cli/src/checks/general/site/linkinator.ts", "packages/eslint-plugin/src/plugin.ts", "docs/src/content/reference/collection.ts", "scripts/setting-values.ts"]
+entry = ["packages/cli/src/checks/general/site/linkinator.ts", "packages/eslint-plugin/src/rules/public.ts", "docs/src/content/reference/collection.ts", "scripts/setting-values.ts"]
 
 [tools.knip.ignore_dependencies]
 "^@fontsource-variable/" = "The site imports the fonts from docs/src/theme.css, outside the TypeScript import graph."
@@ -514,7 +514,7 @@ rule = "js/http-to-file-access"
 
 [[ignore]]
 check = "security/codeql"
-paths = ["packages/cli/src/checks/tool/actions.ts"]
+paths = ["packages/cli/src/checks/tool/public.ts"]
 reason = "Only the leading self-repository marker is translated; later dollar signs are path characters and must stay."
 rule = "js/incomplete-sanitization"
 
@@ -545,7 +545,7 @@ reason = "The database and library namespaces match the behavioral check owners.
 
 [[ignore]]
 check = "structure/lone-files"
-paths = ["tests/cli/docs", "tests/cli/parsers/naming", "tests/config/cli/checks/language/bash", "tests/config/cli/checks/tool/xcode", "tests/config/cli/parsers/tool", "tests/config/cli/tools/python", "tests/config/tools/configurations/language/bash", "tests/types/cli/checks/framework", "tests/types/cli/checks/general", "tests/types/cli/checks/library", "tests/types/cli/execution", "tests/types/cli/generation", "tests/types/tools/checks/supabase", "tests/types/tools/configurations/general", "tests/types/tools/generation", "tests/types/tools/lifecycle"]
+paths = ["tests/cli/docs", "tests/cli/parsers/naming", "tests/config/cli/checks/language/bash", "tests/config/cli/checks/tool/xcode", "tests/config/cli/parsers/tool", "tests/config/cli/tools/python", "tests/config/tools/configurations/language/bash", "tests/types/cli/checks/framework", "tests/types/cli/checks/general", "tests/types/cli/checks/library", "tests/types/cli/execution", "tests/types/cli/generation", "tests/types/tools/configurations/general", "tests/types/tools/generation", "tests/types/tools/lifecycle"]
 reason = "These suite namespaces follow their behavioral source owners. The docs tests stay under cli/docs, and each matching config or types namespace owns its suite data. Their placement follows the repository ownership contract even when an owner needs one file."
 
 [[ignore]]

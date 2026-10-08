@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { parseNextBuildFlags } from '#cli/parsers/command.ts';
+import { parseNextBuildFlags } from '#cli/parsers/bash/contracts.ts';
 
 test('Next.js build scripts preserve quoted paths and empty flags while refusing unresolved expansions', () => {
     expect(parseNextBuildFlags(`NODE_ENV=production next build "two words" "" --webpack && echo done`)).toStrictEqual([

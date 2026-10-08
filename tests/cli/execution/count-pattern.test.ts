@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 
 const policy = `configurations = []

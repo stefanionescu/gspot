@@ -1,8 +1,8 @@
 import { access } from 'node:fs/promises';
+import { buildProgram } from '@gspothq/cli/src/public.ts';
 import { COMMAND_OWNERS } from '../../config/reference.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
-import { buildProgram } from '@gspothq/cli/src/commands/program.ts';
 import type { CommandUnknownOpts } from '@commander-js/extra-typings';
 import { COMMAND_HELP } from '@gspothq/cli/src/config/commands/help.ts';
 
@@ -73,7 +73,7 @@ export async function commandPages(): Promise<Map<string, ReferencePage>> {
                     .visibleOptions(program)
                     .map((option) => [`\`${option.flags}\``, cell(program.createHelp().optionDescription(option))]),
             )}\n`,
-            'packages/cli/src/commands/program.ts',
+            'packages/cli/src/public.ts',
         ),
     );
     return pages;

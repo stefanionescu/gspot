@@ -1,13 +1,12 @@
 // The parts of the ESLint configuration that the policy and the emitted scope decide.
 import type { Session } from '#cli/types/planning.ts';
-import { aliasesFor } from '#cli/repository/aliases.ts';
-import { tablesFor } from '#cli/policy/settings/lookup.ts';
+import { aliasesFor } from '#cli/repository/contracts.ts';
 import type { EtaInputs } from '#cli/types/generation/eta.ts';
+import { tablesFor } from '#cli/policy/settings/contracts.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
 import { boundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
-import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
-import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
-import { readEslintPresets } from '#cli/generation/eslint/presets.ts';
+import { isInScope, pathMatcher } from '#cli/repository/paths/public.ts';
+import { generatedIgnores } from '#cli/generation/documents/contracts.ts';
 import type { ScopeView, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { scriptPaths, runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation/eslint.ts';
@@ -19,15 +18,16 @@ import {
     eslintIgnoreBlocks,
     manifestRuleBlocks,
     structuralRuleBlocks,
-} from '#cli/generation/eslint/blocks.ts';
+} from '#cli/generation/eslint/contracts.ts';
 import {
     eslintModule,
     eslintErrorRules,
+    readEslintPresets,
     eslintFilePatterns,
     eslintNodePatterns,
     eslintRuleSettings,
     eslintSourcePattern,
-} from '#cli/generation/eslint/serialize.ts';
+} from '#cli/generation/eslint/public.ts';
 
 // Each nested scope resolves its import boundaries against its own aliases.
 function scopeBlocks(context: EslintContext): EslintBlock[] {

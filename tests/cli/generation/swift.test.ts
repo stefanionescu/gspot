@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { XCODE_METADATA } from '#tests/config/samples/xcode.ts';
 import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
 import { SWIFT_LINE_ENDINGS, SWIFT_VERSION_FILES, SWIFT_PROJECT_POLICY } from '#tests/config/cli/generation/swift.ts';

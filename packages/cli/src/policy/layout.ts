@@ -1,13 +1,20 @@
-import { GspotError } from '#cli/platform/errors.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
 import { POLICY_EMIT_FORMAT } from '#cli/config/policy/file.ts';
-import { emitTomlComments } from '#cli/parsers/toml/comments.ts';
 import { stringify, parseDocument } from '@decimalturn/toml-patch';
-import { valueAt, isRecord, isRecordArray } from '#cli/platform/objects.ts';
+import { valueAt, isRecord, isRecordArray } from '#cli/platform/contracts.ts';
 import type { PolicyLayout, PolicySection } from '#cli/types/policy/layout.ts';
 import type { Value, KeyValue, TomlSyntax, TomlComments } from '#cli/types/parsers/toml.ts';
-import { isValue, tomlRange, isKeyValue, isInlineArray, isInlineTable } from '#cli/parsers/toml/nodes.ts';
+
+import {
+    isValue,
+    tomlRange,
+    isKeyValue,
+    isInlineArray,
+    isInlineTable,
+    emitTomlComments,
+} from '#cli/parsers/toml/contracts.ts';
 
 function noncontiguous(syntax: TomlSyntax): boolean {
     const closed = new Set<string>();

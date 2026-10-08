@@ -7,7 +7,7 @@ import { INTEGRITY } from '#cli/config/tools/npm.ts';
 import { HTTP_URL } from '#cli/config/tools/install.ts';
 import type { BunPackage } from '#cli/types/parsers/lockfiles.ts';
 import { CONFLICT_MARKER_PREFIX } from '#cli/config/parsers/git.ts';
-import { parseLockfile, rootLockfileDependencies } from '#cli/parsers/lockfiles.ts';
+import { parseLockfile, rootLockfileDependencies } from '#cli/parsers/contracts.ts';
 import type { DependencyMap, PackageInstaller } from '#cli/types/parsers/packages.ts';
 import { bunPackageSchema, bunPackagesSchema, yarnLockfileSchema } from '#cli/parsers/schema/lockfiles.ts';
 

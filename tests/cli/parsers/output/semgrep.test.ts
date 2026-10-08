@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/platform/errors.ts';
-import { checkedFindings } from '#cli/execution/command/findings.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { checkedFindings } from '#cli/execution/command/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { EMPTY_FAILURE } from '#tests/config/cli/execution/command/findings.ts';
 import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR } from '#tests/config/cli/parsers/output/semgrep.ts';
 

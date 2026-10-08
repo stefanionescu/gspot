@@ -1,8 +1,10 @@
 import type { MigrationStatement } from '#cli/types/checks/database/postgres.ts';
 
-export const KEY_KINDS = new Set(['CONSTR_PRIMARY', 'CONSTR_UNIQUE']);
-
-export const CONSTRAINT_SUFFIXES: Record<string, string> = { CONSTR_PRIMARY: 'pkey', CONSTR_UNIQUE: 'key' };
+export const CONSTRAINT_SUFFIXES: Record<string, string> = {
+    CONSTR_PRIMARY: 'pkey',
+    CONSTR_UNIQUE: 'key',
+    CONSTR_FOREIGN: 'fkey',
+};
 
 export const PUBLIC_SCHEMA = 'public';
 
@@ -27,8 +29,6 @@ export const SECTION = /^-- (?<name>[A-Z][A-Za-z ]+)$/u;
 export const BLOCK_REACH = 12;
 
 export const DOC_SEPARATOR = '-- ============================================================================';
-
-export const MIGRATION_FOLDERS = ['supabase/migrations', 'db/migrations', 'migrations'];
 
 /** The down section begins on its own SQL comment line. */
 export const MIGRATION_DOWN = /^[\t ]*--[\t ]*migrate:down\b/mu;

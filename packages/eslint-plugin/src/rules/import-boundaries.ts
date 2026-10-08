@@ -4,7 +4,7 @@ import type { ImportSource } from '#plugin/types/imports.ts';
 import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import { ASTUtils, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { ImportBoundariesOptions } from '#plugin/types/boundaries.ts';
-import { lintedPath, isAnyGlobMatch, relativeImportPath } from '#plugin/files.ts';
+import { lintedPath, isAnyGlobMatch, relativeImportPath } from '#plugin/public.ts';
 
 function aliasFor(target: string, aliases: Record<string, string>): string | undefined {
     for (const [prefix, directory] of Object.entries(aliases)) {

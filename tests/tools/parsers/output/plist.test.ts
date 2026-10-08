@@ -1,15 +1,14 @@
 import { join } from 'node:path';
 import { chmod } from 'node:fs/promises';
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { GspotError } from '#cli/platform/errors.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
-import { checkedFindings } from '#cli/execution/command/findings.ts';
+import { checkedFindings } from '#cli/execution/command/contracts.ts';
 
 describe.if(isMacos)('native property lists', () => {
     test('xcode/plutil classifies mixed native parse and input failures as execution errors', async () => {
@@ -24,11 +23,14 @@ describe.if(isMacos)('native property lists', () => {
         const paths = { cwd: sandbox.path, root: sandbox.path };
         await chmod(join(sandbox.path, 'private.plist'), 0);
         try {
-            for (const path of ['missing.plist', 'private.plist']) {
+            for (const { path, reason } of [
+                { path: 'missing.plist', reason: 'no such file' },
+                { path: 'private.plist', reason: 'permission' },
+            ]) {
                 const mixed = await runTestCommand(['plutil', '-lint', 'bad.plist', path], { cwd: sandbox.path });
                 expect(mixed.code).toBe(1);
                 expect(mixed.stdout + mixed.stderr).toContain('Encountered unexpected EOF');
-                expect(() => checkedFindings(planned!, mixed, paths)).toThrow(GspotError);
+                expect(() => checkedFindings(planned!, mixed, paths)).toThrow(reason);
             }
         } finally {
             await chmod(join(sandbox.path, 'private.plist'), 0o600);

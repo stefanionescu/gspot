@@ -1,9 +1,9 @@
 // The built packages published into an isolated registry, and a fresh consumer that installed them from it.
 import { join } from 'node:path';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
 import type { PublishedRelease } from '#automation/types/package.ts';
 
 /**

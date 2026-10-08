@@ -4,6 +4,7 @@ eslint_all_rules = [
     "gspot/env-owner",
     "gspot/header-first",
     "gspot/import-boundaries",
+    "gspot/import-direction",
     "gspot/no-alias-exports",
     "gspot/no-index-imports",
     "gspot/no-trivial-files",
@@ -496,7 +497,6 @@ help = "Delete what knip names, or add a knip entry point with gspot set tools.k
 
 [[setting]]
 name = "tools.eslint.rules"
-off_values = ["off", 0]
 type = "table"
 direction = "rule-options"
 default = {}
@@ -564,7 +564,15 @@ summary = "Dependencies knip does not report as unused, each with a reason: pack
 [required_eslint_rules]
 js = ["eqeqeq", "no-restricted-syntax", "max-lines", "sonarjs/cognitive-complexity", "import-x/exports-last"]
 
+[[naming.overrides]]
+paths = ["**"]
+languages = ["typescript", "javascript"]
+categories = ["functions", "methods"]
+ignored_prefix = "^handle(?=[A-Z])"
+reason = "A handler starts with handle and then names the event."
+
 [agent_rules]
+"PLAYWRIGHT.md" = { dependencies = ["@playwright/test", "playwright"] }
 "NODE.md" = { runtimes = ["node"] }
 "DENO.md" = { runtimes = ["deno"] }
 "COMPONENTS.md" = { dependencies = ["astro", "svelte", "vue", "react"] }

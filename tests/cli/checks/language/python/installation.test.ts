@@ -2,17 +2,17 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { environmentBin } from '#cli/platform/paths.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
+import { environmentBin } from '#cli/platform/contracts.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { toolPin, pythonPins } from '#cli/configurations/pins.ts';
-import { importLinter } from '#cli/checks/language/python/imports.ts';
+import { toolPin, pythonPins } from '#cli/configurations/contracts.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 
 test.each(LOCKFILES.filter(({ client }) => ['uv', 'poetry', 'pdm'].includes(client)))(
@@ -98,9 +98,11 @@ test.each(['stdout', 'stderr'])(
                 duration: 1,
             }),
         );
-        expect(await rejection(importLinter(buildCheckInput(session, 'python/import-linter')))).toBe(
-            `The lint-imports command failed: ${diagnostic}`,
-        );
+        expect(
+            await rejection(
+                BUILT_IN_CHECKS['python/import-linter'].input(buildCheckInput(session, 'python/import-linter')),
+            ),
+        ).toBe(`The lint-imports command failed: ${diagnostic}`);
         expect(await Bun.file(join(sandbox.path, 'pyproject.toml')).text()).toBe(manifest);
     },
 );
@@ -133,7 +135,9 @@ test('import-linter follows INI precedence and retains separate chains for decor
             duration: 1,
         }),
     );
-    const findings = await importLinter(buildCheckInput(session, 'python/import-linter'));
+    const findings = await BUILT_IN_CHECKS['python/import-linter'].input(
+        buildCheckInput(session, 'python/import-linter'),
+    );
     expect(findings.map((finding) => [finding.file, finding.rule])).toStrictEqual([
         ['setup.cfg', 'contract'],
         ['setup.cfg', 'contract'],

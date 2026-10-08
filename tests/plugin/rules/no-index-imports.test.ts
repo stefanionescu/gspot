@@ -1,7 +1,7 @@
+import plugin from '#plugin/rules/public.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
-import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
 
-createRuleTester().run('no-index-imports', noIndexImports, {
+createRuleTester().run('no-index-imports', plugin.rules['no-index-imports'], {
     valid: [
         "vi.requireActual('@/turn/index.js');",
         "jest.importActual('@/turn/index.js');",

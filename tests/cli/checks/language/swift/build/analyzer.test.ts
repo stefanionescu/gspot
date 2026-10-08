@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import * as spawn from '#cli/platform/spawn.ts';
+import * as spawn from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
+import { buildPlan } from '#cli/checks/language/swift/public.ts';
 import { useCacheDirectory } from '#tests/harness/environment.ts';
 import { SWIFT_PACKAGE } from '#tests/config/samples/swift/source.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { swiftBuild, swiftlintAnalyze } from '#cli/checks/language/swift/build.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 
 test('analysis refuses an incomplete compiler log after a failed build', async () => {
     await using sandbox = await testdir();
@@ -27,7 +27,7 @@ test('analysis refuses an incomplete compiler log after a failed build', async (
         .mockResolvedValueOnce({ code: 7, stdout: '', stderr: '', missing: false, duration: 1 })
         .mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
-        expect(await rejection(swiftlintAnalyze(input))).toMatch(/build exited 7/u);
+        expect(await rejection(BUILT_IN_CHECKS['swift/swiftlint-analyze'].input(input))).toMatch(/build exited 7/u);
     } finally {
         run.mockRestore();
     }
@@ -45,7 +45,7 @@ test('a silent successful SwiftLint analyzer returns no findings', async () => {
     resources.use(
         spyOn(spawn, 'run').mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 }),
     );
-    expect(await swiftlintAnalyze(input)).toStrictEqual([]);
+    expect(await BUILT_IN_CHECKS['swift/swiftlint-analyze'].input(input)).toStrictEqual([]);
 });
 
 test('a silent failed SwiftLint analyzer reports its exit code', async () => {
@@ -62,7 +62,7 @@ test('a silent failed SwiftLint analyzer reports its exit code', async () => {
             .mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 })
             .mockResolvedValue({ code: 7, stdout: '', stderr: '', missing: false, duration: 1 }),
     );
-    expect(await rejection(swiftlintAnalyze(input))).toContain('analyzer exited 7');
+    expect(await rejection(BUILT_IN_CHECKS['swift/swiftlint-analyze'].input(input))).toContain('analyzer exited 7');
 });
 
 test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async (step) => {
@@ -78,7 +78,9 @@ test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async 
         run.mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     run.mockResolvedValue({ code: 1, stdout: '', stderr: '', missing: false, duration: 1, isTimedOut: true });
     try {
-        expect(await rejection(swiftlintAnalyze(input))).toMatch(/ran past 600 seconds and was stopped/u);
+        expect(await rejection(BUILT_IN_CHECKS['swift/swiftlint-analyze'].input(input))).toMatch(
+            /ran past 600 seconds and was stopped/u,
+        );
     } finally {
         run.mockRestore();
     }
@@ -105,8 +107,8 @@ test('manual analysis clears its own compiler state without consuming the increm
         .mockResolvedValueOnce({ code: 0, stdout: 'complete compiler log', stderr: '', missing: false, duration: 1 })
         .mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
-        expect(await swiftBuild(input)).toStrictEqual([]);
-        expect(await swiftlintAnalyze(input)).toStrictEqual([]);
+        expect(await BUILT_IN_CHECKS['swift/build'].input(input)).toStrictEqual([]);
+        expect(await BUILT_IN_CHECKS['swift/swiftlint-analyze'].input(input)).toStrictEqual([]);
         expect(await readFile(compilerState, 'utf8')).toBe('incremental');
         expect(await pathExists(analyzerState)).toBe(false);
         expect(await readFile(analyzer.log, 'utf8')).toContain('complete compiler log');

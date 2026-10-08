@@ -1,12 +1,12 @@
 import ts from 'typescript';
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/platform/source.ts';
-import { rolePaths } from '#cli/policy/settings/lookup.ts';
+import { readSource } from '#cli/platform/root/public.ts';
+import { rolePaths } from '#cli/policy/settings/contracts.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
-import { typescriptNodes, typescriptProgram } from '#cli/parsers/typescript.ts';
+import { isInScope, pathMatcher } from '#cli/repository/paths/public.ts';
 import { structureSources } from '#cli/checks/general/structure/source-files.ts';
+import { typescriptNodes, typescriptProgram } from '#cli/parsers/source/contracts.ts';
 import { TEST_PATTERN, TEST_DIRECTORIES, ASSERTION_MODULES } from '#cli/config/checks/general/structure.ts';
 
 function hasAssertions(source: ts.SourceFile, checker: ts.TypeChecker): boolean {

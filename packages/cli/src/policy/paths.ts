@@ -1,9 +1,9 @@
 import { z } from 'zod';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
-import { settingValueSchemas } from '#cli/policy/schema/setting-values.ts';
-import { scopeSchema, rootSettingSchemas } from '#cli/policy/schema/policy.ts';
+import { settingValueSchemas } from '#cli/policy/schema/native/public.ts';
+import { scopeSchema, rootSettingSchemas } from '#cli/policy/schema/public.ts';
 import type { RawScope, PolicyPathCallback } from '#cli/types/policy/settings.ts';
-import { valueAt, isRecord, createTable, normalizeTables } from '#cli/platform/objects.ts';
+import { valueAt, isRecord, createTable, normalizeTables } from '#cli/platform/contracts.ts';
 
 const settingSchemas = new Map<string, z.ZodType>(Object.entries({ ...rootSettingSchemas, ...settingValueSchemas }));
 

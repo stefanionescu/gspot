@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import * as fs from 'node:fs/promises';
 import { test, expect } from 'bun:test';
 import { throws } from 'node:assert/strict';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { VALID } from '#tests/config/samples/typescript.ts';
 import { MALFORMED_COMPILER_CONFIGURATIONS } from '#tests/config/cli/generation/typescript.ts';
 

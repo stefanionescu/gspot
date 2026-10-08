@@ -1,13 +1,13 @@
+import plugin from '#plugin/rules/public.ts';
 import { OWNERS } from '#tests/config/plugin/rules/env-owner.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
 import type { EnvOwnerOptions } from '#plugin/types/environment.ts';
 import { ENVIRONMENT_GLOBALS } from '#tests/config/plugin/environment.ts';
-import { envOwner as environmentAccessOwner } from '#plugin/rules/env-owner.ts';
 
 createRuleTester('/repo', { globals: ENVIRONMENT_GLOBALS }).run<
-    keyof typeof environmentAccessOwner.meta.messages,
+    keyof (typeof plugin.rules)['env-owner']['meta']['messages'],
     [Partial<EnvOwnerOptions[0]>]
->('env-owner', environmentAccessOwner, {
+>('env-owner', plugin.rules['env-owner'], {
     valid: [
         ...['process', 'Bun', 'Deno'].map((host) => ({
             code: `function read(${host}) { return ${host}.env.KEY; }`,

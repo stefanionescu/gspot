@@ -6,8 +6,8 @@ import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { checkOutRevision } from '#cli/execution/copy/revision.ts';
+import { checkOutRevision } from '#cli/execution/copy/public.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { lstat, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 /** Stages dependency declarations and authored files for a revision copy. */

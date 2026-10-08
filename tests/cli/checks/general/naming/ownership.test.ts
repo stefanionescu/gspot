@@ -120,7 +120,7 @@ test('shell variables preserve findings on functions and neighboring local bindi
     expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ status: 'passed', findings: [] }]);
 });
 
-test('Swift native type names do not exempt parameters or neighboring declarations', async () => {
+test('Swift native case and length rules preserve banned terms in types and parameters', async () => {
     await using sandbox = await testdir();
     const native = 'typealias URLSession = String\n';
     await createFileTree(sandbox.path, {
@@ -138,12 +138,13 @@ test('Swift native type names do not exempt parameters or neighboring declaratio
             findings.map(({ line, rule }) => ({ line, rule })),
         ),
     ).toStrictEqual([
+        { line: 1, rule: 'banned-term' },
         { line: 2, rule: 'banned-term' },
         { line: 3, rule: 'banned-term' },
     ]);
     await Bun.write(
         join(sandbox.path, 'Entry.swift'),
-        native + 'let entryCount = 1\nfunc readValue(client: String) {}\n',
+        'typealias URL = String\nlet entryCount = 1\nfunc readValue(client: String) {}\n',
     );
     const corrected = await runGspot(sandbox.path, command);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

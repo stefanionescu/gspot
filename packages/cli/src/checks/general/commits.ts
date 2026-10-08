@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
-import { runGit } from '#cli/platform/git.ts';
+import { runGit } from '#cli/platform/git/public.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { getPushBase } from '#cli/repository/revisions/changes.ts';
+import { getPushBase } from '#cli/repository/revisions/public.ts';
+import { runCheckCommand } from '#cli/execution/command/public.ts';
 import type { CommitSelection } from '#cli/types/repository/revisions.ts';
 
 async function pushedCommits(session: ToolSession, planned: PlannedCheck): Promise<CommitSelection> {

@@ -1,8 +1,8 @@
-import { stemOf } from '#cli/platform/paths.ts';
-import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { stemOf } from '#cli/platform/contracts.ts';
+import { codeLines } from '#cli/parsers/bash/public.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 
 import {
     FORWARDER_STEM,

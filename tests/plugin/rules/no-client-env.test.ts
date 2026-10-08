@@ -1,13 +1,13 @@
-import { noClientEnv } from '#plugin/rules/no-client-env.ts';
+import plugin from '#plugin/rules/public.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
 import type { ClientEnvOptions } from '#plugin/types/environment.ts';
 import { EXAMPLE } from '#tests/config/plugin/rules/no-client-env.ts';
 import { ENVIRONMENT_GLOBALS } from '#tests/config/plugin/environment.ts';
 
 createRuleTester('/repo', { globals: ENVIRONMENT_GLOBALS }).run<
-    keyof typeof noClientEnv.meta.messages,
+    keyof (typeof plugin.rules)['no-client-env']['meta']['messages'],
     [Partial<ClientEnvOptions[0]>]
->('no-client-env', noClientEnv, {
+>('no-client-env', plugin.rules['no-client-env'], {
     valid: [
         EXAMPLE.corrected,
         "'use client';\nconst url = process.env.NEXT_PUBLIC_URL;",

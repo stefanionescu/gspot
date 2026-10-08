@@ -1,7 +1,7 @@
 import { sep, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
-import { normalizePath } from '#plugin/files.ts';
+import { normalizePath } from '#plugin/public.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 

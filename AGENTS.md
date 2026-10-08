@@ -6,11 +6,12 @@ Selected level: `all`. Correctness, security, accessibility, type safety, routin
 
 These rules apply only at level `all`: word choice, architecture, naming, doc comments, declaration order, API style, and complexity. Neither level enables experimental or preview lint rules.
 
-Read `.gspot/rules/general/engineering/agent/WORKING.md` and `.gspot/rules/general/engineering/prose/WRITING.md` first. Then read the rules for the files you change. A more specific rule wins over a general one.
+Read `.gspot/rules/general/engineering/agent/WORKING.md` and `.gspot/rules/general/prose/WRITING.md` first. Then read the rules for the files you change. A more specific rule wins over a general one.
 
 Repository:
 
-- `.gspot/rules/general/engineering/agent/GIT.md`
+- `.gspot/rules/general/commits/GIT.md`
+- `.gspot/rules/general/dependencies/DEPENDENCIES.md`
 - `.gspot/rules/general/engineering/agent/PLANNING.md`
 - `.gspot/rules/general/engineering/agent/SUPPRESSIONS.md`
 - `.gspot/rules/general/engineering/agent/TALKING.md`
@@ -20,23 +21,22 @@ Repository:
 - `.gspot/rules/general/engineering/code/CLI.md`
 - `.gspot/rules/general/engineering/code/COMMENTS.md`
 - `.gspot/rules/general/engineering/code/CONFIGURATION.md`
-- `.gspot/rules/general/engineering/code/DEPENDENCIES.md`
 - `.gspot/rules/general/engineering/code/ERRORS.md`
-- `.gspot/rules/general/engineering/code/GENERATED.md`
 - `.gspot/rules/general/engineering/code/HTTP.md`
 - `.gspot/rules/general/engineering/code/LOGGING.md`
-- `.gspot/rules/general/engineering/code/NAMING-FILES.md`
-- `.gspot/rules/general/engineering/code/NAMING.md`
-- `.gspot/rules/general/engineering/code/SECRETS.md`
-- `.gspot/rules/general/engineering/code/SECURITY.md`
 - `.gspot/rules/general/engineering/code/TESTING.md`
-- `.gspot/rules/general/engineering/prose/DOCS-CONTENT.md`
-- `.gspot/rules/general/engineering/prose/DOCS-FORMAT.md`
-- `.gspot/rules/general/engineering/prose/DOCS-MEDIA.md`
-- `.gspot/rules/general/engineering/prose/DOCS-SURFACES.md`
-- `.gspot/rules/general/engineering/prose/DOCS.md`
-- `.gspot/rules/general/engineering/prose/WRITING.md`
 - `.gspot/rules/general/files/YAML.md`
+- `.gspot/rules/general/gspot/GENERATED.md`
+- `.gspot/rules/general/naming/NAMING-FILES.md`
+- `.gspot/rules/general/naming/NAMING.md`
+- `.gspot/rules/general/prose/DOCS-CONTENT.md`
+- `.gspot/rules/general/prose/DOCS-FORMAT.md`
+- `.gspot/rules/general/prose/DOCS-MEDIA.md`
+- `.gspot/rules/general/prose/DOCS-SURFACES.md`
+- `.gspot/rules/general/prose/DOCS.md`
+- `.gspot/rules/general/prose/WRITING.md`
+- `.gspot/rules/general/secrets/SECRETS.md`
+- `.gspot/rules/general/security/SECURITY.md`
 - `.gspot/rules/general/site/SITE.md`
 
 Languages:
@@ -92,7 +92,7 @@ A check that runs a tool uses the tool name, so readers know which rules and sup
 
 Test `config/` and `types/` folders mirror the tests that use them. Flatten a one-file folder into its parent. Keep text shared by two or more test files in `config/samples/`.
 
-File-format schemas belong to their parsers; shared parser contracts live in `parsers/schema/`. Policy tables, including `[agent_rules]`, belong to `policy/schema/`. The ownership log schema lives in `packages/cli/src/lifecycle/ownership/schema.ts`.
+File-format schemas belong to their parsers; shared parser contracts live in `parsers/schema/`. Policy tables, including `[agent_rules]`, belong to `policy/schema/`. The ownership log schema lives in `packages/cli/src/lifecycle/ownership/state/contracts.ts`.
 
 Owner decisions are recorded in `findings/progress.json`. Read them before you change how gspot ships, installs, or is configured, and never reverse one inside unrelated work. These decisions are final:
 

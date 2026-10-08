@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { parseJsonRecord } from '#cli/parsers/json.ts';
+import { parseJsonRecord } from '#cli/parsers/public.ts';
 import { INVALID_JSON, NON_RECORD_JSON } from '#tests/config/cli/parsers/json.ts';
 
 test('strict JSON configuration parsing preserves field values and empty objects', () => {

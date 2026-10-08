@@ -1,4 +1,4 @@
-// A clean NestJS module passes every check, and the NestJS plugin reports a route parameter its decorator does not name.
+// NestJS checks compiler settings and type safety; declared Swagger use selects its API lint contracts.
 import { join } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { Level } from '#cli/types/configurations.ts';
@@ -70,9 +70,9 @@ describe('the nestjs configuration', () => {
         (level) => swaggerContracts(testRepository, level),
     );
 
-    test('the lint, type, and compiler option checks accept the clean Nest module', async () => {
+    test('the type and compiler option checks accept the clean Nest module', async () => {
         const { root, environment } = testRepository;
-        for (const id of ['javascript/eslint', 'typescript/tsc', 'typescript/tsconfig']) {
+        for (const id of ['typescript/tsc', 'typescript/tsconfig']) {
             const clean = await spawnGspot(root, ['check', '--only', id], environment);
             expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
         }

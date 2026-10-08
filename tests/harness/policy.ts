@@ -1,8 +1,8 @@
 // Build sandbox policy and report public validation failures.
-import { GspotError } from '#cli/platform/errors.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 import type { PolicyOptions } from '#tests/types/harness/policy.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 
 /**
  * Build policy with explicit configuration choices and authored TOML tables.

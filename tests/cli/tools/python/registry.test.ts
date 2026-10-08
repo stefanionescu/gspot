@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { parsePythonSettings } from '#cli/tools/python/registry.ts';
+import { parsePythonSettings } from '#cli/tools/python/contracts.ts';
 import { PROJECT_INDEX, AUTHORED_UV_INDEX } from '#tests/config/samples/python.ts';
 
 test('uv.toml takes precedence and local index paths follow the authored repository', () => {

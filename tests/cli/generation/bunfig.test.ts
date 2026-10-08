@@ -1,14 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { planMerge } from '#cli/lifecycle/ownership/plans.ts';
-import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { planMerge, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 import { AGE_CASES, TWO_WEEKS_SECONDS } from '#tests/config/cli/generation/bunfig.ts';
 
 test('Bun safeguards preserve stricter age and unrelated fields across ownership merge and restoration', async () => {

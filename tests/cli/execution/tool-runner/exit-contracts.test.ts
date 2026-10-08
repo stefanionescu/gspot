@@ -1,20 +1,20 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { checkRun } from '#cli/execution/built-in.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { checkRun } from '#cli/execution/contracts.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { stat, chmod, writeFile } from 'node:fs/promises';
 import { containing } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { TYPO_REPORT, MARKDOWN_REPORT } from '#tests/config/cli/parsers/output/formats.ts';
 
 test.each(['{file}', '{files}'])(

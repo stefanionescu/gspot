@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { inspectTool } from '#cli/tools/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { inspectTool } from '#cli/tools/inspect.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { environmentExecutable } from '#cli/platform/paths.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { chmod, mkdir, unlink, symlink } from 'node:fs/promises';
+import { environmentExecutable } from '#cli/platform/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 test('managed executable discovery refuses an external link before inspecting and accepts an internal replacement', async () => {
     await using directory = await testdir();

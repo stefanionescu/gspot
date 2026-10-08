@@ -1,11 +1,11 @@
 // What this machine can and cannot do: which pinned tools ship for it, the modes it keeps, and the modules it links.
 import { join, dirname } from 'node:path';
-import { missingBuild } from '#cli/planning/skips.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
-import { hostPlatform } from '#cli/platform/environment.ts';
+import { hostPlatform } from '#cli/platform/public.ts';
+import { missingBuild } from '#cli/planning/contracts.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { mkdir, readdir, symlink, realpath } from 'node:fs/promises';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { testModules, installedModules } from '#tests/harness/environment.ts';
 
 /**

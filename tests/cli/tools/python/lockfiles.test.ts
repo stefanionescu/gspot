@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { pythonLockfileMatches } from '#cli/tools/python/lockfiles.ts';
+import { pythonLockfileMatches } from '#cli/tools/python/contracts.ts';
 
 import {
     PRIVATE_PYTHON_PROJECT,

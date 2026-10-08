@@ -56,3 +56,26 @@ export const MISSPELLED_FILE = `// ${TYPO.the} order of things.\n\n/** A value. 
 
 export const DOUBLE_JS =
     '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice(3);\n';
+
+export const TSCONFIG_PROJECT =
+    '{"compilerOptions":{"composite":true,"strict":true,"types":[],"target":"ES2020"},"include":["*.ts"]}';
+
+export const AUTHORED_TSCONFIG = `{
+    // The application owns its build and module settings.
+    "compilerOptions": {
+        "strict": false,
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "types": [],
+        "incremental": true,
+        "tsBuildInfoFile": %BUILD_INFO%
+    },
+    "include": ["src"],
+}\n`;
+
+/** Native compiler output boundaries have distinct exit contracts. */
+export const OUTDIR_CASES = [
+    { name: 'an absolute outDir outside the project is refused with exit 2', kind: 'absolute', code: 2 },
+    { name: 'an outDir through a linked node_modules writes nothing outside the repository', kind: 'symlink', code: 0 },
+];

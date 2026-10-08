@@ -1,10 +1,10 @@
 // Foreign key columns that no index leads with, read from the schema the migrations build.
 import { findingAt } from '#cli/checks/finding.ts';
+import { positionAt } from '#cli/parsers/sql/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
-import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
+import { migrationsOf } from '#cli/checks/database/postgres/public.ts';
+import { buildSchema } from '#cli/checks/database/postgres/contracts.ts';
 
 /**
  * One finding for each foreign key column that no index, primary key, or unique key leads with.

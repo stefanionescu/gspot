@@ -4,14 +4,14 @@ import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
-import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 import { BASH_CASES_MAIN as MAIN } from '#tests/config/samples/bash.ts';
 
 test('an executable requires strict mode before its first command', async () => {

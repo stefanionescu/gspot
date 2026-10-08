@@ -1,15 +1,15 @@
 import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { isRecord } from '#cli/platform/objects.ts';
-import { readSource } from '#cli/platform/source.ts';
-import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
+import { isRecord } from '#cli/platform/contracts.ts';
+import { lockfileEntry } from '#cli/parsers/contracts.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { SECONDS_PER_DAY } from '#cli/config/platform/runtime.ts';
-import { parseBunInstallSettings } from '#cli/parsers/packages.ts';
 import { BUNFIG } from '#cli/config/checks/general/dependencies.ts';
+import { parseBunInstallSettings } from '#cli/parsers/packages/public.ts';
 
 function installTable(root: string): Record<string, unknown> | undefined {
     const path = join(root, BUNFIG);

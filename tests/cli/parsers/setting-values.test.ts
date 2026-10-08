@@ -3,13 +3,11 @@ import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { format, resolveConfig } from 'prettier';
-import { relativePath } from '#cli/policy/schema/fields.ts';
-import { compileSettingValue } from '#cli/policy/schema/settings.ts';
-import { settingSchemaSources } from '#cli/generation/setting-values.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { settingNamespaceSchemas } from '#cli/policy/schema/namespaces.ts';
-import { settingValueSchemas } from '#cli/policy/schema/setting-values.ts';
-import { activeSettingNamespaceSchemas } from '#cli/policy/schema/active-settings.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { settingSchemaSources } from '#cli/generation/compilation/public.ts';
+import { settingNamespaceSchemas } from '#cli/policy/schema/native/contracts.ts';
+import { relativePath, compileSettingValue } from '#cli/policy/schema/contracts.ts';
+import { settingValueSchemas, activeSettingNamespaceSchemas } from '#cli/policy/schema/native/public.ts';
 
 test('a path declaration permits an empty disabling value only when its native default declares it', () => {
     const strict = compileSettingValue({ type: 'path', validation: {} });

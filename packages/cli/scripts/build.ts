@@ -2,10 +2,10 @@
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
-import { assertManifests } from '#cli/configurations/errors.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { validateEslintPresets } from '#cli/generation/eslint/presets.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { validateEslintPresets } from '#cli/generation/eslint/public.ts';
+import { assertManifests } from '#cli/configurations/errors/contracts.ts';
 import { rm, chmod, rename, copyFile, readFile, writeFile } from 'node:fs/promises';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');

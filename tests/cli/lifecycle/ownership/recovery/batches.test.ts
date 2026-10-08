@@ -5,13 +5,11 @@ import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
-import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
-import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { planReplacement, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 
-const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
-const boundary = getCliSourcePath('platform/root/open.ts');
+const implementation = getCliSourcePath('lifecycle/ownership/public.ts');
+const boundary = getCliSourcePath('platform/root/public.ts');
 
 async function interrupted(
     cwd: string,
@@ -32,9 +30,9 @@ if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
 }};
 }}));
 const {openOwnership}=await import(${JSON.stringify(implementation)});
-const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
-const {applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
-const {planRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/restoration.ts'))});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
+const {applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
+const {planRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
 const log=openOwnership(process.cwd());
 ${call}
 log[Symbol.dispose]();

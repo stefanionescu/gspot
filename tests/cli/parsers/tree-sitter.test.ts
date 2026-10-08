@@ -5,9 +5,9 @@ import { writeFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { rejection } from '#tests/harness/expectations.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { readPython, disposePython } from '#cli/parsers/python.ts';
-import { readSwift, disposeSwift } from '#cli/parsers/swift/source.ts';
-import { parserFor, parseSource, visitParsed } from '#cli/parsers/tree-sitter.ts';
+import { readSwift, disposeSwift } from '#cli/parsers/swift/public.ts';
+import { readPython, disposePython } from '#cli/parsers/source/contracts.ts';
+import { parserFor, parseSource, visitParsed } from '#cli/parsers/source/public.ts';
 import type { ObservationReader, ParsedObservation } from '#tests/types/cli/parsers.ts';
 import { TYPED_DECLARATION, PARSER_OBSERVATIONS } from '#tests/config/cli/parsers/tree-sitter.ts';
 

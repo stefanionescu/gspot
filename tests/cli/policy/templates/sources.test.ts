@@ -1,8 +1,8 @@
 // Where a template is fetched from: an https address as given, a GitHub shorthand mapped to its raw file, never http.
 import { test, spyOn, expect } from 'bun:test';
-import { getTemplate } from '#cli/policy/templates.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
+import { getTemplate } from '#cli/policy/document/contracts.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { TEMPLATE } from '#tests/config/cli/policy/templates-sources.ts';
 import { RAW_HOST, TEMPLATE_FILE } from '#cli/config/policy/templates.ts';
@@ -26,7 +26,8 @@ test('a template address that answers 404 is refused with its status', async () 
 
 test('a template address over plain http is refused before any request', async () => {
     using fetched = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('No request is expected.'));
-    // eslint-disable-next-line unicorn/prefer-https -- reason: The test hands the reader the plain http address it refuses.
+
+    // eslint-disable-next-line unicorn/prefer-https -- reason: This negative test proves plain HTTP is refused before any network request.
     expect(await rejection(getTemplate('http://example.com/house.template.toml', '.'))).toContain('https, not http');
     expect(fetched).not.toHaveBeenCalled();
 });

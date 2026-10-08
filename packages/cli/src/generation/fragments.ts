@@ -1,14 +1,14 @@
 // What the selected fragments add to a generated target: emitted text, imports, file globs, and selectors.
-import { eta } from '#cli/generation/eta.ts';
-import { readAsset } from '#cli/platform/assets.ts';
+import { readAsset } from '#cli/platform/root/public.ts';
+import { eta } from '#cli/generation/compilation/public.ts';
 import type { EtaInputs } from '#cli/types/generation/eta.ts';
-import { typescriptImports } from '#cli/parsers/typescript.ts';
 import type { Fragment } from '#cli/types/generation/fragments.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
-import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
+import { typescriptImports } from '#cli/parsers/source/contracts.ts';
+import { isInScope, nestedScopes } from '#cli/repository/paths/public.ts';
 import type { Manifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { eslintModule, eslintFilePatterns } from '#cli/generation/eslint/serialize.ts';
-import { eslintRuleOptions, fragmentSelectorGroups } from '#cli/generation/eslint/blocks.ts';
+import { eslintModule, eslintFilePatterns } from '#cli/generation/eslint/public.ts';
+import { eslintRuleOptions, fragmentSelectorGroups } from '#cli/generation/eslint/contracts.ts';
 
 // The configurations whose fragments a target takes: a target written for one scope asks that scope, and a target
 // written once asks every scope.

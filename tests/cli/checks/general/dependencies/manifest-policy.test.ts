@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { parsePackageManifest } from '#cli/parsers/packages.ts';
-import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
+import { parsePackageManifest } from '#cli/parsers/packages/public.ts';
 import { MANIFEST, REGISTRY_ALIASES } from '#tests/config/cli/checks/general/dependencies/manifest-policy.ts';
 
 const DEPENDENCIES_POLICY = buildPolicy(['dependencies']);
@@ -16,9 +16,17 @@ describe('manifest policy reads', () => {
     test('accepts an absent optional manifest and a valid manifest', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': DEPENDENCIES_POLICY, 'README.md': '# Example\n' });
-        expect(manifests(buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'))).toStrictEqual([]);
+        expect(
+            BUILT_IN_CHECKS['dependencies/manifests'].input(
+                buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'),
+            ),
+        ).toStrictEqual([]);
         await writeFile(join(sandbox.path, 'package.json'), MANIFEST);
-        expect(manifests(buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'))).toStrictEqual([]);
+        expect(
+            BUILT_IN_CHECKS['dependencies/manifests'].input(
+                buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'),
+            ),
+        ).toStrictEqual([]);
     });
 });
 
@@ -64,7 +72,11 @@ test.each(['recommended', 'all'] as const)(
                     messages.filter(({ ruleId }) => ruleId === 'package-json/restrict-dependency-ranges').length,
             ),
         ).toStrictEqual([0, 0, 1]);
-        expect(manifests(buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'))).toStrictEqual([]);
+        expect(
+            BUILT_IN_CHECKS['dependencies/manifests'].input(
+                buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'),
+            ),
+        ).toStrictEqual([]);
     },
 );
 

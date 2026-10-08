@@ -1,19 +1,20 @@
 import executables from 'which';
 import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
-import { toPosix } from '#cli/platform/paths.ts';
 import { commitAll } from '#tests/harness/git.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
+import * as processes from '#cli/platform/public.ts';
+import { toPosix } from '#cli/platform/contracts.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { nextjsTsc } from '#cli/checks/framework/public.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import { nextBuild, nextjsTsc } from '#cli/checks/framework/nextjs.ts';
 import { stat, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 import type { NextjsCommands } from '#tests/types/cli/checks/framework/nextjs.ts';
 
@@ -91,7 +92,7 @@ for (const scope of ['', 'apps/web'])
             using read = mockNextjsCommands(check);
             const { directories, routesSeen, commands } = read;
             const execute = async () => {
-                if (check === 'nextjs/build') return nextBuild(input);
+                if (check === 'nextjs/build') return BUILT_IN_CHECKS['nextjs/build'].input(input);
                 const result = await nextjsTsc(session, planned);
                 return result.findings;
             };

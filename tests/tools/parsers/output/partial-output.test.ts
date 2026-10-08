@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
-import { checkedFindings } from '#cli/execution/command/findings.ts';
+import { checkedFindings } from '#cli/execution/command/contracts.ts';
 
 test('partial ShellCheck output beside an unreadable file is an execution error', async () => {
     await using sandbox = await testdir();

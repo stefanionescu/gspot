@@ -3,11 +3,11 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { format, resolveConfig } from 'prettier';
-import { assetPath } from '#cli/platform/assets.ts';
-import { npmPins } from '#cli/configurations/pins.ts';
+import { assetPath } from '#cli/platform/root/public.ts';
+import { npmPins } from '#cli/configurations/contracts.ts';
 import { JSON_INDENT } from '#cli/config/generation/eta.ts';
 import { readInstalledNpmPackage } from '#automation/parsers/npm.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { ESLINT_REFRESH_ARGUMENT_COUNT } from '#automation/config/eslint-presets.ts';
 import { STYLELINT_RULE_NAMES_FILE, STYLELINT_RULE_NAMES_MODULE } from '#cli/config/parsers/stylelint.ts';
 
@@ -28,7 +28,7 @@ import {
     eslintGlobalsSchema,
     eslintRuleNamesSchema,
     eslintRuleModuleSchema,
-} from '#cli/parsers/schema/eslint.ts';
+} from '#cli/parsers/schema/public.ts';
 
 const project = process.argv[2];
 if (project === undefined || process.argv.length !== ESLINT_REFRESH_ARGUMENT_COUNT)

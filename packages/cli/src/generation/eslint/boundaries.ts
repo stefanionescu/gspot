@@ -1,6 +1,6 @@
 import type { ScopeView } from '#cli/types/policy/settings.ts';
-import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
-import { eslintNodePatterns, eslintSourcePattern } from '#cli/generation/eslint/serialize.ts';
+import { isInScope, nestedScopes } from '#cli/repository/paths/public.ts';
+import { eslintNodePatterns, eslintSourcePattern } from '#cli/generation/eslint/public.ts';
 
 import type {
     EslintBlock,

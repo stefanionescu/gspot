@@ -1,9 +1,9 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/platform/source.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { parseBashSyntaxResult, findFenceSyntaxFindings } from '#cli/parsers/markdown.ts';
+import { runCheckTool } from '#cli/execution/command/public.ts';
+import { parseBashSyntaxResult, findFenceSyntaxFindings } from '#cli/parsers/public.ts';
 
 /**
  * Report invalid tagged examples at their error lines; Bash executes through the same native tool boundary.

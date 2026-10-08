@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { readPackageManifests } from '#cli/repository/package-manifests.ts';
+import { readPackageManifests } from '#cli/repository/contracts.ts';
+import { detectConfigurations } from '#cli/configurations/selection/contracts.ts';
 
 test.each(['@testing-library/react', '@testing-library/dom', '@testing-library/custom-adapter'])(
     'Testing Library detects %s only in the project scope that declares it',

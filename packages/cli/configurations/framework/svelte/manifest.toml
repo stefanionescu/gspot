@@ -5,6 +5,13 @@ eslint_all_rules = [
     "svelte/require-event-dispatcher-types",
 ]
 
+naming.path_containers = [
+    { open = "[", close = "]", category = "path_parameters" },
+    { open = "(", close = ")", category = "directories" },
+    { open = "@", close = "", category = "directories" },
+    { open = "_", close = "", category = "directories" },
+]
+
 [configuration]
 title = "Svelte"
 requires = ["javascript"]

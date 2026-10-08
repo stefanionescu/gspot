@@ -4,10 +4,15 @@ import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import { identify, openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
-import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
-import { planBlock, planMerge, planRetirement, planReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { identify, applyPlan, applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+
+import {
+    planBlock,
+    planMerge,
+    planRetirement,
+    planReplacement,
+    planRestoration,
+} from '#cli/lifecycle/ownership/contracts.ts';
 
 test('a prepared configuration does not write and cannot overwrite a subsequent edit', async () => {
     await using directory = await testdir();

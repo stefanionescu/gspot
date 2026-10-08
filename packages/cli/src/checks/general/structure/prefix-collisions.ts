@@ -1,13 +1,13 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { isInScope } from '#cli/repository/selectors.ts';
-import { extensionsTagged } from '#cli/repository/tags.ts';
+import { isInScope } from '#cli/repository/paths/public.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { HOOK_DIRECTORIES } from '#cli/config/repository/hooks.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
+import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
 import { INDEX_STEMS, NESTJS_KINDS, TOOL_PREFIXES } from '#cli/config/checks/general/structure.ts';
-import { stemOf, prefixOf, directoryOf, extensionOf, directoryTree } from '#cli/platform/paths.ts';
 import { structureSources, isDependencyFolder } from '#cli/checks/general/structure/source-files.ts';
+import { stemOf, prefixOf, directoryOf, extensionOf, directoryTree } from '#cli/platform/contracts.ts';
 
 // NestJS files share the feature name the folder already carries, so they do not form a set to regroup.
 function isNestjsName(name: string): boolean {

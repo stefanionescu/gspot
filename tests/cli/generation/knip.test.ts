@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
-import { parseOutput } from '#cli/parsers/output/parse.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { parseOutput } from '#cli/parsers/output/public.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 
 import {
     KNIP_ENTRY_TABLES,

@@ -9,8 +9,8 @@ import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import { CONFIGURATION_GROUPS } from '../../config/reference.ts';
 import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
-import { allChecks } from '@gspothq/cli/src/configurations/declarations.ts';
-import { configurationManifests } from '@gspothq/cli/src/configurations/manifests.ts';
+import { allChecks } from '@gspothq/cli/src/configurations/contracts.ts';
+import { configurationManifests } from '@gspothq/cli/src/configurations/public.ts';
 
 function configurationSections(manifests: Manifest[]): string {
     const sections: string[] = [];

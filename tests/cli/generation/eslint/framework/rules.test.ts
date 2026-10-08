@@ -145,7 +145,8 @@ test.each(['recommended', 'all'] as const)('Drizzle guards only its declared cli
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': `level = "${level}"\nconfigurations = ["drizzle"]\n[scope.app]\nconfigurations = ["drizzle"]\n[scope.app.drizzle]\nclient_names = ["connection"]\n`,
-        'source.js': 'db.delete(table);\nother.delete(table);\n',
+        'source.js':
+            'db.delete(table);\nother.delete(table);\nnew Map().delete(key);\nnew Set().delete(key);\nnew Headers().delete("header");\nnew URLSearchParams().delete("query");\n',
         'app/source.js': 'connection.update(table).set({ value: 1 });\nother.update(table).set({ value: 1 });\n',
     });
     const eslint = await createEslint(sandbox.path);

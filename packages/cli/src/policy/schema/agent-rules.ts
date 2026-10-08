@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { RULES_DIRECTORY } from '#cli/config/platform/locations.ts';
-import { defaultValue, relativePath, authoredDefault } from '#cli/policy/schema/fields.ts';
+import { defaultValue, relativePath, authoredDefault } from '#cli/policy/schema/contracts.ts';
 
 export const agentRulesSchema = z.strictObject({
     enabled: authoredDefault(z.boolean().default(true)).meta({

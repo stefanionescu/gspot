@@ -2,18 +2,18 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse, stringify } from 'smol-toml';
 import { writeFile } from 'node:fs/promises';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
-import { initCommand } from '#cli/commands/init/command.ts';
+import { initCommand } from '#cli/commands/init/public.ts';
 import { GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { emitPolicy, parseExpiryDate } from '#cli/policy/file.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import { rejection, containingAll } from '#tests/harness/expectations.ts';
+import { emitPolicy, parseExpiryDate } from '#cli/policy/document/public.ts';
 
 test('typos output preserves quoted keys and paths without creating settings', async () => {
     const words = ['quoted"word', 'dotted.word', String.raw`back\slash`, 'café', "apostrophe'word"];

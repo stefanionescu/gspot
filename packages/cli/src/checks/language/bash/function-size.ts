@@ -1,16 +1,16 @@
 // The size ceilings of a shell function: code lines and the ast-grep counts.
-import { codeLines } from '#cli/parsers/bash.ts';
 import { relative, isAbsolute } from 'node:path';
-import { toPosix } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { assetPath } from '#cli/platform/assets.ts';
+import { toPosix } from '#cli/platform/contracts.ts';
+import { codeLines } from '#cli/parsers/bash/public.ts';
+import { assetPath } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { fileBatches } from '#cli/execution/command/batches.ts';
+import { runCheckTool } from '#cli/execution/command/public.ts';
 import { astGrepReportSchema } from '#cli/parsers/schema/ast-grep.ts';
+import { fileBatches } from '#cli/execution/command/arguments/contracts.ts';
+import { functionAt, getScriptIndex } from '#cli/checks/language/contracts.ts';
 import { COUNT_RULES, OUTER_LEVELS } from '#cli/config/checks/language/bash.ts';
-import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 import type { ScriptIndex, AstGrepMatch, BashCountRule } from '#cli/types/checks/language/bash.ts';
 
 /**

@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';
 
 test('generated vocabulary combines shipped and project words without duplicates', async () => {

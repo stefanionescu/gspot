@@ -3,14 +3,16 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
+import { selectConfigurations } from '#cli/configurations/selection/public.ts';
 
 test('templates > init validates a template in a dry run without changing the repository', async () => {
     await using sandbox = await testdir();
@@ -60,7 +62,9 @@ test.each(['exact', 'detect'])('an empty %s template controls root detection wit
     for (const configuration of alwaysSelectedConfigurations()) expect(policy.configurations).toContain(configuration);
     if (selection === 'exact')
         expect(policy.configurations.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(
-            alwaysSelectedConfigurations().toSorted((left, right) => left.localeCompare(right)),
+            selectConfigurations(alwaysSelectedConfigurations(), configurationManifests())
+                .map((manifest) => manifest.configuration.name)
+                .toSorted((left, right) => left.localeCompare(right)),
         );
     expect(report.plan.template).toMatchObject({ name: 'team', selection });
     expect(await readTree(sandbox.path)).toStrictEqual(before);

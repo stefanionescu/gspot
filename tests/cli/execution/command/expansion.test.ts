@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, symlink } from 'node:fs/promises';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { substitute, commandConfigurations } from '#cli/execution/command/placeholders.ts';
+import { runCheckCommand } from '#cli/execution/command/public.ts';
+import { substitute, commandConfigurations } from '#cli/execution/command/arguments/public.ts';
 
 test('nested configuration inputs stop at the declared scope and reject ancestors linked outside the repository', async () => {
     await using sandbox = await testdir();

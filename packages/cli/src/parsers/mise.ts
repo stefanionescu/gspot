@@ -1,5 +1,5 @@
 import { parse } from 'smol-toml';
-import { isRecord } from '#cli/platform/objects.ts';
+import { isRecord } from '#cli/platform/contracts.ts';
 import { miseTasksSchema, miseToolsSchema, miseTaskAliasSchema } from '#cli/parsers/schema/mise.ts';
 
 /**

@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
-import { identifiersOf } from '#cli/checks/general/naming/identifiers.ts';
+import { identifiersOf } from '#cli/checks/general/naming/contracts.ts';
 
 import {
     SWIFT_NAMES,

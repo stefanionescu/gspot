@@ -3,9 +3,9 @@ import type { JSONSchema } from 'zod/v4/core';
 import { buildJsonSchema } from './schema.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { cell, table, section, referencePage } from './page.ts';
-import { isRecord } from '@gspothq/cli/src/platform/objects.ts';
+import { isRecord } from '@gspothq/cli/src/platform/contracts.ts';
 import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
-import { knownSettings } from '@gspothq/cli/src/policy/settings/known.ts';
+import { knownSettings } from '@gspothq/cli/src/policy/settings/public.ts';
 import type { ReferencePage, SettingVariant } from '../../types/reference.ts';
 import { SETTINGS_INTRO, SCHEMA_TYPE_LABELS } from '../../config/reference.ts';
 

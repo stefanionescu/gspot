@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { codeLines, parseBashScript } from '#cli/parsers/bash.ts';
+import { codeLines, parseBashScript } from '#cli/parsers/bash/public.ts';
 import { COMMENT_CASES, TEMPORARY_CASES } from '#tests/config/cli/parsers/bash.ts';
 
 test.each(COMMENT_CASES)('Bash comments preserve quoted and parameter hashes in %s', async (source, expected) => {

@@ -5,15 +5,14 @@ import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { OWNERSHIP_BYTES } from '#tests/config/samples/ownership.ts';
-import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
-import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
-import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
+import { ownershipSchema } from '#cli/lifecycle/ownership/state/contracts.ts';
 import { runTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
+import { applyPlan, applyPlans, getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
-const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
-const boundary = getCliSourcePath('platform/root/open.ts');
+const implementation = getCliSourcePath('lifecycle/ownership/public.ts');
+const boundary = getCliSourcePath('platform/root/public.ts');
 
 async function publish(root: string, point: 'error' | 'restoration error' | 'interruption' | 'edited'): Promise<void> {
     const original = Buffer.from(OWNERSHIP_BYTES.replacement);
@@ -44,8 +43,8 @@ mock.module('node:fs', () => ({ ...fs, renameSync(from, to) {
 } }));
 Object.defineProperty(process, 'platform', {value: 'win32'});
 const {openOwnership} = await import(${JSON.stringify(implementation)});
-const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
-const {applyPlan,applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
+const {applyPlan,applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
 const log = openOwnership(process.cwd());
 try {
     applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 0o444}, kind: 'tool_file', canReplace: true}));
@@ -164,8 +163,8 @@ mock.module(${JSON.stringify(boundary)}, () => ({
     }
 }));
 const { openOwnership } = await import(${JSON.stringify(implementation)});
-const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
-const {applyPlan,applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
+const {applyPlan,applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
 const log = openOwnership(${JSON.stringify(directory.path)});
 try {
     applyPlans(log, ['first.bin', 'second.bin'].map(path => planReplacement(log,{path: path, next: { bytes: Buffer.from('installed'), mode: 0o444 }, kind: 'tool_file', canReplace: true})));

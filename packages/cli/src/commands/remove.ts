@@ -1,21 +1,21 @@
 // Remove authored configuration choices through the policy transaction.
 import { resolve } from 'node:path';
-import { compact } from '#cli/platform/objects.ts';
-import { findRoot } from '#cli/repository/root.ts';
-import { commandHelp } from '#cli/commands/help.ts';
-import { getScopeTable } from '#cli/policy/edit.ts';
-import { GspotError } from '#cli/platform/errors.ts';
-import { printResult } from '#cli/terminal/messages.ts';
-import { savePolicy } from '#cli/commands/save-policy.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { compact } from '#cli/platform/contracts.ts';
+import { commandHelp } from '#cli/commands/public.ts';
+import { printResult } from '#cli/terminal/public.ts';
+import { savePolicy } from '#cli/commands/contracts.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
-import { defaultValue } from '#cli/policy/schema/fields.ts';
-import { policySchema } from '#cli/policy/schema/policy.ts';
-import { requireChain } from '#cli/configurations/select.ts';
+import { assertVersionPin } from '#cli/lifecycle/public.ts';
+import { policySchema } from '#cli/policy/schema/public.ts';
 import type { Mutation } from '#cli/types/policy/settings.ts';
 import type { Program } from '#cli/types/commands/program.ts';
-import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
+import { defaultValue } from '#cli/policy/schema/contracts.ts';
+import { findRoot } from '#cli/repository/discovery/contracts.ts';
+import { getScopeTable } from '#cli/policy/document/contracts.ts';
 import type { RemoveOptions } from '#cli/types/commands/remove.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { requireChain } from '#cli/configurations/selection/public.ts';
 
 /**
  * gspot remove: drops one configuration from the root list or from one scope's list.

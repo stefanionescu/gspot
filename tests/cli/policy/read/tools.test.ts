@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 
 import {
     ESLINT_REJECTED_SELECTIONS,

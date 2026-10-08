@@ -2,11 +2,11 @@ import { join, posix } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { versionPairs } from '#cli/checks/general/dependencies/version-pairs.ts';
+import { versionPairs } from '#cli/checks/general/dependencies/public.ts';
 import { VERSION_PAIR_CASES } from '#tests/config/cli/checks/general/dependencies/version-pairs.ts';
 import { NEXT_VERSION_PAIRS, REACT_VERSION_PAIRS } from '#cli/config/checks/general/dependencies.ts';
 

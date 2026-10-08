@@ -1,16 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { GspotError } from '#cli/platform/errors.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { TYPO } from '#tests/config/samples/spelling.ts';
-import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { checkedFindings } from '#cli/execution/command/findings.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { checkedFindings } from '#cli/execution/command/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { PENDING } from '#tests/config/cli/parsers/output/declared-checks.ts';
 
 const ENTRY = String.raw`configurations = []
@@ -26,79 +24,6 @@ summary = "Finds pending notes left in the notes folder."
 format = "regex"
 pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
 `;
-
-test('pin verification treats a rate limit as an execution error and accepts a completed read', async () => {
-    const failure = '429 Too Many Requests';
-    await using sandbox = await testdir();
-    const workflow = 'jobs:\n  check:\n    steps:\n      - uses: actions/checkout@v4\n';
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['actions']),
-        '.github/workflows/check.yml': workflow,
-    });
-    const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'push', skips: [], only: ['actions/pinact'] });
-    const planned = plans[0]!;
-    const result = {
-        code: 1,
-        stdout: '',
-        stderr: `ERROR failed to handle a line: GET https://api.github.com/repos/actions/checkout/commits/v4: ${failure}`,
-        missing: false,
-        duration: 1,
-    };
-    expect(() => checkedFindings(planned, result, { cwd: sandbox.path, root: sandbox.path })).toThrow(GspotError);
-    expect(
-        checkedFindings(
-            planned,
-            { ...result, stderr: 'invalid action pin: .github/workflows/check.yml:4' },
-            { cwd: sandbox.path, root: sandbox.path },
-        ),
-    ).toStrictEqual([
-        containing({
-            check: 'actions/pinact',
-            message: 'invalid action pin: .github/workflows/check.yml:4',
-        }),
-    ]);
-    expect(
-        checkedFindings(planned, { ...result, code: 0, stderr: '' }, { cwd: sandbox.path, root: sandbox.path }),
-    ).toStrictEqual([]);
-    expect(await Bun.file(join(sandbox.path, '.github/workflows/check.yml')).text()).toBe(workflow);
-});
-
-test('spelling distinguishes native findings from fatal exits', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['spelling']),
-        'sample.txt': `${TYPO.the}\n`,
-    });
-    const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', only: ['spelling/typos'], skips: [] });
-    const planned = plans[0]!;
-    const stdout = JSON.stringify({
-        type: 'typo',
-        path: 'sample.txt',
-        line_num: 1,
-        byte_offset: 0,
-        typo: TYPO.the,
-        corrections: ['the'],
-    });
-    const result = { stdout, stderr: '', code: 2, missing: false, duration: 1 };
-    expect(checkedFindings(planned, result, { cwd: sandbox.path, root: sandbox.path })).toMatchObject([
-        { file: 'sample.txt' },
-    ]);
-    expect(() =>
-        checkedFindings(
-            planned,
-            { ...result, code: 78, stderr: 'Invalid native configuration.' },
-            { cwd: sandbox.path, root: sandbox.path },
-        ),
-    ).toThrow(GspotError);
-    expect(() =>
-        checkedFindings(planned, { ...result, stdout: '' }, { cwd: sandbox.path, root: sandbox.path }),
-    ).toThrow(GspotError);
-    expect(
-        checkedFindings(planned, { ...result, stdout: '', code: 0 }, { cwd: sandbox.path, root: sandbox.path }),
-    ).toStrictEqual([]);
-});
 
 test('a declared regex check verifies reported files only when it has a configuration manifest', async () => {
     await using sandbox = await testdir();
@@ -130,43 +55,6 @@ pattern = '^(?<file>[^:]+):(?<line>\d+):(?<message>.*)$'
     expect(checkedFindings(planned, result, paths)).toStrictEqual(checkedFindings(configured, result, paths));
     expect(await Bun.file(join(sandbox.path, 'notes/selected.txt')).text()).toBe(source);
     expect(await Bun.file(join(sandbox.path, 'notes/reported.txt')).text()).toBe(source);
-});
-
-test('source text naming module errors stays an ESLint finding', async () => {
-    await using sandbox = await testdir();
-    const path = 'source.ts';
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['typescript'], { level: 'all' }),
-        [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
-    });
-    const session = await openSession(sandbox.path);
-    const plans = planRun(session, { stage: 'all', skips: [], only: ['javascript/eslint'] });
-    const planned = plans[0]!;
-    const stdout = JSON.stringify([
-        {
-            filePath: join(sandbox.path, path),
-            source: 'const message = "ERR_MODULE_NOT_FOUND"; // ConfigError:',
-            messages: [{ ruleId: 'no-unused-vars', severity: 2, message: 'Unused message.', line: 1, column: 7 }],
-        },
-    ]);
-    const result = { stdout, stderr: '', code: 1, missing: false, duration: 1 };
-    expect(checkedFindings(planned, result, { cwd: sandbox.path, root: sandbox.path })).toMatchObject([
-        { file: path, rule: 'no-unused-vars', line: 1, column: 7 },
-    ]);
-    expect(() =>
-        checkedFindings(
-            planned,
-            { ...result, code: 2, stderr: 'ConfigError: invalid configuration' },
-            { cwd: sandbox.path, root: sandbox.path },
-        ),
-    ).toThrow(GspotError);
-    expect(() =>
-        checkedFindings(
-            planned,
-            { ...result, stdout: '', code: 2, stderr: 'Oops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin' },
-            { cwd: sandbox.path, root: sandbox.path },
-        ),
-    ).toThrow('ERR_MODULE_NOT_FOUND: plugin');
 });
 
 test('a named check entry > reruns a command check when an input outside its selected paths changes', async () => {

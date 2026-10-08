@@ -1,7 +1,7 @@
 import { test, spyOn, expect } from 'bun:test';
-import * as assets from '#cli/platform/assets.ts';
+import * as assets from '#cli/platform/root/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 import {
     SEMGREP_ASSETS,

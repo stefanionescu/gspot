@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { lockfileSchema } from '#cli/parsers/schema/python/tools.ts';
+import type { lockfileSchema } from '#cli/parsers/schema/public.ts';
 
 /** Repository identity and the command-owned Python installer used during preparation. */
 export type PythonPreparation = {

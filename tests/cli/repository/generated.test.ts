@@ -1,12 +1,12 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { exportTemplate } from '#cli/policy/templates.ts';
-import { emitPolicy, parseTomlText } from '#cli/policy/file.ts';
-import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
+import { exportTemplate } from '#cli/policy/document/contracts.ts';
+import { emitPolicy, parseTomlText } from '#cli/policy/document/public.ts';
+import { reconcileConfigurations } from '#cli/lifecycle/selection/contracts.ts';
 import { REFERENCE_FILES, GENERATED_SELECTIONS } from '#tests/config/cli/repository/generated.ts';
 
 test.each(GENERATED_SELECTIONS)(

@@ -1,5 +1,5 @@
 // A parsed migration file for the tests of the Postgres checks.
-import { parseSqlFile } from '#cli/parsers/sql/statements.ts';
+import { parseSqlFile } from '#cli/parsers/sql/public.ts';
 import type { Migration } from '#cli/types/checks/database/postgres.ts';
 
 /**

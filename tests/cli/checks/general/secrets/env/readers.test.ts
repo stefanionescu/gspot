@@ -3,10 +3,10 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { envTemplate } from '#cli/checks/general/secrets.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 
@@ -104,7 +104,7 @@ test('environment reads without a template in their scope report the unmet prere
         scope: 'app',
         paths: ['.env.example', 'app/source.ts'],
     });
-    expect(() => envTemplate(input)).toThrow('secrets.env_examples');
+    expect(() => BUILT_IN_CHECKS['secrets/env-template'].input(input)).toThrow('secrets.env_examples');
     const checked = await runGspot(sandbox.path, [
         'check',
         'app/source.ts',
@@ -139,7 +139,9 @@ test('modern environment accessors in component and module files require matchin
         'notes.txt': 'import.meta.env.UNREAD_API; Deno.env.get("UNREAD_API");\n',
     };
     await createFileTree(sandbox.path, { 'gspot.toml': policy, '.env.example': 'KNOWN=example\n', ...sources });
-    const rejected = envTemplate(buildCheckInput(await openSession(sandbox.path), 'secrets/env-template'));
+    const rejected = BUILT_IN_CHECKS['secrets/env-template'].input(
+        buildCheckInput(await openSession(sandbox.path), 'secrets/env-template'),
+    );
     expect(rejected.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'app.astro', line: 2, rule: 'missing-key' },
         { file: 'app.svelte', line: 1, rule: 'missing-key' },
@@ -153,7 +155,11 @@ test('modern environment accessors in component and module files require matchin
         join(sandbox.path, '.env.example'),
         'KNOWN=example\nVITE_API=example\nSVELTE_API=example\nVUE_API=example\nDENO_API=example\nMODULE_API=example\nCOMMON_API=example\nLEGACY_API=example\n',
     );
-    expect(envTemplate(buildCheckInput(await openSession(sandbox.path), 'secrets/env-template'))).toStrictEqual([]);
+    expect(
+        BUILT_IN_CHECKS['secrets/env-template'].input(
+            buildCheckInput(await openSession(sandbox.path), 'secrets/env-template'),
+        ),
+    ).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
     for (const [path, text] of Object.entries(sources))
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);

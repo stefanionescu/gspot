@@ -2,17 +2,17 @@ import { pathToFileURL } from 'node:url';
 import { sep, join, resolve } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { applyIgnores } from '#cli/execution/run.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { codeql } from '#cli/checks/general/security.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
+import { applyIgnores } from '#cli/execution/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { sarifFindings } from '#cli/parsers/output/sarif.ts';
+import { sarifFindings } from '#cli/parsers/output/structured/public.ts';
 import type { CapturedInvocation } from '#tests/types/harness/command.ts';
 
 import {
@@ -208,14 +208,16 @@ test.if(hasToolBuild('codeql')).each(['../outside', 'C:outside'])(
                 await Bun.write(output.slice('--output='.length), '{"version":"2.1.0","runs":[{"results":[]}]}');
             return { code: 0, missing: false, stdout: '', stderr: '', duration: 1 };
         });
-        await rejection(codeql(input));
+        await rejection(BUILT_IN_CHECKS['security/codeql'].input(input));
         expect(run).not.toHaveBeenCalled();
         await Bun.write(
             join(directory.path, 'gspot.toml'),
             buildPolicy(['security'], { tables: '[tools.codeql]\nlanguages = ["python"]\n', level: 'all' }),
         );
         const corrected = await openSession(directory.path);
-        expect(await codeql(buildCheckInput(corrected, 'security/codeql'))).toStrictEqual([]);
+        expect(
+            await BUILT_IN_CHECKS['security/codeql'].input(buildCheckInput(corrected, 'security/codeql')),
+        ).toStrictEqual([]);
         expect(copies).not.toContain(directory.path);
         expect(sources).toStrictEqual(['value = 1\n']);
         expect(await pathExists(join(directory.path, 'generated.py'))).toBe(false);
@@ -275,7 +277,7 @@ test.if(hasToolBuild('codeql')).each([
         } else if (!argv.includes('create')) throw new Error('Unexpected CodeQL command');
         return { ...base, stdout: '' };
     });
-    const findings = await codeql(buildCheckInput(session, 'security/codeql'));
+    const findings = await BUILT_IN_CHECKS['security/codeql'].input(buildCheckInput(session, 'security/codeql'));
     expect(invoked.map(({ cwd }) => cwd)).not.toContain(directory.path);
     const option = (command: string, prefix: string) =>
         invoked

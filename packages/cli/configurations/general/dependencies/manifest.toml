@@ -78,7 +78,7 @@ why = "A version range installs a different tree tomorrow, and two package manag
 help = "Pin the version the lockfile holds, name one packageManager, mark a workspace root private, and delete the lockfile of the manager the repository does not use."
 
 [[check]]
-name = "lockfile-fresh"
+name = "stale-lockfile"
 title = "Keep lockfiles current"
 example = "Adding a dependency to a package manifest without updating its lockfile reports an outdated lockfile. Run the owning package manager installation, inspect its manifest and lockfile changes, and retain both together."
 level = "recommended"

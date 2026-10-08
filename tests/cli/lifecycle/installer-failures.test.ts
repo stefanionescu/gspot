@@ -3,16 +3,16 @@ import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/commands/session.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { CLI_PINS } from '#cli/config/configurations.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
-import { installCommand } from '#cli/commands/install.ts';
-import { initCommand } from '#cli/commands/init/command.ts';
+import { initCommand } from '#cli/commands/init/public.ts';
+import { installCommand } from '#cli/commands/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 import { INSTALLATION_FAILURES } from '#tests/config/cli/lifecycle/installer-failures.ts';
@@ -52,7 +52,9 @@ test.each([...INSTALLATION_FAILURES])(
         const recordedVersion = await readFile(join(sandbox.path, '.gspot/version'), 'utf8');
         expect(recordedVersion.trim()).toBe(RUNNING_VERSION);
         const session = await openSession(sandbox.path);
-        expect(session.policyFiles.policy.configurations).toStrictEqual(alwaysSelectedConfigurations());
+        expect(session.policyFiles.policy.configurations).toStrictEqual(
+            [...alwaysSelectedConfigurations(), 'format'].toSorted((a, b) => a.localeCompare(b)),
+        );
         expect(await readFile(join(sandbox.path, 'README.md'), 'utf8')).toBe('Authored project.\n');
         const retry = await installCommand({ cwd: sandbox.path, isDryRun: false });
         expect(retry.exitCode).toBe(2);

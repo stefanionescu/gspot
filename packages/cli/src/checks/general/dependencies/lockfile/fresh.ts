@@ -1,11 +1,11 @@
 import { join, posix, dirname } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/platform/source.ts';
-import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
+import { lockfileEntry } from '#cli/parsers/contracts.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { copyIntoScratch } from '#cli/execution/copy/files.ts';
-import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { copyIntoScratch } from '#cli/execution/copy/public.ts';
+import { runCheckTool } from '#cli/execution/command/public.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { LOCKFILE_DIAGNOSTIC_LINES, STALE_LOCKFILE_DIAGNOSTICS } from '#cli/config/checks/general/dependencies.ts';
 

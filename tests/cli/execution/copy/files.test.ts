@@ -3,14 +3,13 @@ import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { checkOutRevision } from '#cli/execution/copy/revision.ts';
-import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/files.ts';
 import { prepareTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
 import { mkdir, readdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
+import { copyIntoScratch, checkOutRevision, projectCopyInputs } from '#cli/execution/copy/public.ts';
 
 test('dependency copies let concurrent native process output drain', async () => {
     await using repository = await testdir();

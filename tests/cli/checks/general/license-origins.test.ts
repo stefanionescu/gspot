@@ -3,15 +3,15 @@ import { chmod } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { environmentExecutable } from '#cli/platform/paths.ts';
-import { licensesPackages } from '#cli/checks/general/licenses.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { environmentExecutable } from '#cli/platform/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { SCANNERS, LICENSE_SETTINGS } from '#tests/config/cli/checks/general/licenses.ts';
 import type { ExceptionMembership } from '#tests/types/cli/checks/general/license-origins.ts';
@@ -110,7 +110,7 @@ test.each(EXCEPTION_MEMBERSHIP)('license inventory preserves $name', async (scen
                 }),
             ),
         );
-    expect(await licensesPackages(input)).toStrictEqual(expectedFindings);
+    expect(await BUILT_IN_CHECKS['licenses/packages'].input(input)).toStrictEqual(expectedFindings);
     const expected = scopes.filter((scope) => scope !== ignore).toSorted((a, b) => a.localeCompare(b));
     expect(scanned.toSorted((a, b) => a.localeCompare(b))).toStrictEqual(expected);
     expect(output).toHaveBeenCalledTimes(expected.length);

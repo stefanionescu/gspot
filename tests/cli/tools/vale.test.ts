@@ -2,15 +2,15 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { throws, rejects } from 'node:assert/strict';
-import { toolPin } from '#cli/configurations/pins.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { rootView } from '#cli/policy/settings/view.ts';
+import { rootView } from '#cli/policy/settings/public.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { chmod, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { hasValePackages, removeValePackages, installValePackages } from '#cli/tools/vale.ts';
+import { hasValePackages, removeValePackages, installValePackages } from '#cli/lifecycle/install/contracts.ts';
 
 import {
     CONFIG,

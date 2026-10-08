@@ -2,13 +2,13 @@
 title = "Static Site"
 requires = ["html"]
 suggests = ["css", "javascript"]
-description = "A site built to a folder and served as files: the build, its output, its links, its weight, its sitemap, and its headers."
+description = "A site built to a folder and served as files: the build, its output, its links, its weight, its sitemap."
 
 [detect]
-paths = ["_headers", "_redirects", "site.webmanifest", "sitemap.xml"]
+paths = ["site.webmanifest", "sitemap.xml"]
 
 [files]
-filenames = ["_headers", "_redirects", "site.webmanifest", "sitemap.xml", "robots.txt"]
+filenames = ["site.webmanifest", "sitemap.xml", "robots.txt"]
 extensions = [".svg"]
 
 [[tool]]
@@ -175,20 +175,10 @@ example = "A web manifest referencing `icon-192.png` reports a missing icon when
 level = "recommended"
 stage = "commit"
 runs = "scope"
+files = { extensions = [".webmanifest", ".html", ".htm", ".json"] }
 summary = "Checks that the web manifest parses, names the app, and lists icons that exist."
 why = "A manifest with a missing icon installs an app with a blank tile."
 help = "Correct the manifest, or add the icon."
-
-[[check]]
-name = "security-headers"
-title = "Set security headers"
-example = "A configured response-header block without a required security header reports the missing header. Add that header to every governed path block using the value required by policy."
-level = "recommended"
-stage = "commit"
-runs = "scope"
-summary = "Checks that the headers file sets the content type, referrer, and framing headers for every path."
-why = "A site of files has no server code, so the headers file is the only place these protections can live."
-help = "Add the header to the block for every path."
 
 [[setting]]
 name = "tools.svgo.min_saving_percent"
@@ -205,7 +195,7 @@ type = "list"
 items = "string"
 direction = "neutral"
 default = ["npm", "run", "build"]
-summary = "The command that builds the site."
+summary = "The build script run by the repository package manager, unless an authored command replaces it."
 
 [[setting]]
 name = "site.build_folder"

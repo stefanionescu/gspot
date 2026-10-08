@@ -1,15 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { planRun, configuredChecks } from '#cli/planning/plan.ts';
-import { applicableManifests } from '#cli/planning/requirements.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { planRun, configuredChecks, applicableManifests } from '#cli/planning/public.ts';
 
 import {
     FORMAT_POLICY,

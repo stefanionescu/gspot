@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { parseExpoDoctor } from '#cli/parsers/expo.ts';
+import { parseExpoDoctor } from '#cli/parsers/tool/public.ts';
 import { PASSING_REPORT } from '#tests/config/samples/expo.ts';
 import { REPORT, EXPECTED_ISSUES } from '#tests/config/cli/parsers/expo.ts';
 

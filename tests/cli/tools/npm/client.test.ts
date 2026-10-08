@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { chmod, unlink, symlink } from 'node:fs/promises';
 import { rejection } from '#tests/harness/expectations.ts';
 import { useEnvironment } from '#tests/harness/environment.ts';
-import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/client.ts';
+import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/public.ts';
 import { NON_EXACT_MANAGERS, PACKAGE_SELECTIONS } from '#tests/config/cli/tools/npm/client.ts';
 
 test('without a declaration or Bun on the path, the tool project uses npm at the version it reports', async () => {

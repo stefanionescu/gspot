@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
-import { policySchema } from '#cli/policy/schema/policy.ts';
-import { localDateSchema } from '#cli/policy/schema/fields.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
+import { policySchema } from '#cli/policy/schema/public.ts';
+import { localDateSchema } from '#cli/policy/schema/contracts.ts';
 import { buildJsonSchema } from '#docs/src/content/reference/schema.ts';
-import { emitPolicy, parseTomlText, parseExpiryDate } from '#cli/policy/file.ts';
+import { emitPolicy, parseTomlText, parseExpiryDate } from '#cli/policy/document/public.ts';
 import { POLICY_EXPIRY_CASES, UNREPRESENTABLE_POLICY_COMMENT } from '#tests/config/cli/policy/expiry.ts';
 
 for (const { name, literal, valid, date, syntaxError } of POLICY_EXPIRY_CASES)

@@ -1,8 +1,8 @@
-import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { isToolProjectPath } from '#cli/repository/selectors.ts';
+import { isToolProjectPath } from '#cli/repository/paths/public.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DEPENDENCY_FOLDERS } from '#cli/config/repository/inventory.ts';
+import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
 
 /**
  * Read authored code for the four folder checks. Documentation and generated tool projects have their own layouts.

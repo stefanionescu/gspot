@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { fileBatches } from '#cli/execution/command/batches.ts';
+import { fileBatches } from '#cli/execution/command/arguments/contracts.ts';
 import { UNIX_COMMAND_LIMIT, WINDOWS_COMMAND_LIMIT } from '#cli/config/execution/command.ts';
 
 describe('file batches', () => {

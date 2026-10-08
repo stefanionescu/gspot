@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { test, expect } from 'bun:test';
 import { useEnvironment } from '#tests/harness/environment.ts';
-import { miseHome, cacheDirectory } from '#cli/platform/environment.ts';
+import { miseHome, cacheDirectory } from '#cli/platform/public.ts';
 import { MISE_DIRECTORY_CASES } from '#tests/config/cli/platform/environment.ts';
 
 for (const { name, mise, xdg, expected } of MISE_DIRECTORY_CASES)

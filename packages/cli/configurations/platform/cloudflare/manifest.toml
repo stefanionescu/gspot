@@ -55,7 +55,9 @@ why = "A redirect Cloudflare cannot read is dropped, and the old address starts 
 help = "Write the rule as source, destination, status."
 
 [[check]]
-name = "types-fresh"
+name = "stale-types"
+command = ["wrangler", "types", "{file}", "--env-interface", "{setting:cloudflare.types_interface}"]
+generated_paths = [{ pattern = "**/{setting:cloudflare.types_file}" }]
 title = "Keep Worker environment types current"
 example = "A generated Worker environment type file that differs from `wrangler types` output reports drift. Regenerate it using the configured Wrangler project, inspect the changes, and rerun."
 level = "recommended"
@@ -65,6 +67,18 @@ tool = "wrangler"
 summary = "Checks that a tracked environment types file matches what wrangler writes."
 why = "Stale binding types let code compile against a binding the configuration dropped."
 help = "Run wrangler types and commit the file."
+
+[[check]]
+name = "security-headers"
+title = "Set security headers"
+example = "A configured response-header block without a required security header reports the missing header. Add that header to every governed path block using the value required by policy."
+level = "recommended"
+stage = "commit"
+runs = "scope"
+summary = "Checks that the headers file sets the content type, referrer, and framing headers for every path."
+why = "A site of files has no server code, so the headers file is the only place these protections can live."
+help = "Add the header to the block for every path."
+
 
 [[setting]]
 name = "cloudflare.types_file"

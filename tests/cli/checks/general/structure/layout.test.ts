@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rename } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { ROUTE_CASES } from '#tests/config/cli/checks/general/structure/layout.ts';
@@ -141,8 +141,8 @@ test.each(['', 'nested'])('naming checks leave the harness folder of scope %j al
         buildRunOptions({ only: ['structure/folder-names', 'naming/paths'] }),
     );
     expect(result.report.checks.flatMap((check) => check.findings)).toMatchObject([
-        { check: 'structure/folder-names', file: `${prefix}app/support/startup.ts`, line: 1, rule: 'container-name' },
         { check: 'naming/paths', file: `${prefix}app/support/startup.ts`, line: 1, rule: 'banned-term' },
+        { check: 'structure/folder-names', file: `${prefix}app/support/startup.ts`, line: 1, rule: 'container-name' },
     ]);
 });
 

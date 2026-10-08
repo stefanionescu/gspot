@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
-import { readPackageManifests } from '#cli/repository/package-manifests.ts';
+import { readPackageManifests } from '#cli/repository/contracts.ts';
 import { DEPENDENCY_CASES } from '#tests/config/cli/planning/dependencies.ts';
+import { detectConfigurations } from '#cli/configurations/selection/contracts.ts';
 
 for (const level of ['recommended', 'all'] as const)
     test.each(DEPENDENCY_CASES)(

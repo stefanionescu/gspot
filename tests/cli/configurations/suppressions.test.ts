@@ -1,6 +1,6 @@
 // Each tool's suppression definition finds its own comment and reads a reason only where the comment gives one.
 import { test, expect } from 'bun:test';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { SUPPRESSION_REASONS } from '#tests/config/cli/configurations/suppressions.ts';
 
 test.each(SUPPRESSION_REASONS)(

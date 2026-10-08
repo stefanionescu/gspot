@@ -2,15 +2,15 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { chmod } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
-import * as policyFile from '#cli/policy/file.ts';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openRoot } from '#cli/platform/root/open.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { openRoot } from '#cli/platform/root/public.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { emitPolicy, parseTomlText } from '#cli/policy/file.ts';
+import * as policyFile from '#cli/policy/document/public.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
+import { emitPolicy, parseTomlText } from '#cli/policy/document/public.ts';
 
 import {
     POLICY_LAYOUT_CASES,
@@ -60,7 +60,8 @@ test('a native policy-layout correction preserves an external replacement before
     const encodePolicy = policyFile.emitPolicy;
     using emission = spyOn(policyFile, 'emitPolicy').mockImplementation((text, policy) => {
         const canonical = encodePolicy(text, policy);
-        // eslint-disable-next-line n/no-sync -- reason: The synchronous policy emitter must replace the file before final publication to exercise its native compare-and-swap boundary.
+
+        // eslint-disable-next-line n/no-sync -- reason: The external replacement must occur inside the synchronous emitter before its result can be published.
         if (text === source) writeFileSync(path, POLICY_LAYOUT_EXTERNAL_EDIT);
         return canonical;
     });

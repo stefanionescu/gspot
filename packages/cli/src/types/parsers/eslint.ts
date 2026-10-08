@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { eslintPresetsSchema, eslintAllRulesSchema, eslintRuleNamesSchema } from '#cli/parsers/schema/eslint.ts';
+import type { eslintPresetsSchema, eslintAllRulesSchema, eslintRuleNamesSchema } from '#cli/parsers/schema/public.ts';
 
 /** Default rules that are active only at level all. */
 export type EslintAllRules = z.output<typeof eslintAllRulesSchema>;

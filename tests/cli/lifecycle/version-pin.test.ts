@@ -4,10 +4,10 @@ import { test, expect, describe } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { unlink, writeFile } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
-import { readVersionPin, writeVersionPin, assertVersionPin } from '#cli/lifecycle/version-pin.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { readVersionPin, writeVersionPin, assertVersionPin } from '#cli/lifecycle/public.ts';
 
 const { version: RUNNING_VERSION } = packageManifest;
 

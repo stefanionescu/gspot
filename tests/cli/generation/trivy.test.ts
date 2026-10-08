@@ -1,11 +1,11 @@
 import { parse } from 'yaml';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { settingValueSchemas } from '#cli/policy/schema/setting-values.ts';
+import { settingValueSchemas } from '#cli/policy/schema/native/public.ts';
 
 test('Trivy keeps typed severities and converts its duration to native seconds', async () => {
     const text = await emitFile(

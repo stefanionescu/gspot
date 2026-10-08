@@ -2,9 +2,7 @@
 import { testdir } from 'testdirs';
 import { stringify } from 'smol-toml';
 import { writeFileSync } from 'node:fs';
-import { run } from '#cli/platform/spawn.ts';
 import { join, resolve, delimiter } from 'node:path';
-import { misePins } from '#cli/configurations/pins.ts';
 import { CLI_PINS } from '#cli/config/configurations.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
@@ -12,11 +10,11 @@ import { TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { ARGUMENT_START } from '#automation/config/paths.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import pluginManifest from '#plugin-package' with { type: 'json' };
-import { environmentVariables } from '#cli/platform/environment.ts';
+import { run, environmentVariables } from '#cli/platform/public.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { installSuitePythonTools } from '#tests/harness/python-installation.ts';
 import { TERMINATED_EXIT, INTERRUPTED_EXIT } from '#automation/config/plugin.ts';
+import { misePins, configurationManifests } from '#cli/configurations/public.ts';
 import { SUITE_PYTHON_FOLDER } from '#tests/config/harness/python-installation.ts';
 import { packRegistryPackages, createPackageRegistry } from '#tests/harness/registry.ts';
 

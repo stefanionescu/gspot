@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
-import { GspotError } from '#cli/platform/errors.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { parseExpoDoctor } from '#cli/parsers/expo.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { runCheckTool } from '#cli/execution/command/check.ts';
+import { parseExpoDoctor } from '#cli/parsers/tool/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { readPackageManifest } from '#cli/repository/package-manifests.ts';
+import { runCheckTool } from '#cli/execution/command/public.ts';
+import { readPackageManifest } from '#cli/repository/contracts.ts';
 
 function hasInstalledExpo(scopeRoot: string): boolean {
     try {

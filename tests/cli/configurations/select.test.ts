@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { selectForScope, selectConfigurations } from '#cli/configurations/select.ts';
+import { selectForScope, selectConfigurations } from '#cli/configurations/selection/public.ts';
 import { PROJECT_CHOICES, OPENAPI_FRAMEWORKS, PROJECT_SELECTIONS } from '#tests/config/cli/configurations/select.ts';
 
 describe('selectConfigurations', () => {

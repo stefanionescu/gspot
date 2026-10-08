@@ -1,16 +1,14 @@
 // The selected tool files in one scope, with the pointers that lead tools to them.
 import { posix } from 'node:path';
-import { emitTarget } from '#cli/generation/eta.ts';
-import { collectRules } from '#cli/generation/rules.ts';
-import { ownedBy } from '#cli/configurations/owners.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
+import { targetInScope } from '#cli/configurations/contracts.ts';
+import { emitTarget } from '#cli/generation/compilation/public.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
-import { targetInScope } from '#cli/configurations/declarations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { fillTarget, bodyPointer } from '#cli/generation/pointers.ts';
-import { isConfigurationSelected } from '#cli/configurations/select.ts';
-import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/selectors.ts';
+import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/paths/public.ts';
 import type { GeneratedToolFile, ToolFileDeclaration } from '#cli/types/configurations.ts';
+import { ownedBy, isConfigurationSelected } from '#cli/configurations/selection/public.ts';
+import { fillTarget, bodyPointer, collectRules } from '#cli/generation/documents/contracts.ts';
 
 import type {
     Generated,
@@ -44,8 +42,8 @@ function pointerFiles(context: ToolFileInputs, toolFile: ToolFileDeclaration, ta
             scope,
         );
         const matches = pathMatcher(pointer.directories);
-        const owned = ownedBy(manifest.files, selection.selected, files, scope).filter((file) =>
-            children.every((child) => !isInScope(file.path, child)),
+        const owned = ownedBy(manifest.files, selection.selected, files, '').filter(
+            (file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)),
         );
         const directories = new Set(owned.flatMap((file) => pointerDirectories(scope, file, matches)));
         paths = [...directories].map((directory) => `${directory}/${pointer.path}`);

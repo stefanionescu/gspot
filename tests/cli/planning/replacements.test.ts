@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { planRun, configuredChecks } from '#cli/planning/plan.ts';
+import { planRun, configuredChecks } from '#cli/planning/public.ts';
 import { REPLACEMENTS } from '#tests/config/cli/planning/replacements.ts';
 
 test.each(REPLACEMENTS)(

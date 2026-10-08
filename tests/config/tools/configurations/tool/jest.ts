@@ -6,3 +6,11 @@ export const TEST_SOURCE =
 
 /** The second test covers the function left untested by the initial source. */
 export const CORRECTED_TEST_SOURCE = `${TEST_SOURCE}test("triples an integer", () => { expect(triple(2)).toBe(6); });\n`;
+
+/** Root coverage and load-refusal cases use the same preserved project files. */
+export const JEST_PROJECT_FILES = {
+    'package.json': '{"name":"jest-acceptance","private":true,"devDependencies":{"jest":"30.2.0"}}\n',
+    'math.cjs': SOURCE,
+    'authored.txt': 'preserved source\n',
+    'coverage/authored.txt': 'preserved report\n',
+};

@@ -4,12 +4,12 @@ import { testdir, createFileTree } from 'testdirs';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { symlink, readFile, readlink } from 'node:fs/promises';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
-import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
+import { ownershipSchema } from '#cli/lifecycle/ownership/state/contracts.ts';
 
-const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
-const boundary = getCliSourcePath('platform/root/open.ts');
+const implementation = getCliSourcePath('lifecycle/ownership/public.ts');
+const boundary = getCliSourcePath('platform/root/public.ts');
 
 if (isPosix) {
     test.each(['before', 'after'] as const)(
@@ -31,8 +31,8 @@ if (isPosix) {
                 }};
             }}));
             const { openOwnership } = await import(${JSON.stringify(implementation)});
-const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
-const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
+const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
             using log = openOwnership(process.cwd());
             applyPlan(log, planReplacement(log,{path: 'tool', next: {bytes: Buffer.from('target'), mode: 511, isLink: true}, kind: 'tool_file', canReplace: true}));
         `;
@@ -70,8 +70,8 @@ const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/owne
                 },
             }));
             const { openOwnership } = await import(${JSON.stringify(implementation)});
-const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
-const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
+const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
             using log = openOwnership(process.cwd());
             applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 420}, kind: 'tool_file', canReplace: true}));
         `;

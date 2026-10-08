@@ -74,7 +74,7 @@ export const DEFAULT_TEST_PATTERNS = [
 ];
 
 /** The files the managed block tells the reader to open first; they cannot be left out. */
-export const FIRST_READ = ['general/engineering/agent/WORKING.md', 'general/engineering/prose/WRITING.md'];
+export const FIRST_READ = ['general/engineering/agent/WORKING.md', 'general/prose/WRITING.md'];
 
 export const LEVEL_SUMMARY =
     'Correctness, security, accessibility, type safety, routine formatting, and declared project contracts apply at both levels.';

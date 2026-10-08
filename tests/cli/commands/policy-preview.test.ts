@@ -5,7 +5,7 @@ import { chmod } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readTree } from '#tests/harness/preservation.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import type { PolicyPlanJson } from '#cli/types/commands/save-policy.ts';
 
 import {

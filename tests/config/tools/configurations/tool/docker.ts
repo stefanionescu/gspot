@@ -11,7 +11,7 @@ export const IGNORES = '.git\nnode_modules\n.env*\n';
 export const REPOSITORY: InstalledScenario = {
     configurations: ['docker'],
 
-    tools: ['hadolint', 'trivy', 'taplo', 'yamllint'],
+    tools: ['hadolint', 'trivy'],
     files: {
         'api/Dockerfile': DOCKER_CLEAN,
         'api/.dockerignore': IGNORES,

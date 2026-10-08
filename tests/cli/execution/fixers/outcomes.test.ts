@@ -1,16 +1,15 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { applyFixers } from '#cli/execution/fixers.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
+import { executeRun, applyFixers } from '#cli/execution/public.ts';
+import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { planFixer, buildFixerPolicy } from '#tests/harness/fixer.ts';
 import { FIXER_OUTCOMES } from '#tests/config/cli/execution/fixers/outcomes.ts';
 

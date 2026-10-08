@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
-import { parseJsonc } from '#cli/parsers/jsonc.ts';
-import { parseWrangler } from '#cli/parsers/cloudflare.ts';
+import { parseJsonc } from '#cli/parsers/public.ts';
+import { parseWrangler } from '#cli/parsers/tool/public.ts';
 import { JSONC_ENTRIES, JSONC_FAILURES } from '#tests/config/cli/parsers/jsonc.ts';
 
 for (const entry of JSONC_FAILURES)

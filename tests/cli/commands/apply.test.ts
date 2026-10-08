@@ -6,14 +6,14 @@ import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { applyCommand } from '#cli/commands/apply.ts';
+import { applyCommand } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
-import { containing } from '#tests/harness/expectations.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { stat, chmod, unlink, readdir, readFile, writeFile } from 'node:fs/promises';
 
 const INIT = buildInitArguments(['bash']);
@@ -55,7 +55,7 @@ test('apply preserves a policy replaced after session opening and publishes no g
     expect(await readFile(join(directory.path, 'entry.sh'), 'utf8')).toBe('echo example\n');
 });
 
-test('init deletes a replaced file, and apply preserves later edits and unowned content', async () => {
+test('init deletes a replaced file, and apply exits 2 while preserving later edits and unowned content', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, { '.shellcheckrc': 'disable=SC2086\n', 'entry.sh': 'echo example\n' });
     commitAll(directory.path);
@@ -71,6 +71,7 @@ test('init deletes a replaced file, and apply preserves later edits and unowned 
     await writeFile(join(directory.path, '.gspot/authored.txt'), 'Preserve this file.\n');
     const applied = await runGspot(directory.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(2);
+    expect(applied.stderr).toContain('.gspot/config/shellcheckrc');
     expect(applied.stderr).toContain('The version pin is unchanged.');
     expect(await readFile(generated, 'utf8')).toBe(edited);
     expect(await readFile(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('Preserve this file.\n');
@@ -154,10 +155,6 @@ test('malformed authored blocks refuse apply before generated files change', asy
     expect(refused.stdout + refused.stderr).toContain('incomplete or repeated');
     expect(await readFile(join(directory.path, 'AGENTS.md'), 'utf8')).toBe(authored);
     expect(await pathExists(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(false);
-    await writeFile(join(directory.path, 'AGENTS.md'), `${authored}<!-- <<< gspot managed <<< -->\n`);
-    const corrected = await runGspot(directory.path, ['apply']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(await pathExists(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(true);
 });
 
 // A claim that a crash left behind, and one a live process holds: apply stops and names the claim to delete.
@@ -260,12 +257,12 @@ test('apply --dry-run reports a changed file, a stray, a conflict, and an edited
         containing({
             path: '.gspot/config/shellcheckrc',
             kind: 'changed',
-            diff: expect.stringContaining('-# Edited.') as string,
+            diff: textContaining('-# Edited.'),
         }),
     );
     expect(drift).toContainEqual(containing({ path: '.gspot/package.json', kind: 'conflict' }));
     expect(drift).toContainEqual(
-        containing({ path: 'AGENTS.md', kind: 'changed', diff: expect.stringContaining('-Edited inside.') as string }),
+        containing({ path: 'AGENTS.md', kind: 'changed', diff: textContaining('-Edited inside.') }),
     );
     expect(drift).toContainEqual(containing({ path: '.gspot/config/markdownlint.jsonc', kind: 'stray' }));
     expect(drift.some(({ path }) => path === 'README.md' || path === 'settings.json')).toBe(false);

@@ -1,8 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';
-import { isOwned, ownedBy } from '#cli/configurations/owners.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { isOwned, ownedBy, selectConfigurations } from '#cli/configurations/selection/public.ts';
 
 import {
     PATH_OWNER_CASES,

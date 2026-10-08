@@ -1,17 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { run } from '#cli/platform/spawn.ts';
+import { run } from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { gitignoreBlock } from '#cli/generation/files.ts';
+import { gitignoreBlock } from '#cli/generation/public.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { applyBlock } from '#cli/platform/managed-blocks.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { applyBlock } from '#cli/platform/root/contracts.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { CONFIGURATION_TABLE } from '#tests/config/cli/generation/managed-ignores.ts';
-import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/manifests.ts';
+import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/public.ts';
 
 test.each([true, false])(
     'apply waits for Git before managing ignore entries with authored file=%s',

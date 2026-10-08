@@ -8,7 +8,7 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { INIT } from '#tests/config/cli/commands/agents.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { currentBlock } from '#cli/platform/managed-blocks.ts';
+import { currentBlock } from '#cli/platform/root/contracts.ts';
 import { rm, stat, chmod, symlink, readFile } from 'node:fs/promises';
 
 test('agent instructions reach AGENTS.md and configured files, and other agent files stay as written', async () => {

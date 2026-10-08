@@ -1,23 +1,22 @@
 import { join } from 'node:path';
-import { decodeUtf8 } from '#cli/platform/text.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { GspotError } from '#cli/platform/errors.ts';
-import { readSource } from '#cli/platform/source.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { decodeUtf8 } from '#cli/platform/contracts.ts';
 import { writeFileSync, appendFileSync } from 'node:fs';
-import { isInScope } from '#cli/repository/selectors.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { extensionsTagged } from '#cli/repository/tags.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { isEnvironmentFile } from '#cli/repository/kind.ts';
-import { runGit, runGitBinary } from '#cli/platform/git.ts';
+import { isInScope } from '#cli/repository/paths/public.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
+import { isEnvironmentFile } from '#cli/repository/public.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import { fileBatches } from '#cli/execution/command/batches.ts';
-import { getBlobs } from '#cli/repository/revisions/objects.ts';
-import { runCheckCommand } from '#cli/execution/command/check.ts';
-import { getPushBase } from '#cli/repository/revisions/changes.ts';
+import { runCheckCommand } from '#cli/execution/command/public.ts';
+import { runGit, runGitBinary } from '#cli/platform/git/public.ts';
 import type { SecretScan } from '#cli/types/checks/general/secrets.ts';
+import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
+import { fileBatches } from '#cli/execution/command/arguments/contracts.ts';
+import { getBlobs, getPushBase } from '#cli/repository/revisions/public.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 
 import {

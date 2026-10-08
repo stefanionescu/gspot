@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
 import { gitOutput } from '#tests/harness/git.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { checkInput } from '#cli/execution/built-in.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
+import { checkInput } from '#cli/execution/contracts.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { sleeps, disabled } from '#cli/checks/tool/xctest.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { XCTEST_FILES } from '#tests/config/cli/checks/tool/xctest/sources.ts';
 import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
@@ -62,7 +62,9 @@ test.each([
         'Examples/Checks.swift': `import Testing\nfunc checks() throws {\n    ${body}\n}\n`,
     });
     const session = await openSession(sandbox.path);
-    const findings = await disabled(buildCheckInput(session, 'xctest/skip-reasons'));
+    const findings = await BUILT_IN_CHECKS['xctest/skip-reasons'].input(
+        buildCheckInput(session, 'xctest/skip-reasons'),
+    );
     expect(findings.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual(
         missing ? [{ file: 'Examples/Checks.swift', rule: 'disabled', line: 3 }] : [],
     );
@@ -102,7 +104,7 @@ test.each([
         'Examples/Checks.swift': `import Testing\n@Test func checks() {\n    ${body}\n}\n`,
     });
     const session = await openSession(sandbox.path);
-    const findings = await sleeps(buildCheckInput(session, check));
+    const findings = await BUILT_IN_CHECKS['xctest/sleep'].input(buildCheckInput(session, check));
     expect(findings).toHaveLength(count);
     if (count > 0) expect(findings[0]).toMatchObject({ file: 'Examples/Checks.swift', line: 3 });
 });
@@ -122,7 +124,7 @@ test('a sleep path ignore excludes an unreadable file before source parsing', as
     const input = checkInput(session, planned.find((entry) => entry.scope.scope.path === 'integration')!);
     expect(input.files.map(({ path }) => path)).not.toContain('integration/Allowed.swift');
     await rm(join(sandbox.path, 'integration/Allowed.swift'));
-    const findings = await sleeps(input);
+    const findings = await BUILT_IN_CHECKS['xctest/sleep'].input(input);
     expect(findings.map(({ file, rule, line }) => ({ file, rule, line }))).toStrictEqual([
         { file: 'integration/Blocked.swift', rule: 'sleep', line: 2 },
     ]);

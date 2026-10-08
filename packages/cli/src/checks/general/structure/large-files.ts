@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
 import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 

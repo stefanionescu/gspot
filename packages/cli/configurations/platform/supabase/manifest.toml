@@ -101,7 +101,9 @@ why = "The project compiler does not resolve the import map of a function, so on
 help = "Fix the first error Deno prints; later ones are often the same mistake."
 
 [[check]]
-name = "types-fresh"
+name = "stale-types"
+command = ["supabase", "gen", "types", "typescript", "--local", "{each:--schema:supabase.schemas}"]
+generated_paths = [{ stdout = "{setting:supabase.types_file}" }]
 title = "Keep Supabase database types current"
 example = "A database types file that differs from the configured local Supabase schema reports drift. With the local database ready, regenerate using `supabase gen types typescript --local`, write the output to the configured file, and rerun."
 level = "recommended"

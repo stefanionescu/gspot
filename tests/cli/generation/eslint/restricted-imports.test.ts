@@ -1,7 +1,7 @@
 // User restrictions coexist with configuration restrictions at their declared levels and paths.
 import { test, expect } from 'bun:test';
-import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { toPosix } from '#cli/platform/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';

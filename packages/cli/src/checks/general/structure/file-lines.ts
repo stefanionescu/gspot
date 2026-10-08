@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { extensionOf } from '#cli/platform/paths.ts';
-import { readSource } from '#cli/platform/source.ts';
-import { parseComments } from '#cli/parsers/comments.ts';
+import { extensionOf } from '#cli/platform/contracts.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { parseComments } from '#cli/parsers/source/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { COMMENT_STYLE_BY_EXTENSION } from '#cli/config/checks/general/structure.ts';
 

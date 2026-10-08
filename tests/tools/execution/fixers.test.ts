@@ -1,17 +1,17 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { chmod, readFile } from 'node:fs/promises';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { sharePythonTools } from '#tests/harness/python-installation.ts';
-import { toolPin, toolName, toolProjectPackage } from '#cli/configurations/pins.ts';
+import { toolPin, toolName, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { PARTIAL_FIX_CASES, SHFMT_FORMATTED_SCRIPT } from '#tests/config/tools/fixers.ts';
 
 // Generate the selected configuration and copy the complete suite-owned Python environment when it is private.

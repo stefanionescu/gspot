@@ -1,6 +1,6 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 /**
  * One finding per function that is called with more arguments than the positions it reads.
  * @param input the check context

@@ -1,4 +1,4 @@
-// Policy errors name their gspot.toml key path and preserve valid settings.
+// Policy errors name their gspot.toml key path.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';

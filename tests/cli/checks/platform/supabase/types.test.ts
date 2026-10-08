@@ -1,17 +1,18 @@
 import executables from 'which';
-import { join } from 'node:path';
+import { join, isAbsolute } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
-import { executeRun } from '#cli/execution/run.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
+import * as processes from '#cli/platform/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { checkInput } from '#cli/execution/built-in.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
+import { checkInput } from '#cli/execution/contracts.ts';
 import { stat, chmod, readFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { typesFresh } from '#cli/checks/platform/supabase.ts';
+import { pathExists } from '#tests/harness/preservation.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import type { SupabaseProject, SupabaseInvocation } from '#tests/types/cli/checks/platform/supabase.ts';
 import { GENERATED_TYPES, DATABASE_SCHEMAS } from '#tests/config/cli/checks/platform/supabase/types.ts';
@@ -34,7 +35,7 @@ async function prepareSupabaseCheck(
     });
     const execute = async () => {
         const session = await openSession(root);
-        const outcome = await executeRun(session, buildRunOptions({ only: ['supabase/types-fresh'] }));
+        const outcome = await executeRun(session, buildRunOptions({ only: ['supabase/stale-types'] }));
         return outcome.report.checks.find((check) => check.scope === scope)!;
     };
     const requests: SupabaseInvocation[] = [];
@@ -87,14 +88,14 @@ test.each(['', 'apps/api'])(
         const { prefix, execute } = fixture;
         const missing = await execute();
         expect(missing).toMatchObject({
-            check: 'supabase/types-fresh',
+            check: 'supabase/stale-types',
             status: 'failed',
             findings: [
                 {
                     file: `${prefix}database.ts`,
                     line: 1,
                     rule: 'missing',
-                    message: `Run supabase gen types typescript --local and write its output to ${prefix}database.ts.`,
+                    message: `Run supabase gen types typescript --local --schema public and write its output to ${prefix}database.ts.`,
                 },
             ],
         });
@@ -103,7 +104,7 @@ test.each(['', 'apps/api'])(
         const stale = await execute();
         expect(stale).toMatchObject({
             status: 'failed',
-            findings: [{ check: 'supabase/types-fresh', file: `${prefix}database.ts`, rule: 'stale', line: 1 }],
+            findings: [{ check: 'supabase/stale-types', file: `${prefix}database.ts`, rule: 'stale', line: 1 }],
         });
         expect(await readFile(join(sandbox.path, prefix, 'database.ts'), 'utf8')).toBe('export type Database = {};\n');
         const output = await stat(join(sandbox.path, prefix, 'database.ts'));
@@ -111,11 +112,15 @@ test.each(['', 'apps/api'])(
         await Bun.write(join(sandbox.path, prefix, 'database.ts'), GENERATED_TYPES);
         expect(await execute()).toMatchObject({ status: 'passed', findings: [] });
         expect(fixture.requests.length).toBeGreaterThan(0);
-        for (const request of fixture.requests)
+        for (const request of fixture.requests) {
+            expect(isAbsolute(request.cwd)).toBe(true);
+            expect(request.cwd).not.toBe(join(sandbox.path, scope));
+            expect(await pathExists(request.cwd)).toBe(false);
             expect(request).toStrictEqual({
                 args: ['gen', 'types', 'typescript', '--local', '--schema', 'public'],
-                cwd: join(sandbox.path, scope),
+                cwd: request.cwd,
             });
+        }
     },
 );
 
@@ -139,20 +144,26 @@ test.each(['', 'apps/api'])(
             note: textContaining('Database is unavailable'),
         });
         const session = await openSession(sandbox.path);
-        const plans = planRun(session, { stage: 'push', only: ['supabase/types-fresh'], skips: [] });
+        const plans = planRun(session, { stage: 'push', only: ['supabase/stale-types'], skips: [] });
         const planned = plans.find((check) => check.scope.scope.path === scope)!;
         const input = checkInput(session, planned);
         input.cancelSignal = AbortSignal.abort();
-        expect(await rejection(typesFresh(input))).toContain('The command was canceled.');
+        expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(input))).toContain(
+            'The command was canceled.',
+        );
         expect(await readFile(join(sandbox.path, prefix, 'database.ts'), 'utf8')).toBe(GENERATED_TYPES);
         const output = await stat(join(sandbox.path, prefix, 'database.ts'));
         expect(output.mode & 0o777).toBe(getKeptMode(0o640));
         expect(fixture.requests.length).toBeGreaterThan(0);
-        for (const request of fixture.requests)
+        for (const request of fixture.requests) {
+            expect(isAbsolute(request.cwd)).toBe(true);
+            expect(request.cwd).not.toBe(join(sandbox.path, scope));
+            expect(await pathExists(request.cwd)).toBe(false);
             expect(request).toStrictEqual({
                 args: ['gen', 'types', 'typescript', '--local', '--schema', 'public'],
-                cwd: join(sandbox.path, scope),
+                cwd: request.cwd,
             });
+        }
     },
 );
 
@@ -172,6 +183,9 @@ test.each(['', 'apps/api'])('Supabase passes every configured schema separately 
     );
     await Bun.write(join(sandbox.path, fixture.prefix, 'database.ts'), GENERATED_TYPES);
     expect(await fixture.execute()).toMatchObject({ status: 'passed', findings: [] });
+    const request = fixture.requests[0]!;
+    expect(request.cwd).not.toBe(join(sandbox.path, scope));
+    expect(await pathExists(request.cwd)).toBe(false);
     expect(fixture.requests).toStrictEqual([
         {
             args: [
@@ -181,7 +195,7 @@ test.each(['', 'apps/api'])('Supabase passes every configured schema separately 
                 '--local',
                 ...DATABASE_SCHEMAS.flatMap((schema) => ['--schema', schema]),
             ],
-            cwd: join(sandbox.path, scope),
+            cwd: request.cwd,
         },
     ]);
 });

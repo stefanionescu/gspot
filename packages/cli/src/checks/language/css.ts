@@ -1,14 +1,14 @@
 import { camelCase } from 'scule';
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { extensionOf } from '#cli/platform/paths.ts';
-import { readSource } from '#cli/platform/source.ts';
-import { extensionsTagged } from '#cli/repository/tags.ts';
+import { extensionOf } from '#cli/platform/contracts.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { MODULE_SUFFIX } from '#cli/config/checks/language/css.ts';
 import type { CssClass, Importer } from '#cli/types/parsers/css.ts';
 import { definedClasses, moduleImporters } from '#cli/parsers/css.ts';
+import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
 
 function sheetFindings(input: CheckInput, sheet: string, defined: CssClass[], importers: Importer[]): Finding[] {
     const name = posix.basename(sheet);

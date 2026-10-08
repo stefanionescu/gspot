@@ -1,14 +1,13 @@
 import { testdir } from 'testdirs';
 import { join, dirname } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { misePins } from '#cli/configurations/pins.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { buildSandboxPath } from '#tests/harness/install.ts';
 import { createPackageRegistry } from '#tests/harness/registry.ts';
 import type { Quickstart } from '#tests/types/harness/quickstart.ts';
 import { sourceLauncherDirectory } from '#tests/harness/environment.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { misePins, configurationManifests } from '#cli/configurations/public.ts';
 
 /**
  * Prepare native tutorial state with the suite's installed tools and packed CLI.

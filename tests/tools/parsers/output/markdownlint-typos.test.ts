@@ -1,33 +1,27 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rename } from 'node:fs/promises';
-import { planRun } from '#cli/planning/plan.ts';
-import { emitAll } from '#cli/generation/files.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { GspotError } from '#cli/platform/errors.ts';
+import { emitAll } from '#cli/generation/public.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
-import { parseOutput } from '#cli/parsers/output/parse.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { checkedFindings } from '#cli/execution/command/findings.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { parseOutput } from '#cli/parsers/output/public.ts';
+import { isPosix } from '#tests/config/harness/platforms.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { checkedFindings } from '#cli/execution/command/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 
-test('native Markdown JSON preserves filename delimiters, positions, and fixability', async () => {
-    await using sandbox = await testdir();
-    const paths = ['space name.md', ...(process.platform === 'win32' ? [] : ['name:5.md', 'line\nbreak.md'])];
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['markdown'], {
-            level: 'all',
-        }),
-        ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png">   \n'])),
-    });
-    const session = await openSession(sandbox.path);
+// Uses the installed Markdown tool and emitted native configuration for both output contracts.
+async function runMarkdown(root: string, paths: string[]) {
+    const session = await openSession(root);
     const generated = emitAll(session);
-    using log = openOwnership(sandbox.path);
+    using log = openOwnership(root);
     writeGeneratedFiles(session, log, undefined, generated);
     const configuration = generated.files.find(({ path }) => path === '.gspot/config/markdownlint-cli2.mjs')!;
     const plans = planRun(session, { stage: 'all', only: ['markdown/markdownlint'], skips: [] });
@@ -39,7 +33,20 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
         configuration.path,
         ...paths.map((path) => `:${path}`),
     ];
-    const failed = await runTestCommand(command, { cwd: sandbox.path });
+    const failed = await runTestCommand(command, { cwd: root });
+    return { planned, command, failed };
+}
+
+test('native Markdown JSON preserves filename delimiters, positions, and fixability', async () => {
+    await using sandbox = await testdir();
+    const paths = ['space name.md', ...(isPosix ? ['name:5.md', 'line\nbreak.md'] : [])];
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['markdown'], {
+            level: 'all',
+        }),
+        ...Object.fromEntries(paths.map((path) => [path, 'café <img src="example.png">   \n'])),
+    });
+    const { planned, command, failed } = await runMarkdown(sandbox.path, paths);
     expect(failed.code, failed.stderr).toBe(1);
     const findings = parseOutput(planned.check, failed.stdout, failed.stderr, {
         root: sandbox.path,
@@ -50,17 +57,6 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
         expect(findings).toContainEqual(containing({ file, line: 1, rule: 'MD009', fixable: true }));
         expect(findings).toContainEqual(containing({ file, line: 1, rule: 'MD041', fixable: false }));
     }
-    const declared = { ...planned };
-    delete declared.manifest;
-    for (const check of [planned, declared]) {
-        expect(checkedFindings(check, failed, { cwd: sandbox.path, root: sandbox.path })).toStrictEqual(findings);
-        expect(() => checkedFindings(check, { ...failed, code: 2 }, { cwd: sandbox.path, root: sandbox.path })).toThrow(
-            GspotError,
-        );
-        expect(() =>
-            checkedFindings(check, { ...failed, stdout: '[]' }, { cwd: sandbox.path, root: sandbox.path }),
-        ).toThrow(GspotError);
-    }
     for (const path of paths) await Bun.write(join(sandbox.path, path), '# Title\n');
     const corrected = await runTestCommand(command, { cwd: sandbox.path });
     expect(corrected.code, corrected.stderr).toBe(0);
@@ -69,13 +65,40 @@ test('native Markdown JSON preserves filename delimiters, positions, and fixabil
     );
 });
 
+test('native Markdown output refuses crashes and failures without attributed findings', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['markdown'], {
+            level: 'all',
+            tables: '[check."sandbox/markdown"]\ncommand = ["markdownlint-cli2"]\npaths = ["*.md"]\nstage = "commit"\nexit_codes = [1]\n[check."sandbox/markdown".output]\nformat = "markdownlint"\n',
+        }),
+        'sample.md': 'café <img src="example.png">   \n',
+    });
+    const { planned, failed } = await runMarkdown(sandbox.path, ['sample.md']);
+    expect(failed.code, failed.stderr).toBe(1);
+    const declared = planRun(await openSession(sandbox.path), {
+        stage: 'all',
+        only: ['sandbox/markdown'],
+        skips: [],
+    })[0]!;
+    for (const check of [planned, declared]) {
+        const findings = parseOutput(check.check, failed.stdout, failed.stderr, {
+            root: sandbox.path,
+            cwd: sandbox.path,
+        });
+        expect(checkedFindings(check, failed, { cwd: sandbox.path, root: sandbox.path })).toStrictEqual(findings);
+        expect(() => checkedFindings(check, { ...failed, code: 2 }, { cwd: sandbox.path, root: sandbox.path })).toThrow(
+            GspotError,
+        );
+        expect(() =>
+            checkedFindings(check, { ...failed, stdout: '[]' }, { cwd: sandbox.path, root: sandbox.path }),
+        ).toThrow(GspotError);
+    }
+});
+
 test('native spelling JSON retains filename delimiters, Unicode columns, and forbidden words without a correction', async () => {
     await using sandbox = await testdir();
-    const paths = [
-        'space name.txt',
-        `${TYPO.the}.txt`,
-        ...(process.platform === 'win32' ? [] : ['name:part.txt', 'line\nbreak.txt']),
-    ];
+    const paths = ['space name.txt', `${TYPO.the}.txt`, ...(isPosix ? ['name:part.txt', 'line\nbreak.txt'] : [])];
     await createFileTree(sandbox.path, {
         'native.toml': '[default.extend-words]\nforbidden = ""\n',
         'nested/word.txt': 'forbidden\n',

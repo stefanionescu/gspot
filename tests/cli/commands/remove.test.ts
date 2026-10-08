@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
-import { readPolicy } from '#cli/policy/read.ts';
 import { commitAll } from '#tests/harness/git.ts';
+import { readPolicy } from '#cli/policy/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
+import * as processes from '#cli/platform/public.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { INSTALLATION_MUTATIONS } from '#tests/config/cli/commands/remove.ts';
 

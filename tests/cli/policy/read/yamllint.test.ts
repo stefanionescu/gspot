@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { REJECTED_YAML_OPTIONS } from '#tests/config/cli/generation/yaml.ts';
 
 test('keeps YAML coverage and exclusions in level and ignore policy for every scope', () => {

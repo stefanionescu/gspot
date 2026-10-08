@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
+import { lockfileEntry } from '#cli/parsers/contracts.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { PackageJson } from '#cli/types/parsers/packages.ts';
-import { readPackageManifest } from '#cli/repository/package-manifests.ts';
+import { readPackageManifest } from '#cli/repository/contracts.ts';
 import { NPM_MANIFEST, JAVASCRIPT_CLIENTS } from '#cli/config/checks/general/dependencies.ts';
 
 function rootFindings(input: CheckInput, root: PackageJson | undefined): Finding[] {

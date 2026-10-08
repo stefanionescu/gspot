@@ -1,14 +1,14 @@
 import { test, expect, describe } from 'bun:test';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
-import { knownSettings } from '#cli/policy/settings/known.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
+import { knownSettings } from '#cli/policy/settings/public.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import { validateAgainstSurface } from '#cli/policy/errors/keys.ts';
-import { selectConfigurations } from '#cli/configurations/select.ts';
+import { validateAgainstSurface } from '#cli/policy/errors/public.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { settingValue, declarationFor } from '#cli/policy/settings/lookup.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { selectConfigurations } from '#cli/configurations/selection/public.ts';
+import { settingValue, declarationFor } from '#cli/policy/settings/contracts.ts';
 
-const selected = selectConfigurations(['bash', 'naming', 'format', 'spelling'], configurationManifests());
+const selected = selectConfigurations(['structure', 'bash', 'naming', 'format', 'spelling'], configurationManifests());
 const surface = knownSettings(selected);
 
 test('new license policy requires an explicit choice', () => {
@@ -131,7 +131,7 @@ describe('setting defaults and declarations', () => {
     });
 
     test('refuses SQL function line and Bash cyclomatic limits without native consumers', () => {
-        const settings = knownSettings(selectConfigurations(['sql', 'bash'], configurationManifests()));
+        const settings = knownSettings(selectConfigurations(['structure', 'sql', 'bash'], configurationManifests()));
         expect(declarationFor(settings, 'limits.sql.function_lines')).toBeUndefined();
         expect(declarationFor(settings, 'limits.bash.cyclomatic_complexity')).toBeUndefined();
         expect(declarationFor(settings, 'limits.sql.function_parameters')?.declaration.name).toBe(

@@ -6,7 +6,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 
 const TOOL_FAILURES_POLICY = buildPolicy(['files'], {
     tables: 'runner = "mise"\n[agent_rules]\nenabled = false\n',

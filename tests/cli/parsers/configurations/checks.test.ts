@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import { CHECK_FIELDS } from '#tests/config/harness/tooling.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 describe('parseManifest check declarations', () => {
     test.each(['runs = "once"\ncommand = ["x", "{files}"]', 'command = ["x"]'])(
@@ -51,10 +51,20 @@ describe('parseManifest check declarations', () => {
 test('every tool named by a manifest command is declared by a shipped configuration', () => {
     const manifests = [...configurationManifests().values()];
     const declared = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
-    const undefinedTools = manifests.flatMap((manifest) =>
-        manifest.checks
-            .flatMap((check) => (check.command === undefined ? [] : [check.tool ?? check.command[0]!]))
-            .filter((name) => !declared.has(name)),
-    );
+    const undefinedTools = manifests.flatMap((manifest) => {
+        const settings = new Map(manifest.settings.map((setting) => [setting.name, setting]));
+        return manifest.checks
+            .flatMap((check) => {
+                if (check.command === undefined) return [];
+                const command = check.tool ?? check.command[0]!;
+                if (!command.startsWith('{setting:')) return [command];
+                const name = command.slice('{setting:'.length, -1);
+                const declaration = settings.get(name);
+                expect(declaration).toMatchObject({ type: 'list', items: 'string' });
+                expect(check.when).toMatchObject({ setting: name });
+                return [];
+            })
+            .filter((name) => !declared.has(name));
+    });
     expect([...new Set(undefinedTools)]).toStrictEqual([]);
 });

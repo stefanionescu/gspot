@@ -1,11 +1,6 @@
-import type { PathContainer } from '#cli/types/checks/general/naming.ts';
-
 export const DIGIT = /\d/u;
 
 export const VERB_CATEGORIES = new Set(['functions', 'methods', 'variables']);
-
-/** The leading verb allowed only in framework callback positions. */
-export const CALLBACK_VERB = 'handle';
 
 /** The identifier categories a setting can narrow to; every other category borrows the limits of one of these. */
 export const CATEGORY_PARENTS: Record<string, string> = {
@@ -19,15 +14,6 @@ export const CATEGORY_PARENTS: Record<string, string> = {
     modules: 'files',
     packages: 'directories',
 };
-
-export const REACT_FILE = /\.[jt]sx$/u;
-
-export const WRAPPERS: PathContainer[] = [
-    { open: '[', close: ']', category: 'path_parameters' },
-    { open: '(', close: ')', category: 'directories' },
-    { open: '@', close: '', category: 'directories' },
-    { open: '_', close: '', category: 'directories' },
-];
 
 export const SEPARATORS = /[^A-Za-z0-9]+/u;
 

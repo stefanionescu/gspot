@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import example from '#docs/src/config/example.json';
-import { codeFences } from '#cli/parsers/markdown.ts';
+import { codeFences } from '#cli/parsers/public.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
 
 test('the TypeScript quickstart retains every recorded source block in order', async () => {

@@ -3,13 +3,11 @@ import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { applyBlock } from '#cli/platform/managed-blocks.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { applyBlock } from '#cli/platform/root/contracts.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { planBlock, planMerge } from '#cli/lifecycle/ownership/plans.ts';
-import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
-import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { MALFORMED_BLOCKS } from '#tests/config/cli/platform/managed-blocks.ts';
+import { applyPlan, applyPlans, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { planBlock, planMerge, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 import { TASK_RESTORATION_CASES } from '#tests/config/cli/lifecycle/ownership/preservation/configuration.ts';
 
 test('shared TOML updates preserve comments and later authored settings through removal', async () => {

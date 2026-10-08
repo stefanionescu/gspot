@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import { throws } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { readRepository } from '#cli/repository/read.ts';
-import { readText, readPrefix, readSource, createReadCache } from '#cli/platform/source.ts';
+import { readRepository } from '#cli/repository/public.ts';
+import { readText, readPrefix, readSource, createReadCache } from '#cli/platform/root/public.ts';
 import { rm, link, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 test('source reads distinguish missing optional text, required bytes, and invalid UTF-8', async () => {

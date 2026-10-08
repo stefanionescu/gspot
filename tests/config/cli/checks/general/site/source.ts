@@ -26,3 +26,7 @@ export const SVG_SAVING_CASES: SvgSavingCase[] = [
         finding: true,
     },
 ];
+
+/** Actual markup references and inert text that must not select arbitrary JSON. */
+export const MANIFEST_LINKS =
+    '<!-- <link rel="manifest" href="config/manifest.json"> -->\n<script>const text = \'<link rel="manifest" href="config/manifest.json">\';</script>\n<link HREF="metadata/app%20manifest.json?version=1&amp;other=2#entry" REL="alternate manifest">\n<link rel="manifest" href="https://example.com/config/manifest.json">\n';

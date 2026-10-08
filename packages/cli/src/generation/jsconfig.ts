@@ -1,12 +1,11 @@
-import { valueAt } from '#cli/platform/objects.ts';
 import { join, dirname, relative } from 'node:path';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import { getTsconfig } from '#cli/parsers/tsconfig.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
-import { toPosix, extensionOf } from '#cli/platform/paths.ts';
-import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
+import { scopeOf } from '#cli/repository/paths/contracts.ts';
+import { getTsconfig } from '#cli/parsers/packages/public.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
 import type { JsconfigInput } from '#cli/types/generation/jsconfig.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
+import { generatedIgnores } from '#cli/generation/documents/contracts.ts';
+import { toPosix, valueAt, extensionOf } from '#cli/platform/contracts.ts';
 
 import {
     JAVASCRIPT_IMPORTS,

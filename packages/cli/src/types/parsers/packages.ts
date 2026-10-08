@@ -9,7 +9,7 @@ import type {
     packageInstallerSchema,
     packageInstallerIdentitySchema,
     packageInstallerDeclarationSchema,
-} from '#cli/parsers/schema/packages.ts';
+} from '#cli/parsers/packages/contracts.ts';
 
 export type PackageInstaller = z.infer<typeof packageInstallerSchema>;
 

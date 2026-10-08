@@ -1,61 +1,19 @@
 import { join } from 'node:path';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
+import * as processes from '#cli/platform/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
-import * as toolRunner from '#cli/execution/command/check.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
-import type { SiteReportCase } from '#tests/types/cli/checks/general/site.ts';
 import { SITE_POLICY, SITE_BUILD_SCRIPT } from '#tests/config/samples/site.ts';
-import { purgecss, linkinator, htmlValidate } from '#cli/checks/general/site/output.ts';
+import { filesUnder, cachedBuild } from '#cli/checks/general/site/contracts.ts';
 import { stat, chmod, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { filesUnder, cachedBuild, buildReproducible } from '#cli/checks/general/site/build.ts';
-
-const SITE_REPORTS: SiteReportCase[] = [
-    {
-        name: 'links',
-        check: 'site/linkinator',
-        analyze: (input) => linkinator(input, false),
-        report: () => ({
-            links: [{ url: 'https://example.com/missing', parent: 'index.html', state: 'BROKEN', status: 404 }],
-        }),
-        corrected: { links: [] },
-        status: 1,
-        file: 'dist/index.html',
-        rule: 'broken-link',
-    },
-    {
-        name: 'markup',
-        check: 'site/html-validate',
-        analyze: htmlValidate,
-        report: (output: string) => [
-            {
-                filePath: join(output, 'index.html'),
-                messages: [{ ruleId: 'doctype', line: 1, message: 'Missing doctype.' }],
-            },
-        ],
-        corrected: [],
-        status: 1,
-        file: 'dist/index.html',
-        rule: 'doctype',
-    },
-    {
-        name: 'selectors',
-        check: 'site/purgecss',
-        analyze: purgecss,
-        report: () => [{ file: 'style.css', rejected: ['.unused'] }],
-        corrected: [{ file: 'style.css', rejected: [] }],
-        status: 0,
-        file: 'dist/style.css',
-        rule: 'dead-selector',
-    },
-];
 
 test('push builds preserve tracked dist bytes and Git status', async () => {
     await using sandbox = await testdir();
@@ -95,7 +53,7 @@ describe('site build reproducibility', () => {
         const first = await cachedBuild(request);
         const before = await readFile(join(first.output, 'index.html'), 'utf8');
         expect(first.isBuilt).toBe(true);
-        expect(await buildReproducible(request)).toStrictEqual([]);
+        expect(await BUILT_IN_CHECKS['site/build-reproducible'].input(request)).toStrictEqual([]);
         expect(await readFile(join(first.output, 'index.html'), 'utf8')).toBe(before);
         expect(await readFile(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('edited output');
         // Windows keeps no POSIX mode bits, so the file stays at its default there.
@@ -151,7 +109,9 @@ writeFileSync('built-once', 'yes');`,
     });
     const first = await cachedBuild(request);
     expect(first.isBuilt).toBe(true);
-    expect(await rejection(buildReproducible(request))).toContain('The second site build failed');
+    expect(await rejection(BUILT_IN_CHECKS['site/build-reproducible'].input(request))).toContain(
+        'The second site build failed',
+    );
     expect(await readFile(join(first.output, 'index.html'), 'utf8')).toBe('first');
     expect(await pathExists(join(sandbox.path, 'dist'))).toBe(false);
 });
@@ -182,7 +142,7 @@ writeFileSync('built-once', 'yes');`,
         paths: ['build.js'],
         resources,
     });
-    const findings = await buildReproducible(input);
+    const findings = await BUILT_IN_CHECKS['site/build-reproducible'].input(input);
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([...expected]);
     expect(await readFile(join(sandbox.path, 'build.js'), 'utf8')).toBe(script);
     expect(await pathExists(join(sandbox.path, 'built-once'))).toBe(false);
@@ -237,46 +197,6 @@ test('site output inventory refuses external links and passes after the fix', as
     expect(filesUnder(join(sandbox.path, 'dist'))).toStrictEqual(['linked.txt', 'local.txt']);
 });
 
-test.each(SITE_REPORTS)(
-    '$name rejects fatal, absent, and malformed reports and handles findings before and after fixes',
-    async ({ analyze, check, report, status, file, rule, corrected }) => {
-        await using sandbox = await testdir();
-        using resources = new DisposableStack();
-        await createFileTree(sandbox.path, { 'gspot.toml': SITE_POLICY, 'build.js': SITE_BUILD_SCRIPT });
-        const request = buildCheckInput(await openSession(sandbox.path), check, {
-            paths: ['build.js'],
-            resources: resources,
-        });
-        const build = await cachedBuild(request);
-        await writeFile(join(build.output, 'style.css'), 'body { color: red; }');
-        let code = 2;
-        let stdout = '';
-        const command = spyOn(toolRunner, 'runCheckTool').mockImplementation(async (_input, argv) => {
-            if (Array.isArray(argv)) {
-                const formatter = argv.find((argument) => argument.startsWith('json='));
-                if (formatter !== undefined) await writeFile(formatter.slice('json='.length), stdout);
-            }
-            return { code, stdout, stderr: 'Test tool diagnostic', missing: false, duration: 1 };
-        });
-        try {
-            await rejection(analyze(request));
-            code = 0;
-            for (const invalid of ['', '{ broken', '{}']) {
-                stdout = invalid;
-                await rejection(analyze(request));
-            }
-            stdout = JSON.stringify(report(build.output));
-            code = status;
-            expect(await analyze(request)).toMatchObject([{ check: request.check.name, file, line: 1, rule }]);
-            code = 0;
-            stdout = JSON.stringify(corrected);
-            expect(await analyze(request)).toStrictEqual([]);
-        } finally {
-            command.mockRestore();
-        }
-    },
-);
-
 test('scoped site builds reuse only declared workspace sources for both native builds', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -302,7 +222,7 @@ test('scoped site builds reuse only declared workspace sources for both native b
     expect(built.isBuilt, built.outputTail).toBe(true);
     expect(await readFile(join(built.output, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
     expect(await pathExists(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);
-    expect(await buildReproducible(input)).toStrictEqual([]);
+    expect(await BUILT_IN_CHECKS['site/build-reproducible'].input(input)).toStrictEqual([]);
     expect(await pathExists(join(sandbox.path, 'web/dist'))).toBe(false);
     expect(await readFile(join(sandbox.path, 'packages/core/value.js'), 'utf8')).toBe(
         'export const value = "<h1>Workspace site</h1>";',

@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { sqlIdentifiers } from '#cli/parsers/naming/sql.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
-import { positionAt, parseSqlFile } from '#cli/parsers/sql/statements.ts';
+import { sqlIdentifiers } from '#cli/parsers/naming/public.ts';
+import { positionAt, parseSqlFile } from '#cli/parsers/sql/public.ts';
 
 test('SQL analyses share concurrent parses and refresh after source corrections', async () => {
     const reads: ReadCache = { root: '/repository', sources: new Map(), memo: new Map() };

@@ -1,7 +1,7 @@
 // Build one check input from the session and inventory owned by its test.
-import { toolPath } from '#cli/platform/paths.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import { checkInput } from '#cli/execution/built-in.ts';
+import { toolPath } from '#cli/platform/contracts.ts';
+import { checkInput } from '#cli/execution/contracts.ts';
+import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { CheckInputOptions } from '#tests/types/harness/input.ts';

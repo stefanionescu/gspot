@@ -113,7 +113,7 @@
         ".": {
             "entry": [
                 "packages/cli/src/checks/general/site/linkinator.ts",
-                "packages/eslint-plugin/src/plugin.ts",
+                "packages/eslint-plugin/src/rules/public.ts",
                 "docs/src/content/reference/collection.ts",
                 "scripts/setting-values.ts",
                 "src/main.{ts,js}",
@@ -143,7 +143,7 @@
         },
         "packages/eslint-plugin": {
             "entry": [
-                "src/plugin.ts",
+                "src/rules/public.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/*.{test,spec}.{ts,tsx,js}",

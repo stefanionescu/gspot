@@ -10,7 +10,7 @@ import { READERS_HEADERS, EXPECTED_READERS } from '#tests/config/cli/execution/s
 test('scoped readers receive their own files and preserve binary asset inputs', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['site', 'supabase', 'i18n'], {
+        'gspot.toml': buildPolicy(['site', 'supabase', 'i18n', 'cloudflare'], {
             level: 'all',
             tables: '[i18n]\nmessages_folder = "messages"\nbase_locale = "en"\n[scope."apps/backend"]\n[scope."apps/backend".i18n]\nmessages_folder = "messages"\n',
         }),

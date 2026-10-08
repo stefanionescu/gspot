@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import type { settingNamespaceSchemas } from '#cli/policy/schema/namespaces.ts';
-import type { activeSettingNamespacesSchema } from '#cli/policy/schema/active-settings.ts';
+import type { settingNamespaceSchemas } from '#cli/policy/schema/native/contracts.ts';
+import type { activeSettingNamespacesSchema } from '#cli/policy/schema/native/public.ts';
 
 /** Namespace identities come from the same compiler output as their validators. */
 export type SettingNamespace = keyof typeof settingNamespaceSchemas;

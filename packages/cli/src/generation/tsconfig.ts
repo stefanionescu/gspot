@@ -1,8 +1,8 @@
 import ts from 'typescript';
 import { join, dirname, relative } from 'node:path';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import { getTsconfig } from '#cli/parsers/tsconfig.ts';
-import { toPosix, extensionOf } from '#cli/platform/paths.ts';
+import { scopeOf } from '#cli/repository/paths/contracts.ts';
+import { getTsconfig } from '#cli/parsers/packages/public.ts';
+import { toPosix, extensionOf } from '#cli/platform/contracts.ts';
 import type { Level, Manifest } from '#cli/types/configurations.ts';
 import type { TsconfigInput } from '#cli/types/generation/tsconfig.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';

@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { COMPILER_SOURCE } from '#tests/config/samples/typescript.ts';
-import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
+import { suppressionComments } from '#cli/checks/general/structure/public.ts';
 
 import {
     COMPILER_REASON,

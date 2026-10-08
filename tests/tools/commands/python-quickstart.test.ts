@@ -3,12 +3,12 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { mkdir } from 'node:fs/promises';
-import { openRoot } from '#cli/platform/root/open.ts';
+import { openRoot } from '#cli/platform/root/public.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { prepareQuickstart } from '#tests/harness/quickstart.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
 import { SETUP_COMMANDS } from '#tests/config/samples/quickstart.ts';
 import { INITIALIZE, INVALID_SOURCE, PROJECT_COMMANDS } from '#tests/config/tools/commands/python-quickstart.ts';
 

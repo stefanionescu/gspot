@@ -3,7 +3,7 @@ import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
+import { visitParsedSources } from '#cli/parsers/source/public.ts';
 import { RECORDING_MODES, RECORDING_NAMES } from '#cli/config/checks/swift-snapshot-testing.ts';
 
 function recordingEnabled(node: Node): boolean {

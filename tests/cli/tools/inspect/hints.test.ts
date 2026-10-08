@@ -1,19 +1,19 @@
 import { test, expect } from 'bun:test';
-import { readPolicy } from '#cli/policy/read.ts';
 import { mkdir, symlink } from 'node:fs/promises';
+import { inspectTool } from '#cli/tools/public.ts';
+import { readPolicy } from '#cli/policy/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { inspectTool } from '#cli/tools/inspect.ts';
 import { join, dirname, delimiter } from 'node:path';
-import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { useEnvironment } from '#tests/harness/environment.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 
 // Acquisition commands use the package names declared by the host installers.

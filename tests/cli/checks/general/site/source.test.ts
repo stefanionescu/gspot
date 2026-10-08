@@ -2,16 +2,23 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
 import { unlink, readFile } from 'node:fs/promises';
-import { toolPin } from '#cli/configurations/pins.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
+import { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { checkOutRevision } from '#cli/execution/copy/revision.ts';
-import { svgo, deadAssets, webManifest } from '#cli/checks/general/site/source.ts';
-import { ORIGINAL_SVG, SVG_SAVING_CASES, INVALID_WEB_MANIFESTS } from '#tests/config/cli/checks/general/site/source.ts';
+import { checkOutRevision } from '#cli/execution/copy/public.ts';
+
+import {
+    ORIGINAL_SVG,
+    MANIFEST_LINKS,
+    SVG_SAVING_CASES,
+    INVALID_WEB_MANIFESTS,
+} from '#tests/config/cli/checks/general/site/source.ts';
 
 test.each(['assets', 'public', 'static'])(
     'scoped %s assets retain their tracked outside references',
@@ -25,7 +32,7 @@ test.each(['assets', 'public', 'static'])(
         });
         commitAll(sandbox.path);
         const input = buildCheckInput(await openSession(sandbox.path), 'site/dead-assets', { scope: 'docs' });
-        expect(deadAssets(input)).toMatchObject([
+        expect(BUILT_IN_CHECKS['site/dead-assets'].input(input)).toMatchObject([
             { file: `docs/${folder}/unused.svg`, line: 1, check: 'site/dead-assets', rule: 'dead-asset' },
         ]);
     },
@@ -45,7 +52,9 @@ test('asset references read staged bytes without borrowing an unstaged README or
     });
     await checkOutRevision(sandbox.path, { kind: 'index' }, async (root) => {
         const input = buildCheckInput(await openSession(root), 'site/dead-assets', { scope: 'docs' });
-        expect(deadAssets(input)).toMatchObject([{ file: 'docs/assets/unused.svg', rule: 'dead-asset' }]);
+        expect(BUILT_IN_CHECKS['site/dead-assets'].input(input)).toMatchObject([
+            { file: 'docs/assets/unused.svg', rule: 'dead-asset' },
+        ]);
     });
     expect(await readFile(join(sandbox.path, 'README.md'), 'utf8')).toBe('![Unused](docs/assets/unused.svg)\n');
 });
@@ -59,7 +68,9 @@ test('a site without Git keeps its local references and reports an unused asset'
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'site/dead-assets');
     expect(input.index).toStrictEqual([]);
-    expect(deadAssets(input)).toMatchObject([{ file: 'assets/unused.svg', rule: 'dead-asset' }]);
+    expect(BUILT_IN_CHECKS['site/dead-assets'].input(input)).toMatchObject([
+        { file: 'assets/unused.svg', rule: 'dead-asset' },
+    ]);
 });
 
 test.each(['astro', 'vue', 'svelte', 'jsx', 'tsx'])('a %s component names its asset', async (suffix) => {
@@ -70,7 +81,9 @@ test.each(['astro', 'vue', 'svelte', 'jsx', 'tsx'])('a %s component names its as
         'assets/unused.svg': '<svg/>',
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'site/dead-assets');
-    expect(deadAssets(input)).toMatchObject([{ file: 'assets/unused.svg', rule: 'dead-asset' }]);
+    expect(BUILT_IN_CHECKS['site/dead-assets'].input(input)).toMatchObject([
+        { file: 'assets/unused.svg', rule: 'dead-asset' },
+    ]);
 });
 
 test('an unstaged deletion removes the tracked outside reference without failing the asset check', async () => {
@@ -83,7 +96,9 @@ test('an unstaged deletion removes the tracked outside reference without failing
     await unlink(join(sandbox.path, 'README.md'));
     const input = buildCheckInput(await openSession(sandbox.path), 'site/dead-assets', { scope: 'docs' });
     expect(input.index.map((entry) => entry.path)).toContain('README.md');
-    expect(deadAssets(input)).toMatchObject([{ file: 'docs/assets/logo.svg', rule: 'dead-asset' }]);
+    expect(BUILT_IN_CHECKS['site/dead-assets'].input(input)).toMatchObject([
+        { file: 'docs/assets/logo.svg', rule: 'dead-asset' },
+    ]);
 });
 
 test.each(INVALID_WEB_MANIFESTS)('malformed web manifest %s produces a parse finding', async (source) => {
@@ -91,7 +106,9 @@ test.each(INVALID_WEB_MANIFESTS)('malformed web manifest %s produces a parse fin
         'gspot.toml': buildPolicy(['site']),
         'site.webmanifest': source,
     });
-    const findings = webManifest(buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'));
+    const findings = await BUILT_IN_CHECKS['site/webmanifest'].input(
+        buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'),
+    );
     expect(findings).toMatchObject([{ check: 'site/webmanifest', file: 'site.webmanifest', line: 1, rule: 'parse' }]);
 });
 
@@ -100,7 +117,9 @@ test('a valid web manifest reports missing names and icons and passes after the 
         'gspot.toml': buildPolicy(['site']),
         'site.webmanifest': '{"icons": [{"src": "icon.png"}]}',
     });
-    const rejected = webManifest(buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'));
+    const rejected = await BUILT_IN_CHECKS['site/webmanifest'].input(
+        buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'),
+    );
     expect(rejected).toMatchObject([
         { file: 'site.webmanifest', line: 1, rule: 'missing-name' },
         { file: 'site.webmanifest', line: 1, rule: 'icon' },
@@ -109,7 +128,11 @@ test('a valid web manifest reports missing names and icons and passes after the 
         'site.webmanifest': '{"name": "Example", "icons": [{"src": "icon.png"}]}',
         'icon.png': 'icon',
     });
-    expect(webManifest(buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'))).toStrictEqual([]);
+    expect(
+        await BUILT_IN_CHECKS['site/webmanifest'].input(
+            buildCheckInput(await openSession(sandbox.path), 'site/webmanifest'),
+        ),
+    ).toStrictEqual([]);
 });
 
 test.each(SVG_SAVING_CASES)('SVG optimization $name', async ({ level, percent, saved, finding }) => {
@@ -139,11 +162,45 @@ test.each(SVG_SAVING_CASES)('SVG optimization $name', async ({ level, percent, s
         missing: false,
         duration: 1,
     });
-    const findings = await svgo(buildCheckInput(session, 'site/svgo'));
+    const findings = await BUILT_IN_CHECKS['site/svgo'].input(buildCheckInput(session, 'site/svgo'));
     expect(run.mock.calls.map(([, options]) => options.stdin)).toStrictEqual([ORIGINAL_SVG]);
     if (finding) {
         expect(findings).toMatchObject([{ file: 'icon.svg', rule: 'unoptimized' }]);
     } else expect(findings).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'icon.svg'), 'utf8')).toBe(ORIGINAL_SVG);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
+});
+
+test.each(levelSchema.options)('web manifests use native HTML links rather than JSON names at %s', async (level) => {
+    await using sandbox = await testdir();
+    const policy = buildPolicy(['site'], { level, tables: '[scope.app]\nconfigurations = ["site"]\n' });
+    await createFileTree(sandbox.path, { 'gspot.toml': policy });
+    for (const scope of ['', 'app'])
+        await createFileTree(sandbox.path, {
+            [join(scope, 'index.html')]: MANIFEST_LINKS,
+            [join(scope, 'config/manifest.json')]: '{',
+            [join(scope, 'metadata/app manifest.json')]: '{"icons":[{"src":"icon.png"}]}',
+        });
+    for (const scope of ['', 'app']) {
+        const path = scope === '' ? 'metadata/app manifest.json' : 'app/metadata/app manifest.json';
+        const findings = await BUILT_IN_CHECKS['site/webmanifest'].input(
+            buildCheckInput(await openSession(sandbox.path), 'site/webmanifest', { scope }),
+        );
+        expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+            { file: path, rule: 'missing-name' },
+            { file: path, rule: 'icon' },
+        ]);
+        await createFileTree(sandbox.path, {
+            [path]: '{"name":"Example","icons":[{"src":"icon.png"}]}',
+            [join(scope, 'metadata/icon.png')]: 'icon',
+        });
+        expect(
+            await BUILT_IN_CHECKS['site/webmanifest'].input(
+                buildCheckInput(await openSession(sandbox.path), 'site/webmanifest', { scope }),
+            ),
+        ).toStrictEqual([]);
+        expect(await readFile(join(sandbox.path, scope, 'config/manifest.json'), 'utf8')).toBe('{');
+        expect(await readFile(join(sandbox.path, scope, 'index.html'), 'utf8')).toBe(MANIFEST_LINKS);
+    }
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(policy);
 });

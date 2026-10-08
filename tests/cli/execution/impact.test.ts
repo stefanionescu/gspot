@@ -1,21 +1,20 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
-import { executeRun } from '#cli/execution/run.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { mkdir, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import type { Session } from '#cli/types/planning.ts';
-import { applyFixers } from '#cli/execution/fixers.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
+import { executeRun, applyFixers } from '#cli/execution/public.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
+import { getStaged, getChanged } from '#cli/repository/revisions/public.ts';
 import { BASE_CHECK } from '#tests/config/cli/execution/command/findings.ts';
-import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
 import { NESTED_POLICY, PROJECT_OPTIONS, PROJECT_PATH_IGNORES } from '#tests/config/cli/execution/impact.ts';
 
 test('command checks retain nested inputs and report their findings once at the root', async () => {

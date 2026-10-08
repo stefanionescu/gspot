@@ -1,19 +1,18 @@
 import { join } from 'node:path';
-import { readSource } from '#cli/platform/source.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { sarifFindings } from '#cli/parsers/output/sarif.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import { CODEQL } from '#cli/config/checks/general/security.ts';
-import { assertMutationTarget } from '#cli/platform/root/rules.ts';
+import { copyIntoScratch } from '#cli/execution/copy/public.ts';
 import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
-import { toolOutputDetail } from '#cli/execution/command/failures.ts';
-import { semgrepRuleFiles } from '#cli/configurations/declarations.ts';
+import { assertMutationTarget } from '#cli/platform/root/contracts.ts';
+import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
+import { sarifFindings } from '#cli/parsers/output/structured/public.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
-import { runCheckTool, runCheckCommand } from '#cli/execution/command/check.ts';
+import { toolPin, semgrepRuleFiles } from '#cli/configurations/contracts.ts';
+import { runCheckTool, runCheckCommand } from '#cli/execution/command/public.ts';
 import type { CodeqlAnalysis, CodeqlLanguage } from '#cli/types/checks/general/security.ts';
 
 async function runCodeql(input: CheckInput, argv: string[], cwd: string): Promise<string> {

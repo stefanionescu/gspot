@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/harness/expectations.ts';
-import { registryEnvironment } from '#cli/tools/npm/registry.ts';
+import { registryEnvironment } from '#cli/tools/npm/contracts.ts';
 
 test.each([
     { source: 'registry=not-a-valid-url\n', message: 'Invalid registry URL in package manager configuration.' },

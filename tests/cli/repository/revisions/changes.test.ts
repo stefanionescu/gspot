@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
-import { getStaged, getChanged, getPushBase } from '#cli/repository/revisions/changes.ts';
+import { getStaged, getChanged, getPushBase } from '#cli/repository/revisions/public.ts';
 
 test('Git change read > reports an unborn index and its unstaged edits', async () => {
     await using sandbox = await testdir();

@@ -7,8 +7,8 @@ import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { NODE_VERSION } from '#cli/config/generation/ci.ts';
-import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
+import { githubFile, gitlabFile } from '#cli/generation/documents/public.ts';
 import type { GithubWorkflow, GitlabPipeline } from '#tests/types/generation/workflow.ts';
 import { PIPELINE, MISE_PROGRAM, GSPOT_PROGRAM, DOCTOR_EXIT_CODES } from '#tests/config/cli/generation/workflow.ts';
 

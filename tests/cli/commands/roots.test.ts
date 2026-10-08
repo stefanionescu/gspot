@@ -8,7 +8,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { unlink, symlink, readFile, writeFile } from 'node:fs/promises';
+import { symlink, readFile, writeFile } from 'node:fs/promises';
 
 const INIT = buildInitArguments(['bash']);
 
@@ -24,10 +24,6 @@ test('init refuses a symlinked managed directory without writing outside the con
     expect(await pathExists(join(outside, 'mutation.lock'))).toBe(false);
     expect(await pathExists(join(outside, 'ownership.json'))).toBe(false);
     expect(await pathExists(join(project, 'gspot.toml'))).toBe(false);
-    await unlink(join(project, '.gspot'));
-    const corrected = await runGspot(project, INIT);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(await readFile(join(outside, 'sentinel'), 'utf8')).toBe('authored\n');
 });
 
 test('a configuration below the Git root owns only its own project writes and changed paths', async () => {

@@ -1,7 +1,7 @@
 import { test, expect, describe } from 'bun:test';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { BASE_CHECK } from '#tests/config/cli/execution/command/findings.ts';
-import { hasToolError, toolOutputDetail } from '#cli/execution/command/failures.ts';
+import { hasToolError, toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import { ESLINT_TOOL, ESLINT_CRASH } from '#tests/config/cli/execution/command/failures.ts';
 
 test('bounded failure output retains the final diagnostic from both streams', () => {

@@ -2,10 +2,10 @@
 import { join } from 'node:path';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { parseTomlText } from '#cli/policy/file.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { contentDigest } from '#cli/platform/text.ts';
+import { contentDigest } from '#cli/platform/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { parseTomlText } from '#cli/policy/document/public.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';

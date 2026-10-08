@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import type { RuffConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 test('a scope resolves its own tool settings over the root defaults', async () => {

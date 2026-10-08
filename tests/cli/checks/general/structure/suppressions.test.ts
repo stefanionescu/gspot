@@ -1,14 +1,14 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
-import { suppressionComments } from '#cli/checks/general/structure/suppressions.ts';
+import { suppressionComments } from '#cli/checks/general/structure/public.ts';
 
 test.each([
     ['// Example eslint-disable-next-line no-console', false],

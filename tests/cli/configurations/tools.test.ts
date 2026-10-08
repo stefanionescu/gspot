@@ -1,12 +1,12 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { collectPins } from '#cli/configurations/pins.ts';
-import { assertManifests } from '#cli/configurations/errors.ts';
+import { collectPins } from '#cli/configurations/contracts.ts';
+import { toolDeclarationSchema } from '#cli/parsers/schema/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
-import { toolDeclarationSchema } from '#cli/parsers/schema/configurations/tool.ts';
-import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/manifests.ts';
+import { assertManifests } from '#cli/configurations/errors/contracts.ts';
+import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/public.ts';
 
 test.each([
     ['actions', 'bash', 'shellcheck'],

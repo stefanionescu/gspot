@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { hasCase, splitParts, repeatedPart } from '#cli/checks/general/naming/words.ts';
+import { hasCase, splitParts, repeatedPart } from '#cli/checks/general/naming/public.ts';
 
 describe('splitParts', () => {
     test('splits at case boundaries, separators and digit runs; an acronym is one part', () => {

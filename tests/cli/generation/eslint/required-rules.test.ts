@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { validateEslintPresets } from '#cli/generation/eslint/presets.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { validateEslintPresets } from '#cli/generation/eslint/public.ts';
 import { CHECK_LEVELS, PROJECT_FILES } from '#tests/config/cli/generation/eslint/required-rules.ts';
 
 const allRules = new Set([...configurationManifests().values()].flatMap((manifest) => [...manifest.eslint_all_rules]));

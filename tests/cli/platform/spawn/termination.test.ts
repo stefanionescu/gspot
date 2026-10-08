@@ -8,7 +8,7 @@ import * as childProcess from 'node:child_process';
 import { waitForExit } from '#tests/harness/process.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
-import { run, runBinary, runStream } from '#cli/platform/spawn.ts';
+import { run, runBinary, runStream } from '#cli/platform/public.ts';
 import type { AsyncSpawnOptions } from '#cli/types/platform/runtime.ts';
 
 const captures = {
@@ -93,7 +93,7 @@ test.each([
 test('a CLI exit terminates its ready asynchronous process group', async () => {
     await using sandbox = await testdir();
     const descendant = 'console.log(process.pid); setInterval(() => {}, 1000);';
-    const sourceUrl = pathToFileURL(join(root, 'packages/cli/src/platform/spawn.ts')).href;
+    const sourceUrl = pathToFileURL(join(root, 'packages/cli/src/platform/public.ts')).href;
     const script = `import {run} from ${JSON.stringify(sourceUrl)}; void run([process.execPath,"-e",${JSON.stringify(descendant)}],{cwd:process.cwd(),onStdout(chunk){process.stdout.write(chunk);process.exit(19);}});`;
     const command = [process.execPath, '-e', script];
     const prepared = prepareTestCommand(command, { cwd: sandbox.path }, 'CLI process-group exit');

@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse, stringify } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
-import { parseExpiryDate } from '#cli/policy/file.ts';
+import { parseExpiryDate } from '#cli/policy/document/public.ts';
 import { ESLINT_OVERRIDE_POLICY } from '#tests/config/samples/javascript.ts';
 import { FORMAT_OVERRIDES_POLICY } from '#tests/config/samples/formatting.ts';
-import { getTemplate, parseTemplate, exportTemplate } from '#cli/policy/templates.ts';
+import { getTemplate, parseTemplate, exportTemplate } from '#cli/policy/document/contracts.ts';
 
 test.each([
     ['preserves ESLint rules and authored path', ESLINT_OVERRIDE_POLICY, 'project.template.toml'],

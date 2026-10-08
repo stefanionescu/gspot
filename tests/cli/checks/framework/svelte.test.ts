@@ -1,12 +1,13 @@
 import { join } from 'node:path';
 import { chmod } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
-import { openSession } from '#cli/commands/session.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { svelteCheck, svelteFindings } from '#cli/checks/framework/svelte.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
+import { svelteFindings } from '#cli/checks/framework/contracts.ts';
 import { LINES, PROJECTS, SCANNERS } from '#tests/config/cli/checks/framework/svelte.ts';
 
 test.each(PROJECTS)('svelte-check selects the $name TypeScript target', async ({ scope, policy, target }) => {
@@ -35,7 +36,7 @@ test.each(PROJECTS)('svelte-check selects the $name TypeScript target', async ({
         stderr: '',
         duration: 1,
     });
-    expect(await svelteCheck(input)).toStrictEqual([]);
+    expect(await BUILT_IN_CHECKS['svelte/svelte-check'].input(input)).toStrictEqual([]);
     expect(
         run.mock.calls.map(([argv, options]) => ({
             target: argv.includes('--tsconfig') ? argv[argv.indexOf('--tsconfig') + 1] : undefined,

@@ -1,4 +1,4 @@
-import { lintedPath, isAnyGlobMatch } from '#plugin/files.ts';
+import { lintedPath, isAnyGlobMatch } from '#plugin/public.ts';
 import { createRule, optionsSchema } from '#plugin/create-rule.ts';
 import type { EnvOwnerOptions } from '#plugin/types/environment.ts';
 import { ENVIRONMENT_ALLOWED } from '#plugin/config/environment.ts';

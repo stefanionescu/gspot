@@ -1,15 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { readRepository } from '#cli/repository/read.ts';
+import { readRepository } from '#cli/repository/public.ts';
 import { rm, mkdir, symlink, writeFile } from 'node:fs/promises';
 import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
+import { readPackageManifest, readPackageManifests, getProjectDependencies } from '#cli/repository/contracts.ts';
 
-import {
-    readPackageManifest,
-    readPackageManifests,
-    getProjectDependencies,
-} from '#cli/repository/package-manifests.ts';
 import {
     INVALID_MANIFESTS,
     AUTHORED_PACKAGE_FIELDS,

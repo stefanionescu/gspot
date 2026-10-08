@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
 
 test('path selectors: ** crosses directories, ! negates', () => {
     const matcher = pathMatcher(['scripts/**', '!scripts/vendor/**']);

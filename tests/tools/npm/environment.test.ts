@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { runTool } from '#cli/tools/run.ts';
+import { runTool } from '#cli/tools/contracts.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import { registryEnvironment } from '#cli/tools/npm/registry.ts';
+import { registryEnvironment } from '#cli/tools/npm/contracts.ts';
 
 test('native registry settings authenticate from an isolated project and preserve authored configuration', async () => {
     await using repository = await testdir();

@@ -1,9 +1,9 @@
 // Isolate installed consumers from this checkout and restore test-owned environment changes.
 import { spyOn } from 'bun:test';
 import { testdir } from 'testdirs';
-import * as environment from '#cli/platform/environment.ts';
+import * as environment from '#cli/platform/public.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
 import { MODULE_DIRECTORIES } from '#tests/config/harness/environment.ts';
 import { sep, join, resolve, relative, delimiter, isAbsolute } from 'node:path';
 

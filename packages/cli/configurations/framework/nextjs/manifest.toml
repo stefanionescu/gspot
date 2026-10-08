@@ -8,6 +8,13 @@ eslint_all_rules = [
 
 generated = ["next-env.d.ts"]
 
+naming.path_containers = [
+    { open = "[", close = "]", category = "path_parameters" },
+    { open = "(", close = ")", category = "directories" },
+    { open = "@", close = "", category = "directories" },
+    { open = "_", close = "", category = "directories" },
+]
+
 [configuration]
 title = "Next.js"
 requires = ["typescript", "react"]
@@ -118,13 +125,6 @@ paths = ["**/app/**", "**/pages/**"]
 categories = ["files"]
 allowed = ["page", "layout", "loading", "error", "global-error", "not-found", "route", "template", "default", "middleware", "instrumentation", "proxy", "sitemap", "robots", "manifest", "opengraph-image", "icon", "apple-icon", "_app", "_document", "_error", "404", "500"]
 reason = "Next.js names these files."
-
-[[naming.overrides]]
-paths = ["**"]
-languages = ["typescript", "javascript"]
-categories = ["functions", "methods"]
-ignored_prefix = "^handle(?=[A-Z])"
-reason = "A handler starts with handle and then names the event."
 
 [[naming.overrides]]
 paths = ["**"]

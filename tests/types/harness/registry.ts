@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { run } from '#cli/platform/spawn.ts';
+import type { run } from '#cli/platform/public.ts';
 import type { packedPackagesSchema } from '#tests/harness/registry.ts';
 
 /** Execute install commands within the caller's cancellation boundary. */

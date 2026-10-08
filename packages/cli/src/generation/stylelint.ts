@@ -1,10 +1,10 @@
 import { posix } from 'node:path';
-import { openRoot } from '#cli/platform/root/open.ts';
-import { parseJsonRecord } from '#cli/parsers/json.ts';
-import { relativeTarget } from '#cli/generation/pointers.ts';
+import { openRoot } from '#cli/platform/root/public.ts';
+import { parseJsonRecord } from '#cli/parsers/public.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
+import { relativeTarget } from '#cli/generation/documents/contracts.ts';
+import { isInScope, nestedScopes } from '#cli/repository/paths/public.ts';
 import type { GeneratedFile, EmittedToolFile } from '#cli/types/generation/files.ts';
 
 /**

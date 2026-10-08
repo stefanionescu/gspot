@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { typescriptImports } from '#cli/parsers/typescript.ts';
+import { typescriptImports } from '#cli/parsers/source/contracts.ts';
 import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
 import { FRAGMENT_SCOPE_CASES, IMPORT_FRAGMENT_SOURCE } from '#tests/config/cli/generation/eslint/fragments.ts';
 

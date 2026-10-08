@@ -2,9 +2,9 @@ import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
 

@@ -1,5 +1,5 @@
 // Docker-dependent scenarios probe the daemon lazily without blocking unrelated test imports.
-import { runBlocking } from '#cli/platform/spawn.ts';
+import { runBlocking } from '#cli/platform/public.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
 

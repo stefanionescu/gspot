@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter';
-import { addIdentifier } from '#cli/parsers/naming/identifiers.ts';
+import { addIdentifier } from '#cli/parsers/naming/contracts.ts';
 import type { Identifier, ExtractSink } from '#cli/types/parsers/naming.ts';
 
 function addFunctions(sink: ExtractSink, root: Node): void {

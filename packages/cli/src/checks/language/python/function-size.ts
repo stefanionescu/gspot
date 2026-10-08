@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { visitParsed } from '#cli/parsers/source/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { readPython, disposePython } from '#cli/parsers/python.ts';
+import { readPython, disposePython } from '#cli/parsers/source/contracts.ts';
 
 /**
  * Report Python functions above the configured code-line ceiling.

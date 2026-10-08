@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { parseTestSource } from '#tests/harness/syntax.ts';
 import { TRIVIAL_FILES } from '#tests/config/cli/parsers/statements.ts';
-import { isTrivialFile, executableStatements } from '#cli/parsers/statements.ts';
+import { isTrivialFile, executableStatements } from '#cli/parsers/source/contracts.ts';
 
 test.each([
     ['python', 'def example():\n    """Contract."""\n    work()\n    work()\n'],

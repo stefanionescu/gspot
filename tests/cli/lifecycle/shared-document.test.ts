@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { symlink } from 'node:fs/promises';
 import { throws } from 'node:assert/strict';
 import { testdir, createFileTree } from 'testdirs';
-import { hasFields } from '#cli/lifecycle/merge/document.ts';
+import { hasFields } from '#cli/lifecycle/merge/contracts.ts';
 
 test('shared output readers reject external links', async () => {
     await using sandbox = await testdir();

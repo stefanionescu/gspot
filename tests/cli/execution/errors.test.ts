@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { runBuiltInCheck } from '#cli/execution/built-in.ts';
+import { runBuiltInCheck } from '#cli/execution/contracts.ts';
 import { NON_ERROR_FAILURES } from '#tests/config/cli/execution/errors.ts';
 
 test.each(NON_ERROR_FAILURES)(
@@ -24,7 +24,7 @@ test.each(NON_ERROR_FAILURES)(
                 checks: {
                     'project/source': {
                         run: runBuiltInCheck(() => {
-                            // eslint-disable-next-line @typescript-eslint/only-throw-error -- reason: The test exercises built-in checks that throw non-Error values.
+                            // eslint-disable-next-line @typescript-eslint/only-throw-error -- reason: This test proves the runner reports non-Error failures from external checks.
                             throw thrown;
                         }),
                     },

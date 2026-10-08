@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { readPbxproj } from '#cli/parsers/xcode.ts';
+import { readPbxproj } from '#cli/parsers/tool/public.ts';
 import { PBXPROJ_PROJECT } from '#tests/config/samples/xcode.ts';
 
 test('project directory offsets and source roots resolve separately', () => {

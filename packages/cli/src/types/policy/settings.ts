@@ -4,10 +4,10 @@ import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import type { namingLists } from '#cli/parsers/schema/naming.ts';
 import type { SettingValueDeclaration } from '#cli/types/parsers/settings.ts';
-import type { scopeSchema, policySchema } from '#cli/policy/schema/policy.ts';
+import type { scopeSchema, policySchema } from '#cli/policy/schema/public.ts';
 import type { agentRulesValuesSchema } from '#cli/policy/schema/agent-rules.ts';
 import type { ScopeEntry, FileDeclaration } from '#cli/types/repository/inventory.ts';
-import type { limitTableSchema, namingCategorySchema } from '#cli/policy/schema/fields.ts';
+import type { limitTableSchema, namingCategorySchema } from '#cli/policy/schema/contracts.ts';
 import type { Manifest, CheckDeclaration, SettingDeclaration } from '#cli/types/configurations.ts';
 import type { SettingOptions, SettingNamespace, ActiveSettingNamespaces } from '#cli/types/policy/setting-values.ts';
 

@@ -1,9 +1,9 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
+import { getSuggestions } from '#cli/commands/doctor/contracts.ts';
 import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {
@@ -157,5 +157,28 @@ test.each(['recommended', 'all'] as const)(
                 ([name, rule]) => /^(?:vue|svelte|astro)\//u.test(name) && rule[0] !== 0,
             ),
         ).toStrictEqual([]);
+    },
+);
+
+test.each(['3.25.76', '4.6.2'])(
+    'Zod %s omits the three removed rules and keeps retained schema rules',
+    async (version) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'level = "all"\nconfigurations = ["zod"]\n',
+            'package.json': JSON.stringify({ private: true, dependencies: { zod: version } }),
+            'source.js': 'import { z } from "zod";\nexport const schema = z.object({ value: z.any() });\n',
+        });
+        const eslint = await createEslint(sandbox.path);
+        const computed = (await eslint.calculateConfigForFile('source.js')) as RuntimeConfiguration;
+        for (const rule of REMOVED_ZOD_RULES) expect(computed.rules[rule], rule).toBeUndefined();
+        expect(computed.rules['zod/no-any-schema']![0]).toBe(2);
+        expect(computed.rules['zod/prefer-strict-object']![0]).toBe(2);
+        const results = await eslint.lintFiles(['source.js']);
+        expect(
+            results.flatMap(({ messages }) =>
+                messages.filter(({ ruleId }) => ruleId?.startsWith('zod/') === true).map(({ ruleId }) => ruleId),
+            ),
+        ).toStrictEqual(['zod/no-any-schema']);
     },
 );

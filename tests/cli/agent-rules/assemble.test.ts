@@ -1,14 +1,14 @@
 import { testdir } from 'testdirs';
 import { test, expect, describe } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
-import { readAsset } from '#cli/platform/assets.ts';
+import { emitAll } from '#cli/generation/public.ts';
+import { excludeErrors } from '#cli/policy/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { readAsset } from '#cli/platform/root/public.ts';
 import { FIRST_READ } from '#cli/config/policy/settings.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
-import { excludeErrors } from '#cli/policy/errors/selection.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { textAtLevel, selectRuleFiles } from '#cli/agent-rules/assemble.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { everyManifest } from '#cli/configurations/selection/public.ts';
+import { textAtLevel, selectRuleFiles } from '#cli/agent-rules/public.ts';
 import { UPSTREAM_GUIDES, CHECKED_RULE_LINES, RULE_CONFIGURATIONS } from '#tests/config/cli/agent-rules.ts';
 
 describe('[agent_rules] exclude', () => {
@@ -23,7 +23,7 @@ describe('[agent_rules] exclude', () => {
         expect(problem!.message).toContain('general/engineering/code/ACCESSIBILITY.md');
     });
 
-    test.each([...FIRST_READ, 'general/engineering/agent', 'general/engineering/prose'])(
+    test.each([...FIRST_READ, 'general/engineering/agent', 'general/prose'])(
         'the required first-read entry %s cannot be left out',
         (entry) => {
             const [problem] = excludeErrors([entry]);
@@ -131,10 +131,8 @@ test.each(
         'accept that script with an `[[ignore]]` record for `bash/safety`',
     );
     for (const [path, destination] of UPSTREAM_GUIDES) expect(rules.get(path)).toContain(destination);
-    expect(rules.get('general/engineering/prose/DOCS-FORMAT.md')?.includes('Delete obsolete content')).toBe(
-        level === 'all',
-    );
-    expect(rules.get('general/engineering/prose/WRITING.md')?.includes('Use active voice')).toBe(level === 'all');
+    expect(rules.get('general/prose/DOCS-FORMAT.md')?.includes('Delete obsolete content')).toBe(level === 'all');
+    expect(rules.get('general/prose/WRITING.md')?.includes('Use active voice')).toBe(level === 'all');
 });
 
 test.each(['recommended', 'all'] as const)(

@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { coverageShortfalls } from '#cli/checks/tool/xctest.ts';
-import { parseSwiftCoverage } from '#cli/parsers/swift/coverage.ts';
+import { coverageShortfalls } from '#cli/checks/tool/contracts.ts';
+import { parseSwiftCoverage } from '#cli/parsers/swift/contracts.ts';
 import { SWIFT_PACKAGE_COVERAGE_FILES, SWIFT_PACKAGE_COVERAGE_TARGETS } from '#tests/config/cli/parsers/swift.ts';
 
 test('Swift package coverage measures actual custom target paths and applies every target floor', async () => {

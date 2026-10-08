@@ -1,35 +1,22 @@
-import { posix } from 'node:path';
-import { stemOf } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { scopeOf } from '#cli/repository/scopes.ts';
-import { readSource } from '#cli/platform/source.ts';
-import { isOwned } from '#cli/configurations/owners.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { sqlIdentifiers } from '#cli/parsers/naming/sql.ts';
-import { bashIdentifiers } from '#cli/parsers/naming/bash.ts';
+import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import { swiftIdentifiers } from '#cli/parsers/naming/swift.ts';
-import { CASE_NAMES } from '#cli/checks/general/naming/words.ts';
-import { pythonIdentifiers } from '#cli/parsers/naming/python.ts';
-import { createIdentifier } from '#cli/parsers/naming/identifiers.ts';
-import { grammarFor, parseSource } from '#cli/parsers/tree-sitter.ts';
-import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
-import { nameFindings } from '#cli/checks/general/naming/findings.ts';
-import { effectivePolicy } from '#cli/checks/general/naming/policy.ts';
-import { typescriptIdentifiers } from '#cli/parsers/naming/typescript.ts';
-import { WRAPPERS, REACT_FILE } from '#cli/config/checks/general/naming.ts';
-import { everyTable, harnessFolders } from '#cli/policy/settings/lookup.ts';
+import { isInScope, pathMatcher } from '#cli/repository/paths/public.ts';
 import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
+import { everyTable, harnessFolders } from '#cli/policy/settings/contracts.ts';
+import { CASE_NAMES, nameFindings } from '#cli/checks/general/naming/public.ts';
+import { isOwned, selectForScope } from '#cli/configurations/selection/public.ts';
 import type { FileNames, NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
-function segmentName(segment: string): Pick<Identifier, 'name' | 'category'> {
-    const bracket = WRAPPERS.find((entry) => segment.startsWith(entry.open) && segment.endsWith(entry.close));
-    if (bracket === undefined) return { name: segment, category: 'directories' };
-    const inner = segment.slice(bracket.open.length, segment.length - bracket.close.length);
-    return { name: inner.replace(/^\.\.\./u, ''), category: bracket.category };
-}
+import {
+    identifiersOf,
+    fileIdentifier,
+    effectivePolicy,
+    directoryIdentifiers,
+} from '#cli/checks/general/naming/contracts.ts';
 
 function sourceFiles(input: CheckInput): NamingSource[] {
     const languages = input.selection.selected.filter((manifest) => manifest.configuration.kind === 'language');
@@ -48,7 +35,6 @@ function findingsFor(input: CheckInput, policy: EffectivePolicy, identifiers: Id
         nameFindings(identifier, {
             check: input.check,
             policy,
-            isReactFile: REACT_FILE.test(identifier.file),
             isTestFile: isTestFile(identifier.file),
         }),
     );
@@ -66,9 +52,13 @@ async function identifierFindings(input: CheckInput, policy: EffectivePolicy): P
 
 function pathIdentifiers(input: CheckInput): Identifier[] {
     const harnesses = new Set(harnessFolders(input.policyFiles.policy, input.scope));
+    const containers = input.selection.selected.flatMap((manifest) => manifest.naming?.path_containers ?? []);
     const seen = new Set<string>();
     return sourceFiles(input).flatMap(({ file, language }) => {
-        const all = [fileIdentifier(file.path, language), ...directoryIdentifiers(file.path, language)];
+        const all = [
+            fileIdentifier(file.path, language, containers),
+            ...directoryIdentifiers(file.path, language, containers),
+        ];
         return all.filter((identifier) => {
             if (identifier.directory !== undefined && harnesses.has(identifier.directory)) return false;
             const key = JSON.stringify([identifier.directory ?? identifier.file, identifier.language, identifier.name]);
@@ -82,18 +72,17 @@ function pathIdentifiers(input: CheckInput): Identifier[] {
 async function declaredNames(input: CheckInput): Promise<FileNames[]> {
     const policy = input.policyFiles.policy;
     const selections = new Map(
-        input.scopeEntries.map((scope) => [
-            scope.path,
-            selectForScope(policy, scope.path, input.manifests).filter(
-                (manifest) => manifest.configuration.kind === 'language',
-            ),
-        ]),
+        input.scopeEntries.map((scope) => [scope.path, selectForScope(policy, scope.path, input.manifests)]),
     );
     const files: FileNames[] = [];
     for (const file of input.files) {
         if (file.kind !== 'source') continue;
         const scope = scopeOf(file.path, input.scopeEntries);
-        const language = selections.get(scope.path)?.find((manifest) => isOwned(manifest.files, file));
+        const selected = selections.get(scope.path) ?? [];
+        const language = selected.find(
+            (manifest) => manifest.configuration.kind === 'language' && isOwned(manifest.files, file),
+        );
+        const containers = selected.flatMap((manifest) => manifest.naming?.path_containers ?? []);
         if (language === undefined) continue;
         const name = language.configuration.name;
         const identifiers = await identifiersOf(
@@ -104,9 +93,11 @@ async function declaredNames(input: CheckInput): Promise<FileNames[]> {
         );
         files.push({
             path: file.path,
-            names: [fileIdentifier(file.path, name), ...directoryIdentifiers(file.path, name), ...identifiers].map(
-                (identifier) => identifier.name,
-            ),
+            names: [
+                fileIdentifier(file.path, name, containers),
+                ...directoryIdentifiers(file.path, name, containers),
+                ...identifiers,
+            ].map((identifier) => identifier.name),
         });
     }
     return files;
@@ -157,97 +148,6 @@ function namingCheck(
         );
         return analysis(input, policy);
     };
-}
-
-/**
- * The file's own name as an identifier: the stem for most languages, the whole base name for a SQL migration.
- * @param path the file path
- * @param language the language configuration the file belongs to
- * @returns the identifier
- */
-export function fileIdentifier(path: string, language: string): Identifier {
-    const base = posix.basename(path);
-    const name = language === 'sql' && base.endsWith('.sql') ? base : stemOf(base);
-    const named = name.startsWith('[') ? segmentName(name) : { name, category: 'files' };
-    return createIdentifier(
-        { file: path, language },
-        {
-            line: 1,
-            column: 1,
-            category: named.category,
-            name: named.name,
-        },
-    );
-}
-
-/**
- * Every directory on a file's path as an identifier, from the top down. Dot folders are skipped.
- * @param path the file path
- * @param language the language configuration the file belongs to
- * @returns the identifiers
- */
-export function directoryIdentifiers(path: string, language: string): Identifier[] {
-    const segments = path.split('/').slice(0, -1);
-    return segments.flatMap((segment, index) => {
-        const named = segment.startsWith('.') ? undefined : segmentName(segment);
-        if (named === undefined || named.name === '') return [];
-        const directory = segments.slice(0, index + 1).join('/');
-        return [
-            createIdentifier(
-                { file: path, language },
-                {
-                    line: 1,
-                    column: 1,
-                    category: named.category,
-                    name: named.name,
-                    directory,
-                },
-            ),
-        ];
-    });
-}
-
-/**
- * The identifiers a file declares, or none when no extractor reads its language.
- * @param file the file path
- * @param text the file text
- * @param language the language configuration the file belongs to
- * @param context optional execution reads and their resource owner
- * @returns the identifiers in document order
- */
-export async function identifiersOf(
-    file: string,
-    text: string,
-    language: string,
-    context?: Pick<CheckInput, 'reads' | 'resources'>,
-): Promise<Identifier[]> {
-    if (language === 'sql') return sqlIdentifiers(file, text, context?.reads);
-    const grammar = grammarFor(file, language);
-    if (grammar === undefined) return [];
-    const tree = await parseSource(grammar, text, context);
-    try {
-        let identifiers: Identifier[];
-        switch (grammar) {
-            case 'bash': {
-                identifiers = bashIdentifiers(tree.rootNode, file);
-                break;
-            }
-            case 'swift': {
-                identifiers = swiftIdentifiers(tree.rootNode, file);
-                break;
-            }
-            case 'python': {
-                identifiers = pythonIdentifiers(tree.rootNode, file);
-                break;
-            }
-            default: {
-                identifiers = typescriptIdentifiers(tree.rootNode, file, language);
-            }
-        }
-        return identifiers.toSorted((left, right) => left.line - right.line || left.column - right.column);
-    } finally {
-        tree.delete();
-    }
 }
 
 export const namingIdentifiers: BuiltInCheck = namingCheck(identifierFindings);

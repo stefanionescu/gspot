@@ -1,7 +1,7 @@
+import plugin from '#plugin/rules/public.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
-import { noAliasExports } from '#plugin/rules/no-alias-exports.ts';
 
-createRuleTester().run('no-alias-exports', noAliasExports, {
+createRuleTester().run('no-alias-exports', plugin.rules['no-alias-exports'], {
     valid: [
         'export const a = 1;',
         'export const a = build(b);',

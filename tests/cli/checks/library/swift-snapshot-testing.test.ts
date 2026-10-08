@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { detectUnselected } from '#cli/configurations/detect.ts';
-import { recording } from '#cli/checks/library/swift-snapshot-testing.ts';
+import { detectUnselected } from '#cli/configurations/selection/contracts.ts';
 import { PACKAGE_PROJECTS, DOCUMENTATION_LEVELS } from '#tests/config/cli/checks/library/swift-snapshot-testing.ts';
 
 test.each([
@@ -23,7 +23,9 @@ test.each([
         'Examples/Checks.swift': `import Testing\n@Test func checks() {\n    ${body}\n}\n`,
     });
     const session = await openSession(sandbox.path);
-    const findings = await recording(buildCheckInput(session, 'swift-snapshot-testing/recording'));
+    const findings = await BUILT_IN_CHECKS['swift-snapshot-testing/recording'].input(
+        buildCheckInput(session, 'swift-snapshot-testing/recording'),
+    );
     expect(findings).toHaveLength(count);
     if (count > 0) expect(findings[0]).toMatchObject({ file: 'Examples/Checks.swift', line: 3 });
 });

@@ -20,7 +20,7 @@ export const EXPECTED_READERS: ScopeReaderFindings[] = [
         nested: [{ file: 'apps/backend/messages/de.json' }],
     },
     {
-        check: 'site/security-headers',
+        check: 'cloudflare/security-headers',
         root: [],
         nested: [
             { file: 'apps/backend/_headers', rule: 'missing-header' },

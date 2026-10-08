@@ -1,4 +1,4 @@
-import { lintedPath, isIndexFile } from '#plugin/files.ts';
+import { lintedPath, isIndexFile } from '#plugin/public.ts';
 import { TRIVIAL_STATEMENTS } from '#plugin/config/syntax.ts';
 import type { ImplementedFunction } from '#plugin/types/syntax.ts';
 import { createRule, optionsSchema } from '#plugin/create-rule.ts';

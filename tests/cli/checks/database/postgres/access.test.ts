@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
-import { rls, grants } from '#cli/checks/database/postgres/access.ts';
 
 import {
     RLS_SOURCE,
@@ -39,7 +39,7 @@ test.each([...ACCESS_SCOPES])(
                 }),
             );
             const input = buildCheckInput(await openSession(sandbox.path), 'postgres/grants', { scope });
-            const findings = await grants(input);
+            const findings = await BUILT_IN_CHECKS['postgres/grants'].input(input);
             expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual(
                 files.map((path) => ({ file: `${prefix}${path}`, line: 1, rule: 'grant-all' })),
             );
@@ -72,7 +72,7 @@ test.each([...ACCESS_SCOPES])(
             [path]: RLS_SOURCE,
         });
         const input = buildCheckInput(await openSession(sandbox.path), 'postgres/rls', { scope });
-        expect(await rls(input)).toStrictEqual([
+        expect(await BUILT_IN_CHECKS['postgres/rls'].input(input)).toStrictEqual([
             {
                 check: 'postgres/rls',
                 file: path,
@@ -85,6 +85,6 @@ test.each([...ACCESS_SCOPES])(
         ]);
         await writeFile(join(sandbox.path, path), `${RLS_SOURCE}ALTER TABLE private_data ENABLE ROW LEVEL SECURITY;\n`);
         const corrected = buildCheckInput(await openSession(sandbox.path), 'postgres/rls', { scope });
-        expect(await rls(corrected)).toStrictEqual([]);
+        expect(await BUILT_IN_CHECKS['postgres/rls'].input(corrected)).toStrictEqual([]);
     },
 );

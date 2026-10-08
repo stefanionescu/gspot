@@ -1,14 +1,14 @@
 import { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
-import { toPosix } from '#cli/platform/paths.ts';
 import { commitAll } from '#tests/harness/git.ts';
 import { join, posix, relative } from 'node:path';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { prepare } from '#cli/commands/init/prepare.ts';
-import { writeSetup } from '#cli/commands/init/write.ts';
+import { toPosix } from '#cli/platform/contracts.ts';
+import { prepare } from '#cli/commands/init/public.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { writeSetup } from '#cli/commands/init/contracts.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { VALID_CSS, INVALID_CSS, TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
 import { KNIP_TAKEOVERS, STYLELINT_DISCOVERY } from '#tests/config/cli/generation/eslint/takeover.ts';

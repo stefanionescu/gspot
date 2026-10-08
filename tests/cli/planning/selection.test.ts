@@ -1,17 +1,16 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, symlink } from 'node:fs/promises';
-import { openSession } from '#cli/commands/session.ts';
-import { prepare } from '#cli/commands/init/prepare.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { prepare } from '#cli/commands/init/public.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { policySchema } from '#cli/policy/schema/policy.ts';
-import { applicableManifests } from '#cli/planning/requirements.ts';
+import { policySchema } from '#cli/policy/schema/public.ts';
+import { planRun, applicableManifests } from '#cli/planning/public.ts';
 import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 
 import {

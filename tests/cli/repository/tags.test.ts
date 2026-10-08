@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
-import { tagEntry } from '#cli/repository/tags.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { readRepository } from '#cli/repository/read.ts';
+import { readRepository } from '#cli/repository/public.ts';
+import { tagEntry } from '#cli/repository/discovery/contracts.ts';
 import { SHEBANG_CASES } from '#tests/config/cli/repository/tags.ts';
 
 test('tags come from extension, filename, shebang and content', async () => {

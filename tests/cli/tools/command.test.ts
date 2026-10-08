@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { runTool } from '#cli/tools/run.ts';
+import { runTool } from '#cli/tools/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 
 test('tool execution accepts literal arguments, stdin, and caller environment without policy', async () => {

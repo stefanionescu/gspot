@@ -1,7 +1,7 @@
 // Bound child processes by their test's remaining time and retain evidence when a step times out.
 import { spyOn, type Mock } from 'bun:test';
-import * as processes from '#cli/platform/spawn.ts';
-import { run, runBlocking } from '#cli/platform/spawn.ts';
+import * as processes from '#cli/platform/public.ts';
+import { run, runBlocking } from '#cli/platform/public.ts';
 import { TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import type { TestStep } from '#tests/types/harness/command.ts';
 import { STEP_ARGUMENTS } from '#tests/config/harness/command.ts';

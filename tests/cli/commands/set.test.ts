@@ -2,18 +2,18 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { readPolicy } from '#cli/policy/read.ts';
+import { readPolicy } from '#cli/policy/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { valueAt } from '#cli/platform/objects.ts';
+import { valueAt } from '#cli/platform/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
-import { knownSettings } from '#cli/policy/settings/known.ts';
-import { settingValue } from '#cli/policy/settings/lookup.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
+import { knownSettings } from '#cli/policy/settings/public.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
+import { settingValue } from '#cli/policy/settings/contracts.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { selectForScope } from '#cli/configurations/selection/public.ts';
 import { TAPLO_REASON, TAPLO_OPTIONS } from '#tests/config/samples/taplo.ts';
 
 import {

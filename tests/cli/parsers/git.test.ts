@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
-import { parseGitBlobs, parseGitEntries, parseIndexEntries } from '#cli/parsers/git.ts';
+import { parseGitBlobs, parseGitEntries, parseIndexEntries } from '#cli/parsers/contracts.ts';
 
 import {
     SHA1,

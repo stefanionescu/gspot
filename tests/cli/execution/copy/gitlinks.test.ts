@@ -2,16 +2,16 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { selectPush } from '#cli/repository/revisions/push.ts';
-import { doctorCommand } from '#cli/commands/doctor/command.ts';
-import { checkOutRevision } from '#cli/execution/copy/revision.ts';
+import { doctorCommand } from '#cli/commands/doctor/public.ts';
+import { checkOutRevision } from '#cli/execution/copy/public.ts';
+import { selectPush } from '#cli/repository/revisions/contracts.ts';
 import { mkdir, readdir, symlink, writeFile } from 'node:fs/promises';
-import { readIndexEntries, getSubmodulePaths } from '#cli/repository/tracked.ts';
-import { getBlobs, getEntries, getHeadEntries } from '#cli/repository/revisions/objects.ts';
+import { readIndexEntries, getSubmodulePaths } from '#cli/repository/contracts.ts';
+import { getBlobs, getEntries, getHeadEntries } from '#cli/repository/revisions/public.ts';
 
 test.each(['index', 'commit'] as const)(
     'a %s copy retains gitlinks without reading submodule contents',

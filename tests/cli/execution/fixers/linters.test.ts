@@ -1,13 +1,13 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import type { RunOptions } from '#cli/types/execution/check.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 
 test.each([
     {

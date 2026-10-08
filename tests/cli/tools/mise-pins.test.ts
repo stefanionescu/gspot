@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { duplicateMisePins } from '#cli/tools/mise.ts';
+import { duplicateMisePins } from '#cli/tools/public.ts';
 import { unlink, symlink, writeFile } from 'node:fs/promises';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
 import { DECLARED_TOOLS, DUPLICATE_CASES, MISE_DECLARATIONS } from '#tests/config/cli/tools/mise-pins.ts';

@@ -1,7 +1,6 @@
 import { BASH_CASES } from '#tests/config/samples/bash.ts';
-import * as postgres from '#tests/config/tools/configurations/postgres.ts';
-import * as supabase from '#tests/config/tools/configurations/supabase.ts';
-import * as libraries from '#tests/config/tools/configurations/libraries.ts';
+import * as libraries from '#tests/config/tools/configurations/library.ts';
+import * as postgres from '#tests/config/tools/configurations/database.ts';
 import * as toolXcode from '#tests/config/tools/configurations/tool/xcode.ts';
 import * as react from '#tests/config/tools/configurations/framework/react.ts';
 import * as toolDocker from '#tests/config/tools/configurations/tool/docker.ts';
@@ -16,10 +15,11 @@ import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.
 import * as generalFiles from '#tests/config/tools/configurations/general/files.ts';
 import * as languageHtml from '#tests/config/tools/configurations/language/html.ts';
 import type { BashBoundary, ConfigurationScenario } from '#tests/types/tools/cases.ts';
-import * as languagePython from '#tests/config/tools/configurations/language/python.ts';
 import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
 import * as frameworkNextjs from '#tests/config/tools/configurations/framework/nextjs.ts';
 import * as frameworkSvelte from '#tests/config/tools/configurations/framework/svelte.ts';
+import * as supabase from '#tests/config/tools/configurations/platform/supabase/checks.ts';
+import * as languagePython from '#tests/config/tools/configurations/language/python/checks.ts';
 import * as languageBashChecks from '#tests/config/tools/configurations/language/bash/checks.ts';
 import * as languageSwiftChecks from '#tests/config/tools/configurations/language/swift/checks.ts';
 import * as languageSwiftPackage from '#tests/config/tools/configurations/language/swift/package.ts';

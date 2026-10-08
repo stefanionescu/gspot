@@ -1,10 +1,9 @@
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { toolPin } from '#cli/configurations/pins.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { applicableManifests } from '#cli/planning/requirements.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
+import { planRun, applicableManifests } from '#cli/planning/public.ts';
 import { NODE_REQUIREMENTS } from '#tests/config/cli/planning/requirements.ts';
 
 test('a check version prerequisite cannot lower its tool-wide requirement', async () => {

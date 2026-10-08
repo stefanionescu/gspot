@@ -13,10 +13,10 @@
     },
     "type": "module",
     "main": "./dist/plugin.cjs",
-    "types": "./dist/plugin.d.ts",
+    "types": "./dist/rules/public.d.ts",
     "exports": {
         ".": {
-            "types": "./dist/plugin.d.ts",
+            "types": "./dist/rules/public.d.ts",
             "import": "./dist/plugin.js",
             "require": "./dist/plugin.cjs"
         }

@@ -1,12 +1,12 @@
-import type { Node } from 'web-tree-sitter';
 import { decodeHTMLAttribute } from 'entities';
 import { findingAt } from '#cli/checks/finding.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { getAttributes } from '#cli/parsers/html.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { ParsedSource } from '#cli/types/parsers/source.ts';
-import { visitParsedSources } from '#cli/parsers/tree-sitter.ts';
-import type { MarkupAttribute } from '#cli/types/checks/language/html.ts';
+import type { MarkupAttribute } from '#cli/types/parsers/html.ts';
+import { visitParsedSources } from '#cli/parsers/source/public.ts';
 
 import {
     LETTERS,
@@ -32,19 +32,6 @@ function withoutPlaceholders(text: string): string {
         }
     }
     return rest;
-}
-
-function getAttributes(element: Node): MarkupAttribute[] {
-    const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');
-    const name = tag?.namedChildren.find((child) => child.type === 'tag_name')?.text.toLowerCase() ?? '';
-    return (tag?.namedChildren ?? [])
-        .filter((child) => child.type === 'attribute')
-        .map((node) => ({
-            node,
-            element: name,
-            name: node.namedChildren[0]?.text.toLowerCase() ?? '',
-            value: (node.namedChildren[1]?.text ?? '').replaceAll(/^["']|["']$/gu, ''),
-        }));
 }
 
 // Script and active-document contexts can execute data URLs. Image and text resources are inert.

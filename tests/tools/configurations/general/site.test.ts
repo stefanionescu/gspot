@@ -2,7 +2,8 @@
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { initRepository } from '#tests/harness/install.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
@@ -10,12 +11,12 @@ import { buildInitArguments } from '#tests/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
-import { cachedBuild } from '#cli/checks/general/site/build.ts';
+import { linkinator } from '#cli/checks/general/site/public.ts';
+import { cachedBuild } from '#cli/checks/general/site/contracts.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { SITE_POLICY, SITE_BUILD_SCRIPT } from '#tests/config/samples/site.ts';
 import type { SiteOutputCase } from '#tests/types/tools/configurations/general/site.ts';
-import { purgecss, linkinator, htmlValidate } from '#cli/checks/general/site/output.ts';
 import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 
 import {
@@ -51,8 +52,8 @@ async function inspectSiteOutput(scenario: SiteOutputCase): Promise<void> {
     const { check, body, finding } = scenario;
     const analyze = {
         'site/linkinator': linkinator,
-        'site/html-validate': htmlValidate,
-        'site/purgecss': purgecss,
+        'site/html-validate': BUILT_IN_CHECKS['site/html-validate'].input,
+        'site/purgecss': BUILT_IN_CHECKS['site/purgecss'].input,
     }[check];
     const { root, environment } = testRepository;
     using resources = new DisposableStack();

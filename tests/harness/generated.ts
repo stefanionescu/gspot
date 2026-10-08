@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 // What a sandbox policy generates: the files its selected configurations write, and the ESLint instance its
 // configuration produces.
 

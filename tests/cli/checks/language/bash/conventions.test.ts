@@ -1,10 +1,10 @@
 // Shipped Bash defaults report unused functions and unnamed SSH heredocs without hiding other findings.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
 import { ONLY, SCRIPT } from '#tests/config/cli/checks/language/bash/conventions.ts';

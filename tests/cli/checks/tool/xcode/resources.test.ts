@@ -1,11 +1,11 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openRoot } from '#cli/platform/root/open.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { openRoot } from '#cli/platform/root/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { rm, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { ASSET_SETTING_CASES } from '#tests/config/cli/checks/tool/xcode/resources.ts';

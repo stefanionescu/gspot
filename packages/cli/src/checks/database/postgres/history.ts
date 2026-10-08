@@ -4,9 +4,9 @@ import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
+import { migrationsOf } from '#cli/checks/database/postgres/public.ts';
 import { MIGRATION_DOWN } from '#cli/config/checks/database/postgres.ts';
-import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
-import { getBlobs, getHeadEntries } from '#cli/repository/revisions/objects.ts';
+import { getBlobs, getHeadEntries } from '#cli/repository/revisions/public.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 
 const COMMITTED_MIGRATIONS_MEMO = { create: () => new Map<string, Promise<Map<string, string>>>() };

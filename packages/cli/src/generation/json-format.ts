@@ -1,5 +1,5 @@
 // JSON text the way Prettier prints it: objects one key per line, arrays on one line when they fit.
-import { isRecord } from '#cli/platform/objects.ts';
+import { isRecord } from '#cli/platform/contracts.ts';
 import type { JsonFormat } from '#cli/types/generation/formatting.ts';
 
 function primitive(value: unknown): string | undefined {

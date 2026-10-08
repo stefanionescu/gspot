@@ -5,16 +5,14 @@ import { getKeptMode } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { OWNERSHIP_BYTES } from '#tests/config/samples/ownership.ts';
-import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
-import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { planBlock, planReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { applyPlan, getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { planBlock, planReplacement, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 import { BLOCK_CASES, ADOPTED_FILE_CASES } from '#tests/config/cli/lifecycle/ownership/preservation/restoration.ts';
 
-const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
+const implementation = getCliSourcePath('lifecycle/ownership/public.ts');
 
 if (isPosix) {
     test('lifecycle ownership: giving back a twice replaced file deletes it, keeps unowned files, and keeps the log private', async () => {
@@ -213,9 +211,9 @@ test('Windows permission projection supports repeated log writes, idempotent rep
     const program = `
 Object.defineProperty(process, 'platform', {value: 'win32'});
 const {openOwnership} = await import(${JSON.stringify(implementation)});
-const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
-const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
-const {planRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/restoration.ts'))});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
+const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/public.ts'))});
+const {planRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/contracts.ts'))});
 let log = openOwnership(process.cwd());
 try {
     const first = applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'tool_file', canReplace: true}));

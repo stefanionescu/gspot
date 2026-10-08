@@ -1,14 +1,13 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { scopeView } from '#cli/policy/settings/view.ts';
-import { knownSettings } from '#cli/policy/settings/known.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { GOOD_IGNORE } from '#tests/config/cli/policy/read/recovery.ts';
-import { readPolicyText, parseStrictPolicy } from '#cli/policy/read.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { selectForScope } from '#cli/configurations/selection/public.ts';
+import { readPolicyText, parseStrictPolicy } from '#cli/policy/public.ts';
+import { scopeView, knownSettings } from '#cli/policy/settings/public.ts';
 
 test('forbidden ShellCheck settings in a scope are reported and removed at the scoped key', async () => {
     await using sandbox = await testdir();

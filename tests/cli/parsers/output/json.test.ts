@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
-import { parseJson } from '#cli/parsers/output/json.ts';
-import { parseOutput } from '#cli/parsers/output/parse.ts';
-import { parseAlerts } from '#cli/parsers/output/reports.ts';
+import { parseOutput } from '#cli/parsers/output/public.ts';
+import { parseAlerts } from '#cli/parsers/output/contracts.ts';
+import { parseJson } from '#cli/parsers/output/structured/public.ts';
 
 describe('JSON finding fields', () => {
     test('a flat list maps its fields to a finding', () => {

@@ -27,9 +27,9 @@ test('a linked-worktree hook keeps its custom index and HEAD while checking priv
             '#!/bin/sh\n"$GSPOT_HOOK_RUNTIME" "$GSPOT_HOOK_PROBE" "$GSPOT_HOOK_REVISION" "$GSPOT_HOOK_GIT" "$GSPOT_HOOK_TOOL" "$GSPOT_HOOK_REPORT"\n',
     });
     await chmod(join(sandbox.path, 'hook/pre-commit'), 0o755);
-    const revision = pathToFileURL(await Bun.resolve('#cli/execution/copy/revision.ts', import.meta.dir)).href;
-    const owner = pathToFileURL(await Bun.resolve('#cli/platform/git.ts', import.meta.dir)).href;
-    const tool = pathToFileURL(await Bun.resolve('#cli/tools/run.ts', import.meta.dir)).href;
+    const revision = pathToFileURL(await Bun.resolve('#cli/execution/copy/public.ts', import.meta.dir)).href;
+    const owner = pathToFileURL(await Bun.resolve('#cli/platform/git/public.ts', import.meta.dir)).href;
+    const tool = pathToFileURL(await Bun.resolve('#cli/tools/contracts.ts', import.meta.dir)).href;
     const report = join(sandbox.path, 'report.json');
     const result = git(worktree, ['-c', `core.hooksPath=${join(sandbox.path, 'hook')}`, 'commit', '-qm', 'hook'], {
         GIT_INDEX_FILE: index,

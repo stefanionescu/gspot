@@ -1,10 +1,9 @@
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
-import { runTool } from '#cli/tools/run.ts';
-import { GspotError } from '#cli/platform/errors.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
-import { addEnvironmentReference } from '#cli/tools/credentials.ts';
+import { runTool, addEnvironmentReference } from '#cli/tools/contracts.ts';
 import { yarnSettingSchema, yarnConfigEntrySchema, yarnConnectionSettingsSchema } from '#cli/parsers/schema/yarn.ts';
 
 import {

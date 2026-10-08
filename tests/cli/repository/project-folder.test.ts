@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { projectFolder } from '#cli/repository/scopes.ts';
+import { projectFolder } from '#cli/repository/paths/contracts.ts';
 
 test.each([
     ['api/package.json', 'package.json', 'api'],

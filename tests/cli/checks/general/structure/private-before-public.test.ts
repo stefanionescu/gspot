@@ -1,12 +1,12 @@
 import { test, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
-import { privateBeforePublic } from '#cli/checks/general/structure/private-before-public.ts';
 
 test('a private Swift setter leaves its getter visible to other files', async () => {
     const text = 'private(set) var count = 0\nprivate func hidden() {}\n';
@@ -15,7 +15,9 @@ test('a private Swift setter leaves its getter visible to other files', async ()
         'gspot.toml': buildPolicy(['swift'], { level: 'all' }),
     });
     expect(
-        await privateBeforePublic(buildCheckInput(await openSession(sandbox.path), 'structure/private-before-public')),
+        await BUILT_IN_CHECKS['structure/private-before-public'].input(
+            buildCheckInput(await openSession(sandbox.path), 'structure/private-before-public'),
+        ),
     ).toMatchObject([
         {
             file: 'Counter.swift',
@@ -97,6 +99,8 @@ test('a private function declared under a public one is reported while private d
         'example/order.py': `${PYTHON_MODULE_HEADER}def shown() -> int:\n    """Give one."""\n    return _part()\n\n\ndef _part() -> int:\n    """Give one part."""\n    return 1\n`,
     });
     expect(
-        await privateBeforePublic(buildCheckInput(await openSession(sandbox.path), 'structure/private-before-public')),
+        await BUILT_IN_CHECKS['structure/private-before-public'].input(
+            buildCheckInput(await openSession(sandbox.path), 'structure/private-before-public'),
+        ),
     ).toMatchObject([{ file: 'example/order.py', line: 9, rule: 'private-before-public' }]);
 });

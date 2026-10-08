@@ -3,8 +3,8 @@ import type { Ignore } from 'ignore';
 import type { Dirent } from 'node:fs';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { GitIndexEntry } from '#cli/types/parsers/git.ts';
-import type { runnerSchema } from '#cli/parsers/schema/settings.ts';
 import type { POLICY_FILE } from '#cli/config/platform/locations.ts';
+import type { runnerSchema } from '#cli/parsers/schema/contracts.ts';
 import type { fileKindSchema, vendoredSchema, generatedSchema } from '#cli/parsers/schema/inventory.ts';
 
 export type PathIgnore = { base: string; matcher: Ignore };

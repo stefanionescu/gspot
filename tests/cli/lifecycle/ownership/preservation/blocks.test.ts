@@ -2,11 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { applyBlock } from '#cli/platform/managed-blocks.ts';
-import { planBlock } from '#cli/lifecycle/ownership/plans.ts';
-import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { applyBlock } from '#cli/platform/root/contracts.ts';
+import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { planBlock, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 
 test('managed block updates and removal preserve authored bytes and subsequent surrounding edits', async () => {
     await using directory = await testdir();

@@ -3,10 +3,10 @@ import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { SWAP_CASES } from '#tests/config/cli/lifecycle/ownership/installations.ts';
 import { rm, lstat, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
-import { installTree, readInstalledTree, deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
+import { installTree, readInstalledTree, deleteInstallation } from '#cli/lifecycle/ownership/state/public.ts';
 
 test('an installation is one record, and removing it deletes the folder', async () => {
     await using directory = await testdir();

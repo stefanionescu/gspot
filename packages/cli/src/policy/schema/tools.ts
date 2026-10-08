@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { quoteArgument } from '#cli/platform/text.ts';
-import { relativePath } from '#cli/policy/schema/fields.ts';
+import { quoteArgument } from '#cli/platform/contracts.ts';
+import { relativePath } from '#cli/policy/schema/contracts.ts';
 import ESLINT_RUNTIMES from '../../../configurations/language/javascript/runtime-names.json' with { type: 'json' };
 
 import {

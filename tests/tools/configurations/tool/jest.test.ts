@@ -7,7 +7,25 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildSandboxPath } from '#tests/harness/install.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { SOURCE, TEST_SOURCE, CORRECTED_TEST_SOURCE } from '#tests/config/tools/configurations/tool/jest.ts';
+
+import {
+    SOURCE,
+    TEST_SOURCE,
+    JEST_PROJECT_FILES,
+    CORRECTED_TEST_SOURCE,
+} from '#tests/config/tools/configurations/tool/jest.ts';
+
+// Coverage findings and load failures share the native root project inputs.
+function prepareJest(root: string, testSource: string) {
+    return createFileTree(root, {
+        'gspot.toml': buildPolicy(['jest'], {
+            tables: '[coverage]\nlines = 80\nbranches = 80\nfunctions = 80\nstatements = 80\n',
+            level: 'all',
+        }),
+        ...JEST_PROJECT_FILES,
+        'math.test.cjs': testSource,
+    });
+}
 
 test('native Jest at all applies nested coverage settings without executing sibling tests', async () => {
     await using sandbox = await testdir();
@@ -38,23 +56,12 @@ test('native Jest at all applies nested coverage settings without executing sibl
     expect((JSON.parse(passing.stdout) as RunReport).checks).toMatchObject([
         { check: 'jest/coverage', scope: 'app', status: 'passed', findings: [] },
     ]);
-    expect((JSON.parse(passing.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'app/authored.txt'), 'utf8')).toBe('preserved nested source\n');
 });
 
 test('native Jest at all reports uncovered functions and failed tests while preserving working-tree files', async () => {
     await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['jest'], {
-            tables: '[coverage]\nlines = 80\nbranches = 80\nfunctions = 80\nstatements = 80\n',
-            level: 'all',
-        }),
-        'package.json': '{"name":"jest-acceptance","private":true,"devDependencies":{"jest":"30.2.0"}}\n',
-        'math.cjs': SOURCE,
-        'math.test.cjs': TEST_SOURCE,
-        'authored.txt': 'preserved source\n',
-        'coverage/authored.txt': 'preserved report\n',
-    });
+    await prepareJest(sandbox.path, TEST_SOURCE);
     const environment = { PATH: buildSandboxPath([]) };
     const command = ['check', '--only', 'jest/coverage', '--json'];
     const uncovered = await spawnGspot(sandbox.path, command, environment);
@@ -73,14 +80,22 @@ test('native Jest at all reports uncovered functions and failed tests while pres
     expect((JSON.parse(passing.stdout) as RunReport).checks).toMatchObject([
         { check: 'jest/coverage', status: 'passed', findings: [] },
     ]);
-    expect((JSON.parse(passing.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([]);
     await Bun.write(join(sandbox.path, 'math.test.cjs'), CORRECTED_TEST_SOURCE.replace('toBe(6)', 'toBe(7)'));
     const failed = await spawnGspot(sandbox.path, command, environment);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
         containing({ rule: 'test-failure', file: 'math.test.cjs', line: 4 }),
     ]);
-    await Bun.write(join(sandbox.path, 'math.test.cjs'), 'require("./missing-test-dependency.cjs");\n');
+    expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('preserved source\n');
+    expect(await readFile(join(sandbox.path, 'coverage/authored.txt'), 'utf8')).toBe('preserved report\n');
+    expect(await readFile(join(sandbox.path, 'math.cjs'), 'utf8')).toBe(SOURCE);
+});
+
+test('native Jest reports a test file that cannot load as an execution error and passes after the fix', async () => {
+    await using sandbox = await testdir();
+    await prepareJest(sandbox.path, 'require("./missing-test-dependency.cjs");\n');
+    const environment = { PATH: buildSandboxPath([]) };
+    const command = ['check', '--only', 'jest/coverage', '--json'];
     const unavailable = await spawnGspot(sandbox.path, command, environment);
     expect(unavailable.code, unavailable.stdout + unavailable.stderr).toBe(2);
     expect((JSON.parse(unavailable.stdout) as RunReport).checks).toStrictEqual([

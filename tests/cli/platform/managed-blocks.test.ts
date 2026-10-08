@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { blockSpan, applyBlock, currentBlock } from '#cli/platform/managed-blocks.ts';
+import { blockSpan, applyBlock, currentBlock } from '#cli/platform/root/contracts.ts';
 import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/config/cli/platform/managed-blocks.ts';
 
 test('are appended and replaced without changing authored text', () => {

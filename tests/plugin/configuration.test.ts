@@ -1,10 +1,10 @@
 import { Linter } from 'eslint';
-import plugin from '#plugin/plugin.ts';
+import plugin from '#plugin/rules/public.ts';
 import { test, expect, describe } from 'bun:test';
-import { readAsset } from '#cli/platform/assets.ts';
+import { readAsset } from '#cli/platform/root/public.ts';
 import packageManifest from '#plugin-package' with { type: 'json' };
 import { ENVIRONMENT_GLOBALS } from '#tests/config/plugin/environment.ts';
-import { captureEslintPreset, eslintPresetsSchema } from '#cli/parsers/schema/eslint.ts';
+import { captureEslintPreset, eslintPresetsSchema } from '#cli/parsers/schema/public.ts';
 
 test('the shipped recommended preset agrees with the plugin', () => {
     const presets = eslintPresetsSchema.parse(

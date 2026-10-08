@@ -1,19 +1,18 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
+import { emitAll } from '#cli/generation/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { computeDrift } from '#cli/lifecycle/drift.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { packageLockfile } from '#cli/parsers/packages.ts';
-import { prepareToolProjects } from '#cli/tools/project.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { prepareToolProjects } from '#cli/tools/public.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { packageLockfile } from '#cli/parsers/packages/contracts.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
+import { computeDrift, writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
 
 // Resolve normal immutable inputs without installing an environment before either repair journey.
@@ -48,11 +47,7 @@ test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' 
             expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
         }
         // Yarn 1 writes resolved URLs into its lockfile; the private registry must not be among them.
-        expect(
-            installer === 'yarn' &&
-                sandbox.version.startsWith('1.') &&
-                lockfile.toString('utf8').includes(registry.url),
-        ).toBe(false);
+        if (installer === 'yarn') expect(lockfile.toString('utf8')).not.toContain(registry.url);
         const stale = lockfile.toString('utf8').replaceAll(prettierManifest.version, '0.0.0');
         await chmod(lockfilePath, 0o644);
         await writeFile(lockfilePath, stale);

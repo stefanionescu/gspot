@@ -28,20 +28,23 @@ title = "Declare every Drizzle relation"
 example = "An exported `orders` table whose column uses `.references(() => users.id)` reports `relations` when the scope has no `relations(orders, ...)` declaration. Add that declaration with the table's actual relationships and rerun. The check recognizes the supported source forms; it does not execute the schema."
 level = "all"
 stage = "commit"
+runs = "scope"
 files = { extensions = [".ts"] }
 summary = "Checks that every table with a reference has a relations entry."
-why = "The query builder joins through relations, so a reference without one works in SQL and is missing in code."
+why = "Relational queries through `db.query` read relations. SQL joins do not need them."
 help = "Add a relations call for the table."
 
 [[check]]
-name = "migrations-fresh"
+name = "stale-migrations"
+command = ["drizzle-kit", "generate"]
+generated_paths = [{ pattern = "**/*" }]
 title = "Keep Drizzle migrations current"
 example = "Changing a Drizzle schema without generating its migration reports drift. Run `drizzle-kit generate` with the project configuration, inspect the new migration, and retain it before rerunning."
 level = "recommended"
 stage = "push"
 runs = "scope"
 tool = "drizzle-kit"
-files = { extensions = [".ts", ".sql"] }
+files = { paths = ["drizzle.config.ts", "drizzle.config.js", "drizzle.config.mts", "drizzle.config.mjs", "drizzle.config.cts", "drizzle.config.cjs"] }
 summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
 why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
 help = "Run drizzle-kit generate and commit the migration."

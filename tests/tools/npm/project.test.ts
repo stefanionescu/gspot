@@ -1,21 +1,19 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
-import { emitAll } from '#cli/generation/files.ts';
-import { inspectTool } from '#cli/tools/inspect.ts';
-import { computeDrift } from '#cli/lifecycle/drift.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { installTools } from '#cli/lifecycle/install.ts';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { prepareToolProjects } from '#cli/tools/project.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { installTools } from '#cli/lifecycle/install/public.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { stat, readdir, readFile, writeFile } from 'node:fs/promises';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
+import { inspectTool, prepareToolProjects } from '#cli/tools/public.ts';
+import { computeDrift, writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import { readPackageInputs, createPackageProject } from '#tests/harness/npm.ts';
 import type { PackageInputs, PackageProject } from '#tests/types/harness/npm.ts';
 

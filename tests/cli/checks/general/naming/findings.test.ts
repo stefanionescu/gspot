@@ -1,11 +1,11 @@
 import { test, expect, describe } from 'bun:test';
-import { pathMatcher } from '#cli/repository/selectors.ts';
+import { allChecks } from '#cli/configurations/contracts.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
-import { allChecks } from '#cli/configurations/declarations.ts';
-import { compileTerms } from '#cli/checks/general/naming/policy.ts';
+import { compileTerms } from '#cli/checks/general/naming/contracts.ts';
 import type { EffectivePolicy } from '#cli/types/checks/general/naming.ts';
-import { bannedTerm, nameFindings } from '#cli/checks/general/naming/findings.ts';
-import { namingTerms, configurationManifests } from '#cli/configurations/manifests.ts';
+import { bannedTerm, nameFindings } from '#cli/checks/general/naming/public.ts';
+import { namingTerms, configurationManifests } from '#cli/configurations/public.ts';
 
 const policy: EffectivePolicy = {
     terms: compileTerms(['enhanced', 'handler'], { source: 'marketing group', group: 'marketing' }),
@@ -75,7 +75,7 @@ const policy: EffectivePolicy = {
 
 const owned = allChecks(configurationManifests().values()).get('naming/identifiers');
 if (owned === undefined) throw new Error('The naming/identifiers declaration is missing.');
-const plain = { check: owned.check, policy, isReactFile: false, isTestFile: false };
+const plain = { check: owned.check, policy, isTestFile: false };
 
 function identifier(name: string, category = 'functions', file = 'src/a.ts', language = 'typescript'): Identifier {
     return { file, line: 1, column: 1, language, category, kind: `${language} ${category}`, name };
@@ -127,13 +127,39 @@ describe('nameFindings', () => {
         expect(nameFindings(identifier('config', 'directories'), plain)).toStrictEqual([]);
         expect(nameFindings(identifier('configOf'), plain)[0]?.rule).toBe('reserved-term');
     });
+});
 
-    test('handle leads a name only in a React file', () => {
-        expect(nameFindings(identifier('handleSubmit'), plain)[0]?.rule).toBe('callback-verb');
-        expect(
-            nameFindings(identifier('handleSubmit'), { ...plain, policy, isReactFile: true, isTestFile: false }),
-        ).toStrictEqual([]);
-    });
+test('selected prefix rules permit functions and methods and reject variables without a file-extension exception', () => {
+    const rule = {
+        ...policy.rules[3]!,
+        matches: pathMatcher(['src/**']),
+        languages: new Set(['typescript', 'javascript']),
+        structuralPrefix: /^handle(?=[A-Z])/u,
+        categories: new Set(['functions', 'methods']),
+    };
+    const selected = { ...plain, policy: { ...policy, rules: [...policy.rules, rule] } };
+    for (const file of ['src/a.ts', 'src/a.tsx', 'src/a.js', 'src/a.jsx']) {
+        for (const category of ['functions', 'methods'])
+            expect(nameFindings(identifier('handleSubmit', category, file), selected)).toStrictEqual([]);
+        expect(nameFindings(identifier('handleSubmit', 'variables', file), selected)).toMatchObject([
+            {
+                rule: 'callback-verb',
+                message:
+                    'typescript variables "handleSubmit": "handle" leads a name only in a callback position; name what the function does.',
+            },
+        ]);
+    }
+    expect(nameFindings(identifier('handleSubmit'), plain)).toStrictEqual([]);
+    expect(nameFindings(identifier('handleSubmit', 'variables', 'other/a.ts'), selected)).toStrictEqual([]);
+    expect(nameFindings(identifier('handlebar', 'variables'), selected)).toStrictEqual([]);
+    for (const name of ['HandleSubmit', 'handleSubmit_now', 'handleSubmit-Now'])
+        expect(nameFindings(identifier(name), selected).map(({ rule }) => rule)).toContain('case');
+    expect(
+        nameFindings(identifier('useSubmit', 'variables'), {
+            ...selected,
+            policy: { ...policy, rules: [{ ...rule, structuralPrefix: /^use(?=[A-Z])/u }] },
+        })[0]?.message,
+    ).toContain('"use"');
 });
 
 test('the words of the shipped tests group pass in a test file and fail elsewhere', () => {
@@ -142,12 +168,8 @@ test('the words of the shipped tests group pass in a test file and fail elsewher
     );
     const shipped = { ...policy, terms };
     const specimen = identifier('testcaseCount', 'variables');
-    expect(nameFindings(specimen, { ...plain, policy: shipped, isReactFile: false, isTestFile: true })).toStrictEqual(
-        [],
-    );
-    expect(nameFindings(specimen, { ...plain, policy: shipped, isReactFile: false, isTestFile: false })[0]?.rule).toBe(
-        'banned-term',
-    );
+    expect(nameFindings(specimen, { ...plain, policy: shipped, isTestFile: true })).toStrictEqual([]);
+    expect(nameFindings(specimen, { ...plain, policy: shipped, isTestFile: false })[0]?.rule).toBe('banned-term');
 });
 
 test('test exemptions use the group identity independently of its display label', () => {

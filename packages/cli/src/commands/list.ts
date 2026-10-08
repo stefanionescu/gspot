@@ -1,19 +1,18 @@
 import { resolve } from 'node:path';
-import { compact } from '#cli/platform/objects.ts';
-import { findRoot } from '#cli/repository/root.ts';
-import { commandHelp } from '#cli/commands/help.ts';
+import { compact } from '#cli/platform/contracts.ts';
 import type { Session } from '#cli/types/planning.ts';
+import { printResult } from '#cli/terminal/public.ts';
 import { Argument } from '@commander-js/extra-typings';
-import { openSession } from '#cli/commands/session.ts';
-import { printResult } from '#cli/terminal/messages.ts';
-import { selectionStatus } from '#cli/planning/skips.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
+import { selectionStatus } from '#cli/planning/contracts.ts';
 import type { Program } from '#cli/types/commands/program.ts';
-import { everyManifest } from '#cli/configurations/select.ts';
-import { detectUnselected } from '#cli/configurations/detect.ts';
+import { findRoot } from '#cli/repository/discovery/contracts.ts';
+import { commandHelp, openSession } from '#cli/commands/public.ts';
 import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/options.ts';
-import { everyTable, listSettings } from '#cli/policy/settings/lookup.ts';
+import { everyManifest } from '#cli/configurations/selection/public.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { everyTable, listSettings } from '#cli/policy/settings/contracts.ts';
+import { detectUnselected } from '#cli/configurations/selection/contracts.ts';
 import type { SettingsListing, SettingsListJson, ConfigurationsListJson } from '#cli/types/commands/list.ts';
 
 function scopeTag(scope: string | undefined): string {

@@ -5,11 +5,11 @@ import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 
 test('a missing tool fails with the install hint', async () => {
     await using sandbox = await testdir();

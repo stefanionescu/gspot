@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { getTsconfig } from '#cli/parsers/tsconfig.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { aliasesFor } from '#cli/repository/aliases.ts';
+import { aliasesFor } from '#cli/repository/contracts.ts';
 import { mkdir, symlink, writeFile } from 'node:fs/promises';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
+import { getTsconfig } from '#cli/parsers/packages/public.ts';
 import { ALIAS_INPUTS, ALIAS_PROJECT } from '#tests/config/cli/repository/aliases.ts';
 
 test.each(ALIAS_INPUTS)('alias reads report malformed $path', async ({ path, diagnostic }) => {

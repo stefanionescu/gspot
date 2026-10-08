@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { readPolicy } from '#cli/policy/read.ts';
 import { rm, writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
+import { readPolicy } from '#cli/policy/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readTree } from '#tests/harness/preservation.ts';

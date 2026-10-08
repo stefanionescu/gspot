@@ -1,5 +1,5 @@
 // What init replaces: the configuration files of the selected tools, read before anything is written.
-import { openRoot } from '#cli/platform/root/open.ts';
+import { openRoot } from '#cli/platform/root/public.ts';
 import type { Replaced } from '#cli/types/commands/init.ts';
 import type { EmittedToolFile } from '#cli/types/generation/files.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';

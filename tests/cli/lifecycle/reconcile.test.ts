@@ -1,12 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { preparePolicy } from '#cli/policy/edit.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { applicableManifests } from '#cli/planning/requirements.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { preparePolicy } from '#cli/policy/document/contracts.ts';
 import { COMPONENTS } from '#tests/config/cli/lifecycle/reconcile.ts';
-import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
+import { planRun, applicableManifests } from '#cli/planning/public.ts';
+import { reconcileConfigurations } from '#cli/lifecycle/selection/contracts.ts';
 
 test.each(COMPONENTS)('reconciliation retains CSS tooling for embedded styles in $path', async ({ path, source }) => {
     await using sandbox = await testdir();

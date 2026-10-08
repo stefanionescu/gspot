@@ -3,9 +3,9 @@ import { mkdir } from 'node:fs/promises';
 import { parse, stringify } from 'smol-toml';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { policySchema } from '#cli/policy/schema/policy.ts';
+import { policySchema } from '#cli/policy/schema/public.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
-import { readPolicy, readPolicyText, parseStrictPolicy } from '#cli/policy/read.ts';
+import { readPolicy, readPolicyText, parseStrictPolicy } from '#cli/policy/public.ts';
 
 import {
     DISABLED_RULES,

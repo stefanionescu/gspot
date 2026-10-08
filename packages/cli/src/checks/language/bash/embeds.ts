@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
+import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 import { RUNTIME_EMBEDS } from '#cli/config/checks/language/bash.ts';
-import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 /**
  * One finding per line that embeds another runtime.

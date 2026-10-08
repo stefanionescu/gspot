@@ -4,15 +4,15 @@ import { throws } from 'node:assert/strict';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, writeFile } from 'node:fs/promises';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { readRepository } from '#cli/repository/read.ts';
+import { readRepository } from '#cli/repository/public.ts';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';
+import { readPackageManifests } from '#cli/repository/contracts.ts';
 import { runtimeEvidenceCases } from '#tests/harness/repository.ts';
 import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
-import { readPackageManifests } from '#cli/repository/package-manifests.ts';
-import { detectUnselected, detectConfigurations } from '#cli/configurations/detect.ts';
-import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/manifests.ts';
+import { detectUnselected, detectConfigurations } from '#cli/configurations/selection/contracts.ts';
+import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/public.ts';
 
 import {
     SWIFT_TEST_CASES,

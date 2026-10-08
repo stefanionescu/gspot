@@ -1,16 +1,16 @@
 import executables from 'which';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
+import { inspectTool } from '#cli/tools/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { inspectTool } from '#cli/tools/inspect.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { chmod, mkdir, symlink } from 'node:fs/promises';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { PACKAGE_METADATA_FAILURES } from '#tests/config/cli/tools/versions.ts';
 
 test.each([

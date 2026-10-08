@@ -6,15 +6,17 @@ import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { toolPin } from '#cli/configurations/pins.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { parseToolProject } from '#cli/parsers/packages.ts';
-import { policySchema } from '#cli/policy/schema/policy.ts';
+import { policySchema } from '#cli/policy/schema/public.ts';
+import { applicableManifests } from '#cli/planning/public.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
+import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { npmPins, pythonPins } from '#cli/configurations/contracts.ts';
+import { readPolicyText, parseStrictPolicy } from '#cli/policy/public.ts';
 import { COMPONENT, SELECTION_INIT } from '#tests/config/cli/commands/init/selection.ts';
 
 test('accepting defaults leaves the detected initialization plan unchanged', async () => {
@@ -163,19 +165,22 @@ test('init previews only applicable tool projects and duplicate pins for the sel
     });
     const result = await runGspot(sandbox.path, [...SELECTION_INIT, '--configurations', 'python', ...QUIET_INIT]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
-    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
-    const manifests = configurationManifests();
-    const pythonTools = manifests.get('python')!.tools.filter((tool) => tool.installers['pypi'] !== undefined);
-    const npmTools = [...manifests.get('files')!.tools, toolPin(manifests.values(), 'ec')].filter(
-        (tool) => tool.installers['npm'] !== undefined,
+    const { plan, policy } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'policy'>>;
+    const selected = applicableManifests(
+        await openSession(sandbox.path, {
+            ...readPolicyText(policy, sandbox.path),
+            path: join(sandbox.path, 'gspot.toml'),
+            text: policy,
+        }),
     );
+    const packages = npmPins(selected, undefined);
     expect(plan.change).toContainEqual({
         path: '.gspot/pyproject.toml',
-        note: `${String(pythonTools.length)} pinned Python tools; matching uv.lock and tool environment`,
+        note: `${String(pythonPins(selected).length)} pinned Python tools; matching uv.lock and tool environment`,
     });
     expect(plan.change).toContainEqual({
         path: '.gspot/package.json',
-        note: `${String(npmTools.length)} pinned npm tools; matching lockfile`,
+        note: `${String(Object.keys(packages).length)} pinned npm tools; matching lockfile`,
     });
     expect(plan.noLongerRuns).toStrictEqual([
         { path: 'mise.toml', note: '1 pin gspot also pins (gspot doctor lists them)' },
@@ -190,9 +195,7 @@ test('init previews only applicable tool projects and duplicate pins for the sel
     ]);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const installed = parseToolProject(await Bun.file(join(sandbox.path, '.gspot/package.json')).text());
-    expect(Object.keys(installed.dependencies)).toStrictEqual(
-        npmTools.map((tool) => tool.installers['npm']!.name).toSorted((a, b) => a.localeCompare(b)),
-    );
+    expect(Object.keys(installed.dependencies)).toStrictEqual(Object.keys(packages));
 });
 
 test.each(['recommended', 'all'] as const)('init counts active and disabled checks at %s', async (level) => {

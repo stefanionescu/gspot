@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { valueAt } from '#cli/platform/objects.ts';
+import { valueAt } from '#cli/platform/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';

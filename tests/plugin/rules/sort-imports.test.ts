@@ -1,7 +1,7 @@
-import { sortImports } from '#plugin/rules/sort-imports.ts';
+import plugin from '#plugin/rules/public.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
 
-createRuleTester().run('sort-imports', sortImports, {
+createRuleTester().run('sort-imports', plugin.rules['sort-imports'], {
     valid: [
         "import 'long-side-effect';\nimport 'a';",
         "import { long } from 'long';\nimport 'effect';\nimport a from 'a';",
@@ -72,7 +72,7 @@ createRuleTester().run('sort-imports', sortImports, {
     ],
 });
 
-createRuleTester('/repo', { sourceType: 'commonjs' }).run('sort-imports CommonJS', sortImports, {
+createRuleTester('/repo', { sourceType: 'commonjs' }).run('sort-imports CommonJS', plugin.rules['sort-imports'], {
     valid: [
         {
             code: "require('long-side-effect');\nrequire('a');",

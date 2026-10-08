@@ -1,13 +1,13 @@
 import { test, expect } from 'bun:test';
-import { readPolicy } from '#cli/policy/read.ts';
+import { readPolicy } from '#cli/policy/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildBinaryPin } from '#tests/harness/pins.ts';
 import { useEnvironment } from '#tests/harness/environment.ts';
-import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { toolPin, toolProjectPackage } from '#cli/configurations/pins.ts';
+import { inspectTool, toolAvailability } from '#cli/tools/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
+import { toolPin, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { NATIVE_HINTS, TOOL_PROJECT_PACKAGES } from '#tests/config/cli/configurations/pins.ts';
 
 test.each([...TOOL_PROJECT_PACKAGES])(

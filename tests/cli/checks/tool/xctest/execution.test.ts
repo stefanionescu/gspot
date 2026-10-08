@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import * as spawn from '#cli/platform/spawn.ts';
-import { executeRun } from '#cli/execution/run.ts';
+import * as spawn from '#cli/platform/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isMacos } from '#tests/config/harness/platforms.ts';
-import { buildFolder } from '#cli/checks/language/swift/cache.ts';
 import { useCacheDirectory } from '#tests/harness/environment.ts';
+import { buildFolder } from '#cli/checks/language/swift/public.ts';
 import { rm, chmod, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { SHEBANG, XCTEST_FAILURES, XCTEST_EXECUTION_POLICY } from '#tests/config/cli/checks/tool/xctest/execution.ts';
 

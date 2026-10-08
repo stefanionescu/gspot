@@ -1,13 +1,13 @@
 import { ESLint } from 'eslint';
 import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
-import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { toPosix } from '#cli/platform/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { parseOutput } from '#cli/parsers/output/parse.ts';
-import { eslintFilePatterns } from '#cli/generation/eslint/serialize.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { parseOutput } from '#cli/parsers/output/public.ts';
+import { eslintFilePatterns } from '#cli/generation/eslint/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 
 import {
     NODE_SCRIPT_CASES,

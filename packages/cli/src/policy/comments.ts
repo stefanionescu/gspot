@@ -1,11 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
-import { tomlRange } from '#cli/parsers/toml/nodes.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import type { TomlTable } from '#cli/types/policy/settings.ts';
-import { tomlCommentOwners } from '#cli/parsers/toml/comments.ts';
 import { POLICY_PROVENANCE_PREFIXES } from '#cli/config/policy/file.ts';
+import { tomlRange, tomlCommentOwners } from '#cli/parsers/toml/contracts.ts';
 import type { Comment, TomlSyntax, TomlComments, TomlCommentOwner } from '#cli/types/parsers/toml.ts';
-import { valueAt, isRecord, createTable, isRecordArray, normalizeTables } from '#cli/platform/objects.ts';
+import { valueAt, isRecord, createTable, isRecordArray, normalizeTables } from '#cli/platform/contracts.ts';
 
 function sameValue(left: unknown, right: unknown): boolean {
     return isDeepStrictEqual(normalizeTables(left), normalizeTables(right));

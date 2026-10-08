@@ -1,17 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { npmProject } from '#cli/generation/npm.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { YARN_MANAGERS } from '#tests/config/samples/npm.ts';
+import { emitAll, npmProject } from '#cli/generation/public.ts';
 import { NPM_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';
-import { toolProjectSchema } from '#cli/parsers/schema/packages.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { parseToolProject, getPackageInstallerMajor } from '#cli/parsers/packages.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { TOOL_REQUIREMENTS, NEXT_INSTALLATIONS } from '#tests/config/cli/generation/npm.ts';
+import { parseToolProject, toolProjectSchema, getPackageInstallerMajor } from '#cli/parsers/packages/contracts.ts';
 
 test.each(YARN_MANAGERS)(
     'Yarn $installer.version selects compatible generated settings and native lockfile creation',

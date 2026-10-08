@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { parseToolProject } from '#cli/parsers/packages.ts';
 import { emitFile, createEslint } from '#tests/harness/generated.ts';
+import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
 import type { FileRuleFinding } from '#tests/types/generation/findings.ts';
 

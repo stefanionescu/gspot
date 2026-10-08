@@ -1,21 +1,20 @@
 import executables from 'which';
 import { join } from 'node:path';
-import { runTool } from '#cli/tools/run.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { readPolicy } from '#cli/policy/read.ts';
+import { inspectTool } from '#cli/tools/public.ts';
+import { readPolicy } from '#cli/policy/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { inspectTool } from '#cli/tools/inspect.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
+import * as environment from '#cli/platform/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { locateCandidates } from '#cli/tools/locate.ts';
-import * as environment from '#cli/platform/environment.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { chmod, mkdir, unlink, symlink } from 'node:fs/promises';
+import { runTool, locateCandidates } from '#cli/tools/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 test.skipIf(!isPosix)(
     'the tool inspection > version inspections and tool execution prefer helpers from the selected installation',

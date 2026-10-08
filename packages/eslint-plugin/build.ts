@@ -12,7 +12,7 @@ await rm(distribution, { recursive: true, force: true });
 await mkdir(distribution);
 for (const [format, name] of BUILD_FORMATS) {
     const result = await Bun.build({
-        entrypoints: [join(root, 'src/plugin.ts')],
+        entrypoints: [join(root, 'src/rules/public.ts')],
         outdir: distribution,
         naming: name,
         format,

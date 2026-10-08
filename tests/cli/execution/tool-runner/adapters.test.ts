@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
 import { chmod, writeFile } from 'node:fs/promises';
+import * as processes from '#cli/platform/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { waitForFile } from '#tests/harness/process.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';

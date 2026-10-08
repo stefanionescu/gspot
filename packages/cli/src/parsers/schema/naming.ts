@@ -22,6 +22,13 @@ export const namingOverrideSchema = z.strictObject({
     reason: z.string().optional(),
 });
 
+/** Framework punctuation around a named path segment. */
+export const pathContainerSchema = z.strictObject({
+    open: z.string().min(1),
+    close: z.string(),
+    category: identifierCategory,
+});
+
 /** Naming lists and their defaults, before per-language tables are added. */
 export const namingLists = z.object({
     banned: z.array(z.string()).default([]),

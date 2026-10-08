@@ -1,24 +1,24 @@
 // Every flag a manifest command passes exists in the pinned tool: the tool's own help text says so.
 import { join } from 'node:path';
-import { readPolicy } from '#cli/policy/read.ts';
+import { readPolicy } from '#cli/policy/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { inspectTool } from '#cli/tools/inspect.ts';
-import { npmProject } from '#cli/generation/npm.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { pythonProject } from '#cli/generation/python.ts';
+import { npmProject } from '#cli/generation/public.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { installToolProject } from '#cli/tools/contracts.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { pythonProject } from '#cli/generation/contracts.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
-import { packageToolProject } from '#cli/tools/npm/project.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { pythonToolProject } from '#cli/tools/python/project.ts';
-import { toolProjectPackage } from '#cli/configurations/pins.ts';
+import { packageToolProject } from '#cli/tools/npm/public.ts';
+import { pythonToolProject } from '#cli/tools/python/public.ts';
 import { workspaceRoot as root } from '#automation/workspace.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { toolProjectPackage } from '#cli/configurations/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { inspectTool, prepareToolProjects } from '#cli/tools/public.ts';
 import type { FlagCommand } from '#tests/types/tools/manifest-flags-in-help.ts';
-import { installToolProject, prepareToolProjects } from '#cli/tools/project.ts';
-import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
+import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/state/public.ts';
 
 const manifests = [...configurationManifests().values()];
 const context = { root, inspections: new Map(), policyFiles: readPolicy(root) };
@@ -60,7 +60,8 @@ async function helpText(executable: string, subcommands: string[], flags: string
         ),
     );
     const text = pages.map((page) => `${page.stdout}\n${page.stderr}`).join('\n');
-    // eslint-disable-next-line no-control-regex, sonarjs/no-control-regex -- reason: A man page overstrike is a character, a backspace, and the character again.
+
+    // eslint-disable-next-line no-control-regex, sonarjs/no-control-regex -- reason: Native terminal help uses backspace overstrikes, which must be removed before comparing literal flags.
     return text.replaceAll(/.\u0008/gu, '');
 }
 

@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { chmod } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
-import * as spawn from '#cli/platform/spawn.ts';
-import { planRun } from '#cli/planning/plan.ts';
+import * as spawn from '#cli/platform/public.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { PYPROJECT } from '#tests/config/samples/python.ts';
-import { pydoclint, docstringConfiguration } from '#cli/checks/language/python/pydoclint.ts';
+import { pydoclint, docstringConfiguration } from '#cli/checks/language/public.ts';
 import { DOCSTRING_STYLES, DOCSTRING_PROJECTS } from '#tests/config/cli/checks/language/python/pydoclint.ts';
 
 test.each(DOCSTRING_PROJECTS)('pydoclint runs with $name', async ({ files, style }) => {

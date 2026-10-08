@@ -1,13 +1,13 @@
 import { join, delimiter } from 'node:path';
-import { readPolicy } from '#cli/policy/read.ts';
+import { readPolicy } from '#cli/policy/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { createInstallationRegistry } from '#tests/harness/registry.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { toolPin, toolProjectPackage } from '#cli/configurations/pins.ts';
 import type { SandboxInstallation } from '#tests/types/harness/install.ts';
+import { toolPin, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { testModules, installedModules, sourceLauncherDirectory } from '#tests/harness/environment.ts';
 
 /**

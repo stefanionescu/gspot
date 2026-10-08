@@ -1,9 +1,9 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
-import { parserFor } from '#cli/parsers/tree-sitter.ts';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { parserFor } from '#cli/parsers/source/public.ts';
 
 test('reason comments cannot add JavaScript statements or ignore entries', async () => {
     const parser = await parserFor('javascript');

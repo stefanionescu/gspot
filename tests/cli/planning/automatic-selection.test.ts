@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
-import { skipFor } from '#cli/planning/skips.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { planRun } from '#cli/planning/public.ts';
+import { skipFor } from '#cli/planning/contracts.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 
 test.each(['recommended', 'all'] as const)(

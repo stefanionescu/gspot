@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import { test, expect } from 'bun:test';
-import { compileSettingValue } from '#cli/policy/schema/settings.ts';
+import { compileSettingValue } from '#cli/policy/schema/contracts.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
-import { settingSchemaSources } from '#cli/generation/setting-values.ts';
+import { settingSchemaSources } from '#cli/generation/compilation/public.ts';
 import { NUMBER_SETTING_DECLARATION, RECORD_SETTING_DECLARATION } from '#tests/config/cli/parsers/settings.ts';
 
 test('typed record items validate fields, nested paths and bounds without reader casts', () => {
@@ -50,7 +50,7 @@ test('scalar constraints share the compiler used for typed fields', () => {
 
 test('declared choices retain their primitive type and numeric bounds', () => {
     const manifest = parseConfigurationManifest('example', {
-        tables: NUMBER_SETTING_DECLARATION.replace('minimum = 1', 'enum = [0, 2, 4, "2"]\nminimum = 1'),
+        tables: NUMBER_SETTING_DECLARATION.replace('minimum = 1', 'enum = [0, 2, 4, "2"], minimum = 1'),
     });
     const schema = compileSettingValue(manifest.settings[0]!).schema;
     expect(schema.parse(2)).toBe(2);
@@ -69,7 +69,7 @@ test('item metadata refuses an undeclared field type and unknown field options',
 
 test('list declarations without a native item owner refuse compilation', () => {
     const manifest = parseConfigurationManifest('example', {
-        tables: RECORD_SETTING_DECLARATION.slice(0, RECORD_SETTING_DECLARATION.indexOf('[setting.items]')),
+        tables: RECORD_SETTING_DECLARATION.slice(0, RECORD_SETTING_DECLARATION.indexOf('items = ')),
     });
     expect(() => settingSchemaSources([manifest])).toThrow();
     expect(() => compileSettingValue({ type: 'list', validation: {} })).toThrow();
@@ -140,7 +140,7 @@ default = []
 summary = "Script paths."
 `,
     });
-    expect(settingSchemaSources([manifest]).size).toBe(3);
+    expect(settingSchemaSources([manifest]).size).toBe(2);
     const invalid = manifest.settings.map((declaration) =>
         declaration.name === 'architecture.roles'
             ? { ...declaration, default: { scripts: ['../outside/**'] } }

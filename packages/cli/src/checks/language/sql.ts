@@ -1,12 +1,12 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { isRecord } from '#cli/platform/objects.ts';
-import { readSource } from '#cli/platform/source.ts';
 import type { Node, ParseResult } from '@pgsql/types';
-import { trivialText } from '#cli/parsers/statements.ts';
+import { isRecord } from '#cli/platform/contracts.ts';
+import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { trivialText } from '#cli/parsers/source/contracts.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { parse, nodeOf, nodesOf } from '#cli/parsers/sql/pg.ts';
-import { positionAt, parseSqlFile } from '#cli/parsers/sql/statements.ts';
+import { positionAt, parseSqlFile } from '#cli/parsers/sql/public.ts';
+import { parse, nodeOf, nodesOf } from '#cli/parsers/sql/contracts.ts';
 import type { SqlFile, SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { PARSED_DIALECTS, OUTPUT_PARAMETERS } from '#cli/config/checks/language/sql.ts';
 import type { SqlSource, SqlFileInput, SqlFunctionFindings } from '#cli/types/checks/language/sql.ts';

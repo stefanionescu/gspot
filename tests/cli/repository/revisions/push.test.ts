@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { PUSH_CONTENT } from '#tests/config/samples/git.ts';
-import { selectPush } from '#cli/repository/revisions/push.ts';
+import { selectPush } from '#cli/repository/revisions/contracts.ts';
 import { gitOutput, preparePushRepository } from '#tests/harness/git.ts';
 
 test.each(['origin', undefined, 'file:///unused', '/unused'] as const)(

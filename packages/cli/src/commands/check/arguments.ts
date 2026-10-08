@@ -1,9 +1,9 @@
 // Selects positional repository paths and refuses unknown check IDs.
 import { resolve, relative } from 'node:path';
-import { GspotError } from '#cli/platform/errors.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { isInScope } from '#cli/repository/selectors.ts';
-import { toPosix, isInside } from '#cli/platform/paths.ts';
+import { isInScope } from '#cli/repository/paths/public.ts';
+import { toPosix, isInside } from '#cli/platform/contracts.ts';
 import type { CheckOptions } from '#cli/types/commands/check.ts';
 
 // The repository files a selector names: the file itself, or everything under a folder.

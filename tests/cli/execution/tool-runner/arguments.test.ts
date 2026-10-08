@@ -2,16 +2,16 @@ import executables from 'which';
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { chmod } from 'node:fs/promises';
-import { run } from '#cli/platform/spawn.ts';
+import { run } from '#cli/platform/public.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
-import { executeRun } from '#cli/execution/run.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { fileBatches } from '#cli/execution/command/batches.ts';
-import { prepareCommand, runCheckCommand, commandEnvironment } from '#cli/execution/command/check.ts';
+import { fileBatches } from '#cli/execution/command/arguments/contracts.ts';
+import { prepareCommand, runCheckCommand, commandEnvironment } from '#cli/execution/command/public.ts';
 
 test('Batched tool invocations preserve spaced Unicode file arguments', async () => {
     await using sandbox = await testdir();

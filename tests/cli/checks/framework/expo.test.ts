@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { openSession } from '#cli/commands/session.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { expoDoctor } from '#cli/checks/framework/expo.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { DOCTOR_RESULTS, DOCTOR_VERSION } from '#tests/config/cli/checks/expo.ts';
 
@@ -40,10 +40,10 @@ test.each(DOCTOR_RESULTS)('Expo Doctor preserves scoped orchestration for $name'
     try {
         for (const input of inputs) {
             if (typeof entry.expected === 'string') {
-                expect(await rejection(expoDoctor(input))).toBe(entry.expected);
+                expect(await rejection(BUILT_IN_CHECKS['expo/doctor'].input(input))).toBe(entry.expected);
                 continue;
             }
-            const findings = await expoDoctor(input);
+            const findings = await BUILT_IN_CHECKS['expo/doctor'].input(input);
             expect(findings).toStrictEqual(
                 entry.expected.map((diagnostic) => ({
                     check: 'expo/doctor',
@@ -69,7 +69,7 @@ test('Expo Doctor reports an uninstalled Expo project instead of accepting its e
         'package.json': '{"private":true,"dependencies":{"expo":"54.0.0"}}\n',
     });
     const input = buildCheckInput(await openSession(sandbox.path), 'expo/doctor');
-    expect(await rejection(expoDoctor(input))).toBe(
+    expect(await rejection(BUILT_IN_CHECKS['expo/doctor'].input(input))).toBe(
         'Expo is not installed in this scope; Expo Doctor reads an installed Expo project.',
     );
 });

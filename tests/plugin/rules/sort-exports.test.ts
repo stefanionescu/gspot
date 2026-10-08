@@ -1,7 +1,7 @@
-import { sortExports } from '#plugin/rules/sort-exports.ts';
+import plugin from '#plugin/rules/public.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
 
-createRuleTester().run('sort-exports', sortExports, {
+createRuleTester().run('sort-exports', plugin.rules['sort-exports'], {
     valid: [
         "export * from './c';\nexport { a } from './a';\nexport { bb } from './bb';",
         "export { a } from './a';\n\nexport {\n    long,\n    longer,\n} from './multi';",

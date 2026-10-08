@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import type { PackageJson } from '#cli/types/parsers/packages.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 test('apply refuses a plan whose policy changed after the session was read', async () => {
     await using sandbox = await testdir();

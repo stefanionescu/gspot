@@ -3,8 +3,8 @@ import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import type { MergeRecord } from '#cli/types/lifecycle/apply.ts';
 import type { EmittedToolFile } from '#cli/types/generation/files.ts';
-import type { fieldsSchema } from '#cli/lifecycle/ownership/schema.ts';
 import type { OwnershipEntry } from '#cli/types/lifecycle/ownership.ts';
+import type { fieldsSchema } from '#cli/lifecycle/ownership/state/contracts.ts';
 
 export type MergeRequest = {
     changes: EmittedToolFile['changes'];

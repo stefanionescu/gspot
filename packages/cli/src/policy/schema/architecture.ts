@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { authoredDefault } from '#cli/policy/schema/fields.ts';
-import { settingValueSchemas } from '#cli/policy/schema/setting-values.ts';
+import { authoredDefault } from '#cli/policy/schema/contracts.ts';
+import { settingValueSchemas } from '#cli/policy/schema/native/public.ts';
 
 /** Module fields derive from their declaration; import edges refer to declared identities. */
 export const architectureSchema = z

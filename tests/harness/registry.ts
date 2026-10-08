@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { readFile, writeFile } from 'node:fs/promises';
 import { npmPackSchema } from '#automation/parsers/npm.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 
 import type {
     PackageRegistry,

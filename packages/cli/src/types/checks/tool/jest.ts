@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { reportSchema } from '#cli/parsers/schema/jest.ts';
-import type { settingNamespaceSchemas } from '#cli/policy/schema/namespaces.ts';
+import type { settingNamespaceSchemas } from '#cli/policy/schema/native/contracts.ts';
 
 export type JestRun = { input: CheckInput; source: string; work: string };
 

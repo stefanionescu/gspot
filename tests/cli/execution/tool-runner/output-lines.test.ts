@@ -1,11 +1,11 @@
 // Built-in checks split tool output on LF, so check execution hands them LF wherever the tool ran.
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { runCheckTool, runCheckCommand } from '#cli/execution/command/check.ts';
+import { runCheckTool, runCheckCommand } from '#cli/execution/command/public.ts';
 import { HEADER_FAILURE } from '#tests/config/cli/execution/tool-runner/output.ts';
 
 test('a check command hands its built-in check LF line endings when the tool prints CRLF', async () => {

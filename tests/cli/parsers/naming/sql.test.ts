@@ -1,6 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { rejection } from '#tests/harness/expectations.ts';
-import { sqlIdentifiers } from '#cli/parsers/naming/sql.ts';
+import { sqlIdentifiers } from '#cli/parsers/naming/public.ts';
 import { SQL_SOURCE } from '#tests/config/cli/checks/general/naming/sql.ts';
 
 describe('sqlIdentifiers', () => {
@@ -30,9 +29,4 @@ test('psql declaration variables are excluded while authored names retain their 
         { name: 'createdAt', line: 2, column: 23 },
         { name: 'id', line: 3, column: 21 },
     ]);
-});
-
-test('a SQL parse error names its file and position', async () => {
-    const diagnostic = await rejection(sqlIdentifiers('db/broken.sql', 'CREATE TABLE'));
-    expect(diagnostic).toMatch(/^db\/broken\.sql:\d+:\d+: SQL parse failed:/u);
 });

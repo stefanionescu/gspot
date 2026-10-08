@@ -1,11 +1,11 @@
 import type { z } from 'zod';
 import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
-import type { levelSchema } from '#cli/parsers/schema/settings.ts';
+import type { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { INSTALLATION_KINDS } from '#cli/config/configurations.ts';
-import type { manifestSchema } from '#cli/parsers/schema/configurations/manifest.ts';
-import type { toolSchema, installerPinSchema } from '#cli/parsers/schema/configurations/tool.ts';
+import type { manifestSchema } from '#cli/parsers/schema/configurations.ts';
+import type { toolSchema, installerPinSchema } from '#cli/parsers/schema/public.ts';
 
 export type ConfigurationEvidence = {
     configuration: string;

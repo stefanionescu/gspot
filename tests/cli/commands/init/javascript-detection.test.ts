@@ -2,17 +2,17 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { parseToolProject } from '#cli/parsers/packages.ts';
+import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { TOOLING_PACKAGE, NON_JAVASCRIPT_PROJECTS } from '#tests/config/cli/commands/init/selection.ts';
 
 // The same public plan must select languages from sources while retaining package boundaries.
 test.each(NON_JAVASCRIPT_PROJECTS)(
-    '%s tooling packages preserve scopes and match the default and accepted initialization plans',
+    '%s tooling packages preserve scopes and isolate JavaScript to its consumer manifest',
     async (language, file, source) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -27,7 +27,7 @@ test.each(NON_JAVASCRIPT_PROJECTS)(
         for (const result of [preview, accepted]) {
             expect(result.code, `${language}: ${result.stdout}${result.stderr}`).toBe(0);
             expect(result.stdout).toContain('\nconfigurations\n');
-            expect(result.stdout).not.toMatch(/^ {2}javascript\s/mu);
+            expect(result.stdout).toMatch(/^ {2}javascript\s/mu);
         }
         expect(preview.stdout.slice(preview.stdout.indexOf('\nconfigurations\n'))).toBe(
             accepted.stdout.slice(accepted.stdout.indexOf('\nconfigurations\n')),
@@ -35,14 +35,15 @@ test.each(NON_JAVASCRIPT_PROJECTS)(
         const json = await runGspot(sandbox.path, [...argv, '--yes', '--json']);
         expect(json.code, json.stdout + json.stderr).toBe(0);
         const output = JSON.parse(json.stdout) as Required<Pick<InitJson, 'plan' | 'policy'>>;
-        expect(output.plan.configurations.map(({ configuration }) => configuration)).not.toContain('javascript');
+        expect(output.plan.configurations.map(({ configuration }) => configuration)).toContain('javascript');
         expect(Object.keys(parseStrictPolicy(output.policy, sandbox.path).scope)).toStrictEqual(['app']);
         expect(await readTree(sandbox.path)).toStrictEqual(before);
         const written = await runGspot(sandbox.path, ['init', '--yes', '--json', ...QUIET_INIT]);
         expect(written.code, written.stdout + written.stderr).toBe(0);
         const session = await openSession(sandbox.path);
         expect(session.repository.scopes.map(({ path }) => path)).toStrictEqual(['', 'app']);
-        expect(session.scopes.flatMap(({ view }) => view.configurations)).not.toContain('javascript');
+        expect(session.scopes.find(({ scope }) => scope.path === '')!.view.configurations).not.toContain('javascript');
+        expect(session.scopes.find(({ scope }) => scope.path === 'app')!.view.configurations).toContain('javascript');
     },
 );
 

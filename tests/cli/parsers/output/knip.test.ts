@@ -1,8 +1,8 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/platform/errors.ts';
-import { parseOutput } from '#cli/parsers/output/parse.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { parseOutput } from '#cli/parsers/output/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { KNIP_REPORT, KNIP_EXPECTED, INVALID_KNIP_REPORTS } from '#tests/config/cli/parsers/output/knip.ts';
 
 const check = configurationManifests()

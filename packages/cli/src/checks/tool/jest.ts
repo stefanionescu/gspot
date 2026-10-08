@@ -2,13 +2,13 @@
 import { join, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { openRoot } from '#cli/platform/root/open.ts';
+import { openRoot } from '#cli/platform/root/public.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
-import { toPosix, isInside } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { copyIntoScratch } from '#cli/execution/copy/files.ts';
-import { runCheckTool } from '#cli/execution/command/check.ts';
+import { toPosix, isInside } from '#cli/platform/contracts.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { copyIntoScratch } from '#cli/execution/copy/public.ts';
+import { runCheckTool } from '#cli/execution/command/public.ts';
 import { reportSchema, coverageSchema } from '#cli/parsers/schema/jest.ts';
 import type { Suite, JestRun, TestReport, JestSettings } from '#cli/types/checks/tool/jest.ts';
 

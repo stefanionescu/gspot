@@ -1,10 +1,10 @@
 // Registry validation runs when declared tool versions change, without installing those tools.
 import semver from 'semver';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { releaseDocumentSchema } from '#automation/parsers/releases.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { validateEslintPresets } from '#cli/generation/eslint/presets.ts';
+import { validateEslintPresets } from '#cli/generation/eslint/public.ts';
 import type { RegistryPin, ReleaseDocument } from '#automation/types/pins.ts';
 import { RELEASE_ENDPOINTS, RELEASE_NOT_FOUND, REGISTRY_TIMEOUT_MS } from '#automation/config/pins.ts';
 

@@ -1,15 +1,15 @@
 import { posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { readSource } from '#cli/platform/source.ts';
-import { parseIndexRevision } from '#cli/parsers/git.ts';
-import { parseJsonDocument } from '#cli/parsers/json.ts';
+import { readSource } from '#cli/platform/root/public.ts';
+import { parseJsonDocument } from '#cli/parsers/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { testPlanSchema } from '#cli/parsers/schema/xcode.ts';
+import { getBlobs } from '#cli/repository/revisions/public.ts';
+import { parseIndexRevision } from '#cli/parsers/contracts.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { getBlobs } from '#cli/repository/revisions/objects.ts';
-import { readPbxproj, testTargets } from '#cli/parsers/xcode.ts';
 import { SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
+import { readPbxproj, testTargets } from '#cli/parsers/tool/public.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
 

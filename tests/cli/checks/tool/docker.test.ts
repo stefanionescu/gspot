@@ -1,13 +1,13 @@
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { trivyImage, dockerignore } from '#cli/checks/tool/docker.ts';
 
 import {
     CLEAN_REPORT,
@@ -42,7 +42,9 @@ test.each(COMPOSE_SOURCES)('Trivy scans only service images in $name', async ({ 
             });
         }),
     );
-    expect(await trivyImage(buildCheckInput(session, 'docker/trivy-image'))).toStrictEqual([
+    expect(
+        await BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image')),
+    ).toStrictEqual([
         {
             check: 'docker/trivy-image',
             file: 'compose.yaml',
@@ -65,7 +67,9 @@ test.each(REPORT_FAILURES)('Trivy refuses $name with its diagnostic', async ({ c
     using resources = new DisposableStack();
     resources.use(mockPinnedExecutables([toolPin(session.manifests.values(), 'trivy')]));
     resources.use(spyOn(processes, 'run').mockResolvedValue({ code, stdout, stderr, missing: false, duration: 1 }));
-    expect(await rejection(trivyImage(buildCheckInput(session, 'docker/trivy-image')))).toContain(diagnostic);
+    expect(
+        await rejection(BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image'))),
+    ).toContain(diagnostic);
 });
 
 test('Trivy accepts a clean native report without an image finding', async () => {
@@ -86,7 +90,9 @@ test('Trivy accepts a clean native report without an image finding', async () =>
             duration: 1,
         }),
     );
-    expect(await trivyImage(buildCheckInput(session, 'docker/trivy-image'))).toStrictEqual([]);
+    expect(
+        await BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image')),
+    ).toStrictEqual([]);
 });
 
 test.each(INVALID_COMPOSE)('Trivy refuses $name before scanning an image', async ({ source }) => {
@@ -97,9 +103,9 @@ test.each(INVALID_COMPOSE)('Trivy refuses $name before scanning an image', async
     });
     const session = await openSession(directory.path);
     using scan = spyOn(processes, 'run');
-    expect(await rejection(trivyImage(buildCheckInput(session, 'docker/trivy-image')))).toContain(
-        'Cannot read Compose service images in compose.yaml.',
-    );
+    expect(
+        await rejection(BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image'))),
+    ).toContain('Cannot read Compose service images in compose.yaml.');
     expect(scan).not.toHaveBeenCalled();
 });
 
@@ -111,7 +117,9 @@ test('Trivy leaves build-only services unscanned', async () => {
     });
     const session = await openSession(directory.path);
     using scan = spyOn(processes, 'run');
-    expect(await trivyImage(buildCheckInput(session, 'docker/trivy-image'))).toStrictEqual([]);
+    expect(
+        await BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image')),
+    ).toStrictEqual([]);
     expect(scan).not.toHaveBeenCalled();
 });
 
@@ -133,7 +141,7 @@ test('Trivy retains each native advisory and secret identity without exporting s
             duration: 1,
         }),
     );
-    const findings = await trivyImage(buildCheckInput(session, 'docker/trivy-image'));
+    const findings = await BUILT_IN_CHECKS['docker/trivy-image'].input(buildCheckInput(session, 'docker/trivy-image'));
     expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
         { file: 'compose.yaml', rule: 'CVE-example', message: 'nginx:1.27.2: CVE-example (example)' },
         { file: 'compose.yaml', rule: 'CVE-neighbor', message: 'nginx:1.27.2: CVE-neighbor (neighbor)' },
@@ -152,7 +160,7 @@ describe.each(['recommended', 'all'] as const)('%s Docker language ignores', (le
                 [`${scope === '' ? '' : scope + '/'}.dockerignore`]: text,
             });
             const input = buildCheckInput(await openSession(sandbox.path), 'docker/dockerignore', { scope });
-            const findings = dockerignore(input);
+            const findings = BUILT_IN_CHECKS['docker/dockerignore'].input(input);
             expect(findings.map(({ rule }) => rule)).toStrictEqual(missing === '' ? [] : ['missing-entry']);
             if (missing !== '') expect(findings[0]!.message).toBe(`The ignore file lets through: ${missing}.`);
         },

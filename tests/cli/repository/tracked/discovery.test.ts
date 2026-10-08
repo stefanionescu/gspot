@@ -3,15 +3,15 @@ import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import * as childProcess from 'node:child_process';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { readRepository } from '#cli/repository/read.ts';
+import * as processes from '#cli/platform/public.ts';
+import { readRepository } from '#cli/repository/public.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { getEntries } from '#cli/repository/revisions/objects.ts';
+import { getEntries } from '#cli/repository/revisions/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
-import { findRoot, isGitRepository } from '#cli/repository/root.ts';
-import { trackedEntries, readIndexEntries } from '#cli/repository/tracked.ts';
 import { REPLACED_PARENT_PATHS } from '#tests/config/cli/repository/tracked.ts';
+import { trackedEntries, readIndexEntries } from '#cli/repository/contracts.ts';
+import { findRoot, isGitRepository } from '#cli/repository/discovery/contracts.ts';
 import { rm, chmod, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 test('repository file discovery > keeps tracked deletions out of readable entries', async () => {

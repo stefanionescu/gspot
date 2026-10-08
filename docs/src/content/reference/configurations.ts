@@ -3,7 +3,7 @@ import { DETECTION_LABELS } from '../../config/reference.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
-import { configurationFiles } from '@gspothq/cli/src/configurations/declarations.ts';
+import { configurationFiles } from '@gspothq/cli/src/configurations/public.ts';
 
 // Describe each native detection value, including content expressions.
 function detectionConditions(detect: Manifest['detect']): string[] {

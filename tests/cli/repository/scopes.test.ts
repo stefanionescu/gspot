@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { readRepository } from '#cli/repository/read.ts';
-import { npmToolNames } from '#cli/configurations/pins.ts';
+import { readRepository } from '#cli/repository/public.ts';
+import { npmToolNames } from '#cli/configurations/contracts.ts';
+import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { rm, mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import { INVALID_WORKSPACE_CASES } from '#tests/config/cli/repository/scopes.ts';
-import { scopeOf, plannedScopes, packageWorkspaces } from '#cli/repository/scopes.ts';
+import { scopeOf, plannedScopes, packageWorkspaces } from '#cli/repository/paths/contracts.ts';
 
 function proposeProjectScopes(files: TrackedFile[], manifests: PackageManifest[]) {
     const configurations = configurationManifests();

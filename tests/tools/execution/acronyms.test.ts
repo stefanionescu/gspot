@@ -1,11 +1,11 @@
 import { basename } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { parseAlerts } from '#cli/parsers/output/reports.ts';
+import { parseAlerts } from '#cli/parsers/output/contracts.ts';
 
 test('native acronym checks honor emitted accepted words and retain unknown-word and definition coverage', async () => {
     await using directory = await testdir();

@@ -1,13 +1,13 @@
 import type { z } from 'zod';
 import type { Defined } from '#cli/types/platform/runtime.ts';
-import type { outputSchema } from '#cli/parsers/schema/output.ts';
 
 import type {
+    outputSchema,
     findingSchema,
     knipReportSchema,
     typosEntrySchema,
     markdownlintReportSchema,
-} from '#cli/parsers/schema/report.ts';
+} from '#cli/parsers/schema/contracts.ts';
 
 /** The output table accepted by configuration and command checks. */
 export type OutputSpec = z.infer<typeof outputSchema>;

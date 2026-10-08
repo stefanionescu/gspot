@@ -14,6 +14,7 @@ paths = ["**/project.pbxproj", "**/*.xcscheme", "**/*.xctestplan", "**/*.xcasset
 [[tool]]
 name = "plutil"
 system = true
+platforms = ["macos"]
 crash_pattern = "couldn['’]t be opened"
 
 [[check]]

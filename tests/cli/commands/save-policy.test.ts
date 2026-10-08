@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { setKey } from '#cli/policy/edit.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { savePolicy } from '#cli/commands/save-policy.ts';
+import { savePolicy } from '#cli/commands/contracts.ts';
+import { setKey } from '#cli/policy/document/contracts.ts';
 
 test('a policy command evaluates its mutation once before applying the prepared result', async () => {
     await using sandbox = await testdir();

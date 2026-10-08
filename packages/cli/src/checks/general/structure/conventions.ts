@@ -1,7 +1,7 @@
 import { Query, type Node } from 'web-tree-sitter';
-import { readSource } from '#cli/platform/source.ts';
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
-import { isToolProjectPath } from '#cli/repository/selectors.ts';
+import { readSource } from '#cli/platform/root/public.ts';
+import { parseSource } from '#cli/parsers/source/public.ts';
+import { isToolProjectPath } from '#cli/repository/paths/public.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { CountedLanguage } from '#cli/types/parsers/statements.ts';
 import { HOUSE_QUERIES } from '#cli/config/checks/general/structure.ts';

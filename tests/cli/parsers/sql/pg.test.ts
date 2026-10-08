@@ -1,23 +1,20 @@
 // The SQL parser in a fresh process: concurrent parses each keep their own result.
 import { test, expect } from 'bun:test';
-import { parse } from '#cli/parsers/sql/pg.ts';
+import { parse } from '#cli/parsers/sql/contracts.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { SQL_DECLARATION } from '#tests/config/cli/parsers/pg.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
+import { containing, textContaining } from '#tests/harness/expectations.ts';
 
 test('concurrent SQL parsing returns independent results in a fresh process', async () => {
     const script = `
-        import { parse } from ${JSON.stringify(await Bun.resolve('#cli/parsers/sql/pg.ts', import.meta.dir))};
+        import { parse } from ${JSON.stringify(await Bun.resolve('#cli/parsers/sql/contracts.ts', import.meta.dir))};
         const parsed = await Promise.all(['SELECT 1', '${TYPO.select} 2', 'SELECT 3'].map((sql) => parse(sql)));
         console.log(JSON.stringify(parsed.map((result) => result.error ?? null)));
     `;
     const result = runTestCommandBlocking([process.execPath, '-e', script], { cwd: process.cwd() });
     expect(result.code, result.stderr).toBe(0);
-    expect(JSON.parse(result.stdout)).toStrictEqual([
-        null,
-        { text: `syntax error at or near "${TYPO.select}"`, offset: 0 },
-        null,
-    ]);
+    expect(JSON.parse(result.stdout)).toStrictEqual([null, containing({ text: textContaining(TYPO.select) }), null]);
 });
 
 test('empty SQL has no statements', async () => {

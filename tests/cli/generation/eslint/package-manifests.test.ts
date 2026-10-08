@@ -1,8 +1,8 @@
 // ESLint reads every package.json through the package-json rules. A manifest under a test folder gets no code rule.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { toPosix } from '#cli/platform/contracts.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 
 test('every package.json gets the package-json rules and no code rule beside a test runner', async () => {

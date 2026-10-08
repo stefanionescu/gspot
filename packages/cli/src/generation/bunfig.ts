@@ -1,7 +1,6 @@
-import { readText } from '#cli/platform/source.ts';
-import { openRoot } from '#cli/platform/root/open.ts';
-import { parseTomlFile } from '#cli/parsers/toml/document.ts';
+import { parseTomlFile } from '#cli/parsers/toml/public.ts';
 import { SECONDS_PER_DAY } from '#cli/config/platform/runtime.ts';
+import { openRoot, readText } from '#cli/platform/root/public.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { EmittedToolFile } from '#cli/types/generation/files.ts';
 

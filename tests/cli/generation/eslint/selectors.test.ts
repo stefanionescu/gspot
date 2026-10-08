@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/harness/generated.ts';
-import { selectorGroups } from '#cli/generation/eslint/blocks.ts';
+import { selectorGroups } from '#cli/generation/eslint/public.ts';
 import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {

@@ -2,8 +2,8 @@ import { test, spyOn, expect } from 'bun:test';
 import { npmPackSchema } from '#automation/parsers/npm.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { releasedPins, validateReleases } from '#automation/pins.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 test('pin validation requests shared releases once and leaves system tools and unpublished workspace packages out', () => {
     const configuration = configurationManifests().get('javascript')!;

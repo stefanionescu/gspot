@@ -1,15 +1,14 @@
 import { test, expect } from 'bun:test';
-import { hookFiles } from '#cli/generation/hooks.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
-import { scopeView } from '#cli/policy/settings/view.ts';
-import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
-import { policySchema } from '#cli/policy/schema/policy.ts';
-import { setKey, getScopeTable } from '#cli/policy/edit.ts';
-import { knownSettings } from '#cli/policy/settings/known.ts';
-import { selectForScope } from '#cli/configurations/select.ts';
-import { emitPolicy, parseTomlText } from '#cli/policy/file.ts';
-import { declaredArchitectures } from '#cli/policy/settings/lookup.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { hookFiles } from '#cli/generation/contracts.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
+import { policySchema } from '#cli/policy/schema/public.ts';
+import { hookStatus } from '#cli/lifecycle/install/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { selectForScope } from '#cli/configurations/selection/public.ts';
+import { declaredArchitectures } from '#cli/policy/settings/contracts.ts';
+import { scopeView, knownSettings } from '#cli/policy/settings/public.ts';
+import { setKey, getScopeTable } from '#cli/policy/document/contracts.ts';
+import { emitPolicy, parseTomlText } from '#cli/policy/document/public.ts';
 
 import {
     PATH_SCOPE_CASES,

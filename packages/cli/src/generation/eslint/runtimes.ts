@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
-import { compact } from '#cli/platform/objects.ts';
-import { rolePaths } from '#cli/policy/settings/lookup.ts';
-import { isInScope, pathExpressions } from '#cli/repository/selectors.ts';
+import { compact } from '#cli/platform/contracts.ts';
+import { rolePaths } from '#cli/policy/settings/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { isInScope, pathExpressions } from '#cli/repository/paths/public.ts';
 import type { EslintContext, EslintRuntimeBlock } from '#cli/types/generation/eslint.ts';
 import { MISE_SCRIPT_PATH, ESLINT_BROWSER_CONFIGURATIONS } from '#cli/config/generation/eslint.ts';
 

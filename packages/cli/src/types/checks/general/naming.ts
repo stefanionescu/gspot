@@ -1,15 +1,16 @@
+import type { z } from 'zod';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { FindingPlace } from '#cli/types/parsers/output.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import type { pathContainerSchema } from '#cli/parsers/schema/naming.ts';
 
 /** A banned term split into parts, with where it came from. */
 export type Term = { term: string; parts: string[]; source: string; group?: string };
 
-/** The naming policy and whether this is a React file or a test file. */
+/** The naming policy and whether this is a test file. */
 export type NamingInputs = Pick<CheckInput, 'check'> & {
     policy: EffectivePolicy;
-    isReactFile: boolean;
     isTestFile: boolean;
 };
 
@@ -45,7 +46,7 @@ export type EffectivePolicy = {
 };
 
 /** Framework punctuation removed before a path segment's name is checked. */
-export type PathContainer = { open: string; close: string; category: string };
+export type PathContainer = z.infer<typeof pathContainerSchema>;
 
 /** A selected source file and its owning language configuration. */
 export type NamingSource = { file: TrackedFile; language: string };

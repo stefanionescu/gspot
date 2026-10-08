@@ -2,18 +2,18 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { sharePythonTools } from '#tests/harness/python-installation.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 import {
     OWN_RULE,

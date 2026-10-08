@@ -1,9 +1,9 @@
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { trivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
 import { CLEAN_SWIFT, ACCESSOR_DECLARATIONS } from '#tests/config/samples/swift/source.ts';
 
 import {
@@ -17,7 +17,7 @@ test('Swift reports constructors, accessors, decorated methods, nested functions
         'example.swift': text,
         'gspot.toml': buildPolicy(['swift'], { level: 'all', tables: '[limits.swift]\nmin_function_statements = 2\n' }),
     });
-    const initial = await trivialFunctions(
+    const initial = await BUILT_IN_CHECKS['structure/trivial-functions'].input(
         buildCheckInput(await openSession(sandbox.path), 'structure/trivial-functions'),
     );
     expect(
@@ -27,7 +27,7 @@ test('Swift reports constructors, accessors, decorated methods, nested functions
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['swift'], { level: 'all', tables: '[limits.swift]\nmin_function_statements = 3\n' }),
     );
-    const increased = await trivialFunctions(
+    const increased = await BUILT_IN_CHECKS['structure/trivial-functions'].input(
         buildCheckInput(await openSession(sandbox.path), 'structure/trivial-functions'),
     );
     expect(
@@ -41,7 +41,7 @@ test('Swift includes implicit getters, property readers, and subscript accessors
         'example.swift': text,
         'gspot.toml': buildPolicy(['swift'], { level: 'all', tables: '[limits.swift]\nmin_function_statements = 2\n' }),
     });
-    const result = await trivialFunctions(
+    const result = await BUILT_IN_CHECKS['structure/trivial-functions'].input(
         buildCheckInput(await openSession(sandbox.path), 'structure/trivial-functions'),
     );
     expect(
@@ -59,7 +59,7 @@ test.each([...TRIVIAL_FUNCTION_CASES])(
                 tables: '[limits.swift]\nmin_function_statements = 2\n',
             }),
         });
-        const result = await trivialFunctions(
+        const result = await BUILT_IN_CHECKS['structure/trivial-functions'].input(
             buildCheckInput(await openSession(sandbox.path), 'structure/trivial-functions'),
         );
         expect(
@@ -76,7 +76,9 @@ test('Swift source with substantial function bodies passes the trivial-function 
         'gspot.toml': buildPolicy(['swift'], { level: 'all', tables: '[limits.swift]\nmin_function_statements = 2\n' }),
     });
     expect(
-        await trivialFunctions(buildCheckInput(await openSession(sandbox.path), 'structure/trivial-functions')),
+        await BUILT_IN_CHECKS['structure/trivial-functions'].input(
+            buildCheckInput(await openSession(sandbox.path), 'structure/trivial-functions'),
+        ),
     ).toStrictEqual([]);
 });
 
@@ -88,7 +90,7 @@ test('Python counts nested control flow and reports decorated methods and leaves
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['python'], { level: 'all', tables: '[limits.python]\nmin_function_statements = 2\n' }),
     );
-    const initial = await trivialFunctions(
+    const initial = await BUILT_IN_CHECKS['structure/trivial-functions'].input(
         buildCheckInput(await openSession(sandbox.path), 'structure/trivial-functions'),
     );
     expect(initial.filter((entry) => entry.rule === 'trivial-function').map((entry) => entry.line)).toStrictEqual([
@@ -98,7 +100,7 @@ test('Python counts nested control flow and reports decorated methods and leaves
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['python'], { level: 'all', tables: '[limits.python]\nmin_function_statements = 3\n' }),
     );
-    const increased = await trivialFunctions(
+    const increased = await BUILT_IN_CHECKS['structure/trivial-functions'].input(
         buildCheckInput(await openSession(sandbox.path), 'structure/trivial-functions'),
     );
     expect(increased.filter((entry) => entry.rule === 'trivial-function').map((entry) => entry.line)).toStrictEqual([

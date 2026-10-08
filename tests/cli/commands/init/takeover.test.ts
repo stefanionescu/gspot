@@ -3,16 +3,16 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { stat, writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { prepare } from '#cli/commands/init/prepare.ts';
-import { parseTemplate } from '#cli/policy/templates.ts';
-import { writeSetup } from '#cli/commands/init/write.ts';
+import { prepare } from '#cli/commands/init/public.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
-import { identify } from '#cli/lifecycle/ownership/log.ts';
-import { parseToolProject } from '#cli/parsers/packages.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
+import { writeSetup } from '#cli/commands/init/contracts.ts';
+import { identify } from '#cli/lifecycle/ownership/public.ts';
+import { parseTemplate } from '#cli/policy/document/contracts.ts';
+import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { rejection, containing } from '#tests/harness/expectations.ts';
 import { INVALID_CSS, TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
+import { ownershipSchema } from '#cli/lifecycle/ownership/state/contracts.ts';
 import { INACTIVE_CONFIGURATIONS } from '#tests/config/cli/generation/commitlint.ts';
 
 test('initialization refuses publication of a shared package field edited after preview', async () => {

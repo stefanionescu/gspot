@@ -1,7 +1,7 @@
 // Replacing files atomically inside one root, and the claim that keeps one lifecycle writer at a time.
 import { randomUUID } from 'node:crypto';
 import { join, dirname } from 'node:path';
-import { sameEntry } from '#cli/platform/root/rules.ts';
+import { sameEntry } from '#cli/platform/root/contracts.ts';
 import type { Bounds, Staging, FileCopy } from '#cli/types/platform/root.ts';
 import { PRIVATE_FILE, OWNER_WRITE_BIT } from '#cli/config/platform/modes.ts';
 import { readEntry, preparedPath, validateRead } from '#cli/platform/root/reads.ts';

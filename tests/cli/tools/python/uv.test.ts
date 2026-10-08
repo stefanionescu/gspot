@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { installUv } from '#cli/tools/python/uv.ts';
-import { GspotError } from '#cli/platform/errors.ts';
+import * as processes from '#cli/platform/public.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fakeCommand } from '#tests/harness/command.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { pythonInstallerPin } from '#cli/configurations/pins.ts';
-import { pythonToolProject } from '#cli/tools/python/project.ts';
+import { prepareToolProjects } from '#cli/tools/public.ts';
+import { installToolProject } from '#cli/tools/contracts.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { pythonInstallerPin } from '#cli/configurations/public.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
-import { installToolProject, prepareToolProjects } from '#cli/tools/project.ts';
+import { installUv, pythonToolProject } from '#cli/tools/python/public.ts';
 import { AUTHORED_UV_INDEX, PRIVATE_PYTHON_PROJECT, PRIVATE_PYTHON_LOCKFILE } from '#tests/config/samples/python.ts';
 
 test('one command acquires its pinned uv once and creates lockfiles through that executable', async () => {

@@ -1,12 +1,12 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
 import { modulePath } from '#cli/repository/modules.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
-import { rolePaths } from '#cli/policy/settings/lookup.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
+import { rolePaths } from '#cli/policy/settings/contracts.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { ParsedFile, ParsedSource } from '#cli/types/parsers/source.ts';
-import { grammarFor, visitParsedSources } from '#cli/parsers/tree-sitter.ts';
+import { grammarFor, visitParsedSources } from '#cli/parsers/source/public.ts';
 import { CONFIG_STATEMENTS, CONFIG_LOGIC_NODES, CONFIG_CALL_ALLOWED } from '#cli/config/checks/general/structure.ts';
 
 function isOutsideImport(node: Node, input: CheckInput, path: string, isConfig: (path: string) => boolean): boolean {

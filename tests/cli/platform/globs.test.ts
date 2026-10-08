@@ -1,9 +1,9 @@
 // The globs a folder scan takes: a pattern that leaves the folder is refused, and a link loop ends the walk.
 import { test, expect } from 'bun:test';
 import { join, dirname } from 'node:path';
-import { globPaths } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { mkdir, unlink, symlink } from 'node:fs/promises';
+import { globPaths } from '#cli/platform/root/contracts.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 
 test.each([

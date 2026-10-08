@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { planRun, ownedInputs } from '#cli/planning/plan.ts';
-import { checkInput, runBuiltInCheck } from '#cli/execution/built-in.ts';
+import { planRun, ownedInputs } from '#cli/planning/public.ts';
+import { checkInput, runBuiltInCheck } from '#cli/execution/contracts.ts';
 import { SOURCE_CORRECTIONS } from '#tests/config/cli/execution/check-input.ts';
 
 test.each(SOURCE_CORRECTIONS)(

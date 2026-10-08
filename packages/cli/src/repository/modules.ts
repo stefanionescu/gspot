@@ -1,7 +1,7 @@
 import ts from 'typescript';
-import { toPosix } from '#cli/platform/paths.ts';
 import { join, dirname, relative } from 'node:path';
-import { getTsconfig } from '#cli/parsers/tsconfig.ts';
+import { toPosix } from '#cli/platform/contracts.ts';
+import { getTsconfig } from '#cli/parsers/packages/public.ts';
 import type { ModuleContext } from '#cli/types/repository/inventory.ts';
 
 /** Resolve a module with the importing project's TypeScript settings.

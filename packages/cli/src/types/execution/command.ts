@@ -68,3 +68,8 @@ export type ParsedFindings = { findings: Finding[]; note?: undefined } | { findi
 
 /** Check metadata for parsing output and distinguish a process crash from findings. */
 export type OutputCheck = Pick<PlannedCheck, 'check' | 'tool' | 'manifest'>;
+
+/** Repository data and scoped command metadata consumed by native placeholder expansion. */
+export type CommandSource = Pick<ToolSession, 'root' | 'reads' | 'manifests'>;
+
+export type CommandCheck = Pick<PlannedCheck, 'check' | 'scope' | 'files'> & { manifest?: PlannedCheck['manifest'] };

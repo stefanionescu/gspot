@@ -1,14 +1,14 @@
 import { test, expect } from 'bun:test';
 import { parse, stringify } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
-import { openSession } from '#cli/commands/session.ts';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
-import { parseTemplate } from '#cli/policy/templates.ts';
-import { readRepository } from '#cli/repository/read.ts';
+import { openSession } from '#cli/commands/public.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
+import { readRepository } from '#cli/repository/public.ts';
+import { proposeText } from '#cli/commands/init/contracts.ts';
 import { XCODE_METADATA } from '#tests/config/samples/xcode.ts';
-import { emitPolicy, parseTomlText } from '#cli/policy/file.ts';
-import { proposeText } from '#cli/commands/init/policy-text.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { parseTemplate } from '#cli/policy/document/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { emitPolicy, parseTomlText } from '#cli/policy/document/public.ts';
 import { CONFIGURATIONS, SDK_DESTINATIONS, MANUAL_SWIFT_CHOICES } from '#tests/config/cli/commands/init/policy-text.ts';
 
 test('initialization preserves root and scoped configuration choices', async () => {

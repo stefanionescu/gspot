@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { SITE_CONSUMERS } from '#tests/config/cli/execution/prerequisites.ts';
@@ -72,12 +72,6 @@ test('a failed site build skips every output consumer and a new session rebuilds
     expect(rebuilt.report.checks).toMatchObject([{ check: 'site/build', status: 'passed', findings: [] }]);
 });
 
-// A runner that fails past its own handling, as a tool runner can.
-// eslint-disable-next-line gspot/no-trivial-functions -- reason: The run registry takes a runner function, and this one stands for a runner that fails.
-function brokenRunner(): Promise<never> {
-    return Promise.reject(new Error('The runner broke'));
-}
-
 test('a check runner that throws errors that check alone, and the other checks keep their results', async () => {
     const reporter = [process.execPath, '-e', 'console.log("source.txt"); process.exitCode = 1;'];
     const entries = ['broken', 'kept'].map(
@@ -89,7 +83,12 @@ test('a check runner that throws errors that check alone, and the other checks k
         'gspot.toml': buildPolicy([], { tables: entries.join('') }),
         'source.txt': 'input\n',
     });
-    const checks = { ...BUILT_IN_CHECKS, 'sandbox/broken': { run: brokenRunner } };
+    const checks = {
+        ...BUILT_IN_CHECKS,
+        'sandbox/broken': {
+            run: () => Promise.reject(new Error('The runner broke')),
+        },
+    };
     const outcome = await executeRun(
         await openSession(sandbox.path),
         buildRunOptions({ checks, only: ['sandbox/broken', 'sandbox/kept'] }),

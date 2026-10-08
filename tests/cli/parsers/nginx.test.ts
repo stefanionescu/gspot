@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
-import { parseDirectives } from '#cli/parsers/nginx.ts';
 import type { DirectiveCase } from '#tests/types/cli/parsers.ts';
+import { parseDirectives } from '#cli/parsers/tool/contracts.ts';
 
 test.each([
     {

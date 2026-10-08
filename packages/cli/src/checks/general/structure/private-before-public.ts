@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
-import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { visitParsed } from '#cli/parsers/source/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { FILE_LOCAL } from '#cli/config/checks/language/swift.ts';
 import type { HouseSource, HouseDeclaration } from '#cli/types/checks/general/structure.ts';

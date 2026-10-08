@@ -1,7 +1,7 @@
 import { stringify } from 'smol-toml';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { policyFindings } from '#tests/harness/policy.ts';
 import { UNSAFE_DIRECTORIES } from '#tests/config/cli/policy/boundaries.ts';
 

@@ -1,16 +1,16 @@
-import { executeRun } from '#cli/execution/run.ts';
 import { join, toNamespacedPath } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
 import { chmod, writeFile } from 'node:fs/promises';
-import { toolPin } from '#cli/configurations/pins.ts';
+import * as processes from '#cli/platform/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { cloneFindings } from '#cli/checks/general/duplication.ts';
+import { cloneFindings } from '#cli/checks/general/public.ts';
 import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import type { CloneReport } from '#cli/types/checks/general/duplication.ts';
 import { SCANNERS, VALID_REPORT, EXECUTION_FAILURES } from '#tests/config/cli/checks/general/duplication.ts';
 

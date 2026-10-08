@@ -2,14 +2,13 @@
 import { parse } from 'yaml';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { configuredChecks } from '#cli/planning/plan.ts';
-import { npmPins, toolPin } from '#cli/configurations/pins.ts';
-import { applicableManifests } from '#cli/planning/requirements.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { npmPins, toolPin } from '#cli/configurations/contracts.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { configuredChecks, applicableManifests } from '#cli/planning/public.ts';
 import type { StylelintConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {
@@ -164,12 +163,13 @@ test.each(['recommended', 'all'] as const)(
         for (const path of ['.gspot/config/prettier.json', '.prettierrc.json', '.prettierignore'])
             expect(paths).not.toContain(path);
         const packages = npmPins(applicableManifests(session), undefined);
-        expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(
-            [...configurationManifests().get('files')!.tools, toolPin(configurationManifests().values(), 'ec')]
-                .filter((tool) => tool.installers['npm'] !== undefined)
-                .map((tool) => tool.installers['npm']!.name)
-                .toSorted((a, b) => a.localeCompare(b)),
+        const manifests = configurationManifests();
+        const fileManifest = manifests.get('files')!;
+        const expected = npmPins(
+            [{ ...fileManifest, tools: [...fileManifest.tools, toolPin(manifests.values(), 'ec')] }],
+            undefined,
         );
+        expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(Object.keys(expected));
         expect(configuredChecks(session).map((check) => check.check.name)).not.toContain('format/prettier');
     },
 );

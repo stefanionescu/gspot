@@ -1,18 +1,21 @@
 import semver from 'semver';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
-import * as inspect from '#cli/tools/inspect.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { toolPin } from '#cli/configurations/pins.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
-import { doctorCommand } from '#cli/commands/doctor/command.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { environmentBin } from '#cli/platform/contracts.ts';
+import { applicableManifests } from '#cli/planning/public.ts';
+import { doctorCommand } from '#cli/commands/doctor/public.ts';
+import { mockPinnedExecutables } from '#tests/harness/pins.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
+import { toolPin, collectPins, toolProjectPackage } from '#cli/configurations/contracts.ts';
+import { NODE_MODULES_DIRECTORY, PYTHON_ENVIRONMENT_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 test('doctor lists a tool only on the systems it has a build for', async () => {
     await using sandbox = await testdir();
@@ -106,40 +109,50 @@ test('doctor reports the private Python project for an applicable duplicate with
     expect(result.text).not.toContain('.mise/conf.d/gspot-tools.toml');
 });
 
-test.each([
-    ['ok', 0],
-    ['newer', 0],
-    ['outdated', 1],
-] as const)('doctor reports an installed library as %s and exits %i', async (state, code) => {
-    const wanted = toolPin(configurationManifests().values(), 'eslint-plugin-zod').version!;
-    const versions = {
-        ok: wanted,
-        newer: semver.inc(wanted, 'minor')!,
-        outdated: `${String(semver.major(wanted) - 1)}.0.0`,
-    };
-    const version = versions[state];
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['zod'], { tables: '[agent_rules]\nenabled = false\n' }),
-        'source.js': 'export const value = 1;\n',
-        '.gspot/node_modules/eslint-plugin-zod/package.json': JSON.stringify({
-            name: 'eslint-plugin-zod',
-            version,
-        }),
-    });
-    const original = inspect.inspectTool;
-    // Every other tool reads as ready, so the exit code follows the one test library alone.
-    using inspected = spyOn(inspect, 'inspectTool').mockImplementation((context, tool) =>
-        tool.name === 'eslint-plugin-zod'
-            ? original(context, tool)
-            : { name: tool.name, state: 'ok', path: `/fixture/${tool.name}` },
-    );
-    const result = await doctorCommand(sandbox.path);
-    expect(inspected).toHaveBeenCalled();
-    const report = result.json as DoctorReport;
-    expect(report.tools.find((tool) => tool.name === 'eslint-plugin-zod')?.state).toBe(state);
-    expect(result.exitCode).toBe(code);
-});
+test.each(['ok', 'newer', 'outdated'] as const)(
+    'doctor exits by the installed library state %s: an outdated tool exits 1',
+    async (state) => {
+        await using sandbox = await testdir();
+        const pin = toolPin(configurationManifests().values(), 'eslint-plugin-zod');
+        const floor = semver.parse(pin.min_version ?? pin.version!)!;
+        let older = `${String(floor.major - 1)}.0.0`;
+        if (floor.minor > 0) older = `${String(floor.major)}.${String(floor.minor - 1)}.0`;
+        if (floor.patch > 0) older = `${String(floor.major)}.${String(floor.minor)}.${String(floor.patch - 1)}`;
+        const versions = { ok: pin.version!, newer: semver.inc(pin.version!, 'minor')!, outdated: older };
+        const version = versions[state];
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['zod'], { tables: '[agent_rules]\nenabled = false\n' }),
+            'source.js': 'export const value = 1;\n',
+        });
+        const tools = collectPins(applicableManifests(await openSession(sandbox.path)));
+        await createFileTree(
+            sandbox.path,
+            Object.fromEntries(
+                tools.map((tool) => {
+                    if (tool.kind === 'library') {
+                        const name = tool.installers['npm']!.name;
+                        return [
+                            `.gspot/node_modules/${name}/package.json`,
+                            JSON.stringify({ name, version: tool.name === pin.name ? version : tool.version }),
+                        ];
+                    }
+                    const installation = toolProjectPackage(tool);
+                    let folder = 'test-tools';
+                    if (installation?.kind === 'npm') folder = join(NODE_MODULES_DIRECTORY, '.bin');
+                    else if (installation?.kind === 'python') folder = environmentBin(PYTHON_ENVIRONMENT_DIRECTORY);
+                    return [join(folder, tool.name), 'native lookup target'];
+                }),
+            ),
+        );
+        using resources = new DisposableStack();
+        resources.use(spyOn(process, 'cwd').mockReturnValue(sandbox.path));
+        resources.use(mockPinnedExecutables(tools));
+        const result = await doctorCommand(sandbox.path);
+        const report = result.json as DoctorReport;
+        expect(report.tools.find((tool) => tool.name === pin.name)).toMatchObject({ state, found: version });
+        expect(result.exitCode).toBe(state === 'outdated' ? 1 : 0);
+    },
+);
 
 test('doctor detects installed test frameworks instead of recommending a different runner', async () => {
     await using sandbox = await testdir();

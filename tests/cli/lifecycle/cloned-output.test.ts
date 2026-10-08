@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openRoot } from '#cli/platform/root/open.ts';
+import { openRoot } from '#cli/platform/root/public.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';

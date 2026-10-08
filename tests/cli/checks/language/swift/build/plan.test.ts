@@ -1,17 +1,16 @@
 import { test, expect } from 'bun:test';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { GspotError } from '#cli/platform/errors.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { buildPlan } from '#cli/checks/language/swift/plan.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { buildFolder } from '#cli/checks/language/swift/cache.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
+import { buildPlan, buildFolder } from '#cli/checks/language/swift/public.ts';
 import { SWIFT_BUILD_PURPOSES, SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/cli/checks/language/swift.ts';
 
 test.each([...SWIFT_PROJECT_SELECTION_CASES])(

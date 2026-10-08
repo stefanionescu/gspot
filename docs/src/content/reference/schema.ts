@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { policySchema } from '@gspothq/cli/src/policy/schema/policy.ts';
+import { policySchema } from '@gspothq/cli/src/policy/schema/public.ts';
 import { JSON_SCHEMA_URL } from '@gspothq/cli/src/config/commands/init.ts';
-import { localDateSchema, calendarDateSchema } from '@gspothq/cli/src/policy/schema/fields.ts';
+import { localDateSchema, calendarDateSchema } from '@gspothq/cli/src/policy/schema/contracts.ts';
 
 /**
  * Project the runtime policy validator into the editor's JSON representation.

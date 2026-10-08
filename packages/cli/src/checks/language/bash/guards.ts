@@ -1,10 +1,10 @@
-import { codeLines } from '#cli/parsers/bash.ts';
 import { findingAt } from '#cli/checks/finding.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
-import { rolePaths } from '#cli/policy/settings/lookup.ts';
+import { codeLines } from '#cli/parsers/bash/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { pathMatcher } from '#cli/repository/paths/public.ts';
+import { rolePaths } from '#cli/policy/settings/contracts.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 import { CONFIG_GUARD, DEFAULT_EXPANSION } from '#cli/config/checks/language/bash.ts';
 
 /**

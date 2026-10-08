@@ -2,14 +2,14 @@
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { parse, TomlError, stringify } from 'smol-toml';
-import { pythonProject } from '#cli/generation/python.ts';
+import { toolProjectDrift } from '#cli/tools/public.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import { pythonProject } from '#cli/generation/contracts.ts';
+import { toolInstallationPlan } from '#cli/tools/contracts.ts';
 import { UV_LOCKFILE } from '#cli/config/platform/locations.ts';
-import { pythonInstallerPin } from '#cli/configurations/pins.ts';
-import { pythonToolProject } from '#cli/tools/python/project.ts';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { pythonToolProjectSchema } from '#cli/parsers/schema/python/tools.ts';
-import { toolProjectDrift, toolInstallationPlan } from '#cli/tools/project.ts';
+import { pythonToolProject } from '#cli/tools/python/public.ts';
+import { pythonToolProjectSchema } from '#cli/parsers/schema/public.ts';
+import { pythonInstallerPin, configurationManifests } from '#cli/configurations/public.ts';
 import { PRIVATE_PYTHON_PROJECT, PRIVATE_PYTHON_LOCKFILE } from '#tests/config/samples/python.ts';
 
 import {

@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { OWNED_KINDS } from '#cli/config/lifecycle/ownership.ts';
-import type { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import type { Root, FileCopy, PlannedFiles } from '#cli/types/platform/root.ts';
+import type { ownershipSchema } from '#cli/lifecycle/ownership/state/contracts.ts';
 
 export type Restoration = { next?: FileCopy };
 

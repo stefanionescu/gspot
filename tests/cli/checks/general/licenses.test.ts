@@ -2,15 +2,15 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
+import * as processes from '#cli/platform/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { chmod, unlink, symlink, readFile } from 'node:fs/promises';
-import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
 import {
@@ -58,7 +58,7 @@ test.each(
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const input = buildCheckInput(await openSession(sandbox.path), 'licenses/packages', { scope });
         using spawn = spyOn(processes, 'run');
-        expect(await rejection(licensesPackages(input))).toBe(
+        expect(await rejection(BUILT_IN_CHECKS['licenses/packages'].input(input))).toBe(
             `Install the project dependencies first: ${installed} is missing in ${scope === '' ? 'the root' : scope}.`,
         );
         expect(spawn).not.toHaveBeenCalled();
@@ -94,7 +94,7 @@ test.each(SCANNER_FAILURES)(
                 );
             }),
         );
-        expect(await rejection(licensesPackages(selected))).toContain(diagnostic);
+        expect(await rejection(BUILT_IN_CHECKS['licenses/packages'].input(selected))).toContain(diagnostic);
         expect(directories.length).toBeGreaterThan(0);
         for (const directory of directories) {
             expect(directory).not.toBe(sandbox.path);
@@ -116,7 +116,7 @@ test.each(CONFIGURATION_FAILURES)(
             await Bun.write(path, content);
         }
         using spawn = spyOn(processes, 'run');
-        expect(await rejection(licensesPackages(selected))).toContain(diagnostic);
+        expect(await rejection(BUILT_IN_CHECKS['licenses/packages'].input(selected))).toContain(diagnostic);
         expect(spawn).not.toHaveBeenCalled();
         expect(await Bun.file(path).exists()).toBe(content !== undefined);
         if (content !== undefined) expect(await Bun.file(path).text()).toBe(content);
@@ -135,7 +135,7 @@ test('a license configuration linked outside the repository is refused without c
     await unlink(path);
     await symlink(destination, path);
     using spawn = spyOn(processes, 'run');
-    expect(await rejection(licensesPackages(selected))).toContain('licenses.json');
+    expect(await rejection(BUILT_IN_CHECKS['licenses/packages'].input(selected))).toContain('licenses.json');
     expect(spawn).not.toHaveBeenCalled();
     expect(await readFile(destination)).toEqual(original);
 });
@@ -181,7 +181,7 @@ test('combined license scans preserve manifest order, license alternatives, unkn
             ),
         });
     });
-    const findings = await licensesPackages(selected);
+    const findings = await BUILT_IN_CHECKS['licenses/packages'].input(selected);
     expect(findings).toMatchObject(
         PROJECT_FINDINGS.map(({ file, message }) => ({
             file,
@@ -217,7 +217,7 @@ test.each(LICENSE_EXCEPTIONS)(
                 stdout: JSON.stringify([{ Name: installed, Version: '1.0.0', License: license }]),
             }),
         );
-        expect(await licensesPackages(selected)).toStrictEqual(
+        expect(await BUILT_IN_CHECKS['licenses/packages'].input(selected)).toStrictEqual(
             findings.map(({ rule, diagnostic }) =>
                 containing({
                     file: rule === 'stale-exception' ? 'gspot.toml' : 'pyproject.toml',

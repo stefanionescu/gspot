@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
-import { directoryOf } from '#cli/platform/paths.ts';
-import { harnessFolders } from '#cli/policy/settings/lookup.ts';
+import { directoryOf } from '#cli/platform/contracts.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
+import { harnessFolders } from '#cli/policy/settings/contracts.ts';
 import { BANNED_FOLDERS } from '#cli/config/checks/general/structure.ts';
 import { structureSources, isDependencyFolder } from '#cli/checks/general/structure/source-files.ts';
 

@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { parseMigration } from '#tests/harness/migrations.ts';
-import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
+import { buildSchema } from '#cli/checks/database/postgres/contracts.ts';
 
 test('keys count as indexes, a table constraint names its columns, and a dropped table leaves', async () => {
     const fields = buildSchema([
@@ -84,4 +84,20 @@ test('dropped foreign and unique constraints remove only the fields they own', a
     expect(retained.indexed.get('public.posts')).toStrictEqual(new Set(['author_id']));
     const removed = buildSchema([initial, await parseMigration('2_drop.sql', 'DROP INDEX author_index;')]);
     expect([...removed.indexed]).toStrictEqual([]);
+});
+
+test('native unnamed foreign keys get their suffix without counting as their own index', async () => {
+    const initial = await parseMigration(
+        '1_keys.sql',
+        'CREATE TABLE posts (id int PRIMARY KEY, author_id int REFERENCES users(id), title text UNIQUE, CHECK (id > 0));',
+    );
+    const fields = buildSchema([initial]);
+    expect(fields.foreignKeys.map(({ column }) => column)).toStrictEqual(['author_id']);
+    expect(fields.indexed.get('public.posts')).toStrictEqual(new Set(['id', 'title']));
+    const removed = buildSchema([
+        initial,
+        await parseMigration('2_drop.sql', 'ALTER TABLE posts DROP CONSTRAINT posts_author_id_fkey;'),
+    ]);
+    expect(removed.foreignKeys).toStrictEqual([]);
+    expect(removed.indexed.get('public.posts')).toStrictEqual(new Set(['id', 'title']));
 });

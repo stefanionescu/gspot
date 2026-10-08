@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
 import { buildBinaryPin } from '#tests/harness/pins.ts';
-import { parseVersionOutput } from '#cli/parsers/tool/version.ts';
+import { parseVersionOutput } from '#cli/parsers/tool/contracts.ts';
 import { VERSION_RESPONSE } from '#tests/config/cli/parsers/tool/version.ts';
 
 test('native wrappers report their executable version when the package has a different version', () => {

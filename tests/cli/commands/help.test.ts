@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
-import { buildProgram } from '#cli/commands/program.ts';
+import { buildProgram } from '#cli/public.ts';
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { rootSettingSchemas } from '#cli/policy/schema/policy.ts';
+import { rootSettingSchemas } from '#cli/policy/schema/public.ts';
 import { commandPages } from '#docs/src/content/reference/commands.ts';
 import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/policy/settings.ts';
 

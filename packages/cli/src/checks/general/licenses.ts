@@ -4,20 +4,20 @@ import { isDeepStrictEqual } from 'node:util';
 import { findingAt } from '#cli/checks/finding.ts';
 import parseExpression from 'spdx-expression-parse';
 import { join, dirname, basename } from 'node:path';
-import { openRoot } from '#cli/platform/root/open.ts';
-import { isInScope } from '#cli/repository/selectors.ts';
+import { openRoot } from '#cli/platform/root/public.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import { licenseProjects } from '#cli/planning/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { environmentExecutable } from '#cli/platform/paths.ts';
-import { runCheckTool } from '#cli/execution/command/check.ts';
+import { isInScope } from '#cli/repository/paths/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import { licenseProjects } from '#cli/planning/requirements.ts';
-import { normalizedPythonIdentity } from '#cli/parsers/packages.ts';
-import { targetInScope } from '#cli/configurations/declarations.ts';
-import { toolOutputDetail } from '#cli/execution/command/failures.ts';
+import { runCheckTool } from '#cli/execution/command/public.ts';
+import { targetInScope } from '#cli/configurations/contracts.ts';
+import { environmentExecutable } from '#cli/platform/contracts.ts';
+import { toolOutputDetail } from '#cli/execution/command/contracts.ts';
 import { LICENSE_CHECKER } from '#cli/config/checks/general/licenses.ts';
-import { everyTable, policyValue } from '#cli/policy/settings/lookup.ts';
+import { normalizedPythonIdentity } from '#cli/parsers/packages/public.ts';
+import { everyTable, policyValue } from '#cli/policy/settings/contracts.ts';
 
 import {
     reportSchema,

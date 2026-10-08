@@ -1,7 +1,7 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
+import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 import { ENTRY_FUNCTIONS } from '#cli/config/checks/language/bash.ts';
-import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
 
 /**
  * One finding per function whose underscore disagrees with its callers: file-local without one, or private with outside callers.

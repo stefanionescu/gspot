@@ -1,10 +1,10 @@
 import type { Node } from 'web-tree-sitter';
 import { findingAt } from '#cli/checks/finding.ts';
-import { visitParsed } from '#cli/parsers/tree-sitter.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import { visitParsed } from '#cli/parsers/source/public.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { CLASS_CALL } from '#cli/config/checks/language/python.ts';
-import { readPython, assignmentOf, disposePython } from '#cli/parsers/python.ts';
+import { readPython, assignmentOf, disposePython } from '#cli/parsers/source/contracts.ts';
 
 // A module variable that holds an object built from a class at import time, or undefined. A name in capitals is a constant.
 function builtAtImport(statement: Node): string | undefined {

@@ -1,19 +1,19 @@
 import { join } from 'node:path';
-import * as tools from '#cli/tools/inspect.ts';
+import * as tools from '#cli/tools/public.ts';
 import { test, spyOn, expect } from 'bun:test';
-import { toPosix } from '#cli/platform/paths.ts';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
-import * as processes from '#cli/platform/spawn.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
+import * as processes from '#cli/platform/public.ts';
+import { toPosix } from '#cli/platform/contracts.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { rejection } from '#tests/harness/expectations.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
-import { typesFresh } from '#cli/checks/platform/cloudflare.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
+import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import type { WorkerTypesProject } from '#tests/types/cli/checks/platform/cloudflare.ts';
 
 import {
@@ -40,7 +40,7 @@ async function applyChanges(scope: string, bindings: string): Promise<WorkerType
     await writeFile(target, edited);
     await chmod(target, 0o640);
     const session = await openSession(directory.path);
-    const input = buildCheckInput(session, 'cloudflare/types-fresh', { scope });
+    const input = buildCheckInput(session, 'cloudflare/stale-types', { scope });
     const locate = spyOn(tools, 'inspectTool').mockReturnValue({
         name: 'wrangler',
         state: 'host',
@@ -72,7 +72,9 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         const testRepository = await applyChanges(scope, 'failure');
         await using directory = testRepository.directory;
         try {
-            expect(await rejection(typesFresh(testRepository.input))).toContain('Types generation failed');
+            expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input))).toContain(
+                'Types generation failed',
+            );
             await expectPreserved(testRepository);
             expect(await readFile(join(directory.path, testRepository.path('bindings.txt')), 'utf8')).toBe('failure');
         } finally {
@@ -87,18 +89,18 @@ test.each(CLOUDFLARE_TYPES_SCOPES)(
         const testRepository = await applyChanges(scope, '// Generated types\n');
         await using directory = testRepository.directory;
         try {
-            expect(await typesFresh(testRepository.input)).toStrictEqual([
+            expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([
                 {
                     check: testRepository.input.check.name,
                     file: toPosix(testRepository.path('worker-configuration.d.ts')),
                     line: 1,
                     rule: 'stale',
-                    message: 'wrangler types writes this file differently. Run it and commit the result.',
+                    message: textContaining('changes this generated file; commit what it writes.'),
                     fixable: false,
                 },
             ]);
             await writeFile(join(directory.path, testRepository.path('bindings.txt')), testRepository.edited);
-            expect(await typesFresh(testRepository.input)).toStrictEqual([]);
+            expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([]);
             await expectPreserved(testRepository);
         } finally {
             testRepository.locate.mockRestore();
@@ -128,7 +130,9 @@ test('custom Worker type files retain the configured interface and child scope',
         }),
     );
     expect(
-        await typesFresh(buildCheckInput(session, 'cloudflare/types-fresh', { scope: 'workers/api' })),
+        await BUILT_IN_CHECKS['supabase/stale-types'].input(
+            buildCheckInput(session, 'cloudflare/stale-types', { scope: 'workers/api' }),
+        ),
     ).toStrictEqual([]);
     expect(directories).toHaveLength(1);
     expect(directories[0]).not.toBe(join(sandbox.path, 'workers/api'));

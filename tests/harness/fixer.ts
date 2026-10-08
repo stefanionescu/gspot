@@ -1,5 +1,5 @@
 // Sandbox for one fixer check whose fix command each test replaces with its own script.
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { FIXER_POLICY } from '#tests/config/harness/fixer.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
 

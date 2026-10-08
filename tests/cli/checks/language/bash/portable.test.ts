@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
-import { readRepository } from '#cli/repository/read.ts';
+import { readRepository } from '#cli/repository/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
-import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { detectConfigurations } from '#cli/configurations/selection/contracts.ts';
 
 import {
     NODE_EMBEDS,

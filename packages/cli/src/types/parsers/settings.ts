@@ -4,11 +4,11 @@ import type {
     settingPrimitiveSchema,
     settingFieldOptionsSchema,
     settingValueDeclarationSchema,
-} from '#cli/parsers/schema/settings.ts';
+} from '#cli/parsers/schema/contracts.ts';
 
 /** Path roles come from the native setting declaration, not the schema visitor. */
 declare module 'zod/v4/core' {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: Zod merges this native metadata interface; a type alias cannot augment it.
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- reason: Zod metadata requires interface merging in its native module.
     interface GlobalMeta {
         pathRole?: SettingValueDeclaration['path_role'];
     }

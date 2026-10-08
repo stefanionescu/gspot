@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { scopeIgnorePatterns } from '#cli/generation/ignore-patterns.ts';
+import { scopeIgnorePatterns } from '#cli/generation/documents/contracts.ts';
 
 test.each([
     { pattern: '/{apps,packages}/web/file.ts', expected: ['/file.ts'] },

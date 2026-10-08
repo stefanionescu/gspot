@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
 import { gitOutput } from '#tests/harness/git.ts';
-import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
-import { getStaged } from '#cli/repository/revisions/changes.ts';
+import { getStaged } from '#cli/repository/revisions/public.ts';
 
 test.each(['secrets/env-files', 'structure/tracked-dependencies'])(
     '%s reports a failed index read instead of a clean verdict',

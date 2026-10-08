@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { join, relative } from 'node:path';
-import { toPosix } from '#cli/platform/paths.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { toPosix } from '#cli/platform/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { EnginePhase } from '#tests/types/cli/generation/eslint/engines.ts';

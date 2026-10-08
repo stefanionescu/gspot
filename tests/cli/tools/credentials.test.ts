@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { useEnvironment } from '#tests/harness/environment.ts';
 import { INSTALL_OUTPUT_LIMIT } from '#cli/config/tools/install.ts';
-import { registryPasswords, installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/credentials.ts';
+import { registryPasswords, installationDiagnostics, assertCredentialFreeLockfile } from '#cli/tools/contracts.ts';
 import { LEAKED_LOCKFILES, REGISTRY_PASSWORDS, CREDENTIAL_DIAGNOSTICS } from '#tests/config/cli/tools/credentials.ts';
 
 test.each(REGISTRY_PASSWORDS)('registry password parsing preserves both representations of %s', (url, expected) => {

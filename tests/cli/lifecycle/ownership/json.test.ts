@@ -2,13 +2,11 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { hasFields } from '#cli/lifecycle/merge/document.ts';
-import { planMerge } from '#cli/lifecycle/ownership/plans.ts';
-import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
+import { hasFields } from '#cli/lifecycle/merge/contracts.ts';
 import { TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { planMerge, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 
 test('JSON field ownership survives reopen, updates and removal while keeping unrelated bytes and modes', async () => {
     await using sandbox = await testdir();

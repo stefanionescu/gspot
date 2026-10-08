@@ -1,7 +1,7 @@
 // Builds minimal manifests for the init and selection tests.
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { TestManifest } from '#tests/types/harness/tooling.ts';
-import { parseManifest, linkManifestTools } from '#cli/configurations/manifests.ts';
+import { parseManifest, linkManifestTools } from '#cli/configurations/public.ts';
 
 /**
  * Parse an isolated configuration with the declarations its scenario needs.

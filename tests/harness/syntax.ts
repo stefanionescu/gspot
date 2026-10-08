@@ -1,4 +1,4 @@
-import { parseSource } from '#cli/parsers/tree-sitter.ts';
+import { parseSource } from '#cli/parsers/source/public.ts';
 import type { GrammarName } from '#cli/types/parsers/source.ts';
 import type { OwnedSyntaxTree } from '#tests/types/harness/syntax.ts';
 

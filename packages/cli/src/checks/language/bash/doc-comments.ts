@@ -2,7 +2,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ScriptFunction } from '#cli/types/parsers/bash.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { getScriptIndex } from '#cli/checks/language/contracts.ts';
 
 import {
     WORD,

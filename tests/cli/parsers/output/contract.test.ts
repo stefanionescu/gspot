@@ -2,8 +2,8 @@
 // another shape is a GspotError, never another error.
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
-import { GspotError } from '#cli/platform/errors.ts';
-import { parseOutput } from '#cli/parsers/output/parse.ts';
+import { GspotError } from '#cli/platform/public.ts';
+import { parseOutput } from '#cli/parsers/output/public.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import { BASE_CHECK } from '#tests/config/cli/execution/command/findings.ts';
 import { FOREIGN, OUTPUTS, JSON_FORMATS } from '#tests/config/cli/parsers/output/contract.ts';

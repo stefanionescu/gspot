@@ -1,10 +1,10 @@
 import { readdirSync } from 'node:fs';
 import { findingAt } from '#cli/checks/finding.ts';
-import { directoryOf } from '#cli/platform/paths.ts';
+import { directoryOf } from '#cli/platform/contracts.ts';
 import { sourcePath } from '#cli/platform/root/reads.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
-import { sourceConfigurations } from '#cli/configurations/select.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
+import { sourceConfigurations } from '#cli/configurations/selection/public.ts';
 import { structureSources, isDependencyFolder } from '#cli/checks/general/structure/source-files.ts';
 
 /**

@@ -5,7 +5,7 @@ import { check, format } from 'prettier';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { toolProjectSchema } from '#cli/parsers/schema/packages.ts';
+import { toolProjectSchema } from '#cli/parsers/packages/contracts.ts';
 import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
 import { createEslint, eslintConfigurationSchema } from '#tests/harness/generated.ts';
 

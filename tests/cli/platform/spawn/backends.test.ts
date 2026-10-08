@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { chmod } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
-import { run, runBlocking } from '#cli/platform/spawn.ts';
+import { run, runBlocking } from '#cli/platform/public.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import type { AsyncSpawnOptions } from '#cli/types/platform/runtime.ts';

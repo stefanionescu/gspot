@@ -1,11 +1,11 @@
 import { testdir } from 'testdirs';
 import { sep, join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { cacheDirectory } from '#cli/platform/public.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { cacheDirectory } from '#cli/platform/environment.ts';
 import { useCacheDirectory } from '#tests/harness/environment.ts';
 import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { buildFolder, openBuildCache } from '#cli/checks/language/swift/cache.ts';
+import { buildFolder, openBuildCache } from '#cli/checks/language/swift/public.ts';
 
 test('build cache rejects external output links and concurrent writers', async () => {
     await using sandbox = await testdir();

@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { cp, realpath } from 'node:fs/promises';
+import { inspectTool } from '#cli/tools/public.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { inspectTool } from '#cli/tools/inspect.ts';
-import { toolPin } from '#cli/configurations/pins.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 
 test('library inspection reads native package metadata without executing an authored ESLint configuration', async () => {

@@ -4,7 +4,7 @@ import { test, expect } from 'bun:test';
 import { unlink } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import type { toolProjectSchema } from '#cli/parsers/schema/packages.ts';
+import type { toolProjectSchema } from '#cli/parsers/packages/contracts.ts';
 import { createEslint, eslintConfigurationSchema } from '#tests/harness/generated.ts';
 
 import {

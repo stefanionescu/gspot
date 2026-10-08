@@ -1,13 +1,13 @@
 // Running gspot from a test: in-process for command behavior, or as a child process end to end.
 import { join } from 'node:path';
 import { spyOn } from 'bun:test';
+import { main } from '#cli/public.ts';
 import { Readable } from 'node:stream';
-import { main } from '#cli/commands/program.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
-import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 import type { RunOptions } from '#cli/types/execution/check.ts';
 import { SOURCE_CLI_PATH } from '#tests/config/harness/gspot.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
 import type { CapturedProcess } from '#tests/types/harness/process.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { runTestCommand, prepareTestCommand } from '#tests/harness/command.ts';

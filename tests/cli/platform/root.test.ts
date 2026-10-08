@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { openRoot } from '#cli/platform/root/open.ts';
+import { openRoot } from '#cli/platform/root/public.ts';
 import { link, stat, symlink, readFile } from 'node:fs/promises';
 import { isMacos, isPosix } from '#tests/config/harness/platforms.ts';
-import { fileMode, portableSegments } from '#cli/platform/root/rules.ts';
+import { fileMode, portableSegments } from '#cli/platform/root/contracts.ts';
 
 import {
     UNSAFE_DESTINATIONS,

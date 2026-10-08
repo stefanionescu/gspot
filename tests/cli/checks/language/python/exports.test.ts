@@ -1,12 +1,12 @@
 // The Python export analyses: private prefixes, declaration order, the place and order of __all__, and its size.
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
+import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
 import { SHOWN } from '#tests/config/cli/checks/language/python/exports.ts';
-import { exportOrder, privatePrefix, packageExports, exportsAtBottom } from '#cli/checks/language/python/exports.ts';
 
 test('a function left out of __all__ carries the private prefix', async () => {
     await using sandbox = await testdir({
@@ -15,7 +15,9 @@ test('a function left out of __all__ carries the private prefix', async () => {
         'example/tidy.py': `${PYTHON_MODULE_HEADER}${SHOWN}\n\ndef _hidden() -> int:\n    """Give two."""\n    return 2\n\n\n__all__ = ["shown"]\n`,
     });
     expect(
-        await privatePrefix(buildCheckInput(await openSession(sandbox.path), 'python/private-prefix')),
+        await BUILT_IN_CHECKS['python/private-prefix'].input(
+            buildCheckInput(await openSession(sandbox.path), 'python/private-prefix'),
+        ),
     ).toMatchObject([{ file: 'example/leaky.py', line: 9, rule: 'private-prefix' }]);
 });
 
@@ -27,24 +29,32 @@ test('__all__ belongs at the bottom, lists shortest names first, and stays under
         'example/__init__.py': `${PYTHON_MODULE_HEADER}__all__ = ["a", "b", "c"]\n`,
     });
     expect(
-        await exportsAtBottom(buildCheckInput(await openSession(sandbox.path), 'python/exports-at-bottom')),
+        await BUILT_IN_CHECKS['python/exports-at-bottom'].input(
+            buildCheckInput(await openSession(sandbox.path), 'python/exports-at-bottom'),
+        ),
     ).toMatchObject([{ file: 'example/top.py', line: 4, rule: 'exports-at-bottom' }]);
-    expect(await exportOrder(buildCheckInput(await openSession(sandbox.path), 'python/export-order'))).toMatchObject([
-        { file: 'example/listed.py', line: 14, rule: 'export-order' },
-    ]);
+    expect(
+        await BUILT_IN_CHECKS['python/export-order'].input(
+            buildCheckInput(await openSession(sandbox.path), 'python/export-order'),
+        ),
+    ).toMatchObject([{ file: 'example/listed.py', line: 14, rule: 'export-order' }]);
     await Bun.write(
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['python'], { level: 'all', tables: '[limits]\nindex_exports = 2\n' }),
     );
     expect(
-        await packageExports(buildCheckInput(await openSession(sandbox.path), 'python/package-exports')),
+        await BUILT_IN_CHECKS['python/package-exports'].input(
+            buildCheckInput(await openSession(sandbox.path), 'python/package-exports'),
+        ),
     ).toMatchObject([{ file: 'example/__init__.py', line: 4, rule: 'package-exports' }]);
     await Bun.write(
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['python'], { level: 'all', tables: '[limits]\nindex_exports = 3\n' }),
     );
     expect(
-        await packageExports(buildCheckInput(await openSession(sandbox.path), 'python/package-exports')),
+        await BUILT_IN_CHECKS['python/package-exports'].input(
+            buildCheckInput(await openSession(sandbox.path), 'python/package-exports'),
+        ),
     ).toStrictEqual([]);
 });
 
@@ -53,7 +63,9 @@ test('__all__ names in shortest-first order pass export ordering', async () => {
         'gspot.toml': buildPolicy(['python'], { level: 'all' }),
         'example/sorted.py': `${PYTHON_MODULE_HEADER}${SHOWN}\n\ndef ab() -> int:\n    """Give two."""\n    return 2\n\n\n__all__ = ["ab", "shown"]\n`,
     });
-    expect(await exportOrder(buildCheckInput(await openSession(sandbox.path), 'python/export-order'))).toStrictEqual(
-        [],
-    );
+    expect(
+        await BUILT_IN_CHECKS['python/export-order'].input(
+            buildCheckInput(await openSession(sandbox.path), 'python/export-order'),
+        ),
+    ).toStrictEqual([]);
 });

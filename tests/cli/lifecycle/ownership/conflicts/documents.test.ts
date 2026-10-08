@@ -3,10 +3,8 @@ import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { readFile, writeFile } from 'node:fs/promises';
-import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { planBlock, planMerge } from '#cli/lifecycle/ownership/plans.ts';
-import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import { planBlock, planMerge, planRestoration } from '#cli/lifecycle/ownership/contracts.ts';
 
 test('TOML task ownership refuses malformed and edited fields and creates new tables', async () => {
     await using directory = await testdir();

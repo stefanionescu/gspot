@@ -35,12 +35,6 @@ export const TEXT_SUFFIXES = new Set([
 
 export const ASSET_FOLDER = /(?:^|\/)(?:assets|public|static)\//u;
 
-export const REQUIRED_HEADERS: Record<string, RegExp> = {
-    'x-content-type-options': /^nosniff$/iu,
-    'referrer-policy': /\S/u,
-    'x-frame-options': /^(?:deny|sameorigin)$/iu,
-};
-
 /** How many lines of build output accompany a failure. */
 export const OUTPUT_TAIL_LINES = 10;
 

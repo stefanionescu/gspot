@@ -6,6 +6,13 @@ eslint_all_rules = [
     "astro/prefer-split-class-list",
 ]
 
+naming.path_containers = [
+    { open = "[", close = "]", category = "path_parameters" },
+    { open = "(", close = ")", category = "directories" },
+    { open = "@", close = "", category = "directories" },
+    { open = "_", close = "", category = "directories" },
+]
+
 [configuration]
 title = "Astro"
 requires = ["javascript"]

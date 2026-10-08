@@ -1,10 +1,10 @@
 import { test, expect } from 'bun:test';
-import { planRun } from '#cli/planning/plan.ts';
+import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import type { CommandPart } from '#cli/types/execution/command.ts';
-import { isolatedFiles, perFileCommands } from '#cli/execution/command/placeholders.ts';
+import { isolatedFiles, perFileCommands } from '#cli/execution/command/arguments/public.ts';
 
 test.each([0, 1, 2])('replaces a file marker at position %s without dropping neighboring arguments', (slot) => {
     const parts: CommandPart[] = ['before', 'after'];

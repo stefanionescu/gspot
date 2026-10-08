@@ -2,10 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { isPosix } from '#tests/config/harness/platforms.ts';
-import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
-import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { lstat, symlink, readFile, readlink } from 'node:fs/promises';
+import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
+import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 
 test.skipIf(!isPosix)(
     'lifecycle ownership: an exactly reproduced escaping link is refused before ownership or recovery changes',

@@ -1,6 +1,6 @@
 // The template schema retains path-independent policy and adds a template name and selection mode.
 import { z } from 'zod';
-import { policySchema, validateAuthoredReasons } from '#cli/policy/schema/policy.ts';
+import { policySchema, validateAuthoredReasons } from '#cli/policy/schema/public.ts';
 
 /** A template as written. */
 export const templateSchema = z

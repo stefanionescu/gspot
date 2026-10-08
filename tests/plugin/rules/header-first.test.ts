@@ -1,7 +1,6 @@
 import { Linter } from 'eslint';
-import plugin from '#plugin/plugin.ts';
 import { test, expect } from 'bun:test';
-import { headerFirst } from '#plugin/rules/header-first.ts';
+import plugin from '#plugin/rules/public.ts';
 import { createRuleTester } from '#tests/harness/rule-tester.ts';
 
 test.each(['class Sample {}', 'export class Sample {}', 'export default class Sample {}'])(
@@ -24,7 +23,7 @@ test.each(['class Sample {}', 'export class Sample {}', 'export default class Sa
     },
 );
 
-createRuleTester().run('header-first', headerFirst, {
+createRuleTester().run('header-first', plugin.rules['header-first'], {
     valid: [
         "import { a } from './a';\n\n// Explains the complete\n// declaration below.\nexport const b = a;",
 
@@ -101,7 +100,7 @@ createRuleTester().run('header-first', headerFirst, {
     ],
 });
 
-createRuleTester('/repo', { sourceType: 'commonjs' }).run('header-first CommonJS', headerFirst, {
+createRuleTester('/repo', { sourceType: 'commonjs' }).run('header-first CommonJS', plugin.rules['header-first'], {
     valid: [
         {
             code: "const a = require('./a');\n\n// Explains b.\nmodule.exports = a;",

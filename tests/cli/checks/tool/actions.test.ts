@@ -5,10 +5,10 @@ import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { actionlintSource } from '#cli/checks/tool/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { actionlintSource } from '#cli/checks/tool/actions.ts';
+import { environmentVariables } from '#cli/platform/public.ts';
 import { WORKFLOW_HEAD } from '#tests/config/samples/actions.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
 import { PATH, PINACT_STUB } from '#tests/config/cli/checks/tool/actions.ts';
 
 const TOOL_FAILURES_POLICY = buildPolicy(['files', 'actions'], {

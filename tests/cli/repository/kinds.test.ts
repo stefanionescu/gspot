@@ -2,10 +2,9 @@ import { join } from 'node:path';
 import { gitOutput } from '#tests/harness/git.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { readAttributes } from '#cli/repository/kind.ts';
-import { readRepository } from '#cli/repository/read.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
+import { readAttributes, readRepository } from '#cli/repository/public.ts';
+import { headerFor, addJsonHeader } from '#cli/generation/documents/contracts.ts';
 import { rm, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
 import {

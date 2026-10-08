@@ -2,10 +2,10 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/git.ts';
-import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 
 test('the attributes block keeps LF in each generated file, including one in a scope folder with a space', async () => {
     await using sandbox = await testdir();

@@ -1,10 +1,9 @@
 import { namingLists } from '#cli/parsers/schema/naming.ts';
-import { trimTrailingSlashes } from '#cli/platform/paths.ts';
-import { compact, valueAt, isRecord } from '#cli/platform/objects.ts';
 import { prefixScopePath, scopePolicyPaths } from '#cli/policy/paths.ts';
-import { configurationSettingSchemas } from '#cli/policy/schema/namespaces.ts';
-import { defaultValue, namingCategorySchema } from '#cli/policy/schema/fields.ts';
-import { policySchema, policyTableValuesSchema } from '#cli/policy/schema/policy.ts';
+import { configurationSettingSchemas } from '#cli/policy/schema/native/contracts.ts';
+import { defaultValue, namingCategorySchema } from '#cli/policy/schema/contracts.ts';
+import { policySchema, policyTableValuesSchema } from '#cli/policy/schema/public.ts';
+import { compact, valueAt, isRecord, trimTrailingSlashes } from '#cli/platform/contracts.ts';
 
 import type {
     Limits,

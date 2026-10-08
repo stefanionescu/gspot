@@ -2,7 +2,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import type { ScriptFile } from '#cli/types/checks/language/bash.ts';
 import { SOURCE_STATEMENT } from '#cli/config/checks/language/bash.ts';
-import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
+import { functionAt, getScriptIndex } from '#cli/checks/language/contracts.ts';
 
 // The runs of top-level source statements, each as the zero-based lines it spans. Blank lines and comments join a run.
 function sourceRuns(file: ScriptFile): number[][] {

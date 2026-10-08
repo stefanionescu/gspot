@@ -1,12 +1,12 @@
-import { emitAll } from '#cli/generation/files.ts';
 import { test, expect, beforeAll } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { openSession } from '#cli/commands/session.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { RULES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { runtimeEvidenceCases } from '#tests/harness/repository.ts';
-import { DRIZZLE_DRIVERS } from '#tests/config/cli/generation/guides.ts';
+import { DRIZZLE_DRIVERS, PLAYWRIGHT_RUNNERS, PLAYWRIGHT_DEPENDENCIES } from '#tests/config/cli/generation/guides.ts';
 
 async function generatedGuides(level: Level, files: Record<string, string>): Promise<Map<string, string>> {
     await using sandbox = await testdir();
@@ -36,11 +36,7 @@ test('recommended guides omit sections marked for level all', () => {
 });
 
 test('a rule whose every section is for level all installs only at all', () => {
-    for (const path of [
-        'general/engineering/code/NAMING.md',
-        'language/typescript/NAMING.md',
-        'language/bash/NAMING.md',
-    ]) {
+    for (const path of ['general/naming/NAMING.md', 'language/typescript/NAMING.md', 'language/bash/NAMING.md']) {
         expect(recommended.has(`${RULES_DIRECTORY}/${path}`)).toBe(false);
         expect(all.has(`${RULES_DIRECTORY}/${path}`)).toBe(true);
     }
@@ -52,7 +48,11 @@ test('conditional guides follow file and dependency evidence', async () => {
         'bunfig.toml': '[test]\nroot = "tests"\n',
         'package.json': '{"name":"example","devDependencies":{"tailwindcss":"4.1.0","@playwright/test":"1.50.0"}}\n',
     });
-    for (const path of ['language/javascript/BUN.md', 'language/css/TAILWIND.md', 'tool/vitest/PLAYWRIGHT.md']) {
+    for (const path of [
+        'language/javascript/BUN.md',
+        'language/css/TAILWIND.md',
+        'language/javascript/PLAYWRIGHT.md',
+    ]) {
         expect(all.has(`${RULES_DIRECTORY}/${path}`)).toBe(false);
         expect(present.has(`${RULES_DIRECTORY}/${path}`)).toBe(true);
     }
@@ -94,4 +94,35 @@ test('shared HTTP and OpenAPI instructions use their engineering and tool owners
     expect(guides.has(`${RULES_DIRECTORY}/tool/openapi/OPENAPI.md`)).toBe(true);
     expect(guides.has(`${RULES_DIRECTORY}/framework/express/HTTP.md`)).toBe(false);
     expect(guides.has(`${RULES_DIRECTORY}/framework/express/OPENAPI.md`)).toBe(false);
+});
+
+const projects = (['recommended', 'all'] as const).flatMap((level) =>
+    ['', 'app'].map((scope) => ({ level, scope, project: scope || 'root' })),
+);
+
+test.each(
+    projects.flatMap((project) =>
+        PLAYWRIGHT_RUNNERS.flatMap((runner) =>
+            PLAYWRIGHT_DEPENDENCIES.map((dependency) => ({ ...project, ...runner, ...dependency })),
+        ),
+    ),
+)('Playwright guidance follows $dependency with $runner at $level in $project', async (entry) => {
+    await using sandbox = await testdir();
+    const prefix = entry.scope === '' ? '' : `${entry.scope}/`;
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(entry.scope === '' ? [...entry.configurations] : [], {
+            level: entry.level,
+            tables: entry.scope === '' ? '' : `[scope.app]\nconfigurations = ${JSON.stringify(entry.configurations)}\n`,
+        }),
+        [`${prefix}package.json`]: JSON.stringify({ dependencies: { [entry.dependency]: '1.0.0' } }),
+        ...(entry.runner === 'Bun' ? { [`${prefix}bunfig.toml`]: '[test]\nroot = "tests"\n' } : {}),
+    });
+    const session = await openSession(sandbox.path);
+    const output = emitAll(session);
+    const paths = output.files.filter((file) => file.kind === 'rules').map((file) => file.path);
+    expect(paths.filter((path) => path === `${RULES_DIRECTORY}/language/javascript/PLAYWRIGHT.md`)).toHaveLength(
+        entry.present ? 1 : 0,
+    );
+    expect(paths).not.toContain(`${RULES_DIRECTORY}/tool/vitest/PLAYWRIGHT.md`);
+    expect(paths).toContain(`${RULES_DIRECTORY}/general/engineering/agent/TALKING.md`);
 });

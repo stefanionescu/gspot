@@ -1,5 +1,74 @@
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
+/** Native lock checks use local dependency projects and retain their exact authored manifests. */
+const JAVASCRIPT_PROJECT = {
+    manifestPath: 'package.json',
+    manifest: '{"private":true,"dependencies":{"library":"file:./library"}}',
+    changed: '{"private":true,"dependencies":{"other":"file:./other"}}',
+    files: {
+        'library/package.json': '{"name":"library","version":"1.0.0"}\n',
+        'other/package.json': '{"name":"other","version":"1.0.0"}\n',
+    },
+};
+const PYTHON_PROJECT = {
+    manifestPath: 'pyproject.toml',
+    manifest:
+        '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["library"]\n[tool.uv.sources]\nlibrary = { path = "library" }\nother = { path = "other" }\n',
+    changed:
+        '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["other"]\n[tool.uv.sources]\nlibrary = { path = "library" }\nother = { path = "other" }\n',
+    files: {
+        'library/pyproject.toml': '[project]\nname = "library"\nversion = "1.0.0"\n',
+        'other/pyproject.toml': '[project]\nname = "other"\nversion = "1.0.0"\n',
+    },
+};
 
 export const CLEAN = `{\n    "name": "example",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}"\n}\n`;
 
 export const DEPENDENCIES_INIT = ['init', '--yes', '--configurations', 'dependencies', ...QUIET_INIT];
+export const NATIVE_LOCKFILES = [
+    {
+        ...JAVASCRIPT_PROJECT,
+        name: 'Bun',
+        client: 'bun',
+        lockfileName: 'bun.lock',
+        arguments: ['install', '--lockfile-only', '--ignore-scripts'],
+    },
+    {
+        ...JAVASCRIPT_PROJECT,
+        name: 'npm',
+        client: 'npm',
+        lockfileName: 'package-lock.json',
+        arguments: ['install', '--package-lock-only', '--ignore-scripts'],
+    },
+    {
+        ...JAVASCRIPT_PROJECT,
+        name: 'Yarn Classic',
+        client: 'yarn',
+        lockfileName: 'yarn.lock',
+        arguments: ['install', '--non-interactive', '--ignore-scripts'],
+    },
+    {
+        ...JAVASCRIPT_PROJECT,
+        name: 'pnpm',
+        client: 'pnpm',
+        lockfileName: 'pnpm-lock.yaml',
+        arguments: ['install', '--lockfile-only', '--ignore-scripts'],
+    },
+    { ...PYTHON_PROJECT, name: 'uv', client: 'uv', lockfileName: 'uv.lock', arguments: ['lock'] },
+] as const;
+/** Native Syncpack filenames that were absent from the takeover declarations. */
+export const SYNCPACK_TAKEOVERS = [
+    { file: '.syncpackrc.yaml', source: 'versionGroups:\n  - dependencies: [fixture]\n    isIgnored: true\n' },
+    { file: '.syncpackrc.yml', source: 'versionGroups:\n  - dependencies: [fixture]\n    isIgnored: true\n' },
+    {
+        file: '.syncpackrc.ts',
+        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
+    },
+    {
+        file: '.syncpackrc.mjs',
+        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
+    },
+    {
+        file: 'syncpack.config.ts',
+        source: 'export default { versionGroups: [{ dependencies: ["fixture"], isIgnored: true }] };\n',
+    },
+];

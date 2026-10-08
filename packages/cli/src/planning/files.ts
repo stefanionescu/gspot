@@ -1,14 +1,14 @@
 // Which files a planned check runs over: what it owns, less excluded and child-scope paths, narrowed to a selection.
-import { kindOf } from '#cli/repository/kind.ts';
-import { tagEntry } from '#cli/repository/tags.ts';
-import { ownedBy } from '#cli/configurations/owners.ts';
-import { toolFileName } from '#cli/configurations/declarations.ts';
+import { kindOf } from '#cli/repository/public.ts';
+import { toolFileName } from '#cli/configurations/contracts.ts';
+import { ownedBy } from '#cli/configurations/selection/public.ts';
+import { tagEntry } from '#cli/repository/discovery/contracts.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DOT_GSPOT, POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/planning.ts';
-import { isInScope, pathMatcher, isOutsideChildren, isToolProjectPath } from '#cli/repository/selectors.ts';
+import { isInScope, pathMatcher, isOutsideChildren, isToolProjectPath } from '#cli/repository/paths/public.ts';
 
 // Every tracked file under the scope.
 function projectFiles(context: PlanInputs, scopePath: string, runs: CheckDeclaration['runs']): TrackedFile[] {
