@@ -1,5 +1,5 @@
 {
-    "openRecords": 674,
+    "openRecords": 645,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -258,7 +258,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 674,
+        "openRecords": 645,
         "records": 1092,
         "batches": [
             {
@@ -564,8 +564,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 97,
-                "unresolvedAssignments": 194
+                "completedAssignments": 106,
+                "unresolvedAssignments": 185
             },
             {
                 "id": "python",
@@ -718,8 +718,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 15,
-                "unresolvedAssignments": 84
+                "completedAssignments": 24,
+                "unresolvedAssignments": 75
             },
             {
                 "id": "swift-bash-sql",
@@ -808,8 +808,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 32,
-                "unresolvedAssignments": 50
+                "completedAssignments": 42,
+                "unresolvedAssignments": 40
             },
             {
                 "id": "frameworks-platforms",
@@ -947,8 +947,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 25,
-                "unresolvedAssignments": 106
+                "completedAssignments": 28,
+                "unresolvedAssignments": 103
             },
             {
                 "id": "test-quality",
@@ -1424,8 +1424,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 154,
-                "unresolvedAssignments": 315
+                "completedAssignments": 179,
+                "unresolvedAssignments": 290
             },
             {
                 "id": "scripts-repository",
@@ -1564,8 +1564,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 29,
-                "unresolvedAssignments": 103
+                "completedAssignments": 37,
+                "unresolvedAssignments": 95
             },
             {
                 "id": "installation-docs",
@@ -1709,8 +1709,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 57,
-                "unresolvedAssignments": 80
+                "completedAssignments": 61,
+                "unresolvedAssignments": 76
             },
             {
                 "id": "policy-file",
@@ -1905,8 +1905,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 47,
-                "unresolvedAssignments": 42
+                "completedAssignments": 48,
+                "unresolvedAssignments": 41
             },
             {
                 "id": "configurations",
@@ -1972,8 +1972,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 51,
-                "unresolvedAssignments": 8
+                "completedAssignments": 52,
+                "unresolvedAssignments": 7
             },
             {
                 "id": "names",
@@ -2155,24 +2155,27 @@
             "verification": []
         },
         "areas/checks/030": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
                 "Assigned exact binding current fix to separate implementation checkout; no completed-record credit. Root owns integration and final evidence. CSS checks030 exact prescribed npm metadata probe fails ENOTFOUND, so neither conditional branch is claimed.",
                 "Evidence d46319e4935c1707.",
                 "Evidence aaa450b84f7aba90.",
-                "Evidence 28e449d0c0ca8ce6."
+                "Evidence 28e449d0c0ca8ce6.",
+                "Prescribed exact npm view eslint-plugin-css-modules time.modified peerDependencies --json exits0: time.modified2023-10-19T16:22:59.728Z, peer eslint>=2.0.0. Required2024-or-later predicate fails, so record is wrong per stated fallback; keep built-in CSS check/parser/registration.",
+                "Raw native probe /tmp/gspot-native-css-maintenance-probe.json preserved; no unsupported plugin replacement. Existing native CSS check controls pass in Main combined160/472.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-native-names-final-freeze.json",
-                    "commit": null,
+                    "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
                     "verification": ["Evidence d46319e4935c1707.", "Evidence aaa450b84f7aba90."]
                 },
                 {
                     "evidence": "/tmp/gspot-css-plugin-unrestricted-prescribed-probe.log",
-                    "commit": null,
+                    "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
                     "verification": ["Evidence 28e449d0c0ca8ce6."]
                 }
             ]
@@ -2733,10 +2736,14 @@
             ]
         },
         "areas/integration-tests/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Keep js/ts callback and distinct JSX controls; remove only duplicate mts/cts/tsx rows. Exact native AST extension-array proof preserves body; Main comments tests pass.",
+                "Agent frozen behavior dfb0c88ca1609cbe4f41e864f52b7b205dc206ead42aa39fc7ce312aa2e4889c. Main combined160cases472assertions15files16.33s; native tutorial/spelling/JS5cases38assertions40.85s.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "areas/integration-tests/030": {
             "status": "pending",
@@ -2784,10 +2791,14 @@
             "verification": []
         },
         "areas/integration-tests/041": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Three complete pinact/typos/ESLint callbacks moved mechanically into actual execution/command/findings owner in9a3851a9a. Root26case102assert replay and original callback AST proof pass; custom declared command cases remain.",
+                "Agent frozen behavior dfb0c88ca1609cbe4f41e864f52b7b205dc206ead42aa39fc7ce312aa2e4889c. Main combined160cases472assertions15files16.33s; native tutorial/spelling/JS5cases38assertions40.85s.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "areas/integration-tests/043": {
             "status": "complete",
@@ -2867,10 +2878,14 @@
             "verification": []
         },
         "areas/integration-tests/057": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Remove only duplicate Jest all-level valid-expect native case; preserve recommended defect/correction and both-level applicability matrix. Main native Jest generation tests pass.",
+                "Agent frozen behavior dfb0c88ca1609cbe4f41e864f52b7b205dc206ead42aa39fc7ce312aa2e4889c. Main combined160cases472assertions15files16.33s; native tutorial/spelling/JS5cases38assertions40.85s.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "areas/integration-tests/058": {
             "status": "complete",
@@ -4186,10 +4201,14 @@
             "verification": []
         },
         "areas/tool-tests/020": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Delete duplicate spelling command case after preserving both fixable:false findings, repeated partial byte reads and manual correction in shared native fixer. Main spelling/typos passes; SQL/shfmt bodies remain unchanged.",
+                "Agent frozen behavior dfb0c88ca1609cbe4f41e864f52b7b205dc206ead42aa39fc7ce312aa2e4889c. Main combined160cases472assertions15files16.33s; native tutorial/spelling/JS5cases38assertions40.85s.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "areas/tool-tests/021": {
             "status": "pending",
@@ -4243,33 +4262,49 @@
             ]
         },
         "areas/tool-tests/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Delete duplicate syntax/shfmt table vectors after dedicated native syntax Bash/Zsh/Bats and shfmt ordinary/space/tab/syntax/refusal/correction controls pass. ShellCheck and five genuine computed boundary vectors remain.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "areas/tool-tests/032": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."],
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Evidence 7bd6261850b418f3.",
+                "Evidence 4f93bbab82bba503.",
+                "Delete duplicate Bash init/lifecycle case; only genuine missing-tool/available-tool native control remains. Distinct init/refusal/hook output/byte/ownership checks remain in CLI.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-bash-contracts-freeze.json",
-                    "commit": null,
+                    "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
                     "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."]
                 }
             ]
         },
         "areas/tool-tests/034": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7b1e1ab655c0f702.", "Evidence 9937a87a53a7ad1d."],
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Evidence 7b1e1ab655c0f702.",
+                "Evidence 9937a87a53a7ad1d.",
+                "ShellCheck missing message reads actual native manifest toolPin version; no hard-coded0.11.0 expected message remains.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-bash-test-quality-freeze.json",
-                    "commit": null,
+                    "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
                     "verification": ["Evidence 7b1e1ab655c0f702.", "Evidence 9937a87a53a7ad1d."]
                 }
             ]
@@ -4350,10 +4385,14 @@
             ]
         },
         "areas/unit-tests/007": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Move three mocked build reports to site/output and remove only duplicate positive/corrected mocked halves. Fatal, absent and malformed controls remain; actual native site six correction cases pass20assertions248.23s.",
+                "Agent frozen behavior dfb0c88ca1609cbe4f41e864f52b7b205dc206ead42aa39fc7ce312aa2e4889c. Main combined160cases472assertions15files16.33s; native tutorial/spelling/JS5cases38assertions40.85s.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "areas/unit-tests/008": {
             "status": "complete",
@@ -6314,10 +6353,14 @@
             "verification": []
         },
         "review/configurations-plugin/048": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Delete Eta options input/type member and convert all five consumers to settings values. Actual full135generated files are byte-identical across recommended/all, root/child, custom native maps and Swift schemes. Internal ScopeView options API with genuine compilation callers remains.",
+                "Frozen seven-owner dd41e10460e081a324e2165e91762da108f32c4bd1a3d3a39702e96a36358e52 removes57bytes. Main41case331assertion replay and normal apply157unchanged pass.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "review/configurations-plugin/049": {
             "status": "complete",
@@ -10336,10 +10379,14 @@
             "verification": []
         },
         "review/tests-layout/015": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Separate CLI19 and tools3literal case ownership in exact mirrored config owners, remove TOOL_CHECKS/filter, then remove duplicate syntax/shfmt native rows. Later user AGENTS shared-text directive retains one MAIN literal with two real test callers; HEAD/CLEAN/MAIN bytes stay identical.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "review/tests-layout/016": {
             "status": "pending",
@@ -11342,13 +11389,15 @@
             ]
         },
         "slices/config/041": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "7e7008abcdbc3fd23638084f785c345c611382c1",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
             "verification": [
-                "INHERITED_ERREXIT and BASH_FEATURES are both absent after adopted shipped strict-mode contract. Reintroducing BASH_FEATURES solely to follow stale final row would reverse that contract."
-            ],
-            "remaining": "Both INHERITED_ERREXIT and BASH_FEATURES are absent under the adopted strict-mode contract. Do not restore either solely for the stale version-row instruction."
+                "INHERITED_ERREXIT and BASH_FEATURES are both absent after adopted shipped strict-mode contract. Reintroducing BASH_FEATURES solely to follow stale final row would reverse that contract.",
+                "All duplicate directory/terminator constants are absent. Adopted strict-mode owner contract deletes both INHERITED_ERREXIT and BASH_FEATURES; no stale version alias or old setting is restored.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/config/043": {
             "status": "partial",
@@ -12208,14 +12257,20 @@
             ]
         },
         "slices/tests-acceptance/042": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7b1e1ab655c0f702.", "Evidence 9937a87a53a7ad1d."],
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Evidence 7b1e1ab655c0f702.",
+                "Evidence 9937a87a53a7ad1d.",
+                "Bash lifecycle header accurately describes missing-tool readiness and native availability, without claiming finding counts.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-bash-test-quality-freeze.json",
-                    "commit": null,
+                    "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
                     "verification": ["Evidence 7b1e1ab655c0f702.", "Evidence 9937a87a53a7ad1d."]
                 }
             ]
@@ -12243,10 +12298,14 @@
             "verification": []
         },
         "slices/tests-integration-checks/004": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Remove16redundant CSS skip spreads and6XCTest check spreads/import. Default built-ins/skips, source inputs and callbacks remain equal by exact substitution proof; Main CSS/XCTest cases pass.",
+                "Agent frozen behavior dfb0c88ca1609cbe4f41e864f52b7b205dc206ead42aa39fc7ce312aa2e4889c. Main combined160cases472assertions15files16.33s; native tutorial/spelling/JS5cases38assertions40.85s.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-integration-checks/005": {
             "status": "complete",
@@ -12405,14 +12464,20 @@
             ]
         },
         "slices/tests-integration-checks/025": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7b1e1ab655c0f702.", "Evidence 9937a87a53a7ad1d."],
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Evidence 7b1e1ab655c0f702.",
+                "Evidence 9937a87a53a7ad1d.",
+                "Commit script and mark executable; compare complete convention findings and correction. RULES filter and interpreter-check comment are deleted.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-bash-test-quality-freeze.json",
-                    "commit": null,
+                    "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
                     "verification": ["Evidence 7b1e1ab655c0f702.", "Evidence 9937a87a53a7ad1d."]
                 }
             ]
@@ -12505,10 +12570,14 @@
             ]
         },
         "slices/tests-integration-checks/039": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Replace manual generated writes with public applyCommand and exact exit0 assertion. Preserve generated jsconfig path and empty-child compiler result. Main TypeScript cases pass.",
+                "Agent frozen behavior dfb0c88ca1609cbe4f41e864f52b7b205dc206ead42aa39fc7ce312aa2e4889c. Main combined160cases472assertions15files16.33s; native tutorial/spelling/JS5cases38assertions40.85s.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-integration-checks/041": {
             "status": "pending",
@@ -12526,14 +12595,20 @@
             ]
         },
         "slices/tests-integration-checks/046": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7b1e1ab655c0f702.", "Evidence 9937a87a53a7ad1d."],
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Evidence 7b1e1ab655c0f702.",
+                "Evidence 9937a87a53a7ad1d.",
+                "Strict-mode version rows have clean and broken controls only; redundant identical fixed rerun is absent.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-bash-test-quality-freeze.json",
-                    "commit": null,
+                    "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
                     "verification": ["Evidence 7b1e1ab655c0f702.", "Evidence 9937a87a53a7ad1d."]
                 }
             ]
@@ -12896,10 +12971,14 @@
             "verification": []
         },
         "slices/tests-integration-lifecycle/001": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Unsafe output ancestor asserts Unsafe lifecycle refusal and a disposed processes.run spy verifies no mise call; all outside/authored-byte/no-publication controls survive.",
+                "Evidence 4d2ac8d51b2e53aa.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-integration-lifecycle/002": {
             "status": "partial",
@@ -13093,10 +13172,14 @@
             "verification": ["Evidence 6984e15849e6fb35.", "Evidence 27ae11b810641048."]
         },
         "slices/tests-integration-lifecycle/025": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Native malformed YAML is wrapped with CI filename, original diagnostic and cause. Actual earlier JSON parse boundary wraps SyntaxError with package filename, cause and message; non-SyntaxError identity propagates and native valid JSON values are unrestricted.",
+                "Evidence 4d2ac8d51b2e53aa.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-integration-lifecycle/026": {
             "status": "complete",
@@ -13123,28 +13206,44 @@
             "verification": ["Evidence 6984e15849e6fb35.", "Evidence 27ae11b810641048."]
         },
         "slices/tests-integration-lifecycle/030": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Absent-upstream first commit is compared exactly; a distinct second commit supplies the upstream and is compared exactly; absent upstream object still rejects.",
+                "Evidence 4d2ac8d51b2e53aa.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-integration-lifecycle/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Retain remote-default/unpublished identity test. Separate registered upstream-at-HEAD test asserts exact commit; corrected comment says commit id.",
+                "Evidence 4d2ac8d51b2e53aa.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-integration-lifecycle/032": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Explicitly assert extension JavaScript tag; remove redundant chmod/comment; complete shebang, binary and filename controls remain.",
+                "Evidence 4d2ac8d51b2e53aa.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-integration-lifecycle/033": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "One native project(name) calculation has three real callers; all three Xcode input texts are byte-identical. Module-scope calculation passes native policy.",
+                "Evidence 4d2ac8d51b2e53aa.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-integration-lifecycle/034": {
             "status": "pending",
@@ -13159,16 +13258,24 @@
             "verification": []
         },
         "slices/tests-integration-lifecycle/036": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Delete stale cached-result assertion only. Initial staged symlink finding plus both fresh correction/recovery inputs and actual index preservation remain.",
+                "Evidence 4d2ac8d51b2e53aa.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-integration-lifecycle/037": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Assert exact Unsafe lifecycle path refusal in existing source-reader test; reader implementation unchanged.",
+                "Evidence 4d2ac8d51b2e53aa.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-integration-lifecycle/038": {
             "status": "complete",
@@ -13331,10 +13438,14 @@
             ]
         },
         "slices/tests-tools-samples/008": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Three literal titles use at level all. Native Node/Bun callback ASTs and full sample bytes are equal apart from titles. Main native JavaScript projects and shared spelling controls pass.",
+                "Agent frozen behavior dfb0c88ca1609cbe4f41e864f52b7b205dc206ead42aa39fc7ce312aa2e4889c. Main combined160cases472assertions15files16.33s; native tutorial/spelling/JS5cases38assertions40.85s.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ]
         },
         "slices/tests-tools-samples/009": {
             "status": "partial",
@@ -13362,40 +13473,58 @@
             ]
         },
         "slices/tests-tools-samples/011": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."],
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Evidence 7bd6261850b418f3.",
+                "Evidence 4f93bbab82bba503.",
+                "Native Bash/Zsh/Bats syntax cases compare exact file list/count and line/message; root/script.sh/launcher, script.zsh/zlauncher and script.bats inputs retained.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-bash-contracts-freeze.json",
-                    "commit": null,
+                    "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
                     "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."]
                 }
             ]
         },
         "slices/tests-tools-samples/012": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."],
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Evidence 7bd6261850b418f3.",
+                "Evidence 4f93bbab82bba503.",
+                "Native syntax rows carry expected line/message; Zsh end-of-input comment explains interpreter-reported position. Finding paths and original bytes restoration are asserted.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-bash-contracts-freeze.json",
-                    "commit": null,
+                    "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
                     "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."]
                 }
             ]
         },
         "slices/tests-tools-samples/013": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."],
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "verification": [
+                "Evidence 7bd6261850b418f3.",
+                "Evidence 4f93bbab82bba503.",
+                "One clean and one failed native syntax run remain; identical third fixed run is deleted, all file/list/message/readiness controls remain.",
+                "Evidence cd9a6f9a1da7c4a3.",
+                "Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-bash-contracts-freeze.json",
-                    "commit": null,
+                    "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
                     "verification": ["Evidence 7bd6261850b418f3.", "Evidence 4f93bbab82bba503."]
                 }
             ]
@@ -16903,6 +17032,53 @@
                 "Linux/macOS/Windows new CI still pending; skipped checks provide no platform proof",
                 "Release main001 remains partial; no publication/tag/deployment/live setup"
             ]
+        },
+        {
+            "commit": "087e6d6d5eb739c6b4b44e6d1e3544442597e739",
+            "completedRecords": [
+                "areas/unit-tests/007",
+                "areas/tool-tests/020",
+                "areas/integration-tests/029",
+                "areas/integration-tests/041",
+                "areas/integration-tests/057",
+                "slices/tests-tools-samples/008",
+                "slices/tests-integration-checks/004",
+                "slices/tests-integration-checks/039",
+                "slices/tests-integration-lifecycle/001",
+                "slices/tests-integration-lifecycle/025",
+                "slices/tests-integration-lifecycle/030",
+                "slices/tests-integration-lifecycle/031",
+                "slices/tests-integration-lifecycle/032",
+                "slices/tests-integration-lifecycle/033",
+                "slices/tests-integration-lifecycle/036",
+                "slices/tests-integration-lifecycle/037",
+                "review/tests-layout/015",
+                "areas/tool-tests/031",
+                "slices/tests-tools-samples/011",
+                "slices/tests-tools-samples/012",
+                "slices/tests-tools-samples/013",
+                "slices/config/041",
+                "areas/tool-tests/032",
+                "areas/tool-tests/034",
+                "slices/tests-acceptance/042",
+                "slices/tests-integration-checks/025",
+                "slices/tests-integration-checks/046",
+                "review/configurations-plugin/048",
+                "areas/checks/030"
+            ],
+            "unresolvedRecords": 645,
+            "validation": [
+                "Main staged88passedzero findings59.57s",
+                "160cases472assertions15files;8parser cases21assertions;13apply cases79assertions;41Eta cases331assertions",
+                "Native tutorial/spelling/JS5cases38assertions and site6cases20assertions pass",
+                "Normal apply157outputs unchanged; TypeScript0; frozen native AST/value/error evidence as recorded"
+            ],
+            "limitations": [
+                "Full cross-platform CI still required; skips are not execution proof",
+                "Semgrep Bash cleanup/embeds replacement remains partial due preserved native counterexamples",
+                "Next upstream report and historical comments-binding discrepancy remain partial",
+                "main001 publication/live setup remains outside release boundary"
+            ]
         }
     ],
     "verificationEvidence": {
@@ -17205,6 +17381,8 @@
         "4d84023c177e288a": "Main native designated once-packed run16 passed,106assertions,ninefiles; Root types, ESLint and formatting passed. Native fixture transport is reduced; original failures are retained.",
         "6984e15849e6fb35": "Repository test leaves consolidated with all 48 substantive registration signatures retained; exact directory EISDIR refusal, pruning, scope, sibling, private-state and link assertions retained.",
         "27ae11b810641048": "Native discovery followup: 15 passed, 33 assertions. Directory symlink calls explicitly use dir; POSIX newline eligibility and a Windows registration control are distinguished from Windows filesystem execution.",
-        "61fbfe47b92cc3d6": "Pushed a7f522912..1285f9d5e to main without force. Required pre-push checks: 147 pass, 13 skip, zero findings, 83.6s; remote main verified at 1285f9d5eead1c60f4f7b892c92d744bab52792f."
+        "61fbfe47b92cc3d6": "Pushed a7f522912..1285f9d5e to main without force. Required pre-push checks: 147 pass, 13 skip, zero findings, 83.6s; remote main verified at 1285f9d5eead1c60f4f7b892c92d744bab52792f.",
+        "cd9a6f9a1da7c4a3": "Frozen mechanical f3b0306b8750e74fe64193f6b7840c3aa5785988ab81204707da5d11b6e35f6b integrated773ad6e; behavior d5138557d856c8683aeac0a712fc2f062134730b8d07fa9c2eb0f35d409b9de2 integrated here. Native CLI21/104, tools10/66 and exact Node/Bun retained values pass; Main68case332assert mechanical replay passes. No Windows Zsh/Bats proof is claimed.",
+        "4d2ac8d51b2e53aa": "Frozen A9 7680a798f21a2de0107551e57aac99aa677b510698cac8febd9af879c4108abd: native100cases297assertions9files, Bun/Node34YAMLjobs11JSONvectors and5YAML/TOML values/errors equal. Main affected160/472 plus8parser cases21assertions pass."
     }
 }
