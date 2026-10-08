@@ -25,7 +25,7 @@ import {
     SPECTRAL_MISSING_DOCUMENT,
 } from '#tests/config/cli/checks/tool/openapi-fresh.ts';
 
-const OPENAPI_FRESH_POLICY = buildPolicy(['express'], {
+const OPENAPI_FRESH_POLICY = buildPolicy(['express', 'openapi'], {
     tables: '[openapi]\ndocument = "openapi.json"\ngenerate_command = ["bun", "generate.ts", "", "two words"]\n',
 });
 
@@ -37,7 +37,7 @@ async function applyChanges(schema: string, scope: string): Promise<OpenapiProje
             scope === ''
                 ? OPENAPI_FRESH_POLICY
                 : buildPolicy(['express'], {
-                      tables: `[scope."${scope}"]\nconfigurations = ["express"]\n[scope."${scope}".openapi]\ndocument = "openapi.json"\ngenerate_command = ["bun", "generate.ts", "", "two words"]\n`,
+                      tables: `[scope."${scope}"]\nconfigurations = ["express", "openapi"]\n[scope."${scope}".openapi]\ndocument = "openapi.json"\ngenerate_command = ["bun", "generate.ts", "", "two words"]\n`,
                   }),
         [posix.join(scope, 'package.json')]: '{"private":true}\n',
         [posix.join(scope, 'openapi.json')]: '{"version":1}\n',

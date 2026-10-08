@@ -4,11 +4,12 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { npmPins } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { configuredChecks } from '#cli/planning/plan.ts';
+import { npmPins, toolPin } from '#cli/configurations/pins.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { StylelintConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {
@@ -83,7 +84,9 @@ test.each(STYLELINT_CONSUMERS)('$name installs the HTML parser only for consumed
     });
     const session = await openSession(sandbox.path);
     const packages = npmPins(applicableManifests(session), undefined);
-    expect(packages['postcss-html']).toBe(entry.needsHtmlParser ? '2.0.0' : undefined);
+    expect(packages['postcss-html']).toBe(
+        entry.needsHtmlParser ? toolPin(configurationManifests().values(), 'postcss-html').version : undefined,
+    );
     const stylelint = configuredChecks(session).find((check) => check.check.name === 'css/stylelint');
     expect(stylelint !== undefined).toBe(entry.configurations.includes('css'));
 });
@@ -161,38 +164,43 @@ test.each(['recommended', 'all'] as const)(
         for (const path of ['.gspot/config/prettier.json', '.prettierrc.json', '.prettierignore'])
             expect(paths).not.toContain(path);
         const packages = npmPins(applicableManifests(session), undefined);
-        expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual([
-            'ajv',
-            'editorconfig-checker',
-            'v8r',
-        ]);
+        expect(Object.keys(packages).toSorted((a, b) => a.localeCompare(b))).toStrictEqual(
+            [...configurationManifests().get('files')!.tools, toolPin(configurationManifests().values(), 'ec')]
+                .filter((tool) => tool.installers['npm'] !== undefined)
+                .map((tool) => tool.installers['npm']!.name)
+                .toSorted((a, b) => a.localeCompare(b)),
+        );
         expect(configuredChecks(session).map((check) => check.check.name)).not.toContain('format/prettier');
     },
 );
 
 test.each(
-    (['recommended', 'all'] as const).flatMap((level) =>
-        (['mise', 'npm', 'bun', 'pnpm', 'yarn'] as const).map((runner) => ({ level, runner })),
-    ),
+    (['recommended', 'all'] as const).flatMap((level) => [
+        ...(['mise', 'npm', 'bun', 'pnpm', 'yarn'] as const).map((runner) => ({ level, runner, hasSchemas: true })),
+        { level, runner: undefined, hasSchemas: false },
+        { level, runner: 'npm' as const, hasSchemas: false },
+    ]),
 )(
-    '$runner catalog at $level retains authored schemas and includes mise only for its runner',
-    async ({ runner, level }) => {
+    '$runner catalog at $level with custom schemas=$hasSchemas stays native and includes mise only for its runner',
+    async ({ runner, level, hasSchemas }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 configurations: ['files'],
                 level,
-                runner,
-                tools: { v8r: { schemas: { 'custom.json': 'https://example.com/schema.json' } } },
+                ...(runner === undefined ? {} : { runner }),
+                tools: { v8r: { schemas: hasSchemas ? { 'custom.json': 'https://example.com/schema.json' } : {} } },
             }),
             'custom.json': '{}\n',
         });
         const output = emitAll(await openSession(sandbox.path));
         const text = output.files.find((file) => file.path === '.gspot/config/v8r.yml')!.content;
         const native: unknown = parse(text);
-        const schemas: unknown = expect.arrayContaining([
-            { name: 'custom.json', fileMatch: ['custom.json'], location: 'https://example.com/schema.json' },
-        ]);
+        const schemas: unknown = hasSchemas
+            ? expect.arrayContaining([
+                  { name: 'custom.json', fileMatch: ['custom.json'], location: 'https://example.com/schema.json' },
+              ])
+            : [];
         expect(native).toMatchObject({ customCatalog: { schemas } });
         expect(text.includes('name: mise')).toBe(runner === 'mise');
     },

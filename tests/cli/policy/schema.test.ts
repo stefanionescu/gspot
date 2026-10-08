@@ -47,17 +47,37 @@ describe('the JSON schema of gspot.toml', () => {
     });
 });
 
-test.each([...RUNTIME_SCHEMA_CASES, ...POLICY_FIELD_SCHEMA_CASES, ...NAMING_SCHEMA_CASES, ...EXCEPTION_SCHEMA_CASES])(
-    'runtime and published schemas agree on $name',
-    ({ input, valid, diagnostic }) => {
-        const document = { ...input };
-        const text = stringify(document);
-        const errors = policyFindings(text);
-        if (valid) expect(errors).toStrictEqual([]);
-        else expect(errors).toContainEqual(textContaining(diagnostic));
-        expect(validate(document)).toBe(valid);
-    },
-);
+test.each([
+    ...RUNTIME_SCHEMA_CASES,
+    ...POLICY_FIELD_SCHEMA_CASES,
+    ...NAMING_SCHEMA_CASES,
+    ...EXCEPTION_SCHEMA_CASES.flatMap((entry) =>
+        Object.hasOwn(entry.input, 'words')
+            ? [entry]
+            : [
+                  entry,
+                  {
+                      ...entry,
+                      name: 'scope.app.' + entry.name,
+                      input: { scope: { app: entry.input } },
+                      ...(entry.valid
+                          ? {}
+                          : {
+                                diagnostic: entry.diagnostic
+                                    .replace('gspot.toml: ', 'gspot.toml: scope.app.')
+                                    .replace('under [', 'under [scope.app.'),
+                            }),
+                  },
+              ],
+    ),
+])('runtime and published schemas agree on $name', ({ input, valid, diagnostic }) => {
+    const document = { ...input };
+    const text = stringify(document);
+    const errors = policyFindings(text);
+    if (valid) expect(errors).toStrictEqual([]);
+    else expect(errors).toContainEqual(textContaining(diagnostic));
+    expect(validate(document)).toBe(valid);
+});
 
 test.each(LOCALE_SCHEMA_CASES)(
     'manifest settings validate $name',

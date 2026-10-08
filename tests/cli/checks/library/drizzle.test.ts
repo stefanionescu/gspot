@@ -4,16 +4,23 @@ import { test, spyOn, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { commitAll } from '#tests/harness/git.ts';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { checkInput } from '#cli/execution/built-in.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { rejection } from '#tests/harness/expectations.ts';
+import type { RunReport } from '#cli/types/execution/check.ts';
+import { rejection, containing } from '#tests/harness/expectations.ts';
 import { relations, migrations } from '#cli/checks/library/drizzle.ts';
 import type { MigrationProject } from '#tests/types/cli/checks/library/drizzle.ts';
 import { stat, chmod, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
-import { DRIZZLE_MIGRATIONS_SCOPES, DRIZZLE_MIGRATIONS_GENERATOR } from '#tests/config/cli/checks/library/drizzle.ts';
+
+import {
+    DRIZZLE_RELATIONS_CASES,
+    DRIZZLE_MIGRATIONS_SCOPES,
+    DRIZZLE_MIGRATIONS_GENERATOR,
+} from '#tests/config/cli/checks/library/drizzle.ts';
 
 // A test scope with a generator script that stands in for drizzle-kit: `schema.txt` decides what it does.
 async function applyChanges(scope: string, schema: 'changed' | 'failure'): Promise<MigrationProject> {
@@ -141,4 +148,21 @@ test('named-schema Drizzle tables need relations and comments do not satisfy the
     );
     const corrected = buildCheckInput(await openSession(sandbox.path), 'drizzle/relations', { paths: ['schema.ts'] });
     expect(relations(corrected)).toStrictEqual([]);
+});
+
+test.each(DRIZZLE_RELATIONS_CASES)('Drizzle relations reports its finding and passes after the fix', async (entry) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { ...entry.files, 'gspot.toml': buildPolicy(['drizzle'], { level: 'all' }) });
+    const command = ['check', '--only', entry.check, '--json'];
+    const failed = await runGspot(sandbox.path, command);
+    const report = JSON.parse(failed.stdout) as RunReport;
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect(report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+    expect(report.checks[0]?.findings).toContainEqual(containing({ check: entry.check, ...entry.expected }));
+    await createFileTree(sandbox.path, entry.corrected!.files);
+    const passed = await runGspot(sandbox.path, command);
+    expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+    expect((JSON.parse(passed.stdout) as RunReport).checks).toMatchObject([
+        { check: entry.check, status: 'passed', findings: [] },
+    ]);
 });

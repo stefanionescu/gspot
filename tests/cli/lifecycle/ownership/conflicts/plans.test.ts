@@ -161,6 +161,7 @@ test('restoration journals completed removals and preserves a later edit', async
                 kind: 'tool_file',
             }),
         );
+        expect(applyPlan(log, planRestoration(log, '.gspot/unowned'))).toBe('preserved');
         const plans = ['authored.txt', 'generated.txt'].map((path) => planRestoration(log, path));
         expect(await readFile(join(directory.path, 'authored.txt'), 'utf8')).toBe('installed\n');
         await writeFile(join(directory.path, 'generated.txt'), 'user edit\n');
@@ -214,10 +215,14 @@ test('reviewed matching bytes refresh ownership without rewriting the file', asy
     expect(reopened.entryFor(path)?.installed).toStrictEqual(identify(reopened.files.read(path)!));
 });
 
-if (isPosix) {
-    test.each(['bytes', 'mode', 'removed'])(
-        'lifecycle ownership: stale replace %s refuses replacement and retirement, then a fresh read succeeds',
-        async (change) => {
+for (const { name, change } of [
+    { name: 'bytes', change: (path: string) => writeFile(path, '{"semi":true}\n') },
+    { name: 'mode', change: (path: string) => chmod(path, 0o600) },
+    { name: 'removed', change: (path: string) => unlink(path) },
+]) {
+    test.skipIf(name === 'mode' && !isPosix)(
+        `lifecycle ownership: stale replace ${name} refuses replacement and retirement, then a fresh read succeeds`,
+        async () => {
             await using directory = await testdir();
             const path = join(directory.path, 'authored.json');
             await writeFile(path, '{"semi":false}\n', { mode: 0o640 });
@@ -225,9 +230,7 @@ if (isPosix) {
                 using log = openOwnership(directory.path);
 
                 const read = log.files.read('authored.json')!;
-                if (change === 'bytes') await writeFile(path, '{"semi":true}\n');
-                if (change === 'mode') await chmod(path, 0o600);
-                if (change === 'removed') await unlink(path);
+                await change(path);
                 const edited = log.files.read('authored.json');
                 expect(() => planRetirement(log, 'authored.json', read)).toThrow(
                     'authored.json changed after gspot read it. Run the command again.',

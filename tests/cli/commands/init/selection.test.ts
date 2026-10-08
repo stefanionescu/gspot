@@ -6,6 +6,7 @@ import { writeFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
@@ -167,11 +168,19 @@ test('init previews only applicable tool projects and duplicate pins for the sel
     const result = await runGspot(sandbox.path, [...SELECTION_INIT, '--configurations', 'python', ...QUIET_INIT]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const manifests = configurationManifests();
+    const pythonTools = manifests.get('python')!.tools.filter((tool) => tool.installers['pypi'] !== undefined);
+    const npmTools = [...manifests.get('files')!.tools, toolPin(manifests.values(), 'ec')].filter(
+        (tool) => tool.installers['npm'] !== undefined,
+    );
     expect(plan.change).toContainEqual({
         path: '.gspot/pyproject.toml',
-        note: '6 pinned Python tools; matching uv.lock and tool environment',
+        note: `${String(pythonTools.length)} pinned Python tools; matching uv.lock and tool environment`,
     });
-    expect(plan.change).toContainEqual({ path: '.gspot/package.json', note: '3 pinned npm tools; matching lockfile' });
+    expect(plan.change).toContainEqual({
+        path: '.gspot/package.json',
+        note: `${String(npmTools.length)} pinned npm tools; matching lockfile`,
+    });
     expect(plan.noLongerRuns).toStrictEqual([
         { path: 'mise.toml', note: '1 pin gspot also pins (gspot doctor lists them)' },
     ]);
@@ -185,7 +194,9 @@ test('init previews only applicable tool projects and duplicate pins for the sel
     ]);
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const installed = parseToolProject(await Bun.file(join(sandbox.path, '.gspot/package.json')).text());
-    expect(Object.keys(installed.dependencies)).toStrictEqual(['ajv', 'editorconfig-checker', 'v8r']);
+    expect(Object.keys(installed.dependencies)).toStrictEqual(
+        npmTools.map((tool) => tool.installers['npm']!.name).toSorted((a, b) => a.localeCompare(b)),
+    );
 });
 
 test.each(['recommended', 'all'] as const)('init counts active and disabled checks at %s', async (level) => {

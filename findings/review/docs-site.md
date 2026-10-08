@@ -1,6 +1,6 @@
 # READMEs, Guides, Reference Generation, and the Docs Site
 
-2 unresolved review records remain.
+0 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -172,3 +172,12 @@ Original records and quotations remain above. These records are complete at `1ec
 | ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                        |
 | ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/docs-site/011` | complete | Deleted duplicate built-site link checker, its config/types/dependency/task and tsconfig include. Docs uses native scoped site checks. Staged HTML, CSS, internal links, sitemap, source assets and reproducibility pass with zero findings. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`. |
+
+## Implementation checkpoint 59d271c9c of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `59d271c9ceedb7ec9b2dee75d44330a825fa1a1d`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/docs-site/046` | complete | No docs.exclude whitelist or global bash exemption remains. Markdown parser excludes real title= example fences while untitled/path prose remains checked; shell/text/custom and misleading metadata controls retained. Current Main docs/stale-paths native full/staged checks pass without the31 entries; dedicated boundary cases pass in269/786 family. Explicit scope/test pointer examples were corrected at source. Commit `59d271c9ceedb7ec9b2dee75d44330a825fa1a1d`.                                                                               |
+| `review/docs-site/027` | complete | Python and macOS Swift tutorial test owners replay native bootstrap, initialization, mise trust/install, install, doctor, checks/fixes and actual Git hooks. Pages contain the exact actual Ruff and SwiftLint finding; restored bytes/mode remain asserted. Designated once-packed tools runner current Main2pass35assertions2files285.50s. Python214.51s, Swift70.74s. No publication or platform-skip proof claimed. Native bootstrap used temporary scoped local registry, not live npm publication. Commit `59d271c9ceedb7ec9b2dee75d44330a825fa1a1d`. |

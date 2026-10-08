@@ -1,7 +1,9 @@
+import semver from 'semver';
 import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import * as inspect from '#cli/tools/inspect.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -9,12 +11,13 @@ import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 
 test('doctor lists a tool only on the systems it has a build for', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['files']),
+        'gspot.toml': buildPolicy(['files', 'xcode']),
         'document.xml': '<root/>',
         'Info.plist': '<plist/>',
     });
@@ -94,7 +97,7 @@ test('doctor reports the private Python project for an applicable duplicate with
     expect(suggestions.duplicateMisePins).toStrictEqual([
         {
             tool: 'ruff',
-            version: '0.16.8',
+            version: toolPin(configurationManifests().values(), 'ruff').version!,
             places: ['mise.toml', '.gspot/pyproject.toml'],
             command: 'delete the mise.toml line',
         },
@@ -104,35 +107,39 @@ test('doctor reports the private Python project for an applicable duplicate with
 });
 
 test.each([
-    ['4.12.0', 0, 'ok'],
-    ['4.13.0', 0, 'newer'],
-    ['4.0.0', 1, 'outdated'],
-] as const)(
-    'doctor exits by the installed library version %s: an outdated tool exits 1',
-    async (version, code, state) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['zod'], { tables: '[agent_rules]\nenabled = false\n' }),
-            'source.js': 'export const value = 1;\n',
-            '.gspot/node_modules/eslint-plugin-zod/package.json': JSON.stringify({
-                name: 'eslint-plugin-zod',
-                version,
-            }),
-        });
-        const original = inspect.inspectTool;
-        // Every other tool reads as ready, so the exit code follows the one test library alone.
-        using inspected = spyOn(inspect, 'inspectTool').mockImplementation((context, tool) =>
-            tool.name === 'eslint-plugin-zod'
-                ? original(context, tool)
-                : { name: tool.name, state: 'ok', path: `/fixture/${tool.name}` },
-        );
-        const result = await doctorCommand(sandbox.path);
-        expect(inspected).toHaveBeenCalled();
-        const report = result.json as DoctorReport;
-        expect(report.tools.find((tool) => tool.name === 'eslint-plugin-zod')?.state).toBe(state);
-        expect(result.exitCode).toBe(code);
-    },
-);
+    ['ok', 0],
+    ['newer', 0],
+    ['outdated', 1],
+] as const)('doctor reports an installed library as %s and exits %i', async (state, code) => {
+    const wanted = toolPin(configurationManifests().values(), 'eslint-plugin-zod').version!;
+    const versions = {
+        ok: wanted,
+        newer: semver.inc(wanted, 'minor')!,
+        outdated: `${String(semver.major(wanted) - 1)}.0.0`,
+    };
+    const version = versions[state];
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['zod'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'source.js': 'export const value = 1;\n',
+        '.gspot/node_modules/eslint-plugin-zod/package.json': JSON.stringify({
+            name: 'eslint-plugin-zod',
+            version,
+        }),
+    });
+    const original = inspect.inspectTool;
+    // Every other tool reads as ready, so the exit code follows the one test library alone.
+    using inspected = spyOn(inspect, 'inspectTool').mockImplementation((context, tool) =>
+        tool.name === 'eslint-plugin-zod'
+            ? original(context, tool)
+            : { name: tool.name, state: 'ok', path: `/fixture/${tool.name}` },
+    );
+    const result = await doctorCommand(sandbox.path);
+    expect(inspected).toHaveBeenCalled();
+    const report = result.json as DoctorReport;
+    expect(report.tools.find((tool) => tool.name === 'eslint-plugin-zod')?.state).toBe(state);
+    expect(result.exitCode).toBe(code);
+});
 
 test('doctor detects installed test frameworks instead of recommending a different runner', async () => {
     await using sandbox = await testdir();

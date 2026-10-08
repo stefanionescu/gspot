@@ -3,7 +3,6 @@ import { markExecutable } from '#tests/harness/git.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import * as nextjs from '#tests/config/cli/checks/framework/nextjs.ts';
-import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { CaseChanges } from '#tests/types/harness/preservation.ts';
 import type { FindingScenario } from '#tests/types/cli/checks/cases.ts';
@@ -11,7 +10,6 @@ import { BASH_CASES, TOOL_CHECKS } from '#tests/config/samples/bash.ts';
 import * as siteOutput from '#tests/config/cli/checks/general/site/output.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import * as bashStructure from '#tests/config/cli/checks/language/bash/structure.ts';
-import * as libraryConventions from '#tests/config/cli/checks/library/conventions.ts';
 import * as pythonStructure from '#tests/config/cli/checks/language/python/structure.ts';
 import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
 import * as supabaseSettings from '#tests/config/cli/checks/platform/supabase/settings.ts';
@@ -43,16 +41,6 @@ for (const scenario of [
         cases: cloudflareConfiguration.CASES,
     },
     { name: 'the built-in supabase checks', repository: supabaseSettings.REPOSITORY, cases: supabaseSettings.CASES },
-    {
-        name: 'the built-in library checks',
-        repository: {
-            ...libraryConventions.REPOSITORY,
-            corrected: (entry) => ({
-                files: Object.fromEntries(Object.keys(entry.files).map((path) => [path, COMPONENT_SOURCE])),
-            }),
-        },
-        cases: libraryConventions.CASES,
-    },
     {
         name: 'the Python structure checks',
         repository: {

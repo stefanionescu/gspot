@@ -18,25 +18,6 @@ export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
         diagnostic: '`exclude` is not a setting gspot knows under [docs]',
     },
     {
-        name: 'scope.app.removed documentation path exception setting',
-        input: {
-            scope: {
-                app: {
-                    docs: {
-                        exclude: [
-                            {
-                                paths: ['example.ts'],
-                                reason: 'This example belongs to its titled code block.',
-                            },
-                        ],
-                    },
-                },
-            },
-        },
-        valid: false,
-        diagnostic: '`exclude` is not a setting gspot knows under [scope.app.docs]',
-    },
-    {
         name: 'removed CodeQL finding exception setting',
         input: {
             tools: {
@@ -53,28 +34,6 @@ export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
         },
         valid: false,
         diagnostic: '`ignore` is not a setting gspot knows under [tools.codeql]',
-    },
-    {
-        name: 'scope.app.removed CodeQL finding exception setting',
-        input: {
-            scope: {
-                app: {
-                    tools: {
-                        codeql: {
-                            ignore: [
-                                {
-                                    rule: 'example',
-                                    paths: ['source.ts'],
-                                    reason: 'This sandbox demonstrates an accepted finding.',
-                                },
-                            ],
-                        },
-                    },
-                },
-            },
-        },
-        valid: false,
-        diagnostic: '`ignore` is not a setting gspot knows under [scope.app.tools.codeql]',
     },
     {
         name: 'removed formatter exclusion setting',
@@ -150,105 +109,6 @@ export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
         },
         valid: false,
         diagnostic: '`ranges_allowed` is not a setting gspot knows under [dependencies]',
-    },
-    {
-        name: 'scope.app.removed formatter exclusion setting',
-        input: {
-            scope: {
-                app: {
-                    tools: {
-                        prettier: {
-                            exclude: ['generated/**'],
-                        },
-                    },
-                },
-            },
-        },
-        valid: false,
-        diagnostic: '`exclude` is not a setting gspot knows under [scope.app.tools.prettier]',
-    },
-    {
-        name: 'scope.app.invalid formatter exclusion list',
-        input: {
-            scope: {
-                app: {
-                    tools: {
-                        prettier: {
-                            exclude: false,
-                        },
-                    },
-                },
-            },
-        },
-        valid: false,
-        diagnostic: '`exclude` is not a setting gspot knows under [scope.app.tools.prettier]',
-    },
-    {
-        name: 'scope.app.reasoned registry hosts',
-        input: {
-            scope: {
-                app: {
-                    dependencies: {
-                        registry_hosts: ['registry.example.test'],
-                    },
-                    reasons: {
-                        'dependencies.registry_hosts': 'Reviewed package registry.',
-                    },
-                },
-            },
-        },
-        valid: true,
-    },
-    {
-        name: 'scope.app.invalid registry host',
-        input: {
-            scope: {
-                app: {
-                    dependencies: {
-                        registry_hosts: [false],
-                    },
-                },
-            },
-        },
-        valid: false,
-        diagnostic: 'gspot.toml: scope.app.dependencies.registry_hosts.0:',
-    },
-    {
-        name: 'scope.app.removed manifest range allowance',
-        input: {
-            scope: {
-                app: {
-                    dependencies: {
-                        ranges_allowed: [
-                            {
-                                paths: ['packages/library/package.json'],
-                                reason: 'Published library compatibility range.',
-                            },
-                        ],
-                    },
-                },
-            },
-        },
-        valid: false,
-        diagnostic: '`ranges_allowed` is not a setting gspot knows under [scope.app.dependencies]',
-    },
-    {
-        name: 'scope.app.invalid manifest range paths',
-        input: {
-            scope: {
-                app: {
-                    dependencies: {
-                        ranges_allowed: [
-                            {
-                                paths: [],
-                            },
-                        ],
-                    },
-                },
-            },
-        },
-        valid: false,
-        diagnostic: '`ranges_allowed` is not a setting gspot knows under [scope.app.dependencies]',
     },
     {
         name: 'accepted words with reasons',

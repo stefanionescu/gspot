@@ -10,8 +10,6 @@ import { readPolicy, readPolicyText, parseStrictPolicy } from '#cli/policy/read.
 import {
     DISABLED_RULES,
     MALFORMED_REASON_CASES,
-    REMOVED_STYLELINT_SETTING,
-    REMOVED_FRAMEWORK_CONTROLS,
     REMOVED_STRUCTURE_SETTINGS,
     INVALID_ENVIRONMENT_SETTINGS,
 } from '#tests/config/cli/policy/read/settings.ts';
@@ -65,21 +63,6 @@ describe('policy value normalization', () => {
 });
 
 describe('policy setting refusals', () => {
-    test.each(['types_directory', 'config_directory'])('%s refuses consumer folder enforcement', (setting) => {
-        const source = stringify({ configurations: ['typescript'], architecture: { [setting]: 'types' } });
-        expect(() => readPolicyText(source)).toThrow(
-            `\`${setting}\` is not a setting gspot knows under [architecture]`,
-        );
-        const corrected = readPolicyText(
-            stringify({
-                configurations: ['typescript'],
-                architecture: { roles: { types: ['types/**'], config: ['config/**'] } },
-            }),
-        );
-        expect(corrected.errors).toStrictEqual([]);
-        expect(corrected.policy.architecture.roles).toMatchObject({ types: ['types/**'], config: ['config/**'] });
-    });
-
     test('an unknown key names its table', () => {
         const found = policyFindings(`${buildPolicy(['bash'])}[hooks]\npush_files = "all"\npsh = "all"\n`);
         expect(found).toHaveLength(1);
@@ -183,52 +166,6 @@ test('native zero-valued Stylelint options and false Taplo formatting remain act
         stylelint: { rules: { 'max-nesting-depth': 0 } },
         taplo: { verbatim: { reorder_keys: false } },
     });
-});
-
-test.each(REMOVED_FRAMEWORK_CONTROLS)(
-    'root and scope refuse the removed $table.$key control',
-    ({ table, key, diagnostic }) => {
-        for (const prefix of ['', 'scope.api.']) {
-            const scope = prefix === '' ? '' : '[scope."api"]\n';
-            const source = buildPolicy(['nextjs', 'nestjs'], {
-                tables: `${scope}[${prefix}${table}]\n${key} = true\n`,
-            });
-            expect(() => parseStrictPolicy(source)).toThrow(diagnostic);
-            expect(policyFindings(source)).toHaveLength(1);
-        }
-    },
-);
-
-test('at-rule exceptions use native Stylelint options without a duplicate setting', () => {
-    expect(() => parseStrictPolicy(buildPolicy(['css'], { tables: REMOVED_STYLELINT_SETTING }))).toThrow(
-        '`ignore_at_rules` is not a setting gspot knows under [tools.stylelint]',
-    );
-    const native = buildPolicy(['css'], {
-        tables: '[tools.stylelint.rules]\nat-rule-no-unknown = [true, { ignoreAtRules = ["container"] }]\n',
-    });
-    expect(policyFindings(native)).toStrictEqual([]);
-});
-
-test('refuses native documentation link flags as extra coverage controls in every scope', () => {
-    for (const scope of ['', '[scope."app"]\n']) {
-        const table = scope === '' ? 'tools' : 'scope.app.tools';
-        const owner = scope === '' ? 'tools.lychee' : 'scope.app.tools.lychee';
-        for (const field of ['offline', 'include_fragments', 'scheme', 'accept'])
-            expect(() =>
-                parseStrictPolicy(
-                    buildPolicy([], {
-                        tables: `${scope}[${table}.lychee]\n${field} = false\n`,
-                    }),
-                ),
-            ).toThrow(`\`${field}\` is not a setting gspot knows under [${owner}]`);
-        expect(() =>
-            parseStrictPolicy(
-                buildPolicy([], {
-                    tables: `${scope}[${table}.lychee.verbatim]\noffline = true\nreason = "Project preference"\n`,
-                }),
-            ),
-        ).toThrow(`\`verbatim\` is not a setting gspot knows under [${owner}]`);
-    }
 });
 
 test.each(REMOVED_STRUCTURE_SETTINGS)('removed structure setting %s is refused in root and scope tables', (name) => {

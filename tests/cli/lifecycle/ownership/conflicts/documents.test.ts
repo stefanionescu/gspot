@@ -15,7 +15,7 @@ test('TOML task ownership refuses malformed and edited fields and creates new ta
         using log = openOwnership(directory.path);
 
         const changes = [{ path: ['tasks', 'gspot:check', 'run'], value: 'gspot check' }];
-        expect(() => planMerge(log, 'broken.toml', changes, true)).toThrow();
+        expect(() => planMerge(log, 'broken.toml', changes, true)).toThrow('broken.toml');
         expect(await readFile(join(directory.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
         applyPlan(log, planMerge(log, 'mise.toml', changes));
         const installed = await readFile(join(directory.path, 'mise.toml'), 'utf8');

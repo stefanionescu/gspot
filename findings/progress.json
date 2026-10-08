@@ -1,5 +1,5 @@
 {
-    "openRecords": 780,
+    "openRecords": 777,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 780,
+        "openRecords": 777,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 67,
-                "unresolvedAssignments": 224
+                "completedAssignments": 68,
+                "unresolvedAssignments": 223
             },
             {
                 "id": "python",
@@ -1687,8 +1687,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 50,
-                "unresolvedAssignments": 87
+                "completedAssignments": 52,
+                "unresolvedAssignments": 85
             },
             {
                 "id": "policy-file",
@@ -4293,10 +4293,13 @@
             ]
         },
         "main/017": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "59d271c9ceedb7ec9b2dee75d44330a825fa1a1d",
+            "verification": [
+                "Policy check, agent_rules, ignore and scope fields now exactly match public TOML keys. Obsolete entries owner is deleted; repository-wide reader search finds no old policy property access. Composite configurationSettings, scopeTables and declarations retain their specified ownership.",
+                "Main normalized/public schema and lifecycle owner family269 cases786assertions pass; Root types0; full staged63 passing checks and corrected affected6 pass, original move failures retained."
+            ]
         },
         "main/064": {
             "status": "partial",
@@ -6404,10 +6407,13 @@
             ]
         },
         "review/docs-site/027": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "59d271c9ceedb7ec9b2dee75d44330a825fa1a1d",
+            "verification": [
+                "Python and macOS Swift tutorial test owners replay native bootstrap, initialization, mise trust/install, install, doctor, checks/fixes and actual Git hooks. Pages contain the exact actual Ruff and SwiftLint finding; restored bytes/mode remain asserted.",
+                "Designated once-packed tools runner current Main2pass35assertions2files285.50s. Python214.51s, Swift70.74s. No publication or platform-skip proof claimed. Native bootstrap used temporary scoped local registry, not live npm publication."
+            ]
         },
         "review/docs-site/028": {
             "status": "complete",
@@ -6539,10 +6545,13 @@
             ]
         },
         "review/docs-site/046": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "59d271c9ceedb7ec9b2dee75d44330a825fa1a1d",
+            "verification": [
+                "No docs.exclude whitelist or global bash exemption remains. Markdown parser excludes real title= example fences while untitled/path prose remains checked; shell/text/custom and misleading metadata controls retained.",
+                "Current Main docs/stale-paths native full/staged checks pass without the31 entries; dedicated boundary cases pass in269/786 family. Explicit scope/test pointer examples were corrected at source."
+            ]
         },
         "review/docs-site/048": {
             "status": "complete",
@@ -15887,6 +15896,17 @@
             ],
             "limitations": [
                 "Current CI and full-suite acceptance outstanding. areas/kits/142 retains gspot check-owner contracts beyond redundant requires deletion. Policy-exceptions031 remains partial: only three stale uppercase entries removed; remaining per-entry vocabulary audit pending."
+            ]
+        },
+        {
+            "commit": "59d271c9ceedb7ec9b2dee75d44330a825fa1a1d",
+            "completedRecords": ["main/017", "review/docs-site/046", "review/docs-site/027"],
+            "unresolvedRecords": 777,
+            "validation": [
+                "Actual current Main269 CLI/786assertions;2native tutorial replays/35assertions;3moved native drift/Plutil cases21assertions;types and staged checks."
+            ],
+            "limitations": [
+                "Linux and Windows native tutorial/platform acceptance and final whole-suite/release acceptance remain outstanding."
             ]
         }
     ],

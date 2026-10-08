@@ -1,17 +1,13 @@
-ignoreErrors: true
-customCatalog:
-    schemas:
-<% if (policy.runner === 'mise') { %>        - name: mise
-          description: The mise configuration file
-          fileMatch:
-              - mise.toml
-              - .mise.toml
-              - .mise/conf.d/*.toml
-              - .config/mise/config.toml
-              - .config/mise/conf.d/*.toml
-          location: https://mise.jdx.dev/schema/mise.json
-<% } %><% for (const [pattern, schema] of Object.entries(settings['tools.v8r.schemas'])) { %>        - name: <%= json(pattern) %>
-          fileMatch:
-              - <%= json(pattern) %>
-          location: <%= json(schema) %>
-<% } %>
+<%
+const schemas = Object.entries(settings['tools.v8r.schemas']).map(([pattern, location]) => ({
+    name: pattern,
+    fileMatch: [pattern],
+    location,
+}));
+if (policy.runner === 'mise') schemas.unshift({
+    name: 'mise',
+    description: 'The mise configuration file',
+    fileMatch: ['mise.toml', '.mise.toml', '.mise/conf.d/*.toml', '.config/mise/config.toml', '.config/mise/conf.d/*.toml'],
+    location: 'https://mise.jdx.dev/schema/mise.json',
+});
+%><%~ yaml({ ignoreErrors: true, customCatalog: { schemas } }).trimEnd() %>

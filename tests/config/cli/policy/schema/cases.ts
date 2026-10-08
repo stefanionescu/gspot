@@ -105,33 +105,9 @@ export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
         diagnostic: 'gspot.toml: tools.eslint.rules.eqeqeq.0:',
     },
     {
-        name: 'removed scoped Vitest configuration file',
-        input: { configurations: ['vitest'], scope: { app: { vitest: { config_file: 'testing/config.mjs' } } } },
-        valid: false,
-        diagnostic: '`vitest` is not a setting gspot knows under [scope.app]',
-    },
-    {
         name: 'site kilobyte limits',
         input: { configurations: ['site'], site: { max_kilobytes: [{ paths: ['**/*.html'], kb: 10 }] } },
         valid: true,
-    },
-    {
-        name: 'obsolete Semgrep configs',
-        input: { configurations: ['security'], tools: { semgrep: { configs: ['security/own.yml'] } } },
-        valid: false,
-        diagnostic: '`configs` is not a setting gspot knows under [tools.semgrep]',
-    },
-    {
-        name: 'obsolete Vitest config',
-        input: { configurations: ['vitest'], tools: { vitest: { config: 'testing/config.mjs' } } },
-        valid: false,
-        diagnostic: '`vitest` is not a setting gspot knows under [tools]',
-    },
-    {
-        name: 'obsolete site sizes',
-        input: { configurations: ['site'], site: { sizes: [{ paths: ['**/*.html'], kb: 10 }] } },
-        valid: false,
-        diagnostic: '`sizes` is not a setting gspot knows under [site]',
     },
     { name: 'finding code 2', input: { check: { 'project/lint': { ...SCHEMA_CHECK, exit_codes: [2] } } }, valid: true },
     {
@@ -233,12 +209,6 @@ export const RUNTIME_SCHEMA_CASES: RuntimeSchemaCase[] = [
         name: 'a scoped SQLFluff dialect label',
         input: { scope: { db: { tools: { sqlfluff: { dialect: 'sqlite' } } } } },
         valid: true,
-    },
-    {
-        name: 'the removed XCTest snapshot layout',
-        input: { configurations: ['xctest'], tools: { xctest: { reference_layout: '__Snapshots__/{file}/{test}.*' } } },
-        valid: false,
-        diagnostic: '`xctest` is not a setting gspot knows under [tools]',
     },
 ];
 

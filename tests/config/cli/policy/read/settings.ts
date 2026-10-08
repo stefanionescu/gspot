@@ -26,19 +26,6 @@ export const INVALID_ENVIRONMENT_SETTINGS = [
     { table: 'secrets', value: 'env_examples = [false]', diagnostic: 'env_examples' },
 ];
 
-/** Framework coverage follows the level and declared dependencies, with no extra switches. */
-export const REMOVED_FRAMEWORK_CONTROLS = [
-    {
-        table: 'tools.next',
-        key: 'build_on_push',
-        diagnostic: '`next` is not a setting gspot knows',
-    },
-    { table: 'nestjs', key: 'swagger', diagnostic: '`nestjs` is not a setting gspot knows' },
-];
-
-/** Native Stylelint options own at-rule exceptions. */
-export const REMOVED_STYLELINT_SETTING = '[tools.stylelint]\nignore_at_rules = ["container"]\n';
-
 /** Malformed explanations are document-shape errors, independent of exception enforcement. */
 export const MALFORMED_REASON_CASES = [
     { name: 'numeric', reason: 42, received: 'number' },
