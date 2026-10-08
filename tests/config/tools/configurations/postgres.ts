@@ -1,5 +1,5 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 export const FOLDER = 'supabase/migrations';
 
@@ -16,9 +16,9 @@ CREATE POLICY members_read ON public.teams FOR SELECT USING (true);
 COMMIT;
 `;
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['postgres'],
-    modules: false,
+
     tools: ['squawk', 'sqlfluff'],
     files: { [`${FOLDER}/20240101000000_create_teams.sql`]: TEAMS },
 };

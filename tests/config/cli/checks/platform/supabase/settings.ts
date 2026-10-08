@@ -1,11 +1,10 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 import { GREET, MIGRATION, SUPABASE_CONFIG } from '#tests/config/cli/checks/platform/supabase/configuration.ts';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InProcessScenario = {
     configurations: ['supabase'],
-    modules: false,
-    installs: false,
+
     files: {
         'supabase/config.toml': SUPABASE_CONFIG,
         'supabase/migrations/20240101000000_create_avatars.sql': MIGRATION,

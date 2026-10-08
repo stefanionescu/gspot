@@ -1,5 +1,5 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import { STRICT_COMPILER_OPTIONS } from '#tests/config/samples/typescript.ts';
 import { NEXT_PAGE, NEXT_LAYOUT, NEXT_CONFIG_FILE } from '#tests/config/samples/nextjs.ts';
 
@@ -9,7 +9,7 @@ export const COUNT = '// A test file.\n\n/** A number that holds text. */\nexpor
 export const BUILD_FAILURE =
     "import Missing from './missing-component';\nexport default function Page() { return <Missing />; }\n";
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['nextjs'],
     tsconfig: {
         compilerOptions: {

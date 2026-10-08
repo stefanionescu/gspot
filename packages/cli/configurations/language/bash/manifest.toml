@@ -179,17 +179,6 @@ why = "A caller that passes an argument expects it to affect the result. An unre
 help = "Read the argument in the function, or drop it from every call."
 
 [[check]]
-name = "source-comments"
-title = "Keep comments out of source blocks"
-example = "A comment written between two `source` lines reports a source comment. Move it above the block or next to the code that uses the sourced file; a `# shellcheck` directive stays."
-level = "all"
-stage = "commit"
-alternatives_checked = ["shellcheck"]
-summary = "Finds a comment written inside a block of source statements, between its first and last one."
-why = "A block of source statements is a list, and a note inside a list is read as part of the wrong entry."
-help = "Move the comment above the block or next to the code it explains."
-
-[[check]]
 name = "source-order"
 title = "Order source statements"
 example = "A block of `source` lines that is not ordered shortest first reports the sorted order. Reorder the lines."
@@ -210,29 +199,6 @@ alternatives_checked = ["shellcheck"]
 summary = "Checks that a shell function no other file calls starts with an underscore, and that an underscore function is not called from outside."
 why = "The underscore tells a reader what the file publishes without reading every caller."
 help = "Rename the function with a leading underscore, or drop the underscore when another file calls it."
-
-[[check]]
-name = "private-before-public"
-title = "Put private functions first"
-example = "A private function `_late` declared after a public shell function reports an ordering finding. Move `_late` above the public function, leaving `main` at the end."
-level = "all"
-stage = "commit"
-alternatives_checked = ["shfmt", "shellcheck"]
-summary = "Checks that underscore functions come before the public ones and main comes last."
-why = "A file read top to bottom then explains its helpers before it uses them and ends where it starts."
-help = "Move the private functions above the public ones and main to the end."
-
-[[check]]
-name = "trivial-functions"
-title = "Find trivial functions"
-example = "A shell function `_tiny() { printf \"%s\\n\" \"Hello\"; }` has one executable statement and reports a trivial-function finding. Inline the command at its call sites and delete the wrapper."
-level = "all"
-stage = "commit"
-limit = "limits.min_function_statements"
-alternatives_checked = ["shellcheck"]
-summary = "Reports functions at or below limits.min_function_statements and files containing only trivial declarations."
-why = "Unnecessary functions add names and indirection without substantial behavior."
-help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore bash/trivial-functions --paths <file> --reason <why>`."
 
 [[check]]
 name = "function-size"
@@ -300,17 +266,6 @@ alternatives_checked = ["shellcheck"]
 summary = "Checks that each script in architecture.roles.env starts with an include guard of its own."
 why = "A configuration file sourced twice runs its side effects twice."
 help = "Open the owner with [[ -n ${NAME_READY:-} ]] && return 0 and then readonly NAME_READY=1, with a guard name no other owner uses."
-
-[[check]]
-name = "env-owner"
-title = "Read environment variables through their owner"
-example = "Reading an environment value outside the paths selected by `architecture.roles.env` reports an ownership finding. Read it in the declared configuration owner and pass the resulting value into the consumer."
-level = "all"
-stage = "commit"
-alternatives_checked = ["shellcheck"]
-summary = "Checks that environment variables the owner declares are read elsewhere only through it."
-why = "When any script reads the environment, nobody can list what the program needs to run; one owner can."
-help = "Read the variable in the owner named under architecture.roles.env and pass the value in."
 
 [[check]]
 name = "safety"

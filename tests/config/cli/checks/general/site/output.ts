@@ -1,6 +1,6 @@
 import { STATIC_SITE_FILES } from '#tests/config/samples/site.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 
 /** Built-output checks run without acquiring tools. */
 export const CASES: FindingCase[] = [
@@ -21,11 +21,9 @@ export const CASES: FindingCase[] = [
 ];
 
 /** Authored inputs and configuration selection for the built-output checks. */
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InProcessScenario = {
     configurations: ['site'],
     files: STATIC_SITE_FILES,
-    modules: false,
-    installs: false,
 };
 
 export const ORPHAN_SITE_FILES = {

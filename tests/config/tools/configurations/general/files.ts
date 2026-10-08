@@ -1,10 +1,9 @@
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['files'],
-    modules: false,
 
     init: [...QUIET_INIT],
     tools: ['taplo', 'yamllint'],

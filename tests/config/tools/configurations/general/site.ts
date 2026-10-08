@@ -1,10 +1,10 @@
 import { STATIC_SITE_FILES } from '#tests/config/samples/site.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 export const COMMAND = ['check', '--only', 'site/svgo', '--json'];
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['site'],
 
     files: STATIC_SITE_FILES,

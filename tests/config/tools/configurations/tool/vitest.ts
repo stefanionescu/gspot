@@ -1,5 +1,5 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 export const VITEST_SOURCE =
     '// Arithmetic the test tests call.\n\n/**\n * Adds positive values.\n * @param values the values to total\n * @returns the positive total\n */\nexport function positiveTotal(values: number[]): number {\n    let total = 0;\n    for (const value of values) {\n        if (value > 0) total += value;\n    }\n    return total;\n}\n';
@@ -12,7 +12,7 @@ export const UNTESTED = `${VITEST_SOURCE}\n/**\n * Triples a number.\n * @param 
 export const TEST =
     "import { test, expect } from 'vitest';\nimport { positiveTotal } from './public.js';\n\ntest('adds only positive values', () => {\n    expect(positiveTotal([2, 3])).toBe(5);\n    expect(positiveTotal([-2, 3])).toBe(3);\n    expect(positiveTotal([])).toBe(0);\n});\n";
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'vitest'],
     files: {
         'package.json': VITEST_PACKAGE,

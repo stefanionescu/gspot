@@ -7,11 +7,11 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { installedModules } from '#tests/harness/environment.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { NEXT_PAGE, NEXT_LAYOUT } from '#tests/config/samples/nextjs.ts';
+import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import { COUNT, REPOSITORY, BUILD_FAILURE } from '#tests/config/tools/configurations/framework/nextjs.ts';
-import type { TestRepository, RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import type { TestRepository, InstalledScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 
 // Runs the named checks alone, expects the exit code, and returns the report.
 async function checked(repository: TestRepository, checks: string[], code: number): Promise<RunReport> {
@@ -106,14 +106,14 @@ async function buildLevels(repository: TestRepository): Promise<void> {
     }
 }
 
-const repository: RepositoryScenario = {
+const repository: InstalledScenario = {
     ...REPOSITORY,
     dirname: join(installedModules, '../..', `gspot-test-${randomUUID()}`),
 };
 const resources = new AsyncDisposableStack();
 let testRepository: OwnedTestRepository;
 beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(repository, spawnGspot));
+    testRepository = resources.use(await createTestRepository(repository, spawnGspot, prepareTestRepository));
 });
 afterAll(async () => {
     await resources.disposeAsync();

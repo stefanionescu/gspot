@@ -1,14 +1,13 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
 
 // The docstrings are Google style, and pydoclint reads that from the project, not from gspot.
 export const PYPROJECT =
     '[project]\nname = "example"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n\n[tool.pydoclint]\nstyle = "google"\n';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['python'],
-    modules: false,
 
     tools: ['ruff', 'basedpyright'],
     files: {

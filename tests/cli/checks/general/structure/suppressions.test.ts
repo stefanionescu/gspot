@@ -77,7 +77,7 @@ test.each([
         const session = await openSession(sandbox.path);
         const result = await executeRun(
             session,
-            buildRunOptions({ stage: 'commit', only: ['structure/suppressions'], isDryRun: true }),
+            buildRunOptions({ stage: 'commit', only: ['structure/suppressions'] }),
         );
         expect(result.report.checks.map(({ status }) => status)).toStrictEqual([
             lines.length === 0 ? 'passed' : 'failed',

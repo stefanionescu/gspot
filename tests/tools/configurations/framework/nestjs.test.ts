@@ -5,9 +5,9 @@ import type { Level } from '#cli/types/configurations.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import type { PackageJson } from '#cli/types/parsers/packages.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import { REPOSITORY, SWAGGER_DEPENDENCY } from '#tests/config/tools/configurations/framework/nestjs.ts';
 
 // Declaring an API documentation dependency makes its native lint contract applicable.
@@ -59,7 +59,7 @@ describe('the nestjs configuration', () => {
     const resources = new AsyncDisposableStack();
     let testRepository: OwnedTestRepository;
     beforeAll(async () => {
-        testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+        testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
     });
     afterAll(async () => {
         await resources.disposeAsync();

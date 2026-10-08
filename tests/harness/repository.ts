@@ -12,28 +12,58 @@ import type { CaseChanges } from '#tests/types/harness/preservation.ts';
 import { initRepository, buildSandboxPath } from '#tests/harness/install.ts';
 
 import type {
-    RepositorySetup,
+    InProcessScenario,
+    InstalledScenario,
     RepositoryScenario,
     OwnedTestRepository,
     RuntimeEvidenceCase,
 } from '#tests/types/harness/repository.ts';
 
-// The manifest a sandbox with dependencies starts from.
-function buildManifest(dependencies: Record<string, string> | undefined): Record<string, string> {
-    if (dependencies === undefined) return {};
+// Write each scenario's authored project inputs before its suite prepares execution.
+function writeRepository(root: string, sandbox: RepositoryScenario): Promise<void> {
     const manifest = {
         name: 'example',
         version: '1.0.0',
         private: true,
         description: 'A sandbox.',
         type: 'module',
-        dependencies,
+        dependencies: sandbox.dependencies,
     };
-    return { 'package.json': `${JSON.stringify(manifest, null, 4)}\n` };
+    return createFileTree(root, {
+        '.gitignore': 'node_modules\n',
+        ...(sandbox.dependencies === undefined ? {} : { 'package.json': JSON.stringify(manifest, null, 4) + '\n' }),
+        ...(sandbox.tsconfig === undefined
+            ? {}
+            : { 'tsconfig.json': JSON.stringify(sandbox.tsconfig, null, 4) + '\n' }),
+        ...sandbox.files,
+    });
 }
 
-// Initializes the configurations with their tool projects installed, selects the level, and returns the command environment.
-async function installTools(root: string, sandbox: RepositorySetup): Promise<Record<string, string>> {
+/**
+ * Prepare source and policy for checks that run in this process.
+ * @param root the empty sandbox
+ * @param sandbox authored inputs and selected configurations
+ * @returns the empty command environment; no modules or tools are installed
+ */
+export async function prepareCliRepository(root: string, sandbox: InProcessScenario): Promise<Record<string, string>> {
+    await writeRepository(root, sandbox);
+    await sandbox.before?.(root);
+    commitAll(root);
+    await Bun.write(join(root, 'gspot.toml'), buildPolicy(sandbox.configurations, { level: sandbox.level ?? 'all' }));
+    return {};
+}
+
+/**
+ * Prepare a sandbox with initialized configurations and installed tool projects.
+ * @param root the empty sandbox
+ * @param sandbox authored inputs and native installation choices
+ * @returns the PATH used by its commands
+ */
+export async function prepareTestRepository(root: string, sandbox: InstalledScenario): Promise<Record<string, string>> {
+    await writeRepository(root, sandbox);
+    await linkInstalledModules(join(root, 'node_modules'));
+    await sandbox.before?.(root);
+    commitAll(root);
     const environment = { PATH: buildSandboxPath(['typos', 'ec', 'ast-grep', ...(sandbox.tools ?? [])]) };
     const argv = ['init', '--yes', '--configurations', ...sandbox.configurations, ...(sandbox.init ?? QUIET_INIT)];
     await initRepository(root, argv, environment, {
@@ -44,45 +74,20 @@ async function installTools(root: string, sandbox: RepositorySetup): Promise<Rec
 }
 
 /**
- * Creates a repository, installs its configurations and tool projects, and returns the command environment.
- * @param root the empty sandbox
- * @param sandbox what the repository holds and selects
- * @returns the PATH every gspot command of the test runs with
+ * Prepare one owned repository for sample and fix cases.
+ * @param repository authored inputs and setup callbacks.
+ * @param run the public CLI invocation.
+ * @param prepareRepository the suite preparation.
+ * @returns the repository and temporary directory ownership.
  */
-export async function prepareTestRepository(
-    root: string,
-    sandbox: RepositoryScenario,
-): Promise<Record<string, string>> {
-    await createFileTree(root, {
-        '.gitignore': 'node_modules\n',
-        ...buildManifest(sandbox.dependencies),
-        ...(sandbox.tsconfig === undefined
-            ? {}
-            : { 'tsconfig.json': JSON.stringify(sandbox.tsconfig, null, 4) + '\n' }),
-        ...sandbox.files,
-    });
-    if (sandbox.modules !== false) await linkInstalledModules(join(root, 'node_modules'));
-    await sandbox.before?.(root);
-    commitAll(root);
-    if (sandbox.installs !== false) return installTools(root, sandbox);
-    // Checks gspot runs itself need only the policy: no generated file, tool project, or lockfile.
-    await Bun.write(join(root, 'gspot.toml'), buildPolicy(sandbox.configurations, { level: sandbox.level ?? 'all' }));
-    return {};
-}
-
-/**
- * Create and prepare one owned repository for a scenario's sample and fix cases.
- * @param repository authored inputs, selected configurations, and setup callbacks
- * @param run the public CLI invocation selected by the test
- * @returns the installed repository and ownership of its temporary directory
- */
-export async function createTestRepository(
-    repository: RepositoryScenario,
+export async function createTestRepository<Scenario extends RepositoryScenario>(
+    repository: Scenario,
     run: CheckCommand,
+    prepareRepository: (root: string, scenario: Scenario) => Promise<Record<string, string>>,
 ): Promise<OwnedTestRepository> {
     const sandbox = await testdir({}, repository.dirname === undefined ? {} : { dirname: repository.dirname });
     try {
-        const environment = await prepareTestRepository(sandbox.path, repository);
+        const environment = await prepareRepository(sandbox.path, repository);
         await repository.prepare?.(sandbox.path, environment);
         return {
             root: sandbox.path,

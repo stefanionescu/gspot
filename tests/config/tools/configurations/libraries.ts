@@ -1,9 +1,9 @@
 import { ZOD_PACKAGE } from '#tests/config/samples/typescript.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'zod', 'trpc', 'zustand', 'drizzle'],
     files: {
         'package.json': ZOD_PACKAGE,

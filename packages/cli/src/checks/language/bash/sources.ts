@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import type { ScriptFile } from '#cli/types/checks/language/bash.ts';
+import { SOURCE_STATEMENT } from '#cli/config/checks/language/bash.ts';
 import { functionAt, getScriptIndex } from '#cli/checks/language/bash/scripts.ts';
-import { SOURCE_STATEMENT, SHELLCHECK_DIRECTIVE } from '#cli/config/checks/language/bash.ts';
 
 // The runs of top-level source statements, each as the zero-based lines it spans. Blank lines and comments join a run.
 function sourceRuns(file: ScriptFile): number[][] {
@@ -15,34 +15,6 @@ function sourceRuns(file: ScriptFile): number[][] {
     }
     return runs.filter((run) => run.length > 0);
 }
-
-/**
- * One finding per comment among a script's source statements that is not a ShellCheck directive.
- * @param input the check context
- * @returns the findings
- */
-export const sourceComments: BuiltInCheck = async (input) => {
-    const index = await getScriptIndex(input);
-    return index.files.flatMap((file) =>
-        sourceRuns(file).flatMap((run) => {
-            const [first] = run;
-            const last = run.at(-1);
-            if (first === undefined || last === undefined) return [];
-            return file.lines.slice(first, last).flatMap((line, offset) => {
-                const text = line.trim();
-                if (!text.startsWith('#') || SHELLCHECK_DIRECTIVE.test(text)) return [];
-                return [
-                    findingAt(
-                        input,
-                        { file: file.path, line: first + offset + 1 },
-                        'source-comment',
-                        'No comments among source statements. Say it where the sourced file is used, or above the block.',
-                    ),
-                ];
-            });
-        }),
-    );
-};
 
 /**
  * One finding per run of source statements that is not ordered by length, shortest first.

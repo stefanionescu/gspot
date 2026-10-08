@@ -12,8 +12,8 @@ import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { toolPin, pythonPins } from '#cli/configurations/pins.ts';
+import { importLinter } from '#cli/checks/language/python/imports.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
-import { importLinter } from '#cli/checks/language/python/imports/linter.ts';
 
 test.each(LOCKFILES.filter(({ client }) => ['uv', 'poetry', 'pdm'].includes(client)))(
     'Python dependency ownership with $file applies only to locked scopes and accepts removal of the duplicate list',

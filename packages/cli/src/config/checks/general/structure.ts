@@ -1,4 +1,34 @@
-import type { CommentStyle } from '#cli/types/checks/general/structure.ts';
+import type { CountedLanguage } from '#cli/types/parsers/statements.ts';
+import type { CommentStyle, EnvironmentKind } from '#cli/types/checks/general/structure.ts';
+
+/** Native declarations and reads used by the four source convention checks. */
+export const HOUSE_QUERIES: Record<CountedLanguage, string> = {
+    bash: `(function_definition) @function
+(function_definition name: (word) @name (#eq? @name "main")) @entrypoint
+(command) @import
+(comment) @comment
+(variable_assignment) @assignment
+[(simple_expansion (variable_name) @read) (expansion (variable_name) @read)]`,
+    python: `(function_definition) @function
+[(import_statement) (import_from_statement) (future_import_statement)] @import
+(comment) @comment
+[(attribute) (call) (identifier)] @read
+(attribute object: (identifier) attribute: (identifier) @environment_name
+(#eq? @environment_name "environ")) @environment
+(call function: (attribute object: (identifier) attribute: (identifier) @getter_name
+(#eq? @getter_name "getenv")) @environment)
+[(assignment) (for_statement) (function_definition) (class_definition) (parameters)] @binding`,
+    swift: `[(function_declaration body: (function_body)) (init_declaration) (deinit_declaration) (computed_getter)
+(computed_setter) (computed_property (statements)) (willset_clause) (didset_clause)] @function
+[(class_declaration) (protocol_declaration) (function_declaration)
+(property_declaration) (typealias_declaration)] @declaration
+(import_declaration) @import
+[(comment) (multiline_comment)] @comment
+(navigation_expression) @read`,
+};
+
+/** Only these native os members read the process environment. */
+export const OS_ENVIRONMENT_MEMBERS: Record<string, EnvironmentKind> = { environ: 'environ', getenv: 'getenv' };
 
 export const CONFIG_STATEMENTS = new Set([
     'import_statement',

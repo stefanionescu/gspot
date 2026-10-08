@@ -18,15 +18,17 @@ import { commitlintRange } from '#cli/checks/general/commits.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
 import { codeql, semgrep } from '#cli/checks/general/security.ts';
-import { envOwner } from '#cli/checks/language/bash/env-owner.ts';
 import type { BuiltInChecks } from '#cli/types/execution/check.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
+import { sourceOrder } from '#cli/checks/language/bash/sources.ts';
 import { pydoclint } from '#cli/checks/language/python/pydoclint.ts';
 import { shellcheck } from '#cli/checks/language/bash/shellcheck.ts';
+import { envOwner } from '#cli/checks/general/structure/env-owner.ts';
 import { trivyImage, dockerignore } from '#cli/checks/tool/docker.ts';
 import { docComments } from '#cli/checks/language/bash/doc-comments.ts';
 import { fileLines } from '#cli/checks/general/structure/file-lines.ts';
 import { loneFiles } from '#cli/checks/general/structure/lone-files.ts';
+import { privatePrefix } from '#cli/checks/language/bash/visibility.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { manifests } from '#cli/checks/general/dependencies/manifests.ts';
 import { folderNames } from '#cli/checks/general/structure/folder-names.ts';
@@ -43,23 +45,23 @@ import { ats, xcconfig, entitlements } from '#cli/checks/tool/xcode/settings.ts'
 import { siteBuild, buildReproducible } from '#cli/checks/general/site/build.ts';
 import { versionPairs } from '#cli/checks/general/dependencies/version-pairs.ts';
 import { foreignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
+import { importComments } from '#cli/checks/general/structure/import-comments.ts';
 import { stemCollisions } from '#cli/checks/general/structure/stem-collisions.ts';
-import { trivialFunctions } from '#cli/checks/language/bash/trivial-functions.ts';
 import { configurationLogic } from '#cli/checks/general/structure/config-logic.ts';
 import { lockfileFresh } from '#cli/checks/general/dependencies/lockfile/fresh.ts';
 import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile/hosts.ts';
-import { sourceOrder, sourceComments } from '#cli/checks/language/bash/sources.ts';
 import { bunReleaseAge } from '#cli/checks/general/dependencies/bun-release-age.ts';
 import { prefixCollisions } from '#cli/checks/general/structure/prefix-collisions.ts';
 import { recording, references } from '#cli/checks/library/swift-snapshot-testing.ts';
 import { trivialFunctions as sqlTrivialFunctions } from '#cli/checks/language/sql.ts';
-import { envOwner as swiftEnvOwner } from '#cli/checks/general/structure/env-owner.ts';
+import { trivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
 import { symlinks, testPlans, orphanSources } from '#cli/checks/tool/xcode/project.ts';
 import { rls, grants, definerSearchPath } from '#cli/checks/database/postgres/access.ts';
 import { singletons as pythonSingletons } from '#cli/checks/language/python/singletons.ts';
+import { importLinter as pythonImportLinter } from '#cli/checks/language/python/imports.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/history.ts';
 import { trackedDependencies } from '#cli/checks/general/structure/tracked-dependencies.ts';
-import { privatePrefix, privateBeforePublic } from '#cli/checks/language/bash/visibility.ts';
+import { privateBeforePublic } from '#cli/checks/general/structure/private-before-public.ts';
 import { functionSize as bashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
 import { headings, stalePaths, readmeShape, readmePresent } from '#cli/checks/general/docs.ts';
 import { lazyExports as pythonLazyExports } from '#cli/checks/language/python/lazy-exports.ts';
@@ -67,25 +69,17 @@ import { scripts as htmlScripts, literals as htmlLiterals } from '#cli/checks/la
 import { xcstrings, orphanAssets, contentsFindings } from '#cli/checks/tool/xcode/resources.ts';
 import { deptry, pipInstalls as pythonPipInstalls } from '#cli/checks/language/python/deptry.ts';
 import { functionSize as pythonFunctionSize } from '#cli/checks/language/python/function-size.ts';
-import { importLinter as pythonImportLinter } from '#cli/checks/language/python/imports/linter.ts';
 import { swiftBuild, swiftPeriphery, swiftlintAnalyze } from '#cli/checks/language/swift/build.ts';
 import { envFiles, trufflehog, envTemplate, gitleaksHistory } from '#cli/checks/general/secrets.ts';
 import { gspotDrift, fixPolicyLayout, gspotPolicyLayout } from '#cli/checks/general/gspot/drift.ts';
 import { svgo, deadAssets, webManifest, securityHeaders } from '#cli/checks/general/site/source.ts';
 import { NEXT_VERSION_PAIRS, REACT_VERSION_PAIRS } from '#cli/config/checks/general/dependencies.ts';
-import { importComments as pythonImportComments } from '#cli/checks/language/python/imports/comments.ts';
-import { importComments as swiftImportComments } from '#cli/checks/general/structure/import-comments.ts';
 import { namingPaths, namingPolicy, namingIdentifiers } from '#cli/checks/general/naming/identifiers.ts';
 import { nextBuild, nextjsTsc, routeSegments, nextConfiguration } from '#cli/checks/framework/nextjs.ts';
 import { sitemap, purgecss, siteSize, linkinator, htmlValidate } from '#cli/checks/general/site/output.ts';
-import { trivialFunctions as swiftTrivialFunctions } from '#cli/checks/general/structure/trivial-functions.ts';
+import { placeholderDocstrings as pythonPlaceholderDocstrings } from '#cli/checks/language/python/functions.ts';
 import { relations as drizzleRelations, migrations as drizzleMigrationsFresh } from '#cli/checks/library/drizzle.ts';
-import { privateBeforePublic as swiftPrivateBeforePublic } from '#cli/checks/general/structure/private-before-public.ts';
 
-import {
-    trivialFunctions as pythonTrivialFunctions,
-    placeholderDocstrings as pythonPlaceholderDocstrings,
-} from '#cli/checks/language/python/functions.ts';
 import {
     headers as cloudflareHeaders,
     wrangler as cloudflareWrangler,
@@ -97,7 +91,6 @@ import {
     privatePrefix as pythonPrivatePrefix,
     packageExports as pythonPackageExports,
     exportsAtBottom as pythonExportsAtBottom,
-    privateBeforePublic as pythonPrivateBeforePublic,
 } from '#cli/checks/language/python/exports.ts';
 import {
     adminKey,
@@ -120,6 +113,10 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'jest/coverage': { run: runBuiltInCheck(jestCoverage) },
     'gspot/drift': { run: gspotDrift },
     'gspot/policy-layout': { run: gspotPolicyLayout, fix: fixPolicyLayout },
+    'structure/private-before-public': { run: runBuiltInCheck(privateBeforePublic) },
+    'structure/import-comments': { run: runBuiltInCheck(importComments) },
+    'structure/trivial-functions': { run: runBuiltInCheck(trivialFunctions) },
+    'structure/env-owner': { run: runBuiltInCheck(envOwner) },
     'structure/file-lines': { run: runBuiltInCheck(fileLines) },
     'structure/config-logic': { run: runBuiltInCheck(configurationLogic) },
     'structure/suppressions': { run: runBuiltInCheck(suppressions) },
@@ -169,14 +166,11 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'html/scripts': { run: runBuiltInCheck(htmlScripts) },
     'html/template-text': { run: runBuiltInCheck(htmlLiterals) },
     'python/function-size': { run: runBuiltInCheck(pythonFunctionSize) },
-    'python/trivial-functions': { run: runBuiltInCheck(pythonTrivialFunctions) },
     'python/placeholder-docstrings': { run: runBuiltInCheck(pythonPlaceholderDocstrings) },
     'python/private-prefix': { run: runBuiltInCheck(pythonPrivatePrefix) },
-    'python/private-before-public': { run: runBuiltInCheck(pythonPrivateBeforePublic) },
     'python/exports-at-bottom': { run: runBuiltInCheck(pythonExportsAtBottom) },
     'python/lazy-exports': { run: runBuiltInCheck(pythonLazyExports) },
     'python/package-exports': { run: runBuiltInCheck(pythonPackageExports) },
-    'python/import-comments': { run: runBuiltInCheck(pythonImportComments) },
     'python/export-order': { run: runBuiltInCheck(pythonExportOrder) },
     'python/singletons': { run: runBuiltInCheck(pythonSingletons) },
     'python/import-linter': { run: runBuiltInCheck(pythonImportLinter) },
@@ -195,10 +189,6 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'xcode/test-plans': { run: runBuiltInCheck(testPlans) },
     'xcode/orphan-sources': { run: runBuiltInCheck(orphanSources) },
     'xcode/symlinks': { run: runBuiltInCheck(symlinks) },
-    'swift/trivial-functions': { run: runBuiltInCheck(swiftTrivialFunctions) },
-    'swift/private-before-public': { run: runBuiltInCheck(swiftPrivateBeforePublic) },
-    'swift/env-owner': { run: runBuiltInCheck(swiftEnvOwner) },
-    'swift/import-comments': { run: runBuiltInCheck(swiftImportComments) },
     'swift/build': { run: runBuiltInCheck(swiftBuild) },
     'swift/swiftlint-analyze': { run: runBuiltInCheck(swiftlintAnalyze) },
     'swift/periphery': { run: runBuiltInCheck(swiftPeriphery) },
@@ -230,9 +220,6 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'bash/unused-functions': { run: runBuiltInCheck(unusedFunctions) },
     'bash/unread-arguments': { run: runBuiltInCheck(unreadArguments) },
     'bash/private-prefix': { run: runBuiltInCheck(privatePrefix) },
-    'bash/private-before-public': { run: runBuiltInCheck(privateBeforePublic) },
-    'bash/trivial-functions': { run: runBuiltInCheck(trivialFunctions) },
-    'bash/env-owner': { run: runBuiltInCheck(envOwner) },
     'bash/contract': { run: runBuiltInCheck(contract) },
     'bash/wrappers': { run: runBuiltInCheck(wrappers) },
     'bash/embeds': { run: runBuiltInCheck(embeds) },
@@ -240,7 +227,6 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'bash/variable-defaults': { run: runBuiltInCheck(guardDefaults) },
     'bash/guards': { run: runBuiltInCheck(guards) },
     'bash/safety': { run: runBuiltInCheck(safety) },
-    'bash/source-comments': { run: runBuiltInCheck(sourceComments) },
     'bash/source-order': { run: runBuiltInCheck(sourceOrder) },
     'prose/vale': { run: runBuiltInCheck(vale) },
     'naming/identifiers': { run: runBuiltInCheck(namingIdentifiers) },

@@ -34,7 +34,7 @@ test.skipIf(!isMacos)(
         try {
             const failed = await executeRun(
                 await openSession(sandbox.path),
-                buildRunOptions({ stage: 'push', only: ['xctest/coverage'], isDryRun: true }),
+                buildRunOptions({ stage: 'push', only: ['xctest/coverage'] }),
             );
             expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
             expect(failed.report.checks).toMatchObject([
@@ -53,7 +53,7 @@ test.skipIf(!isMacos)(
             );
             const corrected = await executeRun(
                 await openSession(sandbox.path),
-                buildRunOptions({ stage: 'push', only: ['xctest/coverage'], isDryRun: true }),
+                buildRunOptions({ stage: 'push', only: ['xctest/coverage'] }),
             );
             expect(corrected.report.exitCode, JSON.stringify(corrected.report)).toBe(0);
             expect(corrected.report.checks).toMatchObject([

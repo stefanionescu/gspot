@@ -241,18 +241,6 @@ why = "A function that fills a screen does several things, and a reader has to h
 help = "Move one job of the function into a function of its own."
 
 [[check]]
-name = "trivial-functions"
-title = "Find trivial functions"
-example = "The function `def answer(): return 1` has one executable statement and reports a trivial-function finding. Replace unnecessary calls with the value and delete the function."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py"] }
-summary = "Reports functions at or below limits.min_function_statements and files containing only trivial declarations."
-why = "Unnecessary functions add names and indirection without substantial behavior."
-help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore python/trivial-functions --paths <file> --reason <why>`."
-
-[[check]]
 name = "placeholder-docstrings"
 title = "Replace placeholder docstrings"
 example = "A function whose docstring merely repeats its name reports a placeholder description. Replace the docstring with the behavior, inputs, and consequential effects that the name does not explain."
@@ -275,18 +263,6 @@ files = { extensions = [".py"] }
 summary = "In a module with an export list, checks that every other definition starts with an underscore, and that the list holds no such name."
 why = "A name that is public by accident gets imported, and then it cannot change."
 help = "Add the underscore, or list the name in the export list."
-
-[[check]]
-name = "private-before-public"
-title = "Put private functions first"
-example = "A private `_parse` function below an exported public function reports declaration order. Move `_parse` before the public function without changing either body."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py"] }
-summary = "Checks that private functions sit above the public functions of a module."
-why = "A reader who meets the parts first understands what is built from them."
-help = "Move the private functions above the first public one."
 
 [[check]]
 name = "exports-at-bottom"
@@ -323,18 +299,6 @@ files = { extensions = [".py"] }
 summary = "Checks that a package exports no more names than the ceiling."
 why = "A package that exports everything has no surface, so every change to it is a breaking one."
 help = "Split the package, or export fewer names."
-
-[[check]]
-name = "import-comments"
-title = "Keep comments out of import blocks"
-example = "A comment written between two imports reports an import comment. Move it above the block or next to the code that uses the import; a `# noqa` or `# type:` directive stays."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".py"] }
-summary = "Finds a comment written inside an import block, between its first and last import."
-why = "An import block is a list, and a note inside a list is read as part of the wrong entry."
-help = "Move the comment above the block or next to the code it explains."
 
 [[check]]
 name = "export-order"

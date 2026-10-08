@@ -1,5 +1,5 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/config/samples/components.ts';
 
 /** The consumer version installed only in native Vue sandboxes. */
@@ -8,8 +8,7 @@ export const VUE_VERSION = '3.5.22';
 export const VUE_CLEAN =
     '<script setup lang="ts">\ndefineProps<{ name: string }>();\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n';
 
-export const REPOSITORY: RepositoryScenario = {
-    modules: false,
+export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'vue', 'css'],
     tsconfig: COMPONENT_TSCONFIG,
     dependencies: { vue: VUE_VERSION },

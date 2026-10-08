@@ -124,9 +124,9 @@ export function grammarFor(path: string, language: string): GrammarName | undefi
  * @param dispose the operation that releases the observations.
  * @returns a handle. Its value must stay within its ownership lifetime.
  */
-export async function visitParsed<Value>(
-    input: SourceInput,
-    read: (input: SourceInput) => Promise<Value>,
+export async function visitParsed<Value, Input extends SourceInput>(
+    input: Input,
+    read: (input: Input) => Promise<Value>,
     dispose: (value: Value) => void,
 ): Promise<ParsedVisit<Value>> {
     if (input.resources === undefined) {

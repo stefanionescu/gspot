@@ -1,5 +1,5 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 /** Declared Swagger use selects its lint contracts without importing the SDK in this source. */
 export const SWAGGER_DEPENDENCY = '11.2.3';
@@ -24,7 +24,7 @@ export const CONTROLLER =
 export const NESTJS_MODULE =
     "// The greeting feature.\nimport { Module } from '@nestjs/common';\nimport { GreetingService } from './greeting.service.js';\nimport { GreetingController } from './greeting.controller.js';\n\n/** Wires the greeting feature together. */\n@Module({ controllers: [GreetingController], providers: [GreetingService] })\nexport class GreetingModule {}\n";
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'nestjs'],
     dependencies: NESTJS_DEPENDENCIES,
     files: {

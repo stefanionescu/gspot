@@ -1,5 +1,5 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 export const OPENAPI_POLICY = '[openapi]\ndocument = "openapi.yaml"\ngenerate_command = ["bun", "write-document.js"]\n';
 
@@ -27,9 +27,9 @@ paths:
                     description: The service is up.
 `;
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['openapi'],
-    modules: false,
+
     without: ['vitest'],
     files: {
         'package.json': '{"name":"example","private":true,"type":"module"}\n',

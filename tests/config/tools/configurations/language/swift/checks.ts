@@ -1,5 +1,5 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
 
 export const CASES: FindingCase[] = [
@@ -17,9 +17,8 @@ export const CASES: FindingCase[] = [
     },
 ];
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['swift', 'naming'],
-    modules: false,
 
     tools: ['swiftlint', 'swiftformat'],
     files: { 'Sources/App/Greeting.swift': CLEAN_SWIFT },

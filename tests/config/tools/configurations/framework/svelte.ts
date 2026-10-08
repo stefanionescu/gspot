@@ -1,5 +1,5 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/config/samples/components.ts';
 
 export const COUNT = '<script lang="ts">\n    const count: number = \'one\';\n</script>\n\n<p>{count}</p>\n';
@@ -13,7 +13,7 @@ export const PRODUCT =
 export const CARD =
     '<p class="card">card</p>\n\n<style>\n    :global(.card) {\n        color: #ggg;\n    }\n</style>\n';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'svelte', 'css', 'format'],
     tsconfig: COMPONENT_TSCONFIG,
     dependencies: { svelte: '5.57.0' },

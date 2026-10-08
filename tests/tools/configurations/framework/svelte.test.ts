@@ -5,15 +5,15 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import { REPOSITORY, SVELTE_CLEAN } from '#tests/config/tools/configurations/framework/svelte.ts';
 
 const resources = new AsyncDisposableStack();
 let testRepository: OwnedTestRepository;
 beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
 });
 afterAll(async () => {
     await resources.disposeAsync();

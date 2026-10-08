@@ -54,12 +54,10 @@ export function getSwiftFunctions(source: SwiftSource): SwiftFunction[] {
             const statements = (node.childForFieldName('body') ?? node).namedChildren.find(
                 (child) => child.type === 'statements',
             );
-            let name = node.childForFieldName('name')?.text ?? FUNCTION_NAMES[node.type] ?? 'function';
-            if (ACCESSOR_NODES.has(node.type)) name = accessorName(node, name);
             return {
                 path: source.path,
                 node,
-                name,
+                name: swiftFunctionName(node),
                 body: (statements?.namedChildren ?? []).filter((child) => !child.type.endsWith('comment')),
             };
         });
@@ -85,4 +83,14 @@ export function readSwiftVersion(input: SwiftVersionInput, projectPath: string):
     if (packageText !== undefined) return SWIFT_TOOLS_VERSION.exec(packageText)?.[1];
     const projectText = projectPath === '' ? undefined : readText(root, join(projectPath, 'project.pbxproj'), reads);
     return projectText === undefined ? undefined : projectBuildSettings(projectText).swiftVersion;
+}
+
+/**
+ * Name a Swift executable body and its accessor or observer owner.
+ * @param node the native body declaration
+ * @returns its existing finding label
+ */
+export function swiftFunctionName(node: Node): string {
+    const name = node.childForFieldName('name')?.text ?? FUNCTION_NAMES[node.type] ?? 'function';
+    return ACCESSOR_NODES.has(node.type) ? accessorName(node, name) : name;
 }

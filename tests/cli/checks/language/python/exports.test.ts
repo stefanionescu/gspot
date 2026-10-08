@@ -6,14 +6,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { PYTHON_MODULE_HEADER } from '#tests/config/samples/python.ts';
 import { SHOWN } from '#tests/config/cli/checks/language/python/exports.ts';
-
-import {
-    exportOrder,
-    privatePrefix,
-    packageExports,
-    exportsAtBottom,
-    privateBeforePublic,
-} from '#cli/checks/language/python/exports.ts';
+import { exportOrder, privatePrefix, packageExports, exportsAtBottom } from '#cli/checks/language/python/exports.ts';
 
 test('a function left out of __all__ carries the private prefix', async () => {
     await using sandbox = await testdir({
@@ -24,17 +17,6 @@ test('a function left out of __all__ carries the private prefix', async () => {
     expect(
         await privatePrefix(buildCheckInput(await openSession(sandbox.path), 'python/private-prefix')),
     ).toMatchObject([{ file: 'example/leaky.py', line: 9, rule: 'private-prefix' }]);
-});
-
-test('a private function declared under a public one is reported while private declarations above it pass', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildPolicy(['python'], { level: 'all' }),
-        'example/tidy.py': `${PYTHON_MODULE_HEADER}def _part() -> int:\n    """Give one part."""\n    return 1\n\n\ndef shown() -> int:\n    """Give one."""\n    return _part()\n`,
-        'example/order.py': `${PYTHON_MODULE_HEADER}def shown() -> int:\n    """Give one."""\n    return _part()\n\n\ndef _part() -> int:\n    """Give one part."""\n    return 1\n`,
-    });
-    expect(
-        await privateBeforePublic(buildCheckInput(await openSession(sandbox.path), 'python/private-before-public')),
-    ).toMatchObject([{ file: 'example/order.py', line: 9, rule: 'private-before-public' }]);
 });
 
 test('__all__ belongs at the bottom, lists shortest names first, and stays under the package ceiling', async () => {

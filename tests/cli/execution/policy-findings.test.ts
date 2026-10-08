@@ -11,7 +11,7 @@ import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { BROKEN, CORRECTED } from '#tests/config/cli/execution/policy-findings.ts';
 
-const POLICY_FINDINGS_OPTIONS = buildRunOptions({ only: ['swift/trivial-functions'] });
+const POLICY_FINDINGS_OPTIONS = buildRunOptions({ only: ['structure/trivial-functions'] });
 
 test('a wrong entry in gspot.toml is a finding of gspot/policy, and the other checks still run', async () => {
     await using sandbox = await testdir();
@@ -26,13 +26,13 @@ test('a wrong entry in gspot.toml is a finding of gspot/policy, and the other ch
     });
     expect(broken.report.exitCode).toBe(1);
     expect(broken.report.checks.map((check) => [check.check, check.status])).toStrictEqual([
-        ['swift/trivial-functions', 'failed'],
+        ['structure/trivial-functions', 'failed'],
         ['gspot/policy', 'failed'],
     ]);
     expect(broken.report.checks[1]!.findings).toMatchObject([
         {
             file: 'gspot.toml',
-            message: textContaining('ignore.0.reason: [[ignore]] (swift/trivial-functions) needs a reason.'),
+            message: textContaining('ignore.0.reason: [[ignore]] (structure/trivial-functions) needs a reason.'),
         },
     ]);
     expect(broken.report.failed).toContain('gspot/policy');
@@ -41,7 +41,7 @@ test('a wrong entry in gspot.toml is a finding of gspot/policy, and the other ch
         ...POLICY_FINDINGS_OPTIONS,
         checks: BUILT_IN_CHECKS,
     });
-    expect(corrected.report.checks.map((check) => check.check)).toStrictEqual(['swift/trivial-functions']);
+    expect(corrected.report.checks.map((check) => check.check)).toStrictEqual(['structure/trivial-functions']);
 });
 
 test('apply refuses a policy with a wrong entry, because it writes from the policy', async () => {

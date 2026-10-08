@@ -32,33 +32,3 @@ test('shell visibility uses outside callers and keeps entrypoints public', async
     expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks).toMatchObject([{ check: 'bash/private-prefix', status: 'passed', findings: [] }]);
 });
-
-test('shell declaration order resets between files and requires main last', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['bash'], { level: 'all' }),
-        'first.sh':
-            '_top() {\n echo first\n}\npublic() {\n echo second\n}\n_late() {\n echo third\n}\nmain() {\n public\n}\nafter() {\n echo last\n}\n',
-        'second.sh': '_local() {\n echo local\n}\nmain() {\n _local\n}\n',
-        'empty.sh': '# No declarations.\n',
-    });
-    const options = buildRunOptions({ only: ['bash/private-before-public'] });
-    const broken = await executeRun(await openSession(sandbox.path), options);
-    expect(broken.report.exitCode).toBe(1);
-    expect(broken.report.checks).toMatchObject([{ check: 'bash/private-before-public', status: 'failed' }]);
-    expect(
-        broken.report.checks.flatMap(({ findings }) => findings).map(({ file, line, rule }) => ({ file, line, rule })),
-    ).toStrictEqual([
-        { file: 'first.sh', line: 7, rule: 'private-before-public' },
-        { file: 'first.sh', line: 10, rule: 'main-not-last' },
-    ]);
-    await createFileTree(sandbox.path, {
-        'first.sh':
-            '_top() {\n echo first\n}\n_late() {\n echo third\n}\npublic() {\n echo second\n}\nafter() {\n echo last\n}\nmain() {\n public\n}\n',
-    });
-    const corrected = await executeRun(await openSession(sandbox.path), options);
-    expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks).toMatchObject([
-        { check: 'bash/private-before-public', status: 'passed', findings: [] },
-    ]);
-});

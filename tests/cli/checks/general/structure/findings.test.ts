@@ -4,15 +4,15 @@ import { mkdir } from 'node:fs/promises';
 import { git } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { REPOSITORY } from '#tests/config/cli/checks/general/structure/findings.ts';
+import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
 
 const resources = new AsyncDisposableStack();
 let testRepository: OwnedTestRepository;
 beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(REPOSITORY, runGspot));
+    testRepository = resources.use(await createTestRepository(REPOSITORY, runGspot, prepareCliRepository));
 });
 afterAll(async () => {
     await resources.disposeAsync();

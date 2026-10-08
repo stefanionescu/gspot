@@ -7,12 +7,12 @@ import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { REPOSITORY } from '#tests/config/tools/configurations/general/files.ts';
-import { createTestRepository, preserveRepositoryChanges } from '#tests/harness/repository.ts';
+import { createTestRepository, prepareTestRepository, preserveRepositoryChanges } from '#tests/harness/repository.ts';
 
 const resources = new AsyncDisposableStack();
 let testRepository: OwnedTestRepository;
 beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
 });
 afterAll(async () => {
     await resources.disposeAsync();

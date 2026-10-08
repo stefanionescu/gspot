@@ -6,13 +6,13 @@ import { TYPO } from '#tests/config/samples/spelling.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import { REPOSITORY } from '#tests/config/tools/configurations/language/typescript/checks.ts';
 import { ARCHITECTURE } from '#tests/config/tools/configurations/language/typescript/source.ts';
-import type { RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 
-const repository: RepositoryScenario = {
+const repository: InstalledScenario = {
     ...REPOSITORY,
     prepare: async (root, environment) => {
         await mkdir(join(root, 'node_modules'));
@@ -28,7 +28,7 @@ const repository: RepositoryScenario = {
 const resources = new AsyncDisposableStack();
 let testRepository: OwnedTestRepository;
 beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(repository, spawnGspot));
+    testRepository = resources.use(await createTestRepository(repository, spawnGspot, prepareTestRepository));
 });
 afterAll(async () => {
     await resources.disposeAsync();

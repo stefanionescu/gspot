@@ -2,7 +2,6 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { markExecutable } from '#tests/harness/git.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import * as nextjs from '#tests/config/cli/checks/framework/nextjs.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
@@ -15,6 +14,7 @@ import * as xctestSource from '#tests/config/cli/checks/tool/xctest/source.ts';
 import * as bashStructure from '#tests/config/cli/checks/language/bash/structure.ts';
 import * as libraryConventions from '#tests/config/cli/checks/library/conventions.ts';
 import * as pythonStructure from '#tests/config/cli/checks/language/python/structure.ts';
+import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
 import * as supabaseSettings from '#tests/config/cli/checks/platform/supabase/settings.ts';
 import * as dependencyPolicy from '#tests/config/cli/checks/general/dependencies/policy.ts';
 import * as structureFindings from '#tests/config/cli/checks/general/structure/findings.ts';
@@ -26,7 +26,7 @@ const CORRECTIONS: Record<string, (repository: Pick<CaseChanges, 'files'>) => Re
         'scripts/settings.sh':
             '#!/usr/bin/env bash\n[[ -n ${SETTINGS_READY:-} ]] && return 0\nreadonly SETTINGS_READY=1\nreadonly PORT=8080\n',
     }),
-    'bash/env-owner': (repository) => ({ 'scripts/environment.sh': repository.files['scripts/environment.sh']! }),
+    'structure/env-owner': (repository) => ({ 'scripts/environment.sh': repository.files['scripts/environment.sh']! }),
 };
 
 for (const scenario of [
@@ -88,7 +88,7 @@ for (const scenario of [
         const resources = new AsyncDisposableStack();
         let repository: OwnedTestRepository;
         beforeAll(async () => {
-            repository = resources.use(await createTestRepository(scenario.repository, runGspot));
+            repository = resources.use(await createTestRepository(scenario.repository, runGspot, prepareCliRepository));
         });
         afterAll(async () => {
             await resources.disposeAsync();

@@ -88,10 +88,7 @@ test('a repository command receives a declared empty argument without changing i
         }),
         'source.txt': 'source input',
     });
-    const result = await executeRun(
-        await openSession(sandbox.path),
-        buildRunOptions({ isDryRun: true, only: ['project/arguments'] }),
-    );
+    const result = await executeRun(await openSession(sandbox.path), buildRunOptions({ only: ['project/arguments'] }));
     expect(result.report.exitCode).toBe(0);
     expect(result.report.checks).toMatchObject([{ check: 'project/arguments', status: 'passed' }]);
 });

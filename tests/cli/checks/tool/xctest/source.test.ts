@@ -6,16 +6,16 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { REPOSITORY } from '#tests/config/cli/checks/tool/xctest/source.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
 
 describe('the xctest configuration', () => {
     const resources = new AsyncDisposableStack();
     let testRepository: OwnedTestRepository;
     beforeAll(async () => {
-        testRepository = resources.use(await createTestRepository(REPOSITORY, runGspot));
+        testRepository = resources.use(await createTestRepository(REPOSITORY, runGspot, prepareCliRepository));
     });
     afterAll(async () => {
         await resources.disposeAsync();

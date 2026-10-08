@@ -1,13 +1,12 @@
 import { CLEAN } from '#tests/config/samples/swift/tests.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 
 const TEST_SOURCE = 'AppTests/HomeTests.swift';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InProcessScenario = {
     configurations: ['swift-snapshot-testing'],
-    modules: false,
-    installs: false,
+
     files: { [TEST_SOURCE]: CLEAN, 'AppTests/__Snapshots__/HomeTests/testTitle.1.png': 'png' },
 };
 

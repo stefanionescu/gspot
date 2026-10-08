@@ -7,16 +7,16 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { COMMAND, REPOSITORY } from '#tests/config/tools/configurations/general/site.ts';
+import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 
 describe('the site configuration', () => {
     const resources = new AsyncDisposableStack();
     let testRepository: OwnedTestRepository;
     beforeAll(async () => {
-        testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+        testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
     });
     afterAll(async () => {
         await resources.disposeAsync();

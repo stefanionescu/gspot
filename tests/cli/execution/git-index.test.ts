@@ -22,7 +22,7 @@ test.each(['secrets/env-files', 'structure/tracked-dependencies'])(
         gitOutput(sandbox.path, ['init', '-q']);
         gitOutput(sandbox.path, ['add', '.']);
         const session = await openSession(sandbox.path);
-        const options = buildRunOptions({ only: [check], isDryRun: true });
+        const options = buildRunOptions({ only: [check] });
         const found = await executeRun(session, options);
         expect(found.report.exitCode).toBe(1);
         expect(found.report.checks[0]!.status).toBe('failed');

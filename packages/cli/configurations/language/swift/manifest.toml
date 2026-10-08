@@ -162,54 +162,6 @@ summary = "Scans the built project for declarations nothing uses."
 why = "Dead code is read, maintained, and migrated by people who cannot tell it is dead."
 help = "Delete the declaration, or mark it with a periphery:ignore comment that says who uses it."
 
-[[check]]
-name = "trivial-functions"
-title = "Find trivial functions"
-example = "A Swift function containing only `return 1` reports a trivial-function finding at the default statement limit. Inline the value at unnecessary call sites and remove the function."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".swift"] }
-summary = "Reports functions at or below limits.min_function_statements and files containing only trivial declarations."
-why = "Unnecessary functions add names and indirection without substantial behavior."
-help = "Inline unnecessary functions. For one an external API requires, run `gspot ignore swift/trivial-functions --paths <file> --reason <why>`."
-
-[[check]]
-name = "private-before-public"
-title = "Put private declarations first"
-example = "A file-local private declaration below a public declaration reports an ordering finding. Move the private declaration above the first internal or public declaration without changing its behavior."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".swift"] }
-summary = "Checks that private and fileprivate top-level declarations sit above the ones other files see."
-why = "A file that opens with its own pieces and ends with what it offers reads in one direction."
-help = "Move the file-local declarations above the first internal, public, or open one."
-
-[[check]]
-name = "import-comments"
-title = "Keep comments out of import blocks"
-example = "A comment written between two imports reports an import comment. Move it above the block or next to the code that uses the import; a `// swiftlint:` or `// swiftformat:` directive stays."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".swift"] }
-summary = "Finds a comment written inside an import block, between its first and last import."
-why = "An import block is a list, and a note inside a list is read as part of the wrong entry. SwiftFormat orders the block by length."
-help = "Move the comment above the block or next to the code it explains."
-
-[[check]]
-name = "env-owner"
-title = "Read the environment in one place"
-example = "A read of `ProcessInfo.processInfo.environment` outside the configured environment owner reports a finding. Move that read to the path named by `architecture.roles.env` and pass the required values to callers."
-level = "all"
-stage = "commit"
-runs = "scope"
-files = { extensions = [".swift"] }
-summary = "Checks that the process environment is read in one place."
-why = "A variable read in many files has many defaults and many spellings, and nobody can list what the app needs."
-help = "Read the environment in the file that architecture.roles.env names, and pass the values in."
-
 [[setting]]
 name = "tools.swiftlint.keep_imports"
 type = "list"

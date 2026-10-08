@@ -1,13 +1,12 @@
 import { CLEAN } from '#tests/config/samples/swift/tests.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 
 export const XCTEST_TESTS = 'AppTests/HomeTests.swift';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InProcessScenario = {
     configurations: ['xctest'],
-    modules: false,
-    installs: false,
+
     files: {
         [XCTEST_TESTS]: CLEAN,
         'AppTests/SkippedTests.swift':

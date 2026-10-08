@@ -44,36 +44,6 @@ export async function privatePrefix(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * Private definitions come before public ones, so a reader meets the parts before what is built from them.
- * @param input the selected scope, files, and policy settings
- * @returns the findings for that check
- */
-export async function privateBeforePublic(input: CheckInput): Promise<Finding[]> {
-    using parsed = await visitParsed(input, readPython, disposePython);
-    const { modules } = parsed.value;
-    return modules.flatMap((module) => {
-        const names = module.statements.flatMap((statement) => {
-            const name =
-                statement.type === 'function_definition' ? statement.childForFieldName('name')?.text : undefined;
-            return name === undefined ? [] : [{ name, statement }];
-        });
-        const firstPublic = names.findIndex((entry) => !entry.name.startsWith('_'));
-        if (firstPublic === -1) return [];
-        return names
-            .slice(firstPublic)
-            .filter((entry) => entry.name.startsWith('_') && !entry.name.startsWith('__'))
-            .map((entry) =>
-                findingAt(
-                    input,
-                    { file: module.path, line: entry.statement.startPosition.row + 1 },
-                    'private-before-public',
-                    `${entry.name} is private and sits below a public function. Private functions come first.`,
-                ),
-            );
-    });
-}
-
-/**
  * __all__ is the last statement of its module, apart from a main guard.
  * @param input the selected scope, files, and policy settings
  * @returns the findings for that check

@@ -1,6 +1,6 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 import {
     WEB_TSCONFIG,
@@ -18,7 +18,7 @@ export const COUNTER =
 export const RAW_NATIVE_TEXT =
     '// A test component.\n\n/**\n * Draws a label.\n * @returns the label\n */\nexport function Label(): unknown {\n    return <View>label</View>;\n}\n';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'react-dom'],
     tsconfig: WEB_TSCONFIG,
     dependencies: WEB_DEPENDENCIES,
@@ -39,7 +39,7 @@ export const CASES: FindingCase[] = [
     },
 ];
 
-export const EXPO_REPOSITORY: RepositoryScenario = {
+export const EXPO_REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'expo'],
     tsconfig: NATIVE_TSCONFIG,
     dependencies: EXPO_DEPENDENCIES,
@@ -57,7 +57,7 @@ export const EXPO_CASES: FindingCase[] = [
     },
 ];
 
-export const NATIVE_REPOSITORY: RepositoryScenario = {
+export const NATIVE_REPOSITORY: InstalledScenario = {
     configurations: ['typescript', 'react-native'],
     tsconfig: NATIVE_TSCONFIG,
     dependencies: NATIVE_DEPENDENCIES,

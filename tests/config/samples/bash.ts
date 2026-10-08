@@ -64,7 +64,7 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/half.sh', rule: 'unread-arguments', line: 9 },
     },
     {
-        check: 'bash/source-comments',
+        check: 'structure/import-comments',
         files: {
             'scripts/noted.sh': `${HEAD}source ./lib/a.sh\n# the b library\nsource ./lib/bb.sh\n\n${BASH_CASES_MAIN}`,
             'scripts/lib/a.sh': `${HEAD}# a_step: one step.\na_step() {\n    echo a\n    echo b\n    echo "$1"\n}\n`,
@@ -89,7 +89,7 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/local.sh', rule: 'unprefixed', line: 9 },
     },
     {
-        check: 'bash/private-before-public',
+        check: 'structure/private-before-public',
         files: {
             'scripts/lib.sh': `${HEAD}# shared_step: other files call this one.\nshared_step() {\n    echo a\n    echo b\n    echo "$1"\n}\n\n# _late: a private function below a public one.\n_late() {\n    echo a\n    echo c\n    echo "$1"\n}\n\n# main: runs the script.\nmain() {\n    _late "$1"\n    _late "$1"\n    shared_step "$1"\n}\n\nmain "$@"\n`,
             'scripts/user.sh': `${HEAD}# main: runs the script.\nmain() {\n    shared_step "$1"\n}\n\nmain "$@"\n`,
@@ -97,14 +97,14 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/lib.sh', rule: 'private-before-public', line: 16 },
     },
     {
-        check: 'bash/trivial-functions',
+        check: 'structure/trivial-functions',
         files: {
             'scripts/tiny.sh': `${HEAD}# _tiny: one line, one caller.\n_tiny() {\n    echo "$1"\n}\n\n# main: runs the script.\nmain() {\n    _tiny "$1"\n}\n\nmain "$@"\n`,
         },
         expected: { file: 'scripts/tiny.sh', rule: 'trivial-function', line: 9 },
     },
     {
-        check: 'bash/trivial-functions',
+        check: 'structure/trivial-functions',
         files: {
             'scripts/forward.sh': `${HEAD}# _forward: hands everything on.\n_forward() {\n    printf "$@"\n}\n\n# main: runs the script.\nmain() {\n    _forward "$1"\n    _forward "$1"\n}\n\nmain "$@"\n`,
         },
@@ -155,7 +155,7 @@ export const BASH_CASES: FindingCase[] = [
         expected: { file: 'scripts/settings.sh', rule: 'guard-first', line: 6 },
     },
     {
-        check: 'bash/env-owner',
+        check: 'structure/env-owner',
         files: {
             'scripts/environment.sh':
                 '#!/usr/bin/env bash\n#\n# Owns the environment.\n# Runtime: Bash 4.0+, macOS and Linux.\n\nreadonly DEPLOY_TARGET="${1:-}"\n',

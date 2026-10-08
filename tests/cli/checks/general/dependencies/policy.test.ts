@@ -6,16 +6,16 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import { createTestRepository, prepareCliRepository } from '#tests/harness/repository.ts';
 import { INVALID, REPOSITORY } from '#tests/config/cli/checks/general/dependencies/policy.ts';
 
 describe('the dependencies configuration', () => {
     const resources = new AsyncDisposableStack();
     let testRepository: OwnedTestRepository;
     beforeAll(async () => {
-        testRepository = resources.use(await createTestRepository(REPOSITORY, runGspot));
+        testRepository = resources.use(await createTestRepository(REPOSITORY, runGspot, prepareCliRepository));
     });
     afterAll(async () => {
         await resources.disposeAsync();

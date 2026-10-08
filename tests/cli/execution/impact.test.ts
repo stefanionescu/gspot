@@ -29,7 +29,6 @@ test('command checks retain nested inputs and report their findings once at the 
         stage: 'push',
         only: ['project/syntax'],
         changed: ['api/source.sh'],
-        isDryRun: true,
     });
     const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode).toBe(1);

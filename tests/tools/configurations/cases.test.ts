@@ -10,7 +10,6 @@ import { runFindingCase } from '#tests/harness/check-case.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
@@ -28,8 +27,9 @@ import type { BashBoundary, ConfigurationCallbacks } from '#tests/types/tools/ca
 import { SCENARIOS, BASH_LOCATIONS } from '#tests/config/tools/configurations/cases.ts';
 import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
 import * as frameworkNextjs from '#tests/config/tools/configurations/framework/nextjs.ts';
+import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import * as languageBashChecks from '#tests/config/tools/configurations/language/bash/checks.ts';
-import type { RepositoryScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import * as languageSwiftChecks from '#tests/config/tools/configurations/language/swift/checks.ts';
 import * as markdownDocsProse from '#tests/config/tools/configurations/general/markdown-docs-prose.ts';
 import { DOUBLE_JS, ARCHITECTURE } from '#tests/config/tools/configurations/language/typescript/source.ts';
@@ -119,7 +119,7 @@ const BOUNDARIES: BashBoundary[] = [
         },
     },
 ];
-const CALLBACKS = new Map<RepositoryScenario, ConfigurationCallbacks>([
+const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
     [
         libraries.REPOSITORY,
         {
@@ -281,7 +281,9 @@ for (const declared of SCENARIOS) {
             const resources = new AsyncDisposableStack();
             let repository: OwnedTestRepository;
             beforeAll(async () => {
-                repository = resources.use(await createTestRepository(scenario.repository, spawnGspot));
+                repository = resources.use(
+                    await createTestRepository(scenario.repository, spawnGspot, prepareTestRepository),
+                );
             });
             afterAll(() => resources.disposeAsync());
             for (const entry of cases) {

@@ -1,6 +1,6 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { CaseChanges } from '#tests/types/harness/preservation.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 
 export const INVALID: (CaseChanges & Record<'expected', string>)[] = [
     {
@@ -23,10 +23,9 @@ export const FOREIGN_PNPM =
 export const FOREIGN_YARN =
     'a@1.0.0:\n  version "1.0.0"\n  resolved "https://registry.example.test/a/-/a-1.0.0.tgz#0a1b"\n';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InProcessScenario = {
     configurations: ['dependencies'],
-    modules: false,
-    installs: false,
+
     files: { 'package.json': CLEAN },
 };
 

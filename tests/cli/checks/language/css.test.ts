@@ -7,7 +7,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { DYNAMIC_READS } from '#tests/config/cli/checks/css-usage.ts';
 
-const options = buildRunOptions({ only: ['css/module-classes'], isDryRun: true });
+const options = buildRunOptions({ only: ['css/module-classes'] });
 
 test('global CSS classes are not module exports and explicitly local classes still require a use', async () => {
     await using sandbox = await testdir();

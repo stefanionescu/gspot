@@ -3,15 +3,15 @@ import { join } from 'node:path';
 import { rm } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import { REPOSITORY } from '#tests/config/tools/configurations/general/markdown-docs-prose.ts';
 
 const resources = new AsyncDisposableStack();
 let testRepository: OwnedTestRepository;
 beforeAll(async () => {
-    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+    testRepository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
 });
 afterAll(async () => {
     await resources.disposeAsync();

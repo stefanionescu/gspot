@@ -1,7 +1,7 @@
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { WORKFLOW_HEAD } from '#tests/config/samples/actions.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 export const ACTIONS_INIT = [
     'init',
@@ -14,9 +14,8 @@ export const ACTIONS_INIT = [
     '--no-install',
 ];
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['actions'],
-    modules: false,
 
     init: [...QUIET_INIT],
     tools: ['actionlint', 'zizmor'],

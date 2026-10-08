@@ -1,13 +1,12 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 
 export const WRANGLER =
     '{\n    // The worker of the test site.\n    "name": "example",\n    "compatibility_date": "2026-01-15"\n}\n';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InProcessScenario = {
     configurations: ['cloudflare'],
-    modules: false,
-    installs: false,
+
     files: {
         'package.json':
             '{\n    "name": "example",\n    "private": true,\n    "devDependencies": { "wrangler": "4.0.0" }\n}\n',

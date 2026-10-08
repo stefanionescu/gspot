@@ -1,5 +1,6 @@
 import { pathToFileURL } from 'node:url';
 import { sep, join, resolve } from 'node:path';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { applyIgnores } from '#cli/execution/run.ts';
@@ -7,11 +8,9 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { codeql } from '#cli/checks/general/security.ts';
-import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
-import type { Finding } from '#cli/types/parsers/output.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { sarifFindings } from '#cli/parsers/output/sarif.ts';
 import type { CapturedInvocation } from '#tests/types/harness/command.ts';
@@ -172,52 +171,43 @@ const ALIASED_POLICY = buildPolicy(['security'], {
     level: 'all',
 });
 
-// Aliases resolve to one native language and its exact query-pack version.
-function expectNativeCodeqlOptions(commands: string[][], packVersion: string): void {
-    const option = (command: string, prefix: string) =>
-        commands.filter((argv) => argv.includes(command)).map((argv) => argv.find((part) => part.startsWith(prefix)));
-    expect(option('create', '--language=')).toStrictEqual(['--language=javascript']);
-    expect(option('analyze', 'codeql/')).toStrictEqual([
-        `codeql/javascript-queries@${packVersion}:codeql-suites/javascript-security-extended.qls`,
-    ]);
-}
-
-// A language that names a path is refused before any process runs; a real language runs in a copy.
-async function refusesOutsideLanguage(language: string): Promise<string[]> {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        'gspot.toml': buildPolicy(['security'], {
-            tables: `[tools.codeql]\nlanguages = [${JSON.stringify(language)}]\n`,
-            level: 'all',
-        }),
-        'source.py': 'value = 1\n',
-    });
-    const session = await openSession(directory.path);
-    const input = buildCheckInput(session, 'security/codeql');
-    const copies: string[] = [];
-    // What the database creation saw in its copy of the repository.
-    const sources: string[] = [];
-    const run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
-        if (argv.includes('resolve'))
-            return {
-                code: 0,
-                missing: false,
-                stdout: JSON.stringify({ aliases: {}, extractors: { python: [{}] } }),
-                stderr: '',
-                duration: 1,
-            };
-        const { cwd } = options;
-        copies.push(cwd);
-        if (argv.includes('create')) {
-            sources.push(await readFile(join(cwd, 'source.py'), 'utf8'));
-            await writeFile(join(cwd, 'generated.py'), 'build side effect');
-        }
-        const output = argv.find((part) => part.startsWith('--output='));
-        if (output !== undefined)
-            await Bun.write(output.slice('--output='.length), '{"version":"2.1.0","runs":[{"results":[]}]}');
-        return { code: 0, missing: false, stdout: '', stderr: '', duration: 1 };
-    });
-    try {
+// CodeQL ships no arm64 Linux build; its pin says where it runs.
+test.if(hasToolBuild('codeql')).each(['../outside', 'C:outside'])(
+    'CodeQL refuses the language %s, which names a path, before it starts a process',
+    async (language) => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, {
+            'gspot.toml': buildPolicy(['security'], {
+                tables: `[tools.codeql]\nlanguages = [${JSON.stringify(language)}]\n`,
+                level: 'all',
+            }),
+            'source.py': 'value = 1\n',
+        });
+        const session = await openSession(directory.path);
+        const input = buildCheckInput(session, 'security/codeql');
+        const copies: string[] = [];
+        // What the database creation saw in its copy of the repository.
+        const sources: string[] = [];
+        using run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
+            if (argv.includes('resolve'))
+                return {
+                    code: 0,
+                    missing: false,
+                    stdout: JSON.stringify({ aliases: {}, extractors: { python: [{}] } }),
+                    stderr: '',
+                    duration: 1,
+                };
+            const { cwd } = options;
+            copies.push(cwd);
+            if (argv.includes('create')) {
+                sources.push(await readFile(join(cwd, 'source.py'), 'utf8'));
+                await writeFile(join(cwd, 'generated.py'), 'build side effect');
+            }
+            const output = argv.find((part) => part.startsWith('--output='));
+            if (output !== undefined)
+                await Bun.write(output.slice('--output='.length), '{"version":"2.1.0","runs":[{"results":[]}]}');
+            return { code: 0, missing: false, stdout: '', stderr: '', duration: 1 };
+        });
         await rejection(codeql(input));
         expect(run).not.toHaveBeenCalled();
         await Bun.write(
@@ -229,14 +219,25 @@ async function refusesOutsideLanguage(language: string): Promise<string[]> {
         expect(copies).not.toContain(directory.path);
         expect(sources).toStrictEqual(['value = 1\n']);
         expect(await pathExists(join(directory.path, 'generated.py'))).toBe(false);
-    } finally {
-        run.mockRestore();
-    }
-    return copies;
-}
 
-// Aliases resolve to one native language and its pinned pack; SARIF locations map back from the copy.
-async function mapsIsolatedLocations(policy: string): Promise<Finding[]> {
+        expect(await Promise.all(copies.map((copy) => pathExists(copy)))).toStrictEqual(copies.map(() => false));
+    },
+);
+test.if(hasToolBuild('codeql')).each([
+    ['CodeQL policy ignores require matching rule and path', 'js/sql-injection', ['source file.ts'], 0],
+    ['CodeQL policy ignores require different rule', 'js/other', ['source file.ts'], 1],
+    ['CodeQL policy ignores require different path', 'js/sql-injection', ['elsewhere/**'], 1],
+    [
+        'CodeQL adapter uses native language names and pinned packs once and maps isolated SARIF locations',
+        undefined,
+        [],
+        1,
+    ],
+] as const)('%s', async (_name, rule, paths, count) => {
+    const policy =
+        rule === undefined
+            ? ALIASED_POLICY
+            : `${ALIASED_POLICY}\n[[ignore]]\ncheck="security/codeql"\nrule=${JSON.stringify(rule)}\npaths=${JSON.stringify(paths)}\nreason="Reviewed analysis case."\n`;
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': policy,
@@ -244,10 +245,10 @@ async function mapsIsolatedLocations(policy: string): Promise<Finding[]> {
     });
     const session = await openSession(directory.path);
     const manifest = session.manifests.get('security')!;
-    const packVersion = manifest.tools.find((tool) => tool.name === 'codeql')!.query_packs!['javascript'];
+    const packVersion = manifest.tools.find((tool) => tool.name === 'codeql')!.query_packs!['javascript']!;
     // Every database creation and analysis the check ran, with the copy it ran in.
     const invoked: CapturedInvocation[] = [];
-    const run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
+    using _run = spyOn(processes, 'run').mockImplementation(async (argv, options) => {
         const base = { code: 0, missing: false, stderr: '', duration: 1 };
         if (argv.includes('resolve'))
             return {
@@ -274,40 +275,22 @@ async function mapsIsolatedLocations(policy: string): Promise<Finding[]> {
         } else if (!argv.includes('create')) throw new Error('Unexpected CodeQL command');
         return { ...base, stdout: '' };
     });
-    try {
-        const findings = await codeql(buildCheckInput(session, 'security/codeql'));
-        expect(invoked.map(({ cwd }) => cwd)).not.toContain(directory.path);
-        expectNativeCodeqlOptions(
-            invoked.map(({ argv }) => argv),
-            packVersion!,
-        );
-        expect(await readFile(join(directory.path, 'source file.ts'), 'utf8')).toBe('export const source = true;\n');
-        return applyIgnores(findings, session.policyFiles.policy.ignore).kept;
-    } finally {
-        run.mockRestore();
-    }
-}
-
-// CodeQL ships no arm64 Linux build; its pin says where it runs.
-describe.if(hasToolBuild('codeql'))('the CodeQL adapter', () => {
-    test.each(['../outside', 'C:outside'])(
-        'CodeQL refuses output language %s before spawning and accepts a corrected language',
-        async (language) => {
-            const copies = await refusesOutsideLanguage(language);
-            expect(await Promise.all(copies.map((copy) => pathExists(copy)))).toStrictEqual(copies.map(() => false));
-        },
+    const findings = await codeql(buildCheckInput(session, 'security/codeql'));
+    expect(invoked.map(({ cwd }) => cwd)).not.toContain(directory.path);
+    const option = (command: string, prefix: string) =>
+        invoked
+            .filter(({ argv }) => argv.includes(command))
+            .map(({ argv }) => argv.find((part) => part.startsWith(prefix)));
+    expect(option('create', '--language=')).toStrictEqual(['--language=javascript']);
+    expect(option('analyze', 'codeql/')).toStrictEqual([
+        `codeql/javascript-queries@${packVersion}:codeql-suites/javascript-security-extended.qls`,
+    ]);
+    expect(await readFile(join(directory.path, 'source file.ts'), 'utf8')).toBe('export const source = true;\n');
+    const kept = applyIgnores(findings, session.policyFiles.policy.ignore).kept;
+    expect(kept).toHaveLength(count);
+    expect(kept).toMatchObject(
+        count === 0
+            ? []
+            : [{ check: 'security/codeql', rule: 'js/sql-injection', file: 'source file.ts', line: 1, column: 14 }],
     );
-    test.each([
-        ['matching rule and path', 'js/sql-injection', ['source file.ts'], 0],
-        ['different rule', 'js/other', ['source file.ts'], 1],
-        ['different path', 'js/sql-injection', ['elsewhere/**'], 1],
-    ] as const)('CodeQL policy ignores require %s', async (_name, rule, paths, count) => {
-        const policy = `${ALIASED_POLICY}\n[[ignore]]\ncheck="security/codeql"\nrule=${JSON.stringify(rule)}\npaths=${JSON.stringify(paths)}\nreason="Reviewed analysis case."\n`;
-        expect(await mapsIsolatedLocations(policy)).toHaveLength(count);
-    });
-    test('CodeQL adapter uses native language names and pinned packs once and maps isolated SARIF locations', async () => {
-        expect(await mapsIsolatedLocations(ALIASED_POLICY)).toMatchObject([
-            { check: 'security/codeql', rule: 'js/sql-injection', file: 'source file.ts', line: 1, column: 14 },
-        ]);
-    });
 });

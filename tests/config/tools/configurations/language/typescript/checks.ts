@@ -1,7 +1,7 @@
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { TYPESCRIPT_PACKAGE } from '#tests/config/samples/typescript.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 import {
     TOTAL,
@@ -14,9 +14,8 @@ import {
     MISSPELLED_FILE,
 } from '#tests/config/tools/configurations/language/typescript/source.ts';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['typescript'],
-    modules: false,
 
     files: {
         'package.json': TYPESCRIPT_PACKAGE,

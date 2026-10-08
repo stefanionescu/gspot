@@ -2,16 +2,16 @@
 import { join } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
+import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 import { REPOSITORY } from '#tests/config/tools/configurations/general/secrets/environment.ts';
 
 describe('environment checks in the secrets configuration', () => {
     const resources = new AsyncDisposableStack();
     let repository: OwnedTestRepository;
     beforeAll(async () => {
-        repository = resources.use(await createTestRepository(REPOSITORY, spawnGspot));
+        repository = resources.use(await createTestRepository(REPOSITORY, spawnGspot, prepareTestRepository));
     });
     afterAll(async () => {
         await resources.disposeAsync();

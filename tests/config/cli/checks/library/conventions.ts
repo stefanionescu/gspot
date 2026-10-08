@@ -1,7 +1,7 @@
 import { ZOD_PACKAGE } from '#tests/config/samples/typescript.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InProcessScenario } from '#tests/types/harness/repository.ts';
 
 export const TABLES = `// A test file.\n\nimport { uuid, pgTable } from 'drizzle-orm/pg-core';\n\n/** The teams. */\nexport const teams = pgTable('teams', { id: uuid('id').primaryKey() });\n\n/** The members. */\nexport const members = pgTable('members', { id: uuid('id').primaryKey(), teamId: uuid('team_id').references(() => teams.id) });\n`;
 
@@ -18,8 +18,7 @@ export const CASES: FindingCase[] = [
     },
 ];
 
-export const REPOSITORY: RepositoryScenario = {
-    installs: false,
+export const REPOSITORY: InProcessScenario = {
     configurations: ['typescript', 'zod', 'trpc', 'tanstack-query', 'zustand', 'react-hook-form', 'drizzle'],
     files: {
         'package.json': ZOD_PACKAGE,

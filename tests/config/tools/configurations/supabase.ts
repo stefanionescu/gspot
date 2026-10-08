@@ -1,5 +1,5 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 export const SUPABASE_CONFIG =
     'project_id = "example"\n\n[storage.buckets.avatars]\npublic = false\n\n[functions.greet]\nverify_jwt = true\n';
@@ -10,9 +10,9 @@ CREATE POLICY avatars_read ON storage.objects FOR SELECT USING (bucket_id = 'ava
 
 export const GREET = 'Deno.serve(() => new Response("hello"));\n';
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['supabase'],
-    modules: false,
+
     without: ['typescript'],
     tools: ['deno', 'squawk', 'sqlfluff'],
     files: {

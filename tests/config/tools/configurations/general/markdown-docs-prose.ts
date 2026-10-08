@@ -1,6 +1,6 @@
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { GUIDE, README, LICENSE } from '#tests/config/samples/docs.ts';
-import type { RepositoryScenario } from '#tests/types/harness/repository.ts';
+import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
 // What each check accepts in place of its test document; the guide for the rest.
 export const CORRECTIONS: Record<string, string> = {
@@ -37,7 +37,7 @@ export const CASES: FindingCase[] = [
     },
 ];
 
-export const REPOSITORY: RepositoryScenario = {
+export const REPOSITORY: InstalledScenario = {
     configurations: ['markdown', 'docs', 'prose'],
 
     tools: ['vale', 'lychee', 'markdownlint-cli2'],

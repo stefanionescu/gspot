@@ -341,3 +341,51 @@ stage = "commit"
 summary = "Finds support files beside JavaScript and TypeScript tests outside their declared harness."
 why = "Keep shared setup in its declared folder and assertions with tests."
 help = "Move support into the declared test harness, or use gspot ignore structure/test-placement with paths and a reason."
+
+[[check]]
+name = "private-before-public"
+title = "Declare private members first"
+example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+summary = "Checks private declaration order, including Bash entrypoints."
+why = "Keep each responsibility in its declared owner."
+help = "Correct the finding, or record the required exception with gspot ignore structure/private-before-public --paths <file> --reason <why>."
+
+[[check]]
+name = "import-comments"
+title = "Keep prose outside import blocks"
+example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+summary = "Checks comments among native import and source statements."
+why = "Keep each responsibility in its declared owner."
+help = "Correct the finding, or record the required exception with gspot ignore structure/import-comments --paths <file> --reason <why>."
+
+[[check]]
+name = "trivial-functions"
+title = "Inline unnecessary functions"
+example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+summary = "Checks function statement floors and trivial source files."
+why = "Keep each responsibility in its declared owner."
+help = "Correct the finding, or record the required exception with gspot ignore structure/trivial-functions --paths <file> --reason <why>."
+
+[[check]]
+name = "env-owner"
+title = "Read environment values in their declared owner"
+example = "A source file that violates this convention reports its original line. Correct the source and rerun the check."
+level = "all"
+stage = "commit"
+runs = "scope"
+files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
+summary = "Checks native environment reads against architecture.roles.env."
+why = "Keep each responsibility in its declared owner."
+help = "Correct the finding, or record the required exception with gspot ignore structure/env-owner --paths <file> --reason <why>."

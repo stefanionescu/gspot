@@ -43,7 +43,6 @@ test('completion callbacks publish filtered results before the remaining check f
     const running = executeRun(
         await openSession(sandbox.path),
         buildRunOptions({
-            isDryRun: true,
             only: ['project/fast', 'project/waiting'],
             onResult: (entry) => {
                 completed.push(entry);

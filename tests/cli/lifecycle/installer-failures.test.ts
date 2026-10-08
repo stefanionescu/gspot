@@ -27,7 +27,7 @@ test.each([...INSTALLATION_FAILURES])(
         await createFileTree(sandbox.path, { 'README.md': 'Authored project.\n' });
         const run = processes.run;
         let isRepaired = false;
-        const installer = spyOn(processes, 'run').mockImplementation((command, options) => {
+        using _installer = spyOn(processes, 'run').mockImplementation((command, options) => {
             if (command[0] !== 'mise') return run(command, options);
             const failed = !isRepaired && (failsOn === 'every call' || command[1] === failsOn);
             const code = failed ? exitCode : 0;
@@ -39,34 +39,30 @@ test.each([...INSTALLATION_FAILURES])(
                 stderr: '',
             });
         });
-        try {
-            const result = await initCommand(
-                buildInitOptions(sandbox.path, {
-                    configurations: ['none'],
-                    runner: 'mise',
-                    install: true,
-                }),
-            );
-            expect(result.exitCode).toBe(2);
-            expect(result.json).toMatchObject({ error: 'installation', message: textContaining('Run: gspot install') });
-            expect(result.text).toContain('Tool installation is incomplete');
-            expect(result.text).toContain('Run: gspot install');
-            const version = await readFile(join(sandbox.path, '.gspot/version'), 'utf8');
-            expect(version.trim()).toBe(RUNNING_VERSION);
-            const session = await openSession(sandbox.path);
-            expect(session.policyFiles.policy.configurations).toStrictEqual(alwaysSelectedConfigurations());
-            expect(await readFile(join(sandbox.path, 'README.md'), 'utf8')).toBe('Authored project.\n');
-            const retry = await installCommand({ cwd: sandbox.path, isDryRun: false });
-            expect(retry.exitCode).toBe(2);
-            expect(retry.text).toContain(retryDiagnostic);
-            const policy = await readFile(join(sandbox.path, 'gspot.toml'));
-            isRepaired = true;
-            const repaired = await installCommand({ cwd: sandbox.path, isDryRun: false });
-            expect(repaired.exitCode, repaired.text).toBe(0);
-            expect(await readFile(join(sandbox.path, 'gspot.toml'))).toStrictEqual(policy);
-        } finally {
-            installer.mockRestore();
-        }
+        const result = await initCommand(
+            buildInitOptions(sandbox.path, {
+                configurations: ['none'],
+                runner: 'mise',
+                install: true,
+            }),
+        );
+        expect(result.exitCode).toBe(2);
+        expect(result.json).toMatchObject({ error: 'installation', message: textContaining('Run: gspot install') });
+        expect(result.text).toContain('Tool installation is incomplete');
+        expect(result.text).toContain('Run: gspot install');
+        const recordedVersion = await readFile(join(sandbox.path, '.gspot/version'), 'utf8');
+        expect(recordedVersion.trim()).toBe(RUNNING_VERSION);
+        const session = await openSession(sandbox.path);
+        expect(session.policyFiles.policy.configurations).toStrictEqual(alwaysSelectedConfigurations());
+        expect(await readFile(join(sandbox.path, 'README.md'), 'utf8')).toBe('Authored project.\n');
+        const retry = await installCommand({ cwd: sandbox.path, isDryRun: false });
+        expect(retry.exitCode).toBe(2);
+        expect(retry.text).toContain(retryDiagnostic);
+        const policy = await readFile(join(sandbox.path, 'gspot.toml'));
+        isRepaired = true;
+        const repaired = await installCommand({ cwd: sandbox.path, isDryRun: false });
+        expect(repaired.exitCode, repaired.text).toBe(0);
+        expect(await readFile(join(sandbox.path, 'gspot.toml'))).toStrictEqual(policy);
     },
 );
 
@@ -77,7 +73,7 @@ test('init does not report success when required Python lockfile creation cannot
         'pyrightconfig.json': '{"exclude":["legacy"]}\n',
     });
     const run = processes.run;
-    const installer = spyOn(processes, 'run').mockImplementation((command, options) => {
+    using _installer = spyOn(processes, 'run').mockImplementation((command, options) => {
         if (command[0] === 'mise')
             return Promise.resolve({
                 code: 0,
@@ -90,24 +86,20 @@ test('init does not report success when required Python lockfile creation cannot
             ? Promise.resolve({ code: 127, missing: true, duration: 0, stdout: '', stderr: '' })
             : run(command, options);
     });
-    try {
-        expect(
-            await rejection(
-                initCommand(
-                    buildInitOptions(sandbox.path, {
-                        configurations: ['python'],
-                        runner: 'mise',
-                        install: true,
-                    }),
-                ),
+    expect(
+        await rejection(
+            initCommand(
+                buildInitOptions(sandbox.path, {
+                    configurations: ['python'],
+                    runner: 'mise',
+                    install: true,
+                }),
             ),
-        ).toContain('uv is unavailable. Run: python -m pip install uv==');
-        expect(await readFile(join(sandbox.path, 'main.py'), 'utf8')).toBe('print("authored")\n');
-        expect(await pathExists(join(sandbox.path, '.gspot/uv.lock'))).toBe(false);
-        expect(await readFile(join(sandbox.path, 'pyrightconfig.json'), 'utf8')).toBe('{"exclude":["legacy"]}\n');
-    } finally {
-        installer.mockRestore();
-    }
+        ),
+    ).toContain('uv is unavailable. Run: python -m pip install uv==');
+    expect(await readFile(join(sandbox.path, 'main.py'), 'utf8')).toBe('print("authored")\n');
+    expect(await pathExists(join(sandbox.path, '.gspot/uv.lock'))).toBe(false);
+    expect(await readFile(join(sandbox.path, 'pyrightconfig.json'), 'utf8')).toBe('{"exclude":["legacy"]}\n');
 });
 
 test('a repository that already runs hooks keeps them, gets the gspot lines, and the other installers still run', async () => {
@@ -126,7 +118,7 @@ test('a repository that already runs hooks keeps them, gets the gspot lines, and
     }
     const read: string[][] = [];
     const run = processes.run;
-    const installer = spyOn(processes, 'run').mockImplementation((command, options) => {
+    using _installer = spyOn(processes, 'run').mockImplementation((command, options) => {
         if (command[0] !== 'mise') return run(command, options);
         read.push([...command]);
         return Promise.resolve({
@@ -137,16 +129,12 @@ test('a repository that already runs hooks keeps them, gets the gspot lines, and
             stderr: '',
         });
     });
-    try {
-        const result = await installCommand({ cwd: sandbox.path, isDryRun: false });
-        expect(result.exitCode, result.text).toBe(0);
-        expect(result.text).toContain('add these gspot lines');
-        expect(result.text).toContain('pre-commit: mise exec -- gspot check --hook pre-commit');
-        expect(read).toContainEqual(['mise', 'install']);
-        expect(gitOutput(sandbox.path, ['config', 'core.hooksPath'])).toBe('.githooks');
-    } finally {
-        installer.mockRestore();
-    }
+    const result = await installCommand({ cwd: sandbox.path, isDryRun: false });
+    expect(result.exitCode, result.text).toBe(0);
+    expect(result.text).toContain('add these gspot lines');
+    expect(result.text).toContain('pre-commit: mise exec -- gspot check --hook pre-commit');
+    expect(read).toContainEqual(['mise', 'install']);
+    expect(gitOutput(sandbox.path, ['config', 'core.hooksPath'])).toBe('.githooks');
 });
 
 // The hook is a POSIX shell script that a POSIX PATH runs directly.

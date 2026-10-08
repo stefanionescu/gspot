@@ -20,7 +20,7 @@ test.each(SOURCE_CORRECTIONS)(
             [path]: sample,
         });
         const session = await openSession(sandbox.path);
-        const options = buildRunOptions({ only: ['naming/identifiers', structural], isDryRun: true });
+        const options = buildRunOptions({ only: ['naming/identifiers', structural] });
         const failed = await executeRun(session, options);
         expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
         expect(failed.report.checks.map((check) => check.status)).toStrictEqual(['failed', 'failed']);
@@ -112,7 +112,6 @@ test.skipIf(!isPosix)('built-in checks read edited SQL source when a session is 
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({
         only: ['sql/trivial-functions', 'structure/file-lines'],
-        isDryRun: true,
     });
     const clean = await executeRun(session, options);
     expect(clean.report.exitCode).toBe(0);

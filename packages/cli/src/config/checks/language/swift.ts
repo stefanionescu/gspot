@@ -1,14 +1,4 @@
-export const DECLARATIONS = new Set([
-    'class_declaration',
-    'protocol_declaration',
-    'function_declaration',
-    'property_declaration',
-    'typealias_declaration',
-]);
-
 export const FILE_LOCAL = new Set(['private', 'fileprivate']);
-
-export const COMMENTS = new Set(['comment', 'multiline_comment']);
 
 export const ENVIRONMENT_READ = 'ProcessInfo.processInfo.environment';
 

@@ -3,16 +3,18 @@ import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
-import { createTestRepository } from '#tests/harness/repository.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { NATIVE_REPOSITORY } from '#tests/config/tools/configurations/framework/react.ts';
+import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
 
 describe('the bare react-native configuration', () => {
     const resources = new AsyncDisposableStack();
     let testRepository: OwnedTestRepository;
     beforeAll(async () => {
-        testRepository = resources.use(await createTestRepository(NATIVE_REPOSITORY, spawnGspot));
+        testRepository = resources.use(
+            await createTestRepository(NATIVE_REPOSITORY, spawnGspot, prepareTestRepository),
+        );
     });
     afterAll(async () => {
         await resources.disposeAsync();
