@@ -48,3 +48,25 @@ export const KNIP_DIAGNOSTIC_FILES = {
     'space source.js':
         "import 'fixture-missing-package';\nexport const used = 1;\nexport const unused = 2;\nexport { used as alias };\n",
 };
+
+/** Declared root and child pointers must not hide other configuration-shaped source files. */
+export const KNIP_POINTER_FILES = {
+    'package.json': '{"name":"pointer-project","private":true,"type":"module","workspaces":["child"]}',
+    'README.md': '# Pointer project\n',
+    'child/README.md': '# Child pointer project\n',
+    'main.js': 'export const root = 1;\n',
+    'eslint.config.js': 'export default {};\n',
+    'child/package.json': '{"name":"child-pointer-project","private":true,"type":"module"}',
+    'child/main.js': 'export const child = 1;\n',
+    'child/eslint.config.js': 'export default {};\n',
+};
+
+/** Both native scopes select the declarations that own their actual pointer paths. */
+export const KNIP_POINTER_TABLES = `
+[tools.knip]
+entry = ["main.js"]
+[scope.child]
+configurations = ["javascript", "markdown"]
+[scope.child.tools.knip]
+entry = ["main.js"]
+`;

@@ -185,7 +185,7 @@ export async function jscpd(input: CheckInput): Promise<Finding[]> {
     const owned = [
         ...new Set(
             sourceConfigurations(input.selection.selected).flatMap((manifest) =>
-                ownedBy(manifest.files, input.selection.selected, input.files, input.scope)
+                ownedBy(manifest.files, input.selection.selected, input.files, input.scope, input.view.test_files)
                     .filter((file) => file.kind === 'source')
                     .map((file) => file.path),
             ),

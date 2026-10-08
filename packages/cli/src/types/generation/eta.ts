@@ -80,6 +80,8 @@ export type EtaInputs = Omit<ScopeView, 'options'> & {
         dependencies: string[];
         verbatim: ScopeView['verbatim'];
     }[];
+    /** Native root and directory pointers declared by the selected configurations. */
+    pointers: string[];
     ignoredPaths: string[];
     policy: Policy;
     fragments: string;

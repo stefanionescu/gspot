@@ -1,18 +1,22 @@
 import picomatch from 'picomatch';
-import { dirname, relative } from 'node:path';
+import { posix, dirname, relative } from 'node:path';
 import { parseJsonRecord } from '#cli/parsers/public.ts';
 import { jsonText } from '#cli/generation/json-format.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
+import { ownedBy } from '#cli/repository/selection/public.ts';
 import { toPosix, extensionOf } from '#cli/platform/contracts.ts';
 import { TARGET_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
-import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { JsonFormat } from '#cli/types/generation/formatting.ts';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { ruleSettingsSchema } from '#cli/parsers/schema/tool-rule.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
+import { isConfigurationSelected } from '#cli/configurations/public.ts';
 import { GENERATED_JSON_KEY } from '#cli/config/parsers/generated-header.ts';
+import type { GeneratedFile, ToolFileInputs } from '#cli/types/generation/files.ts';
+import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/paths/public.ts';
 
 import {
     HTML_EXTENSIONS,
@@ -141,6 +145,17 @@ function getRules(parsed: unknown, path: string): Map<string, unknown> {
     if (Array.isArray(value)) return mapRules(value, path);
     if (typeof value === 'object') return new Map(Object.entries(value));
     throw new Error(`Rule path ${path} must contain a rule list or table.`);
+}
+
+// A pointer's directory patterns name ancestor directories, each clamped to the scope.
+function pointerDirectories(scope: string, file: TrackedFile, matches: (path: string) => boolean): string[] {
+    const directories: string[] = [];
+    for (let directory = posix.dirname(file.path); directory !== '.'; directory = posix.dirname(directory)) {
+        if (!matches(directory)) continue;
+        const isOutside = !isInScope(directory, scope);
+        directories.push(isOutside ? scope : directory);
+    }
+    return directories;
 }
 
 /**
@@ -301,4 +316,39 @@ export function collectRules(paths: string[], document: unknown): CapturedRules 
     return ruleSettingsSchema.parse(
         Object.fromEntries(paths.map((path) => [path, Object.fromEntries(getRules(document, path))])),
     );
+}
+
+/**
+ * Native pointer paths from their selected declaration and owned scope inputs.
+ * @param context the source inventory, selected scope, and declaring configuration
+ * @param toolFile the tool file with its optional pointer
+ * @returns the applicable root or directory pointer paths
+ */
+export function pointerPaths(
+    context: Pick<ToolFileInputs, 'files' | 'selection' | 'manifest' | 'scopes'>,
+    toolFile: ToolFileDeclaration,
+): string[] {
+    const { files, selection, manifest } = context;
+    const { pointer } = toolFile;
+    if (pointer === undefined) return [];
+    if (
+        pointer.when !== undefined &&
+        !isConfigurationSelected(toolFile.per_scope ? [selection] : context.scopes, pointer.when.configuration)
+    )
+        return [];
+    const scope = selection.scope.path;
+    let paths = [toolFile.per_scope && scope !== '' ? `${scope}/${pointer.path}` : pointer.path];
+    if (pointer.directories !== undefined) {
+        const children = nestedScopes(
+            context.scopes.map((entry) => entry.scope.path),
+            scope,
+        );
+        const matches = pathMatcher(pointer.directories);
+        const owned = ownedBy(manifest.files, selection.selected, files, '', selection.view.test_files).filter(
+            (file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)),
+        );
+        const directories = new Set(owned.flatMap((file) => pointerDirectories(scope, file, matches)));
+        paths = [...directories].map((directory) => `${directory}/${pointer.path}`);
+    }
+    return paths;
 }

@@ -33,6 +33,7 @@ import nativeStylelintRuleNames from '../../../configurations/language/css/rule-
 
 import {
     headerFor,
+    pointerPaths,
     addJsonHeader,
     scopeIgnorePatterns,
     selectedIgnorePaths,
@@ -72,7 +73,7 @@ function htmlRules(
 
 function scopeInputs(input: ScopeEtaInputs) {
     const { session, selection, manifests, projects } = input;
-    const { scopes } = session;
+    const { scopes, repository } = session;
     const { policy } = session.policyFiles;
     const { view } = selection;
     const tools = collectPins(manifests);
@@ -113,6 +114,13 @@ function scopeInputs(input: ScopeEtaInputs) {
                     dependencies: Object.keys(getProjectDependencies(projects, entry.scope.path)),
                     verbatim: entry.view.verbatim,
                 })),
+        pointers: scopes.flatMap((selection) =>
+            selection.selected.flatMap((manifest) =>
+                manifest.toolFiles.flatMap((toolFile) =>
+                    pointerPaths({ files: repository.files, selection, manifest, scopes }, toolFile),
+                ),
+            ),
+        ),
         ignoredPaths: selectedIgnorePaths(scopes),
         policy,
         entryFiles: (scope: string) => entryFiles(policy, scopes, scope),

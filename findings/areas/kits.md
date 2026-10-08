@@ -1,6 +1,6 @@
 # Kits, Settings, and Names
 
-40 unresolved review records remain.
+38 unresolved review records remain.
 
 ## Findings
 
@@ -246,3 +246,12 @@ Original records and quotations remain above. These records are complete at `0df
 | `areas/kits/021` | complete | One prose.locale setting feeds scoped Vale spelling and Typos, including US rules only for en-us. Root, child, deep and sibling native checks cover rejected old settings and strict schema parity. Commit `0df1cdc36291c763f19144ca70af9725dd8b4476`.                 |
 | `areas/kits/022` | complete | The three limits.docs declarations belong to the prose manifest and retain their adopted names. Mechanical move f8397a745 and behavioral producer/schema validation pass. Commit `0df1cdc36291c763f19144ca70af9725dd8b4476`.                                           |
 | `areas/kits/023` | complete | One generation-owned BANNED_HEADINGS list combines shipped and authored headings and excludes Contents. Native both-level scoped checks cover only applicable banned headings. Commit `0df1cdc36291c763f19144ca70af9725dd8b4476`.                                      |
+
+## Implementation checkpoint 34853ef69 of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `34853ef690cfbda449d53393e9c7a00d8455ae5c`.
+
+| ID               | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/kits/123` | complete | The docs check and implementation use docs/required-files and requiredFiles; README and optional root license diagnostics retain native behavior. The adopted docs.require_license and headings_before_contents settings remain unchanged. Focused CLI63/256/4 files, TypeScript and normal staged156 checks passed at this commit. Commit `34853ef690cfbda449d53393e9c7a00d8455ae5c`.             |
+| `areas/kits/124` | complete | Tool, check, compiled native option and every caller use editorconfig-checker; tools.editorconfig-checker.verbatim replaces the retired namespace. Normal npm mise backend executes pinned native3.4.0; Node24.20 and Bun1.4.2 provenance and formatter correction tested. Native formatter1/22, focused CLI63/256 and staged156 checks passed. Commit `34853ef690cfbda449d53393e9c7a00d8455ae5c`. |

@@ -102,6 +102,9 @@
                 "snapshots",
                 "actual"
             ]
+        },
+        "folders": {
+            "terms": ["common", "core", "helper", "helpers", "util", "utils", "support", "misc", "shared"]
         }
     },
     "reserved": {

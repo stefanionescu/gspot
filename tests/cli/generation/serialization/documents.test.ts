@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
@@ -8,6 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { stringify, parse as parseToml } from 'smol-toml';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { bodyPointer } from '#cli/generation/documents/contracts.ts';
@@ -182,5 +182,21 @@ names = ["Widget"]
         expect(config['MD043']).toBeUndefined();
         expect(config['MD044']).toStrictEqual({ names: ['Widget'] });
         expect(config['MD001']).toBeUndefined();
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s Ruff keeps native import ordering without repository-specific generated prose',
+    async (level) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy(['python'], { level }),
+            'source.py': 'value = 1\n',
+        });
+        const output = emitAll(await openSession(sandbox.path));
+        const ruff = output.files.find(({ path }) => path === '.gspot/config/ruff.toml')!;
+        expect(parseToml(ruff.content)).toMatchObject({
+            lint: { isort: { 'length-sort': true, 'length-sort-straight': true, 'force-sort-within-sections': true } },
+        });
+        expect(ruff.content).not.toContain('the order every gspot language uses');
     },
 );

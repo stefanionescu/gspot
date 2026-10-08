@@ -1,11 +1,14 @@
 import { test, expect, describe } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { allChecks } from '#cli/configurations/contracts.ts';
 import { pathMatcher } from '#cli/repository/paths/public.ts';
 import type { Identifier } from '#cli/types/parsers/naming.ts';
-import { compileTerms } from '#cli/checks/general/naming/contracts.ts';
 import type { EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 import { bannedTerm, nameFindings } from '#cli/checks/general/naming/public.ts';
 import { namingTerms, configurationManifests } from '#cli/configurations/public.ts';
+import { compileTerms, effectivePolicy } from '#cli/checks/general/naming/contracts.ts';
 
 const policy: EffectivePolicy = {
     terms: compileTerms(['enhanced', 'handler'], { source: 'marketing group', group: 'marketing' }),
@@ -202,4 +205,27 @@ describe('bannedTerm', () => {
         expect(bannedTerm(['edge', 'of', 'case'], TERMS)).toBeUndefined();
         expect(bannedTerm(['load', 'bearing', 'wall'], TERMS)?.term).toBe('load-bearing');
     });
+});
+
+test('the required folders group keeps identifier terms separate without dropping other shipped groups', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['naming'], { level: 'all' }) });
+    const session = await openSession(sandbox.path);
+    const [selection] = session.scopes;
+    if (selection === undefined) throw new Error('The native root selection is missing.');
+    const selected = effectivePolicy(selection.surface, session.policyFiles.policy, '', selection.selected);
+    const expected = Object.entries(namingTerms().groups)
+        .filter(([group]) => group !== 'folders')
+        .flatMap(([group, { terms }]) => compileTerms(terms, { source: `${group} group`, group }));
+    expect(selected.terms).toStrictEqual(expected);
+    expect(selected.terms.some(({ group }) => group === 'folders')).toBe(false);
+    expect(namingTerms().groups.folders.terms).toContain('shared');
+    expect(
+        nameFindings(identifier('sharedCount', 'variables'), { ...plain, policy: selected }).filter(
+            ({ rule }) => rule === 'banned-term',
+        ),
+    ).toStrictEqual([]);
+    expect(
+        nameFindings(identifier('helperCount', 'variables'), { ...plain, policy: selected }).map(({ rule }) => rule),
+    ).toContain('banned-term');
 });

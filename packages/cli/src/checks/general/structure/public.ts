@@ -32,7 +32,13 @@ function suppressionForms(selection: ScopeSelection, file: TrackedFile): Suppres
     const readers = new Set(
         selected.flatMap((manifest) =>
             manifest.checks.flatMap((check) =>
-                ownedBy(check.files ?? manifest.files, selected, [file], selection.scope.path).length === 0
+                ownedBy(
+                    check.files ?? manifest.files,
+                    selected,
+                    [file],
+                    selection.scope.path,
+                    selection.view.test_files,
+                ).length === 0
                     ? []
                     : [toolName(check)],
             ),

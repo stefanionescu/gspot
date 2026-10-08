@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { posix } from 'node:path';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { fileKindSchema } from '#cli/parsers/schema/inventory.ts';
-import { SENTENCE_MIN_CHARS } from '#cli/config/configurations.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
 import { pathContainerSchema, namingOverrideSchema } from '#cli/parsers/schema/naming.ts';
+import { SENTENCE_MIN_CHARS, TEST_FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
 
 import {
@@ -27,7 +27,16 @@ const filesSchema = z.strictObject({
     extensions: stringList,
     filenames: stringList,
     tags: stringList,
-    paths: stringList,
+    paths: z
+        .array(
+            z
+                .string()
+                .refine(
+                    (path) => !path.includes('{setting:') || path === TEST_FILES_PLACEHOLDER,
+                    'A file path setting reference must be the whole {setting:test_files} token.',
+                ),
+        )
+        .default([]),
     languages: z.boolean().default(false),
     // The file types the Prettier plugins of the selected configurations format, such as .astro, join the owned ones.
     prettier_plugins: z.boolean().default(false),

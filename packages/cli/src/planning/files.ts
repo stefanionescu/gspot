@@ -26,7 +26,11 @@ function projectOwned(context: PlanInputs, entry: PlanEntry, scopePath: string):
     const candidates = projectFiles(context, scopePath, check.runs);
     const applicationInputs =
         manifest === undefined ? candidates : candidates.filter((file) => !isToolProjectPath(file.path));
-    if (owners !== undefined && ownedBy(owners, scope.selected, applicationInputs, scopePath).length === 0) return [];
+    if (
+        owners !== undefined &&
+        ownedBy(owners, scope.selected, applicationInputs, scopePath, scope.view.test_files).length === 0
+    )
+        return [];
     return check.runs === 'scope' ? candidates : candidates.filter((file) => file.kind !== 'binary');
 }
 
@@ -36,7 +40,7 @@ function listOwned(context: PlanInputs, entry: PlanEntry, scopePath: string): Tr
     const { check, manifest } = entry;
     if (!manifest) return session.repository.files.filter((file) => pathMatcher(check.files?.paths ?? [])(file.path));
     const owners = check.files ?? manifest.files;
-    return ownedBy(owners, scope.selected, session.repository.files, scopePath);
+    return ownedBy(owners, scope.selected, session.repository.files, scopePath, scope.view.test_files);
 }
 
 // The files the check owns in the scope.
@@ -100,9 +104,11 @@ function missingTriggers(context: PlanInputs, entry: PlanEntry, scopePath: strin
         );
         return { ...raw, prefix, tags: tagged.tags, kind: verdict.kind, kindSource: verdict.source };
     });
-    return withoutIgnored(ownedBy(owners, scope.selected, missing, scopePath), check, scope).files.map(
-        (file) => file.path,
-    );
+    return withoutIgnored(
+        ownedBy(owners, scope.selected, missing, scopePath, scope.view.test_files),
+        check,
+        scope,
+    ).files.map((file) => file.path);
 }
 
 /**

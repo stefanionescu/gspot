@@ -198,9 +198,9 @@ export function effectivePolicy(
         overrides: tables.flatMap((table) => table?.overrides ?? []),
     };
     const terms = [
-        ...Object.entries(shipped.groups).flatMap(([group, { terms }]) =>
-            compileTerms(terms, { source: `${group} group`, group }),
-        ),
+        ...Object.entries(shipped.groups)
+            .filter(([group]) => group !== 'folders')
+            .flatMap(([group, { terms }]) => compileTerms(terms, { source: `${group} group`, group })),
         ...compileTerms(naming.banned, { source: 'naming.banned' }),
     ];
     // The shipped rules first, then what the selected configurations know about their own files, then the repository's.

@@ -38,6 +38,9 @@ export const INSTALLATION_KINDS = ['npm', 'python', 'vale'] as const;
 /** The npm backend that installs the published CLI. */
 export const GSPOT_MISE_TOOL = 'npm:@gspothq/cli';
 
+/** A manifest-owned file list reads the scope's already resolved repository-relative tests. */
+export const TEST_FILES_PLACEHOLDER = '{setting:test_files}';
+
 export const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
 
 export const TOOL_FILE_PLACEHOLDER = /\{tool_file:(?<name>[a-z0-9-]+)\}/gu;

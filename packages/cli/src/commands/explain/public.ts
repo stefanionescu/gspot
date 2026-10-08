@@ -192,7 +192,7 @@ function buildPathReport(session: Session, file: TrackedFile): PathExplanation {
     const { path } = file;
     const scope = scopeOf(path, session.repository.scopes);
     const selection = session.scopes.find((entry) => entry.scope.path === scope.path) ?? session.scopes[0];
-    const owners = selection ? ownersOf(file, selection.selected) : [];
+    const owners = selection ? ownersOf(file, selection.selected, selection.scope.path, selection.view.test_files) : [];
     const report: PathExplanation = {
         path,
         scope: scope.path === '' ? 'root' : scope.path,

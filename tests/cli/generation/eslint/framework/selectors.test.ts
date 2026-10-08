@@ -7,6 +7,7 @@ import { getSuggestions } from '#cli/commands/doctor/contracts.ts';
 import type { RuntimeConfiguration } from '#tests/types/generation/configuration-files.ts';
 
 import {
+    I18N_SOURCE,
     FRAMEWORK_FILES,
     REMOVED_ZOD_RULES,
     ALL_SECURITY_RULES,
@@ -180,5 +181,36 @@ test.each(['3.25.76', '4.6.2'])(
                 messages.filter(({ ruleId }) => ruleId?.startsWith('zod/') === true).map(({ ruleId }) => ruleId),
             ),
         ).toStrictEqual(['zod/no-any-schema']);
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s translation rules use root and inherited scoped test paths without sibling leakage',
+    async (level) => {
+        await using sandbox = await testdir();
+        const tested = ['qa/entry.jsx', 'app/qa/entry.jsx', 'app/verification/entry.jsx', 'app/deep/qa/entry.jsx'];
+        const ordinary = new Set(['source.jsx', 'app/source.jsx', 'app/deep/source.jsx']);
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['i18n', 'react'], {
+                level,
+                tables: 'test_files = ["**/qa/**"]\n[scope.app]\ntest_files = ["verification/**"]\n[scope."app/deep"]\n[scope.sibling]\nremoved_configurations = ["i18n"]\n',
+            }),
+            'package.json': '{"private":true,"type":"module"}\n',
+            ...Object.fromEntries([...tested, ...ordinary, 'sibling/source.jsx'].map((path) => [path, I18N_SOURCE])),
+        });
+        const eslint = await createEslint(sandbox.path);
+        for (const file of [...tested, ...ordinary, 'sibling/source.jsx']) {
+            const results = await eslint.lintFiles([file]);
+            expect(
+                results.flatMap(({ messages }) => messages.filter(({ fatal }) => fatal)),
+                file,
+            ).toStrictEqual([]);
+            expect(
+                results.flatMap(({ messages }) =>
+                    messages.filter(({ ruleId }) => ruleId === 'i18next/no-literal-string').map(({ line }) => line),
+                ),
+                file,
+            ).toStrictEqual(level === 'all' && ordinary.has(file) ? [1] : []);
+        }
     },
 );

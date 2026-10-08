@@ -8,6 +8,8 @@ const reservedCategories = z
     .min(1)
     .meta({ description: 'Identifier categories where the term is permitted, such as properties or directories.' });
 
+const namingGroupSchema = z.strictObject({ terms: z.array(z.string()) });
+
 /** A path-specific naming override shared by policy, manifests, and shipped naming data. */
 export const namingOverrideSchema = z.strictObject({
     paths: z.array(z.string().min(1).meta({ pathRole: 'source' })).min(1),
@@ -43,7 +45,7 @@ export const shippedNamingSchema = z.strictObject({
     matching: z.strictObject({ whole_parts: z.boolean(), case_insensitive: z.boolean() }),
     allow_digits: z.boolean(),
     allow_repeated_words: z.boolean(),
-    groups: z.record(z.string(), z.strictObject({ terms: z.array(z.string()) })),
+    groups: z.object({ folders: namingGroupSchema }).catchall(namingGroupSchema),
     reserved: z.record(z.string(), reservedCategories),
     allowed: z.array(z.string()),
     languages: z.record(

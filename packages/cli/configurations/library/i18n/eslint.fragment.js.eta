@@ -1,4 +1,4 @@
 import i18next from 'eslint-plugin-i18next';
 <% if (isAll) { %>
-<%~ eslintModule.block({ files: ['**/*.{jsx,tsx}'], ignores: ['**/*.{test,spec}.*', '**/tests/**'], rules: { 'i18next/no-literal-string': ['error', { mode: 'jsx-text-only' }] } }, 'plugins: { i18next }') %>,
+<%~ eslintModule.block({ files: ['**/*.{jsx,tsx}'], ignores: test_files, rules: { 'i18next/no-literal-string': ['error', { mode: 'jsx-text-only' }] } }, 'plugins: { i18next }') %>,
 <% } %>

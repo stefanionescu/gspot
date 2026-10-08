@@ -1,11 +1,14 @@
 import { test, expect, describe } from 'bun:test';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';
 import { isOwned, ownedBy } from '#cli/repository/selection/public.ts';
-import { selectConfigurations, configurationManifests } from '#cli/configurations/public.ts';
+import { parseManifest, selectConfigurations, configurationManifests } from '#cli/configurations/public.ts';
 
 import {
     PATH_OWNER_CASES,
     SCOPE_OWNER_PATHS,
+    FILE_PATH_REFERENCES,
+    TEST_FILE_OWNER_CASES,
+    TEST_FILE_OWNER_PATHS,
     UNSUPPORTED_CONFIGURATION_FILES,
 } from '#tests/config/cli/configurations/owners.ts';
 
@@ -38,7 +41,13 @@ describe('owners', () => {
     test('a repository configuration with language ownership selects the language files', () => {
         const selected = selectConfigurations(['bash'], manifests);
         const structure = manifests.get('structure')!;
-        const owned = ownedBy(structure.files, selected, [buildTrackedFile('a.sh'), buildTrackedFile('README.md')], '');
+        const owned = ownedBy(
+            structure.files,
+            selected,
+            [buildTrackedFile('a.sh'), buildTrackedFile('README.md')],
+            '',
+            [],
+        );
         expect(owned.map((entry) => entry.path)).toStrictEqual(['a.sh']);
     });
 
@@ -50,6 +59,7 @@ describe('owners', () => {
                 selected,
                 [buildTrackedFile('api/a.sh'), buildTrackedFile('b.sh')],
                 'api',
+                [],
             ).map((entry) => entry.path),
         ).toStrictEqual(['api/a.sh']);
     });
@@ -71,7 +81,7 @@ describe('owners', () => {
             buildTrackedFile('src/index.ts'),
         ];
         expect(
-            ownedBy(manifests.get('format')!.files, selectConfigurations(configurations, manifests), files, '').map(
+            ownedBy(manifests.get('format')!.files, selectConfigurations(configurations, manifests), files, '', []).map(
                 (entry) => entry.path,
             ),
         ).toStrictEqual(expected);
@@ -84,11 +94,35 @@ test.each(PATH_OWNER_CASES)(
         const selected = selectConfigurations(['postgres'], manifests);
         const files = SCOPE_OWNER_PATHS.map((path) => buildTrackedFile(path));
         const table = manifests.get('postgres')!.files;
-        const owned = ownedBy(table, selected, files, scope);
+        const owned = ownedBy(table, selected, files, scope, []);
         expect(owned.map((file) => file.path)).toStrictEqual([...expected]);
         expect(owned[0]).toBe(files.find((file) => file.path === expected[0]));
-        expect(ownedBy({ ...table, kinds: ['binary'] }, selected, files, scope)).toStrictEqual([]);
-        expect(ownedBy({ ...table, paths: [] }, selected, files, scope)).toStrictEqual([]);
+        expect(ownedBy({ ...table, kinds: ['binary'] }, selected, files, scope, [])).toStrictEqual([]);
+        expect(ownedBy({ ...table, paths: [] }, selected, files, scope, [])).toStrictEqual([]);
         expect(files.map((file) => file.path)).toStrictEqual(SCOPE_OWNER_PATHS);
     },
 );
+
+test.each(TEST_FILE_OWNER_CASES)(
+    'Jest file ownership in "$scope" uses effective test paths without changing records',
+    ({ scope, tests, expected }) => {
+        const selected = selectConfigurations(['jest'], manifests);
+        const files = TEST_FILE_OWNER_PATHS.map((path) => buildTrackedFile(path));
+        const owned = ownedBy(manifests.get('jest')!.files, selected, files, scope, tests);
+        expect(owned.map(({ path }) => path)).toStrictEqual(expected);
+        for (const file of owned) expect(files).toContain(file);
+        expect(files.map(({ path }) => path)).toStrictEqual(TEST_FILE_OWNER_PATHS);
+    },
+);
+
+test.each(FILE_PATH_REFERENCES)('manifest file setting reference "$path" accepted=$accepted', ({ path, accepted }) => {
+    const parse = () =>
+        parseManifest(
+            '[configuration]\ntitle = "Reader"\ndescription = "Select the authored source files."\n[files]\npaths = ' +
+                JSON.stringify([path]) +
+                '\n',
+            'configurations/tool/reader',
+        );
+    if (accepted) expect(parse().files.paths).toStrictEqual([path]);
+    else expect(parse).toThrow('A file path setting reference must be the whole {setting:test_files} token.');
+});

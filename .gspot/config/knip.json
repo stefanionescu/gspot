@@ -2,8 +2,16 @@
     "$schema": "https://unpkg.com/knip@6/schema.json",
     "ignore": [
         ".gspot/**",
-        "eslint.config.{js,mjs,cjs}",
+        "eslint.config.mjs",
         "prettier.config.mjs",
+        ".markdownlint-cli2.mjs",
+        "docs/.markdownlint-cli2.mjs",
+        "docs/.stylelintrc.json",
+        "packages/cli/.markdownlint-cli2.mjs",
+        "packages/eslint-plugin/.markdownlint-cli2.mjs",
+        "tests/.markdownlint-cli2.mjs",
+        "tests/ruff.toml",
+        "tests/pyrightconfig.json",
         "docs/prettier.config.mjs",
         "docs/worker-configuration.d.ts",
         "packages/cli/prettier.config.mjs",
@@ -118,8 +126,7 @@
                 "scripts/setting-values.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
-                "**/*.{test,spec}.{ts,tsx,js}",
-                ".markdownlint-cli2.mjs"
+                "**/*.{test,spec}.{ts,tsx,js}"
             ]
         },
         "docs": {
@@ -127,8 +134,7 @@
                 "src/content/reference/collection.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
-                "**/*.{test,spec}.{ts,tsx,js}",
-                ".markdownlint-cli2.mjs"
+                "**/*.{test,spec}.{ts,tsx,js}"
             ],
             "ignoreDependencies": ["satteri"]
         },
@@ -137,26 +143,14 @@
                 "src/checks/general/site/linkinator.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
-                "**/*.{test,spec}.{ts,tsx,js}",
-                ".markdownlint-cli2.mjs"
+                "**/*.{test,spec}.{ts,tsx,js}"
             ]
         },
         "packages/eslint-plugin": {
-            "entry": [
-                "src/rules/public.ts",
-                "src/main.{ts,js}",
-                "src/index.{ts,js}",
-                "**/*.{test,spec}.{ts,tsx,js}",
-                ".markdownlint-cli2.mjs"
-            ]
+            "entry": ["src/rules/public.ts", "src/main.{ts,js}", "src/index.{ts,js}", "**/*.{test,spec}.{ts,tsx,js}"]
         },
         "tests": {
-            "entry": [
-                "src/main.{ts,js}",
-                "src/index.{ts,js}",
-                "**/*.{test,spec}.{ts,tsx,js}",
-                ".markdownlint-cli2.mjs"
-            ],
+            "entry": ["src/main.{ts,js}", "src/index.{ts,js}", "**/*.{test,spec}.{ts,tsx,js}"],
             "ignoreDependencies": ["^.+$"]
         }
     }

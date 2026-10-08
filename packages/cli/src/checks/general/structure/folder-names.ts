@@ -1,8 +1,8 @@
 import { findingAt } from '#cli/checks/finding.ts';
 import { directoryOf } from '#cli/platform/contracts.ts';
+import { namingTerms } from '#cli/configurations/public.ts';
 import type { BuiltInCheck } from '#cli/types/execution/check.ts';
 import { harnessFolders } from '#cli/policy/settings/contracts.ts';
-import { BANNED_FOLDERS } from '#cli/config/checks/general/structure.ts';
 import { structureSources, isDependencyFolder } from '#cli/checks/general/structure/source-files.ts';
 
 /**
@@ -12,6 +12,7 @@ import { structureSources, isDependencyFolder } from '#cli/checks/general/struct
  */
 export const folderNames: BuiltInCheck = (input) => {
     const files = structureSources(input);
+    const banned = namingTerms().groups.folders.terms;
     const harnesses = new Set(harnessFolders(input.policyFiles.policy, input.scope));
     const seen = new Set<string>();
     return files.flatMap((file) => {
@@ -20,7 +21,7 @@ export const folderNames: BuiltInCheck = (input) => {
             .filter((segment) => segment !== '');
         return segments.flatMap((segment, index) => {
             const folder = segments.slice(0, index + 1).join('/');
-            if (seen.has(folder) || harnesses.has(folder) || !BANNED_FOLDERS.includes(segment.toLowerCase())) return [];
+            if (seen.has(folder) || harnesses.has(folder) || !banned.includes(segment.toLowerCase())) return [];
             if (isDependencyFolder(folder)) return [];
             seen.add(folder);
             return [

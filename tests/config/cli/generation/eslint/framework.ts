@@ -30,3 +30,6 @@ export const COMPONENT_PARSER_FILES = {
     'source.ts': 'export const count: number = 1;\n',
     'source.js': 'export const count = 1;\n',
 };
+
+/** Literal UI text must be translated unless the file belongs to the declared test list. */
+export const I18N_SOURCE = 'export const element = <p>Hello there</p>;\n';

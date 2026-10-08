@@ -1,6 +1,6 @@
 # Tests in `tests/cli`
 
-62 unresolved review records remain.
+61 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -345,3 +345,11 @@ Original records and quotations remain above. These records are complete at `ad8
 | ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                      |
 | ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/tests-cli/133` | complete | Evidence-only: TOOL_FAILURES_POLICY already selects files, not actions. Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions. Commit `ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a`. |
+
+## Implementation checkpoint 34853ef69 of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `34853ef690cfbda449d53393e9c7a00d8455ae5c`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-cli/040` | complete | The escaped-link and read-cache test bodies are owned by platform/source.test.ts; tracked boundaries retain only the repository-specific pipe walk. Mechanical move preserves both callback ASTs and every security assertion. Native11/56 and integration44/161 passed; implemented in1907737664cec64dfc10b16a7a33e1d65d343116. Commit `34853ef690cfbda449d53393e9c7a00d8455ae5c`. |

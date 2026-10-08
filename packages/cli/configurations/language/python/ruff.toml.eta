@@ -256,4 +256,4 @@ const document = {
     },
 };
 recordRules(document);
-%><%~ toml(document).trimEnd().replace('[lint.isort]', "# Imports go shortest first within each section, the order every gspot language uses. python/export-order orders __all__ the same way, which is why RUF022 is not selected. RUF023 is not selected either: it sorts __slots__ alphabetically.\n[lint.isort]") %>
+%><%~ toml(document).trimEnd() %>

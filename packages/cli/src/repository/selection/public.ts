@@ -1,5 +1,6 @@
 import { posix } from 'node:path';
 import { extensionOf } from '#cli/platform/contracts.ts';
+import { TEST_FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { TrackedFile, FileDeclaration } from '#cli/types/repository/inventory.ts';
 import { selectConfigurations, sourceConfigurations } from '#cli/configurations/public.ts';
 import type { Manifest, FileMatch, ConfigurationSelection } from '#cli/types/configurations.ts';
@@ -36,15 +37,31 @@ export function isOwned(owners: FileMatch, file: TrackedFile): boolean {
  * @param selected the selected manifests, for languages and the Prettier plugins
  * @param files the tracked files
  * @param scope the scope path
+ * @param testFiles the effective repository-relative test paths.
  * @returns the files owned
  */
-export function ownedBy(table: FileMatch, selected: Manifest[], files: TrackedFile[], scope: string): TrackedFile[] {
-    const owners = effectiveOwners(table, selected);
+export function ownedBy(
+    table: FileMatch,
+    selected: Manifest[],
+    files: TrackedFile[],
+    scope: string,
+    testFiles: string[],
+): TrackedFile[] {
+    const ownsTests = table.paths.includes(TEST_FILES_PLACEHOLDER);
+    const tests = pathMatcher(testFiles);
+    const owners = effectiveOwners(
+        { ...table, paths: table.paths.filter((path) => path !== TEST_FILES_PLACEHOLDER) },
+        selected,
+    );
     const candidates = files.filter((file) => isInScope(file.path, scope) && owners.kinds.includes(file.kind));
     const languages = owners.languages ? sourceConfigurations(selected) : [];
     return candidates.filter((file) => {
         const scopeFile = { ...file, path: posix.relative(scope, file.path) };
-        return isOwned(owners, scopeFile) || languages.some((language) => isOwned(language.files, scopeFile));
+        return (
+            (ownsTests && tests(file.path)) ||
+            isOwned(owners, scopeFile) ||
+            languages.some((language) => isOwned(language.files, scopeFile))
+        );
     });
 }
 
@@ -52,10 +69,12 @@ export function ownedBy(table: FileMatch, selected: Manifest[], files: TrackedFi
  * Every selected configuration that owns a file.
  * @param file the file
  * @param selected the selected manifests
+ * @param scope the owning scope path.
+ * @param testFiles the effective repository-relative test paths.
  * @returns the owning configurations
  */
-export function ownersOf(file: TrackedFile, selected: Manifest[]): Manifest[] {
-    return selected.filter((manifest) => ownedBy(manifest.files, selected, [file], '').length > 0);
+export function ownersOf(file: TrackedFile, selected: Manifest[], scope: string, testFiles: string[]): Manifest[] {
+    return selected.filter((manifest) => ownedBy(manifest.files, selected, [file], scope, testFiles).length > 0);
 }
 
 /**

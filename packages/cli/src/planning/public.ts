@@ -175,7 +175,9 @@ export function ownedInputs(session: Session, check: PlannedCheck): TrackedFile[
     const owners = check.check.files ?? check.manifest?.files;
     const children = check.check.runs === 'scope' ? childScopes(session, check.scope) : [];
     const files = check.files.filter((file) => isOutsideChildren(file.path, children));
-    return owners === undefined ? [] : ownedBy(owners, check.scope.selected, files, check.scope.scope.path);
+    return owners === undefined
+        ? []
+        : ownedBy(owners, check.scope.selected, files, check.scope.scope.path, check.scope.view.test_files);
 }
 
 /**
@@ -248,7 +250,13 @@ export function licenseProjects(
             !selection.selected.some(
                 (manifest) =>
                     manifest.configuration.name === 'licenses' &&
-                    ownedBy(check.files ?? manifest.files, selection.selected, [file], selection.scope.path).length > 0,
+                    ownedBy(
+                        check.files ?? manifest.files,
+                        selection.selected,
+                        [file],
+                        selection.scope.path,
+                        selection.view.test_files,
+                    ).length > 0,
             )
         )
             return [];

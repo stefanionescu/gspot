@@ -1,6 +1,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { emitAll } from '#cli/generation/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
@@ -11,7 +13,9 @@ import { configurationManifests } from '#cli/configurations/public.ts';
 import {
     KNIP_ENTRY_TABLES,
     KNIP_UNUSED_FILES,
+    KNIP_POINTER_FILES,
     KNIP_BINARY_PACKAGE,
+    KNIP_POINTER_TABLES,
     KNIP_COMPONENT_FILES,
     KNIP_DIAGNOSTIC_FILES,
     KNIP_DEPENDENCY_PACKAGE,
@@ -202,3 +206,48 @@ test('native Knip distinguishes positioned unused exports from an unlisted depen
         parseOutput(check, corrected.stdout, corrected.stderr, { root: sandbox.path, cwd: sandbox.path }),
     ).toStrictEqual([]);
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s Knip ignores selected root and child pointers while reporting undeclared configuration-shaped source',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            ...KNIP_POINTER_FILES,
+            'gspot.toml': buildPolicy(['javascript', 'markdown'], { level, tables: KNIP_POINTER_TABLES }),
+        });
+        const session = await openSession(sandbox.path);
+        const generated = emitAll(session).files;
+        const pointers = generated.filter(({ kind }) => kind === 'pointer');
+        const configuration = generated.find(({ path }) => path === '.gspot/config/knip.json')!;
+        for (const path of ['eslint.config.mjs', '.markdownlint-cli2.mjs', 'child/.markdownlint-cli2.mjs'])
+            expect(
+                pointers.some((pointer) => pointer.path === path),
+                path,
+            ).toBe(true);
+        await createFileTree(
+            sandbox.path,
+            Object.fromEntries([configuration, ...pointers].map(({ path, content }) => [path, content])),
+        );
+        await linkInstalledModules(join(sandbox.path, '.gspot/node_modules'));
+        const native = await runTestCommand(
+            [
+                'node',
+                '.gspot/node_modules/knip/bin/knip.js',
+                '--config',
+                configuration.path,
+                '--no-progress',
+                '--reporter',
+                'json',
+                '--include',
+                'files',
+            ],
+            { cwd: sandbox.path },
+        );
+        expect(native.code, native.stdout + native.stderr).toBe(1);
+        expect(
+            parseOutput(check, native.stdout, native.stderr, { root: sandbox.path, cwd: sandbox.path })
+                .map(({ file }) => file)
+                .toSorted((left, right) => left.localeCompare(right)),
+        ).toStrictEqual(['child/eslint.config.js', 'eslint.config.js']);
+    },
+);

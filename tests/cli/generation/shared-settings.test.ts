@@ -71,12 +71,13 @@ test('knip takes its workspaces from the package workspaces, with the policy ent
     expect(withoutEntries.workspaces['.']!.entry).not.toContain('cli.js');
 });
 
-test('knip retains the Markdown configuration consumed by its native runner', async () => {
+test('knip ignores the Markdown pointer consumed by its native runner', async () => {
     const knip = await generatedDocument<KnipConfiguration>(buildPolicy(['javascript', 'markdown']), KNIP, {
         'src/main.js': 'export const enabled = true;\n',
         'README.md': '# Example\n',
     });
-    expect(knip.workspaces['.']!.entry).toContain('.markdownlint-cli2.mjs');
+    expect(knip.ignore).toContain('.markdownlint-cli2.mjs');
+    expect(knip.workspaces['.']!.entry).not.toContain('.markdownlint-cli2.mjs');
     expect(knip).not.toHaveProperty('entry');
 });
 

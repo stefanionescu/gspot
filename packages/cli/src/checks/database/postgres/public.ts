@@ -169,9 +169,13 @@ export function migrationPaths(input: CheckInput): string[] {
             ? input.selection.selected
                   .filter((manifest) => manifest.configuration.name === 'postgres')
                   .flatMap((manifest) =>
-                      ownedBy(manifest.files, input.selection.selected, input.files, input.scope).map(
-                          (file) => file.path,
-                      ),
+                      ownedBy(
+                          manifest.files,
+                          input.selection.selected,
+                          input.files,
+                          input.scope,
+                          input.view.test_files,
+                      ).map((file) => file.path),
                   )
             : input.files
                   .map((file) => file.path)

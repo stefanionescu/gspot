@@ -1,15 +1,11 @@
 // The selected tool files in one scope, with the pointers that lead tools to them.
-import { posix } from 'node:path';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
-import { ownedBy } from '#cli/repository/selection/public.ts';
 import { targetInScope } from '#cli/configurations/contracts.ts';
 import { emitTarget } from '#cli/generation/compilation/public.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
-import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isConfigurationSelected } from '#cli/configurations/public.ts';
-import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/paths/public.ts';
 import type { GeneratedToolFile, ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { fillTarget, bodyPointer, collectRules } from '#cli/generation/documents/contracts.ts';
+import { fillTarget, bodyPointer, collectRules, pointerPaths } from '#cli/generation/documents/contracts.ts';
 
 import type {
     Generated,
@@ -19,37 +15,12 @@ import type {
     ToolFileInputs,
 } from '#cli/types/generation/files.ts';
 
-// The directories above a file that a pointer's directory patterns name, each clamped to the scope.
-function pointerDirectories(scope: string, file: TrackedFile, matches: (path: string) => boolean): string[] {
-    const directories: string[] = [];
-    for (let directory = posix.dirname(file.path); directory !== '.'; directory = posix.dirname(directory)) {
-        if (!matches(directory)) continue;
-        const isOutside = !isInScope(directory, scope);
-        directories.push(isOutside ? scope : directory);
-    }
-    return directories;
-}
-
 // Root and directory pointers share native body or Eta emission with target placeholders.
 function pointerFiles(context: ToolFileInputs, toolFile: ToolFileDeclaration, target: string): GeneratedFile[] {
-    const { files, inputs, selection, manifest } = context;
     const { pointer } = toolFile;
+    const { inputs, manifest } = context;
     if (pointer === undefined) return [];
-    const scope = selection.scope.path;
-    let paths = [toolFile.per_scope && scope !== '' ? `${scope}/${pointer.path}` : pointer.path];
-    if (pointer.directories !== undefined) {
-        const children = nestedScopes(
-            context.scopes.map((entry) => entry.scope.path),
-            scope,
-        );
-        const matches = pathMatcher(pointer.directories);
-        const owned = ownedBy(manifest.files, selection.selected, files, '').filter(
-            (file) => isInScope(file.path, scope) && children.every((child) => !isInScope(file.path, child)),
-        );
-        const directories = new Set(owned.flatMap((file) => pointerDirectories(scope, file, matches)));
-        paths = [...directories].map((directory) => `${directory}/${pointer.path}`);
-    }
-    return paths.map((path) =>
+    return pointerPaths(context, toolFile).map((path) =>
         pointer.template === undefined
             ? bodyPointer(pointer, path, target, inputs.version)
             : {
@@ -64,15 +35,6 @@ function pointerFiles(context: ToolFileInputs, toolFile: ToolFileDeclaration, ta
     );
 }
 
-function isConditionMet(
-    toolFile: ToolFileDeclaration,
-    context: EmitInputs,
-    condition: ToolFileDeclaration['when'],
-): boolean {
-    if (condition === undefined) return true;
-    return isConfigurationSelected(toolFile.per_scope ? [context.selection] : context.scopes, condition.configuration);
-}
-
 // Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
 function isTargetEnabled(toolFile: ToolFileDeclaration, context: EmitInputs, consumers: EmitConsumers): boolean {
     const needed = toolFile.per_scope ? consumers.scope : consumers.repository;
@@ -82,7 +44,10 @@ function isTargetEnabled(toolFile: ToolFileDeclaration, context: EmitInputs, con
     ] as const;
     if (constraints.some(([names, available]) => names.length > 0 && !names.some((name) => available.has(name))))
         return false;
-    return isConditionMet(toolFile, context, toolFile.when);
+    return (
+        toolFile.when === undefined ||
+        isConfigurationSelected(toolFile.per_scope ? [context.selection] : context.scopes, toolFile.when.configuration)
+    );
 }
 
 // Emits one tool file target: its file, its nested copies, and its pointer.
@@ -117,13 +82,12 @@ function emitToolFile(
     };
     if (paths !== undefined && !capture.recorded)
         throw new Error(`The Eta source for ${target} did not provide its declared rule data.`);
-    generated.files.push(file);
-    if (isConditionMet(toolFile, context, toolFile.pointer?.when))
-        generated.files.push(
-            ...pointerFiles({ ...context, inputs }, toolFile, target).filter(
-                (pointer) => toolFile.pointer?.directories !== undefined || !fragmentPaths.has(pointer.path),
-            ),
-        );
+    generated.files.push(
+        file,
+        ...pointerFiles({ ...context, inputs }, toolFile, target).filter(
+            (pointer) => toolFile.pointer?.directories !== undefined || !fragmentPaths.has(pointer.path),
+        ),
+    );
 }
 
 /**

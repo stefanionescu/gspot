@@ -2,13 +2,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
+import { executeRun } from '#cli/execution/public.ts';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
+import { runGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 
 test.each([
     { scope: 'root', policy: buildPolicy(['bas']), where: 'configurations.0' },
@@ -96,3 +98,36 @@ test('a malformed reason reports a policy error and apply preserves the authored
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(source);
     expect(await pathExists(join(sandbox.path, '.gspot'))).toBe(false);
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s declares gspot/policy once and retains ordinary and message-stage error behavior',
+    async (level) => {
+        await using sandbox = await testdir();
+        const policy = buildPolicy(['bash'], { level, tables: '[agent_rules]\nenabled = false\n' });
+        await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.sh': 'echo example\n' });
+        const explained = await runGspot(sandbox.path, ['explain', 'gspot/policy', '--json']);
+        expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+        expect(JSON.parse(explained.stdout)).toMatchObject({ kind: 'check', subject: 'gspot/policy' });
+        const listed = await runGspot(sandbox.path, ['list', '--json']);
+        expect(listed.code, listed.stdout + listed.stderr).toBe(0);
+        expect(listed.stdout).toContain('gspot/policy');
+        const valid = await runGspot(sandbox.path, ['check', '--only', 'gspot/policy', '--json']);
+        expect(valid.code, valid.stdout + valid.stderr).toBe(0);
+        expect((JSON.parse(valid.stdout) as RunReport).checks).toStrictEqual([]);
+        await Bun.write(join(sandbox.path, 'gspot.toml'), policy + '[limits]\nfile_linse = 200\n');
+        const session = await openSession(sandbox.path);
+        for (const stage of ['all', 'commit', 'push'] as const) {
+            const invalid = await executeRun(session, buildRunOptions({ only: ['gspot/policy'], stage }));
+            expect(invalid.report.checks).toMatchObject([
+                {
+                    check: 'gspot/policy',
+                    status: 'failed',
+                    findings: [{ message: textContaining('limits.file_linse:') }],
+                },
+            ]);
+            expect(invalid.report.checks).toHaveLength(1);
+        }
+        const message = await executeRun(session, buildRunOptions({ only: ['gspot/policy'], stage: 'message' }));
+        expect(message.report.checks).toStrictEqual([]);
+    },
+);

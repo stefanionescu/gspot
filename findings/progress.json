@@ -1,5 +1,5 @@
 {
-    "openRecords": 567,
+    "openRecords": 564,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -258,7 +258,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 567,
+        "openRecords": 564,
         "records": 1092,
         "batches": [
             {
@@ -564,8 +564,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 150,
-                "unresolvedAssignments": 141
+                "completedAssignments": 151,
+                "unresolvedAssignments": 140
             },
             {
                 "id": "python",
@@ -1424,8 +1424,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 200,
-                "unresolvedAssignments": 269
+                "completedAssignments": 201,
+                "unresolvedAssignments": 268
             },
             {
                 "id": "scripts-repository",
@@ -1709,8 +1709,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 67,
-                "unresolvedAssignments": 70
+                "completedAssignments": 68,
+                "unresolvedAssignments": 69
             },
             {
                 "id": "policy-file",
@@ -3900,16 +3900,20 @@
             ]
         },
         "areas/kits/123": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "34853ef690cfbda449d53393e9c7a00d8455ae5c",
+            "verification": [
+                "The docs check and implementation use docs/required-files and requiredFiles; README and optional root license diagnostics retain native behavior. The adopted docs.require_license and headings_before_contents settings remain unchanged. Focused CLI63/256/4 files, TypeScript and normal staged156 checks passed at this commit."
+            ]
         },
         "areas/kits/124": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "34853ef690cfbda449d53393e9c7a00d8455ae5c",
+            "verification": [
+                "Tool, check, compiled native option and every caller use editorconfig-checker; tools.editorconfig-checker.verbatim replaces the retired namespace. Normal npm mise backend executes pinned native3.4.0; Node24.20 and Bun1.4.2 provenance and formatter correction tested. Native formatter1/22, focused CLI63/256 and staged156 checks passed."
+            ]
         },
         "areas/kits/126": {
             "status": "partial",
@@ -9373,14 +9377,15 @@
             ]
         },
         "review/tests-cli/040": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "34853ef690cfbda449d53393e9c7a00d8455ae5c",
             "verification": [
                 "Evidence 77acd1051ffb7afa.",
                 "Evidence b1a64aa1d6df4033.",
                 "Evidence fd5350b8889a185c.",
-                "Evidence c865257f0179eace."
+                "Evidence c865257f0179eace.",
+                "The escaped-link and read-cache test bodies are owned by platform/source.test.ts; tracked boundaries retain only the repository-specific pipe walk. Mechanical move preserves both callback ASTs and every security assertion. Native11/56 and integration44/161 passed; implemented in1907737664cec64dfc10b16a7a33e1d65d343116."
             ]
         },
         "review/tests-cli/041": {
@@ -17603,6 +17608,18 @@
                 "slices/tests-integration-execution/018 remains partial for meaningful same-session recovery and historical correspondence. Native executable proof covers macOS ARM64; whole-repository cross-platform verification remains pending. No live publication or deployment."
             ],
             "ci": "/tmp/gspot-output-language-checkpoint-ci.json"
+        },
+        {
+            "commit": "34853ef690cfbda449d53393e9c7a00d8455ae5c",
+            "completedRecords": ["areas/kits/123", "areas/kits/124", "review/tests-cli/040"],
+            "unresolvedRecords": 564,
+            "validation": [
+                "Normal producer and generated apply passed. CLI63 tests/256 assertions; native formatter1/22; TypeScript0; staged156pass14skip0. Source-read integration44pass161 assertions.",
+                "The first reproducibility push failure is preserved; three native probes and the unchanged normal push replay passed. No enforcement setting changed."
+            ],
+            "limitations": [
+                "GitHub Actions37860227794 remains pending with no jobs; earlier37858961107 was cancelled. Neither proves Linux/macOS/Windows completion."
+            ]
         }
     ],
     "verificationEvidence": {

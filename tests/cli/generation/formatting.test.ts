@@ -261,3 +261,24 @@ describe.each(['recommended', 'all'] as const)('%s language editor ignores', (le
         },
     );
 });
+
+test.each(['recommended', 'all'] as const)(
+    '%s emits EditorConfig native options under the checker name',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['format'], {
+                level,
+                tables: '[tools.editorconfig-checker.verbatim."*.txt"]\nend_of_line = "crlf"\n[reasons]\n"tools.editorconfig-checker.verbatim" = "The text export uses the reviewed native line-ending contract."\n',
+            }),
+            'source.txt': 'text\n',
+        });
+        const session = await openSession(sandbox.path);
+        const editorconfig = emitAll(session).files.find(({ path }) => path === '.editorconfig');
+        expect(editorconfig?.content).toContain('[*.txt]\nend_of_line = crlf');
+        expect(session.policyFiles.policy.tools['editorconfig-checker']?.verbatim).toMatchObject({
+            '*.txt': { end_of_line: 'crlf' },
+        });
+        expect(session.policyFiles.errors).toStrictEqual([]);
+    },
+);

@@ -52,7 +52,9 @@ function policyErrorsResult(session: ToolSession): CheckResult | undefined {
 // The plan and, for each planned check, the function that runs it.
 function planExecutables(session: ToolSession, options: RunOptions): Executable[] {
     const planned = planRun(session, options);
-    return planned.map((check) => ({ check, run: checkRun(check.check, options.checks) }));
+    return planned
+        .filter(({ check }) => check.name !== POLICY_CHECK)
+        .map((check) => ({ check, run: checkRun(check.check, options.checks) }));
 }
 
 // Rereads the repository after fixers changed it, so the run that follows sees the corrected files.
