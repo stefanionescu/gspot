@@ -44,7 +44,7 @@ ${installationDiagnostics(located, [])}`,
  * @param selection the scope's selected tool declarations
  * @param scopeRoot the native project folder
  * @param command the target executable and its arguments
- * @returns uv's project command without synchronizing the project or its lockfile
+ * @returns the uv project command without synchronizing the project or its lockfile
  */
 export function pythonProjectCommand(
     selection: ScopeSelection,

@@ -84,6 +84,35 @@ const document = {
                 category: 'security',
             },
         },
+        {
+            id: 'gspot.express.no-stack-trace-in-response',
+            patterns: [
+                {
+                    'pattern-either': [
+                        {
+                            pattern: 'res.send({..., stack: $ERR.stack, ...})\n',
+                        },
+                        {
+                            pattern: 'res.json({..., stack: $ERR.stack, ...})\n',
+                        },
+                        {
+                            pattern: 'res.status(...).send({..., stack: $ERR.stack, ...})\n',
+                        },
+                        {
+                            pattern: 'res.status(...).json({..., stack: $ERR.stack, ...})\n',
+                        },
+                    ],
+                },
+            ],
+            message:
+                'Stack traces in API responses leak internal implementation details. Log the stack server-side and return a generic error message.\n',
+            languages: ['typescript', 'javascript'],
+            severity: 'ERROR',
+            metadata: {
+                cwe: ['CWE-209'],
+                category: 'security',
+            },
+        },
     ],
 };
 recordRules(document);

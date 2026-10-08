@@ -1,8 +1,8 @@
 // Emit tool-file assets with the effective settings and inputs of their scope.
 import { Eta } from 'eta';
-import { relative } from 'node:path/posix';
 import { stringify as stringifyYaml } from 'yaml';
 import { readAsset } from '#cli/platform/assets.ts';
+import { basename, relative } from 'node:path/posix';
 import { extensionOf } from '#cli/platform/paths.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { pythonInputs } from '#cli/generation/python.ts';
@@ -13,13 +13,13 @@ import { buildJsconfig } from '#cli/generation/jsconfig.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { packageWorkspaces } from '#cli/repository/scopes.ts';
 import { readSwiftVersion } from '#cli/parsers/swift/source.ts';
+import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
 import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
 import { eslintInputs } from '#cli/generation/eslint/configuration.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
 import { tablesFor, policyValue } from '#cli/policy/settings/lookup.ts';
-import { styleRules, proseFormats } from '#cli/generation/vale-styles.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { EtaInputs, ScopeEtaInputs } from '#cli/types/generation/eta.ts';
 import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
@@ -34,6 +34,32 @@ import {
     TOKEN_IGNORES,
     LEADING_NEWLINES,
 } from '#cli/config/generation/eta.ts';
+
+function proseInputs(session: Session, manifests: Manifest[]): EtaInputs['prose'] {
+    const words = Object.keys(session.policyFiles.policy.words);
+    return {
+        packages: VALE_PACKAGES,
+        words: words,
+        products: [
+            ...new Set([
+                ...session.scopes.flatMap(({ selected }) =>
+                    selected.flatMap((manifest) => manifest.tools.map((tool) => tool.name)),
+                ),
+                ...words,
+            ]),
+        ],
+        rules: manifests.flatMap((manifest) =>
+            manifest.toolFiles
+                .filter((file) => file.tool.includes('vale') && file.target.endsWith('.yml'))
+                .map((file) => basename(file.target, '.yml')),
+        ),
+        blockIgnores: BLOCK_IGNORES,
+        tokenIgnores: TOKEN_IGNORES,
+        formats: Object.entries(PROSE_GRAMMARS).flatMap(([extension, grammar]): [string, string][] =>
+            grammar.format === undefined ? [] : [[extension.slice(1), grammar.format]],
+        ),
+    };
+}
 
 function prefixed(path: string, pattern: string): string {
     if (path === '') return pattern;
@@ -159,13 +185,7 @@ export function etaInputs(session: Session, selection: ScopeSelection, manifests
                 target,
                 options: Object.fromEntries(compilerOptions),
             }),
-        prose: {
-            packages: VALE_PACKAGES,
-            rules: styleRules(),
-            blockIgnores: BLOCK_IGNORES,
-            tokenIgnores: TOKEN_IGNORES,
-            formats: proseFormats(),
-        },
+        prose: proseInputs(session, manifests),
         version: version,
         fragments: '',
         fragmentParts: [],

@@ -1,6 +1,6 @@
 extends: occurrence
-message: 'A paragraph longer than 6 sentences. Split it.'
+message: 'A paragraph longer than <%= limit('paragraph_sentences', 'docs') %> sentences. Split it.'
 level: error
 scope: paragraph
-max: 6
+max: <%= limit('paragraph_sentences', 'docs') %>
 token: "[.!?](\\s|$)"

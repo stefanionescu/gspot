@@ -1,7 +1,7 @@
 ignoreErrors: true
 customCatalog:
     schemas:
-        - name: mise
+<% if (policy.runner === 'mise') { %>        - name: mise
           description: The mise configuration file
           fileMatch:
               - mise.toml
@@ -10,7 +10,7 @@ customCatalog:
               - .config/mise/config.toml
               - .config/mise/conf.d/*.toml
           location: https://mise.jdx.dev/schema/mise.json
-<% for (const [pattern, schema] of Object.entries(settings['tools.v8r.schemas'])) { %>        - name: <%= json(pattern) %>
+<% } %><% for (const [pattern, schema] of Object.entries(settings['tools.v8r.schemas'])) { %>        - name: <%= json(pattern) %>
           fileMatch:
               - <%= json(pattern) %>
           location: <%= json(schema) %>

@@ -110,7 +110,7 @@ export const PLATFORM_SOURCE_CASES = {
 };
 
 export const PLATFORM_SOURCE_FINDINGS = [
-    { file: 'functions/input.js', rule: 'gspot.cloudflare.no-user-controlled-fetch', line: 1 },
+    { file: 'functions/input.js', rule: 'gspot.javascript.ssrf-web-request-user-input', line: 1 },
     { file: 'Info.plist', rule: 'arbitrary-loads', line: 1 },
     { file: 'scripts/inject.js', rule: 'gspot.javascript.no-interpolated-exec', line: 1 },
     { file: 'src/filter.js', rule: 'gspot.supabase.postgrest-filter-interpolation', line: 1 },
@@ -119,6 +119,17 @@ export const PLATFORM_SOURCE_FINDINGS = [
     { file: 'supabase/functions/cors/index.ts', rule: 'gspot.supabase.edge-cors-wildcard-with-credentials', line: 1 },
     { file: 'supabase/functions/eval/index.ts', rule: 'gspot.javascript.no-eval', line: 1 },
 ];
+
+/** Workers CORS restrictions at all cover every source in a selected scope. */
+export const PLATFORM_ALL_SOURCE_FINDINGS = [
+    { file: 'supabase/functions/_shared/cors.ts', rule: 'gspot.cloudflare.no-wildcard-cors-origin', line: 1 },
+    { file: 'supabase/functions/cors/index.ts', rule: 'gspot.cloudflare.no-wildcard-cors-origin', line: 1 },
+];
+
+export const PLATFORM_ALL_SOURCE_CORRECTIONS = {
+    'supabase/functions/_shared/cors.ts':
+        'export const headers = { "Access-Control-Allow-Origin": "https://example.com" };\n',
+};
 
 export const PLATFORM_SOURCE_CORRECTIONS: Record<string, string> = {
     'Info.plist': '<plist><dict/></plist>\n',

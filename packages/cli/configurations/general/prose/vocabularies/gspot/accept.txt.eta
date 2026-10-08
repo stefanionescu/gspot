@@ -1,4 +1,4 @@
-gspot
+<% const words = [...new Set([...`gspot
 ESLint
 Prettier
 TypeScript
@@ -66,3 +66,5 @@ CI
 macOS
 Linux
 Windows
+`.trim().split(/\r?\n/u), ...prose.words])].toSorted((a, b) => a.localeCompare(b)); -%>
+<%~ words.join("\n") %>

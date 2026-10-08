@@ -33,6 +33,7 @@ rules:
           - pattern: $HTTP(req.body.$VALUE, ...)
           - pattern: $HTTP(req.query.$VALUE, ...)
           - pattern: $HTTP(req.params.$VALUE, ...)
+          - pattern: $HTTP($URL.searchParams.get(...), ...)
       - metavariable-regex:
           metavariable: $HTTP
           regex: ^f[e]tch$
@@ -49,7 +50,9 @@ rules:
       category: security
   - id: gspot.javascript.no-secret-in-log
     patterns:
-      - pattern: $LOGGER.$LEVEL(process.env.$VAR)
+      - pattern-either:
+          - pattern: $LOGGER.$LEVEL(process.env.$VAR)
+          - pattern: $LOGGER.$LEVEL(Deno.env.get($VAR))
       - metavariable-regex:
           metavariable: $LEVEL
           regex: ^(log|trace|debug|info|warn|error|fatal)$
@@ -65,53 +68,4 @@ rules:
     metadata:
       cwe:
         - CWE-532
-      category: security
-  - id: gspot.javascript.jwt-no-algorithm-none
-    patterns:
-      - pattern: jwt.verify($TOKEN, $SECRET)
-      - pattern-not: |
-          jwt.verify($TOKEN, $SECRET, {algorithms: ...})
-    message: Require the expected JWT signing algorithms when verifying a token.
-      Pass an algorithms option that matches the signing contract.
-    languages:
-      - typescript
-      - javascript
-    severity: ERROR
-    metadata:
-      cwe:
-        - CWE-327
-      category: security
-  - id: gspot.javascript.jwt-no-decode-without-verify
-    pattern: jwt.decode(...)
-    message: |
-      jwt.decode() does not verify signatures. Use jwt.verify() instead.
-    languages:
-      - typescript
-      - javascript
-    severity: ERROR
-    metadata:
-      cwe:
-        - CWE-345
-      category: security
-  - id: gspot.javascript.no-stack-trace-in-response
-    patterns:
-      - pattern-either:
-          - pattern: |
-              res.send({..., stack: $ERR.stack, ...})
-          - pattern: |
-              res.json({..., stack: $ERR.stack, ...})
-          - pattern: |
-              res.status(...).send({..., stack: $ERR.stack, ...})
-          - pattern: |
-              res.status(...).json({..., stack: $ERR.stack, ...})
-    message: >
-      Stack traces in API responses leak internal implementation details. Log
-      the stack server-side and return a generic error message.
-    languages:
-      - typescript
-      - javascript
-    severity: ERROR
-    metadata:
-      cwe:
-        - CWE-209
       category: security

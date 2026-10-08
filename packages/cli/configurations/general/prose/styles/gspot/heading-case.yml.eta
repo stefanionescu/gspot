@@ -69,7 +69,6 @@ exceptions:
     - CLI
     - CI
     - README
-    - ADVANCED
     - MVVM
     - I18N
     - RTL
@@ -83,20 +82,10 @@ exceptions:
     - GET
     - TODO
     - MARK
-    - CUDA
-    - Hugging Face
-    - Vault
     - '[Ee]dge'
-    - Deno
-    - Compose
     - iOS
     - JSDoc
-    - ViewModel
-    - BuildKit
-    - ViewModels
-    - IndexPath
-    - EventSource
-    - QueryClient
-    - SuperJSON
     - tsconfig
-    - gspot
+<% for (const word of prose.words) { -%>
+    - <%~ json(RegExp.escape(word)) %>
+<% } -%>

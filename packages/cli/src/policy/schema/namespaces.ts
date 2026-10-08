@@ -219,7 +219,7 @@ export const settingNamespaceSchemas = {
         min_saving_percent: z.number().min(0, undefined).max(FULL_PERCENTAGE, undefined).optional(),
     }),
     'tools.swiftlint': z.strictObject({ keep_imports: z.array(z.string()).optional() }),
-    'tools.trivy': z.strictObject({ severity: z.string().optional() }),
+    'tools.trivy': z.strictObject({ severity: z.array(z.string()).optional() }),
     'tools.typos': z.strictObject({
         locale: z
             .string()

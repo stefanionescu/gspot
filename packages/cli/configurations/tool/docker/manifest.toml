@@ -141,7 +141,8 @@ summary = "The registries a base image may come from; empty allows any."
 
 [[setting]]
 name = "tools.trivy.severity"
-type = "string"
+type = "list"
+items = "string"
 direction = "neutral"
-default = "HIGH,CRITICAL"
-summary = "The severities Trivy reports, as a comma-separated list."
+default = ["HIGH", "CRITICAL"]
+summary = "The severities Trivy reports."

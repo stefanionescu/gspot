@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { readFile } from 'node:fs/promises';
 import { planRun } from '#cli/planning/plan.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -8,7 +7,6 @@ import { readAsset } from '#cli/platform/assets.ts';
 import { vale } from '#cli/checks/general/prose.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { workspaceRoot } from '#automation/workspace.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { parseAlerts } from '#cli/parsers/output/reports.ts';
@@ -148,15 +146,17 @@ test('Vale accepts explicit minimum versions and still reports vague or redundan
 
 test('heading capitalization distinguishes ordinary edge from the browser name and rejects title case', async () => {
     await using directory = await testdir();
-    const rule = await readFile(
-        join(workspaceRoot, 'packages/cli/configurations/general/prose/styles/gspot/heading-case.yml.eta'),
-        'utf8',
-    );
+    await createFileTree(directory.path, {
+        'gspot.toml': buildPolicy(['prose']),
+        'guide.md': '# Guide\n\n## HTTP edge rules\n\n## Microsoft Edge settings\n\n## HTTP Edge Rules\n',
+    });
+    const rule = emitAll(await openSession(directory.path)).files.find((file) =>
+        file.path.endsWith('/heading-case.yml'),
+    )!.content;
     await createFileTree(directory.path, {
         'styles/gspot/heading-case.yml': rule,
         'styles/config/vocabularies/project/accept.txt': 'Bun\n',
         '.vale.ini': 'StylesPath = styles\nVocab = project\n\n[*.md]\nBasedOnStyles = gspot\n',
-        'guide.md': '# Guide\n\n## HTTP edge rules\n\n## Microsoft Edge settings\n\n## HTTP Edge Rules\n',
     });
     const result = await runTestCommand(
         ['vale', '--config', '.vale.ini', '--output', 'JSON', '--no-exit', 'guide.md'],

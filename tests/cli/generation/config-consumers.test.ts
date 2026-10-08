@@ -1,4 +1,6 @@
 // A tool config and its pointer exist only where an enabled check consumes the tool.
+import { parse } from 'yaml';
+import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -165,5 +167,51 @@ test.each(['recommended', 'all'] as const)(
             'v8r',
         ]);
         expect(configuredChecks(session).map((check) => check.check.name)).not.toContain('format/prettier');
+    },
+);
+
+test.each(
+    (['recommended', 'all'] as const).flatMap((level) =>
+        (['mise', 'npm', 'bun', 'pnpm', 'yarn'] as const).map((runner) => ({ level, runner })),
+    ),
+)(
+    '$runner catalog at $level retains authored schemas and includes mise only for its runner',
+    async ({ runner, level }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': stringify({
+                configurations: ['files'],
+                level,
+                runner,
+                tools: { v8r: { schemas: { 'custom.json': 'https://example.com/schema.json' } } },
+            }),
+            'custom.json': '{}\n',
+        });
+        const output = emitAll(await openSession(sandbox.path));
+        const text = output.files.find((file) => file.path === '.gspot/config/v8r.yml')!.content;
+        const native: unknown = parse(text);
+        const schemas: unknown = expect.arrayContaining([
+            { name: 'custom.json', fileMatch: ['custom.json'], location: 'https://example.com/schema.json' },
+        ]);
+        expect(native).toMatchObject({ customCatalog: { schemas } });
+        expect(text.includes('name: mise')).toBe(runner === 'mise');
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s selects gspot in root and child structure scopes without a redundant dependency',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['structure'], { level, tables: '[scope.child]\n' }),
+            'source.txt': 'Source\n',
+            'child/source.txt': 'Child source\n',
+        });
+        const session = await openSession(sandbox.path);
+        for (const scope of ['', 'child']) {
+            const selected = session.scopes.find((entry) => entry.scope.path === scope)!.view.configurations;
+            expect(selected).toContain('structure');
+            expect(selected).toContain('gspot');
+        }
     },
 );

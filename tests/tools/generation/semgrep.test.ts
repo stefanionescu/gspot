@@ -32,9 +32,10 @@ import {
     EXPRESS_SOURCE_FINDINGS,
     PLATFORM_SOURCE_FINDINGS,
     PLATFORM_SOURCE_CORRECTIONS,
+    PLATFORM_ALL_SOURCE_FINDINGS,
+    PLATFORM_ALL_SOURCE_CORRECTIONS,
 } from '#tests/config/tools/generation/semgrep.ts';
 
-// Keep each native finding in report order while comparing the same public location and rule fields.
 function findingRows(report: RunReport) {
     return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
 }
@@ -70,7 +71,8 @@ test.skipIf(!hasToolBuild('semgrep'))(
             policy: appliedPolicy,
         });
         expect(appliedPolicy).toMatch(/\[\[ignore\]\][\s\S]*app\/\*\*\/ignored\.js/);
-        const invalidRule = join(sandbox.path, '.gspot/config/app/semgrep/broken.yml');
+        const invalidRule = join(sandbox.path, '.gspot/config/app/semgrep/express.yml');
+        const originalRule = await Bun.file(invalidRule).text();
         await Bun.write(invalidRule, 'rules: [');
         const invalid = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
@@ -78,16 +80,14 @@ test.skipIf(!hasToolBuild('semgrep'))(
             'error',
         );
         expect(await Bun.file(invalidRule).text()).toBe('rules: [');
-        await Bun.file(invalidRule).delete();
-        const recovered = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
-        expect(recovered.code, recovered.stdout + recovered.stderr).toBe(0);
+        await Bun.write(invalidRule, originalRule);
+        expect(await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment)).toHaveProperty('code', 0);
     },
 );
 
-test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configurations and the level', async () => {
+test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the level', async () => {
     await using sandbox = await testdir();
-    const root = sandbox.path;
-    await createFileTree(root, {
+    await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['bash', 'swift', 'security'], {
             tables: '[agent_rules]\nenabled = false\n',
             level: 'recommended',
@@ -95,8 +95,8 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
         'script.sh': BASH_DOWNLOAD_SAMPLE,
         'Value.swift': SWIFT_SAMPLE,
     });
-    const environment = await sharePythonTools(root);
-    const recommended = await spawnGspot(root, SEMGREP_COMMAND, environment);
+    const environment = await sharePythonTools(sandbox.path);
+    const recommended = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
     expect(recommended.code, recommended.stdout + recommended.stderr).toBe(1);
     expect(
         (JSON.parse(recommended.stdout) as RunReport).checks
@@ -104,11 +104,11 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
             .flatMap(({ rule }) => (rule?.startsWith('gspot.swift.') === true ? [rule] : [])),
     ).toStrictEqual(['gspot.swift.keychain-accessible-always', 'gspot.swift.weak-hash-algorithm']);
     await Bun.write(
-        join(root, 'gspot.toml'),
+        join(sandbox.path, 'gspot.toml'),
         buildPolicy(['bash', 'swift', 'security'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' }),
     );
-    await sharePythonTools(root);
-    const all = await spawnGspot(root, SEMGREP_COMMAND, environment);
+    await sharePythonTools(sandbox.path);
+    const all = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
     expect(all.code, all.stdout + all.stderr).toBe(1);
     expect(findingRows(JSON.parse(all.stdout) as RunReport)).toStrictEqual([
         { file: 'Value.swift', line: 1, rule: 'gspot.swift.keychain-accessible-always' },
@@ -120,17 +120,17 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
         { file: 'script.sh', line: 6, rule: 'gspot.bash.curl-pipe-shell' },
         { file: 'script.sh', line: 7, rule: 'gspot.bash.curl-pipe-shell' },
     ]);
-    expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_SAMPLE);
-    expect(await Bun.file(join(root, 'script.sh')).text()).toBe(BASH_DOWNLOAD_SAMPLE);
-    await Bun.write(join(root, 'script.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n');
+    expect(await Bun.file(join(sandbox.path, 'Value.swift')).text()).toBe(SWIFT_SAMPLE);
+    expect(await Bun.file(join(sandbox.path, 'script.sh')).text()).toBe(BASH_DOWNLOAD_SAMPLE);
+    await Bun.write(join(sandbox.path, 'script.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n');
     await Bun.write(
-        join(root, 'Value.swift'),
+        join(sandbox.path, 'Value.swift'),
         SWIFT_SAMPLE.replace('kSecAttrAccessibleAlways', 'kSecAttrAccessibleWhenUnlockedThisDeviceOnly').replace(
             'Insecure.MD5',
             'SHA256',
         ),
     );
-    const clean = await spawnGspot(root, SEMGREP_COMMAND, environment);
+    const clean = await spawnGspot(sandbox.path, SEMGREP_COMMAND, environment);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
 });
 
@@ -252,18 +252,19 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
         const failed = await spawnGspot(sandbox.path, command, environment);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         const findings = findingRows(JSON.parse(failed.stdout) as RunReport);
-        expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
-            PLATFORM_SOURCE_FINDINGS.filter(
-                (finding) => level !== 'all' || finding.rule !== 'gspot.javascript.no-interpolated-exec',
-            ),
+        const expected = PLATFORM_SOURCE_FINDINGS.filter(
+            (finding) => level !== 'all' || finding.rule !== 'gspot.javascript.no-interpolated-exec',
         );
-        for (const [path, source] of Object.entries(PLATFORM_SOURCE_CORRECTIONS))
-            await Bun.write(join(sandbox.path, path), source);
+        if (level === 'all') expected.push(...PLATFORM_ALL_SOURCE_FINDINGS);
+        expect(findings.toSorted((left, right) => left.file.localeCompare(right.file))).toStrictEqual(
+            expected.toSorted((left, right) => left.file.localeCompare(right.file)),
+        );
+        const corrections = { ...PLATFORM_SOURCE_CORRECTIONS };
+        if (level === 'all') Object.assign(corrections, PLATFORM_ALL_SOURCE_CORRECTIONS);
+        for (const [path, source] of Object.entries(corrections)) await Bun.write(join(sandbox.path, path), source);
         const corrected = await spawnGspot(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        const preserved = Object.entries(PLATFORM_SOURCE_CASES).filter(
-            ([path]) => !Object.hasOwn(PLATFORM_SOURCE_CORRECTIONS, path),
-        );
+        const preserved = Object.entries(PLATFORM_SOURCE_CASES).filter(([path]) => !Object.hasOwn(corrections, path));
         expect(await Promise.all(preserved.map(([path]) => Bun.file(join(sandbox.path, path)).text()))).toStrictEqual(
             preserved.map(([, source]) => source),
         );
@@ -277,7 +278,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['typescript', 'security'], {
-                tables: '[semgrep]\nrule_files = ["security/own.yml"]\n',
+                tables: '[tools.semgrep]\nrule_files = ["security/own.yml"]\n',
             }),
             'src/index.ts': SECURITY_CLEAN,
             'src/use.ts': "import { double } from './index.ts';\n\nexport const four = double(2);\n",

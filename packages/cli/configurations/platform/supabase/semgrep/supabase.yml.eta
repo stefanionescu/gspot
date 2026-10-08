@@ -16,7 +16,8 @@ const document = {
                 { 'pattern-not': '$CLIENT.textSearch(..., {..., type: "phrase", ...})' },
                 { 'pattern-not': '$CLIENT.textSearch(..., {..., type: "websearch", ...})' },
             ],
-            message: 'An interpolated value enters raw PostgREST filter syntax. Escape it for the operator or use a typed filter.\n',
+            message:
+                'An interpolated value enters raw PostgREST filter syntax. Escape it for the operator or use a typed filter.\n',
             languages: ['typescript', 'javascript'],
             severity: 'ERROR',
             metadata: {
@@ -31,7 +32,7 @@ const document = {
             languages: ['typescript', 'javascript'],
             severity: 'ERROR',
             paths: {
-                include: functions,
+                include: [...functions],
             },
             metadata: {
                 cwe: ['CWE-346'],
@@ -56,31 +57,10 @@ const document = {
             languages: ['typescript', 'javascript'],
             severity: 'ERROR',
             paths: {
-                include: functions,
+                include: [...functions],
             },
             metadata: {
                 cwe: ['CWE-20'],
-                category: 'security',
-            },
-        },
-        {
-            id: 'gspot.supabase.no-console-log-secrets',
-            patterns: [
-                {
-                    pattern: 'console.log(Deno.env.get($VAR))',
-                },
-                {
-                    'metavariable-regex': {
-                        metavariable: '$VAR',
-                        regex: '.*(KEY|SECRET|PASSWORD|TOKEN).*',
-                    },
-                },
-            ],
-            message: 'Logging a sensitive environment variable. Remove or mask before logging.\n',
-            languages: ['typescript', 'javascript'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-532'],
                 category: 'security',
             },
         },

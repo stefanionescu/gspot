@@ -1,6 +1,6 @@
 # Native-Tool, Acceptance, and Package Tests
 
-25 unresolved review records remain.
+24 unresolved review records remain.
 
 ## Findings
 
@@ -73,3 +73,11 @@ Original records and quotations remain above.
 | ID                     | Status   | Evidence                                                                                                                                                                                                            |
 | ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/tool-tests/004` | complete | One fixer table runs actual checks through changed, repeated unchanged, and manual correction. SQLFluff and typos preserve distinct findings exit codes 1 and 2. Commit `8d7f31aa8a5eac672ebcb206b30c40b8d73f5be6`. |
+
+## Implementation checkpoint 0c36b3e19 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `0c36b3e19a99032b9d6ced61eafd7939094b1bcc`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/tool-tests/052` | complete | First actual packaged consumer retains Prettier defect/fix/pass and authored package bytes. Deleted repeated registry-lock/dry-run/old-mise refusals, unused old-mise data. Second consumer executes clean native Taplo/npm editorconfig inputs solely to assert installed executable location, no repeated findings/correction and no taplo-format row. Existing public native init/install retained; actual package runner passes both cases. Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim. Commit `0c36b3e19a99032b9d6ced61eafd7939094b1bcc`. |

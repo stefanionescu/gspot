@@ -16,7 +16,9 @@ test('manual language choices include security output without selecting security
     const target = '.gspot/config/semgrep/bash.yml';
     const plainSession = await openSession(sandbox.path);
     const plainOutput = emitAll(plainSession);
-    expect(plainOutput.files.find((file) => file.path === target)?.content).toContain('rules:');
+    expect(
+        parseDocument(plainOutput.files.find((file) => file.path === target)!.content).getIn(['rules', 0, 'id']),
+    ).toBe('gspot.bash.curl-pipe-shell');
     await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy(['bash', 'security']));
     const securitySession = await openSession(sandbox.path);
     const securityOutput = emitAll(securitySession);
@@ -40,10 +42,13 @@ for (const level of ['recommended', 'all'] as const) {
         const output = emitAll(session);
         const worker = output.files.find(({ path }) => path.endsWith('/semgrep/workers.yml'))!;
         const rules = parseDocument(worker.content);
-        const identifiers =
-            level === 'all'
-                ? ['gspot.cloudflare.no-user-controlled-fetch', 'gspot.cloudflare.no-wildcard-cors-origin']
-                : ['gspot.cloudflare.no-user-controlled-fetch'];
+        const identifiers = level === 'all' ? ['gspot.cloudflare.no-wildcard-cors-origin'] : [];
+        const javascript = output.files.find(({ path }) => path === '.gspot/config/semgrep/javascript.yml')!;
+        const runtimeRules: unknown = expect.arrayContaining([
+            expect.objectContaining({ id: 'gspot.javascript.ssrf-web-request-user-input' }),
+        ]);
+        expect(parseDocument(javascript.content).toJS()).toMatchObject({ rules: runtimeRules });
+        expect(rules.getIn(['rules', identifiers.length])).toBeUndefined();
         expect(identifiers.map((_, index) => rules.getIn(['rules', index, 'id']))).toStrictEqual(identifiers);
         expect(identifiers.map((_, index) => rules.getIn(['rules', index, 'paths']))).toStrictEqual(
             identifiers.map(() => undefined),
@@ -58,3 +63,38 @@ for (const level of ['recommended', 'all'] as const) {
         expect(parseDocument(supabase.content).toJS()).toMatchObject({ rules: expected });
     });
 }
+
+test.each(['recommended', 'all'] as const)(
+    '%s emits JWT rules only for nearest project dependencies',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['javascript'], {
+                level,
+                tables: '[scope."jwt"]\n[scope."jwt/child"]\n[scope."other"]\n',
+            }),
+            'package.json': '{"private":true}',
+            'source.js': 'jwt.decode(token);\n',
+            'jwt/package.json': '{"private":true,"dependencies":{"jsonwebtoken":"9.0.2"}}',
+            'jwt/source.js': 'jwt.decode(token);\n',
+            'jwt/child/source.js': 'jwt.decode(token);\n',
+            'other/package.json': '{"private":true}',
+            'other/source.js': 'jwt.decode(token);\n',
+        });
+        const output = emitAll(await openSession(sandbox.path));
+        for (const scope of ['', 'jwt/', 'jwt/child/', 'other/']) {
+            const text = output.files.find(
+                (file) => file.path === `.gspot/config/${scope}semgrep/javascript.yml`,
+            )!.content;
+            const native: unknown = parseDocument(text).toJS();
+            if (scope.startsWith('jwt')) {
+                const jwtRules: unknown = expect.arrayContaining([
+                    expect.objectContaining({ id: 'gspot.javascript.jwt-no-algorithm-none' }),
+                    expect.objectContaining({ id: 'gspot.javascript.jwt-no-decode-without-verify' }),
+                ]);
+                expect(native).toMatchObject({ rules: jwtRules });
+            } else expect(text).not.toContain('gspot.javascript.jwt-');
+            expect(text).not.toContain('no-stack-trace-in-response');
+        }
+    },
+);

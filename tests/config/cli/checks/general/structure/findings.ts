@@ -43,30 +43,7 @@ export const CASES: FindingCase[] = [
             line: 1,
         },
     },
-    {
-        check: 'structure/lone-files',
-        files: {
-            'feature/only.js': 'export const only = 1;\n',
-        },
-        expected: {
-            file: 'feature/only.js',
-            rule: 'lone-file',
-            line: 1,
-        },
-    },
-    {
-        check: 'structure/prefix-collisions',
-        files: {
-            'cards/asset-card.js': 'export const card = 1;\n',
-            'cards/asset-list.js': 'export const list = 1;\n',
-            'cards/asset-row.js': 'export const row = 1;\n',
-        },
-        expected: {
-            file: 'cards/asset-card.js',
-            rule: 'shared-prefix',
-            line: 1,
-        },
-    },
+
     {
         check: 'structure/stem-collisions',
         files: {

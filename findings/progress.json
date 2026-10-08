@@ -1,5 +1,5 @@
 {
-    "openRecords": 806,
+    "openRecords": 793,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 806,
+        "openRecords": 793,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 59,
-                "unresolvedAssignments": 232
+                "completedAssignments": 60,
+                "unresolvedAssignments": 231
             },
             {
                 "id": "python",
@@ -1402,8 +1402,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 97,
-                "unresolvedAssignments": 372
+                "completedAssignments": 108,
+                "unresolvedAssignments": 361
             },
             {
                 "id": "scripts-repository",
@@ -1687,8 +1687,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 44,
-                "unresolvedAssignments": 93
+                "completedAssignments": 49,
+                "unresolvedAssignments": 88
             },
             {
                 "id": "policy-file",
@@ -1786,8 +1786,8 @@
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
                 ],
-                "completedAssignments": 1,
-                "unresolvedAssignments": 90
+                "completedAssignments": 2,
+                "unresolvedAssignments": 89
             },
             {
                 "id": "layout",
@@ -1883,8 +1883,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 45,
-                "unresolvedAssignments": 44
+                "completedAssignments": 46,
+                "unresolvedAssignments": 43
             },
             {
                 "id": "configurations",
@@ -4164,10 +4164,13 @@
             ]
         },
         "areas/tool-tests/052": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "First actual packaged consumer retains Prettier defect/fix/pass and authored package bytes. Deleted repeated registry-lock/dry-run/old-mise refusals, unused old-mise data. Second consumer executes clean native Taplo/npm editorconfig inputs solely to assert installed executable location, no repeated findings/correction and no taplo-format row. Existing public native init/install retained; actual package runner passes both cases.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "areas/unit-tests/006": {
             "status": "pending",
@@ -5447,14 +5450,20 @@
             ]
         },
         "review/commands-templates/014": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Native roundtrip source has path ignore, pathless ignore, named check and agent_rules.instruction_files. Destination parsed authored policy equals source minus only scope; exact SHA256 provenance comment verified. Actual install, instruction output, custom-check execution, re-export semantic equality, native Taplo zero findings and saved policy bytes preserved.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -10209,10 +10218,14 @@
             ]
         },
         "review/tests-layout/041": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "Required lifecycle moves completed first; final preservation/configuration and preservation/restoration owners contain the cases, with obsolete folder removed.",
+                "Implemented in final preservation/installations owners; native body/title/byte-vector inventory retained. Stronger field/refusal assertions and caller-owned cleanup verified.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "review/tests-layout/043": {
             "status": "pending",
@@ -10364,16 +10377,22 @@
             ]
         },
         "review/tests-tools/017": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "Evidence-only, no reopened row or semantic edit. Existing merged project/snapshot/pending test remains exact. Distinct cached private transition/Python-pending test remains exact; four native compiler cases pass.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "review/tests-tools/018": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "Deleted only upstream tsc directive/corrected/accepted runs. Two directive setups share one actual CLI test per language: exact comment inventory, quoted marker exclusion, missing reason file/line/rule, reason correction and exact source preservation. Existing private native compiler finding/correction, project/snapshot/pending/cached ownership retained byte-semantic exact.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "review/tests-tools/019": {
             "status": "complete",
@@ -10459,10 +10478,13 @@
             ]
         },
         "review/tests-tools/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "Mise half evidence-only and entire owner byte-identical: actual launcher link controls pass. Commits hand launcher/resource/imports removed, buildSandboxPath puts actual sourceLauncherDirectory first. Native hook refusal, accepted conventional message, range/push/source behavior retained.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "review/tests-tools/030": {
             "status": "partial",
@@ -11541,10 +11563,13 @@
             ]
         },
         "slices/tests-acceptance/007": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "All template init/set/ignore setup codes asserted; init and real commit-hook Git preparation uses existing commitAll. Intentional bad/refused commits unchanged; bypassed bad commit remains accepted Git operation with asserted code0. Real hooks/message/range/push/source controls pass.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "slices/tests-acceptance/008": {
             "status": "pending",
@@ -12337,28 +12362,44 @@
             "verification": []
         },
         "slices/tests-integration-lifecycle/014": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "Block-removal, empty-folder and adopted-file cases moved unchanged into preservation/restoration.test.ts.",
+                "Implemented in final preservation/installations owners; native body/title/byte-vector inventory retained. Stronger field/refusal assertions and caller-owned cleanup verified.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "slices/tests-integration-lifecycle/015": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "All installTree/deleteInstallation cases merged into ownership/installations.test.ts; TOML and Windows restoration cases moved to final preservation owners.",
+                "Implemented in final preservation/installations owners; native body/title/byte-vector inventory retained. Stronger field/refusal assertions and caller-owned cleanup verified.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "slices/tests-integration-lifecycle/016": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "Parsed updated TOML asserts both authored command and generated gspot command, followed by exact authored restoration.",
+                "Implemented in final preservation/installations owners; native body/title/byte-vector inventory retained. Stronger field/refusal assertions and caller-owned cleanup verified.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "slices/tests-integration-lifecycle/017": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "Replaced first-match scalar edits with complete fourth/authored field-line replacements in the final TOML owner, preserving native restoration semantics.",
+                "Implemented in final preservation/installations owners; native body/title/byte-vector inventory retained. Stronger field/refusal assertions and caller-owned cleanup verified.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "slices/tests-integration-lifecycle/018": {
             "status": "partial",
@@ -12385,16 +12426,24 @@
             "verification": []
         },
         "slices/tests-integration-lifecycle/022": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "Each caller creates its await-using directory before publication; shared documented binary vectors retain exact bytes; unchanged batch success title fixed. Native thrown-boundary probe confirms cleanup.",
+                "Implemented in final preservation/installations owners; native body/title/byte-vector inventory retained. Stronger field/refusal assertions and caller-owned cleanup verified.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "slices/tests-integration-lifecycle/023": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "verification": [
+                "Inlined the single-caller edited-link helper and asserted exact private-regular-file refusal with its reason; native link/edit/preservation controls retained.",
+                "Implemented in final preservation/installations owners; native body/title/byte-vector inventory retained. Stronger field/refusal assertions and caller-owned cleanup verified.",
+                "Main CLI 111 pass/529 assertions; native tools 12 pass/134 assertions across two focused selections; types, actual ESLint, formatting and full staged gate passed. Packaged consumers agent run 2 pass/12 assertions. Initial wording and fixture failures retained; no all-platform claim."
+            ]
         },
         "slices/tests-integration-lifecycle/024": {
             "status": "complete",
@@ -15749,6 +15798,31 @@
                 "status": "in_progress",
                 "url": "https://github.com/stefanionescu/gspot/actions/runs/37762468013"
             }
+        },
+        {
+            "commit": "0c36b3e19a99032b9d6ced61eafd7939094b1bcc",
+            "completedRecords": [
+                "slices/tests-integration-lifecycle/014",
+                "slices/tests-integration-lifecycle/015",
+                "slices/tests-integration-lifecycle/016",
+                "slices/tests-integration-lifecycle/017",
+                "slices/tests-integration-lifecycle/022",
+                "slices/tests-integration-lifecycle/023",
+                "review/tests-layout/041",
+                "review/commands-templates/014",
+                "slices/tests-acceptance/007",
+                "review/tests-tools/017",
+                "review/tests-tools/018",
+                "review/tests-tools/029",
+                "areas/tool-tests/052"
+            ],
+            "unresolvedRecords": 793,
+            "validation": [
+                "Main CLI111/529; native tools12/134; packaged consumers2/12; types/lint/format/staged gate0."
+            ],
+            "limitations": [
+                "Host evidence only; whole-suite and current Linux/macOS/Windows CI remain outstanding. Template001 retains product export and refusal obligations."
+            ]
         }
     ],
     "verificationEvidence": {

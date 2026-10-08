@@ -54,6 +54,8 @@ export type EtaInputs = {
     typescriptConfig: (targetPath: string) => Record<string, unknown>;
     prose: {
         packages: string[];
+        words: string[];
+        products: string[];
         blockIgnores: string[];
         tokenIgnores: string[];
         rules: string[];

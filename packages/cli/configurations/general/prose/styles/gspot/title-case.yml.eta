@@ -5,7 +5,8 @@ scope: heading.h1
 match: $title
 exceptions:
     - nginx
-    - next-intl
     - tRPC
-    - gspot
     - iOS
+<% for (const word of prose.words) { -%>
+    - <%~ json(RegExp.escape(word)) %>
+<% } -%>

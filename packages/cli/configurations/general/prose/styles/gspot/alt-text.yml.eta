@@ -5,3 +5,6 @@ scope: raw
 nonword: true
 tokens:
     - '<img\b(?![^>]*\balt\s*=)[^>]*>'
+<% if (isAll) { -%>
+    - '!\[(?:Image|Graphic|Picture) of'
+<% } -%>

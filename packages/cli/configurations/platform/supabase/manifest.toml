@@ -1,6 +1,6 @@
 [configuration]
 title = "Supabase"
-requires = ["postgres"]
+requires = ["postgres", "javascript"]
 suggests = ["typescript", "security"]
 description = "A Supabase project: a project file that parses, edge functions under Deno, and migrations named as the CLI names them. Every storage bucket has a policy, and privileged keys stay in their allowed files."
 

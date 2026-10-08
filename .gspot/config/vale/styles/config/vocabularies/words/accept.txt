@@ -55,7 +55,6 @@ EOL
 ERR
 ESLint
 ESM
-EXIT
 FAST
 GET
 GIF
@@ -113,6 +112,7 @@ MVC
 MVP
 MVVM
 NAME
+next-intl
 Next.js
 nginx
 Node
@@ -158,7 +158,6 @@ RSA
 RSC
 RTL
 Ruff
-RUN
 SARIF
 SAST
 SCSS
@@ -167,7 +166,6 @@ Semgrep
 SEO
 SGID
 SHA
-SHELL
 ShellCheck
 shfmt
 SIM

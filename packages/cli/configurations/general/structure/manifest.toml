@@ -1,7 +1,6 @@
 [configuration]
 title = "Structure"
 always_selected = true
-requires = ["gspot"]
 description = "The structural rules no standard linter ships, over every language: wrappers, barrels, lone files, private-first order, and the size limits."
 
 [files]

@@ -8,9 +8,6 @@ trim_trailing_whitespace = true
 indent_style = <%= format.indent_style %>
 indent_size = <%= format.indent_width %>
 
-[*.{sh,bash,zsh}]
-switch_case_indent = true
-
 [*.md]
 trim_trailing_whitespace = false
 

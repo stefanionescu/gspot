@@ -1,6 +1,6 @@
 extends: occurrence
-message: 'A sentence longer than 30 words. Split it.'
+message: 'A sentence longer than <%= limit('sentence_words', 'docs') %> words. Split it.'
 level: error
 scope: sentence
-max: 30
+max: <%= limit('sentence_words', 'docs') %>
 token: "\\b\\w+\\b"

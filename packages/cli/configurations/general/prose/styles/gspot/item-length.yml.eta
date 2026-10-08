@@ -1,6 +1,6 @@
 extends: occurrence
-message: 'A list item longer than 45 words. Split it or make it a paragraph.'
+message: 'A list item longer than <%= limit('list_item_words', 'docs') %> words. Split it or make it a paragraph.'
 level: error
 scope: list
-max: 45
+max: <%= limit('list_item_words', 'docs') %>
 token: "\\b\\w+\\b"

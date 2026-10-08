@@ -1,12 +1,7 @@
+/** The Vale input mode, source grammar, and comment format for each file extension. */
+
 import type { ProseGrammar } from '#cli/types/generation/prose.ts';
 
-export const STYLE_ASSETS = 'configurations/general/prose/styles/gspot/';
-
-export const MAX_LINE = /^max: \d+$/mu;
-
-export const LONGER_THAN = /longer than \d+/u;
-
-/** The Vale input mode, source grammar, and comment format for each file extension. */
 // Known source grammars parse Markdown inside comments. Module extensions without a native grammar use stdin
 // with the corresponding language extension. Other comment-compatible formats are mapped through [formats].
 export const PROSE_GRAMMARS: Record<string, ProseGrammar> = {
@@ -29,15 +24,4 @@ export const PROSE_GRAMMARS: Record<string, ProseGrammar> = {
     '.sql': { mode: 'path', extension: '.sql', format: 'lua' },
     '.pgsql': { mode: 'path', extension: '.pgsql', format: 'lua' },
     '.psql': { mode: 'path', extension: '.psql', format: 'lua' },
-};
-
-export const GSPOT_STYLE = 'gspot';
-
-export const WORDS = 'words';
-
-/** Maps the three documentation length rules to their limit keys. */
-export const LENGTH_RULES: Record<string, string> = {
-    'sentence-length': 'docs.sentence_words',
-    'item-length': 'docs.list_item_words',
-    'paragraph-length': 'docs.paragraph_sentences',
 };

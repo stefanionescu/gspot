@@ -1,17 +1,6 @@
 <%
 const document = {
     rules: [
-        {
-            id: 'gspot.cloudflare.no-user-controlled-fetch',
-            pattern: 'fetch($URL.searchParams.get(...), ...)',
-            message: 'SSRF risk. Validate and allowlist outbound fetch targets.',
-            languages: ['javascript', 'typescript'],
-            severity: 'ERROR',
-            metadata: {
-                cwe: ['CWE-918'],
-                category: 'security',
-            },
-        },
         ...(isAll
             ? [
                   {

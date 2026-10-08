@@ -5,13 +5,11 @@ import { miseFile } from '#cli/generation/mise.ts';
 import { npmProject } from '#cli/generation/npm.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { rootView } from '#cli/policy/settings/view.ts';
 import { configuredChecks } from '#cli/planning/plan.ts';
 import type { RuleFile } from '#cli/types/agent-rules.ts';
 import { bunfigChanges } from '#cli/generation/bunfig.ts';
 import { pythonProject } from '#cli/generation/python.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
-import { styleFiles } from '#cli/generation/vale-styles.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { emitToolFiles } from '#cli/generation/tool-files.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
@@ -196,7 +194,6 @@ export function emitAll(session: Session): Generated {
             kind: 'rules' as const,
         })),
     );
-    if (tools.has('vale')) generated.files.push(...styleFiles(policy, rootView(scopes)));
     emitBlocks(repository, policy, selected, rules, generated);
     generated.files.sort((a, b) => a.path.localeCompare(b.path));
     combineToolFiles(generated);

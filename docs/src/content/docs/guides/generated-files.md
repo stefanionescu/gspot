@@ -15,7 +15,7 @@ run `gspot apply` to write them again.
 | `.gspot/package.json` and lockfile   | The npm tools gspot installs, at pinned versions.                                          |
 | `.gspot/pyproject.toml` and lockfile | The Python tools gspot installs, at pinned versions.                                       |
 | `.gspot/version`                     | The gspot version of the repository.                                                       |
-| Files at the repository root         | Pointers for editors and tools that look for their configuration at the root.              |
+| Pointer files                        | Configuration pointers at each applicable scope root and inside test folders.              |
 | Managed blocks                       | Blocks in `.gitignore`, `.gitattributes`, and `AGENTS.md`. The rest of each file is yours. |
 | `.gspot/hooks/`                      | The three Git hook scripts.                                                                |
 | `.mise/conf.d/gspot-tools.toml`      | The mise pins, when mise is selected.                                                      |
@@ -26,9 +26,15 @@ run `gspot apply` to write them again.
 Pointers include `eslint.config.mjs`, `prettier.config.mjs`, `.prettierignore`,
 `.stylelintrc.json`, `.editorconfig`, `.semgrepignore`, `pyrightconfig.json`,
 `.swiftlint.yml`, `.markdownlint-cli2.mjs`, and `ruff.toml`, depending on the selected
-configurations. Pointers can also land in scopes and subfolders: for example,
-`.markdownlint-cli2.mjs` can appear both at the root and in `docs/`. Most point to
-a configuration under `.gspot/config/`. For other tools, point your editor at the
+configurations. Each scope that uses a tool gets its pointer. Python service
+scopes and Swift test folders can have pointers at these example paths:
+
+```text title="Pointer file examples"
+services/api/pyrightconfig.json
+Tests/.swiftlint.yml
+```
+
+Most point to a configuration under `.gspot/config/`. For other tools, point your editor at the
 configuration under `.gspot/config/`; gspot supplies that path when it runs them.
 
 Do not edit a generated file. Change `gspot.toml`, then run `gspot apply`. If you do edit a
