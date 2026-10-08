@@ -103,9 +103,7 @@ for (const scope of ['', 'apps/web'])
                 file: toPosix(join(scope, check === 'nextjs/tsc' ? 'src/page.ts' : 'package.json')),
                 line: 1,
             });
-            expect(found[0]!.message).toBe(
-                check === 'nextjs/tsc' ? 'Type mismatch' : 'next build failed: Error: Page is invalid',
-            );
+            expect(found[0]!.message).toContain(check === 'nextjs/tsc' ? 'Type mismatch' : 'Page is invalid');
             await writeFile(join(directory.path, join(scope, 'src/page.ts')), 'corrected input\n');
             expect(await execute()).toStrictEqual([]);
             if (check === 'nextjs/build')

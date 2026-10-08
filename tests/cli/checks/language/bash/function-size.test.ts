@@ -1,14 +1,16 @@
 import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import * as inspections from '#cli/tools/public.ts';
 import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
+import { toolPin } from '#cli/configurations/contracts.ts';
+import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { SCRIPT_TAG } from '#cli/config/checks/language/bash.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
 import * as batches from '#cli/execution/command/arguments/contracts.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
@@ -25,6 +27,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
             tables: '[limits.bash]\nbranches = 1\nnesting = 100\nassignments = 100\n',
         }),
         ...Object.fromEntries(files.map((file) => [file, 'main() { echo example; }\n'])),
+        '.gspot/node_modules/.bin/ast-grep': '',
     });
     const session = await openSession(sandbox.path);
     const input = buildCheckInput(session, 'bash/function-size');
@@ -33,11 +36,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
         selected.slice(0, 2),
         selected.slice(2),
     ]);
-    using _inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
-        name: 'ast-grep',
-        state: 'ok',
-        path: process.execPath,
-    });
+    using _executables = mockPinnedExecutables([toolPin(configurationManifests().values(), 'ast-grep')]);
     using _processRun = spyOn(processes, 'run').mockImplementation((command) => {
         const rule = command[command.indexOf('-r') + 1]!;
         const batch = command.slice(command.indexOf(rule) + 1);
@@ -78,14 +77,11 @@ test.each(['fatal exit', 'malformed JSON', 'invalid match', 'unselected file'] a
                 tables: '[limits.bash]\nbranches = 1\nnesting = 100\nassignments = 100\n',
             }),
             'source.sh': 'echo example\n',
+            '.gspot/node_modules/.bin/ast-grep': '',
         });
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'bash/function-size');
-        using _inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
-            name: 'ast-grep',
-            state: 'ok',
-            path: process.execPath,
-        });
+        using _executables = mockPinnedExecutables([toolPin(configurationManifests().values(), 'ast-grep')]);
         const output = {
             'fatal exit': '[]',
             'malformed JSON': '{',
@@ -116,12 +112,9 @@ test('ast-grep accepts a clean native report', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildPolicy(['bash'], { level: 'all' }),
         'source.sh': 'echo example\n',
+        '.gspot/node_modules/.bin/ast-grep': '',
     });
-    using _inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
-        name: 'ast-grep',
-        state: 'ok',
-        path: process.execPath,
-    });
+    using _executables = mockPinnedExecutables([toolPin(configurationManifests().values(), 'ast-grep')]);
     using _processRun = spyOn(processes, 'run').mockResolvedValue({
         code: 0,
         missing: false,

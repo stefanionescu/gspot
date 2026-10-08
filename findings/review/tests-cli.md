@@ -1,6 +1,6 @@
 # Tests in `tests/cli`
 
-63 unresolved review records remain.
+62 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -337,3 +337,11 @@ Original records and quotations remain above. These records are complete at `294
 | `review/tests-cli/044` | complete | Obsolete library conventions mirror/central descriptor deleted; distinct ordinary pgTable source, correction and expected line9 metadata retained in actual Drizzle owner with all five public failed-code/status/finding/passed-code/status assertions; named-schema and migration failure/staleness coverage unchanged. Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass. Commit `294e6c9da19ffc0cfc02c581522e818a4b81b77a`.                                     |
 | `review/tests-cli/048` | complete | Two prescribed duplicated suppression/folder registrations deleted; native analyses split into config-logic, large-files and vacated flat gspot test. Six newer authored-path cases and explicit1KB oversized/declared/small vectors remain exact. Shared literal policy moves into samples/structure for two real callers. Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass. Commit `294e6c9da19ffc0cfc02c581522e818a4b81b77a`.                                   |
 | `review/tests-cli/111` | complete | Eight current copied scope rows derive from root rows in actual test registration; all18 original names/inputs/property presence/order/undefined/validity/diagnostics proven equal, root-only words rows remain root-only. Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass. Commit `294e6c9da19ffc0cfc02c581522e818a4b81b77a`.                                                                                                                                    |
+
+## Implementation checkpoint ad8c6d10d of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                      |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-cli/133` | complete | Evidence-only: TOOL_FAILURES_POLICY already selects files, not actions. Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions. Commit `ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a`. |

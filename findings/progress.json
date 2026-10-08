@@ -1,5 +1,5 @@
 {
-    "openRecords": 587,
+    "openRecords": 576,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -258,7 +258,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 587,
+        "openRecords": 576,
         "records": 1092,
         "batches": [
             {
@@ -564,8 +564,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 138,
-                "unresolvedAssignments": 153
+                "completedAssignments": 145,
+                "unresolvedAssignments": 146
             },
             {
                 "id": "python",
@@ -611,8 +611,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 20,
-                "unresolvedAssignments": 19
+                "completedAssignments": 21,
+                "unresolvedAssignments": 18
             },
             {
                 "id": "javascript-web",
@@ -718,8 +718,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 24,
-                "unresolvedAssignments": 75
+                "completedAssignments": 26,
+                "unresolvedAssignments": 73
             },
             {
                 "id": "swift-bash-sql",
@@ -808,8 +808,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 42,
-                "unresolvedAssignments": 40
+                "completedAssignments": 43,
+                "unresolvedAssignments": 39
             },
             {
                 "id": "frameworks-platforms",
@@ -947,8 +947,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 31,
-                "unresolvedAssignments": 100
+                "completedAssignments": 32,
+                "unresolvedAssignments": 99
             },
             {
                 "id": "test-quality",
@@ -1424,8 +1424,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 180,
-                "unresolvedAssignments": 289
+                "completedAssignments": 191,
+                "unresolvedAssignments": 278
             },
             {
                 "id": "scripts-repository",
@@ -1564,8 +1564,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 39,
-                "unresolvedAssignments": 93
+                "completedAssignments": 40,
+                "unresolvedAssignments": 92
             },
             {
                 "id": "installation-docs",
@@ -10394,9 +10394,9 @@
             ]
         },
         "review/tests-cli/133": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
             "verification": [
                 "Evidence e63365ac8e885ff7.",
                 "Evidence eaaf8a14991b5073.",
@@ -10405,7 +10405,9 @@
                 "Evidence f1cf0427dfb8608e.",
                 "Evidence a85ef2a0a6686bbc.",
                 "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208."
+                "Evidence 0a4a426cd56e8208.",
+                "Evidence-only: TOOL_FAILURES_POLICY already selects files, not actions.",
+                "Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions."
             ]
         },
         "review/tests-cli/135": {
@@ -12658,10 +12660,13 @@
             "verification": []
         },
         "slices/tests-integration-checks/020": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "verification": [
+                "Rename untracked 0009_manual.sql and old migration prose to notes.txt/neutral text retaining every preservation assertion.",
+                "Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions."
+            ]
         },
         "slices/tests-integration-checks/022": {
             "status": "partial",
@@ -12764,10 +12769,13 @@
             "verification": []
         },
         "slices/tests-integration-checks/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "verification": [
+                "Delete exact fixed-stub run and its unused report import; keep original two-stream/exit native adapter assertions.",
+                "Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions."
+            ]
         },
         "slices/tests-integration-checks/032": {
             "status": "pending",
@@ -13062,10 +13070,13 @@
             ]
         },
         "slices/tests-integration-execution/001": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "verification": [
+                "Delete only the recommended row of the output ownership table; actual checks are all-only.",
+                "Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions."
+            ]
         },
         "slices/tests-integration-execution/004": {
             "status": "in-progress",
@@ -13122,16 +13133,22 @@
             "verification": []
         },
         "slices/tests-integration-execution/019": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "verification": [
+                "Plant reader tree once in beforeAll, test.each(EXPECTED_READERS), delete only redundant correction loop; preserve exact root/child/binary findings.",
+                "Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions."
+            ]
         },
         "slices/tests-integration-execution/020": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "verification": [
+                "Plant eleven comment sources once, open one session and ESLint instance, keep per-file assertions in table.",
+                "Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions."
+            ]
         },
         "slices/tests-integration-execution/021": {
             "status": "in-progress",
@@ -13152,10 +13169,13 @@
             "verification": ["Evidence ab2ac0d5268126a7.", "Evidence 74123bdcdee621fe.", "Evidence 999a19c9a211b7d7."]
         },
         "slices/tests-integration-execution/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "verification": [
+                "Replace count-pattern/format/exit/paths string replacements with real policy parameters. Existing buildFixerPolicy gets paths argument default only if exact shared calculation transfer is granted; no new helper.",
+                "Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions."
+            ]
         },
         "slices/tests-integration-execution/030": {
             "status": "partial",
@@ -13164,10 +13184,13 @@
             "verification": []
         },
         "slices/tests-integration-execution/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "verification": [
+                "Move actual last-file fixer preview/apply assertions into distinct fixers test; maintain shared input policy/commands at existing static owner and genuine projectChecks calculation in proper current harness owner only if necessary; exact substantive existing helper transfer needs grant.",
+                "Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions."
+            ]
         },
         "slices/tests-integration-execution/037": {
             "status": "complete",
@@ -13179,20 +13202,28 @@
             ]
         },
         "slices/tests-integration-execution/038": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "verification": [
+                "Evidence-only: current reason table has scenario column and buildPolicy without deleted require_reasons.",
+                "Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions."
+            ]
         },
         "slices/tests-integration-execution/042": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 7b075accc4c1b2a3.", "Evidence 4d963f8301a62b9b."],
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "verification": [
+                "Evidence 7b075accc4c1b2a3.",
+                "Evidence 4d963f8301a62b9b.",
+                "Evidence-only: final comment already says The copy row replaces the source with a directory before the run.",
+                "Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-test-cleanup-checkpoint4-final-freeze.json",
-                    "commit": null,
+                    "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
                     "verification": ["Evidence 7b075accc4c1b2a3.", "Evidence 4d963f8301a62b9b."]
                 }
             ]
@@ -13306,10 +13337,12 @@
             ]
         },
         "slices/tests-integration-lifecycle/013": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "verification": [
+                "The single-test describe is removed. The native GspotError refusal asserts code pin, version 9.9.9 and both remedies, while read/write and actual check/doctor/apply recovery controls remain. Native checkpoint corpus and staged gate pass."
+            ]
         },
         "slices/tests-integration-lifecycle/014": {
             "status": "complete",
@@ -17479,6 +17512,30 @@
                 "Native executable proof covers macOS ARM64. Whole-repository Linux, macOS and Windows acceptance remains in the final verification wave. CI37855822748 is pending; no live publication or deployment."
             ],
             "ci": "/tmp/gspot-vale-logged-replacement-ci.json"
+        },
+        {
+            "commit": "ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a",
+            "completedRecords": [
+                "slices/tests-integration-execution/001",
+                "slices/tests-integration-execution/019",
+                "slices/tests-integration-execution/020",
+                "slices/tests-integration-execution/029",
+                "slices/tests-integration-execution/031",
+                "slices/tests-integration-execution/038",
+                "slices/tests-integration-execution/042",
+                "slices/tests-integration-checks/020",
+                "slices/tests-integration-checks/031",
+                "review/tests-cli/133",
+                "slices/tests-integration-lifecycle/013"
+            ],
+            "unresolvedRecords": 576,
+            "validation": [
+                "CLI103passed/350assertions/11files/9.97s; workspace types0. Staged51passed/9skipped/0findings/19.9s; normal commit and push hooks pass. Push51passed/9skipped/0findings/22.3s."
+            ],
+            "limitations": [
+                "slices/tests-integration-lifecycle/044 remains partial for its other pure-reader assertions. Whole-repository cross-platform verification remains pending; no live publication or deployment."
+            ],
+            "ci": "/tmp/gspot-quality-twelve-checkpoint-ci.json"
         }
     ],
     "verificationEvidence": {

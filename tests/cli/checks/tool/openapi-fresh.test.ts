@@ -9,12 +9,12 @@ import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { rejection } from '#tests/harness/expectations.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import type { OpenapiProject } from '#tests/types/cli/checks/openapi.ts';
+import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 
 import {
@@ -30,9 +30,8 @@ const OPENAPI_FRESH_POLICY = buildPolicy(['express', 'openapi'], {
 });
 
 // A test Express project whose generator writes the document from schema.json and fails when the schema says so.
-async function applyChanges(schema: string, scope: string): Promise<OpenapiProject> {
-    const directory = await testdir();
-    await createFileTree(directory.path, {
+async function applyChanges(root: string, schema: string, scope: string): Promise<OpenapiProject> {
+    await createFileTree(root, {
         'gspot.toml':
             scope === ''
                 ? OPENAPI_FRESH_POLICY
@@ -44,59 +43,58 @@ async function applyChanges(schema: string, scope: string): Promise<OpenapiProje
         [posix.join(scope, 'schema.json')]: schema,
         [posix.join(scope, 'generate.ts')]: OPENAPI_FRESH_GENERATOR,
     });
-    commitAll(directory.path);
-    const document = join(directory.path, scope, 'openapi.json');
+    commitAll(root);
+    const document = join(root, scope, 'openapi.json');
     const edited = '{"version":2}\n';
     await writeFile(document, edited);
     await chmod(document, 0o640);
-    await writeFile(join(directory.path, scope, 'notes.txt'), 'Untracked project notes\n');
-    const session = await openSession(directory.path);
+    await writeFile(join(root, scope, 'notes.txt'), 'Untracked project notes\n');
+    const session = await openSession(root);
     const check = session.manifests.get('openapi')!.checks.find((entry) => entry.name === 'openapi/stale-document')!;
     const input = buildCheckInput(session, check.name, { scope });
     const { mode } = await stat(document);
-    return { directory, document, edited, mode, check, input };
+    return { document, edited, mode, check, input };
 }
 
 // The dirty document, the untracked file, and the absence of generator side effects, whatever the generator did.
-async function expectPreserved({ directory, document, edited, mode, input }: OpenapiProject): Promise<void> {
+async function expectPreserved(root: string, { document, edited, mode, input }: OpenapiProject): Promise<void> {
     expect(await readFile(document, 'utf8')).toBe(edited);
     const current = await stat(document);
     expect(current.mode).toBe(mode);
-    expect(await readFile(join(directory.path, input.scope, 'notes.txt'), 'utf8')).toBe('Untracked project notes\n');
-    expect(await pathExists(join(directory.path, input.scope, 'side-effect.txt'))).toBe(false);
+    expect(await readFile(join(root, input.scope, 'notes.txt'), 'utf8')).toBe('Untracked project notes\n');
+    expect(await pathExists(join(root, input.scope, 'side-effect.txt'))).toBe(false);
 }
 
 test.each(['', 'apps/api'])(
     'OpenAPI freshness in %s reports failed generation and preserves dirty and untracked input',
     async (scope) => {
-        const testRepository = await applyChanges('{"fail":true}\n', scope);
-        await using _directory = testRepository.directory;
+        await using directory = await testdir();
+        const testRepository = await applyChanges(directory.path, '{"fail":true}\n', scope);
         expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input))).toContain(
             'Generation failed',
         );
-        await expectPreserved(testRepository);
+        await expectPreserved(directory.path, testRepository);
     },
 );
 
 test.each(['', 'apps/api'])(
     'OpenAPI freshness in %s reports stale output, accepts regeneration, and preserves input',
     async (scope) => {
-        const testRepository = await applyChanges('{"version":3}\n', scope);
-        await using directory = testRepository.directory;
+        await using directory = await testdir();
+        const testRepository = await applyChanges(directory.path, '{"version":3}\n', scope);
         expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([
             {
                 check: testRepository.check.name,
                 file: posix.join(scope, 'openapi.json'),
                 line: 1,
                 rule: 'stale',
-                message:
-                    'Running ["bun","generate.ts","","two words"] changes this generated file; commit what it writes.',
+                message: textContaining('["bun","generate.ts","","two words"]'),
                 fixable: false,
             },
         ]);
         await writeFile(join(directory.path, scope, 'schema.json'), testRepository.edited);
         expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([]);
-        await expectPreserved(testRepository);
+        await expectPreserved(directory.path, testRepository);
     },
 );
 

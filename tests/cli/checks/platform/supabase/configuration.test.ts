@@ -41,7 +41,13 @@ test('Supabase configurations and function discovery stay within nested project 
             buildCheckInput(await openSession(sandbox.path), 'supabase/project-file'),
         ),
     ).toStrictEqual([]);
-    await writeFile(join(sandbox.path, 'apps/api/supabase/config.toml'), '[broken');
+});
+
+test('Supabase malformed configuration reports syntax before storage analysis', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['supabase'], { tables: '[scope."apps/api"]\n' }),
+        'apps/api/supabase/config.toml': '[broken',
+    });
     const broken = buildCheckInput(await openSession(sandbox.path), 'supabase/project-file', { scope: 'apps/api' });
     expect(BUILT_IN_CHECKS['supabase/project-file'].input(broken)).toMatchObject([
         { file: 'apps/api/supabase/config.toml', line: 1, rule: 'syntax' },

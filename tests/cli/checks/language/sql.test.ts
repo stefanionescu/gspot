@@ -36,7 +36,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
             .filter((finding) => finding.rule === 'trivial-function')
             .map(({ file, line, rule }) => ({ file, line, rule })),
     ).toStrictEqual(
-        [...Array.from({ length: threshold }, (_, index) => index + 3), 6, 7].map((line) => ({
+        [3, 4, 6, 7].map((line) => ({
             file: 'functions.sql',
             line,
             rule: 'trivial-function',
@@ -97,6 +97,7 @@ test('SQL function analysis keeps quoted bodies strict and preserves psql source
     const options = buildRunOptions({ only: ['sql/trivial-functions'] });
     const broken = await executeRun(await openSession(sandbox.path), options);
     expect(broken.report.checks[0]?.status).toBe('error');
+    expect(broken.report.checks[0]?.note).toContain('Cannot analyze SQL function body');
     expect(await Bun.file(`${sandbox.path}/functions.sql`).text()).toBe(source);
     const corrected = source.replace('SELECT :value', 'SELECT 1');
     await Bun.write(`${sandbox.path}/functions.sql`, corrected);

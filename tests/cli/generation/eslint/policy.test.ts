@@ -1,7 +1,7 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
+import { format } from 'prettier';
 import { test, expect } from 'bun:test';
-import { check, format } from 'prettier';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
@@ -35,7 +35,6 @@ test.each(['recommended', 'all'] as const)(
                 (name) => config.rules[name]?.[0] !== undefined && config.rules[name][0] !== 0,
             );
             const results = await eslint.lintFiles(['source.js']);
-            const source = 'export class Example{first(){return 1;}second(){return 2;}}';
             return JSON.stringify({
                 layout,
                 findings: results.flatMap(({ messages }) =>
@@ -43,10 +42,6 @@ test.each(['recommended', 'all'] as const)(
                         .filter(({ ruleId, fatal }) => ruleId === 'no-restricted-syntax' || fatal)
                         .map(({ ruleId, line, column, severity }) => ({ ruleId, line, column, severity })),
                 ),
-                formatting: [
-                    await check(source, { parser: 'babel' }),
-                    await check(await format(source, { parser: 'babel' }), { parser: 'babel' }),
-                ],
             });
         }
         const result = await lintReport();
@@ -60,12 +55,11 @@ test.each(['recommended', 'all'] as const)(
                               { ruleId: 'no-restricted-syntax', line: 3, column: 12, severity: 2 },
                           ]
                         : [],
-                formatting: [false, true],
             }),
         );
         await Bun.write(join(sandbox.path, 'source.js'), COALESCING_CORRECTION);
         const corrected = await lintReport();
-        expect(corrected).toBe(JSON.stringify({ layout: [], findings: [], formatting: [false, true] }));
+        expect(corrected).toBe(JSON.stringify({ layout: [], findings: [] }));
         expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
     },
 );

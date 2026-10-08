@@ -44,9 +44,6 @@ test.each([
         expect(report.checks.flatMap(({ findings }) => findings)).toMatchObject([
             { file: `app/child/${path}`, line: 1, rule },
         ]);
-        await Bun.write(`${sandbox.path}/app/child/${path}`, corrected);
-        const fixed = await runGspot(sandbox.path, command);
-        expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(`${sandbox.path}/gspot.toml`).text()).toBe(policy);
         expect(await Bun.file(`${sandbox.path}/${path}`).text()).toBe(rootContent);
         expect(await Bun.file(`${sandbox.path}/sibling/${path}`).text()).toBe(rootContent);

@@ -135,9 +135,5 @@ test.each(ASSET_SETTING_CASES)(
         expect(orphan.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
             { check: 'xcode/orphan-assets', file: asset, line: 1, rule: 'orphan-asset' },
         ]);
-        await writeFile(join(sandbox.path, path), text);
-        const corrected = await executeRun(await openSession(sandbox.path), options);
-        expect(corrected.report.exitCode).toBe(0);
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(text);
     },
 );

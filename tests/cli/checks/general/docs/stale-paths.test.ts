@@ -27,10 +27,10 @@ test('wildcard examples stay intact while emphasized literal paths remain checke
     const found = BUILT_IN_CHECKS['docs/stale-paths'].input(
         buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
     );
-    expect(found.map(({ line, message: description }) => [line, description])).toStrictEqual([
-        [2, 'src/missing.ts names no tracked file or folder.'],
-        [2, 'src/absent.ts names no tracked file or folder.'],
-        [2, 'src/gone.ts names no tracked file or folder.'],
+    expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+        { file: 'a.md', line: 2, rule: 'missing-path', message: textContaining('src/missing.ts') },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: textContaining('src/absent.ts') },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: textContaining('src/gone.ts') },
     ]);
 });
 
@@ -45,9 +45,9 @@ test('literal gitignore paths resolve while missing paths remain findings', asyn
     const found = BUILT_IN_CHECKS['docs/stale-paths'].input(
         buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
     );
-    expect(found.map(({ line, message: description }) => [line, description])).toStrictEqual([
-        [2, 'app/absent.ts names no tracked file or folder.'],
-        [2, 'app/private.ts names no tracked file or folder.'],
+    expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+        { file: 'a.md', line: 2, rule: 'missing-path', message: textContaining('app/absent.ts') },
+        { file: 'a.md', line: 2, rule: 'missing-path', message: textContaining('app/private.ts') },
     ]);
 });
 
@@ -67,8 +67,10 @@ test('command check IDs resolve while undefined checks remain findings', async (
     );
     const input = buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] });
     expect(
-        BUILT_IN_CHECKS['docs/stale-paths'].input(input).map(({ message: description }) => description),
-    ).toStrictEqual(['tests/missing names no tracked file or folder.']);
+        BUILT_IN_CHECKS['docs/stale-paths']
+            .input(input)
+            .map(({ file, line, rule, message }) => ({ file, line, rule, message })),
+    ).toStrictEqual([{ file: 'a.md', line: 1, rule: 'missing-path', message: textContaining('tests/missing') }]);
 });
 
 test('mise task aliases resolve while undefined aliases remain findings', async () => {
@@ -82,8 +84,8 @@ test('mise task aliases resolve while undefined aliases remain findings', async 
     const found = BUILT_IN_CHECKS['docs/stale-paths'].input(
         buildCheckInput(await openSession(sandbox.path), 'docs/stale-paths', { paths: ['a.md'] }),
     );
-    expect(found.map(({ message: description }) => description)).toStrictEqual([
-        'mise run absent names no task or script.',
+    expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+        { file: 'a.md', line: 1, rule: 'missing-task', message: textContaining('mise run absent') },
     ]);
 });
 

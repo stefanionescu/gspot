@@ -1,6 +1,6 @@
 # Tests: Lifecycle and Repository Integration Tests
 
-17 unresolved review records remain.
+16 unresolved review records remain.
 
 ## Open findings
 
@@ -153,3 +153,11 @@ Original records and quotations remain above. These records are complete at `087
 | `slices/tests-integration-lifecycle/033` | complete | One native project(name) calculation has three real callers; all three Xcode input texts are byte-identical. Module-scope calculation passes native policy. Frozen A9 7680a798f21a2de0107551e57aac99aa677b510698cac8febd9af879c4108abd: native100cases297assertions9files, Bun/Node34YAMLjobs11JSONvectors and5YAML/TOML values/errors equal. Main affected160/472 plus8parser cases21assertions pass. Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain. Commit `087e6d6d5eb739c6b4b44e6d1e3544442597e739`.                                                                                                         |
 | `slices/tests-integration-lifecycle/036` | complete | Delete stale cached-result assertion only. Initial staged symlink finding plus both fresh correction/recovery inputs and actual index preservation remain. Frozen A9 7680a798f21a2de0107551e57aac99aa677b510698cac8febd9af879c4108abd: native100cases297assertions9files, Bun/Node34YAMLjobs11JSONvectors and5YAML/TOML values/errors equal. Main affected160/472 plus8parser cases21assertions pass. Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain. Commit `087e6d6d5eb739c6b4b44e6d1e3544442597e739`.                                                                                                          |
 | `slices/tests-integration-lifecycle/037` | complete | Assert exact Unsafe lifecycle path refusal in existing source-reader test; reader implementation unchanged. Frozen A9 7680a798f21a2de0107551e57aac99aa677b510698cac8febd9af879c4108abd: native100cases297assertions9files, Bun/Node34YAMLjobs11JSONvectors and5YAML/TOML values/errors equal. Main affected160/472 plus8parser cases21assertions pass. Main combined checkpoint removes73lines across31owners; staged88passedzero findings59.57s, normal apply157outputs unchanged, root TypeScript passes. Original distinct behavior and quotations remain. Commit `087e6d6d5eb739c6b4b44e6d1e3544442597e739`.                                                                                                                                                         |
+
+## Implementation checkpoint ad8c6d10d of October 9, 2026
+
+Original records and quotations remain above. These records are complete at `ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a`.
+
+| ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `slices/tests-integration-lifecycle/013` | complete | The single-test describe is removed. The native GspotError refusal asserts code pin, version 9.9.9 and both remedies, while read/write and actual check/doctor/apply recovery controls remain. Native checkpoint corpus and staged gate pass. Commit `ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a`. |

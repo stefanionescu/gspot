@@ -48,8 +48,8 @@ test.skipIf(!isMacos)('XCTest reports a timed-out native command as an error and
     expect(corrected.report.checks).toMatchObject([{ check: 'xctest/coverage', status: 'passed', findings: [] }]);
 });
 test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
-    'XCTest adapter preserves $failure and accepts a corrected run',
-    async ({ policy, build, coverage, code, status, produced }) => {
+    'XCTest coverage classifies $failure and passes after the fix',
+    async ({ policy, build, coverage, code, status, produced, note }) => {
         await using sandbox = await testdir();
         await using _cache = await useCacheDirectory();
         await createFileTree(sandbox.path, {
@@ -63,6 +63,7 @@ test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
         const outcome = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
         expect(outcome.report.exitCode).toBe(code);
         expect(outcome.report.checks[0]!.status).toBe(status);
+        if (note !== undefined) expect(outcome.report.checks[0]!.note).toContain(note);
         expect(await pathExists(join(sandbox.path, 'viewed.txt'))).toBe(false);
         const viewed = join(buildFolder(sandbox.path), 'swift/root/coverage/source/viewed.txt');
         // The coverage view is kept in the build folder whenever the run got as far as producing it.
@@ -82,7 +83,7 @@ test.skipIf(!isMacos).each([...XCTEST_FAILURES])(
 );
 
 test.skipIf(!isMacos)(
-    'XCTest coverage refuses an external result link and replaces a files previous bundle',
+    'XCTest coverage refuses an external result link and removes a previous result bundle',
     async () => {
         await using sandbox = await testdir();
         await using outside = await testdir();
@@ -102,6 +103,7 @@ test.skipIf(!isMacos)(
         await symlink(outside.path, bundle, process.platform === 'win32' ? 'junction' : 'dir');
         const refused = await executeRun(await openSession(sandbox.path), XCTEST_EXECUTION_OPTIONS);
         expect(refused.report.exitCode).toBe(2);
+        expect(refused.report.checks[0]?.note).toContain('symbolic link');
         expect(await readFile(join(outside.path, 'authored.txt'), 'utf8')).toBe('preserved');
         expect(await pathExists(join(cache, 'source/tested.txt'))).toBe(false);
         await rm(bundle);

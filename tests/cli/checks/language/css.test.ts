@@ -5,6 +5,7 @@ import { executeRun } from '#cli/execution/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { textContaining } from '#tests/harness/expectations.ts';
 import { DYNAMIC_READS } from '#tests/config/cli/checks/css-usage.ts';
 
 const options = buildRunOptions({ only: ['css/module-classes'] });
@@ -19,7 +20,7 @@ test('global CSS classes are not module exports and explicitly local classes sti
     });
     const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.checks[0]?.findings).toMatchObject([
-        { file: 'styles.module.css', line: 3, rule: 'unused-class', message: 'No importer reads the class local.' },
+        { file: 'styles.module.css', line: 3, rule: 'unused-class', message: textContaining('local') },
     ]);
     await Bun.write(
         join(sandbox.path, 'view.ts'),

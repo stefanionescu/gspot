@@ -24,9 +24,8 @@ import {
 } from '#tests/config/cli/checks/library/drizzle.ts';
 
 // A test scope with a generator script that stands in for drizzle-kit: `schema.txt` decides what it does.
-async function applyChanges(scope: string, schema: 'changed' | 'failure'): Promise<MigrationProject> {
-    const directory = await testdir();
-    await createFileTree(directory.path, {
+async function applyChanges(root: string, scope: string, schema: 'changed' | 'failure'): Promise<MigrationProject> {
+    await createFileTree(root, {
         'gspot.toml': buildPolicy(['drizzle']) + (scope === '' ? '' : `[scope."${scope}"]\nconfigurations = []\n`),
         [join(scope, 'package.json')]: '{"private":true}\n',
         [join(scope, 'drizzle.config.ts')]: 'export default {};\n',
@@ -37,26 +36,25 @@ async function applyChanges(scope: string, schema: 'changed' | 'failure'): Promi
         [join(scope, 'migrations/.meta/state.json')]: '{"version":1}\n',
         'unrelated/keep.sql': '-- Keep another scope\n',
     });
-    commitAll(directory.path);
-    const manual = join(directory.path, join(scope, 'migrations/0009_manual.sql'));
+    commitAll(root);
+    const manual = join(root, join(scope, 'migrations/0009_manual.sql'));
     await writeFile(manual, '-- Preserve manual migration\n');
     await chmod(manual, 0o640);
-    const initial = join(directory.path, join(scope, 'migrations/0000_initial.sql'));
+    const initial = join(root, join(scope, 'migrations/0000_initial.sql'));
     await writeFile(initial, '-- Developer edit\n');
-    const bin = join(directory.path, 'node_modules/.bin');
+    const bin = join(root, 'node_modules/.bin');
     await mkdir(bin, { recursive: true });
     await symlink(
         process.execPath,
         join(bin, process.platform === 'win32' ? 'drizzle-kit.exe' : 'drizzle-kit'),
         'file',
     );
-    const session = await openSession(directory.path);
+    const session = await openSession(root);
     const check = session.manifests.get('drizzle')!.checks.find((entry) => entry.name === 'drizzle/stale-migrations')!;
     const planned = planRun(session, { stage: 'push', skips: [], only: [check.name] });
     const input = checkInput(session, planned.find((entry) => entry.scope.scope.path === scope)!);
     const { mode } = await stat(manual);
     return {
-        directory,
         path: (file: string) => join(scope, file),
         manual,
         mode,
@@ -67,21 +65,21 @@ async function applyChanges(scope: string, schema: 'changed' | 'failure'): Promi
 }
 
 // Whatever the generator did, the tracked edits, the untracked migration, and the other scope are untouched.
-async function expectPreserved({ directory, path, manual, mode, initial }: MigrationProject): Promise<void> {
+async function expectPreserved(root: string, { path, manual, mode, initial }: MigrationProject): Promise<void> {
     expect(await readFile(manual, 'utf8')).toBe('-- Preserve manual migration\n');
     const current = await stat(manual);
     expect(current.mode).toBe(mode);
     expect(await readFile(initial, 'utf8')).toBe('-- Developer edit\n');
-    expect(await readFile(join(directory.path, path('migrations/meta/log.json')), 'utf8')).toBe('{"version":1}\n');
-    expect(await readFile(join(directory.path, path('migrations/.meta/state.json')), 'utf8')).toBe('{"version":1}\n');
-    expect(await readFile(join(directory.path, 'unrelated/keep.sql'), 'utf8')).toBe('-- Keep another scope\n');
+    expect(await readFile(join(root, path('migrations/meta/log.json')), 'utf8')).toBe('{"version":1}\n');
+    expect(await readFile(join(root, path('migrations/.meta/state.json')), 'utf8')).toBe('{"version":1}\n');
+    expect(await readFile(join(root, 'unrelated/keep.sql'), 'utf8')).toBe('-- Keep another scope\n');
 }
 
 test.each(DRIZZLE_MIGRATIONS_SCOPES)(
     'a failed generation in %s reports the failure and preserves every file',
     async (scope) => {
-        const testRepository = await applyChanges(scope, 'failure');
-        await using directory = testRepository.directory;
+        await using directory = await testdir();
+        const testRepository = await applyChanges(directory.path, scope, 'failure');
         const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
         try {
             expect(await rejection(BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input))).toContain(
@@ -89,7 +87,7 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
             );
             await writeFile(join(directory.path, testRepository.path('schema.txt')), 'current');
             expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([]);
-            await expectPreserved(testRepository);
+            await expectPreserved(directory.path, testRepository);
         } finally {
             locate.mockRestore();
         }
@@ -99,8 +97,8 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
 test.each(DRIZZLE_MIGRATIONS_SCOPES)(
     'a stale schema in %s reports the missing migration files and preserves every file',
     async (scope) => {
-        const testRepository = await applyChanges(scope, 'changed');
-        await using directory = testRepository.directory;
+        await using directory = await testdir();
+        const testRepository = await applyChanges(directory.path, scope, 'changed');
         const locate = spyOn(executables, 'sync').mockReturnValue(process.execPath);
         try {
             const found = await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input);
@@ -130,7 +128,7 @@ test.each(DRIZZLE_MIGRATIONS_SCOPES)(
             ).toBe(true);
             await writeFile(join(directory.path, testRepository.path('schema.txt')), 'current');
             expect(await BUILT_IN_CHECKS['supabase/stale-types'].input(testRepository.input)).toStrictEqual([]);
-            await expectPreserved(testRepository);
+            await expectPreserved(directory.path, testRepository);
         } finally {
             locate.mockRestore();
         }

@@ -4,7 +4,6 @@ import { rename } from 'node:fs/promises';
 import { planRun } from '#cli/planning/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
-import { GspotError } from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
@@ -88,11 +87,11 @@ test('native Markdown output refuses crashes and failures without attributed fin
         });
         expect(checkedFindings(check, failed, { cwd: sandbox.path, root: sandbox.path })).toStrictEqual(findings);
         expect(() => checkedFindings(check, { ...failed, code: 2 }, { cwd: sandbox.path, root: sandbox.path })).toThrow(
-            GspotError,
+            'exit 2',
         );
         expect(() =>
             checkedFindings(check, { ...failed, stdout: '[]' }, { cwd: sandbox.path, root: sandbox.path }),
-        ).toThrow(GspotError);
+        ).toThrow('exit 1');
     }
 });
 

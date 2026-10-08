@@ -95,7 +95,7 @@ test.each(['', 'apps/api'])(
                     file: `${prefix}database.ts`,
                     line: 1,
                     rule: 'missing',
-                    message: `Run supabase gen types typescript --local --schema public and write its output to ${prefix}database.ts.`,
+                    message: textContaining(`${prefix}database.ts`),
                 },
             ],
         });

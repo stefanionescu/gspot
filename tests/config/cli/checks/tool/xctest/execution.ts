@@ -11,6 +11,7 @@ export const SHEBANG = `#!${process.execPath}\n`;
 export const XCTEST_FAILURES = [
     {
         failure: 'no-project',
+        note: undefined,
         policy: 'configurations = ["xctest", "xcode"]\n[swift]\nxcode_project = ""\nxcode_scheme = "Example"\n[coverage]\noverrides = [{ target = "Example", percent = 80 }]\n',
         build: '',
         coverage: 1,
@@ -20,6 +21,7 @@ export const XCTEST_FAILURES = [
     },
     {
         failure: 'failed-test',
+        note: 'test run exited 65',
         policy: XCTEST_EXECUTION_POLICY,
         build: 'process.exitCode = 65;',
         coverage: 1,
@@ -29,6 +31,7 @@ export const XCTEST_FAILURES = [
     },
     {
         failure: 'malformed',
+        note: 'targets',
         policy: XCTEST_EXECUTION_POLICY,
         build: '',
         coverage: undefined,
@@ -38,6 +41,7 @@ export const XCTEST_FAILURES = [
     },
     {
         failure: 'under-floor',
+        note: undefined,
         policy: XCTEST_EXECUTION_POLICY,
         build: '',
         coverage: 0.5,
