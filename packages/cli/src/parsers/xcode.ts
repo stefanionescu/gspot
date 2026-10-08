@@ -1,135 +1,16 @@
 import { posix } from 'node:path';
+import { parse } from '@bacons/xcode/json';
 import { pbxprojSchema } from '#cli/parsers/schema/xcode.ts';
-import { WORD_CHARACTER, PBXPROJ_ESCAPES, SETTING_REFERENCE, PBXPROJ_PUNCTUATION } from '#cli/config/parsers/xcode.ts';
+import { SETTING_REFERENCE } from '#cli/config/parsers/xcode.ts';
 
 import type {
-    Plist,
     Folder,
-    PlistToken,
     ProjectEntry,
-    ProjectToken,
     XcodeProject,
     ProjectSources,
     ProjectMetadata,
     ProjectBuildSettings,
 } from '#cli/types/parsers/xcode.ts';
-
-// The index past the quoted text that opens before from, where a backslash escapes the next character, or `-1`.
-function quotedEnd(text: string, from: number): number {
-    for (let at = from; at < text.length; at += 1) {
-        if (text[at] === '\\') at += 1;
-        else if (text[at] === '"') return at + 1;
-    }
-    return -1;
-}
-
-// The text a quoted token stands for, with its escapes resolved.
-function unescaped(body: string): string {
-    return body.replaceAll(/\\(U[0-9a-fA-F]{4}|[0-7]{1,3}|[\s\S])/gu, (_whole, escaped: string) => {
-        if (escaped.startsWith('U')) return String.fromCodePoint(Number.parseInt(escaped.slice(1), 16));
-        if (/^[0-7]/u.test(escaped)) return String.fromCodePoint(Number.parseInt(escaped, 8));
-        return PBXPROJ_ESCAPES[escaped] ?? escaped;
-    });
-}
-
-// The index past the whitespace or comment at at, or at when a token starts there.
-function skippedEnd(text: string, at: number): number {
-    const char = text[at] ?? '';
-    if (/\s/u.test(char)) return at + 1;
-    if (char !== '/') return at;
-    if (text[at + 1] === '/') {
-        const end = text.indexOf('\n', at);
-        return end === -1 ? text.length : end + 1;
-    }
-    if (text[at + 1] !== '*') return at;
-    const end = text.indexOf('*/', at + '/*'.length);
-    if (end === -1) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
-    return end + '*/'.length;
-}
-
-// The quoted text, punctuation, or word at at, with the index past it.
-function tokenAt(text: string, at: number): ProjectToken {
-    const char = text[at] ?? '';
-    if (char === '"') {
-        const end = quotedEnd(text, at + 1);
-        if (end === -1) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
-        return { token: { text: unescaped(text.slice(at + 1, end - 1)), quoted: true, at }, end };
-    }
-    if (PBXPROJ_PUNCTUATION.has(char)) return { token: { text: char, quoted: false, at }, end: at + 1 };
-    let end = at;
-    while (WORD_CHARACTER.test(text[end] ?? '')) end += 1;
-    if (end === at) throw new Error(`Invalid Xcode project syntax at character ${String(at + 1)}.`);
-    return { token: { text: text.slice(at, end), quoted: false, at }, end };
-}
-
-function tokens(text: string): PlistToken[] {
-    const result: PlistToken[] = [];
-    let at = 0;
-    while (at < text.length) {
-        const skipped = skippedEnd(text, at);
-        if (skipped > at) {
-            at = skipped;
-            continue;
-        }
-        const scanned = tokenAt(text, at);
-        result.push(scanned.token);
-        at = scanned.end;
-    }
-    return result;
-}
-
-function parse(text: string): Plist {
-    const input = tokens(text);
-    let at = 0;
-
-    const is = (value: string): boolean => input[at]?.quoted === false && input[at]?.text === value;
-    const take = (value: string): void => {
-        if (!is(value))
-            throw new Error(
-                `Expected ${value} in Xcode project at character ${String((input[at]?.at ?? text.length) + 1)}.`,
-            );
-        at += 1;
-    };
-    const dictionary = (): Plist => {
-        take('{');
-        const entries = new Map<string, Plist>();
-        while (!is('}')) {
-            const key = value();
-            if (typeof key !== 'string') throw new Error('An Xcode project dictionary key must be text.');
-            take('=');
-            if (entries.has(key)) throw new Error(`Duplicate Xcode project key: ${key}.`);
-            entries.set(key, value());
-            take(';');
-        }
-        take('}');
-        return Object.fromEntries(entries);
-    };
-    const list = (): Plist => {
-        take('(');
-        const entries: Plist[] = [];
-        while (!is(')')) {
-            entries.push(value());
-            if (is(')')) break;
-            take(',');
-        }
-        take(')');
-        return entries;
-    };
-    const scalar = (): Plist => {
-        const token = input[at++];
-        if (token === undefined || (!token.quoted && /^[{}()=;,]$/u.test(token.text)))
-            throw new Error('Expected a value in the Xcode project.');
-        return token.text;
-    };
-    const value = (): Plist => {
-        if (is('{')) return dictionary();
-        if (is('(')) return list();
-        return scalar();
-    };
-    const result = value();
-    if (at !== input.length) throw new Error('Unexpected content after the Xcode project dictionary.');
-    return result;
-}
 
 // The object an id names, which must exist.
 function projectItem(project: Pick<XcodeProject, 'objects'>, id: string): ProjectEntry {
@@ -150,7 +31,7 @@ function parentGroups(objects: Record<string, ProjectEntry>): Map<string, string
     return parents;
 }
 
-// The folder a group-relative object is resolved against: the project folder for the main group, else its parent's.
+// The folder that a group-relative object belongs to: the project folder for the main group, else its parent's.
 function groupBase(project: XcodeProject, id: string): string {
     if (id === project.root.mainGroup) return posix.join(project.directory, project.root.projectDirPath ?? '');
     const parent = project.parents.get(id);
@@ -163,7 +44,7 @@ function treeBase(project: XcodeProject, id: string, tree: string): string {
     if (tree === 'SOURCE_ROOT') return project.directory;
     if (tree === '<absolute>') return '/';
     if (tree === '<group>') return groupBase(project, id);
-    throw new Error(`Cannot resolve Xcode source tree ${tree} without build settings.`);
+    throw new Error(`Cannot find the folder of Xcode source tree ${tree} without build settings.`);
 }
 
 // The repository-relative path of an object, following its groups up to the main group.
@@ -173,8 +54,7 @@ function projectPath(project: XcodeProject, id: string): string {
     const entry = projectItem(project, id);
     const base = treeBase(project, id, entry.sourceTree ?? '<group>');
     const path = entry.path ?? '';
-    if (SETTING_REFERENCE.test(path))
-        throw new Error(`Cannot resolve Xcode source path ${path} without build settings.`);
+    if (SETTING_REFERENCE.test(path)) throw new Error(`Cannot find Xcode source path ${path} without build settings.`);
     project.visiting.delete(id);
     return posix.normalize(posix.isAbsolute(path) ? path : posix.join(base, path));
 }
@@ -193,7 +73,7 @@ function targetSources(project: XcodeProject, target: ProjectEntry): string[] {
         });
 }
 
-// The synchronized folders a target owns, each with the files its exceptions leave out.
+// The folders whose source files Xcode manages, each with the files its exceptions leave out.
 function targetFolders(project: XcodeProject, id: string, target: ProjectEntry): Folder[] {
     return (target.fileSystemSynchronizedGroups ?? []).map((groupId) => {
         const group = projectItem(project, groupId);
@@ -215,10 +95,10 @@ function readProject(text: string): ProjectMetadata {
 }
 
 /**
- * Resolve the Swift sources and synchronized folders that belong to project targets.
+ * Find the Swift sources and managed folders that belong to project targets.
  * @param text the project file text
  * @param directory the folder the project file lives in, relative to the repository root
- * @returns the source paths and the synchronized folders with their exclusions
+ * @returns the source paths and managed folders with their exclusions
  */
 export function readPbxproj(text: string, directory: string): ProjectSources {
     const parsed = pbxprojSchema.parse(parse(text));
@@ -244,7 +124,7 @@ export function readPbxproj(text: string, directory: string): ProjectSources {
 }
 
 /**
- * Read test-target names without requiring source paths to resolve build settings.
+ * Find test-target names without requiring build settings for their source paths.
  * @param text the project file text
  * @returns the names of the test targets
  */
@@ -261,7 +141,7 @@ export function testTargets(text: string): string[] {
 }
 
 /**
- * Read native compiler and SDK settings without resolving project source paths.
+ * Find native compiler and SDK settings without reading project source paths.
  * @param text the authored project file
  * @returns the first declared SDK and Swift version
  */

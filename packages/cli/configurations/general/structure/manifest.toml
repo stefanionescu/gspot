@@ -127,8 +127,8 @@ name = "limits.file_lines"
 type = "number"
 direction = "ceiling"
 default = 300
-languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
-summary = "The most lines a file may have. Python, Bash, and SQL count code lines; Swift skips comment-only lines. JavaScript and TypeScript count every line."
+languages = ["typescript", "javascript", "python", "swift"]
+summary = "File ceilings are 140 for Bash, 400 for SQL, and 300 otherwise. JavaScript and TypeScript count all lines; Python, Bash, SQL, and Swift skip comment-only lines."
 
 [[setting]]
 name = "limits.function_lines"

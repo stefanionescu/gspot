@@ -1,11 +1,13 @@
 import { memo } from '#cli/platform/memo.ts';
 import { findingAt } from '#cli/checks/finding.ts';
+import { FROZEN_NONE } from '#cli/config/parsers/sql.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
+import { MIGRATION_DOWN } from '#cli/config/checks/database/postgres.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 import { getBlobs, getHeadEntries } from '#cli/repository/revisions/objects.ts';
 import { GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/revisions.ts';
-import { FROZEN_ALL, FROZEN_NONE, MIGRATION_DOWN } from '#cli/config/checks/database/postgres.ts';
 
 const COMMITTED_MIGRATIONS_MEMO = { create: () => new Map<string, Promise<Map<string, string>>>() };
 
@@ -112,12 +114,12 @@ export async function migrationsFrozen(input: CheckInput): Promise<Finding[]> {
         input,
         migrations.map((migration) => migration.path),
     );
+    const frozen = frozenMigrationPaths(
+        migrations.map((migration) => migration.path),
+        through,
+    );
     return migrations
-        .filter(
-            (migration) =>
-                through === FROZEN_ALL ||
-                (migration.version !== '' && /^\d+$/u.test(through) && BigInt(migration.version) <= BigInt(through)),
-        )
+        .filter((migration) => frozen.has(migration.path))
         .flatMap((migration): Finding[] => {
             const committed = texts.get(migration.path);
             if (committed === undefined || (committed.split(MIGRATION_DOWN, 1)[0] ?? '') === migration.text) return [];

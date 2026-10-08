@@ -16,6 +16,7 @@ import { readSwiftVersion } from '#cli/parsers/swift/source.ts';
 import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { JSON_EXTENSIONS } from '#cli/config/generation/headers.ts';
+import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
 import { headerFor, addJsonHeader } from '#cli/generation/headers.ts';
 import { eslintInputs } from '#cli/generation/eslint/configuration.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
@@ -176,6 +177,7 @@ export function etaInputs(session: Session, selection: ScopeSelection, manifests
                 target,
             }),
         scopeIgnorePatterns,
+        frozenMigrationPaths,
         swiftVersion: () => readSwiftVersion(compilerContext, view.options('swift').xcode_project),
         editorconfigOverrides: () => editorconfigOverrides(policy),
         isAll: policy.level === 'all',

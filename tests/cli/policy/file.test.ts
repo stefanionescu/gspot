@@ -142,6 +142,7 @@ test('policy inspection accepts hardlinked authored text while edits preserve bo
     const path = join(sandbox.path, 'gspot.toml');
     await link(original, path);
     await using file = await open(path, 'r');
+    await using authored = await open(original, 'r');
     const attributes = await file.stat();
     expect(attributes.nlink).toBe(2);
     expect(hasPolicy(sandbox.path)).toBe(true);
@@ -154,7 +155,7 @@ test('policy inspection accepts hardlinked authored text while edits preserve bo
     ).toThrow('private regular file');
     expect(evaluated).toBe(false);
     expect(await file.readFile('utf8')).toBe(policy);
-    expect(await readFile(path, 'utf8')).toBe(policy);
+    expect(await authored.readFile('utf8')).toBe(policy);
     expect(await pathExists(join(sandbox.path, '.gspot'))).toBe(false);
 });
 

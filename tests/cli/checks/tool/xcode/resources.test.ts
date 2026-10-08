@@ -89,7 +89,7 @@ test('a denied asset existence read is an execution error and a genuinely missin
     expect(await readFile(target)).toStrictEqual(Buffer.from([0, 1, 2]));
 });
 
-test.each(['logo-mark', 'logo_mark', 'Logo Mark'])(
+test.each(['logo-mark', 'logo_mark', 'Logo Mark', 'Logo MarkImage', 'logo-markColor'])(
     'Xcode asset %s accepts its camel-case symbol and reports an unrelated symbol',
     async (name) => {
         await using sandbox = await testdir();

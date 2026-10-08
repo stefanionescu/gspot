@@ -3,6 +3,7 @@ import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
+import type { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
 import type { EditorconfigOverride } from '#cli/types/generation/formatting.ts';
 import type { EslintPresets, EslintAllRules } from '#cli/types/parsers/eslint.ts';
 import type { Policy, ScopeView, ScopeSelection } from '#cli/types/policy/settings.ts';
@@ -98,6 +99,7 @@ export type EtaInputs = {
     yaml: (value: Record<string, unknown>) => string;
     tomlDate: new (value: string) => Date;
     files: (extension: string) => string[];
+    frozenMigrationPaths: typeof frozenMigrationPaths;
     /** The folders of the npm package workspaces, read when a template asks. */
     packageWorkspaces: () => string[];
     /** The executable names declared by applicable tool requirements. */

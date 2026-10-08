@@ -27,7 +27,11 @@ test('quoted project strings preserve escapes and ignore comment-like text', () 
     ).toBe('/repo/First é Group/Shared.swift');
 });
 test.each([
-    { name: 'missing value', source: PBXPROJ_PROJECT.slice(0, -3), message: 'Expected a value in the Xcode project.' },
+    {
+        name: 'missing value',
+        source: PBXPROJ_PROJECT.slice(0, -3),
+        message: 'Unexpected end of input in object at line 19, column 7',
+    },
     {
         name: 'unknown object',
         source: PBXPROJ_PROJECT.replace('B1, B2,', 'MISSING, B2,'),
@@ -44,7 +48,7 @@ test.each([
     {
         name: 'unresolved source tree',
         source: PBXPROJ_PROJECT.replace('sourceTree = SOURCE_ROOT;', 'sourceTree = CUSTOM_BUILD_ROOT;'),
-        message: 'Cannot resolve Xcode source tree CUSTOM_BUILD_ROOT without build settings.',
+        message: 'Cannot find the folder of Xcode source tree CUSTOM_BUILD_ROOT without build settings.',
     },
 ])('the parser refuses a project with $name', ({ source, message }) => {
     expect(() => readPbxproj(source, '/repo')).toThrow(message);

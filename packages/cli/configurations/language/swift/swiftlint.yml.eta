@@ -149,13 +149,10 @@ const document = {
         'control_statement',
         'implicit_getter',
         'implicit_optional_initialization',
-        'implicit_return',
-        'unneeded_parentheses_in_closure_argument',
-        ...off,
+        ...off.filter((rule) => !OPT_IN.includes(rule) && !ANALYZER.includes(rule)),
     ],
     opt_in_rules: OPT_IN.filter((rule) => !offSet.has(rule)),
     analyzer_rules: ANALYZER.filter((rule) => !offSet.has(rule)),
-
 };
 recordRules(document);
 %><%~ yaml(document).trimEnd()

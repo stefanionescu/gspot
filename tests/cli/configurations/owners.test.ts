@@ -3,7 +3,12 @@ import { buildTrackedFile } from '#tests/harness/tracked.ts';
 import { isOwned, ownedBy } from '#cli/configurations/owners.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import { UNSUPPORTED_CONFIGURATION_FILES } from '#tests/config/cli/configurations/owners.ts';
+
+import {
+    PATH_OWNER_CASES,
+    SCOPE_OWNER_PATHS,
+    UNSUPPORTED_CONFIGURATION_FILES,
+} from '#tests/config/cli/configurations/owners.ts';
 
 const manifests = configurationManifests();
 
@@ -73,3 +78,18 @@ describe('owners', () => {
         ).toStrictEqual(expected);
     });
 });
+
+test.each(PATH_OWNER_CASES)(
+    'migration path ownership in "%s" keeps original records and rejects unrelated kinds',
+    (scope, expected) => {
+        const selected = selectConfigurations(['postgres'], manifests);
+        const files = SCOPE_OWNER_PATHS.map((path) => buildTrackedFile(path));
+        const table = manifests.get('postgres')!.files;
+        const owned = ownedBy(table, selected, files, scope);
+        expect(owned.map((file) => file.path)).toStrictEqual([...expected]);
+        expect(owned[0]).toBe(files.find((file) => file.path === expected[0]));
+        expect(ownedBy({ ...table, kinds: ['binary'] }, selected, files, scope)).toStrictEqual([]);
+        expect(ownedBy({ ...table, paths: [] }, selected, files, scope)).toStrictEqual([]);
+        expect(files.map((file) => file.path)).toStrictEqual(SCOPE_OWNER_PATHS);
+    },
+);

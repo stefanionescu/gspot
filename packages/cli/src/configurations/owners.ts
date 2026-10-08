@@ -1,4 +1,5 @@
 // Which selected configuration owns which file, per scope.
+import { posix } from 'node:path';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { sourceConfigurations } from '#cli/configurations/select.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -41,13 +42,11 @@ export function isOwned(owners: FileMatch, file: TrackedFile): boolean {
 export function ownedBy(table: FileMatch, selected: Manifest[], files: TrackedFile[], scope: string): TrackedFile[] {
     const owners = effectiveOwners(table, selected);
     const candidates = files.filter((file) => isInScope(file.path, scope) && owners.kinds.includes(file.kind));
-    if (owners.languages) {
-        const languages = sourceConfigurations(selected);
-        return candidates.filter(
-            (file) => isOwned(owners, file) || languages.some((language) => isOwned(language.files, file)),
-        );
-    }
-    return candidates.filter((file) => isOwned(owners, file));
+    const languages = owners.languages ? sourceConfigurations(selected) : [];
+    return candidates.filter((file) => {
+        const scopeFile = { ...file, path: posix.relative(scope, file.path) };
+        return isOwned(owners, scopeFile) || languages.some((language) => isOwned(language.files, scopeFile));
+    });
 }
 
 /**

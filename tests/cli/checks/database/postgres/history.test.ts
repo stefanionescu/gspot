@@ -10,8 +10,8 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
-import { PATH, ORIGINAL } from '#tests/config/cli/checks/database/postgres/history.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/history.ts';
+import { PATH, ORIGINAL, MIGRATION_PREFIXES } from '#tests/config/cli/checks/database/postgres/history.ts';
 
 const POSTGRES_HISTORY_POLICY = buildPolicy(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' });
 
@@ -101,32 +101,32 @@ test('migration analysis rejects unreadable SQL and passes after the fix in a ne
     expect(restored[0]?.statements[0]?.kind).toBe('CreateStmt');
 });
 
-test('unpadded migration versions replay and freeze in numeric order', async () => {
+test.each(MIGRATION_PREFIXES)('unpadded %s migration versions replay and freeze in numeric order', async (prefix) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['postgres'], { tables: '[postgres]\nfrozen_through = "9"\n' }),
-        'migrations/9_create.sql': 'CREATE TABLE teams (id int);',
-        'migrations/10_secure.sql': 'ALTER TABLE teams ENABLE ROW LEVEL SECURITY;',
+        [`migrations/${prefix}9_create.sql`]: 'CREATE TABLE teams (id int);',
+        [`migrations/${prefix}10_secure.sql`]: 'ALTER TABLE teams ENABLE ROW LEVEL SECURITY;',
     });
     commitAll(sandbox.path);
     await createFileTree(sandbox.path, {
-        'migrations/8_earlier.sql': 'SELECT 8;',
-        'migrations/11_later.sql': 'SELECT 11;',
+        [`migrations/${prefix}8_earlier.sql`]: 'SELECT 8;',
+        [`migrations/${prefix}11_later.sql`]: 'SELECT 11;',
     });
     const session = await openSession(sandbox.path);
     const input = buildCheckInput(session, 'postgres/migration-order');
     const migrations = await migrationsOf(input);
     expect(migrations.map((migration) => migration.version)).toStrictEqual(['8', '9', '10', '11']);
     expect(buildSchema(migrations).secured.has('public.teams')).toBe(true);
-    expect(await migrationOrder(input)).toMatchObject([{ file: 'migrations/8_earlier.sql', rule: 'order' }]);
-    await Bun.write(join(sandbox.path, 'migrations/10_secure.sql'), 'SELECT 10;');
+    expect(await migrationOrder(input)).toMatchObject([{ file: `migrations/${prefix}8_earlier.sql`, rule: 'order' }]);
+    await Bun.write(join(sandbox.path, `migrations/${prefix}10_secure.sql`), 'SELECT 10;');
     expect(
         await migrationsFrozen(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
     ).toStrictEqual([]);
-    await Bun.write(join(sandbox.path, 'migrations/9_create.sql'), 'CREATE TABLE teams (id bigint);');
+    await Bun.write(join(sandbox.path, `migrations/${prefix}9_create.sql`), 'CREATE TABLE teams (id bigint);');
     expect(
         await migrationsFrozen(buildCheckInput(await openSession(sandbox.path), 'postgres/migrations-frozen')),
-    ).toMatchObject([{ file: 'migrations/9_create.sql', rule: 'frozen' }]);
+    ).toMatchObject([{ file: `migrations/${prefix}9_create.sql`, rule: 'frozen' }]);
 });
 
 test('dbmate and golang-migrate replays exclude rollback SQL', async () => {

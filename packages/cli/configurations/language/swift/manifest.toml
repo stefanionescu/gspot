@@ -74,7 +74,7 @@ system = true
 [[tool_file]]
 target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
-rule_keys = ["opt_in_rules", "analyzer_rules", "disabled_rules", "custom_rules"]
+rule_keys = ["opt_in_rules", "analyzer_rules", "disabled_rules"]
 scoped = true
 pointer = { path = ".swiftlint.yml", body = "parent_config: {target_json}\n" }
 
@@ -194,10 +194,3 @@ summary = "The xcodebuild destination."
 [agent_rules]
 "SWIFTUI.md" = { tags = ["swift-import:SwiftUI"] }
 "UIKIT.md" = { tags = ["swift-import:UIKit"] }
-
-[[naming.overrides]]
-paths = ["**"]
-languages = ["swift"]
-categories = ["types"]
-allowed = ["URLSession"]
-reason = "Foundation defines this type name."

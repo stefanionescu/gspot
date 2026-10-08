@@ -22,7 +22,7 @@ export type ForeignKey = Declared & { table: string; column: string };
 export type Migration = {
     path: string;
     name: string;
-    /** The digits that lead the file name; empty when it has none. */
+    /** The leading version digits, after any V prefix; empty when the name has none. */
     version: string;
     text: string;
     statements: SqlStatementView[];

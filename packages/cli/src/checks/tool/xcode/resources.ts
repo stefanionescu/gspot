@@ -66,7 +66,7 @@ export function orphanAssets(input: CheckInput): Finding[] {
             return sourceTexts.every(
                 (text) =>
                     !text.includes(`"${name}"`) &&
-                    !text.includes(`.${camelCase(name.split(NOT_WORD))}`) &&
+                    !text.includes(`.${camelCase(name.replace(/(?:Color|Image)$/u, '').split(NOT_WORD))}`) &&
                     !assignment.test(text),
             );
         })

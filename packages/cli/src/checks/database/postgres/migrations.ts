@@ -2,9 +2,10 @@ import { posix } from 'node:path';
 import { memo } from '#cli/platform/memo.ts';
 import { readSource } from '#cli/platform/source.ts';
 import { parseSqlFile } from '#cli/parsers/sql/statements.ts';
+import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { Migration } from '#cli/types/checks/database/postgres.ts';
-import { MIGRATION_DOWN, MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/config/checks/database/postgres.ts';
+import { MIGRATION_DOWN, MIGRATION_FOLDERS } from '#cli/config/checks/database/postgres.ts';
 
 const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() };
 

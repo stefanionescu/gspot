@@ -1,5 +1,5 @@
 {
-    "openRecords": 777,
+    "openRecords": 761,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 777,
+        "openRecords": 761,
         "records": 1092,
         "batches": [
             {
@@ -1402,8 +1402,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 112,
-                "unresolvedAssignments": 357
+                "completedAssignments": 127,
+                "unresolvedAssignments": 342
             },
             {
                 "id": "scripts-repository",
@@ -1687,8 +1687,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 52,
-                "unresolvedAssignments": 85
+                "completedAssignments": 53,
+                "unresolvedAssignments": 84
             },
             {
                 "id": "policy-file",
@@ -1883,8 +1883,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 46,
-                "unresolvedAssignments": 43
+                "completedAssignments": 47,
+                "unresolvedAssignments": 42
             },
             {
                 "id": "configurations",
@@ -2829,10 +2829,13 @@
             "verification": []
         },
         "areas/integration-tests/066": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Delete the test \"lifecycle ownership: later edits survive both apply and a prune\" at `tests/cli/lifecycle/ownership/conflicts/links.test.ts:122`; it is not about links and repeats `tests/cli/lifecycle/ownership/configuration-preservation.test.ts` and `tests/cli/lifecycle/ownership/conflicts/documents.test.ts:27`.",
+                "Frozen native callback/payload equivalence proof and current Main362/1341 behavior family pass. Windows bytes/removal controls remain registered; only genuine POSIX execution/link modes are gated. Duplicate successful hook repair is covered by the surviving hook case."
+            ]
         },
         "areas/integration-tests/067": {
             "status": "pending",
@@ -8506,16 +8509,22 @@
             ]
         },
         "review/tests-cli/002": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "21 current obsolete/former/removed-format rows deleted from three data owners; generic native unknown-key/schema test retained",
+                "Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass."
+            ]
         },
         "review/tests-cli/003": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Four copied refusal registrations (six actual cases) and two constants deleted; unknown-table refusal and active native Stylelint/Taplo options retained",
+                "Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass."
+            ]
         },
         "review/tests-cli/004": {
             "status": "partial",
@@ -8566,10 +8575,13 @@
             ]
         },
         "review/tests-cli/009": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Versions derive from toolPin; native ok/newer/outdated observations execute actual library inspection. npm sets/counts derive from Files tools plus the actual Format ec consumer; Python count derives from actual Python pypi declarations. Independent applicability/absence assertions retained. Doctor host case explicitly selects current Xcode owner.",
+                "Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass."
+            ]
         },
         "review/tests-cli/010": {
             "status": "partial",
@@ -8716,10 +8728,13 @@
             ]
         },
         "review/tests-cli/024": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Entire two-case gspot drift owner and sole static mirror moved into tools; native manager/uv lock remains there",
+                "Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass."
+            ]
         },
         "review/tests-cli/026": {
             "status": "complete",
@@ -8731,16 +8746,22 @@
             ]
         },
         "review/tests-cli/027": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Current CLI hooks owner contains no native Taplo formatting setup; no authored edit.",
+                "Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass."
+            ]
         },
         "review/tests-cli/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Both named automation command test and config mirror are physically absent; no authored edit.",
+                "Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass."
+            ]
         },
         "review/tests-cli/029": {
             "status": "complete",
@@ -8868,10 +8889,13 @@
             ]
         },
         "review/tests-cli/044": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Obsolete library conventions mirror/central descriptor deleted; distinct ordinary pgTable source, correction and expected line9 metadata retained in actual Drizzle owner with all five public failed-code/status/finding/passed-code/status assertions; named-schema and migration failure/staleness coverage unchanged.",
+                "Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass."
+            ]
         },
         "review/tests-cli/045": {
             "status": "partial",
@@ -8917,10 +8941,13 @@
             "remaining": ["Mandatory staged check and coherent mechanical/behavior commits, push, CI evidence."]
         },
         "review/tests-cli/048": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Two prescribed duplicated suppression/folder registrations deleted; native analyses split into config-logic, large-files and vacated flat gspot test. Six newer authored-path cases and explicit1KB oversized/declared/small vectors remain exact. Shared literal policy moves into samples/structure for two real callers.",
+                "Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass."
+            ]
         },
         "review/tests-cli/049": {
             "status": "partial",
@@ -9604,10 +9631,13 @@
             ]
         },
         "review/tests-cli/111": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Eight current copied scope rows derive from root rows in actual test registration; all18 original names/inputs/property presence/order/undefined/validity/diagnostics proven equal, root-only words rows remain root-only.",
+                "Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass."
+            ]
         },
         "review/tests-cli/112": {
             "status": "partial",
@@ -10172,10 +10202,13 @@
             "verification": []
         },
         "review/tests-layout/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Schema test, five actual current consumed static mirrors and type mirror moved to policy/schema owners. Later W3 tools/exceptions controls remain.",
+                "Current Main362 CLI cases1341 assertions across17 owners, root types0, policy ESLint0; mechanical move checkpoint0e2caafb0 precedes behavior. Distinct retained counterpart controls and two native drift cases pass."
+            ]
         },
         "review/tests-layout/032": {
             "status": "complete",
@@ -12374,10 +12407,13 @@
             "verification": []
         },
         "slices/tests-integration-lifecycle/007": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "In the table at `tests/cli/lifecycle/hooks.test.ts:59`, add a `gitHook: true` column to the row that plants `.git/hooks/pre-commit`, and delete the hidden switch `Object.keys(files).length === 0` at `:68-71`.",
+                "Frozen native callback/payload equivalence proof and current Main362/1341 behavior family pass. Windows bytes/removal controls remain registered; only genuine POSIX execution/link modes are gated. Duplicate successful hook repair is covered by the surviving hook case."
+            ]
         },
         "slices/tests-integration-lifecycle/010": {
             "status": "partial",
@@ -12396,10 +12432,13 @@
             ]
         },
         "slices/tests-integration-lifecycle/012": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Move the hook-script test at `tests/cli/lifecycle/installer-failures.test.ts:157-188` to `tests/cli/lifecycle/hooks.test.ts`, use `test.skipIf(!isPosix)` instead of the `if (isPosix)` block, and delete the repair-and-rerun at `:183-186`.",
+                "Frozen native callback/payload equivalence proof and current Main362/1341 behavior family pass. Windows bytes/removal controls remain registered; only genuine POSIX execution/link modes are gated. Duplicate successful hook repair is covered by the surviving hook case."
+            ]
         },
         "slices/tests-integration-lifecycle/013": {
             "status": "partial",
@@ -12448,22 +12487,31 @@
             ]
         },
         "slices/tests-integration-lifecycle/018": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "Replace the bare `.toThrow()` at `tests/cli/lifecycle/ownership/conflicts/documents.test.ts:18` with `.toThrow('broken.toml')`; the source names the file (`packages/cli/src/parsers/toml/document.ts:82`).",
+                "Frozen native callback/payload equivalence proof and current Main362/1341 behavior family pass. Windows bytes/removal controls remain registered; only genuine POSIX execution/link modes are gated. Duplicate successful hook repair is covered by the surviving hook case."
+            ]
         },
         "slices/tests-integration-lifecycle/019": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "In `tests/cli/lifecycle/ownership/conflicts/links.test.ts:83-193`, replace the `if (isPosix)` block with `test.skipIf(!isPosix)` on the link test (`:84`) and on the `mode` row only. Move the stale-read test (`:156`) to `tests/cli/lifecycle/ownership/conflicts/plans.test.ts`, with each row's file change as a function in the row. The test at `:122` is deleted by `areas/integration-tests/066`.",
+                "Frozen native callback/payload equivalence proof and current Main362/1341 behavior family pass. Windows bytes/removal controls remain registered; only genuine POSIX execution/link modes are gated. Duplicate successful hook repair is covered by the surviving hook case."
+            ]
         },
         "slices/tests-integration-lifecycle/020": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "verification": [
+                "At `tests/cli/lifecycle/ownership/conflicts/links.test.ts:92-105`, assert the refusal text for `../outside` instead of a bare `.toThrow()`, and delete the unrelated replacement at `:109-118`.",
+                "Frozen native callback/payload equivalence proof and current Main362/1341 behavior family pass. Windows bytes/removal controls remain registered; only genuine POSIX execution/link modes are gated. Duplicate successful hook repair is covered by the surviving hook case."
+            ]
         },
         "slices/tests-integration-lifecycle/021": {
             "status": "pending",
@@ -15907,6 +15955,34 @@
             ],
             "limitations": [
                 "Linux and Windows native tutorial/platform acceptance and final whole-suite/release acceptance remain outstanding."
+            ]
+        },
+        {
+            "commit": "294e6c9da19ffc0cfc02c581522e818a4b81b77a",
+            "completedRecords": [
+                "review/tests-cli/002",
+                "review/tests-cli/003",
+                "review/tests-cli/009",
+                "review/tests-cli/024",
+                "review/tests-cli/027",
+                "review/tests-cli/028",
+                "review/tests-cli/044",
+                "review/tests-cli/048",
+                "review/tests-cli/111",
+                "review/tests-layout/031",
+                "slices/tests-integration-lifecycle/007",
+                "slices/tests-integration-lifecycle/012",
+                "slices/tests-integration-lifecycle/018",
+                "slices/tests-integration-lifecycle/019",
+                "slices/tests-integration-lifecycle/020",
+                "areas/integration-tests/066"
+            ],
+            "unresolvedRecords": 761,
+            "validation": [
+                "Current Main362pass1341assertions17files34.03s; native clean TypeScript V8r1pass; root typecheck, actual ESLint, generated freshness, format and staged checks."
+            ],
+            "limitations": [
+                "Tests-cli006 Python independent inventories and056 full scoped/license equivalence remain partial. Cross-platform and full-suite acceptance remain outstanding."
             ]
         }
     ],

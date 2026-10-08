@@ -6,10 +6,6 @@ export const CONSTRAINT_SUFFIXES: Record<string, string> = { CONSTR_PRIMARY: 'pk
 
 export const PUBLIC_SCHEMA = 'public';
 
-export const FROZEN_NONE = 'none';
-
-export const FROZEN_ALL = 'all';
-
 export const MIGRATION_STATEMENTS: Record<string, MigrationStatement> = {
     CreateSchemaStmt: { section: 'Schema', words: 'CREATE SCHEMA' },
     CreateStmt: { section: 'Tables', words: 'CREATE TABLE' },
@@ -33,8 +29,6 @@ export const BLOCK_REACH = 12;
 export const DOC_SEPARATOR = '-- ============================================================================';
 
 export const MIGRATION_FOLDERS = ['supabase/migrations', 'db/migrations', 'migrations'];
-
-export const MIGRATION_VERSION = /^(?<version>\d+)/u;
 
 /** The down section begins on its own SQL comment line. */
 export const MIGRATION_DOWN = /^[\t ]*--[\t ]*migrate:down\b/mu;

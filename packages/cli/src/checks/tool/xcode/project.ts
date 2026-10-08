@@ -26,32 +26,24 @@ function projectFolder(projectFile: string): string {
 export function orphanSources(input: CheckInput): Finding[] {
     const projects = scopeSourcesByEnding(input, [XCODE_PROJECT_FILE]).map((path) => ({
         path,
-        ...readPbxproj(
-            readSource(input.root, path, input.reads).toString('utf8'),
-            posix.join(input.root, projectFolder(path)),
-        ),
+        ...readPbxproj(readSource(input.root, path, input.reads).toString('utf8'), projectFolder(path)),
     }));
     if (projects.length === 0) return [];
     const references = projects.flatMap((project) =>
         [...project.sources].map((source) => ({
             project: project.path,
-            path: posix.relative(input.root, source),
+            path: source,
         })),
     );
     const referenced = new Set(references.map(({ path }) => path));
-    const synced = projects
-        .flatMap((project) => project.folders)
-        .map(({ path, excluded }) => ({
-            prefix: `${posix.relative(input.root, path)}/`.replace(/^\//u, ''),
-            excluded: new Set([...excluded].map((source) => posix.relative(input.root, source))),
-        }));
+    const folders = projects.flatMap((project) => project.folders);
     const tree = scopeSourcesByEnding(input, ['.swift']).filter((file) => posix.basename(file) !== 'Package.swift');
     const inTree = new Set(tree);
     const untargeted = tree
         .filter(
             (file) =>
                 !referenced.has(file) &&
-                synced.every(({ prefix, excluded }) => !file.startsWith(prefix) || excluded.has(file)),
+                folders.every(({ path, excluded }) => !file.startsWith(path) || excluded.has(file)),
         )
         .map((file) =>
             findingAt(input, { file, line: 1 }, 'untargeted', 'This Swift file is in no target of the project.'),
