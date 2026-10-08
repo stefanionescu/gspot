@@ -90,3 +90,35 @@ export const COVERAGE_PLUGIN_CASES = [
     ['vitest', 'all', 'statements'],
     ['vitest', 'all', 'zero'],
 ] as const;
+
+/** Pushed checks selected by name still use native history metadata. */
+export const HISTORY_TABLES = '[scope."app"]\nconfigurations = ["commits", "secrets"]\n';
+
+/** A configuration-owned history check need not use one of the former fixed names. */
+export const HISTORY_MANIFEST = `
+[configuration]
+title = "Sandbox"
+description = "Checks pushed history."
+[[check]]
+name = "pushed"
+title = "Check pushed history"
+example = "A selected commit activates the check even when no source path changes."
+level = "recommended"
+stage = "push"
+runs = "history"
+command = ["git", "log"]
+summary = "Checks the selected pushed history."
+why = "Each pushed commit remains in the repository."
+help = "Read the selected commits."
+[[check]]
+name = "once"
+title = "Check once"
+example = "An empty source selection leaves this check inactive."
+level = "recommended"
+stage = "push"
+runs = "once"
+command = ["git", "log"]
+summary = "Checks the project once."
+why = "The project needs one check."
+help = "Read the project."
+`;

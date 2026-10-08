@@ -74,3 +74,15 @@ export function buildRunReport(input: ReportInput): RunReport {
     };
     return report;
 }
+
+/**
+ * Start a repository history check, or keep its no-Git diagnostic.
+ * @param session the repository being checked
+ * @param planned the selected history check
+ * @param note the diagnostic when the repository has no Git history
+ * @returns the empty history result or its readiness refusal
+ */
+export function historyResult(session: ToolSession, planned: PlannedCheck, note: string): CheckResult {
+    const result = { ...emptyResult(planned), fileCount: 0 };
+    return session.repository.hasGit ? result : { ...result, status: 'skipped', note };
+}

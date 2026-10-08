@@ -3,6 +3,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/platform/public.ts';
 import { decodeUtf8 } from '#cli/platform/contracts.ts';
 import { writeFileSync, appendFileSync } from 'node:fs';
+import { historyResult } from '#cli/execution/report.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { readSource } from '#cli/platform/root/public.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
@@ -16,8 +17,8 @@ import { runGit, runGitBinary } from '#cli/platform/git/public.ts';
 import type { SecretScan } from '#cli/types/checks/general/secrets.ts';
 import { extensionsTagged } from '#cli/repository/discovery/contracts.ts';
 import { fileBatches } from '#cli/execution/command/arguments/contracts.ts';
-import { getBlobs, getPushBase } from '#cli/repository/revisions/public.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
+import { getBlobs, getPushBase, pushedCommits } from '#cli/repository/revisions/public.ts';
 
 import {
     DIFF_TREE,
@@ -28,16 +29,6 @@ import {
     RAW_CHANGE_FIELDS,
     GITLEAKS_LOG_OPTIONS,
 } from '#cli/config/checks/general/secrets.ts';
-
-// The commits under review: the ones the run supplies, or every commit after the push base.
-async function scannedCommits(session: ToolSession, planned: PlannedCheck): Promise<string[] | undefined> {
-    if (planned.commits !== undefined) return planned.commits;
-    const base = await getPushBase(session.root, session.cancelSignal);
-    const listed = await runGit(session.root, ['rev-list', `${base}..HEAD`, '--'], {
-        cancelSignal: session.cancelSignal,
-    });
-    return listed.code === 0 ? listed.stdout.split('\n').filter(Boolean) : undefined;
-}
 
 // The NUL-separated fields of a commit's raw change list, which must be UTF-8 and complete.
 async function changeFields(session: ToolSession, commit: string): Promise<string[]> {
@@ -121,16 +112,8 @@ async function scanCommits(session: ToolSession, planned: PlannedCheck, commits:
  */
 export async function gitleaksPushed(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
-    const result: CheckResult = {
-        check: planned.check.name,
-        scope: planned.scope.scope.path,
-        status: 'passed',
-        fileCount: 0,
-        findings: [],
-        duration: 0,
-    };
-    if (!session.repository.hasGit)
-        return { ...result, status: 'skipped', note: 'Secret history requires a Git repository.' };
+    const result = historyResult(session, planned, 'Secret history requires a Git repository.');
+    if (result.status === 'skipped') return result;
     const command = [
         'gitleaks',
         'git',
@@ -191,18 +174,10 @@ export function envFiles(input: CheckInput): Finding[] {
  */
 export async function trufflehog(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const started = performance.now();
-    const base: CheckResult = {
-        check: planned.check.name,
-        scope: planned.scope.scope.path,
-        status: 'passed',
-        fileCount: 0,
-        findings: [],
-        duration: 0,
-    };
-    if (!session.repository.hasGit)
-        return { ...base, status: 'skipped', note: 'Verified secret history requires a Git repository.' };
-    const commits = await scannedCommits(session, planned);
-    if (commits === undefined)
+    const base = historyResult(session, planned, 'Verified secret history requires a Git repository.');
+    if (base.status === 'skipped') return base;
+    const commits = await pushedCommits(session.root, planned.commits, session.cancelSignal);
+    if (!Array.isArray(commits))
         return { ...base, status: 'error', note: 'Cannot select commits for verified secret scanning.' };
     if (commits.length === 0) return { ...base, note: 'No selected commits to scan.' };
     const result = await scanCommits(session, planned, commits);

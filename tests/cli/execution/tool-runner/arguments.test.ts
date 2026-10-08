@@ -17,7 +17,7 @@ test('Batched tool invocations preserve spaced Unicode file arguments', async ()
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'echo.cjs': 'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
-        'node_modules/.bin/echo.cmd': '@echo off\r\nnode "%~dp0..\\..\\echo.cjs" %*\r\n',
+        'node_modules/.bin/echo.cmd': `@echo off\r\n"${process.execPath}" "%~dp0..\\..\\echo.cjs" %*\r\n`,
     });
     const fixed =
         process.platform === 'win32'

@@ -7,8 +7,8 @@ import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
 import { readIndexEntries } from '#cli/repository/contracts.ts';
 import { WORKTREE_DIFF_ARGV } from '#cli/config/repository/revisions.ts';
-import type { Revision, StagedPaths, ChangedPaths } from '#cli/types/repository/revisions.ts';
 import { parseGitBlobs, parseGitEntries, parseIndexRevision } from '#cli/parsers/contracts.ts';
+import type { Revision, StagedPaths, ChangedPaths, CommitSelection } from '#cli/types/repository/revisions.ts';
 import { runGit, gitText, gitLines, gitPaths, isShallow, streamGit, runGitBinary } from '#cli/platform/git/public.ts';
 
 // The remote HEAD symrefs, as pairs of the ref name and the branch it points to.
@@ -191,4 +191,25 @@ export async function getHeadEntries(root: string, cancelSignal?: AbortSignal): 
     const refs = await runGit(root, ['for-each-ref', '--format=%(refname)', '--', symbolic.stdout.trim()], options);
     if (refs.code === 0 && refs.stdout.trim() === '' && refs.stderr.trim() === '') return [];
     throw failure;
+}
+
+/**
+ * The supplied pushed commits, or the commits after the native push base.
+ * @param root the repository root
+ * @param commits the explicit selection when supplied
+ * @param cancelSignal cancellation for the Git commands
+ * @returns the exact selected commits or the Git selection error
+ */
+export async function pushedCommits(
+    root: string,
+    commits: string[] | undefined,
+    cancelSignal?: AbortSignal,
+): Promise<CommitSelection> {
+    if (commits !== undefined) return commits;
+    const base = await getPushBase(root, cancelSignal);
+    const listed = await runGit(root, ['rev-list', `${base}..HEAD`, '--'], {
+        cancelSignal,
+    });
+    if (listed.code !== 0) return { error: `Cannot select commit messages: ${listed.stderr.trim()}` };
+    return listed.stdout.split('\n').filter(Boolean);
 }

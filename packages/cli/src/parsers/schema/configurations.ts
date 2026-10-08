@@ -127,7 +127,7 @@ const checkFields = z.strictObject({
     name: z.string().regex(/^[a-z0-9-]+$/),
     level: levelSchema,
     stage: checkStageSchema,
-    runs: z.enum(['files', 'scope', 'once']).default('files'),
+    runs: z.enum(['files', 'scope', 'once', 'history']).default('files'),
     command: commandSchema.optional(),
     generated_paths: z
         .array(

@@ -43,7 +43,7 @@ title = "Check pushed commit messages"
 example = "A new commit with message `changed stuff` causes the checked range to fail its message rules. Reword that commit to an accepted message such as `fix(cli): report missing configuration`. Rewriting commits changes their IDs; coordinate before rewriting shared history."
 level = "all"
 stage = "push"
-runs = "once"
+runs = "history"
 tool = "commitlint"
 output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
 summary = "Checks the message of every commit the push sends. Run by hand, it checks every commit from the upstream merge base to HEAD."

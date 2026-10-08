@@ -1,12 +1,12 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 // Tool requirements derived from the same applicable check plan used by execution.
+import { COVERAGE_FLAGS } from '#cli/config/planning.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import { everyManifest } from '#cli/configurations/public.ts';
 import { ownedBy } from '#cli/repository/selection/public.ts';
 import { GspotError, hostPlatform } from '#cli/platform/public.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { COVERAGE_FLAGS, HISTORY_CHECKS } from '#cli/config/planning.ts';
 import { declaredArchitectures } from '#cli/policy/settings/contracts.ts';
 import { filesFor, runsAtRoot, childScopes } from '#cli/planning/files.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
@@ -107,7 +107,7 @@ function planScope(context: PlanInputs, wholeSeen: Set<string>): PlannedCheck[] 
     );
     for (const entry of entries) {
         if (!isWanted(entry.check, context.options)) continue;
-        const isRootCheck = entry.check.runs === 'once';
+        const isRootCheck = entry.check.runs === 'once' || entry.check.runs === 'history';
         if (isRootCheck && wholeSeen.has(entry.check.name)) continue;
         if (isRootCheck) wholeSeen.add(entry.check.name);
         planned.push(planOne(context, entry, isRootCheck));
@@ -149,7 +149,7 @@ export function isActive(check: PlannedCheck): boolean {
         check.files.length > 0 ||
         check.triggerPaths.length > 0 ||
         check.check.stage === 'message' ||
-        (HISTORY_CHECKS.has(check.check.name) && (check.commits?.length ?? 0) > 0)
+        (check.check.runs === 'history' && (check.commits?.length ?? 0) > 0)
     );
 }
 
@@ -187,9 +187,7 @@ export function ownedInputs(session: Session, check: PlannedCheck): TrackedFile[
 export function planRun(session: Session, options: PlanOptions): PlannedCheck[] {
     const checks = planScopes(session, options).flatMap((planned) => skipReplacedChecks(planned));
     if (options.historyComplete === false) {
-        const historyChecks = checks.filter(
-            (check) => check.skip === undefined && HISTORY_CHECKS.has(check.check.name),
-        );
+        const historyChecks = checks.filter((check) => check.skip === undefined && check.check.runs === 'history');
         if (historyChecks.length > 0)
             throw new GspotError('selection', [
                 `Pushed history is incomplete for ${historyChecks.map((check) => check.check.name).join(', ')}. Run git fetch --unshallow and retry.`,

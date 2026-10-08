@@ -85,7 +85,7 @@ test('a commit in a linked worktree runs staged checks and blocks a finding', as
     using _environment = useEnvironment(environment);
     const applied = await runGspot(main, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const formatted = await runGspot(main, ['check', '--only', 'files/taplo-format', '--fix']);
+    const formatted = await runGspot(main, ['check', '--only', 'gspot/policy-layout', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     const prepared = await runGspot(main, ['install'], registry.environment);
     expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
@@ -129,7 +129,7 @@ command = ${JSON.stringify([process.execPath, '-e', INDEX_COMMAND])}
     await using registry = await createInstallationRegistry(project, runTestCommand);
     const applied = await runGspot(project, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const formatted = await runGspot(project, ['check', '--only', 'files/taplo-format', '--fix']);
+    const formatted = await runGspot(project, ['check', '--only', 'gspot/policy-layout', '--fix']);
     expect(formatted.code, formatted.stdout + formatted.stderr).toBe(0);
     const installed = await runGspot(project, ['install'], registry.environment);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);

@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { gitOutput } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { unlink, symlink } from 'node:fs/promises';
@@ -10,14 +11,17 @@ import { buildInitOptions } from '#tests/harness/init.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
+import { parseManifest, linkManifestTools } from '#cli/configurations/public.ts';
 import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
-import { planRun, checkCompanions, requiredToolNames, applicableManifests } from '#cli/planning/public.ts';
+import { planRun, isActive, checkCompanions, requiredToolNames, applicableManifests } from '#cli/planning/public.ts';
 
 import {
     HOOK_STAGES,
     LINK_POLICY,
     POLICY_PATHS,
+    HISTORY_TABLES,
     AUTOMATIC_CHECKS,
+    HISTORY_MANIFEST,
     HOOK_STAGE_FILES,
     NEXT_BUILD_FILES,
     HOOK_STAGE_CHECKS,
@@ -229,3 +233,49 @@ test.each([...COVERAGE_PLUGIN_CASES])(
         ).toBe(dimension !== 'zero');
     },
 );
+
+test.each(['recommended', 'all'] as const)('%s plans declared history once without source triggers', async (level) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['commits', 'secrets'], { level, tables: HISTORY_TABLES }),
+        'source.txt': 'Root source.\n',
+        'app/source.txt': 'Child source.\n',
+    });
+    gitOutput(sandbox.path, ['init']);
+    const opened = await openSession(sandbox.path);
+    const manifest = linkManifestTools([parseManifest(HISTORY_MANIFEST, 'configurations/general/sandbox')]).get(
+        'sandbox',
+    )!;
+    const session = {
+        ...opened,
+        scopes: opened.scopes.map((scope) => ({ ...scope, selected: [...scope.selected, manifest] })),
+    };
+    const names = [
+        ...(level === 'all' ? ['commits/commitlint-pushed'] : []),
+        'secrets/gitleaks-pushed',
+        'secrets/trufflehog',
+        'sandbox/pushed',
+    ];
+    const planned = planRun(session, {
+        stage: 'push',
+        skips: [],
+        only: [...names, 'sandbox/once'],
+        staged: [],
+        commits: ['selected'],
+    });
+    expect(planned.filter((check) => check.check.runs === 'history').map((check) => check.check.name)).toStrictEqual(
+        names,
+    );
+    expect(planned.map((check) => check.scope.scope.path)).toStrictEqual([...names.map(() => ''), '']);
+    expect(planned.map((check) => isActive(check))).toStrictEqual([...names.map(() => true), false]);
+    expect(
+        planRun(session, { stage: 'push', skips: [], only: names, staged: [], commits: [] }).map((check) =>
+            isActive(check),
+        ),
+    ).toStrictEqual(names.map(() => false));
+    expect(() =>
+        planRun(session, { stage: 'push', skips: [], only: ['sandbox/pushed'], historyComplete: false }),
+    ).toThrow('Pushed history is incomplete for sandbox/pushed');
+    expect(planRun(session, { stage: 'push', skips: [], only: ['sandbox/once'], historyComplete: false })).toHaveLength(
+        1,
+    );
+});
