@@ -14,7 +14,6 @@ mise = "ast-grep"
 brew = "ast-grep"
 cargo = "ast-grep"
 github = { name = "ast-grep/ast-grep", version = "0.45.3" }
-replaces = [".qlty"]
 
 [[check]]
 name = "lone-files"
@@ -268,7 +267,7 @@ name = "limits.prefix_collisions"
 type = "number"
 direction = "ceiling"
 default = 2
-summary = "How many sibling files may share a name prefix before it is a finding."
+summary = "The number of siblings sharing a name prefix that makes a finding."
 
 [[setting]]
 name = "limits.min_function_statements"

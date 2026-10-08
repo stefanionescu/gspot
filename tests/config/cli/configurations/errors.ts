@@ -43,6 +43,4 @@ pointer = { path = "eslint.config.mjs", body = "export { default } from {target_
 selectors = [{ selector = "ExportAllDeclaration", message = "Import from the declaration.", when = { setting = "structure.reexports", value = "none" } }]
 `;
 
-export const ROOT_SELECTOR_REFUSALS = [
-    ['imports = "eslint.imports.js.eta"', 'declares imports, which only a fragment renders.'],
-] as const;
+export const ROOT_SELECTOR_REFUSALS = [['imports = "eslint.imports.js.eta"', 'Unrecognized key: "imports"']] as const;

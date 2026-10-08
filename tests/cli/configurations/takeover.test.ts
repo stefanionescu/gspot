@@ -60,6 +60,15 @@ for (const value of PACKAGE_HOOK_CONFIGURATIONS)
         ]);
     });
 
+test('ast-grep adoption preserves a Qlty configuration', async () => {
+    await using sandbox = await testdir();
+    const source = 'foreign_tool = true\n';
+    await createFileTree(sandbox.path, { '.qlty': source });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    expect(getTooling(sandbox.path, repository.files, []).toolFiles).toStrictEqual([]);
+    expect(await readFile(join(sandbox.path, '.qlty'), 'utf8')).toBe(source);
+});
+
 test('pre-commit is detected from its native configuration', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { '.pre-commit-config.yaml': 'repos: []\n' });

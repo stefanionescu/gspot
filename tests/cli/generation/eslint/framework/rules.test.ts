@@ -72,7 +72,7 @@ test.each([
     async (framework, library, version) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `level = "all"\nconfigurations = ["javascript", "${framework}"]\n[agent_rules]\nenabled = false\n`,
+            'gspot.toml': `level = "all"\nconfigurations = ["javascript", "${framework}", "testing-library"]\n[agent_rules]\nenabled = false\n`,
             'package.json': JSON.stringify({
                 name: 'example',
                 private: true,
@@ -97,7 +97,7 @@ test.each(['react', 'vue', 'svelte'])(
     async (framework) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': `configurations = ["${framework}"]\n[scope.child]\nconfigurations = ["${framework}"]\n`,
+            'gspot.toml': `configurations = ["${framework}", "testing-library"]\n[scope.child]\nconfigurations = ["${framework}", "testing-library"]\n`,
             'package.json': JSON.stringify({
                 private: true,
                 dependencies: { [`@testing-library/${framework}`]: '1.0.0' },

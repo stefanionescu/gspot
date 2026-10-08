@@ -1,3 +1,5 @@
+import tseslint from 'typescript-eslint';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 <% const presets = eslintPresets('typescript'); for (const [index, { parser, ...block }] of presets.strict.blocks.entries()) { %>
 <%~ eslintModule.block({ ...block, files: parser ? eslintFiles.typescriptSource : eslintFiles.typescript }, `...tseslint.configs.strictTypeChecked[${index}]`) %>,
 <% } const projects = ['tsconfig.json', ...scopes.filter((scope) => scope.path !== '').map((scope) => `${scope.path}/tsconfig.json`)]; const rules = {

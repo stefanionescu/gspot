@@ -1,1 +1,2 @@
+import jest from 'eslint-plugin-jest';
 <%~ eslintModule.block({ files: test_files, rules: { ...Object.fromEntries(testRuleNames.filter((name) => isAll || name !== 'prefer-strict-equal').map((name) => [`jest/${name}`, 'error'])), 'jest/valid-expect': ['error', { maxArgs: 1 }] } }, `plugins: { jest }, languageOptions: { globals: jest.environments.globals.globals }, settings: { jest: { globalPackage: '@jest/globals' } }`) %>,

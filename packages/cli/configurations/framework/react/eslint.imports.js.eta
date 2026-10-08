@@ -1,4 +1,0 @@
-import reactHooks from 'eslint-plugin-react-hooks';
-import react from 'eslint-plugin-react';
-import reactRefresh from 'eslint-plugin-react-refresh';
-import testingLibrary from 'eslint-plugin-testing-library';

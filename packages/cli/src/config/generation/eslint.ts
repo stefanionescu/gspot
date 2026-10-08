@@ -1,4 +1,4 @@
-import type { EslintPresetSources, EslintBoundaryPolicy, EslintDependencyNode } from '#cli/types/generation/eslint.ts';
+import type { EslintBoundaryPolicy, EslintDependencyNode } from '#cli/types/generation/eslint.ts';
 
 /** Mise task files use the script runtime and process rules. */
 export const MISE_SCRIPT_PATH = '.mise/tasks/**';
@@ -10,53 +10,6 @@ export const ESLINT_RULE_NAMES_MODULE = 'eslint/use-at-your-own-risk';
 /** Runtime names captured from the declared native globals package. */
 export const ESLINT_RUNTIME_NAMES_FILE = 'configurations/language/javascript/runtime-names.json';
 export const ESLINT_RUNTIME_NAMES_MODULE = 'globals';
-
-/** Installed preset sources whose rule and file data is shipped with its owning configuration. */
-export const ESLINT_PRESET_SOURCES: EslintPresetSources = {
-    javascript: {
-        eslint: ['@eslint/js', 'configs.recommended'],
-        sonar: ['eslint-plugin-sonarjs', 'configs.recommended'],
-        unicorn: ['eslint-plugin-unicorn', 'configs.recommended'],
-        packageJson: ['eslint-plugin-package-json', 'configs.recommended'],
-        prettier: ['eslint-config-prettier', ''],
-        gspot: ['@gspothq/eslint-plugin', 'configs.recommended'],
-    },
-    typescript: {
-        strict: ['typescript-eslint', 'configs.strictTypeChecked'],
-        untyped: ['typescript-eslint', 'configs.disableTypeChecked'],
-    },
-    react: {
-        recommended: ['eslint-plugin-react', 'configs.flat.recommended'],
-        jsx: ['eslint-plugin-react', 'configs.flat.jsx-runtime'],
-        hooks: ['eslint-plugin-react-hooks', 'configs.flat.recommended-latest'],
-        refresh: ['eslint-plugin-react-refresh', 'configs.recommended'],
-        testing: ['eslint-plugin-testing-library', 'configs.flat/react'],
-    },
-    'react-dom': { accessibility: ['eslint-plugin-jsx-a11y', 'flatConfigs.recommended'] },
-    vue: {
-        recommended: ['eslint-plugin-vue', 'configs.flat/recommended'],
-        accessibility: ['eslint-plugin-vuejs-accessibility', 'configs.flat/recommended'],
-        testing: ['eslint-plugin-testing-library', 'configs.flat/vue'],
-    },
-    svelte: {
-        recommended: ['eslint-plugin-svelte', 'configs.recommended'],
-        testing: ['eslint-plugin-testing-library', 'configs.flat/svelte'],
-    },
-    astro: {
-        recommended: ['eslint-plugin-astro', 'configs.flat/recommended'],
-        accessibility: ['eslint-plugin-astro', 'configs.flat/jsx-a11y-recommended'],
-    },
-    nextjs: {
-        recommended: ['@next/eslint-plugin-next', 'configs.core-web-vitals'],
-        refresh: ['eslint-plugin-react-refresh', 'configs.next'],
-    },
-    nestjs: {
-        recommended: ['@darraghor/eslint-plugin-nestjs-typed', 'configs.flatRecommended'],
-        noSwagger: ['@darraghor/eslint-plugin-nestjs-typed', 'configs.flatNoSwagger'],
-    },
-    'tanstack-query': { recommended: ['@tanstack/eslint-plugin-query', 'configs.flat/recommended'] },
-    vitest: { recommended: ['@vitest/eslint-plugin', 'configs.recommended'] },
-};
 
 /** Test correctness rules shared by the two native test plugins, without their namespace. */
 export const TEST_RULE_NAMES = [

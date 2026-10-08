@@ -25,6 +25,7 @@ import type {
     SettingMeaning,
     CheckDeclaration,
     SettingDeclaration,
+    ManifestDeclaration,
     UnknownConfiguration,
     ConfigurationDeclaration,
 } from '#cli/types/configurations.ts';
@@ -270,12 +271,7 @@ export function manifestErrors(raw: ParsedManifest, text: string): string[] {
     const checks = raw.checks.flatMap((check) =>
         CHECK_RULES.filter((rule) => rule.applies(check)).map((rule) => rule.error(check)),
     );
-    const fragments = raw.toolFiles.flatMap((config) =>
-        config.imports !== undefined && !config.fragment
-            ? [`config ${config.target} declares imports, which only a fragment renders.`]
-            : [],
-    );
-    const declarations = [...manifestTableErrors(text), ...checks, ...fragments];
+    const declarations = [...manifestTableErrors(text), ...checks];
     const readers = toolFileReaders(raw.checks);
     // Built-in checks read assets in source; command placeholders cannot prove which configs they use.
     if (raw.checks.some((check) => check.command === undefined)) return declarations;
@@ -297,13 +293,30 @@ export function manifestErrors(raw: ParsedManifest, text: string): string[] {
 }
 
 /**
+ * Indexes complete tool declarations and refuses independent declarations of the same tool.
+ * @param manifests the parsed or resolved configuration declarations
+ * @returns the canonical tools by name
+ */
+export function declaredTools(manifests: Iterable<ManifestDeclaration>): Map<string, ToolPin> {
+    const tools = new Map<string, ToolPin>();
+    for (const manifest of manifests)
+        for (const tool of manifest.tools.filter((entry) => typeof entry !== 'string')) {
+            const previous = tools.get(tool.name);
+            if (previous !== undefined && previous !== tool)
+                throw manifestError(manifest.configuration.name, [`tool ${tool.name} is already declared.`]);
+            tools.set(tool.name, tool);
+        }
+    return tools;
+}
+
+/**
  * Refuses missing requirements, invalid tool pins, undeclared defaults, conflicting settings,
  * invalid check replacements, missing rule assets, and commands that read settings without waiting for them.
  * @param manifests every manifest by name
  */
 export function assertManifests(manifests: Map<string, Manifest>): void {
     const entries = [...manifests.values()];
-    const tools = new Map(entries.flatMap((manifest) => manifest.tools.map((tool) => [tool.name, tool] as const)));
+    const tools = declaredTools(entries);
     const ownedChecks = allChecks(entries);
     const checks: Map<string, CheckDeclaration> = new Map([...ownedChecks].map(([name, { check }]) => [name, check]));
     const settings: Map<string, SettingDeclaration> = new Map(

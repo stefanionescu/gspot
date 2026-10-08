@@ -1,3 +1,5 @@
+eslint_presets = { accessibility = { package = "eslint-plugin-jsx-a11y", source = "flatConfigs.recommended" } }
+
 [configuration]
 title = "React DOM"
 requires = ["react"]
@@ -11,10 +13,3 @@ name = "eslint-plugin-jsx-a11y"
 kind = "library"
 version = "6.10.2"
 npm = "eslint-plugin-jsx-a11y"
-
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true

@@ -1,1 +1,2 @@
+import zodPlugin from 'eslint-plugin-zod';
 <%~ eslintModule.block({ files: eslintFiles.code, rules: Object.fromEntries(['no-any-schema', 'no-coerce-boolean', 'no-empty-custom-schema', 'no-native-enum', 'no-promise-schema', 'no-throw-in-refine', 'prefer-strict-object', 'prefer-meta-last', 'require-brand-type-parameter'].map((rule) => [`zod/${rule}`, 'error'])) }, 'plugins: { zod: zodPlugin }') %>,

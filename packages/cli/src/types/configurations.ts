@@ -62,11 +62,14 @@ export type SettingDeclaration = Defined<ParsedManifest['settings'][number]>;
 
 export type FileMatch = ParsedManifest['files'];
 
-export type Manifest = Omit<ParsedManifest, 'checks' | 'settings'> & {
+export type ManifestDeclaration = Omit<ParsedManifest, 'checks' | 'settings'> & {
     checks: CheckDeclaration[];
     settings: SettingDeclaration[];
     dir: string;
 };
+
+/** A registry entry whose named tool references have been resolved. */
+export type Manifest = Omit<ManifestDeclaration, 'tools'> & { tools: ToolPin[] };
 
 /** The process-owned cache of shipped configuration declarations. */
 export type ManifestCache = { cache: Map<string, Manifest> | undefined };

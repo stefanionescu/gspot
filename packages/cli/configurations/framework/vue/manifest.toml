@@ -1,3 +1,25 @@
+eslint_presets = { recommended = { package = "eslint-plugin-vue", source = "configs.flat/recommended" }, accessibility = { package = "eslint-plugin-vuejs-accessibility", source = "configs.flat/recommended" } }
+eslint_all_rules = [
+    "vue/attribute-hyphenation",
+    "vue/attributes-order",
+    "vue/block-lang",
+    "vue/block-order",
+    "vue/component-api-style",
+    "vue/component-definition-name-casing",
+    "vue/define-emits-declaration",
+    "vue/define-props-declaration",
+    "vue/multi-word-component-names",
+    "vue/one-component-per-file",
+    "vue/order-in-components",
+    "vue/prop-name-casing",
+    "vue/require-default-prop",
+    "vue/this-in-template",
+    "vue/v-bind-style",
+    "vue/v-on-event-hyphenation",
+    "vue/v-on-style",
+    "vue/v-slot-style",
+]
+
 [configuration]
 title = "Vue"
 requires = ["javascript"]
@@ -34,22 +56,9 @@ version = "2.6.0"
 npm = "eslint-plugin-vuejs-accessibility"
 
 [[tool]]
-name = "eslint-plugin-testing-library"
-kind = "library"
-version = "7.16.2"
-npm = "eslint-plugin-testing-library"
-
-[[tool]]
 name = "vue-tsc"
 version = "3.3.11"
 npm = "vue-tsc"
-
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true
 
 [[tool_file]]
 source = "stylelint.fragment.json.eta"

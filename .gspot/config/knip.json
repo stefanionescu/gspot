@@ -41,7 +41,6 @@
         "eslint-plugin-security",
         "eslint-plugin-sonarjs",
         "eslint-plugin-svelte",
-        "eslint-plugin-testing-library",
         "eslint-plugin-unicorn",
         "eslint-plugin-zod",
         "globals",

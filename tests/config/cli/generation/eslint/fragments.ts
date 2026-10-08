@@ -18,3 +18,13 @@ export const FRAGMENT_SCOPE_CASES = [
         file: 'src/service.ts',
     },
 ];
+
+/** Native declarations remain distinguishable from import-shaped comment and string text. */
+export const IMPORT_FRAGMENT_SOURCE = `// Keep this side-effect explanation.
+import 'native-side-effect'; // Native trailing explanation.
+import type { NativeType } from 'native-types';
+import { type OtherType, nativeValue as renamed } from 'native-names';
+const text = "import shadow from 'a string';";
+// import shadow from 'a comment';
+[{ files: ['**/*.js'], rules: { native: 'error' } }],
+`;

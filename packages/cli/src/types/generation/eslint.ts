@@ -134,6 +134,3 @@ export type EslintFiles = {
     tests: string[][];
     scripts: string[][];
 };
-
-/** Configuration name, preset name, installed package, and exact public export path. */
-export type EslintPresetSources = Record<string, Record<string, readonly [string, string]>>;

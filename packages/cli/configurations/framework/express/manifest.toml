@@ -9,9 +9,6 @@ dependencies = ["express"]
 
 [[tool_file]]
 source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-fragment = true
 selectors = [{ selector = "CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]", message = "A message a client reads names no identifier; put the value in its own field." }]
 
 [[naming.overrides]]

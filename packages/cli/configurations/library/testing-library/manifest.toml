@@ -1,0 +1,22 @@
+eslint_presets = { dom = { package = "eslint-plugin-testing-library", source = "configs.flat/dom" }, angular = { package = "eslint-plugin-testing-library", source = "configs.flat/angular" }, react = { package = "eslint-plugin-testing-library", source = "configs.flat/react" }, vue = { package = "eslint-plugin-testing-library", source = "configs.flat/vue" }, svelte = { package = "eslint-plugin-testing-library", source = "configs.flat/svelte" }, marko = { package = "eslint-plugin-testing-library", source = "configs.flat/marko" } }
+eslint_all_rules = [
+    "testing-library/no-container",
+    "testing-library/no-node-access",
+    "testing-library/no-render-in-lifecycle",
+    "testing-library/prefer-screen-queries",
+    "testing-library/render-result-naming-convention",
+]
+
+[configuration]
+title = "Testing Library"
+requires = ["javascript"]
+description = "Testing Library rules over test files of projects that declare a Testing Library dependency."
+
+[detect]
+dependencies = ["@testing-library/*"]
+
+[[tool]]
+name = "eslint-plugin-testing-library"
+kind = "library"
+version = "7.16.2"
+npm = "eslint-plugin-testing-library"

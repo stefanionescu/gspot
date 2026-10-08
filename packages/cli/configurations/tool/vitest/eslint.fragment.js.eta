@@ -1,1 +1,2 @@
+import vitest from '@vitest/eslint-plugin';
 <%~ eslintModule.block({ files: test_files.flatMap((test) => eslintFiles.code.map((pattern) => [test, pattern])), rules: { ...eslintPresets('vitest').recommended.blocks[0].rules, ...Object.fromEntries(testRuleNames.filter((name) => isAll || name !== 'prefer-strict-equal').map((name) => [`vitest/${name}`, 'error'])), 'vitest/no-focused-tests': ['error', { fixable: false }] } }, 'plugins: { vitest }') %>,

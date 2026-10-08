@@ -11,7 +11,7 @@ import { applyBlock } from '#cli/platform/managed-blocks.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { CONFIGURATION_TABLE } from '#tests/config/cli/generation/managed-ignores.ts';
-import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
+import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/manifests.ts';
 
 test.each([true, false])(
     'apply waits for Git before managing ignore entries with authored file=%s',
@@ -54,7 +54,8 @@ test('manifest-owned tool directories are ignored while generated rules and auth
         'ignored = [".gspot/local/downloads/"]\n' + CONFIGURATION_TABLE,
         'configurations/general/local',
     );
-    const block = gitignoreBlock([...configurationManifests().values(), manifest, manifest]);
+    const resolved = linkManifestTools([manifest]);
+    const block = gitignoreBlock([...configurationManifests().values(), ...resolved.values(), ...resolved.values()]);
     const authored = '# Authored entries\nprivate.tmp\n';
     const content = applyBlock(authored, block, { path: '.gitignore', style: 'hash' });
     await createFileTree(repository.path, { '.gitignore': content });

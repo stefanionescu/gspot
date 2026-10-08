@@ -1,3 +1,11 @@
+eslint_presets = { recommended = { package = "eslint-plugin-astro", source = "configs.flat/recommended" }, accessibility = { package = "eslint-plugin-astro", source = "configs.flat/jsx-a11y-recommended" } }
+eslint_all_rules = [
+    "astro/no-unused-css-selector",
+    "astro/prefer-class-list-directive",
+    "astro/prefer-object-class-list",
+    "astro/prefer-split-class-list",
+]
+
 [configuration]
 title = "Astro"
 requires = ["javascript"]
@@ -24,11 +32,6 @@ npm = "eslint-plugin-astro"
 
 [[tool]]
 name = "eslint-plugin-jsx-a11y"
-kind = "library"
-version = "6.10.2"
-npm = "eslint-plugin-jsx-a11y"
-
-# The astro-check binary drops the first two words it is given, so every command passes "astro check" first.
 
 [[tool]]
 name = "astro-check"
@@ -42,13 +45,6 @@ kind = "library"
 version = "1.0.1"
 npm = "prettier-plugin-astro"
 prettier = { entry = "dist/index.js", extensions = [".astro"], overrides = [{ files = "*.astro", options = { parser = "astro" } }] }
-
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true
 
 [[check]]
 name = "astro-check"

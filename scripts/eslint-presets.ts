@@ -17,19 +17,18 @@ import {
     stylelintRuleNamesSchema,
 } from '#cli/parsers/schema/stylelint.ts';
 import {
+    ESLINT_RULE_NAMES_FILE,
+    ESLINT_RULE_NAMES_MODULE,
+    ESLINT_RUNTIME_NAMES_FILE,
+    ESLINT_RUNTIME_NAMES_MODULE,
+} from '#cli/config/generation/eslint.ts';
+import {
     eslintModuleSchema,
     captureEslintPreset,
     eslintGlobalsSchema,
     eslintRuleNamesSchema,
     eslintRuleModuleSchema,
 } from '#cli/parsers/schema/eslint.ts';
-import {
-    ESLINT_PRESET_SOURCES,
-    ESLINT_RULE_NAMES_FILE,
-    ESLINT_RULE_NAMES_MODULE,
-    ESLINT_RUNTIME_NAMES_FILE,
-    ESLINT_RUNTIME_NAMES_MODULE,
-} from '#cli/config/generation/eslint.ts';
 
 const project = process.argv[2];
 if (project === undefined || process.argv.length !== ESLINT_REFRESH_ARGUMENT_COUNT)
@@ -51,12 +50,11 @@ const presets = eslintRuleNamesSchema.parse({
 });
 const ruleNamesPath = assetPath(ESLINT_RULE_NAMES_FILE);
 prepared.set(ruleNamesPath, presets);
-for (const [configuration, sources] of Object.entries(ESLINT_PRESET_SOURCES)) {
-    const manifest = manifests.get(configuration);
-    if (manifest === undefined) throw new Error(`No configuration owns ${configuration}.`);
+for (const manifest of [...manifests.values()].filter((entry) => Object.keys(entry.eslint_presets).length > 0)) {
+    const configuration = manifest.configuration.name;
     const presetsByName = Object.fromEntries(
         await Promise.all(
-            Object.entries(sources).map(async ([name, [packageName, source]]) => {
+            Object.entries(manifest.eslint_presets).map(async ([name, { package: packageName, source }]) => {
                 const entry = Bun.resolveSync(packageName, join(process.cwd(), project));
                 const installed = readInstalledNpmPackage(entry, packageName);
                 const version = versions[packageName];

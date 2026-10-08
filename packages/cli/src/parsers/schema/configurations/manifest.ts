@@ -6,7 +6,8 @@ import { fileKindSchema } from '#cli/parsers/schema/inventory.ts';
 import { SENTENCE_MIN_CHARS } from '#cli/config/configurations.ts';
 import { namingOverrideSchema } from '#cli/parsers/schema/naming.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
-import { toolSchema, versionFloorSchema } from '#cli/parsers/schema/configurations/tool.ts';
+import { eslintPresetSchema, eslintAllRulesSchema } from '#cli/parsers/schema/eslint.ts';
+import { versionFloorSchema, toolDeclarationSchema } from '#cli/parsers/schema/configurations/tool.ts';
 import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
 
 import {
@@ -76,7 +77,6 @@ const pointerSchema = z
 const toolFileSchema = z
     .strictObject({
         source: z.string().optional(),
-        imports: z.string().optional(),
         target: z.string(),
         // Emit the target when an applicable check in its scope consumes any named tool.
         tool: z
@@ -222,6 +222,10 @@ const detectionSchema = z.strictObject({
 // The shape of a configuration manifest.toml after validation.
 export const manifestSchema = z
     .strictObject({
+        eslint_presets: z
+            .record(z.string().min(1), eslintPresetSchema.pick({ package: true, source: true }))
+            .default({}),
+        eslint_all_rules: eslintAllRulesSchema.prefault([]),
         compiler_options: z.record(z.string().min(1), z.boolean()).default({}),
         ignored_folders: z.array(z.string().min(1)).default([]),
         dockerignore: z.array(z.string().min(1)).default([]),
@@ -241,7 +245,7 @@ export const manifestSchema = z
         }),
         detect: detectionSchema.optional(),
         files: filesSchema.prefault({}),
-        tool: z.array(toolSchema).default([]),
+        tool: z.array(toolDeclarationSchema).default([]),
         tool_file: z.array(toolFileSchema).default([]),
         check: z.array(checkSchema).default([]),
         setting: z.array(settingSchema).default([]),

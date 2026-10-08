@@ -1,3 +1,9 @@
+eslint_all_rules = [
+    "react-native/no-color-literals",
+    "react-native/no-inline-styles",
+    "react-native/split-platform-components",
+]
+
 [configuration]
 title = "React Native"
 requires = ["react"]
@@ -48,8 +54,4 @@ npm = "eslint-plugin-react-native"
 
 [[tool_file]]
 source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true
 selectors = [{ selector = "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]", message = "Use Pressable. The Touchable components are kept for old code and get no new behavior." }, { selector = "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']", message = "A ScrollView renders every row at once. Render a list that grows through FlatList." }, { selector = "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]", message = "AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform." }]

@@ -1,3 +1,5 @@
+eslint_presets = { recommended = { package = "@tanstack/eslint-plugin-query", source = "configs.flat/recommended" } }
+
 [configuration]
 title = "TanStack Query"
 requires = ["javascript"]
@@ -11,10 +13,3 @@ name = "@tanstack/eslint-plugin-query"
 kind = "library"
 version = "5.91.2"
 npm = "@tanstack/eslint-plugin-query"
-
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true

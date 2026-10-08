@@ -1,3 +1,4 @@
+import nestjsTyped from '@darraghor/eslint-plugin-nestjs-typed';
 <% const presets = eslintPresets('nestjs'); if (isAll) { %>
 <%~ eslintModule.block({ files: eslintFiles.typescript, rules: { '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }] } }) %>,
 <% } const prefix = scope === '' ? '' : `${scope}/`; %>

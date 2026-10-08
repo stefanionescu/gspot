@@ -5,8 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { createEslint } from '#tests/harness/generated.ts';
+import { typescriptImports } from '#cli/parsers/typescript.ts';
 import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
-import { FRAGMENT_SCOPE_CASES } from '#tests/config/cli/generation/eslint/fragments.ts';
+import { FRAGMENT_SCOPE_CASES, IMPORT_FRAGMENT_SOURCE } from '#tests/config/cli/generation/eslint/fragments.ts';
 
 for (const level of ['recommended', 'all'] as const)
     test.each(FRAGMENT_SCOPE_CASES)(`$configuration at ${level} renders each selected scope once`, async (row) => {
@@ -59,4 +60,16 @@ test('the site configuration requires HTML and suggests optional scripting and s
     expect(
         scope.selected.some(({ configuration }) => configuration.name === 'javascript' || configuration.name === 'css'),
     ).toBe(false);
+});
+
+test('fragment imports preserve native comments, side effects, and type and named declarations', () => {
+    const parsed = typescriptImports(IMPORT_FRAGMENT_SOURCE);
+    expect(parsed.imports).toStrictEqual([
+        "// Keep this side-effect explanation.\nimport 'native-side-effect'; // Native trailing explanation.",
+        "import type { NativeType } from 'native-types';",
+        "import { type OtherType, nativeValue as renamed } from 'native-names';",
+    ]);
+    expect(parsed.body).toBe(
+        `const text = "import shadow from 'a string';";\n// import shadow from 'a comment';\n[{ files: ['**/*.js'], rules: { native: 'error' } }],\n`,
+    );
 });

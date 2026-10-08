@@ -176,3 +176,9 @@ export const toolSchema = z
             tool.replace = [...replaces.map((file) => ({ file, shared: false })), ...(tool.replace ?? [])];
         return { ...compact(tool), installers };
     });
+
+/** A name-only row refers to the complete declaration in another configuration. */
+export const toolDeclarationSchema = z
+    .record(z.string(), z.unknown())
+    .transform((row) => (Object.keys(row).length === 1 && 'name' in row ? row['name'] : row))
+    .pipe(z.union([z.string(), toolSchema]));

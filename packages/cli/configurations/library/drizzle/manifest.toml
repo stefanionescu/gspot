@@ -20,10 +20,6 @@ npm = "drizzle-kit"
 
 [[tool_file]]
 source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true
 selectors = [{ selector = "TaggedTemplateExpression[tag.name='sql']", message = "Raw SQL skips the types of the schema. Use the query builder, or accept this finding with a rule-specific ignore." }]
 
 [[check]]

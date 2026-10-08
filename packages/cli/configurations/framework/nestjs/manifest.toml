@@ -1,3 +1,8 @@
+eslint_presets = { recommended = { package = "@darraghor/eslint-plugin-nestjs-typed", source = "configs.flatRecommended" }, noSwagger = { package = "@darraghor/eslint-plugin-nestjs-typed", source = "configs.flatNoSwagger" } }
+eslint_all_rules = [
+    "@darraghor/nestjs-typed/api-operation-summary-description-capitalized",
+]
+
 compiler_options = { experimentalDecorators = true, emitDecoratorMetadata = true }
 
 [configuration]
@@ -21,10 +26,6 @@ npm = "@darraghor/eslint-plugin-nestjs-typed"
 
 [[tool_file]]
 source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true
 # A controller turns a request into a call, and a service owns the data.
 selectors = [{ selector = "CallExpression[callee.name='forwardRef']", message = "forwardRef papers over two modules that import each other. Move what both need into a third module." }, { selector = "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))", message = "Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }." }, { selector = "TSParameterProperty TSTypeReference[typeName.name=/(Repository|DataSource|EntityManager|PrismaClient|PrismaService)$/]", message = "A controller reaches data through a service. Inject the service, and keep the repository behind it.", files = ["**/*.controller.ts"] }, { selector = "Decorator[expression.callee.name=/^(InjectRepository|InjectModel|InjectDataSource)$/]", message = "A controller reaches data through a service. Inject the service, and keep the repository behind it.", files = ["**/*.controller.ts"] }]
 

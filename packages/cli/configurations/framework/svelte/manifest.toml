@@ -1,3 +1,10 @@
+eslint_presets = { recommended = { package = "eslint-plugin-svelte", source = "configs.recommended" } }
+eslint_all_rules = [
+    "svelte/block-lang",
+    "svelte/no-dom-manipulating",
+    "svelte/require-event-dispatcher-types",
+]
+
 [configuration]
 title = "Svelte"
 requires = ["javascript"]
@@ -29,12 +36,6 @@ version = "1.8.1"
 npm = "svelte-eslint-parser"
 
 [[tool]]
-name = "eslint-plugin-testing-library"
-kind = "library"
-version = "7.16.2"
-npm = "eslint-plugin-testing-library"
-
-[[tool]]
 name = "svelte-check"
 version = "4.7.6"
 npm = "svelte-check"
@@ -45,13 +46,6 @@ kind = "library"
 version = "4.1.1"
 npm = "prettier-plugin-svelte"
 prettier = { entry = "plugin.js", extensions = [".svelte"], overrides = [{ files = "*.svelte", options = { embeddedLanguageFormatting = "auto" } }] }
-
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true
 
 [[tool_file]]
 source = "stylelint.fragment.json.eta"

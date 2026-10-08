@@ -1,5 +1,5 @@
 {
-    "openRecords": 692,
+    "openRecords": 685,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 692,
+        "openRecords": 685,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 91,
-                "unresolvedAssignments": 200
+                "completedAssignments": 93,
+                "unresolvedAssignments": 198
             },
             {
                 "id": "python",
@@ -696,8 +696,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 10,
-                "unresolvedAssignments": 89
+                "completedAssignments": 11,
+                "unresolvedAssignments": 88
             },
             {
                 "id": "swift-bash-sql",
@@ -925,8 +925,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 18,
-                "unresolvedAssignments": 113
+                "completedAssignments": 24,
+                "unresolvedAssignments": 107
             },
             {
                 "id": "test-quality",
@@ -2324,10 +2324,14 @@
             "verification": []
         },
         "areas/checks/054": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
+            "verification": [
+                "Current SQL, naming, configuration-default or Semgrep obligation implemented at its prescribed owner. Exact original quotations and current fixes retained.",
+                "Main15 CLI cases70 assertions; additional schema/access12 cases69 assertions preserve table, key, index and row-security behavior. Native platform-security4 cases30 assertions pass. Pinned Semgrep1.178 and SQL probes on Bun1.4.2/Node24.20 preserved in immutable handoff.",
+                "Removed unread Postgres policy aggregation after deleting the missing-policy rule. Root types/current-policy ESLint, normal gspot apply, staged check and commit hooks pass. SQL diagnostics record046 remains partial outside this slice; final Linux/macOS/Windows suites and database workflow remain separate."
+            ]
         },
         "areas/checks/059": {
             "status": "partial",
@@ -3093,16 +3097,19 @@
             ]
         },
         "areas/kits/036": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
             "verification": [
-                "Twenty-four owners integrate internal prettierignore and selected JavaScript root pointers with native override/plugin path rebasing. Shared manifest ignored_folders plus native lock filenames feed Prettier/Semgrep; Docker requirements use selected languages. DOM rules belong to JavaScript; Workers duplicate removed; suppression help generic. Native78tests306assertions and final ignored8tests110assertions pass. Real Prettier3.8.1 plugin/exclusion probes pass Bun and Node24.2/24.20; Semgrep1.178 yields8DOM findings each level, safe neighbor0/errors empty. Types/affected policy pass. Production grows2953bytes71lines; whole8277bytes187lines; simplification/platform obligations remain partial."
+                "Twenty-four owners integrate internal prettierignore and selected JavaScript root pointers with native override/plugin path rebasing. Shared manifest ignored_folders plus native lock filenames feed Prettier/Semgrep; Docker requirements use selected languages. DOM rules belong to JavaScript; Workers duplicate removed; suppression help generic. Native78tests306assertions and final ignored8tests110assertions pass. Real Prettier3.8.1 plugin/exclusion probes pass Bun and Node24.2/24.20; Semgrep1.178 yields8DOM findings each level, safe neighbor0/errors empty. Types/affected policy pass. Production grows2953bytes71lines; whole8277bytes187lines; simplification/platform obligations remain partial.",
+                "Current SQL, naming, configuration-default or Semgrep obligation implemented at its prescribed owner. Exact original quotations and current fixes retained.",
+                "Main15 CLI cases70 assertions; additional schema/access12 cases69 assertions preserve table, key, index and row-security behavior. Native platform-security4 cases30 assertions pass. Pinned Semgrep1.178 and SQL probes on Bun1.4.2/Node24.20 preserved in immutable handoff.",
+                "Removed unread Postgres policy aggregation after deleting the missing-policy rule. Root types/current-policy ESLint, normal gspot apply, staged check and commit hooks pass. SQL diagnostics record046 remains partial outside this slice; final Linux/macOS/Windows suites and database workflow remain separate."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-language-tools-final-freeze.json",
-                    "commit": null,
+                    "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
                     "verification": [
                         "Twenty-four owners integrate internal prettierignore and selected JavaScript root pointers with native override/plugin path rebasing. Shared manifest ignored_folders plus native lock filenames feed Prettier/Semgrep; Docker requirements use selected languages. DOM rules belong to JavaScript; Workers duplicate removed; suppression help generic. Native78tests306assertions and final ignored8tests110assertions pass. Real Prettier3.8.1 plugin/exclusion probes pass Bun and Node24.2/24.20; Semgrep1.178 yields8DOM findings each level, safe neighbor0/errors empty. Types/affected policy pass. Production grows2953bytes71lines; whole8277bytes187lines; simplification/platform obligations remain partial."
                     ]
@@ -3110,12 +3117,15 @@
             ]
         },
         "areas/kits/037": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
             "verification": [
                 "Workers checks no longer use the functions-only source filter.",
-                "Native root/child both-level platform cases passed in Main7/34 tool corpus."
+                "Native root/child both-level platform cases passed in Main7/34 tool corpus.",
+                "Current SQL, naming, configuration-default or Semgrep obligation implemented at its prescribed owner. Exact original quotations and current fixes retained.",
+                "Main15 CLI cases70 assertions; additional schema/access12 cases69 assertions preserve table, key, index and row-security behavior. Native platform-security4 cases30 assertions pass. Pinned Semgrep1.178 and SQL probes on Bun1.4.2/Node24.20 preserved in immutable handoff.",
+                "Removed unread Postgres policy aggregation after deleting the missing-policy rule. Root types/current-policy ESLint, normal gspot apply, staged check and commit hooks pass. SQL diagnostics record046 remains partial outside this slice; final Linux/macOS/Windows suites and database workflow remain separate."
             ],
             "additionalChanges": [
                 {
@@ -3481,12 +3491,15 @@
             "verification": []
         },
         "areas/kits/071": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "8ea40115fa4cc1405dc8d5a792069e6328fcd25b",
+            "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
             "verification": [
                 "Supabase supplies public client schemas while generic Postgres defaults to an empty list; configured function folders select native paths.",
-                "Native inherited root/child schema and Deno path controls passed."
+                "Native inherited root/child schema and Deno path controls passed.",
+                "Current SQL, naming, configuration-default or Semgrep obligation implemented at its prescribed owner. Exact original quotations and current fixes retained.",
+                "Main15 CLI cases70 assertions; additional schema/access12 cases69 assertions preserve table, key, index and row-security behavior. Native platform-security4 cases30 assertions pass. Pinned Semgrep1.178 and SQL probes on Bun1.4.2/Node24.20 preserved in immutable handoff.",
+                "Removed unread Postgres policy aggregation after deleting the missing-policy rule. Root types/current-policy ESLint, normal gspot apply, staged check and commit hooks pass. SQL diagnostics record046 remains partial outside this slice; final Linux/macOS/Windows suites and database workflow remain separate."
             ],
             "additionalChanges": [
                 {
@@ -11565,16 +11578,24 @@
             ]
         },
         "slices/kits-frameworks-tools/067": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
+            "verification": [
+                "Current SQL, naming, configuration-default or Semgrep obligation implemented at its prescribed owner. Exact original quotations and current fixes retained.",
+                "Main15 CLI cases70 assertions; additional schema/access12 cases69 assertions preserve table, key, index and row-security behavior. Native platform-security4 cases30 assertions pass. Pinned Semgrep1.178 and SQL probes on Bun1.4.2/Node24.20 preserved in immutable handoff.",
+                "Removed unread Postgres policy aggregation after deleting the missing-policy rule. Root types/current-policy ESLint, normal gspot apply, staged check and commit hooks pass. SQL diagnostics record046 remains partial outside this slice; final Linux/macOS/Windows suites and database workflow remain separate."
+            ]
         },
         "slices/kits-frameworks-tools/068": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
+            "verification": [
+                "Current SQL, naming, configuration-default or Semgrep obligation implemented at its prescribed owner. Exact original quotations and current fixes retained.",
+                "Main15 CLI cases70 assertions; additional schema/access12 cases69 assertions preserve table, key, index and row-security behavior. Native platform-security4 cases30 assertions pass. Pinned Semgrep1.178 and SQL probes on Bun1.4.2/Node24.20 preserved in immutable handoff.",
+                "Removed unread Postgres policy aggregation after deleting the missing-policy rule. Root types/current-policy ESLint, normal gspot apply, staged check and commit hooks pass. SQL diagnostics record046 remains partial outside this slice; final Linux/macOS/Windows suites and database workflow remain separate."
+            ]
         },
         "slices/kits-general/014": {
             "status": "pending",
@@ -11610,10 +11631,14 @@
             "verification": []
         },
         "slices/kits-general/040": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
+            "verification": [
+                "Current SQL, naming, configuration-default or Semgrep obligation implemented at its prescribed owner. Exact original quotations and current fixes retained.",
+                "Main15 CLI cases70 assertions; additional schema/access12 cases69 assertions preserve table, key, index and row-security behavior. Native platform-security4 cases30 assertions pass. Pinned Semgrep1.178 and SQL probes on Bun1.4.2/Node24.20 preserved in immutable handoff.",
+                "Removed unread Postgres policy aggregation after deleting the missing-policy rule. Root types/current-policy ESLint, normal gspot apply, staged check and commit hooks pass. SQL diagnostics record046 remains partial outside this slice; final Linux/macOS/Windows suites and database workflow remain separate."
+            ]
         },
         "slices/kits-general/053": {
             "status": "partial",
@@ -16456,6 +16481,25 @@
             ],
             "limitations": [
                 "Outcome-row deletion remains partial because distinct authored exit contracts were preserved. Broad command records, evidence-only retired owner and individual growth obligations remain open. Final suites/platforms/CI not claimed complete."
+            ]
+        },
+        {
+            "commit": "2f15a33a91a5e74c73475351390c48a6d0c5a0ba",
+            "completedRecords": [
+                "slices/kits-frameworks-tools/067",
+                "slices/kits-frameworks-tools/068",
+                "slices/kits-general/040",
+                "areas/checks/054",
+                "areas/kits/036",
+                "areas/kits/037",
+                "areas/kits/071"
+            ],
+            "unresolvedRecords": 685,
+            "validation": [
+                "Main15 CLI/70assert; schema/access12/69; native security4/30; types/lint/apply/staged/normal hooks pass."
+            ],
+            "limitations": [
+                "SQL046 outside SQL remains partial. Current Windows/Linux and database workflow not claimed."
             ]
         }
     ],

@@ -1,0 +1,4 @@
+import testingLibrary from 'eslint-plugin-testing-library';
+<% const presets = eslintPresets('testing-library'); const dependencies = scopeDependencies.filter((name) => name.startsWith('@testing-library/')); if (dependencies.length > 0) { const native = dependencies.map((name) => name.slice('@testing-library/'.length)).filter((name) => presets[name] !== undefined); for (const name of new Set(native.length === 0 ? ['dom'] : native)) { %>
+<%~ eslintModule.block({ files: eslintFiles.tests, rules: eslintErrorRules(presets[name].blocks[0].rules) }, "plugins: { 'testing-library': testingLibrary }") %>,
+<% } } %>

@@ -1,3 +1,4 @@
+import astroPlugin from 'eslint-plugin-astro';
 <% const presets = eslintPresets('astro'); for (const [name, source] of [['recommended', 'flat/recommended'], ['accessibility', 'flat/jsx-a11y-recommended']]) { for (const [index, { parser, ...block }] of presets[name].blocks.entries()) { %>
 <%~ eslintModule.block({ ...block, files: block.files ?? ['**/*.astro'], ...(block.rules === undefined ? {} : { rules: eslintErrorRules(block.rules) }) }, `...astroPlugin.configs[${json(source)}][${index}]`) %>,
 <% } } %>

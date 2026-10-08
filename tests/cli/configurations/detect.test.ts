@@ -12,7 +12,7 @@ import { runtimeEvidenceCases } from '#tests/harness/repository.ts';
 import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
 import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import { detectUnselected, detectConfigurations } from '#cli/configurations/detect.ts';
-import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
+import { parseManifest, linkManifestTools, configurationManifests } from '#cli/configurations/manifests.ts';
 
 import {
     SWIFT_TEST_CASES,
@@ -172,7 +172,7 @@ test.each(runtimeEvidenceCases())('$name determines runtime applicability within
     const detected = detectConfigurations(
         sandbox.path,
         repository.files,
-        new Map([['runtime', manifest]]),
+        linkManifestTools([manifest]),
         packageManifests,
         'api',
     );

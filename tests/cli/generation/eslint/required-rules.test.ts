@@ -2,16 +2,13 @@
 import type { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { readAsset } from '#cli/platform/assets.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import { eslintAllRulesSchema } from '#cli/parsers/schema/eslint.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { validateEslintPresets } from '#cli/generation/eslint/presets.ts';
 import { CHECK_LEVELS, PROJECT_FILES } from '#tests/config/cli/generation/eslint/required-rules.ts';
 
-const allRules = eslintAllRulesSchema.parse(
-    JSON.parse(readAsset('configurations/language/javascript/eslint-all-rules.json')),
-);
+const allRules = new Set([...configurationManifests().values()].flatMap((manifest) => [...manifest.eslint_all_rules]));
 const contracts = [...configurationManifests().values()].flatMap((manifest) =>
     Object.entries(manifest.required_eslint_rules).map(([ending, rules]) => ({
         configuration: manifest.configuration.name,
@@ -53,3 +50,42 @@ test.each(cases)(
         }
     },
 );
+
+test('manifest preset metadata agrees with its captured exports', () => {
+    const manifests = new Map(configurationManifests());
+    const original = manifests.get('javascript')!;
+    expect(() => {
+        validateEslintPresets(manifests);
+    }).not.toThrow();
+    manifests.set('javascript', {
+        ...original,
+        eslint_presets: Object.fromEntries(Object.entries(original.eslint_presets).toReversed()),
+    });
+    expect(() => {
+        validateEslintPresets(manifests);
+    }).not.toThrow();
+    manifests.set('javascript', { ...original, eslint_presets: {} });
+    expect(() => {
+        validateEslintPresets(manifests);
+    }).not.toThrow();
+    manifests.set('javascript', {
+        ...original,
+        eslint_presets: {
+            ...original.eslint_presets,
+            extra: { package: 'eslint-plugin-unicorn', source: 'configs.recommended' },
+        },
+    });
+    expect(() => {
+        validateEslintPresets(manifests);
+    }).toThrow('Refresh the javascript ESLint presets: the source exports changed.');
+    manifests.set('javascript', {
+        ...original,
+        eslint_presets: {
+            ...original.eslint_presets,
+            unicorn: { package: 'eslint-plugin-unicorn', source: 'configs.missing' },
+        },
+    });
+    expect(() => {
+        validateEslintPresets(manifests);
+    }).toThrow('Refresh javascript/unicorn: its ESLint preset must use eslint-plugin-unicorn@');
+});

@@ -15,9 +15,6 @@ mise = "npm:@stoplight/spectral-cli"
 
 [[tool]]
 name = "ajv"
-kind = "library"
-version = "8.20.0"
-npm = "ajv"
 
 [[tool_file]]
 target = ".gspot/config/spectral.yaml"

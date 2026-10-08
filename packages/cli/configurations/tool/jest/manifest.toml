@@ -1,3 +1,7 @@
+eslint_all_rules = [
+    "jest/prefer-strict-equal",
+]
+
 [configuration]
 title = "Jest"
 requires = ["javascript", "coverage"]
@@ -19,13 +23,6 @@ name = "eslint-plugin-jest"
 kind = "library"
 version = "29.16.6"
 npm = "eslint-plugin-jest"
-
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true
 
 [[check]]
 name = "coverage"

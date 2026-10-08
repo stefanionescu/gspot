@@ -1,3 +1,7 @@
+eslint_all_rules = [
+    "expo/prefer-box-shadow",
+]
+
 [configuration]
 title = "Expo"
 requires = ["react-native"]
@@ -22,13 +26,6 @@ npm = "eslint-plugin-expo"
 name = "expo-doctor"
 version = "1.20.4"
 npm = "expo-doctor"
-
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true
 
 [[check]]
 name = "doctor"

@@ -1,3 +1,4 @@
+import tanstackQuery from '@tanstack/eslint-plugin-query';
 <% for (const { rules } of eslintPresets('tanstack-query').recommended.blocks) { %>
 <%~ eslintModule.block({ files: eslintFiles.code, rules: eslintErrorRules(rules) }, "plugins: { '@tanstack/query': tanstackQuery }") %>,
 <% } %>

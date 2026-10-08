@@ -117,10 +117,13 @@ function projectEvidence(detect: Manifest['detect'], tree: Layout): DetectionEvi
 }
 
 function dependencyEvidence(detect: Manifest['detect'], tree: Layout): DetectionEvidence | undefined {
-    const dependency = detect.dependencies.find((name) => tree.dependencies.has(name));
-    return dependency === undefined
-        ? undefined
-        : { evidence: `${dependency} in ${tree.dependencies.get(dependency) ?? ''}` };
+    for (const pattern of detect.dependencies) {
+        const matches = pathMatcher([pattern]);
+        const dependency = [...tree.dependencies.keys()].find((name) => matches(name));
+        if (dependency !== undefined)
+            return { evidence: `${dependency} in ${tree.dependencies.get(dependency) ?? ''}` };
+    }
+    return undefined;
 }
 
 function shebangEvidence(detect: Manifest['detect'], tree: Layout): DetectionEvidence | undefined {

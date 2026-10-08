@@ -1,2 +1,3 @@
+import drizzlePlugin from 'eslint-plugin-drizzle';
 <% const rule = ['error', { drizzleObjectName: settings['drizzle.client_names'] }]; %>
 <%~ eslintModule.block({ files: eslintFiles.code, rules: { 'drizzle/enforce-delete-with-where': rule, 'drizzle/enforce-update-with-where': rule } }, 'plugins: { drizzle: drizzlePlugin }') %>,

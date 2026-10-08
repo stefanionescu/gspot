@@ -2,6 +2,7 @@
 import { eta } from '#cli/generation/eta.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import type { EtaInputs } from '#cli/types/generation/eta.ts';
+import { typescriptImports } from '#cli/parsers/typescript.ts';
 import type { Fragment } from '#cli/types/generation/fragments.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
@@ -106,12 +107,14 @@ export function fragmentInputs(
         { ...inputs, fragmentFiles, eslintFragmentBlocks, eslintFiles },
         scopes,
     );
-    const imports = fragments.flatMap(({ manifest, toolFile }) =>
-        toolFile.imports === undefined ? [] : readAsset(`${manifest.dir}/${toolFile.imports}`).split('\n'),
-    );
+    const parsed = target.target.endsWith('eslint.config.mjs')
+        ? emitted.map((fragment) => typescriptImports(fragment))
+        : emitted.map((body) => ({ body, imports: [] }));
+    const imports = parsed.flatMap(({ imports }) => imports);
+    const bodies = parsed.map(({ body }) => body);
     return {
-        fragments: emitted.join('\n'),
-        fragmentParts: emitted,
+        fragments: bodies.join('\n'),
+        fragmentParts: bodies,
         fragmentImports: [...new Set(imports.filter((line) => line.trim() !== ''))].join('\n'),
         fragmentFiles,
         eslintFiles,

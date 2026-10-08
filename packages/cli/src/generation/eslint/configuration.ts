@@ -3,14 +3,12 @@ import type { Session } from '#cli/types/planning.ts';
 import { aliasesFor } from '#cli/repository/aliases.ts';
 import type { EtaInputs } from '#cli/types/generation/eta.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
-import { eslintAllRulesSchema } from '#cli/parsers/schema/eslint.ts';
 import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
 import { readEslintPresets } from '#cli/generation/eslint/presets.ts';
 import { scriptPaths, runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/selectors.ts';
 import { tablesFor, harnessFolders, declaredArchitectures } from '#cli/policy/settings/lookup.ts';
 import type { ScopeView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/settings.ts';
-import ESLINT_ALL_RULES from '../../../configurations/language/javascript/eslint-all-rules.json' with { type: 'json' };
 
 import type {
     EslintBlock,
@@ -266,7 +264,7 @@ export function eslintInputs(
 > {
     const { root, reads, scopes, policyFiles, repository } = session;
     const { policy } = policyFiles;
-    const allRules = eslintAllRulesSchema.parse(ESLINT_ALL_RULES);
+    const allRules = new Set([...session.manifests.values()].flatMap((manifest) => [...manifest.eslint_all_rules]));
     const presets = new Map<string, EslintPresets>();
     const recognized = pathMatcher([eslintSourcePattern('javascript', 'typescript')]);
     const nodeFiles = repository.files

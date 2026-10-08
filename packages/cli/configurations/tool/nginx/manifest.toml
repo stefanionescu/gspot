@@ -15,7 +15,6 @@ version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 
 [[tool]]
 name = "docker"
-system = true
 
 [[tool]]
 name = "openssl"

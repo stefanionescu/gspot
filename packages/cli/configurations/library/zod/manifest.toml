@@ -1,3 +1,10 @@
+eslint_all_rules = [
+    "zod/no-any-schema",
+    "zod/no-native-enum",
+    "zod/prefer-meta-last",
+    "zod/prefer-strict-object",
+]
+
 [configuration]
 title = "Zod"
 requires = ["javascript"]
@@ -11,10 +18,3 @@ name = "eslint-plugin-zod"
 kind = "library"
 version = "4.12.0"
 npm = "eslint-plugin-zod"
-
-[[tool_file]]
-source = "eslint.fragment.js.eta"
-target = ".gspot/config/eslint.config.mjs"
-tool = "eslint"
-imports = "eslint.imports.js.eta"
-fragment = true

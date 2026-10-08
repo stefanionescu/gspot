@@ -7,6 +7,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { FIRST_READ } from '#cli/config/policy/settings.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { excludeErrors } from '#cli/policy/errors/selection.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { textAtLevel, selectRuleFiles } from '#cli/agent-rules/assemble.ts';
 import { UPSTREAM_GUIDES, CHECKED_RULE_LINES, RULE_CONFIGURATIONS } from '#tests/config/cli/agent-rules.ts';
 
@@ -135,3 +136,33 @@ test.each(
     );
     expect(rules.get('general/engineering/prose/WRITING.md')?.includes('Use active voice')).toBe(level === 'all');
 });
+
+test.each(['recommended', 'all'] as const)(
+    'always-selected instructions use manifest metadata at %s',
+    async (level) => {
+        await using sandbox = await testdir({ 'gspot.toml': buildPolicy([], { level }) });
+        const session = await openSession(sandbox.path);
+        const manifests = configurationManifests();
+        const original = manifests.get('zod')!;
+        const selected = { ...original, configuration: { ...original.configuration, always_selected: true } };
+        const paths = () =>
+            selectRuleFiles(session.policyFiles.policy.agent_rules, [], session.repository, level).map(
+                (file) => file.path,
+            );
+        try {
+            expect(paths()).not.toContain('library/zod/ZOD.md');
+            manifests.set('zod', selected);
+            expect(paths()).toContain('library/zod/ZOD.md');
+            expect(paths()).toContain('general/engineering/agent/TALKING.md');
+            const files = selectRuleFiles(
+                session.policyFiles.policy.agent_rules,
+                [selected],
+                session.repository,
+                level,
+            );
+            expect(files.filter((file) => file.path === 'library/zod/ZOD.md')).toHaveLength(1);
+        } finally {
+            manifests.set('zod', original);
+        }
+    },
+);

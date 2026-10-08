@@ -47,9 +47,8 @@ export function selectRuleFiles(
     level: Level,
 ): RuleFile[] {
     if (!rules.enabled) return [];
-    const shared = configurationManifests().get('engineering');
-    if (shared === undefined) throw new Error('The installed configuration assets are missing engineering guidance.');
-    const sources = new Map(configurationRules([shared, ...manifests], repository).map((file) => [file.path, file]));
+    const shared = [...configurationManifests().values()].filter((manifest) => manifest.configuration.always_selected);
+    const sources = new Map(configurationRules([...shared, ...manifests], repository).map((file) => [file.path, file]));
     return sources
         .values()
         .filter(({ path }) => !rules.exclude.some((entry) => isExcluded(entry, path)))

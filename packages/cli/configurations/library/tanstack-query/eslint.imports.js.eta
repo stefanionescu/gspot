@@ -1,1 +1,0 @@
-import tanstackQuery from '@tanstack/eslint-plugin-query';

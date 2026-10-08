@@ -14,13 +14,6 @@ github = { name = "rhysd/actionlint", version = "v1.7.12" }
 
 [[tool]]
 name = "shellcheck"
-version = "0.11.0"
-mise = "shellcheck"
-brew = "shellcheck"
-apt = "shellcheck"
-winget = "koalaman.shellcheck"
-scoop = "shellcheck"
-github = { name = "koalaman/shellcheck", version = "v0.11.0" }
 
 [[tool]]
 name = "pinact"
