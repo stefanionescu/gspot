@@ -56,7 +56,7 @@ function buildLimitsFor(
         const defaults =
             [category, parent].map((name) => table?.categories[name]?.case).find((names) => names !== undefined) ?? [];
         return {
-            caseNames: Array.isArray(cases) ? (cases as string[]) : defaults,
+            caseNames: Array.isArray(cases) && cases.length > 0 ? (cases as string[]) : defaults,
             maxChars: ceiling('max_chars'),
             maxWords: ceiling('max_words'),
         };

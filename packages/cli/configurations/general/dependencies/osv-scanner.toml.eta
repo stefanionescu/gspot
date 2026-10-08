@@ -1,4 +1,4 @@
-<% const entries = ignoresFor('dependencies/osv').filter((entry) => entry.rule !== undefined && (entry.paths ?? []).length === 0); %><%~ toml(entries.length === 0 ? {} : {
+<% const entries = ignoresFor('dependencies/osv').filter((entry) => entry.rule !== undefined && entry.paths.length === 0); %><%~ toml(entries.length === 0 ? {} : {
     IgnoredVulns: entries.map((entry) => ({
         id: entry.rule,
         ...(entry.until ? { ignoreUntil: new tomlDate(entry.until) } : {}),

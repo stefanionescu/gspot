@@ -90,7 +90,7 @@ test('the default snapshot layout accepts a matching source and reference', asyn
     expect(await Bun.file(join(sandbox.path, 'Checks.swift')).text()).toBe('import Testing\n');
 });
 
-test('disabled tests and snapshot recording report through the CLI and accept their corrections', async () => {
+test('disabled tests and snapshot recording report through the CLI and pass after the fixes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['xctest', 'swift-snapshot-testing'], { level: 'all' }),

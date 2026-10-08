@@ -6,7 +6,7 @@ import { assertManifests } from '#cli/configurations/errors.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { validateEslintPresets } from '#cli/generation/eslint/presets.ts';
-import { rm, chmod, copyFile, readFile, writeFile } from 'node:fs/promises';
+import { rm, chmod, rename, copyFile, readFile, writeFile } from 'node:fs/promises';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const distribution = join(root, 'dist');
@@ -24,9 +24,9 @@ assertManifests(configurationManifests());
 validateEslintPresets(configurationManifests());
 await rm(distribution, { recursive: true, force: true });
 const result = await Bun.build({
-    entrypoints: [join(root, 'src/main.ts')],
+    entrypoints: [join(root, 'src/main.ts'), join(root, 'src/checks/general/site/linkinator.ts')],
     outdir: distribution,
-    naming: 'gspot.js',
+    naming: '[name].js',
     format: 'esm',
     target: 'node',
     external: Object.keys(packageManifest.dependencies),
@@ -35,6 +35,7 @@ const result = await Bun.build({
     sourcemap: 'none',
 });
 if (!result.success) throw new Error(result.logs.map((log) => log.message).join('\n'));
+await rename(join(distribution, 'main.js'), join(distribution, 'gspot.js'));
 await chmod(join(distribution, 'gspot.js'), EXECUTABLE_FILE);
 await copyFile(join(root, '../..', 'LICENSE.md'), join(distribution, 'LICENSE.md'));
 const readme = await readFile(join(root, '../..', 'README.md'), 'utf8');

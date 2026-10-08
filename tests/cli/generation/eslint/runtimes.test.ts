@@ -28,10 +28,10 @@ test.each(RUNTIME_CASES)('runtime globals and Node.js rules are isolated: %j', a
         'server.js': 'process.exit(0);\n',
     });
     const eslint = await createEslint(sandbox.path);
-    const resolved = (await eslint.calculateConfigForFile('application/source.js')) as RuntimeConfiguration;
-    for (const name of entry.globals) expect(resolved.languageOptions.globals[name]).toBeDefined();
-    for (const name of entry.absent) expect(resolved.languageOptions.globals[name]).toBeUndefined();
-    expect(Object.keys(resolved.rules).filter((name) => name.startsWith('n/'))).toStrictEqual([]);
+    const computed = (await eslint.calculateConfigForFile('application/source.js')) as RuntimeConfiguration;
+    for (const name of entry.globals) expect(computed.languageOptions.globals[name]).toBeDefined();
+    for (const name of entry.absent) expect(computed.languageOptions.globals[name]).toBeUndefined();
+    expect(Object.keys(computed.rules).filter((name) => name.startsWith('n/'))).toStrictEqual([]);
     const [result] = await eslint.lintFiles(['application/source.js']);
     expect(result!.messages.some(({ ruleId }) => ruleId === 'n/no-process-exit')).toBe(false);
     expect(
@@ -195,7 +195,7 @@ test.each(['mise', 'npm'] as const)('Mise task defaults follow the selected runn
     });
     const eslint = await createEslint(sandbox.path);
     for (const file of ['.mise/tasks/build.js', 'web/.mise/tasks/build.js']) {
-        const resolved = (await eslint.calculateConfigForFile(file)) as RuntimeConfiguration;
-        expect(resolved.languageOptions.globals['process'], file).toBe(runner === 'mise' ? false : undefined);
+        const computed = (await eslint.calculateConfigForFile(file)) as RuntimeConfiguration;
+        expect(computed.languageOptions.globals['process'], file).toBe(runner === 'mise' ? false : undefined);
     }
 });

@@ -13,6 +13,7 @@ Replace `<version>` with the exact version from the [npm package page](https://w
 mkdir orders-python && cd orders-python
 git init
 uv init --lib
+uv sync
 git add -A
 git commit -m "feat: Create the project"
 ```
@@ -35,7 +36,14 @@ mise exec -- gspot doctor
 mise exec -- gspot check
 ```
 
-Resolve findings in the initial project before committing. `pyproject.toml` selects the general `licenses` configuration automatically. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. Its `licenses/packages` check remains skipped until an allowed license or exception is set.
+Resolve findings in the initial project before committing. Apply the available formatting fixes and rerun the checks:
+
+```shell
+mise exec -- gspot check --fix
+mise exec -- gspot check
+```
+
+`pyproject.toml` selects the general `licenses` configuration automatically. Choose your [dependency license policy](/guides/dependency-licenses/) explicitly. The `licenses/packages` check makes no license comparison until you set an allowed license or exception.
 
 ```shell
 git add -A

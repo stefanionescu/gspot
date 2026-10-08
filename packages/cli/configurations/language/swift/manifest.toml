@@ -72,14 +72,6 @@ name = "xcodebuild"
 system = true
 
 [[tool_file]]
-source = "semgrep/swift.yml.eta"
-target = ".gspot/config/semgrep/swift.yml"
-tool = "semgrep"
-rule_keys = ["rules"]
-when = { configuration = "security" }
-scoped = true
-
-[[tool_file]]
 target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
 rule_keys = ["opt_in_rules", "analyzer_rules", "disabled_rules", "custom_rules"]
@@ -112,7 +104,7 @@ files = { extensions = [".swift"] }
 output = { format = "json", fields = { file = "file", line = "line", column = "character", rule = "rule_id", message = "reason" } }
 summary = "Lints Swift files with the scoped and nested SwiftLint configurations, treating warnings as errors."
 why = "Forced casts and tries can crash, and a strong delegate can retain its owner. Find these before committing."
-help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore swift/swiftlint --rule <id> --reason \"<why>\"."
+help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore swift/swiftlint --rule `<id>` --reason \"`<why>`\"."
 
 [[check]]
 name = "swiftformat"

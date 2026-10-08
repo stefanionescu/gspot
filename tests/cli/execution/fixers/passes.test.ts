@@ -31,9 +31,9 @@ format = "none"
     });
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({ only: ['sql/trivial-functions', 'project/correct-sql'] });
-    const defect = await executeRun(session, options);
-    expect(defect.report.exitCode).toBe(1);
-    expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(
+    const failed = await executeRun(session, options);
+    expect(failed.report.exitCode).toBe(1);
+    expect(failed.report.checks.flatMap((check) => check.findings)).toContainEqual(
         containing({ file: 'query.sql', line: 1 }),
     );
     const corrected = await executeRun(session, { ...options, fix: true });

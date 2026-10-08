@@ -24,9 +24,9 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     expect(broken.code, broken.stderr).toBe(2);
     expect(broken.stdout).toContain('SC2086');
     expect(() => checkedFindings(planned, broken, paths)).toThrow('missing.sh');
-    const defect = runTestCommandBlocking(command, { cwd: sandbox.path });
-    expect(defect.code).toBe(1);
-    expect(checkedFindings(planned, defect, paths)).toContainEqual(
+    const failed = runTestCommandBlocking(command, { cwd: sandbox.path });
+    expect(failed.code).toBe(1);
+    expect(checkedFindings(planned, failed, paths)).toContainEqual(
         containing({ file: 'sample.sh', line: 2, rule: 'SC2086' }),
     );
     expect(await Bun.file(join(sandbox.path, 'sample.sh')).text()).toBe(source);

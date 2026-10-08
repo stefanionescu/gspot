@@ -2,7 +2,7 @@ import type { Manifest, SettingDeclaration } from '#cli/types/configurations.ts'
 
 export const ISO_DATE_LENGTH = 10;
 
-// ESLint option arrays omit the severity; coverage and severity come from generated rule declarations.
+// ESLint option arrays omit the severity; rule applicability and severity come from generated rule declarations.
 export const ESLINT_OPTION_STRING = /^(?!(?:off|warn|error)$)[\s\S]*$/u;
 
 export const ESLINT_OPTIONS_HELP =

@@ -57,7 +57,7 @@ function expectSecretFindings(check: CheckResult | undefined, output: string, pr
     for (const token of [testKeyId, testApiToken]) expect(output).not.toContain(token);
 }
 
-test('native file reports retain mixed redacted rules and comma filenames and accept corrected files', async () => {
+test('native file reports retain mixed redacted rules and comma filenames and pass after the fix', async () => {
     await using sandbox = await testdir();
     const environment = { PATH: buildToolsPath(['gitleaks']) };
     await prepareSecrets(sandbox.path, environment);
@@ -74,7 +74,7 @@ test('native file reports retain mixed redacted rules and comma filenames and ac
     expect(cleanFiles.code, cleanFiles.stdout + cleanFiles.stderr).toBe(0);
 });
 
-test('native staged reports retain mixed redacted rules and comma filenames and accept the corrected index', async () => {
+test('native staged reports retain mixed redacted rules and comma filenames and pass after the fix', async () => {
     await using sandbox = await testdir();
     const environment = { PATH: buildToolsPath(['gitleaks']) };
     await prepareSecrets(sandbox.path, environment);

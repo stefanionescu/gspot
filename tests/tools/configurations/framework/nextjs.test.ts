@@ -38,7 +38,7 @@ async function delegation(repository: TestRepository): Promise<void> {
     });
 }
 
-// The TypeScript check still finds defects when the Next.js check is skipped.
+// The TypeScript check still reports findings when the Next.js check is skipped.
 async function skippedReplacement(repository: TestRepository): Promise<void> {
     const path = join(repository.root, 'app/count.ts');
     const checks = ['typescript/tsc', 'nextjs/tsc', '--skip', 'nextjs/tsc'];
@@ -121,7 +121,7 @@ afterAll(async () => {
 
 describe('the nextjs configuration', () => {
     test('type checking delegates to the Next.js check only when it runs', () => delegation(testRepository));
-    test('the TypeScript check finds defects when the Next.js check is skipped', () =>
+    test('the TypeScript check reports findings when the Next.js check is skipped', () =>
         skippedReplacement(testRepository));
     test('all builds the app without an enabling flag and recommended omits the build', () =>
         buildLevels(testRepository));

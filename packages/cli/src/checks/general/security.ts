@@ -2,15 +2,18 @@ import { join } from 'node:path';
 import { readSource } from '#cli/platform/source.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
+import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { sarifFindings } from '#cli/parsers/output/sarif.ts';
+import type { ToolSession } from '#cli/types/tools/session.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
-import { runCheckTool } from '#cli/execution/command/check.ts';
-import type { CheckInput } from '#cli/types/execution/check.ts';
 import { CODEQL } from '#cli/config/checks/general/security.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { codeqlLanguagesSchema } from '#cli/parsers/schema/codeql.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
+import { semgrepRuleFiles } from '#cli/configurations/declarations.ts';
+import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
+import { runCheckTool, runCheckCommand } from '#cli/execution/command/check.ts';
 import type { CodeqlAnalysis, CodeqlLanguage } from '#cli/types/checks/general/security.ts';
 
 async function runCodeql(input: CheckInput, argv: string[], cwd: string): Promise<string> {
@@ -97,4 +100,21 @@ export async function codeql(input: CheckInput): Promise<Finding[]> {
         }
     }
     return findings;
+}
+
+/**
+ * Run the selected Semgrep packs and authored rule paths through the native command runner.
+ * @param session the repository and installed tools
+ * @param planned the scoped check with its required rule declarations
+ * @returns native findings and execution failures
+ */
+export function semgrep(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
+    const command = planned.check.command;
+    if (command === undefined) throw new Error('The Semgrep check has no declared command.');
+    const rules = semgrepRuleFiles(
+        planned.scope.selected,
+        planned.scope.scope.path,
+        planned.scope.view.options('tools.semgrep').rule_files,
+    ).flatMap((path) => ['--config', join(session.root, path)]);
+    return runCheckCommand(session, planned, { command: [...command, ...rules] });
 }

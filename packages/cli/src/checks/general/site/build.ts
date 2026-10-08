@@ -3,6 +3,7 @@ import { memo } from '#cli/platform/memo.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { contentDigest } from '#cli/platform/text.ts';
+import { openRoot } from '#cli/platform/root/open.ts';
 import { scratchEntries } from '#cli/platform/scratch.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
@@ -131,14 +132,20 @@ export async function siteBuild(input: CheckInput): Promise<Finding[]> {
 }
 
 /**
- * Builds a second time and compares the two outputs file by file.
+ * Builds one isolated source snapshot twice at the same path, with clean output, and compares the files.
  * @param input the check input.
  * @returns one finding for each file that differs, appears, or disappears.
  */
 export async function buildReproducible(input: CheckInput): Promise<Finding[]> {
-    const first = await requireBuild(input);
-    const before = outputDigests(first.output);
     using folder = await copyIntoScratch(input);
+    using files = openRoot(folder.path, 'native');
+    const output = input.view.options('site').build_folder;
+    assertMutationTarget(output);
+    files.removeTree(output);
+    const first = await runBuild(input, folder.path);
+    if (!first.isBuilt) throw new GspotError('skip', 'The site did not build.');
+    const before = outputDigests(first.output);
+    files.removeTree(output);
     const second = await runBuild(input, folder.path);
     if (!second.isBuilt)
         throw new Error(`The second site build failed: ${JSON.stringify(second.command)}: ${second.outputTail}`);

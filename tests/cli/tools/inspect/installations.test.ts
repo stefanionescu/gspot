@@ -56,7 +56,7 @@ test('the tool inspection > an active PATH executable wins over an unrelated mis
     expect(inspection.path).toBe(active);
 });
 
-test('the tool inspection > a managed npm inspection refuses a linked manifest before executing and accepts its corrected file', async () => {
+test('the tool inspection > a managed npm inspection refuses a linked manifest before executing and passes after the fix', async () => {
     await using sandbox = await testdir();
     await using outside = await testdir();
     await createFileTree(sandbox.path, {

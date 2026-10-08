@@ -25,7 +25,7 @@ import {
 
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
     await using sandbox = await testdir();
-    const defect =
+    const sample =
         '"""Fixture declarations."""\n\nimport pytest\n\n\n@pytest.fixture()\ndef example() -> int:\n    """Provide a reusable value."""\n    return 1\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python'], {
@@ -35,8 +35,8 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
         'tests/__init__.py': '"""Root test package."""\n',
         'app/__init__.py': '"""Application package."""\n',
         'app/tests/__init__.py': '"""Application test package."""\n',
-        'tests/test_example.py': defect,
-        'app/tests/test_example.py': defect,
+        'tests/test_example.py': sample,
+        'app/tests/test_example.py': sample,
     });
     const session = await openSession(sandbox.path);
     const emitted = emitAll(session);
@@ -61,7 +61,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
     expect(JSON.parse(failed.stdout)).toMatchObject([{ code: 'PT001' }]);
     await Bun.write(
         join(sandbox.path, 'app/tests/test_example.py'),
-        defect.replace('@pytest.fixture()', '@pytest.fixture'),
+        sample.replace('@pytest.fixture()', '@pytest.fixture'),
     );
     const corrected = run('app/tests/test_example.py');
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);

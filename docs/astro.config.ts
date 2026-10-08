@@ -1,8 +1,11 @@
+import { join } from 'node:path';
+import { PurgeCSS } from 'purgecss';
+import { fileURLToPath } from 'node:url';
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import starlightLlmsTxt from 'starlight-llms-txt';
-import { mkdir, copyFile } from 'node:fs/promises';
 import { SIDEBAR } from './src/config/navigation.ts';
+import { mkdir, copyFile, writeFile } from 'node:fs/promises';
 
 export default defineConfig({
     site: 'https://generativespotting.com',
@@ -26,6 +29,7 @@ export default defineConfig({
         },
         starlight({
             title: 'gspot',
+            favicon: '/brand/identity/mark/light.svg',
             head: [
                 {
                     tag: 'meta',
@@ -60,5 +64,28 @@ export default defineConfig({
             plugins: [starlightLlmsTxt()],
             sidebar: SIDEBAR,
         }),
+        {
+            name: 'unused-css',
+            hooks: {
+                'astro:build:done': async ({ dir }) => {
+                    const output = fileURLToPath(dir);
+                    const styles = await new PurgeCSS().purge({
+                        css: [join(output, '**/*.css')],
+                        content: [join(output, '**/*.html'), join(output, '**/*.js')],
+                        defaultExtractor: (content) =>
+                            (content.match(/[\w/:-]+/g) ?? []).map((token) => {
+                                let end = token.length;
+                                while (token[end - 1] === ':') end--;
+                                return token.slice(0, end);
+                            }),
+                        safelist: { standard: [/^:[\w-]+$/u] },
+                    });
+                    for (const style of styles) {
+                        if (style.file === undefined) throw new Error('PurgeCSS returned no stylesheet path.');
+                        await writeFile(style.file, style.css);
+                    }
+                },
+            },
+        },
     ],
 });

@@ -9,7 +9,7 @@ import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { commitAll, markExecutable } from '#tests/harness/git.ts';
 import { ONLY, SCRIPT } from '#tests/config/cli/checks/language/bash/conventions.ts';
 
-test('shipped entry and SSH defaults report every defect and accept the declared call and heredoc', async () => {
+test('shipped entry and SSH defaults report every finding and accept the declared call and heredoc', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['bash'], { level: 'all' }),

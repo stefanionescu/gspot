@@ -24,7 +24,7 @@ export function activeIgnores(policy: Policy): IgnoreEntry[] {
  */
 export function scopeView(surface: KnownSettings, policy: Policy, selected: Manifest[], scope: string): ScopeView {
     const { settings, values, limits, test_files: testFiles } = effectiveSettings(surface, policy, selected, scope);
-    const ignores = activeIgnores(policy);
+    const ignores = activeIgnores(policy).map((entry) => ({ ...entry, paths: entry.paths ?? [] }));
     const format = values.format;
     if (format === undefined) throw new Error('The selected scope has no format settings.');
     return {
@@ -32,7 +32,7 @@ export function scopeView(surface: KnownSettings, policy: Policy, selected: Mani
         test_files: testFiles,
         settings,
         values,
-        roles: { ...values.architecture?.roles, tests: values.architecture?.roles?.tests ?? testFiles },
+        roles: { ...values.architecture?.roles, tests: values.architecture?.roles.tests ?? testFiles },
         format,
         limit: (key, language) => limits[`${language ?? ''}.${key}`] ?? limits[`.${key}`],
         options: (name) => {
@@ -40,13 +40,11 @@ export function scopeView(surface: KnownSettings, policy: Policy, selected: Mani
             if (value === undefined) throw new Error(`The selected scope has no ${name} settings.`);
             return value;
         },
-        ignoresFor: (check: string): IgnoreEntry[] => ignores.filter((entry) => entry.check === check),
+        ignoresFor: (check) => ignores.filter((entry) => entry.check === check),
         rulesOff: (check) =>
             ignores
                 .filter((entry) => entry.check === check)
-                .filter(
-                    (entry) => entry.paths === undefined || entry.paths.length === 0 || coversScope(entry.paths, scope),
-                )
+                .filter((entry) => entry.paths.length === 0 || coversScope(entry.paths, scope))
                 .map((entry) => entry.rule)
                 .filter((rule) => rule !== undefined),
         verbatim: (name) => {

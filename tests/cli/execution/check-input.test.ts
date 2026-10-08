@@ -13,11 +13,11 @@ import { SOURCE_CORRECTIONS } from '#tests/config/cli/execution/check-input.ts';
 
 test.each(SOURCE_CORRECTIONS)(
     '$language naming and structure read corrected source in a reused session',
-    async ({ language, path, structural, defect, corrected }) => {
+    async ({ language, path, structural, sample, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy([language, 'naming'], { level: 'all' }),
-            [path]: defect,
+            [path]: sample,
         });
         const session = await openSession(sandbox.path);
         const options = buildRunOptions({ only: ['naming/identifiers', structural], isDryRun: true });
@@ -26,7 +26,7 @@ test.each(SOURCE_CORRECTIONS)(
         expect(failed.report.checks.map((check) => check.status)).toStrictEqual(['failed', 'failed']);
         for (const check of failed.report.checks)
             expect(check.findings).toContainEqual(containing({ file: path, line: 1 }));
-        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(defect);
+        expect(await Bun.file(join(sandbox.path, path)).text()).toBe(sample);
         await Bun.write(join(sandbox.path, path), corrected);
         const accepted = await executeRun(session, options);
         expect(accepted.report.exitCode, JSON.stringify(accepted.report)).toBe(0);
@@ -123,9 +123,9 @@ test.skipIf(!isPosix)('built-in checks read edited SQL source when a session is 
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['sql/trivial-functions', 'structure/file-lines']);
     await Bun.write(join(sandbox.path, path), 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n');
-    const defect = await executeRun(session, options);
-    expect(defect.report.exitCode).toBe(1);
-    expect(defect.report.checks.flatMap((check) => check.findings)).toContainEqual(containing({ file: path, line: 1 }));
+    const failed = await executeRun(session, options);
+    expect(failed.report.exitCode).toBe(1);
+    expect(failed.report.checks.flatMap((check) => check.findings)).toContainEqual(containing({ file: path, line: 1 }));
     await Bun.write(join(sandbox.path, path), 'select 2;\n');
     const corrected = await executeRun(session, options);
     expect(corrected.report.exitCode).toBe(0);

@@ -52,7 +52,7 @@ test('tilde fences and unclosed examples still report invalid code', async () =>
     ]);
 });
 
-test('Bash examples report syntax errors, accept corrections, and stop on cancellation', async () => {
+test('Bash examples report syntax errors, pass after fixes, and stop on cancellation', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['markdown'], { level: 'all' }),
@@ -71,7 +71,7 @@ test('Bash examples report syntax errors, accept corrections, and stop on cancel
     expect(await rejection(fences(selected))).toBe('The command was canceled.');
 });
 
-test.each(['tsx', 'jsx'])('a %s fence rejects unclosed JSX and accepts its correction', async (language) => {
+test.each(['tsx', 'jsx'])('a %s fence rejects unclosed JSX and passes after the fix', async (language) => {
     await using sandbox = await testdir({
         'gspot.toml': buildPolicy(['markdown'], { level: 'all' }),
         'example.md': '```' + language + '\nexport const panel = <div>Hello;\n```',

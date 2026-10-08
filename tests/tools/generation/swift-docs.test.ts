@@ -7,10 +7,10 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS } from '#tests/config/tools/generation/swift-docs.ts';
+import { SWIFT_DOCS_SOURCE, SWIFT_INLINE_DOCS, SWIFT_FORMAT_CHECK } from '#tests/config/tools/generation/swift-docs.ts';
 
 async function documentationFindings(root: string, code: 0 | 1) {
-    const result = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json']);
+    const result = await spawnGspot(root, SWIFT_FORMAT_CHECK);
     expect(result.code, result.stdout + result.stderr).toBe(code);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks.every(({ status }) => status === (code === 0 ? 'passed' : 'failed'))).toBe(true);
@@ -18,43 +18,48 @@ async function documentationFindings(root: string, code: 0 | 1) {
 }
 
 // SwiftFormat has no Windows build; Linux and macOS own these native diagnostics.
-test.skipIf(!isPosix).each(['recommended', 'all'])(
-    'Swift block comments have native diagnostics at %s',
-    async (level) => {
-        await using sandbox = await testdir();
-        const root = sandbox.path;
-        const policy = buildPolicy(['swift'], { tables: '[agent_rules]\nenabled = false\n', level });
-        await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': SWIFT_DOCS_SOURCE });
-        const configured = await spawnGspot(root, ['apply']);
-        expect(configured.code, configured.stdout + configured.stderr).toBe(0);
-        const findings = await documentationFindings(root, 1);
-        expect(findings.map(({ file, line, column }) => [file, line, column])).toStrictEqual(
-            level === 'all'
-                ? [
-                      ['Value.swift', 1, 1],
-                      ['Value.swift', 9, 1],
-                  ]
-                : [],
-        );
-        expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_DOCS_SOURCE);
-        const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--fix', '--json']);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        expect(await documentationFindings(root, 0)).toStrictEqual([]);
-        expect(await Bun.file(join(root, 'Value.swift')).text()).toContain('"/** not documentation */"');
-        await Bun.write(join(root, 'Value.swift'), SWIFT_DOCS_SOURCE);
-        const ignored = await spawnGspot(root, [
-            'ignore',
-            'swift/swiftformat',
-            '--rule',
-            'blockComments',
-            '--reason',
-            'The imported source retains its documentation layout.',
-        ]);
-        expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
-        expect(await documentationFindings(root, 1)).toStrictEqual([]);
-        expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_DOCS_SOURCE);
-    },
-);
+test.skipIf(!isPosix)('recommended leaves Swift block comments unchecked', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['swift'], { tables: '[agent_rules]\nenabled = false\n', level: 'recommended' }),
+        'Value.swift': SWIFT_DOCS_SOURCE,
+    });
+    const configured = await spawnGspot(sandbox.path, ['apply']);
+    expect(configured.code, configured.stdout + configured.stderr).toBe(0);
+    expect(await documentationFindings(sandbox.path, 1)).toStrictEqual([]);
+    expect(await Bun.file(join(sandbox.path, 'Value.swift')).text()).toBe(SWIFT_DOCS_SOURCE);
+});
+
+test.skipIf(!isPosix)('all reports and fixes Swift block comments and respects the policy ignore', async () => {
+    await using sandbox = await testdir();
+    const root = sandbox.path;
+    const policy = buildPolicy(['swift'], { tables: '[agent_rules]\nenabled = false\n', level: 'all' });
+    await createFileTree(root, { 'gspot.toml': policy, 'Value.swift': SWIFT_DOCS_SOURCE });
+    const configured = await spawnGspot(root, ['apply']);
+    expect(configured.code, configured.stdout + configured.stderr).toBe(0);
+    const findings = await documentationFindings(root, 1);
+    expect(findings.map(({ file, line, column }) => [file, line, column])).toStrictEqual([
+        ['Value.swift', 1, 1],
+        ['Value.swift', 9, 1],
+    ]);
+    expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_DOCS_SOURCE);
+    const corrected = await spawnGspot(root, [...SWIFT_FORMAT_CHECK, '--fix']);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(await documentationFindings(root, 0)).toStrictEqual([]);
+    expect(await Bun.file(join(root, 'Value.swift')).text()).toContain('"/** not documentation */"');
+    await Bun.write(join(root, 'Value.swift'), SWIFT_DOCS_SOURCE);
+    const ignored = await spawnGspot(root, [
+        'ignore',
+        'swift/swiftformat',
+        '--rule',
+        'blockComments',
+        '--reason',
+        'The imported source retains its documentation layout.',
+    ]);
+    expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
+    expect(await documentationFindings(root, 1)).toStrictEqual([]);
+    expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_DOCS_SOURCE);
+});
 
 test.skipIf(!isPosix)('Swift inline comments retain native exceptions, modes, and original positions', async () => {
     await using sandbox = await testdir();
@@ -77,7 +82,7 @@ test.skipIf(!isPosix)('Swift inline comments retain native exceptions, modes, an
         [11, 1],
     ]);
     expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_INLINE_DOCS);
-    const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--fix', '--json']);
+    const corrected = await spawnGspot(root, [...SWIFT_FORMAT_CHECK, '--fix']);
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await documentationFindings(root, 0)).toStrictEqual([]);
     const correctedText = await Bun.file(join(root, 'Value.swift')).text();
@@ -119,9 +124,9 @@ test.skipIf(!isPosix)('nested Swift scopes retain their own native formatting ex
     ]);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const findings = await documentationFindings(root, 1);
-    expect(findings.map(({ file, line }) => [file, line])).toStrictEqual([
-        ['nested/Value.swift', 1],
-        ['nested/Value.swift', 9],
+    expect(findings.map(({ file, line, column }) => [file, line, column])).toStrictEqual([
+        ['nested/Value.swift', 1, 1],
+        ['nested/Value.swift', 9, 1],
     ]);
     expect(await Bun.file(join(root, 'nested/Value.swift')).text()).toBe(SWIFT_DOCS_SOURCE);
 });

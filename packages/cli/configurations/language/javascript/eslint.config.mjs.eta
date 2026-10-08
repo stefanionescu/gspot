@@ -140,7 +140,7 @@ const securityRules = {
 };
 
 const nodeRules = (version) => {
-    const options = version === undefined ? {} : { version };
+    const options = version === undefined || version === '' ? {} : { version };
     return {
     'n/no-deprecated-api': 'error',
     'n/no-process-exit': 'error',

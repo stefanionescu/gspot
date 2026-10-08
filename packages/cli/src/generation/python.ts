@@ -47,7 +47,7 @@ export function pythonInputs(
     session: Session,
     selection: ScopeSelection,
 ): Pick<EtaInputs, 'pythonVenv' | 'pythonScopePath' | 'pythonExcludes' | 'ruffRules'> {
-    const { root } = session;
+    const root = session.installedRoot ?? session.root;
     const { policy } = session.policyFiles;
     const base = posix.relative(posix.join(CONFIGURATION_DIRECTORY, selection.scope.path), '.');
     const exclusions = generatedIgnores(
@@ -70,7 +70,7 @@ export function pythonInputs(
                 ...selection.view
                     .ignoresFor(check)
                     .filter((entry) => entry.rule === undefined)
-                    .flatMap((entry) => entry.paths ?? []),
+                    .flatMap((entry) => entry.paths),
             ].map((path) => `${base}/${path}`),
     };
 }

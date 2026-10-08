@@ -5,7 +5,7 @@ export type SiteReportCase = {
     name: string;
     check: string;
     analyze: (input: CheckInput) => Promise<Finding[]>;
-    defect: (output: string) => Record<string, unknown> | Record<string, unknown>[];
+    report: (output: string) => Record<string, unknown> | Record<string, unknown>[];
     corrected: Record<string, unknown> | Record<string, unknown>[];
     status: number;
     file: string;

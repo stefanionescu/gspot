@@ -1,4 +1,4 @@
-// Test repository for the xctest configuration: a skipped test with no reason and a sleep.
+// Sandbox for the xctest configuration: a skipped test with no reason and a sleep.
 import { planRun } from '#cli/planning/plan.ts';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';

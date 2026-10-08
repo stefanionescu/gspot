@@ -1,6 +1,5 @@
+import { afterEach, beforeEach } from 'bun:test';
 import { openTestBudget } from '#tests/harness/command.ts';
-import { TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
-import { afterEach, beforeEach, setDefaultTimeout } from 'bun:test';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import workspacePackage from '#workspace-package' with { type: 'json' };
 
@@ -11,8 +10,6 @@ if (Bun.version !== workspacePackage.engines.bun)
 
 // Tests start outside hook context; hook scenarios set their own context explicitly.
 setEnvironmentVariable('GSPOT_HOOK', undefined);
-
-setDefaultTimeout(TEST_TIMEOUT_MS);
 
 let budget: Disposable | undefined;
 beforeEach(() => {

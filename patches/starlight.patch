@@ -1,0 +1,24 @@
+diff --git a/dist/components/MobileMenuToggle.astro b/dist/components/MobileMenuToggle.astro
+index 9108f64d5db1d3ff49042aa526cea0c428bf9f64..8163fe14dcc25280c0907373607c8d8754011192 100644
+--- a/dist/components/MobileMenuToggle.astro
++++ b/dist/components/MobileMenuToggle.astro
+@@ -5 +5 @@ import Icon from '../user-components/Icon.astro';
+-<button popovertarget="starlight__sidebar" class="sl-menu-button sl-flex md:sl-hidden print:hidden">
++<button type="button" popovertarget="starlight__sidebar" class="sl-menu-button sl-flex md:sl-hidden print:hidden">
+diff --git a/dist/components/MobileTableOfContents.astro b/dist/components/MobileTableOfContents.astro
+index f9f5d590f9502e1f3b137ca3db14bedcde886788..00134009631e4ce7fb7bab72345b45876658e2c2 100644
+--- a/dist/components/MobileTableOfContents.astro
++++ b/dist/components/MobileTableOfContents.astro
+@@ -11 +11 @@ const { toc } = Astro.locals.starlightRoute;
+-			<nav aria-labelledby="starlight__on-this-page--mobile">
++			<nav aria-label={`${Astro.locals.t('tableOfContents.onThisPage')} (mobile)`}>
+diff --git a/dist/components/Search.astro b/dist/components/Search.astro
+index d8c80d826995d6c8ce598aa618ddf7ea575ecadc..7e1119b3569e5be2e25cfb9ba7e1375d678c8e0d 100644
+--- a/dist/components/Search.astro
++++ b/dist/components/Search.astro
+@@ -19 +19 @@ if (project.trailingSlash === 'never') dataAttributes['data-strip-trailing-slash
+-	<button
++	<button type="button"
+@@ -37 +37 @@ if (project.trailingSlash === 'never') dataAttributes['data-strip-trailing-slash
+-			<button data-close-modal class="sl-flex md:sl-hidden">
++			<button type="button" data-close-modal class="sl-flex md:sl-hidden">

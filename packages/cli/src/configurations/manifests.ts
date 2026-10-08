@@ -6,10 +6,10 @@ import { compact, isRecord } from '#cli/platform/objects.ts';
 import type { NamingTerms } from '#cli/types/parsers/naming.ts';
 import { allChecks } from '#cli/configurations/declarations.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
-import { NAMING_TERMS_FILE } from '#cli/config/configurations.ts';
 import { shippedNamingSchema } from '#cli/parsers/schema/naming.ts';
 import { manifestError, manifestErrors } from '#cli/configurations/errors.ts';
 import { manifestSchema } from '#cli/parsers/schema/configurations/manifest.ts';
+import { CONFIG_PREFIX, NAMING_TERMS_FILE } from '#cli/config/configurations.ts';
 import type { Manifest, ManifestCache, CheckDeclaration } from '#cli/types/configurations.ts';
 
 function issueLines(issue: z.core.$ZodIssue): string[] {
@@ -61,8 +61,25 @@ function registerManifest(manifests: Map<string, Manifest>, path: string): void 
  */
 export function parseManifest(text: string, dir: string): Manifest {
     const parsed = parseToml(text);
+    const rules = listAssets(`${dir}/semgrep/`)
+        .filter((path) => path.endsWith('.yml.eta'))
+        .map((path) => {
+            const source = posix.relative(dir, path);
+            return {
+                source,
+                target: CONFIG_PREFIX + source.slice(0, -'.eta'.length),
+                tool: 'semgrep',
+                rule_keys: ['rules'],
+                scoped: true,
+                when: { configuration: 'security' },
+            };
+        });
+    let toolFiles = parsed['tool_file'];
+    if (toolFiles === undefined) toolFiles = rules;
+    else if (Array.isArray(toolFiles)) toolFiles = [...toolFiles, ...rules];
     const result = manifestSchema.safeParse({
         ...parsed,
+        tool_file: toolFiles,
         configuration: locatedConfiguration(parsed['configuration'], dir),
     });
     if (!result.success)

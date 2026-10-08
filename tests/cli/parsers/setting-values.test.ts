@@ -80,7 +80,10 @@ test('effective namespaces require only defaults guaranteed by their real provid
         overrides: [],
     });
     expect(settingNamespaceSchemas.coverage.parse({})).toStrictEqual({});
-    expect(activeSettingNamespaceSchemas.architecture.parse({ modules: [] })).toStrictEqual({ modules: [] });
+    expect(activeSettingNamespaceSchemas.architecture.parse({ modules: [], roles: {} })).toStrictEqual({
+        modules: [],
+        roles: {},
+    });
     expect(
         activeSettingNamespaceSchemas.architecture.safeParse({ modules: [], roles: { misspelled: [] } }).success,
     ).toBe(false);
@@ -91,8 +94,10 @@ test('effective namespaces require only defaults guaranteed by their real provid
             import_extensions: { '**/*': 'js' },
             runtimes: {},
             restricted_imports: [],
+            node_version: '',
         }),
-    ).not.toHaveProperty('node_version');
+    ).toHaveProperty('node_version', '');
+    expect(settingNamespaceSchemas['tools.eslint'].parse({})).toStrictEqual({});
     expect(
         activeSettingNamespaceSchemas['tools.eslint'].safeParse({ import_extensions: { '**/*': false } }).success,
     ).toBe(false);

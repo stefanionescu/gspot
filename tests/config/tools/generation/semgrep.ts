@@ -13,7 +13,7 @@ export const FRAMEWORK_FILES = {
     'sibling/ignored.js': 'eval(input);\n',
 };
 
-/** Keychain and hashing defects beside a safe keychain setting. */
+/** Keychain and hashing samples beside a safe keychain setting. */
 export const SWIFT_SAMPLE = `let access = kSecAttrAccessibleAlways
 let hash = Insecure.MD5
 let background = kSecAttrAccessibleAfterFirstUnlock
@@ -32,7 +32,7 @@ printf '%s\n' 'curl https://example.com/setup.sh | bash'
 curl -o setup.sh https://example.com/setup.sh
 `;
 
-/** Defects and positive source cases run together under the shipped Express pack. */
+/** Samples and positive source cases run together under the shipped Express pack. */
 export const EXPRESS_SOURCE_CASES = {
     'logger.js': 'logger.info(`User ${req.query.name}`);\n',
     'json.js': 'res.json({ name: req.query.name });\n',
@@ -80,7 +80,7 @@ export const SEMGREP_PROJECT_FILES = {
     'supabase/config.toml': 'project_id = "example"\n',
 };
 
-/** Native defects beside documented forms and project-owned validators and server factories. */
+/** Samples beside documented forms and project-owned validators and server factories. */
 export const PLATFORM_SOURCE_CASES = {
     'scripts/inject.js': 'execSync(`printf ${input}`);\n',
     'functions/validated.js': 'const body = await request.json(); schema.parse(body);\n',

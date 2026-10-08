@@ -43,7 +43,7 @@ command = ["html-validate", "--config", "{tool_file:html-validate-source}", "--f
 output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message" } }
 summary = "Validates every HTML file: elements where they may sit, required attributes, text alternatives, and one style for void elements."
 why = "A browser repairs broken markup in its own way, and a screen reader reads what the repair left."
-help = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/validate --rule <name> --reason \"<why>\"."
+help = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/validate --rule `<name>` --reason \"`<why>`\"."
 
 [[check]]
 name = "scripts"

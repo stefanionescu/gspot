@@ -35,7 +35,7 @@ describe('the dependencies configuration', () => {
 });
 
 test.each(['bun.lock', 'bun.lockb'])(
-    'Bun policy reports a missing bunfig.toml for %s and accepts its correction',
+    'Bun policy reports a missing bunfig.toml for %s and passes after the fix',
     async (lockfile) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {

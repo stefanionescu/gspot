@@ -9,7 +9,7 @@ import { checkInput } from '#cli/execution/built-in.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { denoLint } from '#cli/checks/platform/supabase.ts';
 
-test('pinned Deno reports a lint defect and accepts its correction in a scoped edge function', async () => {
+test('pinned Deno reports its lint finding and passes after the fix in a scoped edge function', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy([], { tables: '[scope."apps/api"]\nconfigurations = ["supabase"]\n' }),

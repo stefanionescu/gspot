@@ -92,7 +92,7 @@ level = "all"
 stage = "commit"
 summary = "Checks the shape of every README: an opening paragraph, a Contents list when long, a section on getting started."
 why = "A README with the right shape answers what this is and how to start before the reader scrolls."
-help = "Add the missing section or paragraph. For an accepted exception, run gspot ignore docs/readme-shape --paths <glob> --reason \"<why>\"."
+help = "Add the missing section or paragraph. For an accepted exception, run gspot ignore docs/readme-shape --paths `<glob>` --reason \"`<why>`\"."
 
 [[setting]]
 name = "docs.banned_headings"

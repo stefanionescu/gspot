@@ -63,7 +63,7 @@ runs = "scope"
 files = { paths = ["**/*.xcassets/**"], extensions = [".swift", ".storyboard", ".xib", ".plist", ".pbxproj", ".xcconfig"] }
 summary = "At level all, finds asset sets that no source or Xcode build setting names."
 why = "An asset nobody names ships in the app for nothing."
-help = "Delete the asset or name it where it is used. For an accepted asset selected at runtime, run gspot ignore xcode/orphan-assets --rule orphan-asset --paths <glob> --reason \"<why>\"."
+help = "Delete the asset or name it where it is used. For an accepted asset selected at runtime, run gspot ignore xcode/orphan-assets --rule orphan-asset --paths `<glob>` --reason \"`<why>`\"."
 
 [[check]]
 name = "test-plans"

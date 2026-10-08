@@ -20,14 +20,14 @@ export type StylelintConsumerCase = {
 export type MarkdownlintConfiguration = { MD007: { indent: number } };
 /** YAML validates nesting consistency while the formatter owns indentation width. */
 export type YamllintConfiguration = { rules: { indentation: { spaces: 'consistent' } } };
-/** The normalized severity tuples returned by a resolved ESLint configuration. */
-export type ResolvedEslint = { rules: Record<string, [number, ...unknown[]]> };
+/** The normalized severity tuples returned by a computed ESLint configuration. */
+export type ComputedEslint = { rules: Record<string, [number, ...unknown[]]> };
 
 /** A tested Ruff document that is required to contain runner path exclusions. */
 export type TestedRuffConfiguration = RuffConfiguration & { lint: Required<RuffConfiguration['lint']> };
 
-/** Native runtime options and rule severities resolved for one test source file. */
-export type RuntimeConfiguration = ResolvedEslint & {
+/** Native runtime options and rule severities computed for one test source file. */
+export type RuntimeConfiguration = ComputedEslint & {
     languageOptions: { globals: Record<string, string | boolean>; sourceType: string };
 };
 

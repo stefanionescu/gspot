@@ -173,7 +173,7 @@ name = "tools.yamllint.rules"
 type = "table"
 direction = "rule-options"
 default = {}
-summary = "Native option tables for active YAML rules. The level decides which rules run, and formatting width comes from [format]. Ignore a finding with gspot ignore files/yamllint --rule <rule> --reason <why>."
+summary = "Native option tables for active YAML rules. The level decides which rules run, and formatting width comes from [format]. Ignore a finding with gspot ignore files/yamllint --rule `<rule>` --reason `<why>`."
 
 [[setting]]
 name = "tools.v8r.schemas"

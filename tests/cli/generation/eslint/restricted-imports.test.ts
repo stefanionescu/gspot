@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
 import { POLICY, PROJECT, STORE_FILES } from '#tests/config/cli/generation/eslint/restricted-imports.ts';
 
 test.each(['recommended', 'all'] as const)(
@@ -59,7 +59,7 @@ test('Zustand exempts all eight default module store extensions from configurati
     });
     const eslint = await createEslint(sandbox.path);
     for (const path of STORE_FILES) {
-        const config = (await eslint.calculateConfigForFile(path)) as ResolvedEslint | undefined;
+        const config = (await eslint.calculateConfigForFile(path)) as ComputedEslint | undefined;
         expect(config, path).toBeDefined();
         expect(config?.rules['no-restricted-imports']).toBeUndefined();
     }

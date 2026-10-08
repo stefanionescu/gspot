@@ -1,4 +1,4 @@
-// Test repository for the nginx configuration: a proxy target the request chooses.
+// Sandbox for the nginx configuration: a proxy target the request chooses.
 import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
@@ -14,7 +14,7 @@ import { CLEAN, FORGED, SERVER, NGINX_INIT } from '#tests/config/tools/configura
 
 // The root names an image that cannot exist, so only the scope's own image lets the container test run.
 const NGINX_POLICY = buildPolicy(['nginx'], {
-    tables: '[tools.nginx]\nimage = "nginx:1.29.3-alpine@"\n[scope."proxy"]\nconfigurations = []\n[scope.tools.nginx]\nimage = "nginx:1.29.3-alpine"\n',
+    tables: '[tools.nginx]\nimage = "nginx:1.29.3-alpine@"\n[scope."proxy"]\nconfigurations = []\n[scope."proxy".tools.nginx]\nimage = "nginx:1.29.3-alpine"\n',
     level: 'all',
 });
 

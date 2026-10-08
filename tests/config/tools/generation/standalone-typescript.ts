@@ -22,10 +22,10 @@ export const STANDALONE_TYPESCRIPT_TABLES = `[scope."app"]
 configurations = ["typescript"]
 [[generated]]
 paths = ["app/emitted/**"]
-reason = "The fixture compiler owns these outputs."
+reason = "The sandbox compiler owns these outputs."
 [[vendored]]
 paths = ["app/vendor/**"]
-reason = "The fixture preserves these upstream sources."
+reason = "The sandbox preserves these upstream sources."
 `;
 
 export const STANDALONE_CORRECTED_SOURCE =

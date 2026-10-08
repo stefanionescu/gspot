@@ -38,7 +38,6 @@ function translationMessage(text: string): string | undefined {
  */
 export function locales(input: CheckInput): Finding[] {
     const { messages_folder: directory, base_locale: base } = input.view.options('i18n');
-    if (directory === undefined) return [];
     const files = input.files
         .map((file) => file.path)
         .filter((path) => path.startsWith(`${directory}/`) && path.endsWith('.json'));

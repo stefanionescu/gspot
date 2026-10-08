@@ -29,7 +29,7 @@ async function prepareProject(root: string): Promise<Record<string, string>> {
     return { PATH: buildSandboxPath(['typos', 'ec', 'ast-grep']) };
 }
 
-test('adding an ESLint fragment exposes its defect on the next explicit check, and removing it drops its plugin', async () => {
+test('adding an ESLint fragment exposes its finding on the next explicit check, and removing it drops its plugin', async () => {
     await using sandbox = await testdir();
     const environment = await prepareProject(sandbox.path);
     await initRepository(sandbox.path, buildInitArguments(['typescript']), environment, { level: 'all' });

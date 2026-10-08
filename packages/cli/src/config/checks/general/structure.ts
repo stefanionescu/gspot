@@ -29,27 +29,7 @@ export const CONFIG_LOGIC_NODES = new Set([
 export const CONFIG_CALL_ALLOWED = new Set(['Set', 'Map', 'RegExp']);
 
 /** Folder names that say nothing about what the folder holds. */
-export const BANNED_FOLDERS = [
-    'common',
-    'core',
-    'helper',
-    'helpers',
-    'util',
-    'utils',
-    'support',
-    'misc',
-    'shared',
-    'bash',
-    'javascript',
-    'typescript',
-    'python',
-    'swift',
-    'node',
-    'js',
-    'ts',
-    'py',
-    'sh',
-];
+export const BANNED_FOLDERS = ['common', 'core', 'helper', 'helpers', 'util', 'utils', 'support', 'misc', 'shared'];
 
 export const NESTJS_KINDS = new Set([
     'controller',

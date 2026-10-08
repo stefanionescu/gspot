@@ -80,10 +80,10 @@ test.each(['recommended', 'all'] as const)(
         }
         const linted = await lintReport();
         expect(linted).toBe(JSON.stringify({ configurations: settings, files: JSDOC_FINDINGS }));
-        const defect = await runTestCommand(JSDOC_COMPILER_ARGV, { cwd: sandbox.path });
-        expect(defect.code, defect.stdout + defect.stderr).toBe(2);
-        expect(defect.stderr).toBe('');
-        expect(defect.stdout).toBe(
+        const failed = await runTestCommand(JSDOC_COMPILER_ARGV, { cwd: sandbox.path });
+        expect(failed.code, failed.stdout + failed.stderr).toBe(2);
+        expect(failed.stderr).toBe('');
+        expect(failed.stdout.replaceAll('\r\n', '\n')).toBe(
             "malformed.js(3,19): error TS1005: ']' expected.\nmissing.js(6,25): error TS7006: Parameter 'value' implicitly has an 'any' type.\nundefined.js(3,12): error TS2304: Cannot find name 'MissingType'.\n",
         );
         for (const { file } of JSDOC_FINDINGS.filter((entry) => entry.file.endsWith('.js')))

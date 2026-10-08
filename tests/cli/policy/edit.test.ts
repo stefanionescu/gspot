@@ -15,7 +15,7 @@ test('policy edits keep a trailing array comma and write inline tables without o
         check: 'security/codeql',
         rule: 'js/file-system-race',
         paths: ['fixture.js'],
-        reason: 'A deliberate fixture owns its temporary files.',
+        reason: 'The sandbox owns its temporary files.',
     };
     const mutate: Mutation = (raw) => {
         setKey(raw, 'ignore', [entry]);

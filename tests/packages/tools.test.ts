@@ -1,4 +1,4 @@
-// Installed tools preserve authored metadata and report defects before accepting their corrections.
+// Installed tools preserve authored metadata and report findings and pass after fixes.
 import { test, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/paths.ts';
 import { join, relative, delimiter } from 'node:path';
@@ -127,7 +127,7 @@ test('private installation keeps authored and locked metadata, and the installed
     expect(await readFile(join(toolConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
 });
 
-test('installed native tools report TOML and whitespace defects and accept corrections', async () => {
+test('installed native tools report TOML and whitespace findings and pass after fixes', async () => {
     await using consumer = await createConsumer(release.registry, release.version);
 
     const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(consumer);
@@ -143,7 +143,7 @@ test('installed native tools report TOML and whitespace defects and accept corre
             only: 'files/taplo',
             path: 'settings.toml',
             isNpm: false,
-            defect: 'a = [\n',
+            sample: 'a = [\n',
             corrected: 'a = 1\n',
             findings: [{ line: 2, column: 1, fixable: false }],
         },

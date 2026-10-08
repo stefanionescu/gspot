@@ -15,13 +15,13 @@ test.each(
             level: component.level,
         }),
         'package.json': '{"name":"markup-security","private":true,"type":"module"}',
-        [component.path]: component.defect,
+        [component.path]: component.sample,
     });
     const eslint = await createEslint(sandbox.path);
-    const defective = await eslint.lintText(component.defect, { filePath: component.path });
-    expect(defective.flatMap(({ messages }) => messages.filter(({ fatal }) => fatal === true))).toStrictEqual([]);
+    const findings = await eslint.lintText(component.sample, { filePath: component.path });
+    expect(findings.flatMap(({ messages }) => messages.filter(({ fatal }) => fatal === true))).toStrictEqual([]);
     expect(
-        defective.flatMap(({ messages }) =>
+        findings.flatMap(({ messages }) =>
             messages.filter(({ ruleId }) => ruleId === component.rule).map(({ line }) => line),
         ),
     ).toStrictEqual([1]);

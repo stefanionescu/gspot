@@ -19,7 +19,7 @@ test.each([
         nativeConfiguration: 'export default [{ rules: { semi: ["error", "always"], "no-undef": "error" } }];',
         invalidConfiguration: 'throw new Error("Invalid native configuration");',
         formatter: ['--format', 'json'],
-        defect: 'missing()\n',
+        sample: 'missing()\n',
         partial: 'missing();\n',
         corrected: 'export {};\n',
     },
@@ -32,7 +32,7 @@ test.each([
         nativeConfiguration: JSON.stringify({ rules: { 'color-hex-length': 'short', 'property-no-unknown': true } }),
         invalidConfiguration: '{',
         formatter: ['--formatter', 'unix'],
-        defect: 'a { color: #ffffff; unknown: 1; }\n',
+        sample: 'a { color: #ffffff; unknown: 1; }\n',
         partial: 'a { color: #fff; unknown: 1; }\n',
         corrected: 'a { color: #fff; }\n',
     },
@@ -62,7 +62,7 @@ test.each([
             },
         }),
         [entry.config]: entry.nativeConfiguration,
-        [entry.path]: entry.defect,
+        [entry.path]: entry.sample,
     });
     const source = await readFile(join(sandbox.path, entry.path), 'utf8');
     await writeFile(join(sandbox.path, entry.config), entry.invalidConfiguration);

@@ -99,7 +99,7 @@ export const TOOL_SCHEMA_CASES: RuntimeSchemaCase[] = [
         name: 'an unknown tool',
         input: {
             tools: { imaginary: { verbatim: { enabled: true } } },
-            reasons: { 'tools.imaginary.verbatim': 'The fixture supplies a substantive option explanation.' },
+            reasons: { 'tools.imaginary.verbatim': 'The sandbox supplies a substantive option explanation.' },
         },
         valid: false,
         diagnostic: '`imaginary` is not a setting gspot knows under [tools]',
@@ -114,7 +114,7 @@ export const TOOL_SCHEMA_CASES: RuntimeSchemaCase[] = [
         name: 'a forbidden native link-checker verbatim table',
         input: {
             tools: { lychee: { verbatim: { timeout: 3 } } },
-            reasons: { 'tools.lychee.verbatim': 'The fixture supplies a substantive option explanation.' },
+            reasons: { 'tools.lychee.verbatim': 'The sandbox supplies a substantive option explanation.' },
         },
         valid: false,
         diagnostic: '`verbatim` is not a setting gspot knows under [tools.lychee]',
@@ -123,7 +123,7 @@ export const TOOL_SCHEMA_CASES: RuntimeSchemaCase[] = [
         name: 'a forbidden native YAML verbatim table',
         input: {
             tools: { yamllint: { verbatim: { enabled: false } } },
-            reasons: { 'tools.yamllint.verbatim': 'The fixture supplies a substantive option explanation.' },
+            reasons: { 'tools.yamllint.verbatim': 'The sandbox supplies a substantive option explanation.' },
         },
         valid: false,
         diagnostic: '`verbatim` is not a setting gspot knows under [tools.yamllint]',

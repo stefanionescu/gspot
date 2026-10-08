@@ -1,12 +1,29 @@
 // What gspot set refuses, run through the command, and what set and ignore keep when apply stops after them.
 import { join } from 'node:path';
+import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { readPolicy } from '#cli/policy/read.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { readTree } from '#tests/harness/preservation.ts';
+import { valueAt } from '#cli/platform/objects.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
+import { knownSettings } from '#cli/policy/settings/known.ts';
+import { settingValue } from '#cli/policy/settings/lookup.ts';
+import { selectForScope } from '#cli/configurations/select.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
-import { POLICY, SET_CONFLICT_POLICIES, SET_ARGUMENT_CONFLICTS } from '#tests/config/cli/commands/set.ts';
+import { readTree, pathExists } from '#tests/harness/preservation.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { TAPLO_REASON, TAPLO_OPTIONS } from '#tests/config/samples/taplo.ts';
+
+import {
+    POLICY,
+    ESLINT_OVERRIDES,
+    NATIVE_OPTION_SCOPES,
+    SET_CONFLICT_POLICIES,
+    ESLINT_OVERRIDE_REASON,
+    SET_ARGUMENT_CONFLICTS,
+} from '#tests/config/cli/commands/set.ts';
 
 test.each(
     SET_ARGUMENT_CONFLICTS.flatMap((entry) =>
@@ -38,7 +55,11 @@ test.each(
 );
 
 test.each([
-    ['a scope-only key without --scope', ['set', 'bash.safety_owners', 'scripts'], '--scope api'],
+    [
+        'a scope-only key without --scope',
+        ['set', 'tools.shellcheck.verbatim', '{"external_sources": true}'],
+        '--scope api',
+    ],
     [
         'a rule turned off',
         ['set', 'tools.markdownlint.rules', '{"MD013": false}'],
@@ -100,3 +121,89 @@ test.each([
     expect(stopped.stdout).toContain('gspot.toml keeps this change');
     expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(written);
 });
+
+test.each(NATIVE_OPTION_SCOPES)(
+    'set addresses native Taplo options in the $name scope without installing tools',
+    async ({ scope, source }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['files'], { tables: '[agent_rules]\nenabled = false\n[scope."app"]\n' }),
+            'app/settings.toml': 'enabled = true\n',
+        });
+        const key = 'tools.taplo.verbatim';
+        const scopeArguments = scope === '' ? [] : ['--scope', scope];
+        const argv = ['set', key, JSON.stringify(TAPLO_OPTIONS), ...scopeArguments];
+        const before = await readTree(sandbox.path);
+        const preview = await runGspot(sandbox.path, [...argv, '--reason', TAPLO_REASON, '--dry-run']);
+        expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+        expect(preview.stdout).toContain('compact_inline_tables = true');
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
+        const refused = await runGspot(sandbox.path, argv);
+        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+        expect(refused.stderr).toContain('[reasons]');
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
+        const written = await runGspot(sandbox.path, [...argv, '--reason', TAPLO_REASON]);
+        expect(written.code, written.stdout + written.stderr).toBe(0);
+        const { policy } = readPolicy(sandbox.path);
+        const selected = selectForScope(policy, scope, configurationManifests());
+        expect(settingValue(knownSettings(selected), policy, key, scope)).toMatchObject({
+            value: TAPLO_OPTIONS,
+            reason: TAPLO_REASON,
+            source,
+        });
+        if (scope === '') {
+            const generated = parse(await readFile(join(sandbox.path, '.gspot/config/taplo.toml'), 'utf8'));
+            expect(generated['formatting']).toMatchObject(TAPLO_OPTIONS);
+        }
+        expect(await pathExists(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
+        const reset = await runGspot(sandbox.path, ['set', key, '--default', ...scopeArguments]);
+        expect(reset.code, reset.stdout + reset.stderr).toBe(0);
+        const next = readPolicy(sandbox.path).policy;
+        const table = scope === '' ? next.authored : next.scopeTables[scope]?.authored;
+        expect(valueAt(table, ['tools', 'taplo', 'verbatim'])).toBeUndefined();
+        expect(valueAt(table, ['reasons', key])).toBeUndefined();
+        expect(await readFile(join(sandbox.path, 'app/settings.toml'), 'utf8')).toBe('enabled = true\n');
+    },
+);
+
+test('set retains native ESLint override records and their outer reason', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['javascript'], { tables: '[agent_rules]\nenabled = false\n' }),
+        'src/example.js': 'export const value = 1;\n',
+    });
+    const before = await readTree(sandbox.path);
+    const argv = [
+        'set',
+        'tools.eslint.overrides',
+        JSON.stringify(ESLINT_OVERRIDES),
+        '--replace',
+        '--reason',
+        ESLINT_OVERRIDE_REASON,
+    ];
+    const preview = await runGspot(sandbox.path, [...argv, '--dry-run']);
+    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const written = await runGspot(sandbox.path, argv);
+    expect(written.code, written.stdout + written.stderr).toBe(0);
+    const { policy } = readPolicy(sandbox.path);
+    expect(policy.authored.tools?.eslint?.overrides).toStrictEqual(ESLINT_OVERRIDES);
+    expect(policy.authored.reasons?.['tools.eslint.overrides']).toBe(ESLINT_OVERRIDE_REASON);
+    expect(await pathExists(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
+});
+
+test.each(['tools.taplo.unknown', 'tools.eslint.verbatim', 'tools.v8r.verbatim'])(
+    'set refuses the unknown or unavailable native key %s without writes',
+    async (key) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['files']),
+            'settings.toml': 'enabled = true\n',
+        });
+        const before = await readTree(sandbox.path);
+        const refused = await runGspot(sandbox.path, ['set', key, '{"enabled": true}', '--reason', TAPLO_REASON]);
+        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+        expect(refused.stderr).toContain(key);
+        expect(await readTree(sandbox.path)).toStrictEqual(before);
+    },
+);

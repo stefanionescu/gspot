@@ -99,11 +99,23 @@ function section(title: string, rows: InitFileRow[]): string[] {
     return [title, ...rows.map((row) => `  ${row.path.padEnd(width)}${row.note}`), ''];
 }
 
-function configurationSection(rows: InitPlan['configurations']): string[] {
+function configurationRows({ everySelected, selection }: Planning, { level }: Policy): InitPlan['configurations'] {
+    return everySelected.map((manifest) => {
+        const checks = manifest.checks.filter((check) => level === 'all' || check.level === 'recommended').length;
+        return {
+            configuration: manifest.configuration.name,
+            how: selection.how.get(manifest.configuration.name) ?? 'required',
+            checks,
+            checksOff: manifest.checks.length - checks,
+        };
+    });
+}
+
+function configurationSection(rows: InitPlan['configurations'], level: InitPlan['level']): string[] {
     if (rows.length === 0) return ['configurations', '  none', ''];
     const lines = rows.map((row) => {
         const noun = row.checks === 1 ? 'check' : 'checks';
-        return `  ${row.configuration.padEnd(CONFIGURATION_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;
+        return `  ${row.configuration.padEnd(CONFIGURATION_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun} (${String(row.checksOff)} off at ${level})`;
     });
     return ['configurations', ...lines, ''];
 }
@@ -151,11 +163,8 @@ export function buildInitPlan(
     return {
         ...compact({ template }),
         ...(answers.ci === 'none' ? { ci: CI_SETUP } : {}),
-        configurations: everySelected.map((manifest) => ({
-            configuration: manifest.configuration.name,
-            how: selection.how.get(manifest.configuration.name) ?? 'required',
-            checks: manifest.checks.length,
-        })),
+        level: policy.level,
+        configurations: configurationRows(planning, policy),
         write: [
             { path: POLICY_FILE, note: `your policy, ${String(policyText.split('\n').length)} lines` },
             { path: `${DOT_GSPOT}/`, note: 'generated configuration and version pin' },
@@ -196,7 +205,7 @@ export function initPlanText(plan: InitPlan): string {
     const { dim } = colors;
     const lines = [
         ...templateSection(plan.template),
-        ...configurationSection(plan.configurations),
+        ...configurationSection(plan.configurations, plan.level),
         ...section('write', plan.write),
         ...section(`delete ${dim('(git keeps them: git show HEAD:<path>)')}`, plan.remove),
         ...section('left in place', plan.retained),

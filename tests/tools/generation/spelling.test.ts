@@ -17,7 +17,7 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['spelling'], {
-            tables: `[reasons]\n"tools.typos.verbatim" = "The fixture filename owns an external spelling; other words remain checked."\n[tools.typos.verbatim.type.fixture]\nextend-glob = ["fixture.txt"]\n[tools.typos.verbatim.type.fixture.extend-words]\ncolour = "${TYPO.color}"\n[tools.typos.verbatim.type.fixture.extend-identifiers]\nIIFEs = "IIFEs"\n`,
+            tables: `[reasons]\n"tools.typos.verbatim" = "The sample filename owns an external spelling; other words remain checked."\n[tools.typos.verbatim.type.fixture]\nextend-glob = ["fixture.txt"]\n[tools.typos.verbatim.type.fixture.extend-words]\ncolour = "${TYPO.color}"\n[tools.typos.verbatim.type.fixture.extend-identifiers]\nIIFEs = "IIFEs"\n`,
             level: 'all',
         }),
         'fixture.txt': `${TYPO.color} ${TYPO.the}\nIIFEs\n`,
@@ -59,7 +59,7 @@ test('spelling locales and word allowances remain scoped in generated configurat
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['spelling'], {
-            tables: `[scope."british"]\n[scope.british.tools.typos]\nlocale = "en-gb"\n[scope.british.reasons]\n"tools.typos.verbatim" = "An imported name requires this exact spelling; an upstream fixture retains an external label."\n[scope.british.tools.typos.verbatim.default.extend-words]\n"${TYPO.the}" = "${TYPO.the}"\n[scope.british.tools.typos.verbatim.default.extend-identifiers]\n"${TYPO.the}" = "${TYPO.the}"\n[scope.british.tools.typos.verbatim.type.upstream]\nextend-glob = ["upstream.txt"]\n[scope.british.tools.typos.verbatim.type.upstream.extend-words]\nrecieve = "${TYPO.receive}"\n[scope."british/child"]\n`,
+            tables: `[scope."british"]\n[scope.british.tools.typos]\nlocale = "en-gb"\n[scope.british.reasons]\n"tools.typos.verbatim" = "An imported name requires this exact spelling; an upstream sample retains an external label."\n[scope.british.tools.typos.verbatim.default.extend-words]\n"${TYPO.the}" = "${TYPO.the}"\n[scope.british.tools.typos.verbatim.default.extend-identifiers]\n"${TYPO.the}" = "${TYPO.the}"\n[scope.british.tools.typos.verbatim.type.upstream]\nextend-glob = ["upstream.txt"]\n[scope.british.tools.typos.verbatim.type.upstream.extend-words]\nrecieve = "${TYPO.receive}"\n[scope."british/child"]\n`,
             level: 'all',
         }),
         'sample.txt': `${TYPO.color} ${TYPO.the}\n`,

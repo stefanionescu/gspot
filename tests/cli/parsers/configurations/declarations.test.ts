@@ -1,7 +1,10 @@
-import { test, expect } from 'bun:test';
+import { test, spyOn, expect } from 'bun:test';
+import * as assets from '#cli/platform/assets.ts';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 import {
+    SEMGREP_ASSETS,
     TOOL_DECLARATION,
     SECURITY_DECLARATION,
     SUPPRESSION_DECLARATION,
@@ -128,4 +131,29 @@ test('syntax selector coverage has no separate level declaration and retains its
             allowed: 'drizzle.raw_sql_allowed',
         },
     ]);
+});
+
+test('Semgrep packs infer their scoped security declaration while explicit unrelated targets stay authored', () => {
+    using _assets = spyOn(assets, 'listAssets').mockReturnValue(SEMGREP_ASSETS);
+    const manifest = parseConfigurationManifest('example', {
+        tables: '[[tool_file]]\nsource = "other.eta"\ntarget = ".gspot/config/other.yml"\n[tool_file.pointer]\npath = "other.yml"\n',
+    });
+    expect(manifest.toolFiles.map(({ source, target }) => [source, target])).toStrictEqual([
+        ['other.eta', '.gspot/config/other.yml'],
+        ['semgrep/first.yml.eta', '.gspot/config/semgrep/first.yml'],
+        ['semgrep/second.yml.eta', '.gspot/config/semgrep/second.yml'],
+    ]);
+    expect(manifest.toolFiles.slice(1)).toMatchObject([
+        { tool: ['semgrep'], rule_keys: ['rules'], scoped: true, when: { configuration: 'security' } },
+        { tool: ['semgrep'], rule_keys: ['rules'], scoped: true, when: { configuration: 'security' } },
+    ]);
+    expect(() => parseConfigurationManifest('example', { tables: 'tool_file = "invalid"\n' })).toThrow('tool_file');
+});
+
+test('every shipped setting declares a default', () => {
+    expect(
+        [...configurationManifests().values()].flatMap((manifest) =>
+            manifest.settings.filter((setting) => setting.default === undefined).map((setting) => setting.name),
+        ),
+    ).toStrictEqual([]);
 });

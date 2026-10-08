@@ -23,4 +23,4 @@ export const POLICY_LAYOUT_CASES = [
 export const POLICY_LAYOUT_EXTERNAL_EDIT = 'configurations=[]\n# External edit must survive.\n[hooks]\nenabled=true\n';
 
 export const POLICY_LAYOUT_UNREPRESENTABLE =
-    'configurations=[]\n[tools.prettier.verbatim]\nmixed=[{first=1, # This field owns the comment.\nsecond=2},3]\n[reasons]\n"tools.prettier.verbatim"="The fixture preserves native comment ownership."\n';
+    'configurations=[]\n[tools.prettier.verbatim]\nmixed=[{first=1, # This field owns the comment.\nsecond=2},3]\n[reasons]\n"tools.prettier.verbatim"="The sandbox preserves native comment ownership."\n';

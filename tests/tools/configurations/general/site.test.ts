@@ -1,4 +1,4 @@
-// Test repository for the site configuration: a small site with a build script, broken one way for each check.
+// Sandbox for the site configuration: a small site with a build script, broken one way for each check.
 import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
@@ -32,7 +32,7 @@ describe('the site configuration', () => {
     });
 });
 
-// Recommended savings thresholds and strict optimization both accept corrected bytes.
+// Recommended savings thresholds and strict optimization both pass after the fix.
 async function expectSvgThresholds(root: string, svg: string): Promise<void> {
     await Bun.write(join(root, 'icon.svg'), `${svg} `);
     const small = await spawnGspot(root, COMMAND);

@@ -36,7 +36,7 @@ async function expectCloneHooks(source: string, environment: Record<string, stri
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
 }
 
-test('installed and freshly cloned repositories enforce staged defects through real commits', async () => {
+test('installed and freshly cloned repositories enforce staged findings through real commits', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);

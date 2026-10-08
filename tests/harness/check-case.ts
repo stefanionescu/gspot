@@ -1,4 +1,4 @@
-// Run defects and corrections within the test budget, restoring source-case edits after each run.
+// Run samples and fixes within the test budget, restoring source-case edits after each run.
 import { join } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
@@ -15,7 +15,7 @@ import type { FindingCase, CheckCommand, CheckCaseOutcome } from '#tests/types/h
 /**
  * Applies case changes, runs the selected check, and restores the repository.
  * @param cwd the sandbox, already installed
- * @param changes the defect
+ * @param changes the sample
  * @param environment verbatim variables, such as the PATH of the tools
  * @returns the exit code and the output of the check
  */
@@ -35,10 +35,10 @@ export async function runCheckCase(
 }
 
 /**
- * Run one delivered check against a defect, apply its correction, and rerun it within the test budget.
+ * Run one delivered check against a sample, apply its fix, and rerun it within the test budget.
  * @param installation the installed CLI command
  * @param options the isolated repository and command environment
- * @param check the defect and the explicit operation that corrects it
+ * @param check the sample and its fix
  * @returns process evidence and parsed reports for assertions in the owning test
  */
 export async function runPackageCheck(
@@ -47,7 +47,7 @@ export async function runPackageCheck(
     check: PackageCheckCase,
 ): Promise<PackageCheckOutcome> {
     const args = [...installation.command, 'check', check.path, '--only', check.only, '--json'];
-    if (check.defect !== undefined) await writeFile(join(options.cwd, check.path), check.defect);
+    if (check.sample !== undefined) await writeFile(join(options.cwd, check.path), check.sample);
     const failed = await runTestCommand(args, options);
     const report = JSON.parse(failed.stdout) as RunReport;
     let fixed: SpawnOutcome | undefined;
@@ -59,9 +59,9 @@ export async function runPackageCheck(
 }
 
 /**
- * Observe the defect and its correction, restoring each source edit before returning reports to the test.
+ * Observe the sample and its fix, restoring each source edit before returning reports to the test.
  * @param repository the prepared repository and its explicit runner
- * @param entry the defect and expected finding
+ * @param entry the sample and expected finding
  * @param scenario the repository's default correction
  * @returns process evidence and parsed reports without asserting their contents
  */

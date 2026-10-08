@@ -15,7 +15,7 @@ import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/
 
 const POSTGRES_HISTORY_POLICY = buildPolicy(['postgres'], { tables: '[postgres]\nfrozen_through = "all"\n' });
 
-test('migration history reports changed committed SQL and an earlier new version, then accepts corrections', async () => {
+test('migration history reports changed committed SQL and an earlier new version, then passes after fixes', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': POSTGRES_HISTORY_POLICY, [PATH]: ORIGINAL });
     gitOutput(sandbox.path, ['init']);
@@ -90,7 +90,7 @@ test('nested scopes keep migration roots and parsed reads separate', async () =>
     }
 });
 
-test('migration analysis rejects unreadable SQL and accepts its correction in a new run', async () => {
+test('migration analysis rejects unreadable SQL and passes after the fix in a new run', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'gspot.toml': POSTGRES_HISTORY_POLICY, [PATH]: 'CREATE TABLE ;' });
     expect(

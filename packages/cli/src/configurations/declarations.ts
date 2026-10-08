@@ -87,3 +87,19 @@ export function fileDeclarations(
         ),
     ];
 }
+
+/**
+ * The selected Semgrep packs and repository rule paths for one scope.
+ * @param selected the configurations this scope selects
+ * @param scope the repository-relative scope path
+ * @param authored the resolved repository rule paths
+ * @returns the required native rule paths, relative to the repository
+ */
+export function semgrepRuleFiles(selected: Manifest[], scope: string, authored: string[]): string[] {
+    const declared = selected.flatMap((manifest) =>
+        manifest.toolFiles
+            .filter((file) => file.tool.includes('semgrep') && file.rule_keys?.includes('rules') === true)
+            .map((file) => targetInScope(scope, file)),
+    );
+    return [...new Set([...declared, ...authored])];
+}

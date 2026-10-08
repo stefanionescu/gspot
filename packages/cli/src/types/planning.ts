@@ -9,6 +9,8 @@ import type { ToolPin, Manifest, ParsedCheck, CheckDeclaration } from '#cli/type
 /** Policy, repository inventory, and selected configurations shared by planning and generation. */
 export type Session = {
     root: string;
+    /** The verified working installation when the source is a revision copy. */
+    installedRoot?: string;
     reads: ReadCache;
     resources?: DisposableStack;
     packageInstaller: () => PackageInstaller | undefined;
@@ -57,7 +59,7 @@ export type Stage = ParsedCheck['stage'];
 
 /** Saved selection state, with an enabling setting only when it is required. */
 export type SelectionStatus =
-    | { cause: 'level' | 'ignore'; note: string }
+    | { cause: 'level' | 'ignore' | 'condition'; note: string }
     | { cause: 'setting'; note: string; setting: string };
 /** A declared native ignore source and its ordered path matcher. */
 export type NativeIgnore = { file: string; matches: (path: string) => boolean };

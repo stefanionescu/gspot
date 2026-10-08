@@ -14,7 +14,8 @@ export const ENVIRONMENT_READ = 'ProcessInfo.processInfo.environment';
 
 export const WORKSPACE_SUFFIX = '.xcworkspace';
 
-export const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
+export const DIAGNOSTIC =
+    /^(?<file>(?:[A-Za-z]:)?[/\\][^\r\n]+?):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
 
 export const RESPONSE_FILE = /@(?<path>\/\S+)/gu;
 

@@ -8,6 +8,7 @@ import { misePins } from '#cli/configurations/pins.ts';
 import { CLI_PINS } from '#cli/config/configurations.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
+import { TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
 import { ARGUMENT_START } from '#automation/config/paths.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import pluginManifest from '#plugin-package' with { type: 'json' };
@@ -65,16 +66,29 @@ async function installSuiteTools(work: string, execute: typeof run, cancelSignal
 
 const args = process.argv.slice(ARGUMENT_START);
 let suite: string | undefined;
+if (args[0] === 'cli') suite = 'cli';
+if (args[0] === 'plugin') suite = 'plugin';
 if (args[0] === 'test') suite = 'tools';
 if (args[0] === 'package') suite = 'packages';
 const options = suite === undefined ? args : args.slice(1);
+const isSourceSuite = suite === 'cli' || suite === 'plugin';
 const separator = options.indexOf('--');
 const flags = separator === -1 ? options : options.slice(0, separator);
 const paths = separator === -1 ? [] : options.slice(separator + 1);
+const defaults = suite === 'cli' ? ['cli', 'plugin'] : [suite].filter((target) => target !== undefined);
+const targets = paths.length === 0 ? defaults : paths;
+const testCommand = [
+    process.execPath,
+    'test',
+    ...flags,
+    '--timeout',
+    String(TEST_TIMEOUT_MS),
+    ...targets.map((path) => resolve(workspaceRoot, 'tests', path)),
+];
 
 if (suite !== undefined && options.length === 1 && options[0] === '--help') {
     console.log(
-        `Usage: mise run test:${suite === 'packages' ? 'package' : suite} -- [Bun options] [-- paths ...]\n\nPaths are relative to tests/. Without paths, ${suite} is selected. Bun validates its options.`,
+        `Usage: bun scripts/plugin.ts ${String(args[0])} [Bun options] [-- paths ...]\n\nPaths are relative to tests/. Without paths, it runs ${targets.join(' and ')}. Bun validates its options.`,
     );
 } else {
     const controller = new AbortController();
@@ -89,7 +103,7 @@ if (suite !== undefined && options.length === 1 && options[0] === '--help') {
         await using work = await testdir();
         // Each run owns its cache because packed workspace bytes change without a version change.
         const bunCache = join(work.path, 'bun-cache');
-        setEnvironmentVariable('BUN_INSTALL_CACHE_DIR', bunCache);
+        if (!isSourceSuite) setEnvironmentVariable('BUN_INSTALL_CACHE_DIR', bunCache);
         const execute: typeof run = async (command, commandOptions) => {
             controller.signal.throwIfAborted();
             const result = await run(command, { ...commandOptions, cancelSignal: controller.signal });
@@ -107,24 +121,29 @@ if (suite !== undefined && options.length === 1 && options[0] === '--help') {
                 : undefined;
         if (built !== undefined && built.code !== 0)
             throw new Error(`CLI build failed: ${built.stdout}${built.stderr}`);
-        const archives = await packRegistryPackages(
-            work.path,
-            [
-                { ...pluginManifest, source: join(workspaceRoot, 'packages/eslint-plugin') },
-                { ...packageManifest, source: join(workspaceRoot, 'packages/cli') },
-            ],
-            execute,
-        );
-        setEnvironmentVariable('GSPOT_PACKAGE_ARCHIVES', archives);
+        const archives = isSourceSuite
+            ? undefined
+            : await packRegistryPackages(
+                  work.path,
+                  [
+                      { ...pluginManifest, source: join(workspaceRoot, 'packages/eslint-plugin') },
+                      { ...packageManifest, source: join(workspaceRoot, 'packages/cli') },
+                  ],
+                  execute,
+              );
+        if (archives !== undefined) setEnvironmentVariable('GSPOT_PACKAGE_ARCHIVES', archives);
         const nativePath =
-            suite === undefined ? undefined : await installSuiteTools(work.path, execute, controller.signal);
+            suite === 'tools' || suite === 'packages'
+                ? await installSuiteTools(work.path, execute, controller.signal)
+                : undefined;
         await using registry =
-            suite === 'tools' ? undefined : await createPackageRegistry(work.path, { declarations: [], execute });
+            suite === 'tools' || isSourceSuite
+                ? undefined
+                : await createPackageRegistry(work.path, { declarations: [], execute });
         const npmrc = join(work.path, '.npmrc');
         if (registry !== undefined) writeFileSync(npmrc, `@gspothq:registry=${registry.url}/\n`, { mode: 0o600 });
         const env = {
-            BUN_INSTALL_CACHE_DIR: bunCache,
-            GSPOT_PACKAGE_ARCHIVES: archives,
+            ...(archives === undefined ? {} : { BUN_INSTALL_CACHE_DIR: bunCache, GSPOT_PACKAGE_ARCHIVES: archives }),
             ...(nativePath === undefined ? {} : { PATH: nativePath }),
             ...(registry === undefined ? {} : { NPM_CONFIG_USERCONFIG: npmrc }),
             ...(suite === 'packages' && registry !== undefined
@@ -136,17 +155,7 @@ if (suite !== undefined && options.length === 1 && options[0] === '--help') {
                   }
                 : {}),
         };
-        const command =
-            suite === undefined
-                ? [process.execPath, 'packages/cli/src/main.ts', ...args]
-                : [
-                      process.execPath,
-                      'test',
-                      ...flags,
-                      ...(paths.length === 0
-                          ? [join(workspaceRoot, 'tests', suite)]
-                          : paths.map((path) => resolve(workspaceRoot, 'tests', path))),
-                  ];
+        const command = suite === undefined ? [process.execPath, 'packages/cli/src/main.ts', ...args] : testCommand;
         const result = await execute(command, {
             cwd: workspaceRoot,
             env,

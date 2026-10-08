@@ -5,5 +5,5 @@
     "reporters": ["console"],
     "absolute": true,
     "gitignore": true,
-    "ignore": <%= json(["**/.gspot/**", "**/*.md", "**/*.mdx", ...ignoresFor('duplication/jscpd').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths ?? [])], 0) %>
+    "ignore": <%= json(["**/.gspot/**", "**/*.md", "**/*.mdx", ...ignoresFor('duplication/jscpd').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths)], 0) %>
 }

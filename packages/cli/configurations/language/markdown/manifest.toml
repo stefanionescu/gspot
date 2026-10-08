@@ -72,7 +72,7 @@ rule_keys = [""]
 target = ".gspot/config/markdownlint-cli2.mjs"
 tool = "markdownlint-cli2"
 scoped = true
-pointer = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};", when = { configuration = "javascript" } }
+pointer = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};" }
 
 [[check]]
 name = "markdownlint"
@@ -106,4 +106,4 @@ name = "tools.markdownlint.rules"
 type = "table"
 direction = "rule-options"
 default = {}
-summary = "Native option tables by Markdown rule ID, such as MD024. The level decides which rules run; ignore a finding with gspot ignore markdown/markdownlint --rule <rule> --reason <why>."
+summary = "Native option tables by Markdown rule ID, such as MD024. The level decides which rules run; ignore a finding with gspot ignore markdown/markdownlint --rule `<rule>` --reason `<why>`."

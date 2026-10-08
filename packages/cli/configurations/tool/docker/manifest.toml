@@ -74,7 +74,7 @@ files = { paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile"] }
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$" }
 summary = "Lints every Dockerfile, and runs ShellCheck over its RUN lines."
 why = "An unpinned base image or a cache left in a layer makes a build nobody can repeat and an image larger than it needs to be."
-help = "Change the instruction the way the rule says. Turn one rule off with gspot ignore docker/hadolint --rule <id> --reason \"<why>\"."
+help = "Change the instruction the way the rule says. Turn one rule off with gspot ignore docker/hadolint --rule `<id>` --reason \"`<why>`\"."
 
 [[check]]
 name = "compose"
@@ -116,7 +116,7 @@ exit_codes = [10]
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<rule>[^:]+):(?<message>.*)$" }
 summary = "Scans Dockerfiles and Compose files for misconfiguration: a root user, a missing health check, an exposed secret."
 why = "A container that runs as root turns any bug in the service into control of the container."
-help = "Change the file the way the message says. Accept one advisory with gspot ignore docker/trivy-config --rule <id> --reason \"...\"."
+help = "Change the file the way the message says. Accept one advisory with gspot ignore docker/trivy-config --rule `<id>` --reason \"...\"."
 
 [[check]]
 name = "trivy-image"
@@ -129,7 +129,7 @@ needs = ["docker"]
 tool = "trivy"
 summary = "Scans every image a Compose file names for known vulnerabilities in its packages."
 why = "A base image carries hundreds of packages, and their advisories arrive after the image was chosen."
-help = "Move to a newer tag of the image. Accept one advisory with gspot ignore docker/trivy-image --rule <id> --reason \"...\"."
+help = "Move to a newer tag of the image. Accept one advisory with gspot ignore docker/trivy-image --rule `<id>` --reason \"...\"."
 
 [[setting]]
 name = "tools.hadolint.trusted_registries"

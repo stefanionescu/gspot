@@ -1,6 +1,7 @@
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import { runTool } from '#cli/tools/run.ts';
 import { readText } from '#cli/platform/source.ts';
+import { assetPath } from '#cli/platform/assets.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { openRoot } from '#cli/platform/root/open.ts';
@@ -13,6 +14,7 @@ import { copyIntoScratch } from '#cli/execution/copy/files.ts';
 import type { OutputPaths } from '#cli/types/parsers/output.ts';
 import { checkCompanions } from '#cli/planning/requirements.ts';
 import { fileBatches } from '#cli/execution/command/batches.ts';
+import type { SpawnResult } from '#cli/types/platform/runtime.ts';
 import { FILES_PLACEHOLDER } from '#cli/config/configurations.ts';
 import type { ExecutionFailure } from '#cli/types/tools/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -20,7 +22,6 @@ import { toolPin, checkToolPin } from '#cli/configurations/pins.ts';
 import { DEFAULT_OUTPUT_FORMAT } from '#cli/config/parsers/output.ts';
 import { inspectTool, toolAvailability } from '#cli/tools/inspect.ts';
 import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
-import type { SpawnResult, SpawnOptions } from '#cli/types/platform/runtime.ts';
 import { toolDeadline, executionFailure } from '#cli/execution/command/failures.ts';
 import { checkedFindings, recordInvocation } from '#cli/execution/command/findings.ts';
 import type { CheckInput, CheckResult, CheckRunOptions } from '#cli/types/execution/check.ts';
@@ -39,6 +40,8 @@ import type {
     ParsedFindings,
     CommandRunState,
     PreparedCommand,
+    CheckToolOptions,
+    CheckToolProgram,
     CommandInvocation,
     CommandEnvironment,
 } from '#cli/types/execution/command.ts';
@@ -131,9 +134,10 @@ async function runCommands(
 
 function checkTool(
     input: CheckInput,
-    name: string,
+    name: string | undefined,
     options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>>,
 ): CheckTool {
+    if (name === undefined) throw new Error('An empty command cannot run.');
     const tool = checkToolPin(toolPin(input.manifests.values(), name), input.check);
     const env = { ...tool.env, ...input.check.env, ...options.env };
     const inspection = inspectTool({ ...input, cwd: options.cwd }, { ...tool, env });
@@ -142,7 +146,7 @@ function checkTool(
         if (availability.status === 'error') throw new Error(availability.note);
         throw new GspotError('tool', availability.note);
     }
-    return { path: availability.path, env };
+    return { name: tool.name, path: availability.path, env };
 }
 
 // A nested tool runs from its selected installation even inside an isolated source copy.
@@ -315,15 +319,16 @@ export async function runCheckCommand(
  */
 export async function runCheckTool(
     input: CheckInput,
-    command: string[],
-    options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>> & Pick<SpawnOptions, 'stdin'>,
+    command: string[] | CheckToolProgram,
+    options: CheckToolOptions,
 ): Promise<SpawnResult> {
     if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
-    const name = command[0];
-    if (name === undefined) throw new Error('An empty command cannot run.');
-    const { path, env } = checkTool(input, name, options);
+    const { name, path, env } = checkTool(input, Array.isArray(command) ? command[0] : command.tool, options);
     const seconds = toolDeadline(input.view);
-    const result = await runTool([path, ...command.slice(1)], {
+    const argv = Array.isArray(command)
+        ? [path, ...command.slice(1)]
+        : [process.execPath, assetPath(command.entry), path];
+    const result = await runTool(argv, {
         ...options,
         env: companionEnvironment(input, checkCompanions(input.selection, input.check), env),
         timeoutSeconds: seconds,

@@ -732,7 +732,7 @@ const conventions = [
     'TRY401',
 ];
 const families = [...baseline, ...(isAll ? conventions : []), ...ruffRules];
-const perFile = ignoresFor('python/ruff').filter((entry) => entry.rule !== undefined && (entry.paths ?? []).length > 0);
+const perFile = ignoresFor('python/ruff').filter((entry) => entry.rule !== undefined && entry.paths.length > 0);
 const byPath = new Map();
 for (const entry of perFile)
     for (const path of entry.paths) byPath.set(path, [...(byPath.get(path) ?? []), entry.rule]);
@@ -752,7 +752,7 @@ const document = {
         ignore: off,
         isort: { 'length-sort': true, 'length-sort-straight': true, 'force-sort-within-sections': true },
         mccabe: { 'max-complexity': limit('cyclomatic_complexity', 'python') },
-        ...(convention === undefined ? {} : { pydocstyle: { convention } }),
+        ...(convention === '' ? {} : { pydocstyle: { convention } }),
         pylint: {
             'max-args': limit('function_parameters', 'python'),
             'max-positional-args': limit('function_parameters', 'python'),

@@ -1,4 +1,4 @@
-/** The files and policy needed to apply a defect for one check. */
+/** The files and policy needed to apply a sample for one check. */
 export type CaseChanges = {
     check: string;
     files: Record<string, string>;

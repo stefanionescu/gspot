@@ -19,13 +19,13 @@ export const SWIFT_FORMAT_POLICY = `configurations = ["swift"]
 runner = "mise"
 [[ignore]]
 check = "swift/swiftlint"
-reason = "SwiftFormat owns this fixture's formatting."
+reason = "SwiftFormat owns this sandbox's formatting."
 [[ignore]]
 check = "swift/swiftlint-analyze"
-reason = "This fixture has no analyzer build log."
+reason = "This sandbox has no analyzer build log."
 [[ignore]]
 check = "swift/periphery"
-reason = "This fixture has no Xcode project."
+reason = "This sandbox has no Xcode project."
 [agent_rules]
 enabled = false
 `;
@@ -34,7 +34,7 @@ enabled = false
 export const EDITORCONFIG_POLICY = `configurations = ["format"]
 [[ignore]]
 check = "format/prettier"
-reason = "This fixture uses EditorConfig without Prettier."
+reason = "This sandbox uses EditorConfig without Prettier."
 [agent_rules]
 enabled = false
 `;

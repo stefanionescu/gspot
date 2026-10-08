@@ -12,6 +12,7 @@ import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
+import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { COMPONENT, SELECTION_INIT } from '#tests/config/cli/commands/init/selection.ts';
 
 test('accepting defaults leaves the detected initialization plan unchanged', async () => {
@@ -185,4 +186,28 @@ test('init previews only applicable tool projects and duplicate pins for the sel
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const installed = parseToolProject(await Bun.file(join(sandbox.path, '.gspot/package.json')).text());
     expect(Object.keys(installed.dependencies)).toStrictEqual(['ajv', 'editorconfig-checker', 'v8r']);
+});
+
+test.each(['recommended', 'all'] as const)('init counts active and disabled checks at %s', async (level) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'source.py': 'VALUE = 1\n',
+        'team.template.toml': `template = "team"\nselection = "exact"\nlevel = "${level}"\nconfigurations = ["python"]\n`,
+    });
+    const before = await readTree(sandbox.path);
+    const command = ['init', '--yes', '--from', 'team.template.toml', '--dry-run', ...QUIET_INIT];
+    const result = await runGspot(sandbox.path, [...command, '--json']);
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
+    const total = configurationManifests().get('python')!.checks;
+    const off = level === 'all' ? 0 : total.filter((check) => check.level === 'all').length;
+    expect(plan.level).toBe(level);
+    expect(plan.configurations.find((row) => row.configuration === 'python')).toMatchObject({
+        checks: total.length - off,
+        checksOff: off,
+    });
+    const text = await runGspot(sandbox.path, command);
+    expect(text.code, text.stdout + text.stderr).toBe(0);
+    expect(text.stdout).toContain(`${String(total.length - off)} checks (${String(off)} off at ${level})`);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
 });

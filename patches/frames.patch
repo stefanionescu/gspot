@@ -1,0 +1,19 @@
+diff --git a/dist/index.js b/dist/index.js
+index 2892b7f58543097bbd794e69b68e1c851d6a0faa..f2a8af0a534f81a197de4dde6effb2d335138a98 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -236 +236 @@ function getFramesBaseStyles({ cssVar }, options) {
+-			div {
++			span {
+@@ -279 +279 @@ function getFramesBaseStyles({ cssVar }, options) {
+-				div {
++				span {
+@@ -287 +287 @@ function getFramesBaseStyles({ cssVar }, options) {
+-				div {
++				span {
+@@ -579,0 +580,2 @@ function pluginFrames(options = {}) {
++                  type: "button",
++                  "aria-label": texts.copyButtonTooltip,
+@@ -584 +586 @@ function pluginFrames(options = {}) {
+-                [h("div")]
++                [h("span")]

@@ -151,6 +151,11 @@ test('human setting listings shorten long values and name extra tables while JSO
         'generated-long-name-one/**',
         'generated-long-name-two/**',
     ]);
+    expect(settings.find((row) => row.key === 'tools.shellcheck.verbatim')).toMatchObject({
+        value: { external_sources: true },
+        source: 'gspot.toml',
+    });
+    expect(settings.some((row) => row.key === 'tools.eslint.verbatim')).toBe(false);
     expect(extras).toStrictEqual([
         {
             tool: 'shellcheck',

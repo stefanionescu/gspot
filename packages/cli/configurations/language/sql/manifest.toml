@@ -60,7 +60,7 @@ fix = ["sqlfluff", "fix", "--config", "{tool_file:sqlfluff}", "--ignore-local-co
 output = { format = "json", children = "violations", fields = { file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description" } }
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database configuration names."
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
-help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule <code> --reason \"<why>\"."
+help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule `<code>` --reason \"`<why>`\"."
 
 [[setting]]
 name = "tools.sqlfluff.dialect"

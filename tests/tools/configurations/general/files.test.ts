@@ -1,4 +1,4 @@
-// Native file readers report positioned defects and accept independent corrections.
+// Native file readers report positioned findings and pass after independent fixes.
 import { join } from 'node:path';
 import { git } from '#tests/harness/git.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';

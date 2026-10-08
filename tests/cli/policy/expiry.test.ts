@@ -9,7 +9,7 @@ import { POLICY_EXPIRY_CASES, UNREPRESENTABLE_POLICY_COMMENT } from '#tests/conf
 
 for (const { name, literal, valid, date, syntaxError } of POLICY_EXPIRY_CASES)
     test(`${name} retains strict native expiry validation and source locations`, () => {
-        const source = `[[ignore]]\ncheck="gspot/policy"\nreason="The fixture tests expiry dates."\nuntil=${literal}\n`;
+        const source = `[[ignore]]\ncheck="gspot/policy"\nreason="The sandbox tests expiry dates."\nuntil=${literal}\n`;
         if (syntaxError !== undefined) {
             expect(() => parseTomlText(source, 'dates.toml', 'policy')).toThrow(
                 `dates.toml:4:7 is not valid TOML: ${syntaxError}`,
@@ -31,12 +31,12 @@ test('the published expiry representation agrees with the documented native cale
     for (const { valid, date } of POLICY_EXPIRY_CASES) {
         if (!valid) continue;
         expect(
-            validate({ ignore: [{ check: 'gspot/policy', reason: 'The fixture tests expiry dates.', until: date }] }),
+            validate({ ignore: [{ check: 'gspot/policy', reason: 'The sandbox tests expiry dates.', until: date }] }),
         ).toBe(true);
     }
     expect(
         validate({
-            ignore: [{ check: 'gspot/policy', reason: 'The fixture tests expiry dates.', until: '2026-02-29' }],
+            ignore: [{ check: 'gspot/policy', reason: 'The sandbox tests expiry dates.', until: '2026-02-29' }],
         }),
     ).toBe(false);
     // JSON represents dates as strings; the runtime parser proves the TOML token kind.

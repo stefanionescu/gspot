@@ -1,8 +1,8 @@
 import { join, relative } from 'node:path';
 import { memo } from '#cli/platform/memo.ts';
-import { toPosix } from '#cli/platform/paths.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import type { Root } from '#cli/types/platform/root.ts';
+import { toPosix, toolPath } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
 import { buildPlan } from '#cli/checks/language/swift/plan.ts';
@@ -17,7 +17,7 @@ import { DIAGNOSTIC, RULE_SUFFIX, RESPONSE_FILE, MACOS_PRIVATE_PATH } from '#cli
 const BUILD_MEMO = { create: () => new Map<string, Promise<SwiftBuildOutput>>() };
 
 function diagnostics(input: CheckInput, output: string, levels: Set<string>, defaultRule: string): Finding[] {
-    const root = withoutPrivatePrefix(input.root);
+    const root = toPosix(withoutPrivatePrefix(input.root));
     return [...new Set(output.split('\n'))]
         .flatMap((line) => {
             const groups = DIAGNOSTIC.exec(line)?.groups;
@@ -30,7 +30,7 @@ function diagnostics(input: CheckInput, output: string, levels: Set<string>, def
             const suffix = RULE_SUFFIX.exec(text)?.groups;
             const { rule = defaultRule, text: message = text } = suffix === undefined ? {} : suffix;
             const file = groups['file'] ?? '';
-            const normalized = withoutPrivatePrefix(file);
+            const normalized = toolPath(withoutPrivatePrefix(file));
             return findingAt(
                 input,
                 {

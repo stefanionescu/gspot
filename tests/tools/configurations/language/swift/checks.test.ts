@@ -1,4 +1,4 @@
-// Native Swift lint and formatting checks preserve source headers and accept explicit corrections.
+// Native Swift lint and formatting checks preserve source headers and pass after explicit fixes.
 import { join } from 'node:path';
 import { git } from '#tests/harness/git.ts';
 import { readFile } from 'node:fs/promises';

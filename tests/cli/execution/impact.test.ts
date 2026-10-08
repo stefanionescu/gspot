@@ -18,7 +18,7 @@ import { BASE_CHECK } from '#tests/config/cli/execution/command/findings.ts';
 import { getStaged, getChanged } from '#cli/repository/revisions/changes.ts';
 import { NESTED_POLICY, PROJECT_OPTIONS, PROJECT_PATH_IGNORES } from '#tests/config/cli/execution/impact.ts';
 
-test('command checks retain nested inputs and report their defects once at the root', async () => {
+test('command checks retain nested inputs and report their findings once at the root', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': `${NESTED_POLICY}\n[check."project/syntax"]\ncommand = ["bash", "-n", "{files}"]\npaths = ["**/*.sh"]\nstage = "push"\n`,

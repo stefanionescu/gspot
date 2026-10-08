@@ -127,7 +127,7 @@ test('test placement keeps reviewed ignores and remains an all-level convention'
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy(['typescript'], {
                 level,
-                tables: '[architecture.roles]\ntest_harness = "tests/support"\n[[ignore]]\ncheck = "structure/test-placement"\npaths = ["tests/unit/builders.ts"]\nreason = "The reviewed fixture needs adjacent setup."\n',
+                tables: '[architecture.roles]\ntest_harness = "tests/support"\n[[ignore]]\ncheck = "structure/test-placement"\npaths = ["tests/unit/builders.ts"]\nreason = "The reviewed sandbox needs adjacent setup."\n',
             }),
             'tests/unit/a.test.ts': '',
             'tests/unit/builders.ts': '',

@@ -27,7 +27,7 @@ async function removeConfigurations(
         const removed = await spawnGspot(cwd, ['remove', configuration], environment);
         if (removed.code !== 0)
             throw new Error(
-                `Test repository removal of ${configuration} failed with status ${String(removed.code)}: ${removed.stderr}${removed.stdout}`,
+                `Sandbox removal of ${configuration} failed with status ${String(removed.code)}: ${removed.stderr}${removed.stdout}`,
             );
     }
 }
@@ -77,9 +77,7 @@ export async function initRepository(
 ): Promise<void> {
     const outcome = await spawnGspot(cwd, [...argv, '--no-install'], environment);
     if (outcome.code !== 0)
-        throw new Error(
-            `Test repository init failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`,
-        );
+        throw new Error(`Sandbox init failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`);
     await using registry = await createInstallationRegistry(cwd, runTestCommand);
     const installationEnvironment = { ...environment, ...registry.environment };
     const { without = [], level } = settings;
@@ -90,8 +88,7 @@ export async function initRepository(
     }
     await removeConfigurations(cwd, without, installationEnvironment);
     const installed = await spawnGspot(cwd, ['install'], installationEnvironment);
-    if (installed.code !== 0)
-        throw new Error(`Test repository installation failed: ${installed.stdout}${installed.stderr}`);
+    if (installed.code !== 0) throw new Error(`Sandbox installation failed: ${installed.stdout}${installed.stderr}`);
 }
 
 /** Install generated, locked tool projects through the public command. */
@@ -100,6 +97,6 @@ export async function installToolProjects(cwd: string): Promise<void> {
     const outcome = await spawnGspot(cwd, ['install'], registry.environment);
     if (outcome.code !== 0)
         throw new Error(
-            `Test repository installation failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`,
+            `Sandbox installation failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`,
         );
 }

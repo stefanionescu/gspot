@@ -122,7 +122,7 @@ files = { extensions = [".py", ".pyi"] }
 output = { format = "json", fields = { file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message" } }
 summary = "Lints every Python file with the Ruff rules for the level, security rules included."
 why = "Ruff holds the rules of a dozen older tools in one pass fast enough to run at every commit."
-help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore python/ruff --rule <code> --reason \"<why>\", and add --paths to limit it."
+help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore python/ruff --rule `<code>` --reason \"`<why>`\", and add --paths to limit it."
 
 [[check]]
 name = "ruff-format"
@@ -153,7 +153,7 @@ files = { extensions = [".py", ".pyi"] }
 output = { format = "json", items = "generalDiagnostics", line_base = 0, fields = { file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message" } }
 summary = "Type checks the project. At level `all`, it also requires annotations."
 why = "A type error found here is a crash that never reaches a user."
-help = "Fix the type, or narrow it where the value arrives. Accept a file that needs another dependency set with gspot ignore python/basedpyright --paths <path> --reason \"<why>\"."
+help = "Fix the type, or narrow it where the value arrives. Accept a file that needs another dependency set with gspot ignore python/basedpyright --paths `<path>` --reason \"`<why>`\"."
 
 [[check]]
 name = "import-linter"
@@ -198,7 +198,7 @@ files = { extensions = [".py"], filenames = ["pyproject.toml"] }
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$" }
 summary = "Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones."
 why = "An import that works through somebody else's dependency breaks the day they drop it."
-help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule <code> --reason \"<why>\"."
+help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule `<code>` --reason \"`<why>`\"."
 
 
 [[check]]
@@ -226,7 +226,7 @@ runs = "scope"
 files = { filenames = ["uv.lock", "poetry.lock", "pdm.lock"], kinds = ["source", "generated"] }
 summary = "Checks that pyproject.toml owns every dependency: no hand-kept requirements file, and no pip install outside the allowed paths."
 why = "Two owners of the dependency list drift apart, and the image installs what the lockfile never saw."
-help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Accept a reviewed path with gspot ignore python/pip-installs --paths <glob> --reason \"<why>\"."
+help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Accept a reviewed path with gspot ignore python/pip-installs --paths `<glob>` --reason \"`<why>`\"."
 
 [[check]]
 name = "function-size"
@@ -358,16 +358,17 @@ runs = "scope"
 files = { extensions = [".py"] }
 summary = "Finds objects built at import time and kept in a module variable."
 why = "Every importer shares the one instance, and no test gets a fresh one."
-help = "Build the object where the program starts, and pass it in. Accept a reviewed composition file with gspot ignore python/singletons --paths <glob> --reason \"<why>\"."
+help = "Build the object where the program starts, and pass it in. Accept a reviewed composition file with gspot ignore python/singletons --paths `<glob>` --reason \"`<why>`\"."
 
 [[setting]]
 name = "tools.ruff.docstring_convention"
 type = "string"
 direction = "neutral"
+default = ""
 summary = "The Ruff pydocstyle convention carried from project configuration, also used by pydoclint when it has no explicit style."
 
 [setting.validation]
-enum = ["google", "numpy", "pep257"]
+enum = ["", "google", "numpy", "pep257"]
 
 
 [[naming.overrides]]

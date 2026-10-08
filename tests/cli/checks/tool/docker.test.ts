@@ -68,7 +68,7 @@ test.each(REPORT_FAILURES)('Trivy refuses $name with its diagnostic', async ({ c
     expect(await rejection(trivyImage(buildCheckInput(session, 'docker/trivy-image')))).toContain(diagnostic);
 });
 
-test('Trivy accepts a clean native report without finding an image defect', async () => {
+test('Trivy accepts a clean native report without an image finding', async () => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy(['docker']),

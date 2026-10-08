@@ -58,7 +58,7 @@ test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks', async
     expect(hookStatus(await hooksOf(root))).toStrictEqual({ ready: true, text: `${prefix}.gspot/hooks: installed` });
 });
 
-test('a commit in a linked worktree runs the staged checks and blocks a defect', async () => {
+test('a commit in a linked worktree runs staged checks and blocks a finding', async () => {
     await using sandbox = await testdir();
     const main = join(sandbox.path, 'main');
     const linked = join(sandbox.path, 'linked');

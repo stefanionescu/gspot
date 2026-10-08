@@ -74,6 +74,8 @@ export type CheckOutcome = { findings: Finding[]; files: string[] };
 export type BuiltInCheck = (input: CheckInput) => Finding[] | CheckOutcome | Promise<Finding[] | CheckOutcome>;
 
 export type CheckInput = {
+    /** Inventory-owned source paths of this project's declared workspace dependencies. */
+    dependencyFiles: () => string[];
     index: Repository['index'];
     installedRoot?: string;
     policyFiles: PolicyFile;

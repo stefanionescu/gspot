@@ -1,6 +1,6 @@
 import type { HtmlAccessibilityCheck } from '#tests/types/generation/configuration-files.ts';
 
-/** Source markup and built output share the same two independently located media defects. */
+/** Source markup and built output share the same two independently located media findings. */
 export const HTML_ACCESSIBILITY_PAGE = `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8" /><title>Example</title></head>

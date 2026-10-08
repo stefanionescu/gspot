@@ -48,6 +48,7 @@ function stripRuntimeGlobals(block) {
 const runtimeDeclarations = [
     {
         "scope": "",
+        "nodeVersion": "",
         "runtime": "node",
         "includes": [
             "^(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)?(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"
@@ -61,6 +62,7 @@ const runtimeDeclarations = [
     },
     {
         "scope": "",
+        "nodeVersion": "",
         "runtime": "commonjs",
         "includes": [
             "^(?:(?:^|\\/|(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(cjs|cts))$"
@@ -74,6 +76,7 @@ const runtimeDeclarations = [
     },
     {
         "scope": "docs",
+        "nodeVersion": "",
         "runtime": "node",
         "includes": [
             "^(?:docs(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"
@@ -82,6 +85,7 @@ const runtimeDeclarations = [
     },
     {
         "scope": "docs",
+        "nodeVersion": "",
         "runtime": "commonjs",
         "includes": [
             "^(?:docs(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(cjs|cts))$"
@@ -90,6 +94,7 @@ const runtimeDeclarations = [
     },
     {
         "scope": "tests",
+        "nodeVersion": "",
         "runtime": "node",
         "includes": [
             "^(?:tests(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"
@@ -98,6 +103,7 @@ const runtimeDeclarations = [
     },
     {
         "scope": "tests",
+        "nodeVersion": "",
         "runtime": "commonjs",
         "includes": [
             "^(?:tests(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(cjs|cts))$"
@@ -106,6 +112,7 @@ const runtimeDeclarations = [
     },
     {
         "scope": "packages/cli",
+        "nodeVersion": "",
         "runtime": "node",
         "includes": [
             "^(?:packages\\/cli(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"
@@ -114,6 +121,7 @@ const runtimeDeclarations = [
     },
     {
         "scope": "packages/cli",
+        "nodeVersion": "",
         "runtime": "commonjs",
         "includes": [
             "^(?:packages\\/cli(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(cjs|cts))$"
@@ -122,6 +130,7 @@ const runtimeDeclarations = [
     },
     {
         "scope": "packages/eslint-plugin",
+        "nodeVersion": "",
         "runtime": "node",
         "includes": [
             "^(?:packages\\/eslint-plugin(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\/?)$"
@@ -130,6 +139,7 @@ const runtimeDeclarations = [
     },
     {
         "scope": "packages/eslint-plugin",
+        "nodeVersion": "",
         "runtime": "commonjs",
         "includes": [
             "^(?:packages\\/eslint-plugin(?:\\/(?!\\.{1,2}(?:\\/|$))(?:(?:(?!(?:^|\\/)\\.{1,2}(?:\\/|$)).)*?)\\/|\\/|$)(?!\\.{1,2}(?:\\/|$))(?=.)[^/]*?\\.(cjs|cts))$"

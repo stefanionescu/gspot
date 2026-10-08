@@ -46,11 +46,11 @@ stage = "push"
 runs = "files"
 exit_codes = [1, 3]
 platforms = ["macos", "linux"]
-command = ["semgrep", "scan", "--strict", "--config", "{root}/.gspot/config/{scope}/semgrep", "{each:--config:tools.semgrep.rule_files}", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]
+command = ["semgrep", "scan", "--strict", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--json", "{files}"]
 output = { format = "semgrep" }
 summary = "Runs the Semgrep rule packs of the selected configurations, and the repository's own rules, over the changed files."
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."
-help = "Change the code the way the message says. Turn one rule off for a path with gspot ignore security/semgrep --rule <id> --paths <glob> --reason \"<why>\"."
+help = "Change the code the way the message says. Turn one rule off for a path with gspot ignore security/semgrep --rule `<id>` --paths `<glob>` --reason \"`<why>`\"."
 
 [[check]]
 name = "semgrep-registry"
@@ -68,7 +68,7 @@ tool = "semgrep"
 output = { format = "semgrep" }
 summary = "Runs the public Semgrep registry packs named in tools.semgrep.registry, which the registry serves over the network."
 why = "The registry packs cover the common vulnerability classes, and their license keeps them out of this package."
-help = "Change the code the way the message says, or turn the rule off for a path with gspot ignore security/semgrep-registry --rule <id> --reason \"<why>\"."
+help = "Change the code the way the message says, or turn the rule off for a path with gspot ignore security/semgrep-registry --rule `<id>` --reason \"`<why>`\"."
 
 [[check]]
 name = "codeql"
@@ -81,7 +81,7 @@ tool = "codeql"
 when = { setting = "tools.codeql.languages" }
 summary = "Builds a CodeQL database for every language in tools.codeql.languages and runs the security suite over it."
 why = "Data-flow analysis follows a value from a request to a query across files, which a pattern rule cannot."
-help = "Change the code the result names. Record a false positive with gspot ignore security/codeql --rule <id> --paths <glob> --reason \"<why>\"."
+help = "Change the code the result names. Record a false positive with gspot ignore security/codeql --rule `<id>` --paths `<glob>` --reason \"`<why>`\"."
 
 [[setting]]
 name = "tools.codeql.languages"

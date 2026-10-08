@@ -12,7 +12,7 @@ import { containing } from '#tests/harness/expectations.ts';
 import { sleeps, disabled } from '#cli/checks/tool/xctest.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 
-test('Swift Testing outside test folders reports a sleep and accepts its correction', async () => {
+test('Swift Testing outside test folders reports a sleep and passes after the fix', async () => {
     await using sandbox = await testdir();
     const source = 'import Testing\n@Test func checks() async {\n    try await Task.sleep(for: .seconds(1))\n}\n';
     await createFileTree(sandbox.path, {
@@ -70,7 +70,7 @@ test('Swift test checks apply sleep allowances in their declared scope', async (
     const source = 'import Testing\n@Test func checks() { sleep(1) }\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['xctest'], {
-            tables: '[scope."integration"]\n[[ignore]]\ncheck = "xctest/sleep"\npaths = ["integration/**"]\nreason = "Integration fixture verifies a native timeout."\n',
+            tables: '[scope."integration"]\n[[ignore]]\ncheck = "xctest/sleep"\npaths = ["integration/**"]\nreason = "The integration sandbox verifies a native timeout."\n',
             level: 'all',
         }),
         'Examples/Checks.swift': source,
@@ -108,7 +108,7 @@ test('a sleep path ignore excludes an unreadable file before source parsing', as
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['xctest'], {
-            tables: '[scope."integration"]\n[[ignore]]\ncheck = "xctest/sleep"\npaths = ["integration/Allowed.swift"]\nreason = "This fixture checks the native timeout."\n',
+            tables: '[scope."integration"]\n[[ignore]]\ncheck = "xctest/sleep"\npaths = ["integration/Allowed.swift"]\nreason = "This sandbox checks the native timeout."\n',
             level: 'all',
         }),
         'integration/Allowed.swift': 'import Testing\n@Test func checks() { sleep(1) }\n',

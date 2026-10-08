@@ -134,6 +134,7 @@ test.each(['', 'nested'])('naming checks leave the harness folder of scope %j al
         }),
         [`${prefix}tests/helpers/startup.ts`]: '',
         [`${prefix}app/support/startup.ts`]: '',
+        [`${prefix}app/python/startup.ts`]: '',
     });
     const result = await executeRun(
         await openSession(sandbox.path),

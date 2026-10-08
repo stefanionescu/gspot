@@ -35,7 +35,8 @@ help = "Correct the message, or add the missing key to the locale."
 name = "i18n.messages_folder"
 type = "path"
 direction = "neutral"
-summary = "The folder of <locale>.json message files, relative to its scope."
+default = ""
+summary = "The folder of `<locale>`.json message files, relative to its scope."
 
 [[setting]]
 name = "i18n.base_locale"

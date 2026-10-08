@@ -3,7 +3,7 @@ import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { limitTableSchema } from '#cli/policy/schema/fields.ts';
 import { rootSettingSchemas } from '#cli/policy/schema/policy.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
-import { settingNamespaceSchemas } from '#cli/policy/schema/namespaces.ts';
+import { settingValueSchemas } from '#cli/policy/schema/setting-values.ts';
 import type { Manifest, SettingDeclaration } from '#cli/types/configurations.ts';
 import { compact, valueAt, isRecord, createTable } from '#cli/platform/objects.ts';
 import { activeSettingNamespacesSchema } from '#cli/policy/schema/active-settings.ts';
@@ -290,7 +290,7 @@ export function effectiveSettings(
             const depth = segments[0] === 'tools' ? TOOL_KEY_DEPTH : 1;
             return { row, path: segments.slice(depth, -1), name: segments.slice(0, depth).join('.') };
         })
-        .filter(({ name }) => Object.hasOwn(settingNamespaceSchemas, name));
+        .filter(({ row }) => Object.hasOwn(settingValueSchemas, row.declaration.name));
     for (const { row, path, name } of rows) {
         const holder = createTable(namespaces, row.value === undefined ? [name] : [name, ...path]);
         const key = row.key.slice(row.key.lastIndexOf('.') + 1);

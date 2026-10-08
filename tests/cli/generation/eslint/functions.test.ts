@@ -13,9 +13,9 @@ test('generated lint accepts JavaScript method node shapes', async () => {
     });
     const eslint = await createEslint(sandbox.path);
     const source = 'export class Counter {\n    get value() { return 1; }\n    method() { return 1; }\n}\n';
-    const defect = await eslint.lintText(source, { filePath: 'counter.js' });
+    const findings = await eslint.lintText(source, { filePath: 'counter.js' });
     expect(
-        defect
+        findings
             .flatMap(({ messages }) => messages)
             .filter(({ ruleId }) => ruleId === 'gspot/no-trivial-functions')
             .map(({ line, messageId: diagnostic }) => ({ line, messageId: diagnostic })),

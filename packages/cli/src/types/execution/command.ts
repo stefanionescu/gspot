@@ -3,7 +3,15 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { CheckResult } from '#cli/types/execution/check.ts';
-import type { SpawnResult } from '#cli/types/platform/runtime.ts';
+import type { SpawnResult, SpawnOptions } from '#cli/types/platform/runtime.ts';
+
+/** A selected tool's public API executed by a bundled, supervised native program. */
+export type CheckToolProgram = { tool: string; entry: string };
+
+/** The working directory, environment, and input of a nested tool. */
+export type CheckToolOptions = Pick<PreparedCommand, 'cwd'> &
+    Partial<Pick<PreparedCommand, 'env'>> &
+    Pick<SpawnOptions, 'stdin'>;
 
 export type CommandPart = string | { file: true };
 
@@ -19,7 +27,7 @@ export type Substitutions = {
 export type CommandInvocation = { argv: string[]; file?: string };
 
 /** A nested tool resolved to its selected executable and environment. */
-export type CheckTool = { path: string; env: Record<string, string> };
+export type CheckTool = { name: string; path: string; env: Record<string, string> };
 
 /** Scoped paths and environment values for inspecting and execute a command. */
 export type CommandEnvironment = {

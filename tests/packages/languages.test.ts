@@ -1,5 +1,4 @@
-// Installs built packages from an isolated registry: one consumer's pinned language tools report defects and accept
-// corrections.
+// One consumer installs packed packages, reports findings, and passes after fixes.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
@@ -51,15 +50,15 @@ async function expectInstalledSql(installation: Consumer): Promise<void> {
     const configured = await runTestCommand([...command, 'set', 'tools.sqlfluff.dialect', 'postgres'], onlineOptions);
     expect(configured.code, configured.stdout + configured.stderr).toBe(0);
     await writeFile(join(root, 'query.sql'), 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n');
-    const defect = await runTestCommand(
+    const failed = await runTestCommand(
         [...command, 'check', 'query.sql', '--only', 'sql/trivial-functions', '--json'],
         offlineOptions,
     );
-    expect(defect.code, defect.stdout + defect.stderr).toBe(1);
-    const defectReport = JSON.parse(defect.stdout) as RunReport;
-    expect(defectReport.skips).toStrictEqual([]);
-    expect(defectReport.checks).toMatchObject([{ check: 'sql/trivial-functions', status: 'failed', fileCount: 1 }]);
-    expect(defectReport.checks[0]!.findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    const failedReport = JSON.parse(failed.stdout) as RunReport;
+    expect(failedReport.skips).toStrictEqual([]);
+    expect(failedReport.checks).toMatchObject([{ check: 'sql/trivial-functions', status: 'failed', fileCount: 1 }]);
+    expect(failedReport.checks[0]!.findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'query.sql', line: 1, rule: 'trivial-function' },
         { file: 'query.sql', line: 1, rule: 'trivial-file' },
     ]);
@@ -83,7 +82,7 @@ async function expectInstalledSql(installation: Consumer): Promise<void> {
     });
 }
 
-test('one installed consumer runs the pinned language tools against defects and their corrections', async () => {
+test('one installed consumer runs the pinned language tools against samples and fixes', async () => {
     await using installation = await createConsumer(release.registry, release.version);
 
     await prepareLanguages(installation);

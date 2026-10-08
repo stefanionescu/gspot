@@ -4,5 +4,5 @@ coverage/
 <% for (const path of ignoredPaths) { %><%= path %>
 <% } %>
 .env*
-<% for (const path of scopeIgnorePatterns(ignoresFor('security/semgrep').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths ?? []), scope)) { %><%= path %>
+<% for (const path of scopeIgnorePatterns(ignoresFor('security/semgrep').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths), scope)) { %><%= path %>
 <% } %>

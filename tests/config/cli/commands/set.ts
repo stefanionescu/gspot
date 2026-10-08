@@ -53,3 +53,12 @@ export const SET_CONFLICT_POLICIES = [
         policy: 'level = "all"\nconfigurations = ["naming"]\n[naming]\nbanned = ["dispatcher"]\n[agent_rules]\nenabled = false\n',
     },
 ];
+
+/** Native option addresses use the selected tool surface at the authored scope. */
+export const NATIVE_OPTION_SCOPES = [
+    { name: 'root', scope: '', source: 'gspot.toml' },
+    { name: 'child', scope: 'app', source: '[scope."app"]' },
+];
+
+export const ESLINT_OVERRIDES = [{ paths: ['src/**'], rules: { 'no-console': [] } }];
+export const ESLINT_OVERRIDE_REASON = 'The project reports console calls in its source files.';

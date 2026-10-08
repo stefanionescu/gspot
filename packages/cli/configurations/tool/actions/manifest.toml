@@ -83,4 +83,4 @@ exit_codes = [11, 12, 13, 14]
 output = { format = "regex", pattern = "^::(?:warning|error|notice) file=(?<file>[^,]+),line=(?<line>\\d+),title=(?<rule>[^:]+)::(?<message>.*)$" }
 summary = "Audits every GitHub Actions workflow with zizmor: template injection, unpinned actions, excessive permissions, dangerous triggers."
 why = "A workflow runs with the repository's credentials; an injectable expression or an unpinned action hands them to a stranger."
-help = "Apply the fix zizmor names, or turn one audit off with gspot ignore actions/zizmor --rule <audit> --reason \"<why>\"."
+help = "Apply the fix zizmor names, or turn one audit off with gspot ignore actions/zizmor --rule `<audit>` --reason \"`<why>`\"."

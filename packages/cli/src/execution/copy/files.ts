@@ -173,7 +173,7 @@ export async function copyIntoScratch(input: ScratchSource | CheckInput, extra: 
             : {
                   ...projectCopyInputs(
                       input.root,
-                      [...input.files.map((file) => file.path), ...extra],
+                      [...input.files.map((file) => file.path), ...input.dependencyFiles(), ...extra],
                       input.scopeEntries.map((scope) => scope.path),
                   ),
                   cancelSignal: input.cancelSignal,

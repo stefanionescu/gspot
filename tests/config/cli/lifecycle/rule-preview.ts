@@ -10,7 +10,7 @@ export const RULE_PREVIEW_CASES: RulePreviewCase[] = [
         initialLevel: 'all',
         proposedLevel: 'all',
         initialTables:
-            '[[ignore]]\ncheck = "swift/swiftlint"\nrule = "empty_count"\nreason = "The fixture verifies enabling a previously ignored rule."\n',
+            '[[ignore]]\ncheck = "swift/swiftlint"\nrule = "empty_count"\nreason = "The sandbox verifies enabling a previously ignored rule."\n',
         changes: [
             { path: 'opt_in_rules', added: ['empty_count'], removed: [], changed: [] },
             { path: 'disabled_rules', added: [], removed: ['empty_count'], changed: [] },
@@ -24,7 +24,7 @@ export const RULE_PREVIEW_CASES: RulePreviewCase[] = [
         initialLevel: 'all',
         proposedLevel: 'all',
         initialTables:
-            '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The fixture verifies a removed suppression."\n',
+            '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The sandbox verifies a removed suppression."\n',
         changes: [{ path: 'disable', added: [], removed: ['SC2086'], changed: [] }],
     },
     {
@@ -35,7 +35,7 @@ export const RULE_PREVIEW_CASES: RulePreviewCase[] = [
         initialLevel: 'all',
         proposedLevel: 'all',
         initialTables:
-            '[[ignore]]\ncheck = "commits/commitlint"\nrule = "type-case"\nreason = "The fixture verifies enabling a previously disabled rule."\n',
+            '[[ignore]]\ncheck = "commits/commitlint"\nrule = "type-case"\nreason = "The sandbox verifies enabling a previously disabled rule."\n',
         changes: [{ path: 'rules', added: [], removed: [], changed: ['type-case'] }],
     },
 ];

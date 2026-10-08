@@ -8,6 +8,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import type { PathExplanation } from '#cli/types/commands/explain.ts';
 import { EXPLAIN_POLICY } from '#tests/config/cli/commands/explain.ts';
+import { TAPLO_REASON, TAPLO_OPTIONS } from '#tests/config/samples/taplo.ts';
 import { containing, containingAll, textContaining } from '#tests/harness/expectations.ts';
 
 test('explain > setting explanations include nested-only settings and each inherited value', async () => {
@@ -186,4 +187,25 @@ test.each([
     const result = await runGspot(sandbox.path, ['explain', key, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toMatchObject({ key });
+});
+
+test('explain reads selected native Taplo options and their inherited scope reason without writes', async () => {
+    await using sandbox = await testdir();
+    const policy = `configurations = ["files"]\n[tools.taplo.verbatim]\ncompact_inline_tables = true\n[reasons]\n"tools.taplo.verbatim" = "${TAPLO_REASON}"\n[scope."app"]\n`;
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'app/settings.toml': 'enabled = true\n' });
+    const explained = await runGspot(sandbox.path, ['explain', 'tools.taplo.verbatim', '--json']);
+    expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(JSON.parse(explained.stdout)).toMatchObject({
+        kind: 'setting',
+        key: 'tools.taplo.verbatim',
+        type: 'table',
+        scopes: ['', 'app'].map((scope) => ({
+            scope,
+            current: TAPLO_OPTIONS,
+            source: 'gspot.toml',
+            reason: TAPLO_REASON,
+        })),
+    });
+    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
+    expect(await Bun.file(join(sandbox.path, '.gspot/installed.toml')).exists()).toBe(false);
 });

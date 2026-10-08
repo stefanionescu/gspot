@@ -67,7 +67,10 @@ export const settingNamespaceSchemas = {
         trailing_commas: formatSchema.shape['trailing_commas'].unwrap().optional(),
     }),
     html: z.strictObject({ templates: z.array(relativePath).optional() }),
-    i18n: z.strictObject({ base_locale: z.string().optional(), messages_folder: relativePath.optional() }),
+    i18n: z.strictObject({
+        base_locale: z.string().optional(),
+        messages_folder: z.union([z.literal(''), relativePath]).optional(),
+    }),
     licenses: z.strictObject({
         allowed: allowlistSchema.shape['allowed'].optional(),
         exceptions: allowlistSchema.shape['exceptions'].optional(),
@@ -193,7 +196,7 @@ export const settingNamespaceSchemas = {
     'tools.ruff': z.strictObject({
         docstring_convention: z
             .string()
-            .and(z.literal(['google', 'numpy', 'pep257'], {}))
+            .and(z.literal(['', 'google', 'numpy', 'pep257'], {}))
             .optional(),
     }),
     'tools.semgrep': z.strictObject({

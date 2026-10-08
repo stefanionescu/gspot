@@ -1,6 +1,6 @@
 import type { CiDocument } from '#tests/types/generation/workflow.ts';
 
-/** Authored and generated CI files with a deliberate changed-object defect. */
+/** Authored and generated CI files with a deliberate changed-object sample. */
 export type CiProject = {
     base: string;
     generated: CiDocument;

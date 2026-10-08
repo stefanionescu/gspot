@@ -1,6 +1,6 @@
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Template } from '#cli/types/policy/templates.ts';
-import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
+import type { Level, Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
 import type { Tooling, Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 
 import type {
@@ -26,9 +26,10 @@ export type Planning = {
 };
 
 export type InitPlan = {
+    level: Level;
     ci?: { commands: string[] };
     template?: { name: string; digest: string; selection: string; detected: string[] };
-    configurations: { configuration: string; how: ConfigurationReason; checks: number }[];
+    configurations: { configuration: string; how: ConfigurationReason; checks: number; checksOff: number }[];
     write: InitFileRow[];
     remove: InitFileRow[];
     unread: InitFileRow[];

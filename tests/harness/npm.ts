@@ -35,7 +35,7 @@ async function writePackageProject(
     });
     const ignoredChecks = EXCLUDED_PACKAGE_CHECKS.map(
         (check) =>
-            `[[ignore]]\ncheck = "${check}"\nreason = "The fixture exercises package-manager installation and preserves authored application dependencies."\n`,
+            `[[ignore]]\ncheck = "${check}"\nreason = "The sandbox tests package-manager installation and preserves authored dependencies."\n`,
     ).join('\n');
     await createFileTree(root, {
         [projectPath]: rootPackage,

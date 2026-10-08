@@ -111,16 +111,16 @@ export async function sharePythonTools(root: string): Promise<Record<string, str
     if (project === undefined) throw new Error('The selected native checks need no Python tool project.');
     using log = openOwnership(root);
     const original = log.files.read(UV_LOCKFILE);
-    let resolved = pythonLockfiles.get(project.content);
-    if (resolved === undefined) {
-        resolved = prepareToolProject(pythonToolProject, project, log.files, { refreshLockfiles: false }, session).then(
+    let computed = pythonLockfiles.get(project.content);
+    if (computed === undefined) {
+        computed = prepareToolProject(pythonToolProject, project, log.files, { refreshLockfiles: false }, session).then(
             (lockfile) => lockfile.content,
         );
-        pythonLockfiles.set(project.content, resolved);
+        pythonLockfiles.set(project.content, computed);
     }
     generated.files.push({
         path: UV_LOCKFILE,
-        content: await resolved,
+        content: await computed,
         kind: 'lock',
         ...compact({ read: original }),
     });

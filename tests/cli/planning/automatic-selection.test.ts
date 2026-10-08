@@ -34,7 +34,10 @@ test.each(['recommended', 'all'] as const)(
         const security = checks.find((check) => check.check.name === 'security/semgrep');
         expect(security).toBeDefined();
         expect(security?.files).toStrictEqual([]);
-        expect(security?.skip).toBeUndefined();
+        expect(security?.skip).toStrictEqual({
+            cause: 'condition',
+            note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',
+        });
         expect(checks.find((check) => check.check.name === 'prose/vale')?.files.map((file) => file.path)).toContain(
             'guide.md',
         );
@@ -76,7 +79,7 @@ test('a projected policy input respects the repository exclusion before native t
 test.each(['secrets/gitleaks-files', 'security/semgrep'])(
     'the Git prerequisite message names the supplied %s check',
     async (name) => {
-        await using sandbox = await testdir({ 'gspot.toml': buildPolicy(['secrets']) });
+        await using sandbox = await testdir({ 'gspot.toml': buildPolicy(['secrets', 'javascript']) });
         const session = await openSession(sandbox.path);
         const [planned] = planRun(session, { stage: 'all', skips: [], only: [name] });
         expect(planned).toBeDefined();

@@ -21,14 +21,14 @@ function squawk(root: string, config: string): SpawnOutcome {
 
 test('Squawk uses the effective transaction setting for each scope and honors false under Supabase', async () => {
     await using sandbox = await testdir();
-    const defect =
+    const sample =
         "SET lock_timeout = '5s';\nSET statement_timeout = '30s';\nALTER TABLE public.teams ADD COLUMN size BIGINT;\n";
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['supabase'], {
-            tables: '[tools.squawk]\nassume_in_transaction = false\n[scope."transactional"]\n[scope.tools.squawk]\nassume_in_transaction = true\n[scope."transactional/child"]\n',
+            tables: '[tools.squawk]\nassume_in_transaction = false\n[scope."transactional"]\n[scope."transactional".tools.squawk]\nassume_in_transaction = true\n[scope."transactional/child"]\n',
         }),
-        'migration.sql': defect,
-        'supabase/migrations/0001_initial.sql': defect,
+        'migration.sql': sample,
+        'supabase/migrations/0001_initial.sql': sample,
         'transactional/supabase/migrations/0001_initial.sql': 'SELECT 1;\n',
         'transactional/child/supabase/migrations/0001_initial.sql': 'SELECT 1;\n',
     });
@@ -49,7 +49,7 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
     const failed = squawk(sandbox.path, '.gspot/config/squawk.toml');
     expect(failed.code, failed.stderr).toBe(1);
     expect(JSON.parse(failed.stdout)).toMatchObject([{ rule_name: 'prefer-robust-stmts' }]);
-    await Bun.write(join(sandbox.path, 'migration.sql'), defect.replace('ADD COLUMN ', 'ADD COLUMN IF NOT EXISTS '));
+    await Bun.write(join(sandbox.path, 'migration.sql'), sample.replace('ADD COLUMN ', 'ADD COLUMN IF NOT EXISTS '));
     const corrected = squawk(sandbox.path, '.gspot/config/squawk.toml');
     expect(corrected.code, corrected.stderr).toBe(0);
 });

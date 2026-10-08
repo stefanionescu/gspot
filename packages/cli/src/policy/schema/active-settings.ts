@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { settingNamespaceSchemas } from '#cli/policy/schema/namespaces.ts';
 
 export const activeSettingNamespaceSchemas = {
-    architecture: settingNamespaceSchemas['architecture'].required({ modules: true }),
+    architecture: settingNamespaceSchemas['architecture'].required({ roles: true, modules: true }),
     bash: settingNamespaceSchemas['bash'].required({ safety_owners: true }),
     cloudflare: settingNamespaceSchemas['cloudflare'].required({ types_file: true, types_interface: true }),
     coverage: settingNamespaceSchemas['coverage'].required({
@@ -29,9 +29,10 @@ export const activeSettingNamespaceSchemas = {
         quotes: true,
         trailing_commas: true,
         semicolons: true,
+        overrides: true,
     }),
     html: settingNamespaceSchemas['html'].required({ templates: true }),
-    i18n: settingNamespaceSchemas['i18n'].required({ base_locale: true }),
+    i18n: settingNamespaceSchemas['i18n'].required({ messages_folder: true, base_locale: true }),
     licenses: settingNamespaceSchemas['licenses'].required({ allowed: true, exceptions: true }),
     limits: settingNamespaceSchemas['limits']
         .required({
@@ -46,6 +47,7 @@ export const activeSettingNamespaceSchemas = {
             index_exports: true,
             prefix_collisions: true,
             min_function_statements: true,
+            file_kb: true,
         })
         .extend({
             docs: settingNamespaceSchemas['limits'].shape['docs'].unwrap().required({
@@ -69,7 +71,7 @@ export const activeSettingNamespaceSchemas = {
         }),
     links: settingNamespaceSchemas['links'].required({ allowed_urls: true }),
     naming: settingNamespaceSchemas['naming']
-        .required({ banned: true, allowed: true, reserved: true, max_chars: true, max_words: true })
+        .required({ banned: true, allowed: true, reserved: true, max_chars: true, max_words: true, case: true })
         .extend({
             swift: settingNamespaceSchemas['naming'].shape['swift']
                 .unwrap()
@@ -109,6 +111,7 @@ export const activeSettingNamespaceSchemas = {
         overrides: true,
         import_extensions: true,
         runtimes: true,
+        node_version: true,
         restricted_imports: true,
     }),
     'tools.hadolint': settingNamespaceSchemas['tools.hadolint'].required({ trusted_registries: true }),
@@ -116,7 +119,7 @@ export const activeSettingNamespaceSchemas = {
     'tools.markdownlint': settingNamespaceSchemas['tools.markdownlint'].required({ rules: true }),
     'tools.nginx': settingNamespaceSchemas['tools.nginx'].required({ image: true }),
     'tools.purgecss': settingNamespaceSchemas['tools.purgecss'].required({ safelist: true }),
-    'tools.ruff': settingNamespaceSchemas['tools.ruff'],
+    'tools.ruff': settingNamespaceSchemas['tools.ruff'].required({ docstring_convention: true }),
     'tools.semgrep': settingNamespaceSchemas['tools.semgrep'].required({ rule_files: true, registry: true }),
     'tools.sqlfluff': settingNamespaceSchemas['tools.sqlfluff'].required({ dialect: true }),
     'tools.squawk': settingNamespaceSchemas['tools.squawk'].required({ assume_in_transaction: true }),

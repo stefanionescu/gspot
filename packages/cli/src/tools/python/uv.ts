@@ -1,7 +1,5 @@
-import { join } from 'node:path';
 import { runTool } from '#cli/tools/run.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { environmentExecutable } from '#cli/platform/paths.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { installationDiagnostics } from '#cli/tools/credentials.ts';
 import { toolPin, pythonInstallerPin } from '#cli/configurations/pins.ts';
@@ -63,8 +61,6 @@ export function pythonProjectCommand(
         '--no-sync',
         '--project',
         scopeRoot,
-        '--python',
-        environmentExecutable(join(scopeRoot, '.venv'), 'python'),
         '--with',
         `${packagePin.name}==${packagePin.version}`,
         ...command,

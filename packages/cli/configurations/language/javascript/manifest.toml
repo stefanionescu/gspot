@@ -264,14 +264,6 @@ version = "5.9.3"
 npm = "typescript"
 
 [[tool_file]]
-source = "semgrep/javascript.yml.eta"
-target = ".gspot/config/semgrep/javascript.yml"
-tool = "semgrep"
-rule_keys = ["rules"]
-when = { configuration = "security" }
-scoped = true
-
-[[tool_file]]
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 rule_keys = ["rules"]
@@ -303,7 +295,7 @@ files = { extensions = [".js", ".jsx", ".mjs", ".cjs"], filenames = ["package.js
 output = { format = "json", children = "messages", fields = { file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message", fixable = "fix" } }
 summary = "Runs the shipped ESLint rules on JavaScript, TypeScript, component files, and package.json."
 why = "ESLint catches mistakes and dead code the runtime accepts: unused code, unsafe patterns, functions that only forward."
-help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> links the rule documentation."
+help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain `<rule>` links the rule documentation."
 
 [[check]]
 name = "tsc"
@@ -374,6 +366,7 @@ summary = "The runtime per scoped file selector, using names from globals; servi
 name = "tools.eslint.node_version"
 type = "string"
 direction = "neutral"
+default = ""
 summary = "Override the Node version checked by the n plugin. When unset, the plugin reads each source file's package engines."
 
 [[setting]]

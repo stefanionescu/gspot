@@ -1,20 +1,28 @@
 // Attach the original tool installation to a read-only revision copy.
+import { memo } from '#cli/platform/memo.ts';
 import { runGit } from '#cli/platform/git.ts';
 import { listStyleFiles } from '#cli/tools/vale.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { Root } from '#cli/types/platform/root.ts';
+import { isInScope } from '#cli/repository/selectors.ts';
 import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
+import type { ReadCache } from '#cli/types/platform/reads.ts';
+import { packageWorkspaces } from '#cli/repository/scopes.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { PACKAGE_MANIFESTS } from '#cli/config/execution/copy.ts';
 import { PRIVATE_DIRECTORY } from '#cli/config/platform/modes.ts';
 import { join, posix, dirname, resolve, basename } from 'node:path';
+import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DOT_GSPOT, VALE_CONFIG } from '#cli/config/platform/locations.ts';
+import { readPackageManifest } from '#cli/repository/package-manifests.ts';
 import type { DependencyCopy, DependencyFolder } from '#cli/types/execution/copy.ts';
 import { statSync, chmodSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+
+const WORKSPACE_SOURCE_MEMO = { create: () => new Map<string, string[]>() };
 
 function assertDependencyReady(checkout: string, folder: string, pending: string[]): void {
     if (basename(folder) === DOT_GSPOT && pending.includes('npm'))
@@ -168,4 +176,62 @@ export async function revisionDependencies(
                 ]);
             return { path, operation: isToolProject ? 'link' : 'clone' };
         });
+}
+
+/**
+ * Select declared workspace sources from this run's repository inventory.
+ * @param root the source root
+ * @param scope the owning project
+ * @param files the source inventory
+ * @param reads the metadata cache
+ * @returns workspace dependency paths
+ */
+export function workspaceSourceFiles(root: string, scope: string, files: TrackedFile[], reads: ReadCache): string[] {
+    const cache = memo(reads, WORKSPACE_SOURCE_MEMO);
+    const project = files
+        .filter(
+            (file) =>
+                basename(file.path) === 'package.json' &&
+                isInScope(scope, file.path === 'package.json' ? '' : posix.dirname(file.path)),
+        )
+        .toSorted((left, right) => right.path.length - left.path.length)[0];
+    if (project === undefined) return [];
+    const key = JSON.stringify([root, project.path]);
+    const held = cache.get(key);
+    if (held !== undefined) return held;
+    const projectFolder = project.path === 'package.json' ? '' : posix.dirname(project.path);
+    const packages = packageWorkspaces(root).map((path) => ({
+        path,
+        manifest: readPackageManifest(root, posix.join(path, 'package.json')),
+    }));
+    const pending = [projectFolder];
+    const visited = new Set<string>();
+    for (const folder of pending) {
+        if (visited.has(folder)) continue;
+        visited.add(folder);
+        const manifest = readPackageManifest(root, posix.join(folder, 'package.json'));
+        if (manifest === undefined)
+            throw new Error(`Workspace manifest is missing: ${posix.join(folder, 'package.json')}`);
+        const names = Object.keys({
+            ...manifest.dependencies,
+            ...manifest.devDependencies,
+            ...manifest.peerDependencies,
+            ...manifest.optionalDependencies,
+        });
+        pending.push(
+            ...packages
+                .filter((entry) => entry.manifest?.name !== undefined && names.includes(entry.manifest.name))
+                .map((entry) => entry.path),
+        );
+    }
+    visited.delete(projectFolder);
+    const ordered = packages.toSorted((left, right) => right.path.length - left.path.length);
+    const selected = files
+        .filter((file) => {
+            const owner = ordered.find((entry) => isInScope(file.path, entry.path));
+            return owner !== undefined && visited.has(owner.path);
+        })
+        .map((file) => file.path);
+    cache.set(key, selected);
+    return selected;
 }

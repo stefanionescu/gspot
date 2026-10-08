@@ -13,8 +13,7 @@
         "../packages/cli/src/types/platform/assets.ts",
         "../packages/cli/src/types/checks/general/spdx.d.ts",
         "src/**/*",
-        "astro.config.ts",
-        "links.ts"
+        "astro.config.ts"
     ],
     "exclude": ["dist"]
 }

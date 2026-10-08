@@ -33,9 +33,9 @@ describe.if(isMacos)('native property lists', () => {
         } finally {
             await chmod(join(sandbox.path, 'private.plist'), 0o600);
         }
-        const defect = await runTestCommand(['plutil', '-lint', 'bad.plist'], { cwd: sandbox.path });
-        expect(defect.code).toBe(1);
-        expect(checkedFindings(planned!, defect, paths)).toContainEqual(containing({ file: 'bad.plist' }));
+        const failed = await runTestCommand(['plutil', '-lint', 'bad.plist'], { cwd: sandbox.path });
+        expect(failed.code).toBe(1);
+        expect(checkedFindings(planned!, failed, paths)).toContainEqual(containing({ file: 'bad.plist' }));
         await Bun.write(join(sandbox.path, 'bad.plist'), '<plist><dict/></plist>\n');
         const corrected = await runTestCommand(['plutil', '-lint', 'bad.plist', 'private.plist'], {
             cwd: sandbox.path,

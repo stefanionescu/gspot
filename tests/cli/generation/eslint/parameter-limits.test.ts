@@ -22,7 +22,7 @@ for (const language of ['javascript', 'typescript']) {
             const limits =
                 maximum === 7
                     ? ''
-                    : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n[reasons]\n"limits.${language}.function_parameters" = "This fixture exercises the authored parameter ceiling."\n`;
+                    : `[limits.${language}]\nfunction_parameters = ${String(maximum)}\n[reasons]\n"limits.${language}.function_parameters" = "This sandbox tests the authored parameter ceiling."\n`;
             await createFileTree(directory.path, {
                 'gspot.toml': buildPolicy([language], { tables: limits, level: 'all' }),
                 'package.json': '{"private":true,"type":"module"}',

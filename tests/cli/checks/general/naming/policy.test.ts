@@ -223,7 +223,7 @@ test('naming test exemptions follow authored, inherited and Swift test conventio
     ]);
 });
 
-test('Next.js Pages Router names preserve an adjacent path finding and accept its correction', async () => {
+test('Next.js Pages Router names preserve an adjacent path finding and pass after the fix', async () => {
     await using sandbox = await testdir();
     const source = 'export default function Page() { return null; }\n';
     const pages = ['_app', '_document', '_error', '404', '500'].map((name) => `pages/${name}.tsx`);

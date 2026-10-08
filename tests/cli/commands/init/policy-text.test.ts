@@ -6,6 +6,7 @@ import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { parseTemplate } from '#cli/policy/templates.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { XCODE_METADATA } from '#tests/config/samples/xcode.ts';
+import { emitPolicy, parseTomlText } from '#cli/policy/file.ts';
 import { proposeText } from '#cli/commands/init/policy-text.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { CONFIGURATIONS, SDK_DESTINATIONS, MANUAL_SWIFT_CHOICES } from '#tests/config/cli/commands/init/policy-text.ts';
@@ -31,6 +32,7 @@ test('initialization preserves root and scoped configuration choices', async () 
     const policy = parseStrictPolicy(text);
     expect(policy.configurations).toStrictEqual(CONFIGURATIONS);
     expect(policy.scope['apps/site']?.configurations).toStrictEqual(CONFIGURATIONS.slice(0, 12));
+    expect(emitPolicy(text, parseTomlText(text, 'gspot.toml', 'policy'))).toBe(text);
 });
 
 test('template settings survive beside the commit scopes init adds', async () => {
@@ -124,6 +126,7 @@ test('template initialization retains owned comments and records copy-once prove
     expect(parseStrictPolicy(text).agent_rules.enabled).toBe(true);
     expect(parse(text)).not.toHaveProperty('template');
     expect(parse(text)).not.toHaveProperty('selection');
+    expect(emitPolicy(text, parseTomlText(text, 'gspot.toml', 'policy'))).toBe(text);
 });
 
 test.each(SDK_DESTINATIONS)('initialization selects the native $sdk destination', async ({ sdk, destination }) => {

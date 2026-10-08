@@ -71,7 +71,7 @@ export async function prepareTestRepository(
 }
 
 /**
- * Create and prepare one owned repository for a scenario's defect and correction cases.
+ * Create and prepare one owned repository for a scenario's sample and fix cases.
  * @param repository authored inputs, selected configurations, and setup callbacks
  * @param run the public CLI invocation selected by the test
  * @returns the installed repository and ownership of its temporary directory
@@ -116,8 +116,7 @@ export async function preserveRepositoryChanges(
             await restore();
             gitOutput(root, ['read-tree', tree]);
             const applied = await run(root, ['apply'], environment);
-            if (applied.code !== 0)
-                throw new Error(`Test repository restoration failed: ${applied.stdout}${applied.stderr}`);
+            if (applied.code !== 0) throw new Error(`Sandbox restoration failed: ${applied.stdout}${applied.stderr}`);
         },
     };
 }

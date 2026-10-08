@@ -8,6 +8,7 @@ const document = {
             'void-style': 'off',
             'doctype-style': 'off',
             'no-trailing-whitespace': 'off',
+            'valid-id': ['error', { relaxed: true }],
         },
         Object.fromEntries(
             (isAll ? [] : ['no-inline-style', 'prefer-button', 'prefer-native-element']).map((rule) => [rule, 'off']),

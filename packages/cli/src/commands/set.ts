@@ -69,12 +69,15 @@ function parseSettingValue(
 ): ParsedSettingValue {
     const parsed = items.map((item) => parseItem(item));
     const [only] = parsed;
+    const itemReasons = isRecord(declaration.items) && Object.hasOwn(declaration.items, 'reason');
     if (declaration.type === 'list') {
         const value: unknown[] = parsed.length === 1 && Array.isArray(only) ? only : parsed;
         return {
             type: 'list',
             value: value.map((item) =>
-                reason === undefined || !isRecord(item) ? item : { ...item, reason: item['reason'] ?? reason },
+                reason === undefined || !itemReasons || !isRecord(item)
+                    ? item
+                    : { ...item, reason: item['reason'] ?? reason },
             ),
         };
     }
@@ -117,7 +120,10 @@ async function changeSetting(
     const change = parseSettingValue(options.items, declaration, options.reason);
     const isList = change.type === 'list';
     const value = change.value;
-    const reason = change.type === 'list' && change.value.every(isRecord) ? undefined : options.reason;
+    const reason =
+        change.type === 'list' && isRecord(declaration.items) && Object.hasOwn(declaration.items, 'reason')
+            ? undefined
+            : options.reason;
     const mutation: Mutation = (raw) => {
         const holder = getScopeTable(raw, options.scope);
         if (change.type === 'list' && options.remove) removeFromList(holder, options.key, change.value);

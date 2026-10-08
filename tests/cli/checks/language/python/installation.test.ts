@@ -5,6 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { environmentBin } from '#cli/platform/paths.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rm, readFile, writeFile } from 'node:fs/promises';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
@@ -13,7 +14,6 @@ import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { toolPin, pythonPins } from '#cli/configurations/pins.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { importLinter } from '#cli/checks/language/python/imports/linter.ts';
-import { environmentBin, environmentExecutable } from '#cli/platform/paths.ts';
 
 test.each(LOCKFILES.filter(({ client }) => ['uv', 'poetry', 'pdm'].includes(client)))(
     'Python dependency ownership with $file applies only to locked scopes and accepts removal of the duplicate list',
@@ -146,8 +146,6 @@ test('import-linter follows INI precedence and retains separate chains for decor
         '--no-sync',
         '--project',
         session.root,
-        '--python',
-        environmentExecutable(join(session.root, '.venv'), 'python'),
         '--with',
         ...pythonPins([...session.manifests.values()]).filter((pin) => pin.startsWith('import-linter==')),
         'lint-imports',

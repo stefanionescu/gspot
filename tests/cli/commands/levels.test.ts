@@ -25,7 +25,7 @@ async function expectRecommendedLevel(root: string, command: string[]): Promise<
     await Bun.write(join(root, 'entry.sh'), 'helper_command=example\n');
 }
 
-test('switching levels preserves defect checks and selects stricter naming checks', async () => {
+test('switching levels preserves finding checks and selects stricter naming checks', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['bash', 'naming'], { tables: '[agent_rules]\nenabled = false\n' }),

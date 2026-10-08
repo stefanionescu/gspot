@@ -45,7 +45,7 @@ export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
                         {
                             rule: 'example',
                             paths: ['source.ts'],
-                            reason: 'This fixture demonstrates an accepted finding.',
+                            reason: 'This sandbox demonstrates an accepted finding.',
                         },
                     ],
                 },
@@ -65,7 +65,7 @@ export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
                                 {
                                     rule: 'example',
                                     paths: ['source.ts'],
-                                    reason: 'This fixture demonstrates an accepted finding.',
+                                    reason: 'This sandbox demonstrates an accepted finding.',
                                 },
                             ],
                         },

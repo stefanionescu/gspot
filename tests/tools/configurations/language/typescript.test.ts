@@ -1,4 +1,4 @@
-// Checks used by a TypeScript repository report their expected findings and accept the corrections.
+// Checks used by a TypeScript repository report their expected findings and pass after the fixes.
 import { join } from 'node:path';
 import { mkdir, appendFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';

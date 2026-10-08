@@ -7,7 +7,10 @@ configurations = ["spelling", "typescript", "prose", "commits", "actions", "nami
 runner = "mise"
 
 [scope.docs]
-configurations = ["css", "astro", "javascript", "zod", "cloudflare"]
+configurations = ["css", "astro", "javascript", "zod", "cloudflare", "site"]
+
+[scope.docs.site]
+build_command = ["bun", "--bun", "astro", "build"]
 
 [scope."packages/cli"]
 configurations = ["javascript", "zod"]
@@ -410,7 +413,7 @@ scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
 "**/*" = "ts"
 
 [tools.knip]
-entry = ["packages/eslint-plugin/src/plugin.ts", "docs/src/content/reference/collection.ts", "scripts/setting-values.ts"]
+entry = ["packages/cli/src/checks/general/site/linkinator.ts", "packages/eslint-plugin/src/plugin.ts", "docs/src/content/reference/collection.ts", "scripts/setting-values.ts"]
 
 [tools.knip.ignore_dependencies]
 "^@fontsource-variable/" = "The site imports the fonts from docs/src/theme.css, outside the TypeScript import graph."
@@ -525,11 +528,6 @@ reason = "The spelling tests use deliberate misspellings; every other test file 
 check = "spelling/typos"
 paths = ["tests/config/samples/spelling.ts"]
 reason = "This literal supplies a deliberate misspelling to the spelling checks and their corrections."
-
-[[ignore]]
-check = "structure/folder-names"
-paths = ["tests/tools/configurations/language/bash", "tests/tools/configurations/language/swift", "tests/cli/checks/language/python", "tests/cli/checks/language/swift", "tests/cli/checks/language/bash", "tests/config/cli/checks/language/bash", "tests/config/cli/checks/language/swift", "tests/config/cli/checks/language/python", "tests/config/tools/configurations/language/bash", "tests/config/tools/configurations/language/typescript", "tests/config/tools/configurations/language/swift", "packages/cli/src/checks/language/bash", "packages/cli/src/checks/language/python", "packages/cli/src/parsers/schema/python", "packages/cli/src/tools/python", "tests/cli/tools/python", "tests/config/cli/tools/python", "packages/cli/src/checks/language/swift", "packages/cli/src/parsers/swift", "packages/cli/src/types/parsers/swift", "tests/cli/parsers/swift", "tests/config/cli/parsers/swift", "tests/config/samples/swift"]
-reason = "Each directory belongs to a named language configuration or its tests. The TypeScript files implement or test that configuration."
 
 [[ignore]]
 check = "structure/lone-files"

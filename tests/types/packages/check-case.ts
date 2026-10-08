@@ -6,12 +6,12 @@ import type { CheckCaseOutcome } from '#tests/types/harness/check-case.ts';
 export type PackageCheckCase = {
     only: string;
     path: string;
-    defect?: string;
+    sample?: string;
     findings: Partial<Finding>[];
     isNpm?: boolean;
 } & ({ corrected: string } | { fix: true });
 
-/** Raw process evidence and parsed reports for the owning test's defect and correction assertions. */
+/** Raw process evidence and parsed reports for the owning test's finding and fix assertions. */
 export type PackageCheckOutcome = CheckCaseOutcome & {
     fixed: SpawnOutcome | undefined;
 };

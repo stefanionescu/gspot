@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
 
 test('generated all lint checks authored directories named after build outputs', async () => {
     await using sandbox = await testdir();
@@ -20,8 +20,8 @@ test('generated all lint checks authored directories named after build outputs',
     const eslint = await createEslint(sandbox.path);
     for (const filePath of ['tests/build/check.js', 'src/dist/check.js', 'coverage/check.js']) {
         expect(await eslint.isPathIgnored(filePath)).toBe(false);
-        const defect = await eslint.lintText('missing();', { filePath });
-        expect(defect.flatMap(({ messages }) => messages).some(({ ruleId }) => ruleId === 'no-undef')).toBe(true);
+        const findings = await eslint.lintText('missing();', { filePath });
+        expect(findings.flatMap(({ messages }) => messages).some(({ ruleId }) => ruleId === 'no-undef')).toBe(true);
     }
     expect(await eslint.isPathIgnored('emitted/check.js')).toBe(true);
 });
@@ -45,9 +45,9 @@ test.each(['recommended', 'all'])(
             (_, index) => `    const value${String(index)} = ${String(index)};`,
         ).join('\n');
         const source = `export function count() {\n${declarations}\n    return value0;\n}\n`;
-        const defect = await eslint.lintText(source, { filePath: 'sample.test.js' });
+        const findings = await eslint.lintText(source, { filePath: 'sample.test.js' });
         for (const rule of rules)
-            expect(defect.flatMap((file) => file.messages).some((diagnostic) => diagnostic.ruleId === rule)).toBe(
+            expect(findings.flatMap((file) => file.messages).some((diagnostic) => diagnostic.ruleId === rule)).toBe(
                 level === 'all',
             );
     },
@@ -68,8 +68,8 @@ test.each(['recommended', 'all'])(
         });
         const eslint = await createEslint(sandbox.path);
         for (const filePath of ['main.js', 'app/main.js']) {
-            const defect = await eslint.lintText('export function start() { return launch(); }', { filePath });
-            const rules = new Set(defect.flatMap((file) => file.messages).map((diagnostic) => diagnostic.ruleId));
+            const findings = await eslint.lintText('export function start() { return launch(); }', { filePath });
+            const rules = new Set(findings.flatMap((file) => file.messages).map((diagnostic) => diagnostic.ruleId));
             expect(rules.has('gspot/no-trivial-files')).toBe(level === 'all');
             expect(rules.has('gspot/no-trivial-functions')).toBe(false);
             const local = await eslint.lintText('function start() { return launch(); } export const app = start();', {
@@ -97,7 +97,7 @@ test.each(['recommended', 'all'])(
         });
         const eslint = await createEslint(sandbox.path);
         for (const filePath of ['main.js', 'app/main.js']) {
-            const config = (await eslint.calculateConfigForFile(filePath)) as ResolvedEslint;
+            const config = (await eslint.calculateConfigForFile(filePath)) as ComputedEslint;
             expect(config.rules['gspot/import-extensions']![0]).toBe(2);
             const ordinary = await eslint.lintText('import manifest from "#manifest";', { filePath });
             expect(

@@ -44,7 +44,10 @@ for (const configuration of ['react', 'nextjs'])
             await createFileTree(sandbox.path, files);
             const session = await openSession(sandbox.path);
             const check = `${configuration}/version-pairs`;
-            const input = buildCheckInput(session, check, { scope, paths: [join(scope, 'package.json')] });
+            const input = buildCheckInput(session, check, {
+                scope,
+                paths: [join(scope, 'package.json').replaceAll('/', '\\')],
+            });
             const found = versionPairs(input, pairs);
             expect(found).toHaveLength(row.findings);
             if (row.findings === 1) {

@@ -24,7 +24,7 @@ test('generated ESLint applies explicit ignores after native rule options', asyn
             join(directory.path, 'gspot.toml'),
             policy +
                 (ignored
-                    ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "no-console"\nreason = "This fixture accepts the native console finding."\n'
+                    ? '\n[[ignore]]\ncheck = "javascript/eslint"\nrule = "no-console"\nreason = "This sandbox accepts the native console finding."\n'
                     : ''),
         );
         const eslint = await createEslint(directory.path);

@@ -66,7 +66,7 @@ export function commitAll(cwd: string): void {
         ['commit', '-qm', 'init'],
     ]) {
         const result = git(cwd, args);
-        if (result.code !== 0) throw new Error(`Test repository Git setup failed: ${result.stderr}${result.stdout}`);
+        if (result.code !== 0) throw new Error(`Sandbox Git setup failed: ${result.stderr}${result.stdout}`);
     }
 }
 

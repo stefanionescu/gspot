@@ -3,6 +3,7 @@ import ignore from 'ignore';
 import { readText } from '#cli/platform/source.ts';
 import { coversScope } from '#cli/repository/selectors.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
+import { semgrepRuleFiles } from '#cli/configurations/declarations.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
@@ -46,8 +47,7 @@ function ignoreSkip(scope: ScopeSelection, check: CheckDeclaration): SelectionSt
         .ignoresFor(check.name)
         .find(
             (entry) =>
-                entry.rule === undefined &&
-                (entry.paths === undefined || entry.paths.length === 0 || coversScope(entry.paths, scope.scope.path)),
+                entry.rule === undefined && (entry.paths.length === 0 || coversScope(entry.paths, scope.scope.path)),
         );
     if (ignored === undefined) return undefined;
     const reason = ignored.reason === undefined ? '' : `: ${ignored.reason}`;
@@ -97,6 +97,14 @@ export function selectionStatus(
         return { cause: 'level', note: 'disabled at level recommended' };
     const ignored = ignoreSkip(scope, check);
     if (ignored !== undefined) return ignored;
+    if (
+        check.name === 'security/semgrep' &&
+        semgrepRuleFiles(scope.selected, scope.scope.path, scope.view.options('tools.semgrep').rule_files).length === 0
+    )
+        return {
+            cause: 'condition',
+            note: 'No selected configuration or tools.semgrep.rule_files supplies local rules.',
+        };
     const setting = waitingSetting(scope, check);
     return setting === undefined
         ? undefined

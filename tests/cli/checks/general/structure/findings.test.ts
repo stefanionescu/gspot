@@ -1,4 +1,4 @@
-// Test repository for the structure configuration: each repository-shape check fires on its test defect.
+// Sandbox for the structure configuration: each repository-shape check fires on its sample.
 import { join } from 'node:path';
 import { mkdir } from 'node:fs/promises';
 import { git } from '#tests/harness/git.ts';

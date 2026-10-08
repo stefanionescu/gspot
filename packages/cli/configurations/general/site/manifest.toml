@@ -38,6 +38,13 @@ check = "site/html-validate"
 rule_keys = ["rules"]
 generated_header = false
 
+[[tool_file]]
+source = "purgecss.config.mjs.eta"
+target = ".gspot/config/purgecss.config.mjs"
+scoped = true
+tool = "purgecss"
+check = "site/purgecss"
+
 [[check]]
 name = "build"
 title = "Build the site"
@@ -143,7 +150,7 @@ help = "Add the page to the sitemap, remove the dead entry, or leave a page out 
 name = "dead-assets"
 title = "Find unused assets"
 example = "An image in the output directory that no built page or stylesheet references reports an unused asset. Remove it from the source asset set and rebuild."
-level = "recommended"
+level = "all"
 stage = "push"
 runs = "scope"
 files = { paths = ["**/*"], kinds = ["source", "binary"] }

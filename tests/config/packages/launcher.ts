@@ -10,7 +10,7 @@ export const LAUNCHER_FILES = {
     'CLAUDE.md': '# Claude notes\n\nRun the tests.\n',
 };
 
-/** Exact Bash diagnostics for the launcher's planted syntax defect. */
+/** Exact Bash diagnostics for the launcher's syntax sample. */
 export const SYNTAX_FINDINGS = [
     {
         check: 'bash/syntax',

@@ -1,4 +1,4 @@
-// Test repository for the actions configuration: a workflow with an unknown expression context and one open to template injection.
+// Sandbox for the actions configuration: a workflow with an unknown expression context and one open to template injection.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';

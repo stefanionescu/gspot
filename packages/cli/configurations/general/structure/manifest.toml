@@ -98,7 +98,7 @@ stage = "commit"
 runs = "once"
 summary = "Checks that every tracked file over the size limit is stored through LFS or declared with a reason."
 why = "A large file in plain git history stays in every clone for good."
-help = "Track the file with git lfs, classify it with gspot set generated <path> or gspot set vendored <path>, or raise limits.file_kb with a reason."
+help = "Track the file with git lfs, classify it with gspot set generated `<path>` or gspot set vendored `<path>`, or raise limits.file_kb with a reason."
 
 [[check]]
 name = "tracked-dependencies"
@@ -109,7 +109,7 @@ stage = "commit"
 runs = "once"
 summary = "Checks that git tracks no file inside a folder a package manager fills, such as node_modules."
 why = "An installed dependency in git is copied into every clone, goes stale the day it lands, and hides from every check because it looks vendored."
-help = "Run git rm -r --cached <folder>, and write the folder name with no leading slash in .gitignore so it matches at every depth."
+help = "Run git rm -r --cached `<folder>`, and write the folder name with no leading slash in .gitignore so it matches at every depth."
 
 [[check]]
 name = "file-lines"
@@ -121,7 +121,7 @@ runs = "scope"
 files = { extensions = [".sh", ".bash", ".zsh", ".bats", ".py", ".pyi", ".sql", ".pgsql", ".psql"], tags = ["shebang:shell"], kinds = ["source"] }
 summary = "Checks source code lines against each language's ceiling."
 why = "A long file hides independent responsibilities from the reader."
-help = "Split the file by its responsibility, or raise its limits.<language>.file_lines with a reason."
+help = "Split the file by its responsibility, or raise its limits.`<language>`.file_lines with a reason."
 
 [[setting]]
 name = "limits.file_lines"
@@ -224,7 +224,7 @@ type = "number"
 direction = "floor"
 default = 2
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
-summary = "Functions with this many statements or fewer are reported. Any whole number of 1 or more works, and a higher number reports more functions. Set it for one language under limits.<language>."
+summary = "Functions with this many statements or fewer are reported. Any whole number of 1 or more works, and a higher number reports more functions. Set it for one language under limits.`<language>`."
 
 [setting.validation]
 integer = true
@@ -236,6 +236,7 @@ name = "limits.file_kb"
 type = "number"
 direction = "ceiling"
 default_all = 1024
+default = 1024
 summary = "The largest file Git may track, in kilobytes. Larger files need Git LFS or a generated or vendored entry."
 
 [[setting]]
@@ -319,6 +320,7 @@ summary = "Whether re-exports are allowed: none, or index-only for libraries wit
 name = "architecture.roles"
 type = "table"
 direction = "tightening"
+default = {}
 summary = "Which elements or paths play the types, tests, harness, config, env, and runtime roles for the import direction rules. No role has a default."
 
 [[setting]]

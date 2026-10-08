@@ -49,7 +49,7 @@ run = "bun packages/eslint-plugin/build.ts"
 
 [tasks.test]
 description = "Run deterministic CLI and plugin tests."
-run = "bun test ./tests/cli ./tests/plugin"
+run = "bun scripts/plugin.ts cli"
 
 [tasks."test:tools"]
 description = "Run native compatibility tests with the selected tools installed."
@@ -65,9 +65,9 @@ dir = "{{config_root}}/docs"
 run = "bun --bun astro sync"
 
 [tasks."build:docs"]
-description = "Build the documentation site and validate its local links and fragments."
+description = "Build the documentation site."
 dir = "{{config_root}}/docs"
-run = ["bun --bun astro build", "bun links.ts"]
+run = "bun --bun astro build"
 
 [tasks.dev]
 description = "Generate references and serve the documentation locally."

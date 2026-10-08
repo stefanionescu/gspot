@@ -44,13 +44,16 @@
         "eslint-plugin-unicorn",
         "eslint-plugin-zod",
         "globals",
+        "html-validate",
         "jscpd",
         "knip",
         "license-checker-rseidelsohn",
+        "linkinator",
         "markdownlint-cli2",
         "prettier",
         "prettier-plugin-astro",
         "prettier-plugin-svelte",
+        "purgecss",
         "stylelint",
         "stylelint-config-recommended",
         "stylelint-config-standard",
@@ -74,9 +77,11 @@
         "ec",
         "eslint",
         "gitleaks",
+        "html-validate",
         "jscpd",
         "knip",
         "license-checker-rseidelsohn",
+        "linkinator",
         "lint-imports",
         "lychee",
         "markdownlint-cli2",
@@ -84,6 +89,7 @@
         "osv-scanner",
         "pinact",
         "prettier",
+        "purgecss",
         "pydoclint",
         "ruff",
         "semgrep",
@@ -106,6 +112,7 @@
     "workspaces": {
         ".": {
             "entry": [
+                "packages/cli/src/checks/general/site/linkinator.ts",
                 "packages/eslint-plugin/src/plugin.ts",
                 "docs/src/content/reference/collection.ts",
                 "scripts/setting-values.ts",
@@ -126,7 +133,13 @@
             "ignoreDependencies": ["satteri"]
         },
         "packages/cli": {
-            "entry": ["src/main.{ts,js}", "src/index.{ts,js}", "**/*.{test,spec}.{ts,tsx,js}", ".markdownlint-cli2.mjs"]
+            "entry": [
+                "src/checks/general/site/linkinator.ts",
+                "src/main.{ts,js}",
+                "src/index.{ts,js}",
+                "**/*.{test,spec}.{ts,tsx,js}",
+                ".markdownlint-cli2.mjs"
+            ]
         },
         "packages/eslint-plugin": {
             "entry": [

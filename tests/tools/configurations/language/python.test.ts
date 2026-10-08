@@ -1,4 +1,4 @@
-// The Python configuration reports lint, layout, and type errors and accepts their corrections.
+// The Python configuration reports lint, layout, and type errors and passes after the fixes.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';

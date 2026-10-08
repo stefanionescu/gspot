@@ -142,7 +142,11 @@ export function emitTomlComments(comments: TomlComments, kind: string, path: Key
         )
         .join('\n');
     const owned = block.owned.toSorted((left, right) => left.start - right.start).map(({ raw }) => raw);
-    return [...(free === '' ? [] : [free, '']), ...owned, ...(text === '' ? [] : [text])].join('\n');
+    return [
+        ...(free === '' ? [] : [free, ...(owned.length === 0 && text === '' ? [] : [''])]),
+        ...owned,
+        ...(text === '' ? [] : [text]),
+    ].join('\n');
 }
 
 /**

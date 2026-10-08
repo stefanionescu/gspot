@@ -1,0 +1,21 @@
+diff --git a/dist/index.js b/dist/index.js
+index 25d9135378665f29bb2c09a0c08cea3e155305fd..196580981535e24af632dba30b28e4378653b355 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -867 +867 @@ function renderLineToAst({
+-  let lineNode = h(`div.${codeLineClass}`);
++  let lineNode = h(`span.${codeLineClass}`);
+@@ -869 +869 @@ function renderLineToAst({
+-    lineNode.children.push(h("div.gutter", renderedGutterElements));
++    lineNode.children.push(h("span.gutter", renderedGutterElements));
+@@ -871 +871 @@ function renderLineToAst({
+-  lineNode.children.push(h("div.code", partNodes.length > 0 ? partNodes : h(null, "\n")));
++  lineNode.children.push(h("span.code", partNodes.length > 0 ? partNodes : h(null, "\n")));
+@@ -899,2 +899,2 @@ function getRenderEmptyLineFn(context) {
+-    const lineAst = h(`div.${codeLineClass}`);
+-    const gutterWrapper = renderedGutterElements.length ? h("div.gutter", renderedGutterElements) : void 0;
++    const lineAst = h(`span.${codeLineClass}`);
++    const gutterWrapper = renderedGutterElements.length ? h("span.gutter", renderedGutterElements) : void 0;
+@@ -903 +903 @@ function getRenderEmptyLineFn(context) {
+-    const codeWrapper = h("div.code");
++    const codeWrapper = h("span.code");

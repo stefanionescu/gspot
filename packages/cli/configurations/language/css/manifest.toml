@@ -123,7 +123,7 @@ files = { extensions = [".css", ".vue", ".svelte"] }
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$" }
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
 why = "A browser skips a declaration it cannot read without a word, so a typo in a property ships as a missing style."
-help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule <name> --reason \"<why>\"."
+help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule `<name>` --reason \"`<why>`\"."
 
 [[check]]
 name = "module-classes"
@@ -142,7 +142,7 @@ name = "tools.stylelint.rules"
 type = "table"
 direction = "rule-options"
 default = {}
-summary = "Native options for Stylelint rules active at recommended or all. Severity remains error; accept a finding with gspot ignore css/stylelint --rule <rule> --reason <why>."
+summary = "Native options for Stylelint rules active at recommended or all. Severity remains error; accept a finding with gspot ignore css/stylelint --rule `<rule>` --reason `<why>`."
 
 [agent_rules]
 "TAILWIND.md" = { dependencies = ["tailwindcss"] }

@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
 import type { BoundaryResult } from '#tests/types/cli/generation/eslint/import-boundaries.ts';
 import { BOUNDARY_CASES, TEST_BOUNDARY_POLICY } from '#tests/config/cli/generation/eslint/import-boundaries.ts';
 
@@ -15,7 +15,7 @@ test('generated JavaScript configuration enables project import boundaries', asy
         'src/task.js': '',
     });
     const eslint = await createEslint(sandbox.path);
-    const config = (await eslint.calculateConfigForFile('src/task.js')) as ResolvedEslint;
+    const config = (await eslint.calculateConfigForFile('src/task.js')) as ComputedEslint;
     expect(config.rules['gspot/import-boundaries']?.[0]).toBe(2);
 });
 

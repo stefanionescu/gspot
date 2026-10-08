@@ -10,7 +10,7 @@ import { prepareTestRepository } from '#tests/harness/repository.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/config/samples/components.ts';
 import { PAGE, CLEAN, BUNDLED } from '#tests/config/tools/configurations/framework/astro.ts';
 
-test('one Astro project reaches ESLint, astro check, and Prettier, and accepts each correction', async () => {
+test('one Astro project reaches ESLint, astro check, and Prettier, and passes after each fix', async () => {
     await using sandbox = await testdir();
     const root = sandbox.path;
     const environment = await prepareTestRepository(root, {

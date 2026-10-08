@@ -77,7 +77,7 @@ function mockNextjsCommands(check: string): NextjsCommands {
 
 for (const scope of ['', 'apps/web'])
     for (const check of ['nextjs/tsc', 'nextjs/build'])
-        test(`Next.js output preservation in ${scope || 'root'}: ${check} reports a defect, accepts its correction, and preserves source output`, async () => {
+        test(`Next.js output preservation in ${scope || 'root'}: ${check} reports its finding, passes after the fix, and preserves source output`, async () => {
             await using directory = await testdir();
             const session = await prepareNextjsBuild(directory.path, scope);
             const input = buildCheckInput(session, check, { scope });

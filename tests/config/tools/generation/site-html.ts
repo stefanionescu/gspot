@@ -1,4 +1,4 @@
-/** Built pages with one located accessibility defect and its explicit correction. */
+/** Built pages with one located accessibility finding and its fix. */
 export const SITE_HTML_PAGE = `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><title>Example</title></head>

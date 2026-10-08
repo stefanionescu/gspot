@@ -1,5 +1,13 @@
 import { z } from 'zod';
 
+/** The native Linkinator child's validated invocation data. */
+export const linkinatorRequestSchema = z.strictObject({
+    paths: z.array(z.string().min(1)),
+    origin: z.url().optional(),
+    external: z.boolean(),
+    skipped: z.array(z.string()),
+});
+
 /** Linkinator output from the isolated static-site build. */
 export const linkinatorReportSchema = z.object({
     links: z.array(

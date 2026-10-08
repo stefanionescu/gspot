@@ -2,6 +2,7 @@ import { join } from 'node:path';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { buildCheckInput } from '#tests/harness/input.ts';
@@ -21,7 +22,7 @@ const SITE_REPORTS: SiteReportCase[] = [
         name: 'links',
         check: 'site/linkinator',
         analyze: (input) => linkinator(input, false),
-        defect: () => ({
+        report: () => ({
             links: [{ url: 'https://example.com/missing', parent: 'index.html', state: 'BROKEN', status: 404 }],
         }),
         corrected: { links: [] },
@@ -33,7 +34,7 @@ const SITE_REPORTS: SiteReportCase[] = [
         name: 'markup',
         check: 'site/html-validate',
         analyze: htmlValidate,
-        defect: (output: string) => [
+        report: (output: string) => [
             {
                 filePath: join(output, 'index.html'),
                 messages: [{ ruleId: 'doctype', line: 1, message: 'Missing doctype.' }],
@@ -48,7 +49,7 @@ const SITE_REPORTS: SiteReportCase[] = [
         name: 'selectors',
         check: 'site/purgecss',
         analyze: purgecss,
-        defect: () => [{ file: 'style.css', rejected: ['.unused'] }],
+        report: () => [{ file: 'style.css', rejected: ['.unused'] }],
         corrected: [{ file: 'style.css', rejected: [] }],
         status: 0,
         file: 'dist/style.css',
@@ -138,16 +139,53 @@ ${SITE_BUILD_SCRIPT}`,
 test('a failed reproducibility build retains the first isolated output', async () => {
     await using sandbox = await testdir();
     using resources = new DisposableStack();
-    await createFileTree(sandbox.path, { 'gspot.toml': SITE_POLICY, 'build.js': SITE_BUILD_SCRIPT });
+    await createFileTree(sandbox.path, {
+        'gspot.toml': SITE_POLICY,
+        'build.js': `${SITE_BUILD_SCRIPT}
+if (existsSync('built-once')) throw new Error('Test build failure');
+writeFileSync('built-once', 'yes');`,
+    });
     const request = buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
         paths: ['build.js'],
         resources: resources,
     });
     const first = await cachedBuild(request);
     expect(first.isBuilt).toBe(true);
-    await writeFile(join(sandbox.path, 'build.js'), 'throw new Error("Test build failure");');
     expect(await rejection(buildReproducible(request))).toContain('The second site build failed');
     expect(await readFile(join(first.output, 'index.html'), 'utf8')).toBe('first');
+    expect(await pathExists(join(sandbox.path, 'dist'))).toBe(false);
+});
+
+test.each([
+    {
+        name: 'keeps the absolute source path fixed',
+        script: "import {mkdirSync,writeFileSync} from 'node:fs'; mkdirSync('dist'); writeFileSync('dist/index.html',process.cwd());",
+        findings: [],
+    },
+    {
+        name: 'reports output files that appear and disappear',
+        script: `import {existsSync,mkdirSync,writeFileSync} from 'node:fs';
+const second = existsSync('built-once');
+mkdirSync('dist', {recursive:true});
+writeFileSync(second ? 'dist/later.html' : 'dist/earlier.html', 'built');
+writeFileSync('built-once', 'yes');`,
+        findings: [
+            { file: 'dist/earlier.html', rule: 'not-reproducible' },
+            { file: 'dist/later.html', rule: 'not-reproducible' },
+        ],
+    },
+])('reproducibility $name', async ({ script, findings: expected }) => {
+    await using sandbox = await testdir();
+    using resources = new DisposableStack();
+    await createFileTree(sandbox.path, { 'gspot.toml': SITE_POLICY, 'build.js': script });
+    const input = buildCheckInput(await openSession(sandbox.path), 'site/build-reproducible', {
+        paths: ['build.js'],
+        resources,
+    });
+    const findings = await buildReproducible(input);
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([...expected]);
+    expect(await readFile(join(sandbox.path, 'build.js'), 'utf8')).toBe(script);
+    expect(await pathExists(join(sandbox.path, 'built-once'))).toBe(false);
     expect(await pathExists(join(sandbox.path, 'dist'))).toBe(false);
 });
 
@@ -184,7 +222,7 @@ test.each([0, 7])('a run cleans isolated site output after build exit %i', async
     }
 });
 
-test('site output inventory refuses external links and accepts corrected assets', async () => {
+test('site output inventory refuses external links and passes after the fix', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': SITE_POLICY,
@@ -200,8 +238,8 @@ test('site output inventory refuses external links and accepts corrected assets'
 });
 
 test.each(SITE_REPORTS)(
-    '$name rejects fatal, absent, and malformed reports and accepts defects and corrections',
-    async ({ analyze, check, defect, status, file, rule, corrected }) => {
+    '$name rejects fatal, absent, and malformed reports and handles findings before and after fixes',
+    async ({ analyze, check, report, status, file, rule, corrected }) => {
         await using sandbox = await testdir();
         using resources = new DisposableStack();
         await createFileTree(sandbox.path, { 'gspot.toml': SITE_POLICY, 'build.js': SITE_BUILD_SCRIPT });
@@ -213,15 +251,13 @@ test.each(SITE_REPORTS)(
         await writeFile(join(build.output, 'style.css'), 'body { color: red; }');
         let code = 2;
         let stdout = '';
-        const command = spyOn(toolRunner, 'runCheckTool').mockImplementation(() =>
-            Promise.resolve({
-                code,
-                stdout,
-                stderr: 'Test tool diagnostic',
-                missing: false,
-                duration: 1,
-            }),
-        );
+        const command = spyOn(toolRunner, 'runCheckTool').mockImplementation(async (_input, argv) => {
+            if (Array.isArray(argv)) {
+                const formatter = argv.find((argument) => argument.startsWith('json='));
+                if (formatter !== undefined) await writeFile(formatter.slice('json='.length), stdout);
+            }
+            return { code, stdout, stderr: 'Test tool diagnostic', missing: false, duration: 1 };
+        });
         try {
             await rejection(analyze(request));
             code = 0;
@@ -229,7 +265,7 @@ test.each(SITE_REPORTS)(
                 stdout = invalid;
                 await rejection(analyze(request));
             }
-            stdout = JSON.stringify(defect(build.output));
+            stdout = JSON.stringify(report(build.output));
             code = status;
             expect(await analyze(request)).toMatchObject([{ check: request.check.name, file, line: 1, rule }]);
             code = 0;
@@ -240,3 +276,35 @@ test.each(SITE_REPORTS)(
         }
     },
 );
+
+test('scoped site builds reuse only declared workspace sources for both native builds', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy([], {
+            tables: '[scope.web]\nconfigurations = ["site", "javascript"]\n[scope.web.site]\nbuild_command = ["bun", "build.js"]\n',
+        }),
+        'package.json': '{"private":true,"workspaces":["web","packages/*"]}',
+        'web/package.json': '{"name":"web","type":"module","dependencies":{"core":"workspace:*"}}',
+        'web/build.js':
+            'import {mkdirSync,writeFileSync} from "node:fs"; import {value} from "core"; mkdirSync("dist"); writeFileSync("dist/index.html",value);',
+        'packages/core/package.json': '{"name":"core","type":"module","main":"value.js"}',
+        'packages/core/value.js': 'export const value = "<h1>Workspace site</h1>";',
+        'packages/unused/package.json': '{"name":"unused"}',
+        'packages/unused/private.txt': 'Unrelated site bytes',
+    });
+    await mkdir(join(sandbox.path, 'node_modules'));
+    await symlink('../packages/core', join(sandbox.path, 'node_modules/core'));
+    await symlink('../packages/unused', join(sandbox.path, 'node_modules/unused'));
+    using resources = new DisposableStack();
+    const session = await openSession(sandbox.path);
+    const input = buildCheckInput(session, 'site/build', { scope: 'web', resources });
+    const built = await cachedBuild(input);
+    expect(built.isBuilt, built.outputTail).toBe(true);
+    expect(await readFile(join(built.output, 'index.html'), 'utf8')).toBe('<h1>Workspace site</h1>');
+    expect(await pathExists(join(built.cwd, '../packages/unused/private.txt'))).toBe(false);
+    expect(await buildReproducible(input)).toStrictEqual([]);
+    expect(await pathExists(join(sandbox.path, 'web/dist'))).toBe(false);
+    expect(await readFile(join(sandbox.path, 'packages/core/value.js'), 'utf8')).toBe(
+        'export const value = "<h1>Workspace site</h1>";',
+    );
+});

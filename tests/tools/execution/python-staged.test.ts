@@ -1,4 +1,4 @@
-// A staged Python defect is reported from the working tree's installed environment against the snapshot.
+// A staged Python finding is reported from the working tree's installed environment against the snapshot.
 import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
@@ -17,7 +17,7 @@ import { preparePythonInstallation } from '#tests/harness/python-installation.ts
 // A Windows virtual environment has launchers and no interpreter links; the install tests stay POSIX-only.
 
 test.skipIf(!isPosix)(
-    'a staged Python defect is reported by Ruff from the installed environment while the working tree differs',
+    'a staged Python finding is reported by Ruff from the installed environment while the working tree differs',
     async () => {
         await using repository = await testdir();
         await using prepared = await preparePythonInstallation(repository.path, {
@@ -32,7 +32,7 @@ test.skipIf(!isPosix)(
         }
         // Public apply already generated the Ruff configuration before tool installation.
         commitAll(repository.path);
-        // The index holds a second defect beside the committed one; the working tree has the correction.
+        // The index holds a second sample beside the committed one; the working tree has the correction.
         await writeFile(join(repository.path, 'source.py'), 'import os\nimport sys\n');
         gitOutput(repository.path, ['add', 'source.py']);
         await writeFile(join(repository.path, 'source.py'), 'VALUE = 1\n');

@@ -1,5 +1,5 @@
 {
-    "openRecords": 909,
+    "openRecords": 898,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -213,10 +213,30 @@
                 "Owner answer in this conversation: Derive the variants inside their test files; keep literal data in config.",
                 "Native prescribed config derivations produce four config-logic findings; frozen original proposal /tmp/gspot-test-source-variants-main-freeze.json and /tmp/gspot-test-source-variants-policy-ready.json retain the probe."
             ]
+        },
+        {
+            "id": "bun-native-global-test-timeout",
+            "date": "2026-10-08",
+            "scope": "review/carve-outs/001 global test timeout application",
+            "decision": "Use the single TEST_TIMEOUT_MS through Bun runner --timeout because pinned Bun resets preload setDefaultTimeout for each file. No new timeout setting, per-suite/per-OS budget, or environment switch. Keep child-process deadline enforcement; measure the final constant across every CI platform.",
+            "evidence": [
+                "Explicit user answer: Use the same constant through the runner flag.",
+                "Native two-file probe /tmp/gspot-bun-timeout-file-reset-evidence.json"
+            ]
+        },
+        {
+            "id": "built-html-native-id-validation",
+            "date": "2026-10-08",
+            "scope": "review/configurations-plugin/042 built HTML overrides",
+            "decision": "Use native valid-id error with relaxed true for built output, retaining empty-ID and whitespace validation. Preserve native Starlight _top navigation. This authorizes the additional native HTML5 override beyond the five prescribed built-output overrides. Other markup defects are fixed at source.",
+            "evidence": [
+                "Explicit user answer: Use the native HTML5 ID validation.",
+                "Pinned html-validate 11.6.1 native rule implementation and 309-page site report."
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 909,
+        "openRecords": 898,
         "records": 1092,
         "batches": [
             {
@@ -1667,12 +1687,12 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 32,
-                "unresolvedAssignments": 105
+                "completedAssignments": 36,
+                "unresolvedAssignments": 101
             },
             {
                 "id": "policy-file",
-                "status": "pending",
+                "status": "partial",
                 "records": [
                     "review/policy-format/002",
                     "review/policy-format/003",
@@ -1766,8 +1786,8 @@
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
                 ],
-                "completedAssignments": 0,
-                "unresolvedAssignments": 91
+                "completedAssignments": 1,
+                "unresolvedAssignments": 90
             },
             {
                 "id": "layout",
@@ -1966,8 +1986,8 @@
                     "review/glossary/028",
                     "review/glossary/029"
                 ],
-                "completedAssignments": 4,
-                "unresolvedAssignments": 24
+                "completedAssignments": 10,
+                "unresolvedAssignments": 18
             }
         ],
         "overlapPolicy": "Each starting record retains its ID and original quotation. Overlapping records appear in every applicable batch. Batch assignment does not close a finding. Second-pass slice corrections precede area and main-summary reconciliation."
@@ -2255,9 +2275,11 @@
         },
         "areas/checks/048": {
             "status": "partial",
-            "owner": null,
+            "owner": "packaging",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Exact shared four-house-rule consolidation assigned to isolated Python/Bash/Swift source owner from native query feasibility proof; preserves unrelated Bash/Python checks and native import-linter. Implementation and acceptance remain pending."
+            ]
         },
         "areas/checks/049": {
             "status": "partial",
@@ -4196,7 +4218,11 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence cf1539a1ff4fa87b."],
+            "verification": [
+                "Evidence cf1539a1ff4fa87b.",
+                "Owner-approved single TEST_TIMEOUT_MS now reaches CLI/plugin/tools/packages through scripts/plugin.ts native Bun --timeout; child-process budget remains preload-owned.",
+                "Actual unchanged two-file 5200ms regression passes2/2 in10.44s /tmp/gspot-native-shared-timeout-main-two-files.log; integrated source/cancellation/site20pass70assert3files4.10s. Final measured constant remains pending all suites/platforms."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-uniform-timeouts-main-intake/freeze.json",
@@ -5517,10 +5543,14 @@
             "verification": []
         },
         "review/commands-templates/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "config/commands/help.ts owns all twelve exit-code/example entries; commands build help from it and docs read structured data directly. set levels remain authoritative per this record and share the policy level summaries. Shared help/schema tests pass 174 tests and 491 assertions across three files.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ]
         },
         "review/commands-templates/033": {
             "status": "pending",
@@ -5820,10 +5850,12 @@
             "verification": []
         },
         "review/configurations-plugin/042": {
-            "status": "pending",
-            "owner": null,
+            "status": "partial",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Owner authorizes native HTML5 built-output valid-id error/relaxed true, retaining invalid empty/whitespace checks. Common base consolidation and final emitted/native acceptance remain pending."
+            ]
         },
         "review/configurations-plugin/043": {
             "status": "pending",
@@ -6050,10 +6082,14 @@
             ]
         },
         "review/docs-site/011": {
-            "status": "pending",
-            "owner": null,
+            "status": "partial",
+            "owner": "main",
             "commit": null,
-            "verification": []
+            "verification": [
+                "Site selected and native duplicate link checker deleted. Actual309page docs build and native internal links/fragments/sitemap pass.",
+                "Native HTML file formatter preserves large reports;400-native-finding regression passes. Source placeholders corrected so all native HTML syntax/table findings disappear.",
+                "Native source assets and independent same-root build reproducibility pass; upstream component markup and dynamic unused-CSS validation remain active, no broad exemptions."
+            ]
         },
         "review/docs-site/013": {
             "status": "complete",
@@ -6169,10 +6205,14 @@
             ]
         },
         "review/docs-site/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "Native Markdown code-block extraction compares TypeScript quickstart blocks with the recorded example; README contains finding lines only. Native executable acceptance verifies complete normalized rejected and passed human reports, homepage summary, and five structured findings. Root repeated native capture matched all finding fields; focused Markdown/example tests pass seven tests and 42 assertions in two files, and native recorded acceptance passes nine assertions. Immutable evidence /tmp/gspot-docs-example-actual-naming-replay.json and /tmp/gspot-example-main-native-blocks-and-fences.log.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ]
         },
         "review/docs-site/027": {
             "status": "pending",
@@ -6181,10 +6221,14 @@
             "verification": []
         },
         "review/docs-site/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "Policy settings own both level summaries, reused by schema, agent-rule index, set help and command-reference data. Overview keeps one sentence per level and links to level reference. The later current commands-templates/031 instruction retains the set levels data. Native schema/help tests and generated agent rules pass.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ]
         },
         "review/docs-site/029": {
             "status": "complete",
@@ -6205,16 +6249,24 @@
             ]
         },
         "review/docs-site/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "Configuration notes live in manifest-owned notes and the generated configuration page prints them. Policy examples live in runtime schema metadata; every documented example is parsed, and the published schema is generated from that owner. Native notes/schema/declarations checks pass 204 tests and 460 assertions across three files.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ]
         },
         "review/docs-site/032": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "JavaScript, React Native, Next.js, Markdown, CSS and TypeScript details moved into their configuration-owned notes; policy and requirements guides retain their own concerns. Native 204-test notes/schema validation and 309-page docs build pass.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ]
         },
         "review/docs-site/033": {
             "status": "complete",
@@ -6322,18 +6374,21 @@
             ]
         },
         "review/glossary/001": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
             "verification": [
                 "Exact current fix assigned to independent implementation checkout; root owns integration and final evidence.",
                 "Evidence d46319e4935c1707.",
-                "Evidence aaa450b84f7aba90."
+                "Evidence aaa450b84f7aba90.",
+                "Mechanical owner moves at ee8d1579f plus the strict tool_file behavior at this commit replace all prescribed tables, placeholders, types, owned kinds, Eta sources and pointers. Native 158-entry ownership publication moved 147 config entries to tool_file before the strict parser change; no migration alias remains. Native contract tests: 48 passes, 183 assertions, six files.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-native-names-final-freeze.json",
-                    "commit": null,
+                    "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
                     "verification": ["Evidence d46319e4935c1707.", "Evidence aaa450b84f7aba90."]
                 }
             ]
@@ -6428,10 +6483,14 @@
             ]
         },
         "review/glossary/009": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "The check is gspot/unmatched-paths with policy-owned schema path metadata and scoped command keys; old settings and PathAllowance are deleted. Ignore headings, anchor, reference and four manifest summaries agree. Native unmatched-root check passes with zero findings; integrated path/help/schema tests pass 228 tests and 614 assertions across six files.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ]
         },
         "review/glossary/010": {
             "status": "partial",
@@ -6516,14 +6575,21 @@
             ]
         },
         "review/glossary/016": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Private choice operations and ConfigurationChange.manualChoices replace deleted override helpers and types; the source/test names, init help and policy guide use manual choice. Manual-choice tests pass 10 tests and 50 assertions. Path-selected overrides retain their separate meaning.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -6546,14 +6612,21 @@
             ]
         },
         "review/glossary/018": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "All prescribed plan symbols and JSON types replace the retired names, InstallationPreview is merged into InstallationPlan, and editPolicy replaces proposePolicy. Shared help says dry run for the six exit messages; guides use dry run. No compatibility aliases remain. Integrated command/schema tests pass 228 tests and 614 assertions in six files.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -6613,14 +6686,21 @@
             ]
         },
         "review/glossary/025": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Manifest help and generation variables call an architecture component a module. Native eslint-plugin-boundaries element API fields retain their external names. Native generated ESLint rules and integrated contract tests pass.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -6639,10 +6719,14 @@
             ]
         },
         "review/glossary/027": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "verification": [
+                "Authored in-memory generation identifiers and prose use emit, terminal descriptions use print, and Vale package state uses installed. The external eta.renderString API and vale sync command keep their native names. Tool-file consumers and readers retain one final vocabulary.",
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ]
         },
         "review/glossary/028": {
             "status": "complete",
@@ -15091,6 +15175,36 @@
             "limitations": [
                 "Whole repository CI has real failures being corrected. No cross-platform completion or tutorial027 claim. main/001 external publication/setup stays partial."
             ]
+        },
+        {
+            "commit": "a2b65b8001a313c23e2921cdacbc60a089a7ae58",
+            "completedRecords": [
+                "review/glossary/001",
+                "review/glossary/009",
+                "review/glossary/016",
+                "review/glossary/018",
+                "review/glossary/025",
+                "review/glossary/027",
+                "review/commands-templates/031",
+                "review/docs-site/026",
+                "review/docs-site/028",
+                "review/docs-site/031",
+                "review/docs-site/032"
+            ],
+            "unresolvedRecords": 898,
+            "validation": [
+                "Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log.",
+                "Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy."
+            ],
+            "limitations": [
+                "No cross-platform result inferred from local native tests. The obsolete ee8 run was cancelled after preserving its status. Prior f3 Windows failures include native defects and Bun file-default timeout resets; these remain open.",
+                "glossary/012 retains a remaining source comment correction for the next checkpoint; docs-site/011 and /027 retain scoped-build, simplification, native prerequisite and CI obligations. main/001 external publication and account setup remain partial."
+            ],
+            "ci": {
+                "run": 37731304381,
+                "status": "pending at inspection",
+                "url": "https://github.com/stefanionescu/gspot/actions/runs/37731304381"
+            }
         }
     ],
     "verificationEvidence": {

@@ -44,7 +44,7 @@ export const IGNORE_CASES = [
 export const IGNORE_FEEDBACK_CASES = [
     [
         'an authored entry',
-        '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "Word splitting is intentional in this fixture."\n',
+        '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "Word splitting is intentional in this sandbox."\n',
         'removed 1 ignore entry for bash/shellcheck',
     ] as const,
     ['an empty authored list', 'ignore = []\n', 'nothing to remove: no matching ignore entry'] as const,

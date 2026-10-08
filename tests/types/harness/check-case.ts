@@ -27,7 +27,7 @@ export type FindingCase = CaseChanges & {
 /** A CLI invocation selected by the test that owns the scenario. */
 export type CheckCommand = (cwd: string, argv: string[], environment: Record<string, string>) => Promise<SpawnOutcome>;
 
-/** Process outcomes and reports for the defect and its clean rerun. */
+/** Process outcomes and reports for the finding and its clean rerun. */
 export type CheckCaseOutcome = {
     failed: SpawnOutcome & { report: RunReport };
     passed: SpawnOutcome & { report: RunReport };

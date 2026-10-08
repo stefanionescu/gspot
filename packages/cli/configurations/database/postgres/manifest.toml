@@ -40,7 +40,7 @@ command = ["squawk", "--config", "{tool_file:squawk}", "--reporter", "json", "{f
 output = { format = "json", line_base = 0, fields = { file = "file", line = "line", column = "column", rule = "rule_name", message = "message" } }
 summary = "Reads every migration for the change that locks a table, rewrites it, or breaks the running application."
 why = "A migration that takes an exclusive lock on a large table stops the application for as long as it runs."
-help = "Follow the help squawk prints for the rule. Turn one rule off with gspot ignore postgres/squawk --rule <name> --reason \"<why>\"."
+help = "Follow the help squawk prints for the rule. Turn one rule off with gspot ignore postgres/squawk --rule `<name>` --reason \"`<why>`\"."
 
 [[check]]
 name = "migration-order"

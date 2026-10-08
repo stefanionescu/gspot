@@ -1,6 +1,6 @@
 # Commands and Templates
 
-27 unresolved review records remain.
+26 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -207,3 +207,11 @@ Recommended names:
 - The command tests for check, push, explain, doctor, list, and set.
 - `packages/cli/src/policy/read.ts`, `policy/normalize.ts`, `policy/settings/*`, `lifecycle/apply.ts` beyond lines 135 to 160, `lifecycle/install.ts`, `output/messages.ts` beyond lines 22 to 34, and `execution/planning/*` beyond `applicableManifests` and `configuredChecks`. The review read only the parts the command and template flow call.
 - Docs guides other than `templates.md`. The review grepped them for template, export, and runner wording.
+
+## Implementation checkpoint a2b65b800 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `a2b65b8001a313c23e2921cdacbc60a089a7ae58`.
+
+| ID                              | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/commands-templates/031` | complete | config/commands/help.ts owns all twelve exit-code/example entries; commands build help from it and docs read structured data directly. set levels remain authoritative per this record and share the policy level summaries. Shared help/schema tests pass 174 tests and 491 assertions across three files. Full native staged check: zero findings and zero failed checks, 35.649 seconds; normal commit and push hooks passed. Immutable evidence /tmp/gspot-policy-docs-main-staged-passed.json, /tmp/gspot-policy-docs-main-commit.log and /tmp/gspot-policy-docs-main-push.log. Root and CLI types pass; sole schema producer, CLI build and 309-page docs build pass. Retirement audit found no old prescribed identifiers or aliases in authored source, tests, docs, manifests, README or policy. Commit `a2b65b8001a313c23e2921cdacbc60a089a7ae58`. |

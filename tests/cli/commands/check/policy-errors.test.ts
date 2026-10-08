@@ -1,4 +1,4 @@
-// Policy errors name their gspot.toml key path and accept the suggested correction.
+// Policy errors name their gspot.toml key path and pass after the fix.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/harness/gspot.ts';

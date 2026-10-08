@@ -3,7 +3,7 @@ import { test, expect } from 'bun:test';
 import type { ESLint, Linter } from 'eslint';
 import { testdir, createFileTree } from 'testdirs';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
 
 async function configuredRules(policy: string, files: string[]): Promise<Record<string, Record<string, unknown[]>>> {
     await using sandbox = await testdir();
@@ -16,8 +16,8 @@ async function configuredRules(policy: string, files: string[]): Promise<Record<
     const eslint = await createEslint(sandbox.path);
     const results: Record<string, Record<string, unknown[]>> = {};
     for (const file of files) {
-        const resolved = (await eslint.calculateConfigForFile(file)) as ResolvedEslint;
-        results[file] = resolved.rules;
+        const computed = (await eslint.calculateConfigForFile(file)) as ComputedEslint;
+        results[file] = computed.rules;
     }
     return results;
 }

@@ -1,4 +1,4 @@
-// Test repository for the ansible configuration: a task that shells out to systemctl.
+// Sandbox for the ansible configuration: a task that shells out to systemctl.
 import { commitAll } from '#tests/harness/git.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';

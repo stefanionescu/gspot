@@ -66,5 +66,10 @@
     "type": "module",
     "imports": {
         "#automation/*": "./scripts/*"
+    },
+    "patchedDependencies": {
+        "@expressive-code/core@0.44.2": "patches/expressive-code.patch",
+        "@expressive-code/plugin-frames@0.44.2": "patches/frames.patch",
+        "@astrojs/starlight@0.42.0": "patches/starlight.patch"
     }
 }

@@ -27,7 +27,7 @@ test.each([
         after: '[]',
     },
 ])(
-    'parseStrictPolicy > semantic errors name the key path of $name and accept its correction',
+    'parseStrictPolicy > semantic errors name the key path of $name and pass after the fix',
     ({ text, where, before, after }) => {
         const found = policyFindings(text);
         expect(found).toHaveLength(1);
@@ -74,7 +74,7 @@ test.each([
         correction: ['paths = []', 'paths = ["src"]'],
     },
 ])(
-    'parseStrictPolicy > schema errors name the key path of $name and accept its correction',
+    'parseStrictPolicy > schema errors name the key path of $name and pass after the fix',
     ({ name, text, where, correction }) => {
         const found = policyFindings(text);
         expect(found).toHaveLength(1);

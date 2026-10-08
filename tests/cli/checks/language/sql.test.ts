@@ -48,7 +48,7 @@ test('SQL and PL/pgSQL apply the statement threshold and the parameter limit', a
     await Bun.write(
         `${sandbox.path}/gspot.toml`,
         buildPolicy(['sql'], {
-            tables: '[reasons]\n"limits.sql.function_parameters" = "The fixture measures the boundary at eight parameters."\n[limits.sql]\nfunction_parameters = 8\n[tools.sqlfluff]\ndialect = "postgres"\n',
+            tables: '[reasons]\n"limits.sql.function_parameters" = "The sandbox measures the boundary at eight parameters."\n[limits.sql]\nfunction_parameters = 8\n[tools.sqlfluff]\ndialect = "postgres"\n',
             level: 'all',
         }),
     );

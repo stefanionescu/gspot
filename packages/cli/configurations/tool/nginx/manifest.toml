@@ -41,7 +41,7 @@ command = ["gixy", "--config", "{tool_file:gixy}", "--format", "json", "{file}"]
 output = { format = "json", fields = { file = "path", line = "line", rule = "plugin", message = "summary" } }
 summary = "Reads every nginx file for the mistakes that open a server: request forgery, path traversal through alias, header injection, a disclosed version."
 why = "These mistakes parse, serve traffic, and look like any other location block until somebody uses them."
-help = "Change the block the way the rule's page says. Turn one rule off with gspot ignore nginx/gixy --rule <name> --reason \"<why>\"."
+help = "Change the block the way the rule's page says. Turn one rule off with gspot ignore nginx/gixy --rule `<name>` --reason \"`<why>`\"."
 
 [[check]]
 name = "test"

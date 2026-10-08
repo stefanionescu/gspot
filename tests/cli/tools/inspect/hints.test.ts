@@ -1,10 +1,10 @@
-import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readPolicy } from '#cli/policy/read.ts';
 import { mkdir, symlink } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { inspectTool } from '#cli/tools/inspect.ts';
+import { join, dirname, delimiter } from 'node:path';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
@@ -61,6 +61,7 @@ test('doctor and a missing XML check report the host installation prerequisite',
     for (const name of ['git', 'node']) {
         const executable = Bun.which(name);
         expect(executable, `${name} is required for CLI metadata inspection.`).not.toBeNull();
+        if (name === 'git' && process.platform === 'win32') continue;
         const windowsName = `${name}.exe`;
         const filename = process.platform === 'win32' ? windowsName : name;
         await symlink(executable!, join(binaries, filename));
@@ -71,7 +72,10 @@ test('doctor and a missing XML check report the host installation prerequisite',
         'package.json': '{"private":true,"packageManager":"npm@10.9.0"}\n',
     });
     const hint = installerHint(toolPin(configurationManifests().values(), 'xmllint'), process.platform);
-    const environment = { PATH: binaries, MISE_DATA_DIR: join(sandbox.path, 'mise') };
+    const environment = {
+        PATH: [binaries, ...(process.platform === 'win32' ? [dirname(Bun.which('git')!)] : [])].join(delimiter),
+        MISE_DATA_DIR: join(sandbox.path, 'mise'),
+    };
     const doctor = await runGspot(root, ['doctor', '--json'], environment);
     expect(doctor.code, doctor.stdout + doctor.stderr).toBe(1);
     expect((JSON.parse(doctor.stdout) as DoctorReport).tools).toContainEqual(

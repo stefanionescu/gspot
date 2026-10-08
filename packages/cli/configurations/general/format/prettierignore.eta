@@ -5,5 +5,5 @@
 <% } %>
 <% for (const file of policy.declarations.flatMap((entry) => entry.paths)) { %><%= file %>
 <% } %>
-<% for (const pattern of ignoresFor('format/prettier').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths ?? [])) { %><%= pattern %>
+<% for (const pattern of ignoresFor('format/prettier').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths)) { %><%= pattern %>
 <% } %>

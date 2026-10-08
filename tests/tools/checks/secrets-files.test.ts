@@ -41,7 +41,7 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     );
     expect(withoutGit.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('skipped');
     commitAll(sandbox.path);
-    const isGitRepository = await secretChecks(sandbox.path);
-    expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-files')?.status).toBe('skipped');
-    expect(isGitRepository.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('passed');
+    const committed = await secretChecks(sandbox.path);
+    expect(committed.find((check) => check.check === 'secrets/gitleaks-files')?.status).toBe('skipped');
+    expect(committed.find((check) => check.check === 'secrets/gitleaks-staged')?.status).toBe('passed');
 });

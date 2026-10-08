@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { createEslint } from '#tests/harness/generated.ts';
-import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
+import type { ComputedEslint } from '#tests/types/generation/configuration-files.ts';
 import { FRAGMENT_SCOPE_CASES } from '#tests/config/cli/generation/eslint/fragments.ts';
 
 for (const level of ['recommended', 'all'] as const)
@@ -30,10 +30,10 @@ for (const level of ['recommended', 'all'] as const)
         const output = emitAll(session).files.find(({ path }) => path === '.gspot/config/eslint.config.mjs');
         expect(output!.content.split(`"${row.rule}"`).length - 1).toBe(2);
         const eslint = await createEslint(sandbox.path);
-        const first = (await eslint.calculateConfigForFile(join('first', row.file))) as ResolvedEslint;
+        const first = (await eslint.calculateConfigForFile(join('first', row.file))) as ComputedEslint;
         const second = (await eslint.calculateConfigForFile(
             join('second', row.file.replace('unit/', 'specs/')),
-        )) as ResolvedEslint;
+        )) as ComputedEslint;
         expect(first.rules[row.rule]?.[0]).toBe(2);
         expect(second.rules[row.rule]?.[0]).toBe(2);
         if (row.configuration !== 'nestjs') {

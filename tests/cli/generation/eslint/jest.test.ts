@@ -15,12 +15,12 @@ test.each(['recommended', 'all'] as const)(
         });
         const eslint = await createEslint(sandbox.path);
         const args = ['value', '"A custom failure message."', '"Unexpected argument."'];
-        const defect = await eslint.lintText(
+        const findings = await eslint.lintText(
             `import { test, expect } from '@jest/globals';\ntest('checks the value', () => { const value = 1; expect(${args.slice(0, 2).join(', ')}).toBe(1); });\n`,
             { filePath: 'sample.test.js' },
         );
         expect(
-            defect.flatMap((file) => file.messages).filter((diagnostic) => diagnostic.ruleId === 'jest/valid-expect'),
+            findings.flatMap((file) => file.messages).filter((diagnostic) => diagnostic.ruleId === 'jest/valid-expect'),
         ).toHaveLength(1);
         const corrected = await eslint.lintText(
             `import { test, expect } from '@jest/globals';\ntest('checks the value', () => { const value = 1; expect(${args.slice(0, 1).join(', ')}).toBe(1); });\n`,

@@ -20,7 +20,7 @@ import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
 import { STYLE_CASES, CURRENCY_CASES } from '#tests/config/tools/vale.ts';
 
 for (const extension of ['md', 'sh']) {
-    test(`native Vale reports a ${extension} defect and accepts corrected source`, async () => {
+    test(`native Vale reports its ${extension} finding and passes after the fix`, async () => {
         await using directory = await testdir();
         const path = `sample.${extension}`;
         await createFileTree(directory.path, {
@@ -32,9 +32,9 @@ for (const extension of ['md', 'sh']) {
         });
         const session = await openSession(directory.path);
         const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-        const defect = await runBuiltInCheck(vale)(session, planned!);
-        expect(defect.status, defect.note).toBe('failed');
-        expect(defect.findings).toStrictEqual([containing({ file: path, line: 1, rule: 'Example.Concrete' })]);
+        const failed = await runBuiltInCheck(vale)(session, planned!);
+        expect(failed.status, failed.note).toBe('failed');
+        expect(failed.findings).toStrictEqual([containing({ file: path, line: 1, rule: 'Example.Concrete' })]);
         await Bun.write(join(directory.path, path), '# We inspect the records.\n');
         const corrected = await runBuiltInCheck(vale)(session, planned!);
         expect(corrected.status, corrected.note).toBe('passed');
@@ -58,9 +58,9 @@ test('Vale preserves ESLint delimiters while checking punctuation inside reasons
     });
     const session = await openSession(directory.path);
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const defect = await runBuiltInCheck(vale)(session, planned!);
-    expect(defect.status, defect.note).toBe('failed');
-    expect(defect.findings).toStrictEqual([
+    const failed = await runBuiltInCheck(vale)(session, planned!);
+    expect(failed.status, failed.note).toBe('failed');
+    expect(failed.findings).toStrictEqual([
         containing({ file: 'source.ts', line: 4, column: 56, rule: 'Example.Dashes' }),
         containing({ file: 'source.ts', line: 5, column: 15, rule: 'Example.Dashes' }),
     ]);
@@ -200,9 +200,9 @@ test('generated recommended Vale configuration reports unhelpful link text and a
     using ownership = openOwnership(directory.path);
     writeGeneratedFiles(session, ownership, undefined, emitAll(session));
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
-    const defect = await runBuiltInCheck(vale)(session, planned!);
-    expect(defect.status, defect.note).toBe('failed');
-    expect(defect.findings).toStrictEqual([
+    const failed = await runBuiltInCheck(vale)(session, planned!);
+    expect(failed.status, failed.note).toBe('failed');
+    expect(failed.findings).toStrictEqual([
         containing({ file: 'guide.md', line: 3, rule: 'gspot.link-text' }),
         containing({ file: 'source.ts', line: 2, rule: 'gspot.link-text' }),
     ]);
@@ -219,7 +219,7 @@ test('generated recommended Vale configuration reports unhelpful link text and a
     expect(corrected.findings).toStrictEqual([]);
 });
 
-test.each([...STYLE_CASES])('Vale $rule checks report prose defects and accept source notation', async (entry) => {
+test.each([...STYLE_CASES])('Vale $rule checks report prose findings and accept source notation', async (entry) => {
     await using directory = await testdir();
     await createFileTree(directory.path, {
         '.vale.ini': 'StylesPath = styles\n[formats]\nts = md\n[*]\nBasedOnStyles = gspot\n',

@@ -14,7 +14,7 @@ number-max-precision = 0
 selector-max-id = 0
 [scope."app"]
 configurations = []
-[scope.tools.stylelint.rules]
+[scope."app".tools.stylelint.rules]
 color-hex-length = "long"
 `;
 

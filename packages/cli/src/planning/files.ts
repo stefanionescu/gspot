@@ -51,9 +51,7 @@ function withoutIgnored(
     check: CheckDeclaration,
     scope: ScopeSelection,
 ): Pick<PlannedCheck, 'files' | 'skip'> {
-    const paths = scope.view
-        .ignoresFor(check.name)
-        .flatMap((entry) => (entry.rule === undefined ? (entry.paths ?? []) : []));
+    const paths = scope.view.ignoresFor(check.name).flatMap((entry) => (entry.rule === undefined ? entry.paths : []));
     const isIgnored = pathMatcher(paths);
     const selected = files.filter((file) => !isIgnored(file.path));
     return {

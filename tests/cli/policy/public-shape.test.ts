@@ -310,11 +310,11 @@ test('native options named reason retain their values separately from the policy
 [tools.prettier.verbatim]
 reason = false
 [reasons]
-"tools.prettier.verbatim" = "The fixture preserves native option identity."
+"tools.prettier.verbatim" = "The sandbox preserves native option identity."
 `);
     const manifests = configurationManifests();
     const selected = selectForScope(policy, '', manifests);
     const view = scopeView(knownSettings(selected), policy, selected, '');
     expect(view.verbatim('prettier')).toStrictEqual({ reason: false });
-    expect(policy.reasons['tools.prettier.verbatim']).toBe('The fixture preserves native option identity.');
+    expect(policy.reasons['tools.prettier.verbatim']).toBe('The sandbox preserves native option identity.');
 });

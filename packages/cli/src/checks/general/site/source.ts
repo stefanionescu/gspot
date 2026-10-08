@@ -2,14 +2,14 @@ import { statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { directoryOf } from '#cli/platform/paths.ts';
-import { readSource } from '#cli/platform/source.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { WebManifest } from '#cli/types/parsers/site.ts';
+import { readText, readSource } from '#cli/platform/source.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { webManifestSchema } from '#cli/parsers/schema/site.ts';
 import { FULL_PERCENTAGE } from '#cli/config/platform/runtime.ts';
-import { TEXT_SUFFIX, ASSET_FOLDER, REQUIRED_HEADERS } from '#cli/config/checks/general/site.ts';
+import { ASSET_FOLDER, TEXT_SUFFIXES, REQUIRED_HEADERS } from '#cli/config/checks/general/site.ts';
 
 // What svgo says about one file: it cannot read it, it makes it smaller, or nothing.
 async function svgFinding(input: CheckInput, path: string): Promise<Finding[]> {
@@ -53,20 +53,35 @@ function sharedHeaders(text: string): Map<string, string> {
     return held;
 }
 /**
- * Every tracked file under an assets folder that no text file of the site names.
+ * Every selected asset that no local text or tracked outside reference names.
  * @param input the check input
  * @returns the findings
  */
 export function deadAssets(input: CheckInput): Finding[] {
     const files = input.files;
-    const texts = files
-        .filter((file) => TEXT_SUFFIX.test(file.path))
-        .map((file) => readSource(input.root, file.path, input.reads).toString('utf8'));
+    const local = new Set(files.map((file) => file.path));
+    const paths = new Set([
+        ...local,
+        ...input.index
+            .filter((entry) => entry.stage === 0 && (entry.mode === '100644' || entry.mode === '100755'))
+            .map((entry) => entry.path),
+    ]);
+    const texts = paths
+        .values()
+        .filter((path) => TEXT_SUFFIXES.has(posix.extname(path)))
+        .flatMap((path) => {
+            const text = readText(input.root, path, input.reads);
+            return text === undefined ? [] : [{ path, text }];
+        })
+        .toArray();
     return files
-        .filter((file) => ASSET_FOLDER.test(file.path) && !TEXT_SUFFIX.test(file.path))
+        .filter((file) => ASSET_FOLDER.test(file.path) && !TEXT_SUFFIXES.has(posix.extname(file.path)))
         .filter((file) => {
             const name = posix.basename(file.path);
-            return texts.every((text) => !text.includes(name));
+            return texts.every(
+                ({ path, text }) =>
+                    !text.includes(local.has(path) ? name : posix.relative(directoryOf(path), file.path)),
+            );
         })
         .map((file) =>
             findingAt(

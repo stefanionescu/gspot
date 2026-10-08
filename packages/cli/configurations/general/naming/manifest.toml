@@ -15,7 +15,7 @@ stage = "commit"
 alternatives_checked = ["eslint-plugin-unicorn prevent-abbreviations", "ls-lint", "ruff N", "swiftlint identifier_name"]
 summary = "Checks every identifier against the naming policy: banned terms, case, length, and word count."
 why = "Names such as `enhancedHandler`, `ensureConfigIfNeeded`, and `utils` do not explain the value or behavior a reader needs to understand."
-help = "Rename after what the thing is or does. Set naming.allowed to an entry with name and reason, or adjust a ceiling with gspot set naming.<language>.max_words."
+help = "Rename after what the thing is or does. Set naming.allowed to an entry with name and reason, or adjust a ceiling with gspot set naming.`<language>`.max_words."
 
 [[check]]
 name = "paths"
@@ -86,6 +86,7 @@ items = "string"
 direction = "loosening"
 languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
 categories = ["files", "directories", "types", "functions", "parameters", "variables", "properties"]
+default = []
 summary = "The case patterns one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-extension (String+Format.swift) and timestamp-snake (20260103120000_create_users.sql). Ruff owns the case of Python classes, functions, and parameters, and SwiftLint owns Swift types, variables, parameters, and enum cases; these settings choose the case for every other category."
 
 [[setting]]

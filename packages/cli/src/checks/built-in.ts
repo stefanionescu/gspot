@@ -3,7 +3,6 @@ import { locales } from '#cli/checks/library/i18n.ts';
 import { nginxTest } from '#cli/checks/tool/nginx.ts';
 import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { actionlint } from '#cli/checks/tool/actions.ts';
-import { codeql } from '#cli/checks/general/security.ts';
 import { ansibleLint } from '#cli/checks/tool/ansible.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
 import { expoDoctor } from '#cli/checks/framework/expo.ts';
@@ -18,6 +17,7 @@ import { svelteCheck } from '#cli/checks/framework/svelte.ts';
 import { commitlintRange } from '#cli/checks/general/commits.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
+import { codeql, semgrep } from '#cli/checks/general/security.ts';
 import { envOwner } from '#cli/checks/language/bash/env-owner.ts';
 import type { BuiltInChecks } from '#cli/types/execution/check.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
@@ -136,6 +136,7 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'secrets/env-template': { run: runBuiltInCheck(envTemplate) },
     'secrets/env-files': { run: runBuiltInCheck(envFiles) },
     'security/codeql': { run: runBuiltInCheck(codeql) },
+    'security/semgrep': { run: semgrep },
     'dependencies/manifests': { run: runBuiltInCheck(manifests) },
     'dependencies/lockfile-fresh': { run: runBuiltInCheck(lockfileFresh) },
     'licenses/packages': { run: runBuiltInCheck(licensesPackages) },

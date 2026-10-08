@@ -1,4 +1,4 @@
-// Delivered commands preserve authored instructions, report test defects, and terminate canceled tools.
+// Delivered commands preserve authored instructions, report findings, and terminate canceled tools.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
@@ -84,7 +84,7 @@ test.skipIf(!isPosix)('launcher SIGTERM cancellation terminates its ready owned 
     }
 });
 
-test('init replaces formatter files, moves authored instructions, and check reports the test defects', async () => {
+test('init replaces formatter files, moves authored instructions, and check reports findings', async () => {
     await using consumer = await createConsumer(release.registry, release.version);
     const { root } = consumer;
     await createFileTree(root, LAUNCHER_FILES);

@@ -1,11 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { rejects } from 'node:assert/strict';
+import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { checkOutRevision } from '#cli/execution/copy/revision.ts';
 import { copyIntoScratch, projectCopyInputs } from '#cli/execution/copy/files.ts';
 import { prepareTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
 import { mkdir, readdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
@@ -180,5 +182,66 @@ test.each([false, true])(
         if (extra) expect(await readFile(join(copy.path, 'document.json'), 'utf8')).toBe('{"value":3}');
         await writeFile(join(copy.path, 'selected.js'), 'changed in private copy');
         expect(await readFile(join(repository.path, 'selected.js'), 'utf8')).toBe('export const selected = 1;');
+    },
+);
+
+test.each([false, true])(
+    'workspace dependency copies preserve named transitive sources and isolate revision=%s',
+    async (revision) => {
+        await using repository = await testdir();
+        await createFileTree(repository.path, {
+            'gspot.toml': buildPolicy(['javascript'], {
+                tables: '[scope."apps/web"]\nconfigurations = ["javascript"]\n',
+            }),
+            'package.json':
+                '{"private":true,"workspaces":["apps/*","packages/*"],"dependencies":{"unused":"workspace:*"}}',
+            'bun.lock': '{}',
+            '.gitignore': 'node_modules/\ndist/\n',
+            'apps/web/package.json': '{"name":"web","dependencies":{"core":"workspace:*"}}',
+            'apps/web/main.js': 'import {value} from "core"; console.log(value);',
+            'packages/core/package.json':
+                '{"name":"core","type":"module","main":"value.js","dependencies":{"utility":"workspace:*"}}',
+            'packages/core/value.js': 'import {suffix} from "utility"; export const value = "staged" + suffix;',
+            'packages/utility/package.json':
+                '{"name":"utility","type":"module","main":"value.js","dependencies":{"core":"workspace:*"}}',
+            'packages/utility/value.js': 'export const suffix = " dependency";',
+            'packages/unused/package.json': '{"name":"unused","type":"module"}',
+            'packages/unused/private.txt': 'Unselected workspace bytes',
+        });
+        await mkdir(join(repository.path, 'node_modules'));
+        for (const name of ['core', 'utility', 'unused'])
+            await symlink(`../packages/${name}`, join(repository.path, 'node_modules', name));
+        if (revision) {
+            gitOutput(repository.path, ['init']);
+            gitOutput(repository.path, ['add', '.']);
+            await writeFile(join(repository.path, 'packages/core/value.js'), 'export const value = "unstaged";');
+            await writeFile(join(repository.path, 'packages/core/untracked.js'), 'private working bytes');
+        }
+        const inspect = async (root: string) => {
+            const session = await openSession(root);
+            const input = buildCheckInput(session, 'javascript/eslint', {
+                scope: 'apps/web',
+                paths: ['apps/web/main.js'],
+            });
+            const dependencyPaths = input.dependencyFiles();
+            expect(new Set(dependencyPaths).size).toBe(dependencyPaths.length);
+            expect(dependencyPaths).toContain('packages/core/value.js');
+            expect(dependencyPaths).toContain('packages/utility/value.js');
+            expect(dependencyPaths).not.toContain('packages/unused/private.txt');
+            expect(input.files.map((file) => file.path)).toStrictEqual(['apps/web/main.js']);
+            using copy = await copyIntoScratch(input);
+            const output = runTestCommandBlocking([process.execPath, 'apps/web/main.js'], { cwd: copy.path });
+            expect(output.code, output.stderr).toBe(0);
+            expect(output.stdout.trim()).toBe('staged dependency');
+            expect(await pathExists(join(copy.path, 'packages/unused/private.txt'))).toBe(false);
+            expect(await pathExists(join(copy.path, 'packages/core/untracked.js'))).toBe(false);
+            await writeFile(join(copy.path, 'packages/core/value.js'), 'private copy change');
+        };
+        await (revision ? checkOutRevision(repository.path, { kind: 'index' }, inspect) : inspect(repository.path));
+        expect(await readFile(join(repository.path, 'packages/core/value.js'), 'utf8')).toBe(
+            revision
+                ? 'export const value = "unstaged";'
+                : 'import {suffix} from "utility"; export const value = "staged" + suffix;',
+        );
     },
 );

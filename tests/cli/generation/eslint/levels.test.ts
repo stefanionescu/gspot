@@ -62,11 +62,11 @@ test('all keeps native deferred-comment checks after prose stops treating todo a
         'source.js': '',
     });
     const eslint = await createEslint(sandbox.path);
-    const defect = await eslint.lintText('// TODO: finish the feature.\nexport const feature = 1;\n', {
+    const findings = await eslint.lintText('// TODO: finish the feature.\nexport const feature = 1;\n', {
         filePath: 'source.js',
     });
     expect(
-        defect
+        findings
             .flatMap(({ messages }) => messages)
             .flatMap(({ ruleId, line, severity }) =>
                 ruleId === 'sonarjs/todo-tag' || ruleId === 'unicorn/expiring-todo-comments'

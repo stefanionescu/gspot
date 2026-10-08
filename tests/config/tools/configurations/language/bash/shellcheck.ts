@@ -1,4 +1,4 @@
-/** Native cases include dialect defects and temporary cleanup in root and nested scopes. */
+/** Native cases include dialect findings and temporary cleanup in root and nested scopes. */
 export const DIALECT_SOURCES = {
     'posix.sh': '#!/bin/sh\nif [[ -n "$1" ]]; then\n    printf "%s\\n" "$1"\nfi\n',
     'dash.sh': '#!/bin/dash\nif [[ -n "$1" ]]; then\n    printf "%s\\n" "$1"\nfi\n',

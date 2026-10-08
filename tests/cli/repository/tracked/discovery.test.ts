@@ -163,7 +163,7 @@ test('non-Git discovery applies nested ignore overrides without sharing them wit
 });
 
 test.each(REPLACED_PARENT_PATHS)(
-    'tracked discovery reports a replaced parent of %s and accepts its correction',
+    'tracked discovery reports a replaced parent of %s and passes after the fix',
     async (path) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { [path]: 'source' });

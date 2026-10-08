@@ -1,4 +1,4 @@
-// Test repository for the duplication configuration: one block copied into a second file.
+// Sandbox for the duplication configuration: one block copied into a second file.
 import { join } from 'node:path';
 import { commitAll } from '#tests/harness/git.ts';
 import { test, expect, describe } from 'bun:test';

@@ -95,9 +95,9 @@ describe('policy setting refusals', () => {
         expect(found).toHaveLength(1);
         expect(found[0]).toContain('needs a reason that says something');
         const corrected = parseStrictPolicy(
-            `${buildPolicy(['bash'])}[[ignore]]\ncheck = "bash/shellcheck"\nreason = "Reviewed fixture"\n`,
+            `${buildPolicy(['bash'])}[[ignore]]\ncheck = "bash/shellcheck"\nreason = "Reviewed sandbox"\n`,
         );
-        expect(corrected.ignore).toMatchObject([{ check: 'bash/shellcheck', reason: 'Reviewed fixture' }]);
+        expect(corrected.ignore).toMatchObject([{ check: 'bash/shellcheck', reason: 'Reviewed sandbox' }]);
     });
 
     test('a scoped disabled ESLint rule names the accepted-finding command and rule', () => {
@@ -189,7 +189,7 @@ test('native zero-valued Stylelint options and false Taplo formatting remain act
     const source = stringify({
         configurations: ['css', 'files'],
         tools: { stylelint: { rules: { 'max-nesting-depth': 0 } }, taplo: { verbatim: { reorder_keys: false } } },
-        reasons: { 'tools.taplo.verbatim': 'This fixture retains a native formatting option.' },
+        reasons: { 'tools.taplo.verbatim': 'This sandbox retains a native formatting option.' },
     });
     const result = readPolicyText(source);
     expect(result.errors).toStrictEqual([]);

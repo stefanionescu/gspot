@@ -1,7 +1,10 @@
 // Settings and defaults declared by gspot and selected configurations. Framework, platform, library, and database
 // configurations override an earlier scalar default; other scalar disagreements are reported as conflicts.
+import { z } from 'zod';
 import { isDeepStrictEqual } from 'node:util';
+import { toolsSchema } from '#cli/policy/schema/tools.ts';
 import { mergeValue } from '#cli/policy/settings/lookup.ts';
+import { settingTypeSchema } from '#cli/parsers/schema/settings.ts';
 import { TOOL_DEADLINE, OVERRIDING_KINDS } from '#cli/config/policy/settings.ts';
 import type { KnownSettings, SettingDefault } from '#cli/types/policy/settings.ts';
 import { rootSettingSchemas, tableSettingSchemas } from '#cli/policy/schema/policy.ts';
@@ -52,12 +55,12 @@ function addOverride(surface: KnownSettings, manifest: Manifest, name: string, v
     addDefault(surface, manifest, { ...declaration, default: value });
 }
 
-// The kind of a setting from the shape of its default.
-function typeOf(value: unknown): SettingDeclaration['type'] {
-    if (Array.isArray(value)) return 'list';
-    if (typeof value === 'object' && value !== null) return 'table';
-    if (typeof value === 'number') return 'number';
-    return typeof value === 'boolean' ? 'boolean' : 'string';
+// The command value kind comes from the same schema that accepts it.
+function typeOf(schema: z.ZodType): SettingDeclaration['type'] {
+    const type = z.toJSONSchema(schema, { io: 'input' }).type;
+    if (type === 'array') return 'list';
+    if (type === 'object') return 'table';
+    return settingTypeSchema.parse(type === 'integer' ? 'number' : type);
 }
 
 const rootDeclarations: SettingDeclaration[] = [
@@ -67,13 +70,26 @@ const rootDeclarations: SettingDeclaration[] = [
         return {
             name,
             validation: {},
-            type: typeOf(value),
+            type: typeOf(schema),
             direction: 'neutral',
             default: value,
             summary: schema.description ?? '',
         };
     }),
 ];
+
+const nativeDeclarations = new Map(
+    Object.entries(toolsSchema.shape).map(([tool, table]) => [
+        tool,
+        Object.entries<z.ZodType>(table.unwrap().shape).map<SettingDeclaration>(([field, schema]) => ({
+            name: `tools.${tool}.${field}`,
+            validation: {},
+            type: typeOf(schema),
+            direction: 'neutral',
+            summary: schema.description ?? `Native ${tool} ${field.replaceAll('_', ' ')} options.`,
+        })),
+    ]),
+);
 
 /**
  * Builds the surface in selection order; framework, platform, library, and database configurations override scalar defaults.
@@ -88,5 +104,11 @@ export function knownSettings(selected: Manifest[], level: Level = 'recommended'
         surface.defaults.set(declaration.name, { value: declaration.default, configuration: 'gspot' });
     }
     for (const manifest of selected) addManifest(surface, manifest, level);
+    const tools = new Set(selected.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
+    for (const [tool, declarations] of nativeDeclarations) {
+        if (!tools.has(tool)) continue;
+        for (const declaration of declarations.filter((entry) => !surface.declarations.has(entry.name)))
+            surface.declarations.set(declaration.name, declaration);
+    }
     return surface;
 }

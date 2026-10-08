@@ -134,7 +134,7 @@ test.each(PATH_IGNORE_CONFIGURATIONS)(
             level: 'all',
             configurations: [...new Set([configuration, 'javascript'])],
             ignore: [
-                { check, paths: ['selected/**'], reason: 'This generated fixture has its own source owner.' },
+                { check, paths: ['selected/**'], reason: 'This generated sample has its own source owner.' },
                 {
                     check,
                     rule: 'example-rule',

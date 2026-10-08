@@ -5,12 +5,15 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, gitOutput } from '#tests/harness/git.ts';
+import { openSession } from '#cli/commands/session.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
-import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
+import { stat, chmod, mkdir, unlink, readFile, writeFile } from 'node:fs/promises';
 
 const { version: RUNNING_VERSION } = packageManifest;
 
@@ -179,3 +182,44 @@ stage = "commit"
     );
     expect(await readFile(join(directory.path, 'source.txt'), 'utf8')).toBe('authored input');
 });
+
+test.each(['recommended', 'all'] as const)(
+    'staged Python drift keeps the verified project environments at %s',
+    async (level) => {
+        await using sandbox = await testdir();
+        const project = '[project]\nname = "example"\nversion = "0.0.0"\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['python'], {
+                level,
+                tables: '[agent_rules]\nenabled = false\n[scope.child]\nconfigurations = ["python"]\n',
+            }),
+            'pyproject.toml': project,
+            'main.py': 'value = 1\n',
+            'child/pyproject.toml': project,
+            'child/main.py': 'value = 2\n',
+        });
+        for (const scope of ['', 'child']) await mkdir(join(sandbox.path, scope, '.venv'));
+        const session = await openSession(sandbox.path);
+        using log = openOwnership(sandbox.path);
+        writeGeneratedFiles(session, log);
+        gitOutput(sandbox.path, ['init', '-q']);
+        gitOutput(sandbox.path, ['add', '-A']);
+        const original = await readFile(join(sandbox.path, '.gspot/config/basedpyrightconfig.json'));
+        const args = ['check', '--staged', '--only', 'gspot/drift', '--json'];
+        const checked = await runGspot(sandbox.path, args);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+        expect(
+            (JSON.parse(checked.stdout) as RunReport).checks
+                .flatMap((check) => check.findings)
+                .filter((finding) => finding.file.endsWith('/basedpyrightconfig.json')),
+        ).toStrictEqual([]);
+        expect(await readFile(join(sandbox.path, '.gspot/config/basedpyrightconfig.json'))).toEqual(original);
+        await writeFile(join(sandbox.path, 'child/pyproject.toml'), project + '# Unstaged project change.\n');
+        const refused = await runGspot(sandbox.path, args);
+        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+        expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
+            'do not match the revision manifests and lockfiles',
+        );
+        expect(await readFile(join(sandbox.path, '.gspot/config/basedpyrightconfig.json'))).toEqual(original);
+    },
+);

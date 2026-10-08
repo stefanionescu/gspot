@@ -22,14 +22,6 @@ system = true
 min_version = "3.0.0"
 npm = "wrangler"
 
-[[tool_file]]
-source = "semgrep/workers.yml.eta"
-target = ".gspot/config/semgrep/workers.yml"
-tool = "semgrep"
-rule_keys = ["rules"]
-scoped = true
-when = { configuration = "security" }
-
 [[check]]
 name = "wrangler"
 title = "Validate Wrangler configuration"

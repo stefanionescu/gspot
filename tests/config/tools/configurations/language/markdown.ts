@@ -21,6 +21,6 @@ MD033 = {}
 MD060 = { style = "aligned" }
 [scope."app"]
 configurations = []
-[scope.tools.markdownlint.rules]
+[scope."app".tools.markdownlint.rules]
 MD044 = { names = ["Nested label"] }
 `;

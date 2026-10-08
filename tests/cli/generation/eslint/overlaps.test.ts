@@ -61,8 +61,8 @@ test.each(['recommended', 'all'] as const)(
                     })),
             });
         }
-        const defect = await lintReport();
-        expect(defect).toBe(JSON.stringify({ configurations, files }));
+        const report = await lintReport();
+        expect(report).toBe(JSON.stringify({ configurations, files }));
         for (const { file } of files.filter((entry) => entry.findings.length > 0))
             await Bun.write(join(sandbox.path, file), OVERLAP_CORRECTION);
         const corrected = await lintReport();
@@ -118,8 +118,8 @@ test.each(['recommended', 'all'] as const)(
                     })),
             });
         }
-        const defect = await lintReport();
-        expect(defect).toBe(JSON.stringify({ severities, files: REGEX_FINDINGS }));
+        const report = await lintReport();
+        expect(report).toBe(JSON.stringify({ severities, files: REGEX_FINDINGS }));
         for (const { file } of REGEX_FINDINGS.filter((entry) => entry.findings.length > 0))
             await Bun.write(join(sandbox.path, file), REGEX_CORRECTION);
         const corrected = await lintReport();
@@ -167,8 +167,8 @@ test.each(['recommended', 'all'] as const)(
                     })),
             });
         }
-        const defect = await lintReport();
-        expect(defect).toBe(JSON.stringify({ severities, files: DEPRECATION_FINDINGS }));
+        const report = await lintReport();
+        expect(report).toBe(JSON.stringify({ severities, files: DEPRECATION_FINDINGS }));
         for (const { file } of DEPRECATION_FINDINGS.filter((entry) => entry.findings.length > 0))
             await Bun.write(join(sandbox.path, file), DEPRECATION_CORRECTION);
         const corrected = await lintReport();
@@ -227,8 +227,8 @@ test.each(['recommended', 'all'] as const)(
                     })),
             });
         }
-        const defect = await lintReport();
-        expect(defect).toBe(JSON.stringify({ configurations, files }));
+        const report = await lintReport();
+        expect(report).toBe(JSON.stringify({ configurations, files }));
         for (const { file } of files.filter((entry) => entry.findings.length > 0))
             await Bun.write(join(sandbox.path, file), OVERLAP_CORRECTION);
         const corrected = await lintReport();

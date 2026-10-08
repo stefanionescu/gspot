@@ -6,7 +6,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 
 test.each(['colon', 'dash'])(
-    'Bash documentation rejects the %s defect and accepts ordered colon summaries',
+    'Bash documentation rejects the %s sample and accepts ordered colon summaries',
     async (style) => {
         await using sandbox = await testdir();
         const summary = `# _show${style === 'colon' ? ': ' : ' - '}prints the supplied name.\n`;

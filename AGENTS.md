@@ -37,6 +37,7 @@ Repository:
 - `.gspot/rules/general/engineering/prose/DOCS.md`
 - `.gspot/rules/general/engineering/prose/WRITING.md`
 - `.gspot/rules/general/files/YAML.md`
+- `.gspot/rules/general/site/SITE.md`
 
 Languages:
 
@@ -48,6 +49,8 @@ Languages:
 - `.gspot/rules/language/typescript/TYPESCRIPT.md`
 - `.gspot/rules/language/css/CSS.md`
 - `.gspot/rules/language/css/NAMING.md`
+- `.gspot/rules/language/html/HTML.md`
+- `.gspot/rules/language/html/NAMING.md`
 - `.gspot/rules/language/python/DESIGN.md`
 - `.gspot/rules/language/python/FLOW.md`
 - `.gspot/rules/language/python/NAMING.md`

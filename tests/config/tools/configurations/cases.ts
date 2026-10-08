@@ -23,7 +23,7 @@ import * as languageSwiftPackage from '#tests/config/tools/configurations/langua
 import * as markdownDocsProse from '#tests/config/tools/configurations/general/markdown-docs-prose.ts';
 import * as languageTypescriptChecks from '#tests/config/tools/configurations/language/typescript/checks.ts';
 import * as generalSecretsEnvironment from '#tests/config/tools/configurations/general/secrets/environment.ts';
-/** Literal scenario names, authored repositories, and defect tables. */
+/** Literal scenario names, authored repositories, and finding tables. */
 export const SCENARIOS: ConfigurationScenario[] = [
     { name: 'the library configurations', repository: libraries.REPOSITORY, cases: libraries.CASES },
     { name: 'the postgres configuration', repository: postgres.REPOSITORY, cases: postgres.CASES },
@@ -69,7 +69,7 @@ export const SCENARIOS: ConfigurationScenario[] = [
     { name: 'the vue configuration', repository: frameworkVue.REPOSITORY, cases: frameworkVue.CASES },
 ];
 
-/** Source locations for the generated Bash size defects. */
+/** Source locations for the generated Bash size samples. */
 export const BASH_LOCATIONS = [
     { file: 'scripts/long.sh', rule: 'file-lines', line: 1 },
     { file: 'scripts/tall.sh', rule: 'function-lines', line: 9 },

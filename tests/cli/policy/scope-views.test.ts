@@ -138,7 +138,10 @@ test('ignore expiry uses the UTC date and keeps expired authored policy saved', 
         const policy = parseStrictPolicy(emitPolicy('', { configurations: [], ignore: entries }));
         const selected = selectForScope(policy, '', configurationManifests());
         const view = scopeView(knownSettings(selected), policy, selected, '');
-        expect(view.ignoresFor('dependencies/osv')).toStrictEqual([entries[3], entries[0]]);
+        expect(view.ignoresFor('dependencies/osv')).toStrictEqual([
+            { ...entries[3], paths: [] },
+            { ...entries[0], paths: [] },
+        ]);
         expect(view.rulesOff('dependencies/osv')).toStrictEqual(['future', 'permanent']);
         expect(policy.ignore).toStrictEqual([entries[3], entries[1], entries[0], entries[2]]);
         setSystemTime(new Date('2030-05-21T00:00:00.000Z'));

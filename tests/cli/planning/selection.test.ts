@@ -95,8 +95,8 @@ test.each(MANUAL_SELECTIONS)(
             });
             const names = applicableManifests(session).flatMap((manifest) => manifest.tools.map((tool) => tool.name));
             expect(
-                checks.filter((check) => check.check.name === 'security/semgrep').map((check) => check.skip),
-            ).toStrictEqual([undefined, undefined]);
+                checks.filter((check) => check.check.name === 'security/semgrep').map((check) => check.skip?.cause),
+            ).toStrictEqual(configurations === undefined ? [undefined, undefined] : ['condition', undefined]);
             expect(
                 checks.filter((check) => check.check.name === 'duplication/jscpd').map((check) => check.skip?.cause),
             ).toStrictEqual(level === 'all' ? [undefined, undefined] : []);

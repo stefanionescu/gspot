@@ -9,6 +9,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
 import { unmatchedPaths } from '#cli/checks/general/gspot/unmatched-paths.ts';
@@ -68,12 +69,15 @@ test('suppression validation ignores source values and valid reasons but refuses
 test('a file over the limit that is neither declared nor under LFS is reported', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'big.bin': Buffer.alloc(2_000_000),
-        'data/big.bin': Buffer.alloc(2_000_000),
+        'big.bin': Buffer.alloc(BYTES_PER_KB + 1),
+        'data/big.bin': Buffer.alloc(BYTES_PER_KB + 1),
         'small.txt': 'small',
     });
     const paths = ['big.bin', 'data/big.bin', 'small.txt'];
-    await Bun.write(join(sandbox.path, 'gspot.toml'), stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY }));
+    await Bun.write(
+        join(sandbox.path, 'gspot.toml'),
+        stringify({ level: 'all', ...REPOSITORY_SHAPE_POLICY, limits: { file_kb: 1 } }),
+    );
     const found = largeFiles(
         buildCheckInput(await openSession(sandbox.path), 'structure/large-files', { paths: paths }),
     );

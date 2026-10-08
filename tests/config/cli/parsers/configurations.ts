@@ -15,3 +15,10 @@ message = "Use the declared query contract."
 files = ["**/*.ts"]
 allowed = "drizzle.raw_sql_allowed"
 `;
+
+/** A convention names only direct YAML Eta packs, not unrelated configuration assets. */
+export const SEMGREP_ASSETS = [
+    'configurations/language/example/semgrep/first.yml.eta',
+    'configurations/language/example/semgrep/second.yml.eta',
+    'configurations/language/example/semgrep/not-a-pack.yml',
+];

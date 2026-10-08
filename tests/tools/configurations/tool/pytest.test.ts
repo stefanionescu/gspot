@@ -1,4 +1,4 @@
-// Test repository for the pytest configuration: coverage under the floor.
+// Sandbox for the pytest configuration: coverage under the floor.
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';

@@ -145,11 +145,11 @@ export const POLICY_PREVIEW_REFUSALS = [
     { name: 'a missing loosening reason', argv: ['set', 'limits.file_lines', '400'] },
     { name: 'a placeholder reason', argv: ['set', 'limits.bash.file_lines', '200', '--reason', '...'] },
     { name: 'an unknown scope', argv: ['set', 'limits.file_lines', '100', '--scope', 'web'] },
-    { name: 'an unknown check', argv: ['ignore', 'bash/shelcheck', '--reason', 'Check the authored fixture.'] },
+    { name: 'an unknown check', argv: ['ignore', 'bash/shelcheck', '--reason', 'Check the authored sample.'] },
     { name: 'a missing ignore reason', argv: ['ignore', 'bash/syntax'] },
     {
         name: 'an invalid ignore expiry',
-        argv: ['ignore', 'bash/syntax', '--until', 'later', '--reason', 'Check the authored fixture.'],
+        argv: ['ignore', 'bash/syntax', '--until', 'later', '--reason', 'Check the authored sample.'],
     },
 ];
 

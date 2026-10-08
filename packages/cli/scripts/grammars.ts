@@ -5,7 +5,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import type { PinnedDownload } from '#automation/types/grammars.ts';
 import { RUNTIME_WASM, GRAMMAR_PACKAGES } from '#cli/config/platform/assets.ts';
 import { SWIFT_GRAMMAR, DOWNLOAD_TIMEOUT_MS } from '#automation/config/grammars.ts';
-import { rmSync, mkdirSync, existsSync, renameSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs';
+import { rm, mkdir, rename, copyFile, readFile, writeFile } from 'node:fs/promises';
 
 /**
  * Downloads a pinned file unless it exists, and verifies its SHA-256.
@@ -15,13 +15,18 @@ import { rmSync, mkdirSync, existsSync, renameSync, copyFileSync, readFileSync, 
  * @param input.checksum the checksum the download must have
  */
 async function downloadPinnedFile(path: string, input: PinnedDownload): Promise<void> {
-    const isCached = existsSync(path);
+    const cached = await readFile(path).catch((error: unknown) => {
+        if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') throw error;
+        return undefined;
+    });
+    const isCached = cached !== undefined;
     let bytes: Uint8Array;
-    if (isCached) bytes = readFileSync(path);
-    else {
+    if (cached === undefined) {
         const response = await fetch(input.url, { signal: AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS) });
         if (!response.ok) throw new Error(`Build input download failed: HTTP ${String(response.status)}.`);
         bytes = new Uint8Array(await response.arrayBuffer());
+    } else {
+        bytes = cached;
     }
     if (createHash('sha256').update(bytes).digest('hex') !== input.checksum)
         throw new Error(
@@ -30,29 +35,29 @@ async function downloadPinnedFile(path: string, input: PinnedDownload): Promise<
                 : `The download does not match its pinned checksum: ${input.url}. Update SWIFT_GRAMMAR.`,
         );
     if (isCached) return;
-    mkdirSync(dirname(path), { recursive: true });
+    await mkdir(dirname(path), { recursive: true });
     const temporary = `${path}.${randomUUID()}.tmp`;
     try {
-        writeFileSync(temporary, bytes, { flag: 'wx' });
-        renameSync(temporary, path);
+        await writeFile(temporary, bytes, { flag: 'wx' });
+        await rename(temporary, path);
     } finally {
-        rmSync(temporary, { force: true });
+        await rm(temporary, { force: true });
     }
 }
 
-if (import.meta.main) await copyGrammars(fileURLToPath(new URL('../grammars/', import.meta.url)));
+await copyGrammars(fileURLToPath(new URL('../grammars/', import.meta.url)));
 
 /**
  * Copies every grammar the package ships into a folder, each with the license of its source, for the build.
  * @param folder the grammars folder of the package
  */
-export async function copyGrammars(folder: string): Promise<void> {
+async function copyGrammars(folder: string): Promise<void> {
     const requireFromCli = createRequire(fileURLToPath(new URL('../package.json', import.meta.url)));
-    mkdirSync(join(folder, 'licenses'), { recursive: true });
+    await mkdir(join(folder, 'licenses'), { recursive: true });
     for (const [name, source] of Object.entries({ ...GRAMMAR_PACKAGES, ...RUNTIME_WASM })) {
-        copyFileSync(requireFromCli.resolve(source), join(folder, name));
+        await copyFile(requireFromCli.resolve(source), join(folder, name));
         const packageName = source.slice(0, source.indexOf('/'));
-        copyFileSync(
+        await copyFile(
             join(dirname(requireFromCli.resolve(`${packageName}/package.json`)), 'LICENSE'),
             join(folder, 'licenses', `${packageName}.txt`),
         );

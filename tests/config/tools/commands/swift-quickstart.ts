@@ -5,3 +5,9 @@ export const TESTS =
 
 /** The forced cast pasted into the Swift tutorial. */
 export const INVALID_SOURCE = 'public func total(_ value: Any) -> Int {\n    value as! Int\n}\n';
+
+/** Arguments for initializing the tutorial with its explicit configuration. */
+export const INITIALIZE = ['gspot', 'init', '--yes', '--configurations', 'swift'];
+
+/** The source restored after the rejected commit. */
+export const SOURCE_PATH = 'Sources/orders-swift/orders_swift.swift';

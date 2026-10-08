@@ -58,13 +58,13 @@ test.skipIf(process.platform === 'win32' || process.getuid?.() === 0)(
 );
 
 test.each(PARTIAL_FIX_CASES)(
-    '$check fixes available defects and reports an unchanged repeated fix until manual correction',
-    async ({ configuration, check, path, tables, defect, partial, corrected }) => {
+    '$check fixes findings and reports an unchanged repeated fix until manual correction',
+    async ({ configuration, check, path, tables, sample, partial, corrected }) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             'gspot.toml': buildPolicy([configuration], { level: 'all', tables: `runner = "mise"\n${tables}` }),
             '.gitignore': '.gspot/\n',
-            [path]: defect,
+            [path]: sample,
         });
         await prepareFixer(sandbox.path, check);
         const options = buildRunOptions({ only: [check], skips: [], fix: true });
@@ -92,8 +92,8 @@ test('shfmt reports and fixes ordinary shell formatting', async () => {
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     const session = await openSession(sandbox.path);
     const options = buildRunOptions({ only: ['bash/shfmt'] });
-    const defect = await executeRun(session, options);
-    expect(defect.report.exitCode, JSON.stringify(defect.report)).toBe(1);
+    const failed = await executeRun(session, options);
+    expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
     const correction = await executeRun(await openSession(sandbox.path), { ...options, fix: true });
     expect(correction.report.exitCode, JSON.stringify(correction.report)).toBe(0);
     expect(await Bun.file(join(sandbox.path, 'example.sh')).text()).toBe(SHFMT_FORMATTED_SCRIPT);
@@ -125,9 +125,9 @@ test('shfmt reports a syntax error as a source finding and accepts the repaired 
         'broken script.sh': 'if then\n',
     });
     const options = buildRunOptions({ only: ['bash/shfmt'] });
-    const defect = await executeRun(await openSession(sandbox.path), options);
-    expect(defect.report.exitCode, JSON.stringify(defect.report)).toBe(1);
-    expect(defect.report.checks).toMatchObject([
+    const failed = await executeRun(await openSession(sandbox.path), options);
+    expect(failed.report.exitCode, JSON.stringify(failed.report)).toBe(1);
+    expect(failed.report.checks).toMatchObject([
         { status: 'failed', findings: [{ file: 'broken script.sh', line: 1, column: 1, fixable: false }] },
     ]);
     await Bun.write(join(sandbox.path, 'broken script.sh'), 'echo example\n');

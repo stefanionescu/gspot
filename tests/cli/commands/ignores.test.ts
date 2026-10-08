@@ -44,7 +44,7 @@ test('a global ignore stops a command check and its correction command until rem
 test('path-specific ignores prevent checker and fixer execution and report an entirely ignored selection', async () => {
     await using directory = await testdir();
     const policy = buildPolicy([], {
-        tables: `[agent_rules]\nenabled = false\n[check."project/quality"]\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\nreason = "The skipped input preserves the defect."\n`,
+        tables: `[agent_rules]\nenabled = false\n[check."project/quality"]\ncommand = ${JSON.stringify(QUALITY_COMMAND)}\nfix = ${JSON.stringify(QUALITY_FIX)}\npaths = ["inputs/**"]\nstage = "commit"\n[[ignore]]\ncheck = "project/quality"\npaths = ["inputs/skip*", "!inputs/skip-keep.txt"]\nreason = "The skipped input preserves the sample."\n`,
     });
     await createFileTree(directory.path, {
         'gspot.toml': policy,
@@ -149,7 +149,7 @@ test('ignore merges matching expiry dates and removes only the selected expiry',
         'b.sh': 'echo b\n',
         'c.sh': 'echo c\n',
     });
-    const args = ['ignore', 'bash/shellcheck', '--rule', 'SC2086', '--reason', 'The fixture preserves word splitting.'];
+    const args = ['ignore', 'bash/shellcheck', '--rule', 'SC2086', '--reason', 'The sandbox preserves word splitting.'];
     for (const [until, path] of [
         ['2099-05-20', 'a.sh'],
         ['2099-05-20', 'b.sh'],
@@ -158,7 +158,7 @@ test('ignore merges matching expiry dates and removes only the selected expiry',
         const saved = await runGspot(directory.path, [...args, '--until', until!, '--paths', path!]);
         expect(saved.code, saved.stdout + saved.stderr).toBe(0);
     }
-    const entry = { check: 'bash/shellcheck', rule: 'SC2086', reason: 'The fixture preserves word splitting.' };
+    const entry = { check: 'bash/shellcheck', rule: 'SC2086', reason: 'The sandbox preserves word splitting.' };
     const readEntries = async () =>
         parseStrictPolicy(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).ignore.map((entry) => ({
             ...entry,
@@ -215,7 +215,7 @@ test('ignore rejects an invalid expiry without changing authored policy', async 
         '--rule',
         'SC2086',
         '--reason',
-        'The fixture preserves word splitting.',
+        'The sandbox preserves word splitting.',
         '--until',
         '2099-02-30',
     ]);

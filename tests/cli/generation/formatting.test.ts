@@ -39,7 +39,7 @@ test.each(['recommended', 'all'] as const)(
         await using sandbox = await testdir();
         for (const tables of [
             '',
-            '[tools.taplo.verbatim]\ncompact_inline_tables = true\n[reasons]\n"tools.taplo.verbatim" = "This fixture retains a native formatting option."\n',
+            '[tools.taplo.verbatim]\ncompact_inline_tables = true\n[reasons]\n"tools.taplo.verbatim" = "This sandbox retains a native formatting option."\n',
         ]) {
             await createFileTree(sandbox.path, {
                 'gspot.toml': buildPolicy([], { level, tables }),
@@ -150,12 +150,12 @@ test('formatter overrides agree for explicit configuration and editor discovery'
     writeGeneratedFiles(await openSession(root), log);
     for (const { file, ...expected } of FORMAT_CASES) {
         for (const config of ['.gspot/config/prettier.json', 'prettier.config.mjs']) {
-            const resolved = await prettier.resolveConfig(join(root, file), {
+            const computed = await prettier.resolveConfig(join(root, file), {
                 config: join(root, config),
                 editorconfig: true,
                 useCache: false,
             });
-            expect(resolved, `${file} via ${config}`).toMatchObject(expected);
+            expect(computed, `${file} via ${config}`).toMatchObject(expected);
         }
         expect(await prettier.resolveConfig(join(root, file), { editorconfig: true, useCache: false })).toMatchObject(
             expected,

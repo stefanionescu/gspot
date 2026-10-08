@@ -1,4 +1,4 @@
-// Native staged-secret scanning rejects indexed credentials and accepts their correction.
+// Native staged-secret scanning rejects indexed credentials and passes after the fix.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
@@ -50,7 +50,7 @@ async function expectStagedSecret(root: string, environment: Record<string, stri
     ]);
 }
 
-test('staged secrets fail and accept corrections without running network verification', async () => {
+test('staged secrets fail and pass after fixes without running network verification', async () => {
     await using sandbox = await testdir();
     const environment = await prepareStagedSecrets(sandbox.path);
     const clean = await spawnGspot(sandbox.path, ['check', '--hook', 'pre-commit'], environment);

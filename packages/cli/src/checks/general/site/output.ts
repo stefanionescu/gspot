@@ -2,16 +2,25 @@ import { gzipSync } from 'node:zlib';
 import { join, isAbsolute } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/source.ts';
+import { scratchFolder } from '#cli/platform/scratch.ts';
 import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { BYTES_PER_KB } from '#cli/config/platform/runtime.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
+import { fileBatches } from '#cli/execution/command/batches.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
-import { SITEMAP_LOCATION } from '#cli/config/checks/general/site.ts';
 import { filesUnder, requireBuild, repositoryPath } from '#cli/checks/general/site/build.ts';
 import { purgecssReportSchema, linkinatorReportSchema, htmlValidationReportSchema } from '#cli/parsers/schema/site.ts';
+
+import {
+    SITEMAP_FILES,
+    HTTP_OK_STATUS,
+    HTML_REPORT_FILE,
+    SITEMAP_LOCATION,
+    LINKINATOR_PROGRAM,
+} from '#cli/config/checks/general/site.ts';
 
 function pageOf(url: string): [string, ...string[]] {
     const path = decodeURIComponent(new URL(url, 'https://site.invalid').pathname).replace(/^\//u, '');
@@ -28,19 +37,29 @@ function pageOf(url: string): [string, ...string[]] {
  */
 export async function linkinator(input: CheckInput, isExternal: boolean): Promise<Finding[]> {
     const build = await requireBuild(input);
-    const skipped = input.view.options('links').allowed_urls;
-    const skips = [
-        // Linkinator serves the output on the loopback address, so an internal run skips every other host.
-        ...(isExternal ? [] : [String.raw`^https?://(?!localhost|127\.0\.0\.1)`]),
-        '^mailto:',
-        '^tel:',
-        '^sms:',
-        ...skipped,
-    ].flatMap((pattern) => ['--skip', pattern]);
+    const pages = new Set(filesUnder(build.output));
+    const sitemap = SITEMAP_FILES.find((path) => pages.has(path));
+    const location =
+        sitemap === undefined
+            ? undefined
+            : readSource(build.output, sitemap)
+                  .toString('utf8')
+                  .matchAll(SITEMAP_LOCATION)
+                  .map((match) => match.groups?.['url'])
+                  .find((url) => url !== undefined);
+    const paths = [...pages].filter((path) => path.endsWith('.html'));
     const result = await runCheckTool(
         input,
-        ['linkinator', '.', '--recurse', '--server-root', '.', '--format', 'json', ...skips],
-        { cwd: build.output },
+        { tool: 'linkinator', entry: LINKINATOR_PROGRAM },
+        {
+            cwd: build.output,
+            stdin: JSON.stringify({
+                paths,
+                origin: location === undefined ? undefined : new URL(location).origin,
+                external: isExternal,
+                skipped: input.view.options('links').allowed_urls,
+            }),
+        },
     );
     if (result.code !== 0 && result.code !== 1) throw new Error(`Linkinator failed: ${result.stderr}`);
     const start = result.stdout.indexOf('{');
@@ -48,7 +67,6 @@ export async function linkinator(input: CheckInput, isExternal: boolean): Promis
     const report = linkinatorReportSchema.parse(JSON.parse(result.stdout.slice(start)));
     if (result.code === 1 && !report.links.some((link) => link.state === 'BROKEN'))
         throw new Error(`Linkinator failed without reporting broken links: ${result.stderr}`);
-    const pages = new Set(filesUnder(build.output));
     return report.links
         .filter((link) => link.state === 'BROKEN')
         .map((link) => {
@@ -58,7 +76,9 @@ export async function linkinator(input: CheckInput, isExternal: boolean): Promis
                 input,
                 { file: repositoryPath(input, build, join(build.output, page)), line: 1 },
                 'broken-link',
-                `${link.url} answers ${String(link.status ?? 0)}.`,
+                link.status === HTTP_OK_STATUS && link.url.includes('#')
+                    ? `${link.url} has no matching fragment.`
+                    : `${link.url} answers ${String(link.status ?? 0)}.`,
             );
         });
 }
@@ -80,23 +100,37 @@ export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
         .find((target) => target.check.includes(input.check.name));
     if (configuration === undefined) throw new Error(`Check ${input.check.name} has no declared HTML configuration.`);
     const config = join(input.root, targetInScope(input.scope, configuration));
-    const result = await runCheckTool(input, ['html-validate', '--config', config, '--formatter', 'json', ...pages], {
-        cwd: build.cwd,
-    });
-    if (result.code !== 0 && result.code !== 1) throw new Error(`HTML validation failed: ${result.stderr}`);
-    const files = htmlValidationReportSchema.parse(JSON.parse(result.stdout));
-    if (result.code === 1 && files.every((file) => file.messages.length === 0))
-        throw new Error(`HTML validation failed without diagnostics: ${result.stderr}`);
-    return files.flatMap((file) =>
-        file.messages.map((entry) =>
-            findingAt(
-                input,
-                { file: repositoryPath(input, build, file.filePath), line: entry.line },
-                entry.ruleId,
-                entry.message,
+    using reports = scratchFolder('gspot-html-validate-');
+    const command = [
+        'html-validate',
+        '--config',
+        config,
+        '--formatter',
+        `json=${join(reports.path, HTML_REPORT_FILE)}`,
+    ];
+    const findings: Finding[] = [];
+    for (const batch of fileBatches(pages, command, process.platform)) {
+        const result = await runCheckTool(input, [...command, ...batch], { cwd: build.cwd });
+        if (![0, 1].includes(result.code)) throw new Error(`HTML validation failed: ${result.stderr}`);
+        const files = htmlValidationReportSchema.parse(
+            JSON.parse(readSource(reports.path, HTML_REPORT_FILE).toString('utf8')),
+        );
+        if (result.code === 1 && files.every((file) => file.messages.length === 0))
+            throw new Error(`HTML validation failed without diagnostics: ${result.stderr}`);
+        findings.push(
+            ...files.flatMap((file) =>
+                file.messages.map((entry) =>
+                    findingAt(
+                        input,
+                        { file: repositoryPath(input, build, file.filePath), line: entry.line },
+                        entry.ruleId,
+                        entry.message,
+                    ),
+                ),
             ),
-        ),
-    );
+        );
+    }
+    return findings;
 }
 
 /**
@@ -108,16 +142,22 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
     const build = await requireBuild(input);
     const sheets = filesUnder(build.output).filter((path) => path.endsWith('.css'));
     if (sheets.length === 0) return [];
-    const safelist = Object.keys(input.view.options('tools.purgecss').safelist);
+    const configuration = input.manifests
+        .values()
+        .flatMap((manifest) => manifest.toolFiles)
+        .find((target) => target.check.includes(input.check.name));
+    if (configuration === undefined) throw new Error(`Check ${input.check.name} has no declared CSS configuration.`);
+    const config = join(input.root, targetInScope(input.scope, configuration));
     const argv = [
         'purgecss',
+        '--config',
+        config,
         '--css',
         ...sheets,
         '--content',
         '**/*.html',
         '**/*.js',
         '--rejected',
-        ...(safelist.length === 0 ? [] : ['--safelist', ...safelist]),
     ];
     const result = await runCheckTool(input, argv, { cwd: build.output });
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);

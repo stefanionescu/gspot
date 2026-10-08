@@ -29,14 +29,6 @@ brew = "supabase/tap/supabase"
 npm = "supabase"
 scoop = "supabase"
 
-[[tool_file]]
-source = "semgrep/supabase.yml.eta"
-target = ".gspot/config/semgrep/supabase.yml"
-tool = "semgrep"
-rule_keys = ["rules"]
-scoped = true
-when = { configuration = "security" }
-
 [[check]]
 name = "project-file"
 title = "Validate the Supabase project"
@@ -57,7 +49,7 @@ stage = "commit"
 runs = "scope"
 summary = "Checks that every migration is named fourteen digits, an underscore, and snake case words."
 why = "The CLI orders and records migrations by this name, and it skips a file it cannot read a version from."
-help = "Create the migration with supabase migration new <name>, which writes the name."
+help = "Create the migration with supabase migration new `<name>`, which writes the name."
 
 [[check]]
 name = "storage-policies"

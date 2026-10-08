@@ -21,7 +21,7 @@ import {
 } from '#tests/config/cli/tools/vale.ts';
 
 test.each(VALE_ACQUISITION_FAILURES)(
-    'Vale installation preserves installed styles after %s and succeeds after correction',
+    'Vale package installation preserves styles after %s and succeeds after the fix',
     async (failure, script, expected, tables) => {
         await using directory = await testdir();
         const installed = '.gspot/config/vale/styles/Google/terms.yml';

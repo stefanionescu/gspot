@@ -7,14 +7,6 @@ description = "An Express service: the Semgrep rules for request handling, an Op
 [detect]
 dependencies = ["express"]
 
-[[tool_file]]
-source = "semgrep/express.yml.eta"
-target = ".gspot/config/semgrep/express.yml"
-tool = "semgrep"
-rule_keys = ["rules"]
-scoped = true
-when = { configuration = "security" }
-
 [[naming.overrides]]
 paths = ["**"]
 languages = ["typescript", "javascript"]

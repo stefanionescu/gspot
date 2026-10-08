@@ -6,6 +6,7 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
+import { workspaceSourceFiles } from '#cli/execution/copy/dependencies.ts';
 
 import type {
     CheckInput,
@@ -50,6 +51,8 @@ function checkResult(
  */
 export function checkInput(session: ToolSession, planned: Pick<PlannedCheck, 'scope' | 'check' | 'files'>): CheckInput {
     const input: CheckInput = {
+        dependencyFiles: () =>
+            workspaceSourceFiles(session.root, planned.scope.scope.path, session.repository.files, session.reads),
         root: session.root,
         scope: planned.scope.scope.path,
         scopeRoot: join(session.root, planned.scope.scope.path),

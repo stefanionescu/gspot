@@ -56,7 +56,7 @@ export type ScopeView = {
     limit: (key: string, language?: string) => number | undefined;
     values: ActiveSettingNamespaces;
     options: <Name extends SettingNamespace>(name: Name) => SettingOptions<Name>;
-    ignoresFor: (check: string) => IgnoreEntry[];
+    ignoresFor: (check: string) => (IgnoreEntry & { paths: string[] })[];
     rulesOff: (check: string) => string[];
     verbatim: (name: string) => Record<string, unknown> | undefined;
 };

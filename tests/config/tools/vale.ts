@@ -9,7 +9,7 @@ export const CURRENCY_CASES = [
     { path: 'source.ts', source: '// Use $1 as the regular expression replacement.\nconst value = 1;\n', lines: [] },
 ] as const;
 
-/** Each style keeps its substantive prose check without treating source notation as a defect. */
+/** Each style keeps its substantive prose check without treating source notation as a finding. */
 export const STYLE_CASES = [
     {
         rule: 'file-paths',

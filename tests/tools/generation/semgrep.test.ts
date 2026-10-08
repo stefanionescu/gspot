@@ -229,7 +229,7 @@ test.skipIf(!hasToolBuild('semgrep'))(
 );
 
 test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
-    '%s security packs report raw inputs once and accept documented forms and corrections',
+    '%s security packs report raw inputs once, accept documented forms, and pass after fixes',
     async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -272,7 +272,7 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
 );
 
 test.skipIf(!hasToolBuild('semgrep'))(
-    'repository security rules report defects, accept corrections and preserve Bearer files',
+    'repository security rules report findings, pass after fixes and preserve Bearer files',
     async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {

@@ -83,7 +83,7 @@ command = ["commitlint", "--config", "{tool_file:commitlint}", "--edit", "{messa
 output = { format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$" }
 summary = "Checks the commit message being written: a conventional type, an optional known scope, a first line of 72 characters or fewer, and a wrapped body."
 why = "A history of typed, scoped subjects is what release notes, blame and bisect are read from; a free-form message hides the change."
-help = "Write <type>: <subject> or <type>(<scope>): <subject>, with an accepted type and optional scope. Keep the whole first line at 72 characters or fewer. Change accepted types with gspot set tools.commitlint.types."
+help = "Write `<type>`: `<subject>` or `<type>`(`<scope>`): `<subject>`, with an accepted type and optional scope. Keep the whole first line at 72 characters or fewer. Change accepted types with gspot set tools.commitlint.types."
 
 [[check]]
 name = "commitlint-range"
@@ -119,4 +119,4 @@ name = "tools.commitlint.rules"
 type = "table"
 direction = "rule-options"
 default = {}
-summary = "Native options for active commitlint rules, by rule name: an always/never condition and optional value, without a severity. The level decides which rules run. Ignore a finding with gspot ignore commits/commitlint --rule <rule> --reason <why>."
+summary = "Native options for active commitlint rules, by rule name: an always/never condition and optional value, without a severity. The level decides which rules run. Ignore a finding with gspot ignore commits/commitlint --rule `<rule>` --reason `<why>`."

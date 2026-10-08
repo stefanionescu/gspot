@@ -16,7 +16,7 @@ const workspaces = Object.fromEntries(paths.map((path) => [path === '' ? '.' : p
 %>
 {
     "$schema": "https://unpkg.com/knip@6/schema.json",
-    "ignore": <%= json(['.gspot/**', 'eslint.config.{js,mjs,cjs}', ...ignoresFor('javascript/knip').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths ?? []), ...policy.declarations.flatMap((entry) => entry.paths)]) %>,
+    "ignore": <%= json(['.gspot/**', 'eslint.config.{js,mjs,cjs}', ...ignoresFor('javascript/knip').filter((entry) => entry.rule === undefined).flatMap((entry) => entry.paths), ...policy.declarations.flatMap((entry) => entry.paths)]) %>,
     "ignoreDependencies": <%= json([...new Set(['@gspothq/cli', ...toolPackages, ...(settings['dependencies.scanner'] === undefined ? [] : [settings['dependencies.scanner']]), ...ignoredNames(undefined)])]) %>,
     "ignoreBinaries": <%= json([...new Set([...toolBinaries, ...(policy.runner === undefined ? [] : [policy.runner])])]) %>,
     "ignoreExportsUsedInFile": true,

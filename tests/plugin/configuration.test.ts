@@ -57,10 +57,10 @@ test.each(['recommended', 'all'] as const)(
                 .filter(({ ruleId }) => ruleId === 'gspot/no-alias-exports')
                 .map(({ line, column, messageId: diagnosticId }) => ({ line, column, messageId: diagnosticId })),
         ).toStrictEqual(level === 'recommended' ? [] : [{ line: 2, column: 14, messageId: 'alias' }]);
-        const defect = linter.verify("'use client';\nexport const value = process.env.SECRET;", config, {
+        const findings = linter.verify("'use client';\nexport const value = process.env.SECRET;", config, {
             filename: join(sandbox.path, 'example.js'),
         });
-        expect(defect.filter(({ ruleId }) => ruleId === 'gspot/no-client-env')).toMatchObject([
+        expect(findings.filter(({ ruleId }) => ruleId === 'gspot/no-client-env')).toMatchObject([
             { line: 2, column: 22, messageId: 'private' },
         ]);
         const corrected = linter.verify("'use client';\nexport const value = 'public';", config, {
