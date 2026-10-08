@@ -48,7 +48,7 @@ test('native Jest at all applies nested coverage settings without executing sibl
     const report = JSON.parse(uncovered.stdout) as RunReport;
     expect(report.checks).toMatchObject([{ check: 'jest/coverage', scope: 'app', status: 'failed' }]);
     expect(report.checks.flatMap((check) => check.findings)).toContainEqual(
-        containing({ rule: 'coverage-functions', message: textContaining('100% floor') }),
+        containing({ message: 'coverage threshold for functions (100%) not met: 50%' }),
     );
     await Bun.write(join(sandbox.path, 'app/math.test.cjs'), CORRECTED_TEST_SOURCE);
     const passing = await spawnGspot(sandbox.path, command, environment);
@@ -67,11 +67,10 @@ test('native Jest at all reports uncovered functions and failed tests while pres
     const uncovered = await spawnGspot(sandbox.path, command, environment);
     expect(uncovered.code, uncovered.stdout + uncovered.stderr).toBe(1);
     expect((JSON.parse(uncovered.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
-        containing({ rule: 'coverage-lines' }),
+        containing({ message: 'coverage threshold for lines (80%) not met: 66.66%' }),
         containing({
             check: 'jest/coverage',
-            rule: 'coverage-functions',
-            message: textContaining('50%'),
+            message: 'coverage threshold for functions (80%) not met: 50%',
         }),
     ]);
     await Bun.write(join(sandbox.path, 'math.test.cjs'), CORRECTED_TEST_SOURCE);
@@ -84,7 +83,7 @@ test('native Jest at all reports uncovered functions and failed tests while pres
     const failed = await spawnGspot(sandbox.path, command, environment);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toStrictEqual([
-        containing({ rule: 'test-failure', file: 'math.test.cjs', line: 4 }),
+        containing({ message: textContaining('toBe(7)') }),
     ]);
     expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('preserved source\n');
     expect(await readFile(join(sandbox.path, 'coverage/authored.txt'), 'utf8')).toBe('preserved report\n');
@@ -111,3 +110,34 @@ test('native Jest reports a test file that cannot load as an execution error and
     expect(await readFile(join(sandbox.path, 'coverage/authored.txt'), 'utf8')).toBe('preserved report\n');
     expect(await readFile(join(sandbox.path, 'math.cjs'), 'utf8')).toBe(SOURCE);
 });
+
+test.each(['recommended', 'all'] as const)(
+    'native Jest $level runs root and child tests without zero-floor coverage flags',
+    async (level) => {
+        await using sandbox = await testdir();
+        const zero =
+            '[coverage]\nlines = 0\nbranches = 0\nfunctions = 0\nstatements = 0\n[reasons]\n"coverage.lines" = "The test measures the zero-floor native command."\n"coverage.branches" = "The test measures the zero-floor native command."\n"coverage.functions" = "The test measures the zero-floor native command."\n"coverage.statements" = "The test measures the zero-floor native command."\n';
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['jest'], { level, tables: zero + '[scope.app]\nconfigurations = ["jest"]\n' }),
+            ...JEST_PROJECT_FILES,
+            'math.test.cjs': TEST_SOURCE,
+            'app/package.json': JEST_PROJECT_FILES['package.json'],
+            'app/math.cjs': SOURCE,
+            'app/math.test.cjs': TEST_SOURCE,
+            'app/authored.txt': 'preserved nested source\n',
+        });
+        const outcome = await spawnGspot(sandbox.path, ['check', '--only', 'jest/coverage', '--json'], {
+            PATH: buildSandboxPath([]),
+        });
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
+        const report = JSON.parse(outcome.stdout) as RunReport;
+        expect(report.checks.map((check) => check.scope)).toStrictEqual(['', 'app']);
+        for (const check of report.checks) {
+            expect(check).toMatchObject({ status: 'passed', findings: [] });
+            expect(check.command).not.toContain('--runInBand');
+            expect(check.command!.some((part) => part.startsWith('--coverage'))).toBe(false);
+        }
+        expect(await readFile(join(sandbox.path, 'authored.txt'), 'utf8')).toBe('preserved source\n');
+        expect(await readFile(join(sandbox.path, 'app/authored.txt'), 'utf8')).toBe('preserved nested source\n');
+    },
+);

@@ -29,7 +29,8 @@ const CHECK_RULES: CheckRule[] = [
         applies: (check) => {
             if (check.run_in_copy !== true) return false;
             const perFile = check.runs === 'files' && check.command?.includes('{files}') === true;
-            const perScope = check.runs === 'scope' && check.command?.includes('{root}') === true;
+            const perScope =
+                check.runs === 'scope' && check.command?.some((argument) => argument.includes('{root}')) === true;
             return !perFile && !perScope;
         },
         error: (check) =>

@@ -1,5 +1,4 @@
 import { locales } from '#cli/checks/library/i18n.ts';
-import { jestCoverage } from '#cli/checks/tool/jest.ts';
 import { ansibleLint } from '#cli/checks/tool/ansible.ts';
 import { fences } from '#cli/checks/language/markdown.ts';
 import { expoDoctor } from '#cli/checks/framework/expo.ts';
@@ -103,7 +102,6 @@ export const BUILT_IN_CHECKS = {
     'css/module-classes': { input: moduleClasses },
     'ansible/lint': { input: ansibleLint },
     'nginx/test': { input: nginxTest },
-    'jest/coverage': { input: jestCoverage },
     'gspot/drift': { run: gspotDrift },
     'gspot/policy-layout': { run: gspotPolicyLayout, fix: fixPolicyLayout },
     'structure/private-before-public': { input: privateBeforePublic },

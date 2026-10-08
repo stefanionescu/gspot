@@ -18,19 +18,20 @@ import { batchedCommands } from '#cli/execution/command/arguments/contracts.ts';
 import type { CheckInput, CheckResult, CheckRunOptions } from '#cli/types/execution/check.ts';
 
 import {
-    finishResult,
-    toolDeadline,
-    commandOutcome,
-    executionFailure,
-    recordInvocation,
-} from '#cli/execution/command/contracts.ts';
-import {
     substitute,
     isolatedFiles,
     perFileCommands,
     substituteValue,
     commandConfigurations,
 } from '#cli/execution/command/arguments/public.ts';
+import {
+    finishResult,
+    toolDeadline,
+    commandOutcome,
+    executionFailure,
+    recordInvocation,
+    coverageArguments,
+} from '#cli/execution/command/contracts.ts';
 import type {
     CheckTool,
     CommandRun,
@@ -234,7 +235,7 @@ export async function runCheckCommand(
     planned: PlannedCheck,
     options: CheckRunOptions = {},
 ): Promise<CheckResult> {
-    const command = options.command ?? planned.check.command;
+    const command = coverageArguments(planned, options);
     const { tool } = planned;
     const base = emptyResult(planned);
     if (tool === undefined || command === undefined)

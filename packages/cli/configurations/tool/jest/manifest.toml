@@ -34,6 +34,11 @@ runs = "scope"
 cwd = "scope"
 files = { extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"] }
 tool = "jest"
+command = ['jest', '--ci', '--rootDir={root}/{scope}', '--coverage', '--coverageReporters=text-summary', '--coverageThreshold={"global":{"lines":{setting:coverage.lines},"branches":{setting:coverage.branches},"functions":{setting:coverage.functions},"statements":{setting:coverage.statements}}}']
+run_in_copy = true
+exit_codes = [1]
+crash_pattern = '^No tests found|^  ● Test suite failed to run'
+output = { format = "regex", pattern = '^Jest: "global" (?<message>coverage threshold for .+ not met: .+)$' }
 summary = "Runs Jest in a disposable source copy and checks all four coverage floors."
 why = "A coverage floor keeps new code from arriving untested."
 help = "Correct failed tests and cover the reported branches, functions, lines, and statements."
