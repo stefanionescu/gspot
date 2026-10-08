@@ -10,7 +10,7 @@ import type { RunReport } from '#cli/types/execution/check.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { MATH, PROJECT, ARITHMETIC_TESTS } from '#tests/config/tools/configurations/tool/pytest.ts';
+import { MATH, PROJECT, ARITHMETIC_TESTS } from '#tests/config/samples/python.ts';
 
 test('the pytest configuration > coverage under the floor fails, and a test function keeps its prefix', async () => {
     await using sandbox = await testdir();

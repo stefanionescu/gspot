@@ -1,6 +1,6 @@
 # Configurations and the ESLint Plugin
 
-33 unresolved review records remain.
+32 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -205,3 +205,11 @@ Original records and quotations remain above. These records are complete at `884
 | `review/configurations-plugin/016` | complete | Plugin preset tests use in-process Linter.verify with fixed cwd and no sandbox. Full plugin366pass across14files. Commit `88496e133baa930637e18af9a26036d0e32c857c`.                                                                                                                                                                                             |
 | `review/configurations-plugin/038` | complete | Ruff uses140 recommended and77 additional prefix selectors plus17 exclusions;20 explicit D selectors retain native convention behavior. Sixteen native configurations plus16 actual scoped configurations have equal enabled rules and diagnostics. Reasoned scoped native ignores use the scope prefix once. Commit `88496e133baa930637e18af9a26036d0e32c857c`. |
 | `review/configurations-plugin/039` | complete | basedpyright selects recommended/all modes and retains only native deviations.106 native severity/behavior keys and four actual CLI diagnostic runs match the original policy. Commit `88496e133baa930637e18af9a26036d0e32c857c`.                                                                                                                                |
+
+## Implementation checkpoint ed26e012f of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `ed26e012f9927f082f1ab61febcc98f936a64519`.
+
+| ID                                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/configurations-plugin/062` | complete | Default image is the existing full version nginx:1.29.3-alpine. Official OCI tag returned 200; native gixy passes; unchanged container test commits its fixture before pre-push. Linux container test is still a host skip on macOS; full-version default obligation is verified separately and no Linux execution is claimed. Commit `ed26e012f9927f082f1ab61febcc98f936a64519`. |
