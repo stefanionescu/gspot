@@ -1,10 +1,12 @@
 // An exported template keeps the rules of the policy and leaves out what only fits this repository.
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse, stringify } from 'smol-toml';
+import { testdir, createFileTree } from 'testdirs';
 import { parseExpiryDate } from '#cli/policy/file.ts';
-import { parseTemplate, exportTemplate } from '#cli/policy/templates.ts';
 import { ESLINT_OVERRIDE_POLICY } from '#tests/config/samples/javascript.ts';
 import { FORMAT_OVERRIDES_POLICY } from '#tests/config/samples/formatting.ts';
+import { getTemplate, parseTemplate, exportTemplate } from '#cli/policy/templates.ts';
 
 test.each([
     ['preserves ESLint rules and authored path', ESLINT_OVERRIDE_POLICY, 'project.template.toml'],
@@ -84,4 +86,57 @@ test('template export retains authored empty tables without writing schema defau
     const absent = parse(exportTemplate('configurations = []\n', 'absent.template.toml').text);
     for (const table of ['naming', 'architecture', 'structure', 'tools'])
         expect(Object.hasOwn(absent, table)).toBe(false);
+});
+
+test('an absolute template loads from a different working directory', async () => {
+    const source = 'policies/café house.template.toml';
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        [source]: 'template = "house"\nselection = "exact"\nconfigurations = ["bash"]\n',
+        'project/README.md': '# Project\n',
+    });
+    const relative = await getTemplate(source, sandbox.path);
+    const absolute = await getTemplate(join(sandbox.path, source), join(sandbox.path, 'project'));
+    expect(absolute.tables).toStrictEqual(relative.tables);
+    expect(absolute.digest).toBe(relative.digest);
+});
+
+test('templates retain runner coverage settings and authored architecture roles', async () => {
+    await using directory = await testdir();
+    const tools = { eslint: { runtimes: { 'src/**': 'node' } } };
+    const coverage = { lines: 90 };
+    const roles = { test_harness: 'tests/fixtures' };
+    const exported = exportTemplate(
+        stringify({ configurations: ['jest'], tools, coverage, architecture: { roles } }),
+        'shared.template.toml',
+    );
+    await createFileTree(directory.path, { 'shared.template.toml': exported.text });
+    const restored = await getTemplate('shared.template.toml', directory.path);
+    expect(restored.tables.tools?.['eslint']).toStrictEqual(tools.eslint);
+    expect(restored.tables.coverage).toStrictEqual(coverage);
+    expect(exported.leftOut).toStrictEqual([]);
+    expect(restored.tables.architecture?.roles).toStrictEqual(roles);
+    await createFileTree(directory.path, {
+        'invalid.template.toml': stringify({
+            template: 'local',
+            selection: 'exact',
+            configurations: ['jest'],
+            architecture: { roles },
+        }),
+    });
+    const invalid = await getTemplate('invalid.template.toml', directory.path);
+    expect(invalid.tables.architecture?.roles).toStrictEqual(roles);
+});
+
+test('templates round-trip license allowances and exact-version exceptions', async () => {
+    await using directory = await testdir();
+    const licenses = {
+        allowed: ['MPL-2.0'],
+        exceptions: { 'example@1.2.3': { license: 'BSD', reason: 'Reviewed package metadata.' } },
+    };
+    const exported = exportTemplate(stringify({ configurations: ['licenses'], licenses }), 'licenses.template.toml');
+    await createFileTree(directory.path, { 'licenses.template.toml': exported.text });
+    const restored = await getTemplate('licenses.template.toml', directory.path);
+    expect(restored.tables.licenses).toStrictEqual(licenses);
+    expect(exported.leftOut).toStrictEqual([]);
 });

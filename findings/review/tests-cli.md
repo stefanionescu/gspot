@@ -1,6 +1,6 @@
 # Tests in `tests/cli`
 
-94 unresolved review records remain.
+82 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -278,3 +278,22 @@ Original records and quotations remain above. These records are complete at `327
 | `review/tests-cli/119` | complete | Canonical emission and publication tests reside in policy/file; obsolete parser layout owner is absent. Native policy writer corpus passes. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.                                                                                                      |
 | `review/tests-cli/120` | complete | SQL cases reside in parsers/sql/pg, and tree-sitter retains only its native reader/lifetime cases. Both native parser corpora pass. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.                                                                                                              |
 | `review/tests-cli/122` | complete | COMMITLINT_PACKAGE has one config/samples owner, with all generation and tools consumers updated. Native generation corpus passes. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.                                                                                                               |
+
+## Implementation checkpoint b9b1fca98 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                  |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-cli/072` | complete | Deleted duplicate placeholder-reason rows; original recovery refusals remain. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                                                                          |
+| `review/tests-cli/073` | complete | Deleted duplicated loosening cases; retained unique native inverse-floor/default/reason assertions in recovery. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                                        |
+| `review/tests-cli/074` | complete | Deleted duplicate unknown-tool and non-removable naming-group cases; native recovery retains both refusals. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                                            |
+| `review/tests-cli/075` | complete | One native directory matrix contains all26 original refusals plus6 harness boundary inputs and exact positioned diagnostics. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                           |
+| `review/tests-cli/076` | complete | Separate mechanical710e373d6 moved ESLint refusals to key-paths and naming reasons to recovery; native strict rulez retains both actual errors. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                        |
+| `review/tests-cli/077` | complete | Applied prescribed scope-view title without changing its assertions. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                                                                                   |
+| `review/tests-cli/078` | complete | Merged scoped empty-table export cases into one native table, retaining every title/input and the unique eqeqeq assertion. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                             |
+| `review/tests-cli/081` | complete | Native pure set/delete/list cases use editPolicy in memory; five duplicate disk-publication blocks deleted and actual scoped writer retained. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                          |
+| `review/tests-cli/082` | complete | Split native invalid UTF8 and mode-change refusals; all27 contractual assertions remain. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                                                               |
+| `review/tests-cli/098` | complete | Current npm tests/config owners are source-owned install/client/registry and generation/npm; focused actual final owners pass. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                         |
+| `review/tests-cli/099` | complete | Current fakeCommand delegates unrelated commands and disposes its spy; npm/UV native unit contracts pass. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                                              |
+| `review/tests-cli/145` | complete | Current useEnvironment/usePlatform resources restore globals in mapped environment, credentials, manager, installation and hint owners; actual final owner tests pass. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`. |

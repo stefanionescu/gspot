@@ -1,5 +1,5 @@
 {
-    "openRecords": 845,
+    "openRecords": 833,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 845,
+        "openRecords": 833,
         "records": 1092,
         "batches": [
             {
@@ -1402,8 +1402,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 61,
-                "unresolvedAssignments": 408
+                "completedAssignments": 73,
+                "unresolvedAssignments": 396
             },
             {
                 "id": "scripts-repository",
@@ -9041,46 +9041,56 @@
             "verification": []
         },
         "review/tests-cli/072": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "verification": ["Deleted duplicate placeholder-reason rows; original recovery refusals remain."]
         },
         "review/tests-cli/073": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "verification": [
+                "Deleted duplicated loosening cases; retained unique native inverse-floor/default/reason assertions in recovery."
+            ]
         },
         "review/tests-cli/074": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "verification": [
+                "Deleted duplicate unknown-tool and non-removable naming-group cases; native recovery retains both refusals."
+            ]
         },
         "review/tests-cli/075": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "verification": [
+                "One native directory matrix contains all26 original refusals plus6 harness boundary inputs and exact positioned diagnostics."
+            ]
         },
         "review/tests-cli/076": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "verification": [
+                "Separate mechanical710e373d6 moved ESLint refusals to key-paths and naming reasons to recovery; native strict rulez retains both actual errors."
+            ]
         },
         "review/tests-cli/077": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "verification": ["Applied prescribed scope-view title without changing its assertions."]
         },
         "review/tests-cli/078": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "verification": [
+                "Merged scoped empty-table export cases into one native table, retaining every title/input and the unique eqeqeq assertion."
+            ]
         },
         "review/tests-cli/079": {
             "status": "pending",
@@ -9089,22 +9099,29 @@
             "verification": []
         },
         "review/tests-cli/080": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "verification": [
+                "Five duplicate publication pipelines and redundant plan aliases removed; one homogeneous scoped publication remains. Main native Transport/current owners286pass867assert17files plus33pass109assert3current owners; all mode/UTF8/stale-byte/CAS refusals preserved."
+            ],
+            "remaining": [
+                "Prescribed local editPolicy(root, mutation) helper is not present after duplicate disk transport deletion; a helper for the one homogeneous remaining scoped writer conflicts with the recorded no-forwarding owner contract. No helper-delivery or whole-record completion claimed."
+            ]
         },
         "review/tests-cli/081": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "verification": [
+                "Native pure set/delete/list cases use editPolicy in memory; five duplicate disk-publication blocks deleted and actual scoped writer retained."
+            ]
         },
         "review/tests-cli/082": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "verification": ["Split native invalid UTF8 and mode-change refusals; all27 contractual assertions remain."]
         },
         "review/tests-cli/083": {
             "status": "in-progress",
@@ -9267,19 +9284,20 @@
             ]
         },
         "review/tests-cli/098": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
             "verification": [
                 "Evidence 87a24612d4d7ae4b.",
                 "Evidence b0bc9e5ebe9d9f79.",
                 "Evidence 89faa450416afe5e.",
-                "Main metadata staging/commit/push and full cross-platform acceptance remain pending."
+                "Main metadata staging/commit/push and full cross-platform acceptance remain pending.",
+                "Current npm tests/config owners are source-owned install/client/registry and generation/npm; focused actual final owners pass."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-six-tool-test-owner-freeze.json",
-                    "commit": null,
+                    "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
                     "verification": [
                         "Evidence 87a24612d4d7ae4b.",
                         "Evidence b0bc9e5ebe9d9f79.",
@@ -9290,19 +9308,20 @@
             ]
         },
         "review/tests-cli/099": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
             "verification": [
                 "Evidence 87a24612d4d7ae4b.",
                 "Evidence b0bc9e5ebe9d9f79.",
                 "Evidence 89faa450416afe5e.",
-                "Main metadata staging/commit/push and full cross-platform acceptance remain pending."
+                "Main metadata staging/commit/push and full cross-platform acceptance remain pending.",
+                "Current fakeCommand delegates unrelated commands and disposes its spy; npm/UV native unit contracts pass."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-six-tool-test-owner-freeze.json",
-                    "commit": null,
+                    "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
                     "verification": [
                         "Evidence 87a24612d4d7ae4b.",
                         "Evidence b0bc9e5ebe9d9f79.",
@@ -9799,9 +9818,9 @@
             ]
         },
         "review/tests-cli/145": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
             "verification": [
                 "Evidence dcc5449d7f2c7c62.",
                 "Evidence c026281130a15a02.",
@@ -9809,7 +9828,8 @@
                 "Evidence 20c2f89725488b8a.",
                 "Evidence e21341d2b84cbd16.",
                 "Independent /tmp/gspot-disposable-test-environment-independent-review.md verifies all7frozenhashes/fivecallerfamilies, every test title/assertion, exact measuredreduction and native failure-restoration semantics; no source edits or closures.",
-                "Evidence 0a4a426cd56e8208."
+                "Evidence 0a4a426cd56e8208.",
+                "Current useEnvironment/usePlatform resources restore globals in mapped environment, credentials, manager, installation and hint owners; actual final owner tests pass."
             ]
         },
         "review/tests-layout/003": {
@@ -15443,6 +15463,35 @@
                 "Core ESLint Linter.Config declaration consumer has an upstream RuleContext incompatibility; no cast/shim or universal public-type compatibility claim.",
                 "No Windows runtime acceptance inferred from native path probes. Current CI, final all-platform suite measurement, release preparation and main001 external publication/setup remain pending.",
                 "Native site six cases and SVG pass; default-only corrected rerun passes. No final unexecuted whole8/0 claim."
+            ]
+        },
+        {
+            "commit": "b9b1fca985dd99984b80dc76eb3640a91fded6bc",
+            "completedRecords": [
+                "review/tests-cli/072",
+                "review/tests-cli/073",
+                "review/tests-cli/074",
+                "review/tests-cli/075",
+                "review/tests-cli/076",
+                "review/tests-cli/077",
+                "review/tests-cli/078",
+                "review/tests-cli/081",
+                "review/tests-cli/082",
+                "review/tests-cli/098",
+                "review/tests-cli/099",
+                "review/tests-cli/145"
+            ],
+            "unresolvedRecords": 833,
+            "validation": [
+                "Mechanical121pass301assert6files570ms; mandatory staged72pass10skip0findings32.246s; commit56pass3skip0findings11.5s plus message pass.",
+                "Transport/current owner corpus286pass1hostskip867assert17files11.82s; extra native final credentials/inspect-installations/UV33pass109assert3files3.46s; final refusals119pass318assert6files603ms. Roottypes,11owner ESLint/Prettier0; combined staged51pass9skip0findings28.423s."
+            ],
+            "limitations": [
+                "review/tests-cli080 stays partial: duplicated transport and aliases removed, but the prescribed local helper is absent after only one homogeneous scoped publication remains; no helper delivery claimed.",
+                "Swift central runner followup preserves63cases/291assertions; original closed017 remains closed and receives no extra credit.",
+                "Initial combined-patch reapplication conflicted because Main already contained the mechanical phase; zero repository files changed. Correct exact behavior-phase before/after payload then integrated successfully.",
+                "Initial requested20 test paths matched17 current owners; actual3 moved credentials/inspection/UV owners were run separately, with exact files and results retained.",
+                "No Windows execution, timeout measurement, full suite, current CI success or release publication claimed."
             ]
         }
     ],
