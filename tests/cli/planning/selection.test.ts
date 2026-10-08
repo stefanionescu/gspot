@@ -10,6 +10,7 @@ import { toolPin } from '#cli/configurations/pins.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
+import { usePlatform } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
@@ -300,5 +301,9 @@ test.each(['recommended', 'all'] as const)(
                 expect(ids).not.toContain('typescript/tsc');
             }
         }
+        using _platform = usePlatform('win32');
+        expect(planRun(session, { stage: 'all', skips: [], only: ['security/semgrep'] })).toMatchObject([
+            { check: { name: 'security/semgrep' }, skip: { cause: 'platform' } },
+        ]);
     },
 );

@@ -1,6 +1,3 @@
-/** The PATH of the pinned tools used by a secrets sandbox. */
-export type SecretEnvironment = { PATH: string };
-
 /** Independent clean and leaked commits whose final trees contain no test files. */
 export type SecretHistory = { base: string; tree: string; good: string; leaked: string; removed: string };
 

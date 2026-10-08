@@ -9,8 +9,8 @@ import { HOOK_DOCTOR_TOOLS } from '#tests/config/tools/commands/doctor.ts';
 
 test('doctor fails hooks this clone does not run and accepts them once installed', async () => {
     await using sandbox = await testdir();
-    // An empty hooks table enables the default Git hook integration.
-    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([], { tables: '[hooks]\n' }) });
+    // Explicit hook selection enables the default Git hook integration.
+    await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy([], { tables: '[hooks]\nenabled = true\n' }) });
     const environment = { PATH: buildToolsPath(HOOK_DOCTOR_TOOLS) };
     gitOutput(sandbox.path, ['init', '-q']);
     const missing = await spawnGspot(sandbox.path, ['doctor', '--json'], environment);

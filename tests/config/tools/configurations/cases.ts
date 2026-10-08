@@ -4,10 +4,12 @@ import * as supabase from '#tests/config/tools/configurations/supabase.ts';
 import * as libraries from '#tests/config/tools/configurations/libraries.ts';
 import * as react from '#tests/config/tools/configurations/framework/react.ts';
 import * as toolDocker from '#tests/config/tools/configurations/tool/docker.ts';
+import * as toolPytest from '#tests/config/tools/configurations/tool/pytest.ts';
 import * as toolVitest from '#tests/config/tools/configurations/tool/vitest.ts';
 import * as generalSite from '#tests/config/tools/configurations/general/site.ts';
 import * as languageSql from '#tests/config/tools/configurations/language/sql.ts';
 import * as toolActions from '#tests/config/tools/configurations/tool/actions.ts';
+import * as toolAnsible from '#tests/config/tools/configurations/tool/ansible.ts';
 import * as toolOpenapi from '#tests/config/tools/configurations/tool/openapi.ts';
 import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.ts';
 import * as generalFiles from '#tests/config/tools/configurations/general/files.ts';
@@ -25,6 +27,8 @@ import * as languageTypescriptChecks from '#tests/config/tools/configurations/la
 import * as generalSecretsEnvironment from '#tests/config/tools/configurations/general/secrets/environment.ts';
 /** Literal scenario names, authored repositories, and finding tables. */
 export const SCENARIOS: ConfigurationScenario[] = [
+    { name: 'the pytest configuration', repository: toolPytest.REPOSITORY, cases: toolPytest.CASES },
+    { name: 'the ansible configuration', repository: toolAnsible.REPOSITORY, cases: toolAnsible.CASES },
     { name: 'the library configurations', repository: libraries.REPOSITORY, cases: libraries.CASES },
     { name: 'the postgres configuration', repository: postgres.REPOSITORY, cases: postgres.CASES },
     { name: 'the supabase configuration', repository: supabase.REPOSITORY, cases: supabase.CASES },
@@ -77,3 +81,8 @@ export const BASH_LOCATIONS = [
     { file: 'scripts/deep.sh', rule: 'nesting', line: 9 },
     { file: 'scripts/mutable.sh', rule: 'assignments', line: 9 },
 ] as const satisfies readonly BashBoundary['expected'][];
+
+export const SQL_EXCLUSION = {
+    paths: ['db/report.sql'],
+    reason: 'A script for psql, which the linter cannot read.',
+};

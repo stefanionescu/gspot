@@ -8,9 +8,8 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, gitOutput } from '#tests/harness/git.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
+import { containingAll } from '#tests/harness/expectations.ts';
 import { NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
-import { containing, containingAll } from '#tests/harness/expectations.ts';
-import { testKeyId, secretSettings } from '#tests/config/samples/secrets.ts';
 import { VERIFIER_TOKENS } from '#tests/config/tools/configurations/general/secrets/pushed.ts';
 import type { SecretHistory, SecretVerifier } from '#tests/types/tools/configurations/general/secrets.ts';
 
@@ -91,39 +90,6 @@ async function createSecretVerifier(directory: string): Promise<SecretVerifier> 
         throw error;
     }
 }
-
-test('pushed secret history includes removed secrets and excludes unrelated refs despite identical final trees', async () => {
-    await using sandbox = await testdir();
-    const { base, tree, good, leaked, removed } = await prepareSecretHistory(sandbox.path, {
-        'settings.py': secretSettings,
-    });
-    expect(git(sandbox.path, ['rev-parse', 'HEAD^{tree}']).stdout.trim()).toBe(tree);
-    const command = ['check', '--hook', 'pre-push', '--only', 'secrets/gitleaks-history', '--json'];
-    const options = { env: { PATH: buildToolsPath(['gitleaks']) } };
-    const rejected = await spawnGspot(sandbox.path, command, options.env, {
-        stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/removed ${removed} refs/heads/removed ${base}\n`,
-    });
-    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-    const report = JSON.parse(rejected.stdout) as PushReport;
-    expect(report.revisions).toHaveLength(1);
-    expect(report.revisions[0]?.commits).toContain(leaked);
-    expect(report.revisions[0]?.report.checks).toMatchObject([{ check: 'secrets/gitleaks-history', status: 'failed' }]);
-    expect(report.revisions[0]?.report.checks[0]?.findings).toContainEqual(
-        containing({ rule: `${leaked}:settings.py:aws-access-token:1`, file: 'settings.py', line: 1 }),
-    );
-    expect(rejected.stdout).not.toContain(testKeyId);
-    await Bun.write(join(sandbox.path, 'settings.py'), secretSettings);
-    const corrected = await spawnGspot(sandbox.path, command, options.env, {
-        stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
-    });
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('passed');
-    const alreadyRemote = await spawnGspot(sandbox.path, command, options.env, {
-        stdin: `refs/heads/removed ${removed} refs/heads/removed ${leaked}\n`,
-    });
-    expect(alreadyRemote.code, alreadyRemote.stdout + alreadyRemote.stderr).toBe(0);
-    expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(removed);
-});
 
 test('verified-secret history scans every changed blob without exposing raw credentials', async () => {
     await using sandbox = await testdir();

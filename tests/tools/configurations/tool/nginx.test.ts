@@ -6,6 +6,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
+import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
@@ -66,7 +67,7 @@ test.skipIf(!hasLinuxDocker())(
 );
 
 describe('the nginx configuration', () => {
-    test('gixy finds the forged proxy target and passes after the fix', async () => {
+    test.skipIf(!hasToolBuild('gixy'))('gixy finds the forged proxy target and passes after the fix', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'proxy/nginx.conf': CLEAN });
         commitAll(sandbox.path);
@@ -80,19 +81,15 @@ describe('the nginx configuration', () => {
             environment,
         );
         const failed = JSON.parse(outcome.stdout) as RunReport;
-        // Gixy has no Windows build, so the check is skipped there and the run passes.
-        const isWindows = process.platform === 'win32';
-        const forged = containing({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 });
-        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(isWindows ? 0 : 1);
-        expect(failed.checks).toMatchObject([
-            isWindows
-                ? { check: 'nginx/gixy', status: 'skipped' }
-                : { check: 'nginx/gixy', status: 'failed', findings: [forged] },
-        ]);
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+        expect(failed.checks).toMatchObject([{ check: 'nginx/gixy', status: 'failed' }]);
+        expect(failed.checks[0]?.findings).toContainEqual(
+            containing({ rule: 'ssrf', file: 'proxy/nginx.conf', line: 7 }),
+        );
         const corrected = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy', '--json'], environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
-            { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'passed', findings: [] },
+            { check: 'nginx/gixy', status: 'passed', findings: [] },
         ]);
     });
 });

@@ -1,5 +1,6 @@
 // Adding or removing a configuration changes the next explicit check through its ESLint fragment and plugin.
 import { join } from 'node:path';
+import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
@@ -68,6 +69,8 @@ test('removing a configuration from a scope deletes the outputs only it needed',
     const removed = await spawnGspot(sandbox.path, ['remove', 'bash', '--scope', 'api']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     expect(removed.stdout).toContain('removed bash from scope api');
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain('path = "api"\nconfigurations = []');
+    expect(parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'))['scope']).toEqual({
+        api: { configurations: [], removed_configurations: ['bash'] },
+    });
     expect(await pathExists(join(sandbox.path, '.gspot/config/api/shellcheckrc'))).toBe(false);
 });

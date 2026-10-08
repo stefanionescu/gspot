@@ -1,37 +1,38 @@
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { commitAll } from '#tests/harness/git.ts';
+import { chmod, appendFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { GUIDE } from '#tests/config/samples/docs.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
+import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { chmod, mkdir, appendFile } from 'node:fs/promises';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
 import { installedModules } from '#tests/harness/environment.ts';
 import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
-import { COMPONENT_SOURCE } from '#tests/config/samples/components.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import * as postgres from '#tests/config/tools/configurations/postgres.ts';
-import { MODULE_PATH, CLEAN_MODULE } from '#tests/config/samples/python.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import * as libraries from '#tests/config/tools/configurations/libraries.ts';
 import { HEAD, BASH_CASES, TOOL_CHECKS } from '#tests/config/samples/bash.ts';
+import * as toolPytest from '#tests/config/tools/configurations/tool/pytest.ts';
 import * as toolVitest from '#tests/config/tools/configurations/tool/vitest.ts';
 import * as languageSql from '#tests/config/tools/configurations/language/sql.ts';
+import * as toolAnsible from '#tests/config/tools/configurations/tool/ansible.ts';
 import * as toolOpenapi from '#tests/config/tools/configurations/tool/openapi.ts';
 import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.ts';
 import * as languagePython from '#tests/config/tools/configurations/language/python.ts';
 import type { BashBoundary, ConfigurationCallbacks } from '#tests/types/tools/cases.ts';
-import { SCENARIOS, BASH_LOCATIONS } from '#tests/config/tools/configurations/cases.ts';
 import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
 import * as frameworkNextjs from '#tests/config/tools/configurations/framework/nextjs.ts';
 import { createTestRepository, prepareTestRepository } from '#tests/harness/repository.ts';
+import { MODULE_PATH, CLEAN_MODULE, ARITHMETIC_TESTS } from '#tests/config/samples/python.ts';
 import * as languageBashChecks from '#tests/config/tools/configurations/language/bash/checks.ts';
 import type { InstalledScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import * as languageSwiftChecks from '#tests/config/tools/configurations/language/swift/checks.ts';
 import * as markdownDocsProse from '#tests/config/tools/configurations/general/markdown-docs-prose.ts';
+import { SCENARIOS, SQL_EXCLUSION, BASH_LOCATIONS } from '#tests/config/tools/configurations/cases.ts';
 import { DOUBLE_JS, ARCHITECTURE } from '#tests/config/tools/configurations/language/typescript/source.ts';
 import * as languageTypescriptChecks from '#tests/config/tools/configurations/language/typescript/checks.ts';
 
@@ -121,11 +122,11 @@ const BOUNDARIES: BashBoundary[] = [
 ];
 const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
     [
-        libraries.REPOSITORY,
+        toolPytest.REPOSITORY,
         {
-            corrected: (entry) => ({
-                files: Object.fromEntries(Object.keys(entry.files).map((path) => [path, COMPONENT_SOURCE])),
-            }),
+            before: async (root) => {
+                expect(await runTestCommand(['uv', 'sync'], { cwd: root })).toMatchObject({ code: 0 });
+            },
         },
     ],
     [postgres.REPOSITORY, { prepare: commitAll }],
@@ -150,13 +151,9 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
         languageSql.REPOSITORY,
         {
             prepare: async (root, environment) => {
-                const exclusion = {
-                    paths: ['db/report.sql'],
-                    reason: 'A script for psql, which the linter cannot read.',
-                };
                 const excluded = await spawnGspot(
                     root,
-                    ['ignore', 'sql/sqlfluff', '--paths', ...exclusion.paths, '--reason', exclusion.reason],
+                    ['ignore', 'sql/sqlfluff', '--paths', ...SQL_EXCLUSION.paths, '--reason', SQL_EXCLUSION.reason],
                     environment,
                 );
                 if (excluded.code !== 0)
@@ -171,8 +168,6 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
         languageTypescriptChecks.REPOSITORY,
         {
             prepare: async (root, environment) => {
-                await mkdir(join(root, 'node_modules'));
-
                 await appendFile(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
                 const applied = await spawnGspot(root, ['apply'], environment);
                 if (applied.code !== 0) throw new Error(applied.stdout + applied.stderr);
@@ -262,6 +257,11 @@ for (const declared of SCENARIOS) {
     }
     const cases = structuredClone(scenario.cases);
     for (const entry of cases) {
+        if (declared.repository === toolPytest.REPOSITORY)
+            entry.files['tests/test_math.py'] = ARITHMETIC_TESTS.replace('    assert triple(2) == 6\n', '').replace(
+                ', triple',
+                '',
+            );
         if (declared.repository === frameworkNestjs.REPOSITORY)
             entry.files['src/greeting.controller.ts'] = frameworkNestjs.CONTROLLER.replace(
                 "@Get(':name')",
@@ -275,41 +275,41 @@ for (const declared of SCENARIOS) {
             entry.corrected!.files['src/math.test.ts'] =
                 toolVitest.TEST.replace('positiveTotal }', 'positiveTotal, triple }') + toolVitest.TRIPLE_TEST;
     }
-    describe.skipIf(scenario.platforms !== undefined && !scenario.platforms.includes(process.platform))(
-        scenario.name,
-        () => {
-            const resources = new AsyncDisposableStack();
-            let repository: OwnedTestRepository;
-            beforeAll(async () => {
-                repository = resources.use(
-                    await createTestRepository(scenario.repository, spawnGspot, prepareTestRepository),
-                );
-            });
-            afterAll(() => resources.disposeAsync());
-            for (const entry of cases) {
-                const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
-                const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
-                test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
-                    `${entry.check} reports ${where} and passes after the fix`,
-                    async () => {
-                        const { failed, passed } = await runFindingCase(repository, entry, scenario.repository);
-                        const { message, ...position } = entry.expected;
-                        expect(failed.code, `${entry.check}: ${failed.stdout}${failed.stderr}`).toBe(1);
-                        expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
-                        expect(failed.report.checks[0]?.findings).toContainEqual(
-                            containing({
-                                check: entry.check,
-                                ...position,
-                                ...(message === undefined ? {} : { message: textContaining(message) }),
-                            }),
-                        );
-                        expect(passed.code, `${entry.check} corrected: ${passed.stdout}${passed.stderr}`).toBe(0);
-                        expect(passed.report.checks).toMatchObject([
-                            { check: entry.check, status: 'passed', findings: [] },
-                        ]);
-                    },
-                );
-            }
-        },
-    );
+    describe.skipIf(
+        (declared.repository === toolAnsible.REPOSITORY && !hasToolBuild('ansible-lint')) ||
+            (declared.platforms !== undefined && !declared.platforms.includes(process.platform)),
+    )(declared.name, () => {
+        const resources = new AsyncDisposableStack();
+        let repository: OwnedTestRepository;
+        beforeAll(async () => {
+            repository = resources.use(
+                await createTestRepository(scenario.repository, spawnGspot, prepareTestRepository),
+            );
+        });
+        afterAll(() => resources.disposeAsync());
+        for (const entry of cases) {
+            const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
+            const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
+            test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
+                `${entry.check} reports ${where} and passes after the fix`,
+                async () => {
+                    const { failed, passed } = await runFindingCase(repository, entry, scenario.repository);
+                    const { message, ...position } = entry.expected;
+                    expect(failed.code, `${entry.check}: ${failed.stdout}${failed.stderr}`).toBe(1);
+                    expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
+                    expect(failed.report.checks[0]?.findings).toContainEqual(
+                        containing({
+                            check: entry.check,
+                            ...position,
+                            ...(message === undefined ? {} : { message: textContaining(message) }),
+                        }),
+                    );
+                    expect(passed.code, `${entry.check} corrected: ${passed.stdout}${passed.stderr}`).toBe(0);
+                    expect(passed.report.checks).toMatchObject([
+                        { check: entry.check, status: 'passed', findings: [] },
+                    ]);
+                },
+            );
+        }
+    });
 }

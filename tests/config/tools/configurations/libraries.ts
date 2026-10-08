@@ -21,6 +21,7 @@ export const CASES: FindingCase[] = [
             'src/schema.ts': `// A test file.\n\nimport { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.any();\n`,
         },
         expected: { file: 'src/schema.ts', rule: 'zod/no-any-schema', line: 6 },
+        corrected: { files: { 'src/schema.ts': COMPONENT_SOURCE } },
     },
     {
         check: 'javascript/eslint',
@@ -28,6 +29,7 @@ export const CASES: FindingCase[] = [
             'src/purge.ts': `// A test file.\n\nimport { db, users } from './db.ts';\n\n/** Deletes every user. */\nexport const purged = db.delete(users);\n`,
         },
         expected: { file: 'src/purge.ts', rule: 'drizzle/enforce-delete-with-where', line: 6 },
+        corrected: { files: { 'src/purge.ts': COMPONENT_SOURCE } },
     },
     {
         check: 'javascript/eslint',
@@ -35,6 +37,7 @@ export const CASES: FindingCase[] = [
             'src/widget.ts': `// A test file.\n\nimport { create } from 'zustand';\n\n/** A store made outside a store file. */\nexport const useWidgetStore = create(() => ({ open: false }));\n`,
         },
         expected: { file: 'src/widget.ts', rule: 'no-restricted-imports', line: 3 },
+        corrected: { files: { 'src/widget.ts': COMPONENT_SOURCE } },
     },
     {
         check: 'javascript/eslint',
@@ -42,5 +45,6 @@ export const CASES: FindingCase[] = [
             'src/routers/users.ts': `// A test file.\n\nimport { publicProcedure } from './trpc.ts';\n\n/** A procedure with no input schema. */\nexport const list = publicProcedure.query(() => []);\n`,
         },
         expected: { file: 'src/routers/users.ts', rule: 'no-restricted-syntax', line: 6 },
+        corrected: { files: { 'src/routers/users.ts': COMPONENT_SOURCE } },
     },
 ];

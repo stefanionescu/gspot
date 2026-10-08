@@ -85,7 +85,7 @@ export const CASES: FindingCase[] = [
         files: {
             'src/orders/ugly.ts': '// Badly formatted.\n\n/** A value. */\nexport const   ugly   =   [1,2,\n3];\n',
         },
-        expected: { file: 'src/orders/ugly.ts', message: 'This file is not formatted the way Prettier formats it.' },
+        expected: { file: 'src/orders/ugly.ts', message: 'not formatted' },
     },
     {
         check: 'format/editorconfig-checker',

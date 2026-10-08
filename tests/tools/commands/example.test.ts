@@ -5,6 +5,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import example from '#docs/src/config/example.json';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { hasToolBuild } from '#tests/harness/platforms.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
@@ -21,9 +22,7 @@ function recorded(findings: readonly Pick<Finding, 'check' | 'file' | 'line' | '
             rule: finding.rule,
             message: finding.message,
         }))
-        .toSorted((a, b) =>
-            `${a.check}${String(a.column)}${a.message}`.localeCompare(`${b.check}${String(b.column)}${b.message}`),
-        );
+        .toSorted((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
 }
 
 test('the recorded example reports the agent findings and passes after the fix', async () => {
@@ -45,7 +44,11 @@ test('the recorded example reports the agent findings and passes after the fix',
     gitOutput(sandbox.path, ['add', '-A']);
     const rejectedHuman = await spawnGspot(sandbox.path, ['check', '--staged']);
     expect(rejectedHuman.code, rejectedHuman.stdout + rejectedHuman.stderr).toBe(1);
-    expect(rejectedHuman.stdout.replaceAll(/\b\d+(?:\.\d+)?s\b/gu, '0.0s').trimEnd()).toBe(example.rejected.trimEnd());
+    const expected = example.rejected.replace(
+        'files/plutil  (inputs)',
+        `files/plutil  (${hasToolBuild('plutil') ? 'inputs' : 'platform'})`,
+    );
+    expect(rejectedHuman.stdout.replaceAll(/\b\d+(?:\.\d+)?s\b/gu, '0.0s').trimEnd()).toBe(expected.trimEnd());
     const rejected = await spawnGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
     const findings = (JSON.parse(rejected.stdout) as RunReport).checks.flatMap((check) => check.findings);
