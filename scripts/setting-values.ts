@@ -16,8 +16,9 @@ assertManifests(manifests);
 const sources = settingSchemaSources(manifests.values());
 for (const [path, source] of sources) {
     const target = join(dirname(fileURLToPath(import.meta.url)), '..', 'packages/cli', path);
-    const formatting = await resolveConfig(target);
-    const formatted = await format(source, { ...formatting, filepath: target });
+    const options = { ...(await resolveConfig(target)), filepath: target };
+    // Prettier 3.8.1 changes compact method chains on a second formatting pass.
+    const formatted = await format(await format(source, options), options);
     if (flag === '--check') {
         if (readFileSync(target, 'utf8') !== formatted)
             throw new Error(`The compiled policy schema is stale. Run ${SETTING_VALUES_COMMAND}.`);
