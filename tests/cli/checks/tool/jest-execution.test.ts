@@ -9,8 +9,8 @@ import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import type { JestScenario } from '#tests/types/cli/checks/jest.ts';
 import { VALID } from '#tests/config/cli/checks/tool/jest-execution.ts';
-import type { JestScenario } from '#tests/types/cli/checks/tool/jest.ts';
 
 async function writeJestReports(
     root: string,

@@ -14,8 +14,8 @@ import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { mockPinnedExecutables } from '#tests/harness/pins.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
+import type { OpenapiProject } from '#tests/types/cli/checks/openapi.ts';
 import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
-import type { OpenapiProject } from '#tests/types/cli/checks/tool/openapi.ts';
 
 import {
     SPECTRAL_RESULT,
