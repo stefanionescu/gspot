@@ -1,7 +1,7 @@
 import { BARE_KEY } from '#cli/config/parsers/toml.ts';
 import { headerFor } from '#cli/generation/headers.ts';
 import { misePins } from '#cli/configurations/pins.ts';
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
+import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import type { MisePin, Manifest } from '#cli/types/configurations.ts';
 import { CLI_PINS, GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';

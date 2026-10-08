@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { join, extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
@@ -42,7 +42,7 @@ function parseModule(text: string, path: string): void {
 }
 
 const configurations = [...configurationManifests().values()]
-    .filter((manifest) => manifest.configs.some((config) => !config.fragment))
+    .filter((manifest) => manifest.toolFiles.some((config) => !config.fragment))
     .map((manifest) => manifest.configuration.name);
 
 test.each(['recommended', 'all'])(

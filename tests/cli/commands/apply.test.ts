@@ -12,7 +12,7 @@ import { buildInitArguments } from '#tests/harness/init.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { prepareTestCommand } from '#tests/harness/command.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
-import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
+import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { stat, chmod, unlink, readdir, readFile, writeFile } from 'node:fs/promises';
 
@@ -102,7 +102,7 @@ test('apply previews missing outputs without writing', async () => {
     expect(await readTree(directory.path)).toStrictEqual(before);
     const preview = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const result = JSON.parse(preview.stdout) as ApplyPreviewJson;
+    const result = JSON.parse(preview.stdout) as ApplyPlanJson;
     expect(result.dryRun).toBe(true);
     expect(result.drift).toContainEqual(containing({ path: '.gspot/config/shellcheckrc', kind: 'missing' }));
     expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
@@ -133,7 +133,7 @@ test.each([false, true])(
         const structured = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
         expect(structured.code, structured.stdout + structured.stderr).toBe(0);
         expect(structured.stderr).toBe('');
-        const result = JSON.parse(structured.stdout) as ApplyPreviewJson;
+        const result = JSON.parse(structured.stdout) as ApplyPlanJson;
         expect(result.pin).toStrictEqual({ from: isChanged ? '0.0.0' : version, to: version });
         expect(result.drift).toStrictEqual([]);
         expect(await readTree(directory.path)).toStrictEqual(before);
@@ -254,7 +254,7 @@ test('apply --dry-run reports a changed file, a stray, a conflict, and an edited
     const before = await readTree(directory.path);
     const preview = await runGspot(directory.path, ['apply', '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    const { drift } = JSON.parse(preview.stdout) as ApplyPreviewJson;
+    const { drift } = JSON.parse(preview.stdout) as ApplyPlanJson;
     expect(drift).toContainEqual(
         containing({
             path: '.gspot/config/shellcheckrc',

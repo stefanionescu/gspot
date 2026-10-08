@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
 import { COMMITLINT_PACKAGE } from '#tests/config/samples/commitlint.ts';
@@ -21,7 +21,7 @@ test('repository commit fields preserve unrelated package content and restore it
     commitAll(sandbox.path);
     let session = await openSession(sandbox.path);
     const generated = emitAll(session);
-    expect(generated.configurations).toStrictEqual([
+    expect(generated.toolFiles).toStrictEqual([
         {
             path: 'package.json',
             changes: [{ path: ['commitlint'], value: { extends: ['./.gspot/config/commitlint.config.cjs'] } }],
@@ -37,7 +37,7 @@ test('repository commit fields preserve unrelated package content and restore it
     ]);
     {
         using log = openOwnership(sandbox.path);
-        writeOutputs(session, log, undefined, generated);
+        writeGeneratedFiles(session, log, undefined, generated);
         expect(log.entryFor('app/package.json')?.configuration?.format).toBe('json');
     }
     expect(await readFile(join(sandbox.path, 'plain/package.json'), 'utf8')).toBe('{"private":true}\n');
@@ -50,10 +50,10 @@ test('repository commit fields preserve unrelated package content and restore it
         buildPolicy([], { level: 'recommended', tables: '[agent_rules]\nenabled = false\n' }),
     );
     session = await openSession(sandbox.path);
-    expect(emitAll(session).configurations).toStrictEqual([]);
+    expect(emitAll(session).toolFiles).toStrictEqual([]);
     {
         using log = openOwnership(sandbox.path);
-        writeOutputs(session, log);
+        writeGeneratedFiles(session, log);
         expect(log.entryFor('package.json')).toBeUndefined();
         expect(log.entryFor('app/package.json')).toBeUndefined();
     }
@@ -79,7 +79,7 @@ test('a folder without Git keeps authored commit policy and reports its actual p
         'gspot.toml': buildPolicy([], { level: 'all', tables: '[agent_rules]\nenabled = false\n' }),
     });
     const session = await openSession(sandbox.path);
-    expect(emitAll(session).configurations).toStrictEqual([]);
+    expect(emitAll(session).toolFiles).toStrictEqual([]);
     expect(getSuggestions(session).unowned.filter((row) => row.note.includes('commitlint'))).toStrictEqual([
         { path: 'package.json', note: 'commitlint requires a Git repository', command: 'git init' },
     ]);

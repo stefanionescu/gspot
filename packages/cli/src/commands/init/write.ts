@@ -3,18 +3,18 @@ import { colors } from '#cli/terminal/messages.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { writePolicyFile } from '#cli/policy/file.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import { prepareToolProjects } from '#cli/tools/project.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { emitAll, outputPaths } from '#cli/generation/outputs.ts';
+import { emitAll, generatedPaths } from '#cli/generation/files.ts';
 import type { InitOptions } from '#cli/types/lifecycle/selection.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
-import { proposeRetirement, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planRetirement, planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import type { Written, InitPrepared, RetirementResult } from '#cli/types/commands/init.ts';
 
 // Deletes the replaced files the plan lists, which Git keeps, and retains directories.
@@ -33,7 +33,7 @@ function retireReplaced(
         const expected = read.get(entry.path);
         if (expected === undefined)
             throw new GspotError('policy', [`No original file was recorded for ${entry.path}. Run gspot init again.`]);
-        const plan = proposeRetirement(log, entry.path, expected);
+        const plan = planRetirement(log, entry.path, expected);
         plans.push(plan);
         const status = plan.status;
         if (status === 'changed') result.removed.push(entry.path);
@@ -75,16 +75,16 @@ export async function writeSetup(
         original: prepared.read.get(POLICY_FILE),
         publish: (next, expected) => {
             applyPlan(log, {
-                ...proposeReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
+                ...planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
                 before: expected,
             });
         },
     });
-    const generatedPaths = outputPaths(generated);
-    const applied = writeOutputs(session, log, prepared.read, generated);
+    const destinations = generatedPaths(generated);
+    const applied = writeGeneratedFiles(session, log, prepared.read, generated);
     const retired = retireReplaced(
         log,
-        prepared.removed.filter((entry) => !generatedPaths.has(entry.path)),
+        prepared.removed.filter((entry) => !destinations.has(entry.path)),
         prepared.read,
     );
     applied.notes.push(

@@ -2,13 +2,13 @@ import semver from 'semver';
 import { join } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import { npmPins } from '#cli/configurations/pins.ts';
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
+import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { NpmProjectInputs } from '#cli/types/generation/npm.ts';
 import { isYarnBerry, getPackageInstallerMajor } from '#cli/parsers/packages.ts';
 import { installedDependencyVersion } from '#cli/repository/package-manifests.ts';
 import { NPM_TOOL_PROJECT, NEXT_ESLINT_PLUGIN } from '#cli/config/parsers/packages.ts';
+import { JSON_INDENT, YARN_TOOL_PROJECT_SETTINGS } from '#cli/config/generation/eta.ts';
 import { YARN_SETTINGS, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
-import { JSON_INDENT, YARN_TOOL_PROJECT_SETTINGS } from '#cli/config/generation/templates.ts';
 
 /**
  * Generate the npm tools as a tool project without adding dependencies to the repository.

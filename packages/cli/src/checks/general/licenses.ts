@@ -51,7 +51,7 @@ function licenseMessage(name: string, license: string, exception: LicenseExcepti
 
 // Read through the repository filesystem and verify the generated configuration against the selected policy.
 function readAllowlist(input: CheckInput): LicenseAllowlist {
-    const target = input.manifests.get('licenses')?.configs.find((config) => !config.fragment);
+    const target = input.manifests.get('licenses')?.toolFiles.find((config) => !config.fragment);
     if (target === undefined) throw new Error('The license configuration has no configuration target.');
     using files = openRoot(input.root);
     const content = files.read(targetInScope(input.scope, target));

@@ -8,7 +8,7 @@ description = "Checks FastAPI route declarations with Ruff. Adds Semgrep request
 dependencies = ["fastapi"]
 
 [[config]]
-template = "semgrep/fastapi.yml.tmpl"
+template = "semgrep/fastapi.yml.eta"
 target = ".gspot/config/semgrep/fastapi.yml"
 tool = "semgrep"
 rule_keys = ["rules"]

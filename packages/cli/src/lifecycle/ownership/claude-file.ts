@@ -21,7 +21,7 @@ function authoredText(file: FileCopy): string {
  * @param log the open log
  * @returns the plans, none when there is no `CLAUDE.md`
  */
-export function proposeClaudeMove(log: Log): Planned[] {
+export function planClaudeMove(log: Log): Planned[] {
     const claude = log.files.readKeepingLinks('CLAUDE.md');
     if (claude === undefined) return [];
     const removal: Planned = {

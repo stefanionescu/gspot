@@ -1,5 +1,5 @@
 import type { FileCopy } from '#cli/types/platform/root.ts';
-import type { Generated } from '#cli/types/generation/output.ts';
+import type { Generated } from '#cli/types/generation/files.ts';
 import type { Outcome, OwnershipEntry as OwnedFile } from '#cli/types/lifecycle/ownership.ts';
 
 export type WriteRequest = {

@@ -5,9 +5,9 @@ import { testdir, createFileTree } from 'testdirs';
 import { readdir, readFile } from 'node:fs/promises';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
-import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { proposeBlock, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planBlock, planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { installTree, readInstalledTree, deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
 import { SWAP_CASES, BLOCK_CASES, ADOPTED_FILE_CASES } from '#tests/config/cli/lifecycle/ownership/bounded-state.ts';
 
@@ -83,9 +83,9 @@ test.each(BLOCK_CASES)(
         {
             using log = openOwnership(directory.path);
 
-            applyPlan(log, proposeBlock(log, 'NOTES.md', 'managed text', 'markdown'));
+            applyPlan(log, planBlock(log, 'NOTES.md', 'managed text', 'markdown'));
             expect(getOwnership(directory.path).files[0]).toMatchObject({ block: { created: isCreated } });
-            expect(applyPlan(log, proposeRestoration(log, 'NOTES.md'))).toBe('changed');
+            expect(applyPlan(log, planRestoration(log, 'NOTES.md'))).toBe('changed');
         }
         const path = join(directory.path, 'NOTES.md');
         expect((await pathExists(path)) ? await readFile(path, 'utf8') : undefined).toBe(kept);
@@ -100,7 +100,7 @@ test('a replaced file keeps no copy, and giving it back deletes it', async () =>
 
         applyPlan(
             log,
-            proposeReplacement(log, {
+            planReplacement(log, {
                 path: 'config.txt',
                 next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
                 kind: 'config',
@@ -109,7 +109,7 @@ test('a replaced file keeps no copy, and giving it back deletes it', async () =>
         );
         expect(await readdir(join(directory.path, '.gspot/state'))).toContain('ownership.json');
         expect(await readdir(join(directory.path, '.gspot/state'))).not.toContain('recovery');
-        expect(applyPlan(log, proposeRestoration(log, 'config.txt'))).toBe('changed');
+        expect(applyPlan(log, planRestoration(log, 'config.txt'))).toBe('changed');
     }
     expect(await pathExists(join(directory.path, 'config.txt'))).toBe(false);
 });
@@ -122,14 +122,14 @@ test('giving back the last file of a folder removes the folders it leaves empty'
 
         applyPlan(
             log,
-            proposeReplacement(log, {
+            planReplacement(log, {
                 path: 'guides/agent/rules/WORKING.md',
                 next: { bytes: Buffer.from('guide\n'), mode: 0o644 },
                 kind: 'config',
                 canReplace: true,
             }),
         );
-        expect(applyPlan(log, proposeRestoration(log, 'guides/agent/rules/WORKING.md'))).toBe('changed');
+        expect(applyPlan(log, planRestoration(log, 'guides/agent/rules/WORKING.md'))).toBe('changed');
     }
     expect(await pathExists(join(directory.path, 'guides/agent'))).toBe(false);
     expect(await readdir(join(directory.path, 'guides'))).toStrictEqual(['kept.md']);
@@ -147,7 +147,7 @@ test.each(ADOPTED_FILE_CASES)(
             expect(
                 applyPlan(
                     log,
-                    proposeReplacement(log, {
+                    planReplacement(log, {
                         path: path,
                         next: { bytes: Buffer.from('{"v":1}\n'), mode },
                         kind: 'config',
@@ -158,13 +158,13 @@ test.each(ADOPTED_FILE_CASES)(
             if (isChanged)
                 applyPlan(
                     log,
-                    proposeReplacement(log, {
+                    planReplacement(log, {
                         path: path,
                         next: { bytes: Buffer.from('{"v":2}\n'), mode },
                         kind: 'config',
                     }),
                 );
-            expect(applyPlan(log, proposeRestoration(log, path))).toBe('changed');
+            expect(applyPlan(log, planRestoration(log, path))).toBe('changed');
         }
         expect(await pathExists(join(directory.path, path))).toBe(isKept);
         expect(getOwnership(directory.path).files).toStrictEqual([]);

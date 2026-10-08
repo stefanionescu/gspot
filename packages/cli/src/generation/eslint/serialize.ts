@@ -76,7 +76,7 @@ export function serializeEslintBlock(block: EslintSettingsBlock, runtime = ''): 
 /**
  * Bind default block rendering to its level and optional project scope.
  * @param input the level, generated file selectors, authored options, and optional fragment scope
- * @returns rendered defaults and their identical ordered rule data
+ * @returns emitted defaults and their identical ordered rule data
  */
 export function eslintModule(input: EslintModuleInput): EslintModule {
     const { allRules, isAll, codeFiles, ruleOptions, scope } = input;
@@ -125,9 +125,9 @@ export function eslintModule(input: EslintModuleInput): EslintModule {
                     },
                 ];
             });
-            const rendered = [block, ...configured];
-            blocks.push(...rendered);
-            return rendered
+            const emitted = [block, ...configured];
+            blocks.push(...emitted);
+            return emitted
                 .map((entry, index) => {
                     const source = serializeEslintBlock(entry, index === 0 ? runtime : '');
                     return scope === undefined ? source : `stripRuntimeGlobals(${source})`;

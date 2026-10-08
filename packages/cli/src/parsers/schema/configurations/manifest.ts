@@ -65,7 +65,7 @@ const pointerSchema = z
         'Directory pointers require a body without a template.',
     );
 
-const configSchema = z
+const toolFileSchema = z
     .strictObject({
         template: z.string().optional(),
         imports: z.string().optional(),
@@ -101,7 +101,7 @@ const configSchema = z
             : {
                   ...config,
                   fragment: false as const,
-                  template: config.template ?? `${posix.basename(config.target)}.tmpl`,
+                  template: config.template ?? `${posix.basename(config.target)}.eta`,
               },
     );
 
@@ -237,7 +237,7 @@ export const manifestSchema = z
         detect: detectionSchema,
         files: filesSchema.prefault({}),
         tool: z.array(toolSchema).default([]),
-        config: z.array(configSchema).default([]),
+        config: z.array(toolFileSchema).default([]),
         check: z.array(checkSchema).default([]),
         setting: z.array(settingSchema).default([]),
         // Defaults this configuration sets for settings another configuration declares, by setting name; `set_all` applies at level all.
@@ -275,7 +275,7 @@ export const manifestSchema = z
     .transform(({ tool, config, check, setting, ...rest }) => ({
         ...rest,
         tools: tool,
-        configs: config,
+        toolFiles: config,
         checks: check,
         settings: setting,
     }));

@@ -1,16 +1,16 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { environmentExecutable } from '#cli/platform/paths.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { pythonToolProject } from '#cli/tools/python/project.ts';
@@ -27,7 +27,7 @@ async function prepareLockfile(root: string) {
     const session = await openSession(root);
     const generated = emitAll(session);
     await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
-    writeOutputs(session, log, undefined, generated);
+    writeGeneratedFiles(session, log, undefined, generated);
     const lockfilePath = join(root, '.gspot/uv.lock');
     return {
         manifest: await readFile(join(root, '.gspot/pyproject.toml')),

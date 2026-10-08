@@ -197,22 +197,22 @@ test('a generated config refuses an undeclared consuming tool and accepts a tool
     expect(() => {
         assertManifests(manifests);
     }).not.toThrow();
-    consumer.configs[0]!.required_tools = ['missing-parser'];
+    consumer.toolFiles[0]!.required_tools = ['missing-parser'];
     expect(() => {
         assertManifests(manifests);
     }).toThrow('requires undeclared tool missing-parser.');
-    consumer.configs[0]!.required_tools = ['example'];
+    consumer.toolFiles[0]!.required_tools = ['example'];
     expect(() => {
         assertManifests(manifests);
     }).not.toThrow();
-    expect(consumer.configs[0]?.tool).toStrictEqual(['example']);
+    expect(consumer.toolFiles[0]?.tool).toStrictEqual(['example']);
     expect(
         parseConfigurationManifest('consumer', {
             kind: 'tool',
             tables: CONSUMER_DECLARATION.replace('["example"]', '"example"'),
-        }).configs[0]?.tool,
+        }).toolFiles[0]?.tool,
     ).toStrictEqual(['example']);
-    consumer.configs[0]!.check = ['executable/missing'];
+    consumer.toolFiles[0]!.check = ['executable/missing'];
     expect(() => {
         assertManifests(manifests);
     }).toThrow('config .gspot/config/example.toml requires undeclared check executable/missing.');

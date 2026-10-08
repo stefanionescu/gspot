@@ -2,7 +2,7 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { PARAMETER_CASES } from '#tests/config/tools/generation/parameter-limits.ts';
@@ -20,7 +20,7 @@ for (const scenario of PARAMETER_CASES.filter((entry) => entry.language !== 'swi
         });
         const session = await openSession(directory.path);
         using log = openOwnership(directory.path);
-        writeOutputs(session, log);
+        writeGeneratedFiles(session, log);
         const result = runTestCommandBlocking(scenario.command, {
             cwd: directory.path,
         });

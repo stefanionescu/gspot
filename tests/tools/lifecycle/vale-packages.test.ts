@@ -8,7 +8,7 @@ import { rootView } from '#cli/policy/settings/view.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { VALE_PACKAGES, VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { INSTALLED, ENCODED_ARCHIVE } from '#tests/config/tools/lifecycle/vale-packages.ts';
@@ -91,7 +91,7 @@ test.each([
 
             applyPlan(
                 log,
-                proposeReplacement(log, {
+                planReplacement(log, {
                     path: '.gspot/config/vale.ini',
                     next: {
                         bytes: Buffer.from(

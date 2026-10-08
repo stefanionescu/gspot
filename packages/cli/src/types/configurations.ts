@@ -44,10 +44,10 @@ export type ParsedManifest = z.infer<typeof manifestSchema>;
 
 export type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
 
-export type ConfigurationFile = ParsedManifest['configs'][number];
+export type ToolFileDeclaration = ParsedManifest['toolFiles'][number];
 
 /** A complete generated file, with its render template resolved by the manifest schema. */
-export type GeneratedConfigurationFile = Extract<ConfigurationFile, { fragment: false }>;
+export type GeneratedToolFile = Extract<ToolFileDeclaration, { fragment: false }>;
 
 /** Validated execution variants. Repository-defined commands do not require reference examples. */
 export type CheckDeclaration = ExecutionFields<Defined<ParsedCheck>> & { example?: string };

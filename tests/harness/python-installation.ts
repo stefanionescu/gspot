@@ -9,17 +9,17 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { missingBuild } from '#cli/planning/skips.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { environmentBin } from '#cli/platform/paths.ts';
 import { pythonProject } from '#cli/generation/python.ts';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { pythonToolProject } from '#cli/tools/python/project.ts';
+import { emitAll, gitignoreBlock } from '#cli/generation/files.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
-import { emitAll, gitignoreBlock } from '#cli/generation/outputs.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { RUNNER_POLICY, NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
@@ -76,7 +76,7 @@ export async function installSuitePythonTools(root: string, cancelSignal: AbortS
     for (const file of generated)
         applyPlan(
             log,
-            proposeReplacement(log, {
+            planReplacement(log, {
                 path: file.path,
                 next: { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE },
                 kind: file.kind === 'lock' ? 'lock' : 'config',
@@ -124,7 +124,7 @@ export async function sharePythonTools(root: string): Promise<Record<string, str
         kind: 'lock',
         ...compact({ read: original }),
     });
-    writeOutputs(session, log, undefined, generated);
+    writeGeneratedFiles(session, log, undefined, generated);
     installTree(
         log,
         'python',

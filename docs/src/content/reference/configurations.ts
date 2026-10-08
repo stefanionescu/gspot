@@ -66,7 +66,7 @@ export function configurationPage(manifest: Manifest, manifests: Manifest[]): Re
     const tools = manifest.tools.map((tool) =>
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
     );
-    const targets = manifest.configs.map((config) =>
+    const targets = manifest.toolFiles.map((config) =>
         config.when === undefined
             ? `\`${config.target}\``
             : `\`${config.target}\` when the [${config.when.configuration} configuration](/reference/configurations/${config.when.configuration}/) is selected`,

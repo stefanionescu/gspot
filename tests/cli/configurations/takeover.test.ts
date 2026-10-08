@@ -90,7 +90,7 @@ test('adoption discovers nested authored configuration without adopting managed 
     });
     const repository = await readRepository(sandbox.path, [], [], []);
     const discovered = getTooling(sandbox.path, repository.files, []);
-    expect(discovered.configs.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
+    expect(discovered.toolFiles.map((entry) => entry.path)).toStrictEqual(['src/.prettierrc.json']);
 });
 
 test.each([
@@ -177,7 +177,7 @@ test('tool discovery reads linked authored sections inside the repository withou
     await createFileTree(sandbox.path, { 'settings/python.toml': source });
     await symlink('settings/python.toml', join(sandbox.path, 'pyproject.toml'));
     const tooling = getTooling(sandbox.path, [], []);
-    expect(tooling.configs).toContainEqual({
+    expect(tooling.toolFiles).toContainEqual({
         tool: 'ruff',
         path: 'pyproject.toml',
         shared: true,

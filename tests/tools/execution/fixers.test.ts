@@ -5,8 +5,8 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
@@ -19,7 +19,7 @@ async function prepareFixer(root: string, checkId: string): Promise<void> {
     const session = await openSession(root);
     {
         using log = openOwnership(root);
-        writeOutputs(session, log);
+        writeGeneratedFiles(session, log);
     }
     const manifests = session.scopes[0]!.selected;
     const check = manifests.flatMap((manifest) => manifest.checks).find((entry) => entry.name === checkId)!;

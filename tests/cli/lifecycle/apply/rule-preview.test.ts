@@ -9,7 +9,7 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
+import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { RULE_PREVIEW_CASES } from '#tests/config/cli/lifecycle/rule-preview.ts';
 
 test.each(RULE_PREVIEW_CASES)('apply compares rules with its last successful write: $name', async (entry) => {
@@ -29,13 +29,13 @@ test.each(RULE_PREVIEW_CASES)('apply compares rules with its last successful wri
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.exitCode, preview.text).toBe(0);
     expect(
-        (preview.json as ApplyPreviewJson).drift.find(({ path: output }) => output === entry.file)?.rules,
+        (preview.json as ApplyPlanJson).drift.find(({ path: output }) => output === entry.file)?.rules,
     ).toStrictEqual(entry.changes);
     expect(await readFile(path, 'utf8')).toBe(original);
     const applied = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(applied.exitCode, applied.text).toBe(0);
     const settled = await applyCommand({ cwd: sandbox.path, isDryRun: true });
-    expect((settled.json as ApplyPreviewJson).drift.find(({ path: output }) => output === entry.file)).toBeUndefined();
+    expect((settled.json as ApplyPlanJson).drift.find(({ path: output }) => output === entry.file)).toBeUndefined();
     const repeated = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(repeated.json).toMatchObject({ written: [], updated: [], removed: [] });
 });
@@ -55,7 +55,7 @@ test('Vale previews its added style packages and native rule options at all', as
     await writeFile(join(sandbox.path, 'gspot.toml'), buildPolicy(['prose'], { level: 'all', tables }));
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.exitCode, preview.text).toBe(0);
-    const changes = (preview.json as ApplyPreviewJson).drift.find(({ path: output }) => output === path)!.rules!;
+    const changes = (preview.json as ApplyPlanJson).drift.find(({ path: output }) => output === path)!.rules!;
     expect(changes.map((group) => group.path)).toStrictEqual(['*.rules', '*.BasedOnStyles']);
     expect(changes.find((group) => group.path === '*.BasedOnStyles')?.added).toContain('Google');
     const options = changes.find((group) => group.path === '*.rules')!;
@@ -69,7 +69,7 @@ test('Vale previews its added style packages and native rule options at all', as
     expect(applied.exitCode, applied.text).toBe(0);
     expect(getOwnership(sandbox.path).rules?.[path]).not.toStrictEqual(baseline);
     const settled = await applyCommand({ cwd: sandbox.path, isDryRun: true });
-    expect((settled.json as ApplyPreviewJson).drift.find(({ path: output }) => output === path)).toBeUndefined();
+    expect((settled.json as ApplyPlanJson).drift.find(({ path: output }) => output === path)).toBeUndefined();
     const repeated = await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(repeated.json).toMatchObject({ written: [], updated: [], removed: [] });
 });
@@ -93,7 +93,7 @@ test('manual JavaScript edits produce a byte diff without running the edited con
     expect(await pathExists(join(sandbox.path, '.gspot/node_modules'))).toBe(false);
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.exitCode, preview.text).toBe(0);
-    const changed = (preview.json as ApplyPreviewJson).drift.find(({ path: output }) => output === path);
+    const changed = (preview.json as ApplyPlanJson).drift.find(({ path: output }) => output === path);
     expect(changed).toMatchObject({ kind: 'changed' });
     expect(changed?.diff).toContain(authored.trim());
     expect(changed?.rules).toBeUndefined();
@@ -122,7 +122,7 @@ test('a scoped rule preview changes only the matching project configuration', as
     );
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.exitCode, preview.text).toBe(0);
-    const shellcheck = (preview.json as ApplyPreviewJson).drift.filter(({ path }) => path.endsWith('shellcheckrc'));
+    const shellcheck = (preview.json as ApplyPlanJson).drift.filter(({ path }) => path.endsWith('shellcheckrc'));
     expect(shellcheck.map(({ path, rules }) => ({ path, rules }))).toStrictEqual([
         {
             path: '.gspot/config/api/shellcheckrc',
@@ -158,5 +158,5 @@ test('a failed managed write retains the last successful rule baseline until the
     expect(repaired.exitCode, repaired.text).toBe(0);
     expect(getOwnership(sandbox.path).rules?.[path]).not.toStrictEqual(baseline);
     const settled = await applyCommand({ cwd: sandbox.path, isDryRun: true });
-    expect((settled.json as ApplyPreviewJson).drift.find((entry) => entry.path === path)).toBeUndefined();
+    expect((settled.json as ApplyPlanJson).drift.find((entry) => entry.path === path)).toBeUndefined();
 });

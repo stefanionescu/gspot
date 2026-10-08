@@ -146,7 +146,7 @@ export function pruneParents(
  * @param request the destination, requested fields, and read ownership
  * @returns the next copy with its ownership, or undefined when the file must be preserved
  */
-export function planMerge(request: MergeRequest): MergePlan | undefined {
+export function planDocumentMerge(request: MergeRequest): MergePlan | undefined {
     const { changes, current, existing } = request;
     const recorded = existing?.configuration ?? { format: undefined, parents: [], fields: [] };
     const document = openMergedDocument(request.path, current, recorded.format);

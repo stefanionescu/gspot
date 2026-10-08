@@ -130,7 +130,7 @@ export function runsAtRoot(manifest: Manifest | undefined, check: CheckDeclarati
     if (manifest === undefined) return true;
     if (manifest.configuration.kind !== 'general' || manifest.files.languages || check.runs === 'scope') return false;
     const command = [...(check.command ?? []), ...(check.env === undefined ? [] : Object.values(check.env))];
-    return !manifest.configs.some(
+    return !manifest.toolFiles.some(
         (config) =>
             config.scoped &&
             !config.fragment &&

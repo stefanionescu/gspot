@@ -6,7 +6,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readTree } from '#tests/harness/preservation.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { PolicyPreviewJson } from '#cli/types/commands/save-policy.ts';
+import type { PolicyPlanJson } from '#cli/types/commands/save-policy.ts';
 
 import {
     PREVIEW_POLICY,
@@ -30,7 +30,7 @@ test.each(POLICY_PREVIEW_CASES)(
         const preview = await runGspot(sandbox.path, [...argv, '--dry-run', '--json']);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
         expect(preview.stderr).toBe('');
-        const report = JSON.parse(preview.stdout) as PolicyPreviewJson;
+        const report = JSON.parse(preview.stdout) as PolicyPlanJson;
         expect(report.dryRun).toBe(true);
         const proposed = parse(report.policy);
         expect(proposed).toMatchObject(expected);
@@ -66,7 +66,7 @@ test.each(POLICY_PREVIEW_UNCHANGED)('$name previews and repeats without applying
     const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, [...argv, '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect(JSON.parse(preview.stdout) as PolicyPreviewJson).toStrictEqual({
+    expect(JSON.parse(preview.stdout) as PolicyPlanJson).toStrictEqual({
         changed: false,
         policy,
         diff: '',
@@ -87,7 +87,7 @@ test('a policy preview leaves an active writer claim and existing files untouche
     const result = await runGspot(sandbox.path, ['set', 'limits.bash.file_lines', '100', '--dry-run', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stderr).toBe('');
-    expect(parse((JSON.parse(result.stdout) as PolicyPreviewJson).policy)).toMatchObject({
+    expect(parse((JSON.parse(result.stdout) as PolicyPlanJson).policy)).toMatchObject({
         limits: { bash: { file_lines: 100 } },
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);

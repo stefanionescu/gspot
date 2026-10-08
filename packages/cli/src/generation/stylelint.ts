@@ -5,7 +5,7 @@ import { relativeTarget } from '#cli/generation/pointers.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isInScope, nestedScopes } from '#cli/repository/selectors.ts';
-import type { GeneratedFile, ConfigurationOutput } from '#cli/types/generation/output.ts';
+import type { GeneratedFile, EmittedToolFile } from '#cli/types/generation/files.ts';
 
 /**
  * Redirects authored package Stylelint fields to the nearest applicable generated pointer.
@@ -20,7 +20,7 @@ export function stylelintChanges(
     inventory: TrackedFile[],
     scopes: ScopeSelection[],
     generated: GeneratedFile[],
-): ConfigurationOutput[] {
+): EmittedToolFile[] {
     using files = openRoot(root);
     const scopePaths = scopes.map((selection) => selection.scope.path);
     const pointers = generated
@@ -37,7 +37,7 @@ export function stylelintChanges(
             .filter((file) => file.kind === 'source' && posix.basename(file.path) === 'package.json')
             .map((file) => file.path),
     ]);
-    const changes: ConfigurationOutput[] = [];
+    const changes: EmittedToolFile[] = [];
     for (const path of packages) {
         const pointer = pointers.find(
             (entry) => isInScope(path, entry.scope) && entry.children.every((child) => !isInScope(path, child)),

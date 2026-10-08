@@ -1,24 +1,24 @@
 import { join, resolve } from 'node:path';
+import { emitAll } from '#cli/generation/files.ts';
 import { findRoot } from '#cli/repository/root.ts';
 import { preparePolicy } from '#cli/policy/edit.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { writePolicyFile } from '#cli/policy/file.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { printResult } from '#cli/terminal/messages.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
 import type { Program } from '#cli/types/commands/program.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { readVersionPin } from '#cli/lifecycle/version-pin.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { reconcileConfigurations } from '#cli/lifecycle/reconcile.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import type { Drift, ApplyReport } from '#cli/types/lifecycle/apply.ts';
-import type { ApplyOptions, ApplyPreviewJson } from '#cli/types/commands/apply.ts';
+import type { ApplyOptions, ApplyPlanJson } from '#cli/types/commands/apply.ts';
 
 function driftText(drift: Drift[]): string {
     const noun = drift.length === 1 ? 'file' : 'files';
@@ -41,13 +41,13 @@ function driftText(drift: Drift[]): string {
     return `${lines.join('\n')}\n`;
 }
 
-function previewApply(session: Session, policy: string, configurations: string[]): CommandResult {
+function planApply(session: Session, policy: string, configurations: string[]): CommandResult {
     const generated = emitAll(session);
     const drift = computeDrift(session.root, session.policyFiles.policy, generated);
     const summary = drift.length === 0 ? 'every generated file is up to date\n' : driftText(drift);
     const text = summary + generated.notes.map((note) => `note     ${note}\n`).join('');
     const pin = { from: readVersionPin(session.root), to: session.version };
-    const json: ApplyPreviewJson = { dryRun: true, policy, configurations, pin, drift, notes: generated.notes };
+    const json: ApplyPlanJson = { dryRun: true, policy, configurations, pin, drift, notes: generated.notes };
     const version = pin.from === pin.to ? '' : `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n`;
     return { text: `${version}${text}`, json, exitCode: 0 };
 }
@@ -111,7 +111,7 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
         errors: [],
     });
     if (log === undefined) {
-        const result = previewApply(session, proposal.text, reconciliation.notes);
+        const result = planApply(session, proposal.text, reconciliation.notes);
         return {
             ...result,
             text: `${reconciliation.notes.map((note) => 'note     ' + note + '\n').join('')}${result.text}`,
@@ -124,12 +124,12 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
         original: proposal.original,
         publish: (next, expected) => {
             applyPlan(log, {
-                ...proposeReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
+                ...planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
                 before: expected,
             });
         },
     });
-    const report = writeOutputs(session, log, undefined, generated);
+    const report = writeGeneratedFiles(session, log, undefined, generated);
     report.notes.unshift(...reconciliation.notes);
     return { text: reportText(report), json: report, exitCode: 0 };
 }

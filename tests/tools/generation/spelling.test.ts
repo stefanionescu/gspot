@@ -1,14 +1,14 @@
 import { join } from 'node:path';
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { TypoEntry } from '#cli/types/parsers/output.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
@@ -28,7 +28,7 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
     const configs = emitted.files.filter(({ path }) => path.endsWith('typos.toml'));
     expect(configs.map(({ path }) => path)).toStrictEqual(['.gspot/config/typos.toml']);
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log, undefined, emitted);
+    writeGeneratedFiles(session, log, undefined, emitted);
     for (const config of configs) {
         const policy = runTestCommandBlocking(['typos', '--isolated', '--config', config.path, 'gspot.toml'], {
             cwd: sandbox.path,
@@ -77,7 +77,7 @@ test('spelling locales and word allowances remain scoped in generated configurat
         '.gspot/config/typos.toml',
     ]);
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log, undefined, output);
+    writeGeneratedFiles(session, log, undefined, output);
 
     const run = (config: string, path: string) =>
         runTestCommandBlocking(
@@ -128,7 +128,7 @@ test.each([
     });
     const session = await openSession(sandbox.path);
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log);
+    writeGeneratedFiles(session, log);
     const selected = patterns.includes('nested')
         ? ['.gspot/config/typos.toml']
         : ['.gspot/config/typos.toml', '.gspot/config/nested/typos.toml'];

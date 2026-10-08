@@ -1,5 +1,5 @@
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
+import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { Policy, ScopeView } from '#cli/types/policy/settings.ts';
 

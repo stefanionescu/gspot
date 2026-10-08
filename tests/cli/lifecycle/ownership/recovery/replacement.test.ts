@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { PublicationProject } from '#tests/types/cli/lifecycle/ownership.ts';
@@ -45,11 +45,11 @@ mock.module('node:fs', () => ({ ...fs, renameSync(from, to) {
 } }));
 Object.defineProperty(process, 'platform', {value: 'win32'});
 const {openOwnership} = await import(${JSON.stringify(implementation)});
-const {proposeReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
 const {applyPlan,applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
 const log = openOwnership(process.cwd());
 try {
-    applyPlan(log, proposeReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 0o444}, kind: 'config', canReplace: true}));
+    applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 0o444}, kind: 'config', canReplace: true}));
     throw new Error('Expected publication failure');
 } catch (error) {
     if (point === 'restoration error') {
@@ -88,7 +88,7 @@ test.each(['interruption', 'restoration error'] as const)(
             expect(
                 applyPlan(
                     log,
-                    proposeReplacement(log, {
+                    planReplacement(log, {
                         path: 'config.txt',
                         next: { bytes: Buffer.from('installed\n'), mode: 0o444 },
                         kind: 'config',
@@ -116,7 +116,7 @@ test('an inconsistent interrupted log cannot acquire ownership of current bytes'
 
         applyPlan(
             log,
-            proposeReplacement(log, {
+            planReplacement(log, {
                 path: 'config.txt',
                 next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
                 kind: 'config',
@@ -164,11 +164,11 @@ mock.module(${JSON.stringify(boundary)}, () => ({
     }
 }));
 const { openOwnership } = await import(${JSON.stringify(implementation)});
-const {proposeReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
 const {applyPlan,applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
 const log = openOwnership(${JSON.stringify(directory.path)});
 try {
-    applyPlans(log, ['first.bin', 'second.bin'].map(path => proposeReplacement(log,{path: path, next: { bytes: Buffer.from('installed'), mode: 0o444 }, kind: 'config', canReplace: true})));
+    applyPlans(log, ['first.bin', 'second.bin'].map(path => planReplacement(log,{path: path, next: { bytes: Buffer.from('installed'), mode: 0o444 }, kind: 'config', canReplace: true})));
 } catch (error) {
     console.log(JSON.stringify({ code: error.code }));
 } finally { log[Symbol.dispose](); }
@@ -186,7 +186,7 @@ try {
         using log = openOwnership(directory.path);
 
         const plans = ['first.bin', 'second.bin'].map((path) =>
-            proposeReplacement(log, {
+            planReplacement(log, {
                 path: path,
                 next: { bytes: Buffer.from('installed'), mode: 0o444 },
                 kind: 'config',

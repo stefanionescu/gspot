@@ -2,21 +2,21 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { planRun } from '#cli/planning/plan.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readAsset } from '#cli/platform/assets.ts';
 import { vale } from '#cli/checks/general/prose.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { parseAlerts } from '#cli/parsers/output/reports.ts';
 import { runBuiltInCheck } from '#cli/execution/built-in.ts';
+import { TOKEN_IGNORES } from '#cli/config/generation/eta.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { PROSE_GRAMMARS } from '#cli/config/generation/prose.ts';
-import { TOKEN_IGNORES } from '#cli/config/generation/templates.ts';
 import { STYLE_CASES, CURRENCY_CASES } from '#tests/config/tools/vale.ts';
 
 for (const extension of ['md', 'sh']) {
@@ -198,7 +198,7 @@ test('generated recommended Vale configuration reports unhelpful link text and a
     });
     const session = await openSession(directory.path);
     using ownership = openOwnership(directory.path);
-    writeOutputs(session, ownership, undefined, emitAll(session));
+    writeGeneratedFiles(session, ownership, undefined, emitAll(session));
     const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['prose/vale'] });
     const defect = await runBuiltInCheck(vale)(session, planned!);
     expect(defect.status, defect.note).toBe('failed');

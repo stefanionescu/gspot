@@ -1,6 +1,6 @@
+import { emitAll } from '#cli/generation/files.ts';
 import { test, expect, beforeAll } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import type { Level } from '#cli/types/configurations.ts';

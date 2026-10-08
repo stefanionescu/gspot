@@ -55,14 +55,14 @@ export function headerFor(path: string, version: string): string {
 }
 
 /**
- * Puts the header into rendered JSON as the first key, formatted the way the repository's Prettier settings format it.
- * @param rendered the rendered JSON text
+ * Puts the header into emitted JSON as the first key, formatted the way the repository's Prettier settings format it.
+ * @param emitted the emitted JSON text
  * @param version the gspot version
  * @param format the print width and indent width
  * @returns the JSON text with the header key first
  */
-export function addJsonHeader(rendered: string, version: string, format: JsonFormat): string {
-    const parsed = parseJsonRecord(rendered);
+export function addJsonHeader(emitted: string, version: string, format: JsonFormat): string {
+    const parsed = parseJsonRecord(emitted);
     const ordered: Record<string, unknown> = { [GENERATED_JSON_KEY]: headerLines(version).join(' ') };
     for (const [key, value] of Object.entries(parsed)) if (key !== GENERATED_JSON_KEY) ordered[key] = value;
     return jsonText(ordered, format);

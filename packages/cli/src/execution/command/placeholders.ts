@@ -5,7 +5,7 @@ import { readText } from '#cli/platform/source.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { ConfigurationFile } from '#cli/types/configurations.ts';
+import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { targetInScope, configurationName } from '#cli/configurations/declarations.ts';
 import type { CommandPart, Substitutions, CommandInvocation } from '#cli/types/execution/command.ts';
 
@@ -47,12 +47,12 @@ function existingFileArguments(root: string, part: string): string[] | undefined
     return statSync(path, { throwIfNoEntry: false }) === undefined ? [] : [groups['flag'] ?? '', toPlatform(path)];
 }
 
-function allConfigurations(session: ToolSession, planned: PlannedCheck): ConfigurationFile[] {
+function allConfigurations(session: ToolSession, planned: PlannedCheck): ToolFileDeclaration[] {
     // A check's own targets come first because configurationPath selects the first matching target.
-    const own = planned.manifest?.configs ?? [];
+    const own = planned.manifest?.toolFiles ?? [];
     const every = session.manifests
         .values()
-        .flatMap((manifest) => manifest.configs)
+        .flatMap((manifest) => manifest.toolFiles)
         .toArray();
     return [...own, ...every];
 }
@@ -154,7 +154,7 @@ export function commandConfigurations(
  */
 export function isolatedFiles(session: ToolSession, planned: PlannedCheck, command: string[]): string[] {
     const scope = planned.scope.scope.path;
-    const owned = (planned.manifest?.configs ?? [])
+    const owned = (planned.manifest?.toolFiles ?? [])
         .filter((config) => !config.fragment)
         .map((config) => targetInScope(scope, config));
     return [

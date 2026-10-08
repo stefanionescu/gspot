@@ -3,7 +3,7 @@ import { posix } from 'node:path';
 import { listAssets } from '#cli/platform/assets.ts';
 import type { FileDeclaration } from '#cli/types/repository/inventory.ts';
 import { CONFIG_PREFIX, CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
-import type { Manifest, OwnedCheck, RuleSource, ConfigurationFile } from '#cli/types/configurations.ts';
+import type { Manifest, OwnedCheck, RuleSource, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
 /**
  * Every declared check by ID, with the configuration that ships it. Borrowed checks retain their original owner.
@@ -28,7 +28,7 @@ export function allChecks(manifests: Iterable<Manifest>): Map<string, OwnedCheck
  * @param config the config-file declaration
  * @returns the path of the generated config file
  */
-export function targetInScope(scope: string, config: ConfigurationFile): string {
+export function targetInScope(scope: string, config: ToolFileDeclaration): string {
     if (scope === '' || !config.scoped) return config.target;
     if (config.target.startsWith(CONFIG_PREFIX))
         return posix.join(CONFIG_PREFIX, scope, config.target.slice(CONFIG_PREFIX.length));

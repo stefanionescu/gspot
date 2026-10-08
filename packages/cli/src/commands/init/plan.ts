@@ -160,7 +160,7 @@ export function buildInitPlan(
             { path: POLICY_FILE, note: `your policy, ${String(policyText.split('\n').length)} lines` },
             { path: `${DOT_GSPOT}/`, note: 'generated configuration and version pin' },
             ...everySelected
-                .flatMap((manifest) => manifest.configs)
+                .flatMap((manifest) => manifest.toolFiles)
                 .map((config) => config.stub_file?.path)
                 .filter((path) => path !== undefined)
                 .map((path) => ({ path, note: 'pointer' })),

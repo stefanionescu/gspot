@@ -29,7 +29,7 @@ export type ToolSearch = {
 };
 
 /** One file of a finished installation, at its path under the installation folder. */
-export type InstalledOutput = { path: string; file: FileCopy };
+export type InstalledFile = { path: string; file: FileCopy };
 
 /** The part of the lifecycle owner a tool project reads and installs through. */
 export type ToolOwner = {

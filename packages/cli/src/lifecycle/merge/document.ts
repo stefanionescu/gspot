@@ -5,7 +5,7 @@ import { openJsonDocument } from '#cli/parsers/json.ts';
 import { normalizeTables } from '#cli/platform/objects.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import { openTomlDocument } from '#cli/parsers/toml/document.ts';
-import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
+import type { EmittedToolFile } from '#cli/types/generation/files.ts';
 import type { ConfigurationDocument } from '#cli/types/parsers/document.ts';
 
 // Select the native parser and the empty content used only for an absent shared file.
@@ -43,7 +43,7 @@ export function openMergedDocument(
  * @param output.changes the keys and the values they must hold.
  * @returns whether the file exists and holds every installed value.
  */
-export function hasFields(root: string, output: ConfigurationOutput): boolean {
+export function hasFields(root: string, output: EmittedToolFile): boolean {
     using files = openRoot(root);
     const current = files.read(output.path);
     if (current === undefined) return false;

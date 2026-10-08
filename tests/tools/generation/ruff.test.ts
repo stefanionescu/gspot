@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
@@ -46,7 +46,7 @@ test('Ruff keeps pytest rules and scoped limits inside their selected project', 
         '.gspot/config/ruff.toml',
     ]);
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log, undefined, emitted);
+    writeGeneratedFiles(session, log, undefined, emitted);
     const app = parse(configs.find(({ path }) => path === '.gspot/config/app/ruff.toml')!.content);
     expect(app).toMatchObject({ lint: { select: containingAll(['PT001']) } });
 
@@ -83,7 +83,7 @@ test.each(['recommended', 'all'] as const)(
         });
         const session = await openSession(sandbox.path);
         using log = openOwnership(sandbox.path);
-        writeOutputs(session, log);
+        writeGeneratedFiles(session, log);
         const result = runTestCommandBlocking(
             [
                 'ruff',
@@ -137,7 +137,7 @@ test('Python uses one function-size ceiling without a second statement-count fin
     });
     const session = await openSession(sandbox.path);
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log);
+    writeGeneratedFiles(session, log);
     const checked = runTestCommandBlocking(
         ['ruff', 'check', '--config', '.gspot/config/ruff.toml', '--no-cache', '--output-format', 'json', 'sample.py'],
         { cwd: sandbox.path },
@@ -161,7 +161,7 @@ test('Ruff editor discovery and explicit formatting agree on root and nested pol
     });
     const session = await openSession(sandbox.path);
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log);
+    writeGeneratedFiles(session, log);
     for (const { file, config, formatted } of FORMAT_CASES) {
         const fixed = runTestCommandBlocking(['ruff', 'format', '--config', config, '--no-cache', file], {
             cwd: sandbox.path,

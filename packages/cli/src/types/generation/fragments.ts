@@ -1,8 +1,8 @@
-import type { Manifest, ParsedManifest, ConfigurationFile } from '#cli/types/configurations.ts';
+import type { Manifest, ParsedManifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
-export type Fragment = { manifest: Manifest; config: ConfigurationFile };
+export type Fragment = { manifest: Manifest; config: ToolFileDeclaration };
 
 /** A fragment selector with the allowed setting replaced by the paths it holds. */
 export type ResolvedSelector = Pick<FragmentSelector, 'selector' | 'message' | 'files'> & { except?: string[] };
 
-export type FragmentSelector = ParsedManifest['configs'][number]['selectors'][number];
+export type FragmentSelector = ParsedManifest['toolFiles'][number]['selectors'][number];

@@ -1,18 +1,18 @@
 // One claimed policy edit validates the authored values, then applies prepared outputs without installing tools.
 import { join } from 'node:path';
 import { createTwoFilesPatch } from 'diff';
+import { emitAll } from '#cli/generation/files.ts';
 import { preparePolicy } from '#cli/policy/edit.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { writePolicyFile } from '#cli/policy/file.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
 import type { PreparedPolicy } from '#cli/types/policy/settings.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import type { PolicySaveResult, SavePolicyOptions } from '#cli/types/commands/save-policy.ts';
 
 // Both failure phases report native errors and non-Error throws with the same text.
@@ -78,14 +78,14 @@ export async function savePolicy(root: string, options: SavePolicyOptions): Prom
         original: result.original,
         publish: (next, expected) => {
             applyPlan(log, {
-                ...proposeReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
+                ...planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
                 before: expected,
             });
         },
     });
     let applied: ApplyReport;
     try {
-        applied = writeOutputs(session, log, undefined, generated);
+        applied = writeGeneratedFiles(session, log, undefined, generated);
     } catch (error) {
         // The policy is written by now, so the result says it keeps the change and how to finish.
         const reason = errorText(error);

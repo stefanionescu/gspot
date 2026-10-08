@@ -4,9 +4,9 @@ import { writeFile } from 'node:fs/promises';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { BROKEN, CORRECTED } from '#tests/config/cli/execution/policy-findings.ts';
@@ -50,6 +50,6 @@ test('apply refuses a policy with a wrong entry, because it writes from the poli
     const session = await openSession(sandbox.path);
     {
         using log = openOwnership(session.root);
-        expect(() => writeOutputs(session, log)).toThrow('gspot.toml: ignore.0.reason:');
+        expect(() => writeGeneratedFiles(session, log)).toThrow('gspot.toml: ignore.0.reason:');
     }
 });

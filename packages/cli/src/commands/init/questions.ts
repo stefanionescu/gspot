@@ -50,7 +50,7 @@ function detectCi(root: string, tooling: Tooling): InitAnswers['ci'] | undefined
     return undefined;
 }
 
-function proposeCi(root: string, tooling: Tooling): InitAnswers['ci'] {
+function planCi(root: string, tooling: Tooling): InitAnswers['ci'] {
     const existing = detectCi(root, tooling);
     if (existing !== undefined) return existing;
     if (tooling.ci.length > 0) return 'none';
@@ -73,7 +73,7 @@ export async function askQuestions(root: string, options: InitOptions, tooling: 
         options.ci ??
         (getLintJobs(root, tooling.ci).length > 0
             ? 'none'
-            : await askChoice('Write a CI workflow?', '--ci', CI_CHOICES, proposeCi(root, tooling), options.yes));
+            : await askChoice('Write a CI workflow?', '--ci', CI_CHOICES, planCi(root, tooling), options.yes));
     const agentRules =
         options.agentRules ?? (await askConfirmation('Write agent rules?', '--no-agent-rules', true, options.yes));
     const runner =

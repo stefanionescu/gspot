@@ -63,7 +63,7 @@ export type EslintContext = {
     nodeFiles: string[];
 };
 
-/** The parts of the ESLint configuration that the policy and the rendered scope decide. */
+/** The parts of the ESLint configuration that the policy and the emitted scope decide. */
 export type EslintConfiguration = {
     aliases: Record<string, string>;
     nodeFiles: string[];

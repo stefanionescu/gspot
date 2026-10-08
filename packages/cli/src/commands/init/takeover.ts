@@ -1,7 +1,7 @@
 // What init replaces: the configuration files of the selected tools, read before anything is written.
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { Replaced } from '#cli/types/commands/init.ts';
-import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
+import type { EmittedToolFile } from '#cli/types/generation/files.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
 
 // Captures files selected for removal. Retained authored content has no mutation copy.
@@ -38,10 +38,10 @@ export function planTakeover(
     root: string,
     tooling: Tooling,
     tools: Set<string>,
-    configurations: ConfigurationOutput[],
+    configurations: EmittedToolFile[],
 ): Replaced {
     const replaced: Replaced = { read: new Map(), removed: [], unread: [], retained: [], changed: [] };
-    const owned = tooling.configs.filter(({ tool }) => tools.has(tool));
+    const owned = tooling.toolFiles.filter(({ tool }) => tools.has(tool));
     captureOwned(
         root,
         owned.filter((entry) => !entry.shared),

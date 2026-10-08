@@ -2,14 +2,14 @@
 import { isDeepStrictEqual } from 'node:util';
 import { decodeUtf8 } from '#cli/platform/text.ts';
 import { sameEntry } from '#cli/platform/root/rules.ts';
-import { planMerge } from '#cli/lifecycle/merge/plan.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Planned } from '#cli/types/lifecycle/apply.ts';
+import { planDocumentMerge } from '#cli/lifecycle/merge/plan.ts';
 import { ADOPTED_KINDS } from '#cli/config/lifecycle/ownership.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
+import type { EmittedToolFile } from '#cli/types/generation/files.ts';
 import { identify, isRecorded } from '#cli/lifecycle/ownership/log.ts';
 import { blockSpan, applyBlock } from '#cli/platform/managed-blocks.ts';
-import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
 import type { BlockSpan, BlockStyle, BlockContext } from '#cli/types/platform/managed-blocks.ts';
 
 import type {
@@ -91,7 +91,7 @@ function planInsert(
 }
 
 // The plan a planned block yields: unchanged when the bytes already stand, otherwise the new record.
-function planBlock(
+function blockPlan(
     path: string,
     current: FileCopy | undefined,
     existing: OwnershipEntry | undefined,
@@ -123,10 +123,10 @@ export function getOnDisk(log: Log, path: string, ...sides: (FileCopy | Identity
  * @param request the replacement and reviewed file state
  * @returns the plan
  */
-export function proposeReplacement(log: Log, request: ReplacementRequest): Planned {
-    const { path, next, kind, expected, proposed } = request;
+export function planReplacement(log: Log, request: ReplacementRequest): Planned {
+    const { path, next, kind, expected, plannedFiles } = request;
     const existing = log.entryFor(path);
-    log.files.validate(path, next, proposed);
+    log.files.validate(path, next, plannedFiles);
     const current = getOnDisk(log, path, next, existing?.installed);
     // An edited owned file is preserved unless the caller reviewed those exact bytes and authorizes the replacement.
     if (isPreservedReplacement(request, existing, current)) return { path, before: current, status: 'preserved' };
@@ -143,7 +143,7 @@ export function proposeReplacement(log: Log, request: ReplacementRequest): Plann
  * @param style the comment style of the block markers
  * @returns the plan
  */
-export function proposeBlock(log: Log, path: string, body: string, style: BlockStyle): Planned {
+export function planBlock(log: Log, path: string, body: string, style: BlockStyle): Planned {
     const existing = log.entryFor(path);
     const current = log.files.read(path);
     const text = current === undefined ? '' : decodeUtf8(current.bytes);
@@ -154,10 +154,10 @@ export function proposeBlock(log: Log, path: string, body: string, style: BlockS
     if (recorded !== undefined && current !== undefined) {
         const planned = planUpdate(text, span, recorded, context, body);
         if (planned === undefined) return { path, before: current, status: 'preserved' };
-        return planBlock(path, current, existing, planned);
+        return blockPlan(path, current, existing, planned);
     }
     if (isEdited(existing, current)) return { path, before: current, status: 'preserved' };
-    return planBlock(path, current, existing, planInsert(text, current, span, context, body));
+    return blockPlan(path, current, existing, planInsert(text, current, span, context, body));
 }
 
 /**
@@ -168,16 +168,11 @@ export function proposeBlock(log: Log, path: string, body: string, style: BlockS
  * @param canReplace whether an unowned file may be merged into
  * @returns the plan
  */
-export function proposeMerge(
-    log: Log,
-    path: string,
-    changes: ConfigurationOutput['changes'],
-    canReplace = false,
-): Planned {
+export function planMerge(log: Log, path: string, changes: EmittedToolFile['changes'], canReplace = false): Planned {
     const existing = log.entryFor(path);
     const current = log.files.read(path);
     const isInstalled = isRecorded(current, existing?.installed);
-    const plan = planMerge({
+    const plan = planDocumentMerge({
         path,
         changes,
         current,
@@ -204,7 +199,7 @@ export function proposeMerge(
  * @param expected the bytes the caller reviewed, which must still be the file's
  * @returns the plan
  */
-export function proposeRetirement(log: Log, path: string, expected: FileCopy): Planned {
+export function planRetirement(log: Log, path: string, expected: FileCopy): Planned {
     const existing = log.entryFor(path);
     const current = log.files.read(path);
     if (!isDeepStrictEqual(current, expected))

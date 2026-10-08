@@ -13,8 +13,8 @@ version = "5.91.2"
 npm = "@tanstack/eslint-plugin-query"
 
 [[config]]
-template = "eslint.fragment.js.tmpl"
+template = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
-imports = "eslint.imports.js.tmpl"
+imports = "eslint.imports.js.eta"
 fragment = true

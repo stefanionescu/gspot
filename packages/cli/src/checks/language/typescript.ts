@@ -148,7 +148,7 @@ export async function tsc(session: ToolSession, planned: PlannedCheck): Promise<
  */
 export async function checkjs(session: ToolSession, planned: PlannedCheck): Promise<CheckResult> {
     const scope = planned.scope.scope.path;
-    const jsconfig = planned.manifest?.configs.find(
+    const jsconfig = planned.manifest?.toolFiles.find(
         (entry) => entry.target === `${CONFIGURATION_DIRECTORY}/jsconfig.json`,
     );
     if (jsconfig === undefined)

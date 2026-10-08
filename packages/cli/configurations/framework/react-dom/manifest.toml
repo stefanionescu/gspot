@@ -13,8 +13,8 @@ version = "6.10.2"
 npm = "eslint-plugin-jsx-a11y"
 
 [[config]]
-template = "eslint.fragment.js.tmpl"
+template = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
-imports = "eslint.imports.js.tmpl"
+imports = "eslint.imports.js.eta"
 fragment = true

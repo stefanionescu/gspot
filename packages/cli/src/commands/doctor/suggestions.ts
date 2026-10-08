@@ -1,4 +1,4 @@
-import { emitAll } from '#cli/generation/outputs.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { readPrefix } from '#cli/platform/source.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { duplicateMisePins } from '#cli/tools/mise.ts';
@@ -10,7 +10,7 @@ import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { Generated } from '#cli/types/generation/output.ts';
+import type { Generated } from '#cli/types/generation/files.ts';
 import { detectUnselected } from '#cli/configurations/detect.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
@@ -64,11 +64,11 @@ function buildFileRow(session: Session, config: ToolFile, tools: Set<string>, co
 function unownedConfigs(session: Session, tooling: Tooling, tools: Set<string>, outputs: Generated): SuggestionRow[] {
     const tracked = new Set(session.repository.files.map((file) => file.path));
     const generated = new Set(outputs.files.map((file) => file.path));
-    return tooling.configs
+    return tooling.toolFiles
         .filter((config) => tracked.has(config.path) && !generated.has(config.path))
         .filter(
             (config) =>
-                !outputs.configurations.some(
+                !outputs.toolFiles.some(
                     (output) =>
                         output.path === config.path && output.changes.some((field) => field.path[0] === config.key),
                 ),

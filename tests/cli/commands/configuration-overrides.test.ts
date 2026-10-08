@@ -7,7 +7,7 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readTree } from '#tests/harness/preservation.ts';
 import { QUIET_INIT } from '#tests/config/harness/init.ts';
-import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
+import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 
 import {
     SCRIPT_SOURCE,
@@ -28,7 +28,7 @@ test('authored language overrides survive root and scope reconciliation without 
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(
-        (JSON.parse(preview.stdout) as ApplyPreviewJson).policy,
+        (JSON.parse(preview.stdout) as ApplyPlanJson).policy,
     );
     const policy = readPolicy(sandbox.path).policy;
     expect(policy.configurations).toContain('css');

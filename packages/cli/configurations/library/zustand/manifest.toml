@@ -7,7 +7,7 @@ description = "Zustand stores: a store is created in a store file, and a compone
 dependencies = ["zustand"]
 
 [[config]]
-template = "eslint.fragment.js.tmpl"
+template = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 fragment = true

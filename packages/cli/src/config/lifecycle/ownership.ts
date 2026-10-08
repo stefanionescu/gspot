@@ -11,9 +11,9 @@ export const ADOPTED_KINDS = new Set<OwnedKind>(['config', 'hook', 'pin', 'lock'
 /** The heading the text of a moved `CLAUDE.md` goes under at the end of `AGENTS.md`. */
 export const MOVED_HEADING = '## Other instructions';
 
-export const OUTPUT_JSON_INDENT = 2;
+export const OWNERSHIP_JSON_INDENT = 2;
 
-/** Files and output kinds kept when a selected configuration does not write them. */
+/** Files and owned kinds kept when a selected configuration does not write them. */
 export const RETAINED_PATHS = new Set([POLICY_FILE, '.gitignore', VERSION_FILE]);
 export const RETAINED_KINDS = new Set<OwnedKind>(['hook']);
 

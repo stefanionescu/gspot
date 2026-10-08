@@ -1,11 +1,11 @@
-import { emitAll } from '#cli/generation/outputs.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { Session, PlannedCheck } from '#cli/types/planning.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import type { FixResult, CheckResult } from '#cli/types/execution/check.ts';
 import { DRIFT_HELP, DRIFT_MESSAGES } from '#cli/config/checks/general/gspot.ts';
 import { emitPolicy, parseTomlText, readPolicyFile, writePolicyFile } from '#cli/policy/file.ts';
@@ -88,7 +88,7 @@ export function fixPolicyLayout(planned: PlannedCheck, root: string): FixResult 
         publish: (next, expected) => {
             applyPlan(
                 log,
-                proposeReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
+                planReplacement(log, { path: POLICY_FILE, next, kind: 'policy', canReplace: true, expected }),
             );
         },
     });

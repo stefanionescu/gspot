@@ -219,7 +219,7 @@ version = "5.9.3"
 npm = "typescript"
 
 [[config]]
-template = "semgrep/javascript.yml.tmpl"
+template = "semgrep/javascript.yml.eta"
 target = ".gspot/config/semgrep/javascript.yml"
 tool = "semgrep"
 rule_keys = ["rules"]

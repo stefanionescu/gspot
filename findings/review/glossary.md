@@ -1,6 +1,6 @@
 # Vocabulary
 
-26 unresolved review records remain.
+24 unresolved review records remain.
 
 One name for each concept, and one concept for each name. The owner decision of October 7, 2026 in `findings/progress.json` makes this file the reference for every name in the ledger, as `findings/review/glossary.md`. When a record proposes a name that this table does not use, the table wins.
 
@@ -194,3 +194,12 @@ Original IDs and quotations remain above.
 | ID                    | Status   | Implementation and verification                                                                                                                                                                                                                                                                                                                                                           |
 | --------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/glossary/024` | complete | Repository package-manifests/readPackageManifests/PackageManifest/PackageJson/PACKAGE_MANIFESTS and Session.packageManifests have one owner and name. No compatibility aliases. Mechanical AST comparisons equivalent; native83tests275assertions5files; root types0; staged96pass12skip0findings and normal commit/push hooks passed. Commit `2288458c1d894771f72142a378f662ebd453912a`. |
+
+## Implementation checkpoint f3a8a0d5c of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `f3a8a0d5c99de531a78612f2ec395b54f59a7ebd`.
+
+| ID                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| --------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/glossary/026` | complete | Public setting terminology and --no-agent-rules flag agree across all12commands, generated help/reference and docs. Native old flag refusal/new flag/all commands probe, focused230tests1035assertions and ROOT155tests791assertions pass. Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint. Commit `f3a8a0d5c99de531a78612f2ec395b54f59a7ebd`.              |
+| `review/glossary/028` | complete | Public explanation/help/output prose uses rule and check terminology consistently; native tool-rule discriminator remains required native API. Frozen authored oldsymbol/prose audit0; ROOT155tests791assertions, types0 and generated docs links pass. Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint. Commit `f3a8a0d5c99de531a78612f2ec395b54f59a7ebd`. |

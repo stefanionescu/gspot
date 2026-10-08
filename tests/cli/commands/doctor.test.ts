@@ -5,7 +5,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { doctorCommand } from '#cli/commands/doctor/command.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { DoctorReport } from '#cli/types/commands/doctor.ts';
@@ -33,7 +33,7 @@ test('doctor identifies unowned generated-directory files that apply preserves',
     });
     {
         using log = openOwnership(sandbox.path);
-        writeOutputs(await openSession(sandbox.path), log);
+        writeGeneratedFiles(await openSession(sandbox.path), log);
     }
     const result = await doctorCommand(sandbox.path);
     expect(result.json).toMatchObject({
@@ -74,7 +74,7 @@ test('doctor reports a new Python file after setup with the command that adds it
     });
     {
         using log = openOwnership(sandbox.path);
-        writeOutputs(await openSession(sandbox.path), log);
+        writeGeneratedFiles(await openSession(sandbox.path), log);
     }
     await writeFile(join(sandbox.path, 'service.py'), 'print("hello")\n');
     const result = await doctorCommand(sandbox.path);

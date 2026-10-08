@@ -4,13 +4,13 @@ import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { CLI_PINS } from '#cli/config/configurations.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
@@ -122,7 +122,7 @@ test('a repository that already runs hooks keeps them, gets the gspot lines, and
     gitOutput(sandbox.path, ['config', 'core.hooksPath', '.githooks']);
     {
         using log = openOwnership(sandbox.path);
-        writeOutputs(await openSession(sandbox.path), log);
+        writeGeneratedFiles(await openSession(sandbox.path), log);
     }
     const read: string[][] = [];
     const run = processes.run;
@@ -162,7 +162,7 @@ if (isPosix) {
             gitOutput(repository.path, ['init', '-q']);
             {
                 using log = openOwnership(repository.path);
-                writeOutputs(await openSession(repository.path), log);
+                writeGeneratedFiles(await openSession(repository.path), log);
             }
             const launcher = join(repository.path, 'bin/gspot');
             await (condition === 'missing' ? rm(launcher) : chmod(launcher, 0o644));

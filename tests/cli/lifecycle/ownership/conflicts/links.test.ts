@@ -4,8 +4,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
-import { proposeRetirement, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { planRetirement, planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
 import { chmod, lstat, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 
@@ -94,7 +94,7 @@ if (isPosix) {
             expect(() =>
                 applyPlan(
                     log,
-                    proposeReplacement(log, {
+                    planReplacement(log, {
                         path: 'tool',
                         next: {
                             bytes: Buffer.from('../outside'),
@@ -111,7 +111,7 @@ if (isPosix) {
             expect(
                 applyPlan(
                     log,
-                    proposeReplacement(log, {
+                    planReplacement(log, {
                         path: 'valid',
                         next: { bytes: Buffer.from('corrected input'), mode: 0o644 },
                         kind: 'config',
@@ -130,7 +130,7 @@ if (isPosix) {
             expect(
                 applyPlan(
                     log,
-                    proposeReplacement(log, {
+                    planReplacement(log, {
                         path: 'config.txt',
                         next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
                         kind: 'config',
@@ -142,16 +142,16 @@ if (isPosix) {
             expect(
                 applyPlan(
                     log,
-                    proposeReplacement(log, {
+                    planReplacement(log, {
                         path: 'config.txt',
                         next: { bytes: Buffer.from('upgrade\n'), mode: 0o644 },
                         kind: 'config',
                     }),
                 ),
             ).toBe('preserved');
-            expect(applyPlan(log, proposeRestoration(log, 'config.txt'))).toBe('preserved');
+            expect(applyPlan(log, planRestoration(log, 'config.txt'))).toBe('preserved');
             expect(await readFile(join(directory.path, 'config.txt'), 'utf8')).toBe('authored later\n');
-            expect(applyPlan(log, proposeRestoration(log, '.gspot/unowned'))).toBe('preserved');
+            expect(applyPlan(log, planRestoration(log, '.gspot/unowned'))).toBe('preserved');
         }
     });
 
@@ -169,13 +169,13 @@ if (isPosix) {
                 if (change === 'mode') await chmod(path, 0o600);
                 if (change === 'removed') await unlink(path);
                 const edited = log.files.read('authored.json');
-                expect(() => proposeRetirement(log, 'authored.json', read)).toThrow(
+                expect(() => planRetirement(log, 'authored.json', read)).toThrow(
                     'authored.json changed after gspot read it. Run the command again.',
                 );
                 expect(() =>
                     applyPlan(
                         log,
-                        proposeReplacement(log, {
+                        planReplacement(log, {
                             path: 'authored.json',
                             next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
                             kind: 'config',
@@ -191,7 +191,7 @@ if (isPosix) {
             {
                 using log = openOwnership(directory.path);
                 const refreshed = log.files.read('authored.json')!;
-                expect(applyPlan(log, proposeRetirement(log, 'authored.json', refreshed))).toBe('changed');
+                expect(applyPlan(log, planRetirement(log, 'authored.json', refreshed))).toBe('changed');
                 expect(log.files.read('authored.json')).toBeUndefined();
             }
         },

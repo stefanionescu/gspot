@@ -5,11 +5,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { planMerge } from '#cli/lifecycle/ownership/plans.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
-import { proposeMerge } from '#cli/lifecycle/ownership/plans.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
-import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/installations.ts';
 import { TASK_RESTORATION_CASES } from '#tests/config/cli/lifecycle/ownership/replacement-preservation.ts';
@@ -30,16 +30,16 @@ test.each(TASK_RESTORATION_CASES)(
                 { path: ['tasks', 'lint'], value: 'gspot check' },
                 { path: ['tasks', 'format', 'run'], value: 'gspot check --fix' },
             ];
-            expect(applyPlan(log, proposeMerge(log, 'mise.toml', changes, true))).toBe('changed');
+            expect(applyPlan(log, planMerge(log, 'mise.toml', changes, true))).toBe('changed');
             const installed = await readFile(join(directory.path, 'mise.toml'), 'utf8');
             expect(installed).toContain('# Authored tasks');
             expect(installed).toContain('# Keep this description');
             expect(parseToml(installed)).toMatchObject({
                 tasks: { lint: 'gspot check', format: { description: 'Format the app', run: 'gspot check --fix' } },
             });
-            expect(applyPlan(log, proposeMerge(log, 'mise.toml', changes))).toBe('unchanged');
+            expect(applyPlan(log, planMerge(log, 'mise.toml', changes))).toBe('unchanged');
             await writeFile(join(directory.path, 'mise.toml'), installed + appended);
-            expect(applyPlan(log, proposeRestoration(log, 'mise.toml'))).toBe('changed');
+            expect(applyPlan(log, planRestoration(log, 'mise.toml'))).toBe('changed');
             const restored = await readFile(join(directory.path, 'mise.toml'), 'utf8');
             expect(parseToml(restored)['tasks']).toStrictEqual(parseToml(original)['tasks']);
             // An authored edit survives the restore; without one the file is byte for byte the original.
@@ -55,16 +55,16 @@ test('Windows permission projection supports repeated log writes, idempotent rep
     const program = `
 Object.defineProperty(process, 'platform', {value: 'win32'});
 const {openOwnership} = await import(${JSON.stringify(implementation)});
-const {proposeReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
 const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
-const {proposeRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/restoration.ts'))});
+const {planRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/restoration.ts'))});
 let log = openOwnership(process.cwd());
 try {
-    const first = applyPlan(log, proposeReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'config', canReplace: true}));
-    const repeated = applyPlan(log, proposeReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'config'}));
+    const first = applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'config', canReplace: true}));
+    const repeated = applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'config'}));
     log[Symbol.dispose]();
     log = openOwnership(process.cwd());
-    const restored = applyPlan(log, proposeRestoration(log, 'config.txt'));
+    const restored = applyPlan(log, planRestoration(log, 'config.txt'));
     console.log(JSON.stringify({first, repeated, restored, isRemoved: log.files.read('config.txt') === undefined}));
 } finally {log[Symbol.dispose]();}
 `;

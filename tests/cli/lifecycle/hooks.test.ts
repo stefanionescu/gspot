@@ -6,8 +6,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/platform/git.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { installCommand } from '#cli/commands/install.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { hookStatus, installHooks } from '#cli/lifecycle/hooks-path.ts';
@@ -41,7 +41,7 @@ test.each([
     );
     {
         using log = openOwnership(sandbox.path);
-        writeOutputs(await openSession(sandbox.path), log);
+        writeGeneratedFiles(await openSession(sandbox.path), log);
     }
     const preview = await installCommand({ cwd: sandbox.path, isDryRun: true });
     expect(preview.exitCode).toBe(0);

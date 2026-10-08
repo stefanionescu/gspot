@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { OWNED_KINDS } from '#cli/config/lifecycle/ownership.ts';
 import type { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
-import type { Root, FileCopy, Proposed } from '#cli/types/platform/root.ts';
+import type { Root, FileCopy, PlannedFiles } from '#cli/types/platform/root.ts';
 
 export type Restoration = { next?: FileCopy };
 
@@ -17,7 +17,7 @@ export type ReplacementRequest = {
     kind: OwnedKind;
     canReplace?: boolean | undefined;
     expected?: FileCopy | undefined;
-    proposed?: Proposed | undefined;
+    plannedFiles?: PlannedFiles | undefined;
 };
 
 /** The kind of file a gspot write owns. */

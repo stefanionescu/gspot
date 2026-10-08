@@ -1,10 +1,10 @@
 import { z } from 'zod';
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 // What a test repository's policy generates: the files its selected configurations write, and the ESLint instance its
@@ -26,7 +26,7 @@ export async function createEslint(root: string, options: ESLint.Options = {}): 
     await linkInstalledModules(join(root, 'node_modules'));
     const session = await openSession(root);
     using log = openOwnership(root);
-    writeOutputs(session, log);
+    writeGeneratedFiles(session, log);
     return new ESLint({ ...options, cwd: root, overrideConfigFile: join(root, '.gspot/config/eslint.config.mjs') });
 }
 

@@ -338,7 +338,7 @@ type = "list"
 items = { name = "string", paths = { type = "list", items = "path" }, may_import = { type = "list", items = "string", optional = true }, reason = { type = "string", optional = true } }
 direction = "tightening"
 default = []
-summary = "The named parts of the code and the paths each covers."
+summary = "Which module may import which; a module imports itself and the modules in its may_import list"
 
 [[check]]
 name = "test-placement"

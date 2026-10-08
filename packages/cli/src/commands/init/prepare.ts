@@ -1,15 +1,15 @@
 // What init proposes before anything is written: the detection, the selection, the policy text, and the plan.
 import { print } from '#cli/terminal/messages.ts';
 import { compact } from '#cli/platform/objects.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { GspotError } from '#cli/platform/errors.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { runGitBlocking } from '#cli/platform/git.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { readRepository } from '#cli/repository/read.ts';
+import { plannedScopes } from '#cli/repository/scopes.ts';
 import { buildInitPlan } from '#cli/commands/init/plan.ts';
 import { npmToolNames } from '#cli/configurations/pins.ts';
-import { proposedScopes } from '#cli/repository/scopes.ts';
 import { selectForInit } from '#cli/lifecycle/selection.ts';
 import { getTooling } from '#cli/configurations/takeover.ts';
 import { planTakeover } from '#cli/commands/init/takeover.ts';
@@ -44,7 +44,7 @@ function printDetection(
     applicable: Set<string>,
 ): void {
     const { repo, manifests } = inputs;
-    const tools = [...new Set(tooling.configs.map((config) => config.tool))].toSorted((a, b) => a.localeCompare(b));
+    const tools = [...new Set(tooling.toolFiles.map((config) => config.tool))].toSorted((a, b) => a.localeCompare(b));
     const owned: string[] = [];
     const unowned: string[] = [];
     for (const tool of tools) (applicable.has(tool) ? owned : unowned).push(tool);
@@ -73,7 +73,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const repo = await readRepository(root, [], [], []);
     if (repo.hasGit) assertCleanTree(root, options);
     const packageManifests = readPackageManifests(root, repo.files);
-    const workspace = proposedScopes(
+    const workspace = plannedScopes(
         repo.files,
         packageManifests,
         [...manifests.values()].flatMap((manifest) => manifest.detect.project_files),
@@ -93,7 +93,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const applicable = applicableManifests(session);
     const tools = new Set(applicable.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     printDetection(inputs, selection, tooling, tools);
-    const replaced = planTakeover(root, tooling, tools, emitAll(session).configurations);
+    const replaced = planTakeover(root, tooling, tools, emitAll(session).toolFiles);
     const planning: Planning = {
         root,
         hasGit: repo.hasGit,

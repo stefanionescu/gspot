@@ -7,17 +7,17 @@ import { toolProjectDrift } from '#cli/tools/project.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { CONFLICT_MARKERS } from '#cli/config/parsers/git.ts';
+import type { Generated } from '#cli/types/generation/files.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { writeVersionPin } from '#cli/lifecycle/version-pin.ts';
-import type { Generated } from '#cli/types/generation/output.ts';
-import { emitAll, outputPaths } from '#cli/generation/outputs.ts';
-import { proposeClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
-import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { emitAll, generatedPaths } from '#cli/generation/files.ts';
+import { planClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
+import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import type { ApplyReport, WriteRequest } from '#cli/types/lifecycle/apply.ts';
 import { deleteInstallation } from '#cli/lifecycle/ownership/installations.ts';
 import { RETAINED_KINDS, RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
-import { proposeBlock, proposeMerge, proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planBlock, planMerge, planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { VALE_CONFIG, TOOL_PYTHON_PROJECT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 
 // An installation no selected configuration needs any more goes whole, and so do the Vale packages once nothing checks prose.
@@ -29,7 +29,7 @@ function pruneInstallations(log: Log, root: string, retained: WriteRequest['reta
 
 // The text of `CLAUDE.md` lands after the block the batch wrote to `AGENTS.md`, and the file goes.
 function moveClaudeFile(log: Log, report: ApplyReport): void {
-    const moves = proposeClaudeMove(log);
+    const moves = planClaudeMove(log);
     applyPlans(log, moves);
     if (moves.length > 0) report.removed.push('CLAUDE.md');
 }
@@ -41,8 +41,8 @@ function moveClaudeFile(log: Log, report: ApplyReport): void {
  */
 function writeGenerated(log: Log, request: WriteRequest): void {
     const { root, generated, report, retained, reviewedOriginals, conflictedOutputs } = request;
-    const configurations = generated.configurations.map((output) => {
-        const plan = proposeMerge(log, output.path, output.changes, true);
+    const configurations = generated.toolFiles.map((output) => {
+        const plan = planMerge(log, output.path, output.changes, true);
         return reviewedOriginals?.has(output.path) === true
             ? { ...plan, before: reviewedOriginals.get(output.path) }
             : plan;
@@ -56,7 +56,7 @@ function writeGenerated(log: Log, request: WriteRequest): void {
             bytes: Buffer.from(file.content),
             mode: file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE,
         };
-        const plan = proposeReplacement(log, {
+        const plan = planReplacement(log, {
             path: file.path,
             next: replacement,
             kind,
@@ -65,16 +65,16 @@ function writeGenerated(log: Log, request: WriteRequest): void {
         });
         return authorized.has(file.path) ? { ...plan, before: authorized.get(file.path) } : plan;
     });
-    const blocks = generated.blocks.map((block) => proposeBlock(log, block.path, block.block, block.style));
+    const blocks = generated.blocks.map((block) => planBlock(log, block.path, block.block, block.style));
     const generatedPlans = [...replacements, ...blocks, ...configurations];
     // `CLAUDE.md` is no output: it moves into `AGENTS.md` after the batch instead of getting its old text back.
-    const expected = new Set([...RETAINED_PATHS, ...outputPaths(generated), 'CLAUDE.md']);
+    const expected = new Set([...RETAINED_PATHS, ...generatedPaths(generated), 'CLAUDE.md']);
     // Pruning restores only recorded outputs that no selected owner still needs.
     const pruning = log.state.files
         .filter(
             (entry) => entry.installed !== undefined && !expected.has(entry.path) && !RETAINED_KINDS.has(entry.kind),
         )
-        .map((entry) => proposeRestoration(log, entry.path));
+        .map((entry) => planRestoration(log, entry.path));
     const plans = [...generatedPlans, ...pruning];
     const conflicts = plans.filter((plan) => plan.status === 'preserved').map((plan) => plan.path);
     if (reviewedOriginals !== undefined && conflicts.length > 0)
@@ -124,7 +124,7 @@ function conflictedOutputs(log: Log, generated: Generated): Map<string, FileCopy
  * @param prepared the generated outputs whose lockfiles were resolved before committing policy.
  * @returns generated changes.
  */
-export function writeOutputs(
+export function writeGeneratedFiles(
     session: Session,
     log: Log,
     reviewedOriginals?: ReadonlyMap<string, FileCopy | undefined>,
@@ -142,7 +142,7 @@ export function writeOutputs(
         updated: [],
         notes: [...generated.notes],
     };
-    const paths = outputPaths(generated);
+    const paths = generatedPaths(generated);
     writeGenerated(log, {
         agentRulesEnabled: session.policyFiles.policy.agent_rules.enabled,
         root: session.root,

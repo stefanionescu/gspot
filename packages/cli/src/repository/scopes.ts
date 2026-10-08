@@ -69,7 +69,7 @@ export function buildScope(scope: Omit<ScopeEntry, 'name'>): ScopeEntry {
  * @param npmNames declared npm installer packages
  * @returns project scopes in path order
  */
-export function proposedScopes(
+export function plannedScopes(
     files: TrackedFile[],
     packageManifests: PackageManifest[],
     patterns: string[],

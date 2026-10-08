@@ -3,9 +3,9 @@ import type { Policy } from '#cli/types/policy/settings.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import type { Planned } from '#cli/types/lifecycle/apply.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
-import type { Generated } from '#cli/types/generation/output.ts';
+import type { Generated } from '#cli/types/generation/files.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
-import type { ToolOwner, InstalledOutput } from '#cli/types/tools/install.ts';
+import type { ToolOwner, InstalledFile } from '#cli/types/tools/install.ts';
 import type { Manifest, InstallationKind } from '#cli/types/configurations.ts';
 
 /** Proposed tool inputs and complete temporary installations awaiting a successful run. */
@@ -16,7 +16,7 @@ export type InstallationContext = {
     original: Map<string, FileCopy | undefined>;
     prepared: Map<string, FileCopy>;
     plans: Planned[];
-    trees: Map<InstallationKind, InstalledOutput[]>;
+    trees: Map<InstallationKind, InstalledFile[]>;
     refreshLockfiles: boolean;
 };
 
@@ -27,24 +27,24 @@ export type InstallationStep = {
         manifests: Manifest[],
         generated: Generated,
         refreshLockfiles: boolean,
-    ) => InstallationPreview;
+    ) => Pick<InstallationPlan, 'steps' | 'notes'>;
     run: (
         session: ToolSession,
         manifests: Manifest[],
         context: InstallationContext,
-        preview: InstallationPreview,
+        preview: Pick<InstallationPlan, 'steps' | 'notes'>,
     ) => string | Promise<string>;
 };
 
 /** The installation summary and whether every applicable phase finished. */
 export type InstallationResult = { note: string; exitCode: number };
 
-/** Acquisition commands and instructions calculated without changing the repository. */
-export type InstallationPreview = { steps: string[][]; notes: string[] };
 /** Applicable installation phases with their calculated commands and instructions. */
-export type InstallationPlan = InstallationPreview & {
-    preparation: InstallationPreview & { phase: InstallationStep };
-    phases: Array<InstallationPreview & { phase: InstallationStep }>;
+export type InstallationPlan = {
+    steps: string[][];
+    notes: string[];
+    preparation: Pick<InstallationPlan, 'steps' | 'notes'> & { phase: InstallationStep };
+    phases: Array<Pick<InstallationPlan, 'steps' | 'notes'> & { phase: InstallationStep }>;
 };
 /** Policy and repository evidence for installing and inspect clone-local Git hooks. */
 export type HookContext = { policy: Policy; repository: Pick<Repository, 'root' | 'hasGit'> };

@@ -162,7 +162,7 @@ export function surveyRepository(
     files: TrackedFile[],
     packageManifests: PackageManifest[],
     npmNames: ReadonlySet<string>,
-): Omit<Tooling, 'configs'> {
+): Omit<Tooling, 'toolFiles'> {
     const paths = new Set(files.map((file) => file.path));
     const lintOnlyManifests = packageManifests
         .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact, npmNames))

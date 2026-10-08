@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { emitAll } from '#cli/generation/outputs.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { packageLockfile } from '#cli/parsers/packages.ts';
 import { prepareToolProjects } from '#cli/tools/project.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
@@ -22,7 +22,7 @@ async function prepareLockfile(root: string): Promise<void> {
     const session = await openSession(root);
     const generated = emitAll(session);
     await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
-    writeOutputs(session, log, undefined, generated);
+    writeGeneratedFiles(session, log, undefined, generated);
 }
 
 test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' && runner === 'mise'))(
@@ -114,7 +114,7 @@ test.each(PACKAGE_PROJECTS.filter(([, path, runner]) => path === 'package.json' 
         let repaired: ApplyReport;
         {
             using log = openOwnership(root);
-            repaired = writeOutputs(await openSession(root), log);
+            repaired = writeGeneratedFiles(await openSession(root), log);
         }
         expect(repaired.written).not.toContain(`.gspot/${packageLockfile(installer)}`);
         expect(await readFile(lockfilePath, 'utf8')).toBe(conflict);

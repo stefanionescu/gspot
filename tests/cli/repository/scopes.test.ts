@@ -10,11 +10,11 @@ import { rm, mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import { INVALID_WORKSPACE_CASES } from '#tests/config/cli/repository/scopes.ts';
-import { scopeOf, proposedScopes, packageWorkspaces } from '#cli/repository/scopes.ts';
+import { scopeOf, plannedScopes, packageWorkspaces } from '#cli/repository/scopes.ts';
 
 function proposeProjectScopes(files: TrackedFile[], manifests: PackageManifest[]) {
     const configurations = configurationManifests();
-    return proposedScopes(
+    return plannedScopes(
         files,
         manifests,
         [...configurations.values()].flatMap((manifest) => manifest.detect.project_files),

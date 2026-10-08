@@ -5,8 +5,8 @@ import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { testApiToken } from '#tests/config/samples/secrets.ts';
 import type { RunReport, RunOptions } from '#cli/types/execution/check.ts';
@@ -29,7 +29,7 @@ test('a folder with no git scans its files for secrets, and a git repository sca
     });
     {
         using log = openOwnership(sandbox.path);
-        writeOutputs(await openSession(sandbox.path), log);
+        writeGeneratedFiles(await openSession(sandbox.path), log);
     }
     const withoutGit = await secretChecks(sandbox.path);
     expect(withoutGit).toContainEqual(

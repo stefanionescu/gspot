@@ -21,9 +21,9 @@ import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
 import { tablesFor, policyValue } from '#cli/policy/settings/lookup.ts';
 import { styleRules, proseFormats } from '#cli/generation/vale-styles.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { EtaInputs, ScopeEtaInputs } from '#cli/types/generation/eta.ts';
 import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting.ts';
-import type { TemplateInputs, ScopeTemplateInputs } from '#cli/types/generation/templates.ts';
 import { scopeIgnorePatterns, selectedIgnorePaths } from '#cli/generation/ignore-patterns.ts';
 import { readPackageManifests, getProjectDependencies } from '#cli/repository/package-manifests.ts';
 
@@ -33,7 +33,7 @@ import {
     BLOCK_IGNORES,
     TOKEN_IGNORES,
     LEADING_NEWLINES,
-} from '#cli/config/generation/templates.ts';
+} from '#cli/config/generation/eta.ts';
 
 function prefixed(path: string, pattern: string): string {
     if (path === '') return pattern;
@@ -54,7 +54,7 @@ function entryFiles(policy: Policy, scopes: ScopeSelection[], scope: string): st
     return [...new Set([...authored, ...declared])];
 }
 
-function scopeInputs(input: ScopeTemplateInputs) {
+function scopeInputs(input: ScopeEtaInputs) {
     const { session, selection, manifests, projects } = input;
     const { scopes } = session;
     const { policy } = session.policyFiles;
@@ -120,11 +120,11 @@ export const eta = new Eta(ETA_OPTIONS);
 /**
  * The inputs every template sees.
  * @param session the repository, policy, scope selections, and release version.
- * @param selection the scope being rendered.
+ * @param selection the scope being emitted.
  * @param manifests the applicable configuration manifests with only their required tools.
  * @returns the template inputs, with empty fragment parts the generator fills per target.
  */
-export function templateInputs(session: Session, selection: ScopeSelection, manifests: Manifest[]): TemplateInputs {
+export function etaInputs(session: Session, selection: ScopeSelection, manifests: Manifest[]): EtaInputs {
     const { root, reads, scopes, version } = session;
     const { policy } = session.policyFiles;
     const sourceFiles = session.repository.files;
@@ -196,16 +196,16 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
 export function emitTarget(
     templatePath: string,
     targetPath: string,
-    inputs: TemplateInputs,
+    inputs: EtaInputs,
     isHeaderWanted: boolean,
 ): string {
-    const rendered = eta.renderString(readAsset(templatePath), { ...inputs, targetPath });
+    const emitted = eta.renderString(readAsset(templatePath), { ...inputs, targetPath });
     if (JSON_EXTENSIONS.has(extensionOf(targetPath))) {
         const format = { width: inputs.format.print_width, indent: inputs.format.indent_width };
-        if (!isHeaderWanted) return jsonText(JSON.parse(rendered), format);
-        return addJsonHeader(rendered, inputs.version, format);
+        if (!isHeaderWanted) return jsonText(JSON.parse(emitted), format);
+        return addJsonHeader(emitted, inputs.version, format);
     }
-    const body = rendered.replace(LEADING_NEWLINES, '').trimEnd() + '\n';
+    const body = emitted.replace(LEADING_NEWLINES, '').trimEnd() + '\n';
     if (!isHeaderWanted) return body;
     return `${headerFor(targetPath, inputs.version)}${body}`;
 }

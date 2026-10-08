@@ -3,18 +3,18 @@ import { posix } from 'node:path';
 import { pathKey } from '#cli/platform/paths.ts';
 import { sameEntry } from '#cli/platform/root/rules.ts';
 import { identify } from '#cli/lifecycle/ownership/log.ts';
-import type { Proposed } from '#cli/types/platform/root.ts';
 import type { Planned } from '#cli/types/lifecycle/apply.ts';
+import type { PlannedFiles } from '#cli/types/platform/root.ts';
 import type { Log, Outcome } from '#cli/types/lifecycle/ownership.ts';
 
 // Validates destination paths and refuses a batch that repeats a destination.
-function validatePlans(log: Log, plans: Planned[], proposed: Proposed): void {
+function validatePlans(log: Log, plans: Planned[], plannedFiles: PlannedFiles): void {
     const destinations = new Set<string>();
     for (const plan of plans) {
         const key = pathKey(plan.path);
         if (destinations.has(key)) throw new Error(`Duplicate plan destination: ${plan.path}`);
         destinations.add(key);
-        if (plan.after !== undefined) log.files.validate(plan.path, plan.after, proposed);
+        if (plan.after !== undefined) log.files.validate(plan.path, plan.after, plannedFiles);
     }
 }
 
@@ -57,13 +57,13 @@ function writeBatch(log: Log, prepared: Planned[]): void {
  * @returns the outcome of each plan, in order
  */
 export function applyPlans(log: Log, plans: Planned[]): Outcome[] {
-    const proposed = new Map(
+    const plannedFiles = new Map(
         plans.map(({ path, after, before, status }) => [
             path,
             status === 'preserved' || (status === 'unchanged' && after === undefined) ? before : after,
         ]),
     );
-    validatePlans(log, plans, proposed);
+    validatePlans(log, plans, plannedFiles);
     const conflict = plans.find((plan) => plan.status === 'preserved');
     if (conflict !== undefined)
         throw new Error(

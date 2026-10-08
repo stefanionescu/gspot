@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { getSuggestions } from '#cli/commands/doctor/suggestions.ts';
@@ -19,13 +19,13 @@ test.each(['recommended', 'all'] as const)(
         await createFileTree(sandbox.path, { ...STYLELINT_PROJECT, 'gspot.toml': policy });
         let session = await openSession(sandbox.path);
         const generated = emitAll(session);
-        expect(generated.configurations).toStrictEqual([
+        expect(generated.toolFiles).toStrictEqual([
             { path: 'package.json', changes: [{ path: ['stylelint'], value: { extends: './.stylelintrc.json' } }] },
             { path: 'app/package.json', changes: [{ path: ['stylelint'], value: { extends: './.stylelintrc.json' } }] },
         ]);
         {
             using log = openOwnership(sandbox.path);
-            writeOutputs(session, log, undefined, generated);
+            writeGeneratedFiles(session, log, undefined, generated);
             expect(log.entryFor('app/package.json')?.configuration?.format).toBe('json');
         }
         expect(await readFile(join(sandbox.path, 'app/child/package.json'), 'utf8')).toBe(TAKEOVER_PACKAGE);
@@ -47,10 +47,10 @@ test.each(['recommended', 'all'] as const)(
             buildPolicy([], { level, tables: '[agent_rules]\nenabled = false\n' }),
         );
         session = await openSession(sandbox.path);
-        expect(emitAll(session).configurations).toStrictEqual([]);
+        expect(emitAll(session).toolFiles).toStrictEqual([]);
         {
             using log = openOwnership(sandbox.path);
-            writeOutputs(session, log);
+            writeGeneratedFiles(session, log);
             expect(log.entryFor('package.json')).toBeUndefined();
             expect(log.entryFor('app/package.json')).toBeUndefined();
         }

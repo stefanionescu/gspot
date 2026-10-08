@@ -30,7 +30,7 @@ npm = "supabase"
 scoop = "supabase"
 
 [[config]]
-template = "semgrep/supabase.yml.tmpl"
+template = "semgrep/supabase.yml.eta"
 target = ".gspot/config/semgrep/supabase.yml"
 tool = "semgrep"
 rule_keys = ["rules"]

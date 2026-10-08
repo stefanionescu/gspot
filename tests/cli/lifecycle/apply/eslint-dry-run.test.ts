@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readFile, writeFile } from 'node:fs/promises';
+import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
-import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
 
 test('apply preview reports a scoped ESLint rule change and saves the baseline only after applying it', async () => {
@@ -30,7 +30,7 @@ test('apply preview reports a scoped ESLint rule change and saves the baseline o
     await writeFile(join(directory.path, 'gspot.toml'), `${policy}${ignored}paths = ["tests/**"]\n`);
     const preview = await applyCommand({ cwd: directory.path, isDryRun: true });
     expect(preview.exitCode, preview.text).toBe(0);
-    const changed = (preview.json as ApplyPreviewJson).drift.find((entry) => entry.path === path);
+    const changed = (preview.json as ApplyPlanJson).drift.find((entry) => entry.path === path);
     expect(changed?.rules?.flatMap((group) => group.changed)).toContain('no-console');
     expect({
         output: await readFile(join(directory.path, path), 'utf8'),

@@ -3,7 +3,7 @@ import { readText } from '#cli/platform/source.ts';
 import { npmToolNames } from '#cli/configurations/pins.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { surveyRepository } from '#cli/repository/survey.ts';
-import { hasToolSection } from '#cli/parsers/tool/configuration.ts';
+import { hasToolSection } from '#cli/parsers/tool/tool-file.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { isGlob, pathMatcher, isToolProjectPath } from '#cli/repository/selectors.ts';
@@ -67,7 +67,7 @@ export function getTooling(root: string, files: TrackedFile[], packageManifests:
         files.filter((file) => file.kind === 'source').map((file) => file.path),
     );
     return {
-        configs: [
+        toolFiles: [
             ...new Map(
                 configurations.map((entry) => [
                     JSON.stringify([entry.tool, entry.path, entry.table, entry.key]),

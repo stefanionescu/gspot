@@ -7,7 +7,7 @@ import type { Root, FileCopy } from '#cli/types/platform/root.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import { STATE_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
-import { OUTPUT_JSON_INDENT } from '#cli/config/lifecycle/ownership.ts';
+import { OWNERSHIP_JSON_INDENT } from '#cli/config/lifecycle/ownership.ts';
 import { recoverInstallations } from '#cli/lifecycle/ownership/installations.ts';
 import type { Log, Identity, Ownership, OwnershipEntry, PendingOwnership } from '#cli/types/lifecycle/ownership.ts';
 
@@ -56,7 +56,7 @@ function openLog(files: Root): Log {
         state.files = [...entries.values()];
         const parsed = ownershipSchema.parse(state);
         const next = {
-            bytes: Buffer.from(`${JSON.stringify(parsed, null, OUTPUT_JSON_INDENT)}\n`),
+            bytes: Buffer.from(`${JSON.stringify(parsed, null, OWNERSHIP_JSON_INDENT)}\n`),
             mode: PRIVATE_FILE,
         };
         files.write(logPath, next, recorded);

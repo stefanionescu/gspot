@@ -4,8 +4,8 @@ import { isGitRepository } from '#cli/repository/root.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
 import type { HookName } from '#cli/types/generation/hooks.ts';
 import { hashCommentHeader } from '#cli/generation/headers.ts';
+import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { HOOK_ARGS, HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 
 // The script of one hook. Git runs it from the top level; a commit message path Git gives relative to there

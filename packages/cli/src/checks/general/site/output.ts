@@ -76,7 +76,7 @@ export async function htmlValidate(input: CheckInput): Promise<Finding[]> {
     if (pages.length === 0) return [];
     const configuration = input.manifests
         .values()
-        .flatMap((manifest) => manifest.configs)
+        .flatMap((manifest) => manifest.toolFiles)
         .find((target) => target.check.includes(input.check.name));
     if (configuration === undefined) throw new Error(`Check ${input.check.name} has no declared HTML configuration.`);
     const config = join(input.root, targetInScope(input.scope, configuration));

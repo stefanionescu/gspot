@@ -38,7 +38,7 @@ describe('parseManifest check declarations', () => {
     );
 
     test('a generated configuration needs a reader in its manifest or the configuration it requires', () => {
-        const tables = '[[config]]\ntemplate = "x.yml.tmpl"\ntarget = ".gspot/config/semgrep/x.yml"\n';
+        const tables = '[[config]]\ntemplate = "x.yml.eta"\ntarget = ".gspot/config/semgrep/x.yml"\n';
         expect(() => parseConfigurationManifest('example', { tables })).toThrow('has no check that reads it');
         expect(() =>
             parseConfigurationManifest('example', {

@@ -21,7 +21,7 @@ import { toolPin, checkToolPin, toolProjectPackage } from '#cli/configurations/p
 export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration): string[] {
     const tools = new Set([check.tool, check.command?.[0], check.fix?.[0], ...(check.other_tools ?? [])]);
     const companions = scope.selected
-        .flatMap((manifest) => manifest.configs)
+        .flatMap((manifest) => manifest.toolFiles)
         .filter((config) => config.tool.length === 0 || config.tool.some((name) => tools.has(name)))
         .filter((config) => config.check.length === 0 || config.check.includes(check.name))
         .filter((config) => config.when === undefined || scope.view.configurations.includes(config.when.configuration))
@@ -117,7 +117,7 @@ export function applicableManifests(session: Session): Manifest[] {
         const consumers = checks.filter((check) => check.scope.selected.includes(manifest));
         const ownsEslint =
             consumers.some((check) => check.tool?.name === 'eslint') &&
-            manifest.configs.some((config) => config.target.includes('eslint'));
+            manifest.toolFiles.some((config) => config.target.includes('eslint'));
         const ownsPrettier = needed.has('prettier') && manifest.tools.some((tool) => tool.prettier !== undefined);
         return {
             ...manifest,

@@ -6,9 +6,9 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { toolPin } from '#cli/configurations/pins.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { cp, mkdir, symlink, readFile } from 'node:fs/promises';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
@@ -41,7 +41,7 @@ test.skipIf(!isPosix).each(['recommended', 'all'] as const)(
         await symlink('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
         const session = await openSession(sandbox.path);
         using log = openOwnership(sandbox.path);
-        writeOutputs(session, log);
+        writeGeneratedFiles(session, log);
         const compiler = toolPin(session.scopes[0]!.selected, 'tsc');
         expect(inspectTool(session, compiler)).toMatchObject({
             state: 'ok',

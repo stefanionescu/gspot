@@ -7,7 +7,7 @@ import { pathExists } from '#tests/harness/preservation.ts';
 import type { Mutation } from '#cli/types/policy/settings.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { AUTHORED_POLICY } from '#tests/config/cli/policy/file.ts';
-import { setKey, addToList, deleteKey, getScopeTable, preparePolicy, proposePolicy } from '#cli/policy/edit.ts';
+import { setKey, addToList, deleteKey, editPolicy, getScopeTable, preparePolicy } from '#cli/policy/edit.ts';
 
 test('policy edits keep a trailing array comma and write inline tables without one', () => {
     const original = '# Authored selection.\nconfigurations = ["security",]\n';
@@ -20,11 +20,11 @@ test('policy edits keep a trailing array comma and write inline tables without o
     const mutate: Mutation = (raw) => {
         setKey(raw, 'ignore', [entry]);
     };
-    const proposed = proposePolicy('.', original, mutate);
+    const proposed = editPolicy('.', original, mutate);
     expect(proposed.text).toContain('# Authored selection.');
     expect(proposed.text).not.toMatch(/,\s*\}/u);
     expect(proposed.policy.ignore).toStrictEqual([entry]);
-    const repeated = proposePolicy('.', proposed.text, mutate);
+    const repeated = editPolicy('.', proposed.text, mutate);
     expect(repeated.changed).toBe(false);
     expect(repeated.text).toBe(proposed.text);
 });

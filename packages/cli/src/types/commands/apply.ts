@@ -6,7 +6,7 @@ export type ApplyOptions = {
 };
 
 /** The JSON a dry-run apply prints: the version pin, the drifted files, and the notes of the plan. */
-export type ApplyPreviewJson = {
+export type ApplyPlanJson = {
     dryRun: true;
     policy: string;
     configurations: string[];

@@ -5,10 +5,10 @@ import { run } from '#cli/platform/spawn.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
-import { gitignoreBlock } from '#cli/generation/outputs.ts';
+import { gitignoreBlock } from '#cli/generation/files.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { applyBlock } from '#cli/platform/managed-blocks.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { CONFIGURATION_TABLE } from '#tests/config/cli/generation/managed-ignores.ts';
 import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
@@ -24,7 +24,7 @@ test.each([true, false])(
         });
         {
             using log = openOwnership(repository.path);
-            writeOutputs(await openSession(repository.path), log);
+            writeGeneratedFiles(await openSession(repository.path), log);
         }
         const path = join(repository.path, '.gitignore');
         // Without Git there is nothing to manage: an authored file is untouched and none is created.
@@ -35,14 +35,14 @@ test.each([true, false])(
         expect(initialized.code, initialized.stderr).toBe(0);
         {
             using log = openOwnership(repository.path);
-            writeOutputs(await openSession(repository.path), log);
+            writeGeneratedFiles(await openSession(repository.path), log);
         }
         const installed = await readFile(path, 'utf8');
         expect(installed.startsWith(original)).toBe(authored);
         expect(installed).toContain('.gspot/state/');
         {
             using log = openOwnership(repository.path);
-            writeOutputs(await openSession(repository.path), log);
+            writeGeneratedFiles(await openSession(repository.path), log);
         }
         expect(await readFile(path, 'utf8')).toBe(installed);
     },

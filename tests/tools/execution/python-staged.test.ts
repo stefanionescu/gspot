@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-import { emitAll } from '#cli/generation/outputs.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { installTools } from '#cli/lifecycle/install.ts';

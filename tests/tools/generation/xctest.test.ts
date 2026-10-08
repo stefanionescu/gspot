@@ -1,15 +1,15 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { stat, chmod, unlink } from 'node:fs/promises';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { DEFECT, CORRECT } from '#tests/config/tools/generation/xctest.ts';
@@ -63,7 +63,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each([
     const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
     expect(outputs.map(({ path }) => path)).toContain(`${prefix}AppTests/.swiftlint.yml`);
     using log = openOwnership(root);
-    writeOutputs(session, log, undefined, emitted);
+    writeGeneratedFiles(session, log, undefined, emitted);
     const planned = planRun(session, { stage: 'commit', only: ['swift/swiftlint'], skips: [] });
     expect(planned).toHaveLength(1);
     expect(commandConfigurations(session, planned[0]!)).toContain(`${prefix}AppTests/.swiftlint.yml`);
@@ -101,7 +101,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
         const outputs = emitted.files.filter(({ path }) => path.endsWith('swiftlint.yml'));
         expect(outputs.filter(({ path }) => path === `${scope}/.swiftlint.yml`)).toHaveLength(1);
         using log = openOwnership(sandbox.path);
-        writeOutputs(session, log, undefined, emitted);
+        writeGeneratedFiles(session, log, undefined, emitted);
         const native = await runTestCommand(
             ['swiftlint', 'lint', '--strict', '--quiet', '--no-cache', '--reporter', 'json', 'Value.swift'],
             { cwd: join(sandbox.path, scope) },

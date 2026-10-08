@@ -17,14 +17,14 @@ import type {
 } from '#cli/types/generation/eslint.ts';
 
 /** Effective scope policy and declared project facts available to generated assets. */
-export type ScopeTemplateInputs = {
+export type ScopeEtaInputs = {
     session: Session;
     selection: ScopeSelection;
     manifests: Manifest[];
     projects: PackageManifest[];
 };
 
-export type TemplateInputs = {
+export type EtaInputs = {
     /** Present for a configuration whose manifest declares rule paths. */
     recordRules?: (document: unknown) => void;
     /** The parts of the ESLint configuration the policy decides, computed when that template renders. */
@@ -80,7 +80,7 @@ export type TemplateInputs = {
     roles: ScopeView['roles'];
     settings: Record<string, unknown>;
     fragments: string;
-    /** Separately rendered fragments for targets that consume structured configuration. */
+    /** Separately emitted fragments for targets that consume structured configuration. */
     fragmentParts: string[];
     fragmentImports: string;
     fragmentFiles: string[];

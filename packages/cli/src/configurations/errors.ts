@@ -210,12 +210,12 @@ function assertConfigurationConsumers(
     tools: Map<string, ToolPin>,
     checks: Map<string, CheckDeclaration>,
 ): void {
-    const unknownTools = manifest.configs.flatMap((config) =>
+    const unknownTools = manifest.toolFiles.flatMap((config) =>
         [...config.tool, ...config.required_tools]
             .filter((name) => !tools.has(name))
             .map((name) => `config ${config.target} requires undeclared tool ${name}.`),
     );
-    const unknownChecks = manifest.configs.flatMap((config) =>
+    const unknownChecks = manifest.toolFiles.flatMap((config) =>
         config.check
             .filter((name) => !checks.has(name))
             .map((name) => `config ${config.target} requires undeclared check ${name}.`),
@@ -268,7 +268,7 @@ export function manifestErrors(raw: ParsedManifest): string[] {
     const checks = raw.checks.flatMap((check) =>
         CHECK_RULES.filter((rule) => rule.applies(check)).map((rule) => rule.error(check)),
     );
-    const fragments = raw.configs.flatMap((config) => [
+    const fragments = raw.toolFiles.flatMap((config) => [
         ...(config.imports !== undefined && !config.fragment
             ? [`config ${config.target} declares imports, which only a fragment renders.`]
             : []),
@@ -283,11 +283,11 @@ export function manifestErrors(raw: ParsedManifest): string[] {
     // Built-in checks read assets in source; command placeholders cannot prove which configs they use.
     if (raw.checks.some((check) => check.command === undefined)) return declarations;
     // A config that needs another configuration is read by that configuration's check, as Semgrep reads every pack in its folder.
-    const configurations = raw.configs
+    const configurations = raw.toolFiles
         .filter((config) => !config.fragment && config.stub_file === undefined && config.when === undefined)
         .filter((config) => {
             const name = configurationName(config.target);
-            const isReadByTemplate = raw.configs.some(
+            const isReadByTemplate = raw.toolFiles.some(
                 (other) => other !== config && other.template?.includes(name) === true,
             );
             return !readers.has(name) && !isReadByTemplate;

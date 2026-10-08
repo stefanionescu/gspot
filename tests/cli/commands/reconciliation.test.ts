@@ -2,17 +2,17 @@ import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, spyOn, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { applyCommand } from '#cli/commands/apply.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { collectPins } from '#cli/configurations/pins.ts';
 import { readTree } from '#tests/harness/preservation.ts';
+import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { rm, unlink, readFile, writeFile } from 'node:fs/promises';
 import { applicableManifests } from '#cli/planning/requirements.ts';
-import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import type { NpmLockfile } from '#tests/types/cli/commands/reconciliation.ts';
 import { EXPO_DEPENDENCIES, NATIVE_DEPENDENCIES } from '#tests/config/samples/react.ts';
 import { NPM_SUCCESS, NPM_VERSION, MOBILE_RECONCILIATION_POLICY } from '#tests/config/cli/commands/reconciliation.ts';
@@ -35,7 +35,7 @@ test('Expo choices survive dependency removal while native tool options and prev
         expect(await readTree(sandbox.path)).toStrictEqual(before);
         await applyCommand({ cwd: sandbox.path, isDryRun: false });
         const policy = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
-        expect(policy).toBe((preview.json as ApplyPreviewJson).policy);
+        expect(policy).toBe((preview.json as ApplyPlanJson).policy);
         const session = await openSession(sandbox.path);
         expect(session.policyFiles.policy.configurations).toContain('expo');
         const pins = new Set(collectPins(applicableManifests(session)).map((tool) => tool.name));
@@ -116,7 +116,7 @@ test('apply retains saved stack choices, settings and command checks when source
     const before = await readTree(sandbox.path);
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
-    const planned = (preview.json as ApplyPreviewJson).policy;
+    const planned = (preview.json as ApplyPlanJson).policy;
     await applyCommand({ cwd: sandbox.path, isDryRun: false });
     expect(await readFile(path, 'utf8')).toBe(planned);
     const absent = parse(planned);
@@ -153,7 +153,7 @@ test('absent scopes retain authored settings without planning their checks or to
     const preview = await applyCommand({ cwd: sandbox.path, isDryRun: true });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
     await applyCommand({ cwd: sandbox.path, isDryRun: false });
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe((preview.json as ApplyPreviewJson).policy);
+    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe((preview.json as ApplyPlanJson).policy);
     const absent = await openSession(sandbox.path);
     expect(absent.policyFiles.policy.scope).toStrictEqual({
         scripts: { configurations: ['bash'], removed_configurations: [] },

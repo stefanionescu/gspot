@@ -22,7 +22,7 @@ export type Root = {
     /** Return metadata for an entry that is not a symbolic link, or undefined if absent. */
     stat(path: string): Stats | undefined;
     /** Check the copy path and link target, consulting proposed entries before the disk. */
-    validate(path: string, value: FileCopy, proposed?: Proposed): void;
+    validate(path: string, value: FileCopy, plannedFiles?: PlannedFiles): void;
     /** Read file bytes or a symbolic link's target bytes, or return undefined if absent. */
     readKeepingLinks(path: string): FileCopy | undefined;
     /** Read a regular file with no other hard link, or return undefined if absent. */
@@ -47,6 +47,6 @@ export type Root = {
     [Symbol.dispose](): void;
 };
 
-export type Proposed = ReadonlyMap<string, FileCopy | undefined>;
+export type PlannedFiles = ReadonlyMap<string, FileCopy | undefined>;
 
 export type Staging = { bounds: Bounds; path: string; target: string; temporary: string };

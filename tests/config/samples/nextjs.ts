@@ -3,7 +3,7 @@
 export const NEXT_CONFIG_FILE =
     '// The framework configuration.\nconst config = { reactStrictMode: true };\n\nexport default config;\n';
 
-/** The home page rendered by the test application. */
+/** The home page emitted by the test application. */
 export const NEXT_PAGE =
     '// The home page.\n\n/**\n * Renders the home page.\n * @returns the page\n */\nexport default function Page(): string {\n    return "home";\n}\n';
 

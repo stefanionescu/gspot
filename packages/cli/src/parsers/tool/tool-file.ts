@@ -3,10 +3,10 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { isRecord } from '#cli/platform/objects.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
-import { TOOL_CONFIGURATION_FORMATS } from '#cli/config/parsers/tool/configuration.ts';
+import { TOOL_FILE_FORMATS } from '#cli/config/parsers/tool/tool-file.ts';
 
 function parseToolFile(text: string, extension: string, path: string): unknown {
-    switch (TOOL_CONFIGURATION_FORMATS[extension]) {
+    switch (TOOL_FILE_FORMATS[extension]) {
         case 'json': {
             return JSON.parse(text) as unknown;
         }

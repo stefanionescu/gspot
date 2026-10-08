@@ -6,7 +6,6 @@ import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { lockfileArgv } from '#cli/tools/npm/install.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/built-in.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
@@ -14,6 +13,7 @@ import { gspotDrift } from '#cli/checks/general/gspot.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { UV_LOCKFILE_ARGUMENTS } from '#cli/config/tools/python.ts';
@@ -31,7 +31,7 @@ test('an edited generated file and one holding merge markers are drift findings,
     });
     {
         using log = openOwnership(sandbox.path);
-        writeOutputs(await openSession(sandbox.path), log);
+        writeGeneratedFiles(await openSession(sandbox.path), log);
     }
     const project = parseToolProject(await readFile(join(sandbox.path, '.gspot/package.json'), 'utf8'));
     for (const command of [
@@ -45,8 +45,8 @@ test('an edited generated file and one holding merge markers are drift findings,
     expect(await pathExists(join(sandbox.path, '.gspot/.venv'))).toBe(false);
     const clean = await executeRun(await openSession(sandbox.path), runOptions);
     expect(clean.report.checks).toMatchObject([{ check: 'gspot/drift', status: 'passed', findings: [] }]);
-    const rendered = await readFile(join(sandbox.path, GENERATED), 'utf8');
-    await writeFile(join(sandbox.path, GENERATED), `${rendered}disable=SC2034\n`);
+    const emitted = await readFile(join(sandbox.path, GENERATED), 'utf8');
+    await writeFile(join(sandbox.path, GENERATED), `${emitted}disable=SC2034\n`);
     const edited = await executeRun(await openSession(sandbox.path), runOptions);
     expect(edited.report.exitCode).toBe(1);
     expect(edited.report.checks[0]?.findings).toMatchObject([
@@ -54,7 +54,7 @@ test('an edited generated file and one holding merge markers are drift findings,
     ]);
     await writeFile(
         join(sandbox.path, GENERATED),
-        `<<<<<<< HEAD\n${rendered}=======\n${rendered}disable=SC2034\n>>>>>>> feature\n`,
+        `<<<<<<< HEAD\n${emitted}=======\n${emitted}disable=SC2034\n>>>>>>> feature\n`,
     );
     const conflicted = await executeRun(await openSession(sandbox.path), runOptions);
     expect(conflicted.report.checks[0]?.findings).toMatchObject([
@@ -67,7 +67,7 @@ test('an edited generated file and one holding merge markers are drift findings,
     ]);
     {
         using log = openOwnership(sandbox.path);
-        writeOutputs(await openSession(sandbox.path), log);
+        writeGeneratedFiles(await openSession(sandbox.path), log);
     }
     const repaired = await executeRun(await openSession(sandbox.path), runOptions);
     expect(repaired.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });

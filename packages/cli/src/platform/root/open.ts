@@ -113,8 +113,8 @@ export function openRoot(root: string, pathFormat: PathFormat = 'portable'): Roo
         },
         list: (path) => listOf(bounds, path),
         stat: (path) => statOf(bounds, path),
-        validate: (path, value, proposed) => {
-            validateRead(bounds, path, value, proposed);
+        validate: (path, value, plannedFiles) => {
+            validateRead(bounds, path, value, plannedFiles);
         },
         read: (path) => readEntry(bounds, path, false),
         readKeepingLinks: (path) => readEntry(bounds, path, true),

@@ -24,10 +24,10 @@ version = "5.0.0"
 npm = "eslint-plugin-react-native"
 
 [[config]]
-template = "eslint.fragment.js.tmpl"
+template = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
-imports = "eslint.imports.js.tmpl"
+imports = "eslint.imports.js.eta"
 fragment = true
 
 [[config.selectors]]

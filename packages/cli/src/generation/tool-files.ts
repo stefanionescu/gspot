@@ -1,24 +1,24 @@
 // The selected configuration files in one scope, with the pointers that lead tools to them.
 import { posix } from 'node:path';
+import { emitTarget } from '#cli/generation/eta.ts';
 import { collectRules } from '#cli/generation/rules.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import { bodyPointer } from '#cli/generation/pointers.ts';
-import { emitTarget } from '#cli/generation/templates.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/selectors.ts';
-import type { ConfigurationFile, GeneratedConfigurationFile } from '#cli/types/configurations.ts';
+import type { GeneratedToolFile, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
 import type {
     Generated,
     EmitInputs,
     EmitConsumers,
     GeneratedFile,
-    ConfigurationInputs,
-} from '#cli/types/generation/output.ts';
+    ToolFileInputs,
+} from '#cli/types/generation/files.ts';
 
 // The directories above a file that a pointer's directory patterns name, each clamped to the scope.
 function pointerDirectories(scope: string, file: TrackedFile, matches: (path: string) => boolean): string[] {
@@ -33,8 +33,8 @@ function pointerDirectories(scope: string, file: TrackedFile, matches: (path: st
 
 // One pointer per directory the configuration's owned files sit in, when the pointer names directories.
 function directoryPointers(
-    context: ConfigurationInputs,
-    configuration: ConfigurationFile,
+    context: ToolFileInputs,
+    configuration: ToolFileDeclaration,
     target: string,
 ): GeneratedFile[] {
     const { files, inputs, selection, manifest } = context;
@@ -57,8 +57,8 @@ function directoryPointers(
 
 // Adds the pointer a configuration declares for its generated file.
 function addPointer(
-    context: ConfigurationInputs,
-    configuration: ConfigurationFile,
+    context: ToolFileInputs,
+    configuration: ToolFileDeclaration,
     file: GeneratedFile,
     generated: Generated,
     fragmentPaths: ReadonlySet<string>,
@@ -92,9 +92,9 @@ function addPointer(
 }
 
 function isConditionMet(
-    configuration: ConfigurationFile,
+    configuration: ToolFileDeclaration,
     context: EmitInputs,
-    condition: ConfigurationFile['when'],
+    condition: ToolFileDeclaration['when'],
 ): boolean {
     if (condition === undefined) return true;
     return isConfigurationSelected(
@@ -104,7 +104,7 @@ function isConditionMet(
 }
 
 // Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
-function isTargetEnabled(configuration: ConfigurationFile, context: EmitInputs, consumers: EmitConsumers): boolean {
+function isTargetEnabled(configuration: ToolFileDeclaration, context: EmitInputs, consumers: EmitConsumers): boolean {
     const needed = configuration.scoped ? consumers.scope : consumers.repository;
     const constraints = [
         [configuration.tool, needed.tools],
@@ -117,8 +117,8 @@ function isTargetEnabled(configuration: ConfigurationFile, context: EmitInputs, 
 
 // Emits one configuration target: its file, its nested copies, and its pointer.
 function emitConfiguration(
-    context: ConfigurationInputs,
-    configuration: GeneratedConfigurationFile,
+    context: ToolFileInputs,
+    configuration: GeneratedToolFile,
     target: string,
     generated: Generated,
     fragmentPaths: ReadonlySet<string>,
@@ -164,7 +164,7 @@ function emitConfiguration(
  * @param seen the targets already emitted
  * @param consumers the applicable checks and the tools they require
  */
-export function emitConfigurations(
+export function emitToolFiles(
     context: EmitInputs,
     generated: Generated,
     seen: Set<string>,
@@ -173,7 +173,7 @@ export function emitConfigurations(
     const { selection } = context;
     const targets = selection.selected.flatMap((manifest) => {
         const owner = { ...context, manifest };
-        return manifest.configs.map((configuration) => ({
+        return manifest.toolFiles.map((configuration) => ({
             configuration,
             owner,
             pointers: configuration.fragment

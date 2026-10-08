@@ -5,7 +5,7 @@ import { join, posix, relative } from 'node:path';
 import { GspotError } from '#cli/platform/errors.ts';
 import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { PORTABLE_LINK_TARGET } from '#cli/config/platform/root.ts';
-import type { Bounds, FileCopy, Proposed, PathFormat } from '#cli/types/platform/root.ts';
+import type { Bounds, FileCopy, PathFormat, PlannedFiles } from '#cli/types/platform/root.ts';
 import { lstatSync, mkdirSync, existsSync, readFileSync, readlinkSync, realpathSync } from 'node:fs';
 import { fileMode, nativeSegments, assertNotPrivate, portableSegments } from '#cli/platform/root/rules.ts';
 
@@ -49,9 +49,9 @@ function isUnsafeLinkTarget(bounds: Bounds, value: FileCopy, target: string): bo
 }
 
 // Refuses a link whose destination is missing or is itself a link, reading proposed files before the disk.
-function assertLinkDestination(bounds: Bounds, path: string, destination: string, proposed?: Proposed): void {
+function assertLinkDestination(bounds: Bounds, path: string, destination: string, plannedFiles?: PlannedFiles): void {
     const targetFile =
-        proposed?.has(destination) === true ? proposed.get(destination) : readEntry(bounds, destination, false);
+        plannedFiles?.has(destination) === true ? plannedFiles.get(destination) : readEntry(bounds, destination, false);
     if (targetFile === undefined) throw new Error(`Lifecycle link target is missing: ${path}`);
     if (targetFile.isLink) throw new Error(`Lifecycle link target is not a regular file: ${path}`);
 }
@@ -131,10 +131,15 @@ export function readEntry(bounds: Bounds, path: string, allowLink: boolean): Fil
  * @param bounds the root.
  * @param path the root-relative path.
  * @param value the copy.
- * @param proposed files about to be written, consulted before the disk for a link's destination.
+ * @param plannedFiles files about to be written, consulted before the disk for a link's destination.
  * @returns the link target text, or undefined for a regular file.
  */
-export function validateRead(bounds: Bounds, path: string, value: FileCopy, proposed?: Proposed): string | undefined {
+export function validateRead(
+    bounds: Bounds,
+    path: string,
+    value: FileCopy,
+    plannedFiles?: PlannedFiles,
+): string | undefined {
     bounds.partsOf(path);
     if (!value.isLink) return undefined;
     const target = value.bytes.toString('utf8');
@@ -144,7 +149,7 @@ export function validateRead(bounds: Bounds, path: string, value: FileCopy, prop
     assertNotPrivate(destination);
     if (posix.relative(posix.dirname(path), destination) !== target)
         throw new Error(`Lifecycle link target must use a normalized relative path: ${path}`);
-    assertLinkDestination(bounds, path, destination, proposed);
+    assertLinkDestination(bounds, path, destination, plannedFiles);
     return target;
 }
 

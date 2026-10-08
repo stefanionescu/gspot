@@ -72,7 +72,7 @@ name = "xcodebuild"
 system = true
 
 [[config]]
-template = "semgrep/swift.yml.tmpl"
+template = "semgrep/swift.yml.eta"
 target = ".gspot/config/semgrep/swift.yml"
 tool = "semgrep"
 rule_keys = ["rules"]

@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { getIniSection } from '#cli/parsers/tool/configuration.ts';
+import { getIniSection } from '#cli/parsers/tool/tool-file.ts';
 
 test('INI selection retains exact section text and treats malformed headings as content', () => {
     const selected =

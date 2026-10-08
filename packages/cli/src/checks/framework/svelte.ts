@@ -48,7 +48,7 @@ export function svelteFindings(check: string, scope: string, stdout: string): Fi
 export async function svelteCheck(input: CheckInput): Promise<Finding[]> {
     // A scope with a generated TypeScript configuration is checked with its strict compiler options.
     const tsconfig = input.selection.selected
-        .flatMap((manifest) => manifest.configs)
+        .flatMap((manifest) => manifest.toolFiles)
         .find((config) => !config.fragment && configurationName(config.target) === 'tsconfig');
     const command = [
         'svelte-check',

@@ -77,7 +77,7 @@ function getRestoration(existing: OwnershipEntry, current: FileCopy | undefined)
  * @param path the file
  * @returns the plan
  */
-export function proposeRestoration(log: Log, path: string): Planned {
+export function planRestoration(log: Log, path: string): Planned {
     const existing = log.entryFor(path);
     const current = getOnDisk(log, path, existing?.installed);
     const base = { path, before: current };

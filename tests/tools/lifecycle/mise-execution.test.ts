@@ -4,18 +4,18 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { misePins } from '#cli/configurations/pins.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { sourceLauncherDirectory } from '#tests/harness/environment.ts';
 import { CLI_PINS, GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
 import { chmod, mkdir, symlink, readFile, realpath } from 'node:fs/promises';
@@ -44,7 +44,7 @@ beforeAll(async () => {
     await chmod(join(state.path, 'old/mise'), 0o755);
     {
         using log = openOwnership(repository.path);
-        writeOutputs(await openSession(repository.path), log);
+        writeGeneratedFiles(await openSession(repository.path), log);
     }
     project = {
         root: repository.path,
@@ -114,7 +114,7 @@ test.skipIf(!isPosix)(
             using log = openOwnership(root);
             applyPlan(
                 log,
-                proposeReplacement(log, {
+                planReplacement(log, {
                     path: '.gspot/obsolete.json',
                     next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
                     kind: 'config',

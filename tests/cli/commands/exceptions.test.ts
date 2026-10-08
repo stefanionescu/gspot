@@ -9,7 +9,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { readTree } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import type { SettingsListJson } from '#cli/types/commands/list.ts';
-import type { PolicyPreviewJson } from '#cli/types/commands/save-policy.ts';
+import type { PolicyPlanJson } from '#cli/types/commands/save-policy.ts';
 
 import {
     ROOT_PROJECT,
@@ -47,7 +47,7 @@ test.each(PRIMITIVE_EXCEPTIONS)(
             '--json',
         ]);
         expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-        const proposed = JSON.parse(preview.stdout) as PolicyPreviewJson;
+        const proposed = JSON.parse(preview.stdout) as PolicyPlanJson;
         expect(proposed.dryRun).toBe(true);
         expect(valueAt(parseToml(proposed.policy), key.split('.'))).toStrictEqual(acceptedValues([value]));
         if (list) expect(valueAt(parseToml(proposed.policy), ['reasons', key])).toBe(EXCEPTION_REASON);

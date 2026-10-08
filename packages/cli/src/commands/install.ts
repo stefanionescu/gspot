@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { compact } from '#cli/platform/objects.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { findRoot } from '#cli/repository/root.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { printResult } from '#cli/terminal/messages.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';

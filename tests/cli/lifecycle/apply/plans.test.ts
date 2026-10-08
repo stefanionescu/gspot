@@ -4,8 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { PackageJson } from '#cli/types/parsers/packages.ts';
 
@@ -18,7 +18,7 @@ test('apply refuses a plan whose policy changed after the session was read', asy
     await Bun.write(join(sandbox.path, 'gspot.toml'), edited);
     {
         using log = openOwnership(session.root);
-        expect(() => writeOutputs(session, log)).toThrow(
+        expect(() => writeGeneratedFiles(session, log)).toThrow(
             'The gspot.toml file changed while gspot was running. Run the command again.',
         );
     }
@@ -34,7 +34,7 @@ test('an npm runner preserves the authored scripts and adds no task of its own',
     });
     {
         using log = openOwnership(sandbox.path);
-        writeOutputs(await openSession(sandbox.path), log);
+        writeGeneratedFiles(await openSession(sandbox.path), log);
     }
     const content = JSON.parse(await readFile(join(sandbox.path, 'package.json'), 'utf8')) as Required<
         Pick<PackageJson, 'scripts'>

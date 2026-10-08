@@ -6,7 +6,7 @@ import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { VERSION_FILE } from '#cli/config/platform/locations.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 
 /**
  * The pinned version, or undefined when the repository has none.
@@ -28,7 +28,7 @@ export function readVersionPin(root: string): string | undefined {
 export function writeVersionPin(log: Log): void {
     const status = applyPlan(
         log,
-        proposeReplacement(log, {
+        planReplacement(log, {
             path: VERSION_FILE,
             next: { bytes: Buffer.from(`${RUNNING_VERSION}\n`), mode: OWNER_WRITABLE_FILE },
             kind: 'pin',

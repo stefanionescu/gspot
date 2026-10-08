@@ -1,7 +1,7 @@
 import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { parserFor } from '#cli/parsers/tree-sitter.ts';
 

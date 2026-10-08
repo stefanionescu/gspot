@@ -10,7 +10,7 @@ import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { ApplyReport } from '#cli/types/lifecycle/apply.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { EXTERNAL_INPUT_CASES } from '#tests/config/cli/lifecycle/apply.ts';
 import { rm, stat, chmod, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
 
@@ -108,7 +108,7 @@ test('apply validates obsolete output parents before publishing new configuratio
 
         applyPlan(
             log,
-            proposeReplacement(log, {
+            planReplacement(log, {
                 path: '.gspot/obsolete/old.txt',
                 next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
                 kind: 'config',

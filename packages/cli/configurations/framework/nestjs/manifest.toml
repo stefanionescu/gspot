@@ -23,10 +23,10 @@ version = "7.5.5"
 npm = "@darraghor/eslint-plugin-nestjs-typed"
 
 [[config]]
-template = "eslint.fragment.js.tmpl"
+template = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
-imports = "eslint.imports.js.tmpl"
+imports = "eslint.imports.js.eta"
 fragment = true
 
 [[config.selectors]]

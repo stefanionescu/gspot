@@ -54,7 +54,7 @@ name = "bats"
 system = true
 
 [[config]]
-template = "semgrep/bash.yml.tmpl"
+template = "semgrep/bash.yml.eta"
 target = ".gspot/config/semgrep/bash.yml"
 tool = "semgrep"
 rule_keys = ["rules"]

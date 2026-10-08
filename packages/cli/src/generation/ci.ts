@@ -3,7 +3,7 @@ import { Scalar, Document, stringify } from 'yaml';
 import { CLI_PINS } from '#cli/config/configurations.ts';
 import { HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 import { hashCommentHeader } from '#cli/generation/headers.ts';
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
+import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
 
 import {

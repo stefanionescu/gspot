@@ -1,5 +1,5 @@
 {
-    "openRecords": 947,
+    "openRecords": 909,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -12,7 +12,7 @@
             "scope": "Test, script, and package organization",
             "decision": "The current user plan requires four test directories: cli, plugin, tools, and packages. Config and types mirror their behavioral owners, and the shared harness stays flat. Scripts own suite and registry orchestration. This supersedes the inherited five-family decision.",
             "evidence": [
-                "The user’s implementation plan in this conversation",
+                "The user\u2019s implementation plan in this conversation",
                 "tests/package.json",
                 "tests/bunfig.toml",
                 "mise.toml",
@@ -155,7 +155,7 @@
             "decision": "Keep Taplo defaults. The canonical emitter may correct toml-patch array spacing and trailing commas while preserving comments, native value encoding, and spaced inline tables. This supersedes the earlier proposal limited to a dependency spacing fix and resolves the policy-format/007 spacing and commented multiline-array conflicts. Do not change Taplo options or retain duplicate writers.",
             "evidence": [
                 "User answer: Keep Taplo defaults; permit a minimal dependency fix that gives arrays compact spacing while preserving spaced inline tables.",
-                "Later user answer: Keep Taplo defaults; allow the emitter to correct toml-patch’s array layout while preserving comments and native value encoding."
+                "Later user answer: Keep Taplo defaults; allow the emitter to correct toml-patch\u2019s array layout while preserving comments and native value encoding."
             ]
         },
         {
@@ -216,7 +216,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 947,
+        "openRecords": 909,
         "records": 1092,
         "batches": [
             {
@@ -1382,8 +1382,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 38,
-                "unresolvedAssignments": 431
+                "completedAssignments": 41,
+                "unresolvedAssignments": 428
             },
             {
                 "id": "scripts-repository",
@@ -1667,8 +1667,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 2,
-                "unresolvedAssignments": 135
+                "completedAssignments": 32,
+                "unresolvedAssignments": 105
             },
             {
                 "id": "policy-file",
@@ -1930,8 +1930,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 3,
-                "unresolvedAssignments": 56
+                "completedAssignments": 6,
+                "unresolvedAssignments": 53
             },
             {
                 "id": "names",
@@ -1966,8 +1966,8 @@
                     "review/glossary/028",
                     "review/glossary/029"
                 ],
-                "completedAssignments": 2,
-                "unresolvedAssignments": 26
+                "completedAssignments": 4,
+                "unresolvedAssignments": 24
             }
         ],
         "overlapPolicy": "Each starting record retains its ID and original quotation. Overlapping records appear in every applicable batch. Batch assignment does not close a finding. Second-pass slice corrections precede area and main-summary reconciliation."
@@ -5638,10 +5638,13 @@
             "verification": []
         },
         "review/configurations-plugin/008": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Filesystem test-placement enforcement moved from ESLint to native structure/test-placement. Deleted plugin source/config/types/tests and Jest/Vitest rule delivery. Actual lexical TypeScript symbol ownership distinguishes assertion imports/shadowing; framework-specific layouts retained. ROOT21tests41assertions plus CSSDoctor31tests88assertions pass; plugin/build/apply/staged0.",
+                "Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint."
+            ]
         },
         "review/configurations-plugin/009": {
             "status": "complete",
@@ -5664,10 +5667,13 @@
             "verification": []
         },
         "review/configurations-plugin/012": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Published ESLint library runtime dependencies use ^8.70.0 and ^4.0.7 ranges, peers retain ranges. Normal Bun lockfile regeneration changes no installed versions; exact justified published-library range exception recorded through gspot ignore, canonical writer/native apply. Plugin build and staged gate pass.",
+                "Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint."
+            ]
         },
         "review/configurations-plugin/015": {
             "status": "pending",
@@ -5943,10 +5949,13 @@
             "verification": []
         },
         "review/configurations-plugin/064": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Framework-native Jest __tests__ and Nest .spec layouts remain allowed; assertion-bearing tests and support ownership enforced through native path check. Shipped TESTING guidance and generated configurations agree; integrated placement/scoped/Jest/Vitest cases pass.",
+                "Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint."
+            ]
         },
         "review/configurations-plugin/066": {
             "status": "pending",
@@ -5961,56 +5970,81 @@
             "verification": []
         },
         "review/docs-site/001": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Delete the status text from both package READMEs, the homepage, install.md, and the three quickstarts. Keep it only in `README.md:9-11`.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/002": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Use `edit/main/docs/` for authored pages. Keep the SHA only for the generated pages' `blob/` links (docs/src/content/reference/page.ts:13).",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/003": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Map `add` and `remove` in `COMMAND_OWNERS` to `commands/add-remove.ts`, the file name after review/source-layout/045. Make `commandPage` throw when the owner file does not exist, so a wrong path fails the docs build.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/004": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Delete `COMMAND_EXAMPLES` and the merge in commands.ts:14-16. Put any second example into that command's `addHelpText`.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/005": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Use `team.template.toml` in the templates guide (`templates.md:11,20-24`) and in the export help (`commands/export.ts:65`). Drop `../team.gspot.template.toml` from `gspot.toml:136`. Init copies a template once and records it in one comment line with its name and sha256, not in a `template` key (review/commands-templates/009); show that line in the guide.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/007": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Send `GITHUB_TOKEN` as a bearer token when `policy/templates.ts:71-82` fetches a `github:` template source and the variable is set. Say in the templates guide that a template in a private repository needs `GITHUB_TOKEN`.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/009": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Rewrite the first section of `guides/remove.md`: `gspot remove nextjs --dry-run`, then `gspot remove nextjs`. The removal survives later detection, because `remove` writes the name into `removed_configurations` in gspot.toml (`review/code-commands/012`). `remove` installs nothing and prints \"run gspot install\" when the tool set changes (`review/commands-templates/019`). A required configuration must be removed after the configuration that requires it.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/010": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence fb891cda8831aa56."],
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Evidence fb891cda8831aa56.",
+                "Drop the `add` step from `dependency-licenses.md`. Say that `licenses` is selected when a dependency manifest exists. Make `add` refuse general configurations with the same message as `remove` (`configurations.ts:125-128`); manual `add` and `remove` exist for language and framework overrides.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-native-cli-fixture-followup-before",
-                    "commit": null,
+                    "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
                     "verification": ["Evidence fb891cda8831aa56."]
                 }
             ]
@@ -6022,56 +6056,83 @@
             "verification": []
         },
         "review/docs-site/013": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Delete it. `site/dead-assets` would report it.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/014": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Delete these rules.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/015": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Delete the Footer override and the `.mobile-theme` CSS.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/016": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Use Starlight's ThemeSelect. Delete the override, theme.ts, and the menu CSS.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/017": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Render `<HomeHero />` directly in index.astro, drop `hero` from its frontmatter, and delete the override. Adjust theme.css:200-212.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/018": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Use `<Tabs>`/`<TabItem>` for the three steps. Delete example.ts and the `.demo-steps` CSS (home.css:98-120).",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/019": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Add two `head` entries to `404.md`. Delete the three files, `routeMiddleware`, and the knip entry.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/020": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence ab56c1858ce26473.", "Evidence 249c0b15a5538cd5.", "Evidence f706f04fbb49307e."],
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Evidence ab56c1858ce26473.",
+                "Evidence 249c0b15a5538cd5.",
+                "Evidence f706f04fbb49307e.",
+                "Build one zod schema (policy plus manifest settings) in `packages/cli/src/policy/schema/`. Use it for parsing and for `z.toJSONSchema`. The docs only serialize it. Most agreement data then goes away.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
                     "verification": [
                         "Evidence ab56c1858ce26473.",
                         "Evidence 249c0b15a5538cd5.",
@@ -6090,16 +6151,22 @@
             ]
         },
         "review/docs-site/024": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Make `Hero.astro` import the version from `@gspothq/cli/package.json`. In the Markdown pages and both READMEs, write `<version>` with a link to the npm package page instead of `0.1.0`.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/025": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "install.md owns the procedure. README keeps the table, the npm block, and a link. `build:cli` (packages/cli/scripts/build.ts) writes packages/cli/README.md from README sections 1-4 and 6. The quickstarts link to Requirements instead of restating it.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/026": {
             "status": "pending",
@@ -6120,16 +6187,22 @@
             "verification": []
         },
         "review/docs-site/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Use the README sentence in both places.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/030": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Rule metadata owns property descriptions and requiresOptions; deleted duplicated docs maps. Normal plugin build and docs309-page build/locallinks pass; source lint/types0. Frozen14-owner native metadata evidence retained.",
+                "Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint."
+            ]
         },
         "review/docs-site/031": {
             "status": "pending",
@@ -6144,58 +6217,85 @@
             "verification": []
         },
         "review/docs-site/033": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Rename `/reference/configuration/` to `reference/gspot-toml`, and `guides/repository-checks` to `guides/command-checks` with the label \"Command checks\" (a `[[check]]` entry runs a command the repository declares). Do not use \"custom\": `review/owner-decisions/003` restores it as a banned term. Update `navigation.ts:38,67`, `exclude.md:18`, and `repository-checks.md:102`.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/034": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Print \"Selected when required by: ...\" from `requires`. Print only the host tools under \"You install\".",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/037": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "The archive-test text goes with `CONTRIBUTING.md` (review/owner-decisions/007). Correct the Node sentence: `mise.toml` pins only Bun (`mise.toml:19`), and Node comes from the generated `.mise/conf.d/gspot-tools.toml`. Drop the source-checkout sentence from `guides/requirements.md:6`.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/040": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "In `packages/cli/src/config/rules.ts:8` (the source of AGENTS.md:73) and `guides/agents.md:26`, write: \"Change policy with `gspot set` or `gspot ignore`. After a hand edit of `gspot.toml`, run `gspot apply`.\"",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/041": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Add `.markdownlint-cli2.mjs` (at the root and in `docs/`) and `ruff.toml` to the pointer list at `generated-files.md:26-28`, and say that pointers can also land in subfolders and scopes (areas/developer-experience/037).",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/042": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Add `.meta({ description })` to each output format in `parsers/schema/output.ts`, including `semgrep` and `trufflehog-json`, so the reference lists every format, and link the guide to it. `eslint` goes with review/code-execution/016.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/043": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "List all five.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/044": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Replace the example at `guides/exclude.md:28-32` with `gspot ignore javascript/eslint --rule no-console --paths \"scripts/**\" --reason \"Scripts print their results to the terminal.\"`.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/045": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Say \"level `all` conventions\" instead of \"house style\". Delete `requirements.md:36`. Quote the real message start, \"The working tree has\", in the troubleshooting heading.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/046": {
             "status": "pending",
@@ -6204,10 +6304,13 @@
             "verification": []
         },
         "review/docs-site/048": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Move them to `docs/assets/readme/`, outside `public/`, and update README.md:1-5.",
+                "Integrated authored source and native producer changes; actual ROOT155 tests791 assertions13files10.53s, root types0, docs309pages and local links/fragments valid. Actual integrated staged check:141 passed,14 substantive skips plus36 input skips, zero findings; types/builds passed."
+            ]
         },
         "review/docs-site/049": {
             "status": "complete",
@@ -6527,10 +6630,13 @@
             ]
         },
         "review/glossary/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Public setting terminology and --no-agent-rules flag agree across all12commands, generated help/reference and docs. Native old flag refusal/new flag/all commands probe, focused230tests1035assertions and ROOT155tests791assertions pass.",
+                "Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint."
+            ]
         },
         "review/glossary/027": {
             "status": "pending",
@@ -6539,10 +6645,13 @@
             "verification": []
         },
         "review/glossary/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Public explanation/help/output prose uses rule and check terminology consistently; native tool-rule discriminator remains required native API. Frozen authored oldsymbol/prose audit0; ROOT155tests791assertions, types0 and generated docs links pass.",
+                "Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint."
+            ]
         },
         "review/glossary/029": {
             "status": "pending",
@@ -9878,16 +9987,22 @@
             ]
         },
         "review/tests-tools/006": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Deleted duplicate ESLint child programs; native calculateConfigForFile/lintFiles/outputFixes in process. Final49-owner packet preserves distinct behavior. ROOT197tests1347assertions37files66.14s pass; types0.",
+                "Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint."
+            ]
         },
         "review/tests-tools/007": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "ESLint contracts belong to CLI; actual compiler/Node tool execution stays in tools. Deleted ESLint-config-prettier executable smoke. ROOT197tests1347assertions37files pass. Literal mirrors follow actual tests; no old compatibility owners.",
+                "Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint."
+            ]
         },
         "review/tests-tools/008": {
             "status": "pending",
@@ -9943,10 +10058,13 @@
             "verification": []
         },
         "review/tests-tools/016": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "verification": [
+                "Merged scripts JavaScript/typed/shebang/extensionless and structural contract cases into node-scripts; original distinct assertions retained. ROOT197tests1347assertions37files pass; native31 mechanical test bodies equivalent and final named cases pass.",
+                "Integrated staged check141passed,50skips including input skips, zero findings; normal commit/push evidence attached at ledger checkpoint."
+            ]
         },
         "review/tests-tools/017": {
             "status": "pending",
@@ -14079,7 +14197,7 @@
             ],
             "evidence": "/tmp/gspot-test-boilerplate-main-freeze.json",
             "limitations": [
-                "045remainingprose fixture→sandbox/sample obligation is not implemented in this packet.",
+                "045remainingprose fixture\u2192sandbox/sample obligation is not implemented in this packet.",
                 "Main Git metadata protected; required main commits/push pending.",
                 "Fullnative checkpoint andcross-platform CI incomplete; older stagedmirroractualexit2 preserved."
             ]
@@ -14922,6 +15040,57 @@
             "limitations": [
                 "Whole repository CI has real failures being corrected; no cross-platform completion claim. main/001 external publication/setup stays partial."
             ]
+        },
+        {
+            "commit": "f3a8a0d5c99de531a78612f2ec395b54f59a7ebd",
+            "completedRecords": [
+                "review/docs-site/001",
+                "review/docs-site/005",
+                "review/docs-site/007",
+                "review/docs-site/009",
+                "review/docs-site/010",
+                "review/docs-site/014",
+                "review/docs-site/015",
+                "review/docs-site/016",
+                "review/docs-site/020",
+                "review/docs-site/037",
+                "review/docs-site/041",
+                "review/docs-site/042",
+                "review/docs-site/043",
+                "review/docs-site/044",
+                "review/docs-site/045",
+                "review/docs-site/048",
+                "review/docs-site/002",
+                "review/docs-site/003",
+                "review/docs-site/004",
+                "review/docs-site/013",
+                "review/docs-site/017",
+                "review/docs-site/018",
+                "review/docs-site/024",
+                "review/docs-site/025",
+                "review/docs-site/034",
+                "review/docs-site/019",
+                "review/docs-site/033",
+                "review/docs-site/029",
+                "review/docs-site/040",
+                "review/docs-site/030",
+                "review/tests-tools/006",
+                "review/tests-tools/007",
+                "review/tests-tools/016",
+                "review/glossary/026",
+                "review/glossary/028",
+                "review/configurations-plugin/008",
+                "review/configurations-plugin/064",
+                "review/configurations-plugin/012"
+            ],
+            "unresolvedRecords": 909,
+            "validation": [
+                "ROOT focused155tests791assertions; ESLint197tests1347assertions; placement21tests41assertions; CSSDoctor31tests88assertions; schema5tests30assertions.",
+                "Root/CLI types0; normal plugin/CLI builds, install:checks and gspot apply; docs309pages/all local links and fragments pass; actual staged141passed50skips0findings."
+            ],
+            "limitations": [
+                "Whole repository CI has real failures being corrected. No cross-platform completion or tutorial027 claim. main/001 external publication/setup stays partial."
+            ]
         }
     ],
     "verificationEvidence": {
@@ -14980,9 +15149,9 @@
         "4d963f8301a62b9b": "Native Vale3tests6assertions and CLI14tests61assertions, root/CLI types/affected formatting/lint pass. Authored reduction831bytes22lines90AST and equivalence evidence preserved. Complete native npm/package runs remain blocked by existing cache restrictions; no new consumer/platform proof claimed.",
         "a746ef0094600703": "Localexact2-owner /tmp/gspot-duplicate-large-file-test-main.patch SHA256 d70788f86061204fe501b48dae0a40a098c7c4c3ec514682f96617da666d9e98; inventory /tmp/gspot-duplicate-large-file-test-main-freeze.json; reduction1335bytes22lines218AST.",
         "71385db83dd55fb9": "Prescribedduplicate structure/large-files case removed; existingrepository-shape coverage remainsstronger andeveryremainingtracked-dependencyassertion/body remainsbyte-identical. DeleteunusedOVER_LIMIT_KB andfourdeadimports; nativeformatterimportsorting only. Earlier045commentpacket preservedaspriorownership, no unrelatedsource/harness change.",
-        "1ededa3f7361328b": "IndependentparsedTS original2→1tests; retainedtracked-dependencytest andremainingnonimportstatements exact. Existing repository-shape testplants2MBundeclared/2MBdeclaredgenerated/smalltext andexpectsonlybig.bin; /tmp/gspot-duplicate-large-file-test-independent-review.md",
+        "1ededa3f7361328b": "IndependentparsedTS original2\u21921tests; retainedtracked-dependencytest andremainingnonimportstatements exact. Existing repository-shape testplants2MBundeclared/2MBdeclaredgenerated/smalltext andexpectsonlybig.bin; /tmp/gspot-duplicate-large-file-test-independent-review.md",
         "856eb28b92109f3f": "Describe eslint-disable absentbefore/after; explicit112prerequisite009removednow. No suppression/policy/source/harness weakened.",
-        "6ba11121d8730575": "Global recommends→suggests field and actual consumers implemented with no aliases; recommended check level retained. Docs/tests engines align with required Node24.2 while plugin owns its separate engine. Swift source/coverage parser mechanical owners and coverage acceptance cases integrated; original quotes/IDs preserved.",
+        "6ba11121d8730575": "Global recommends\u2192suggests field and actual consumers implemented with no aliases; recommended check level retained. Docs/tests engines align with required Node24.2 while plugin owns its separate engine. Swift source/coverage parser mechanical owners and coverage acceptance cases integrated; original quotes/IDs preserved.",
         "6495aa2721aec77b": "Native schema freshness/root types/combined33tests164assertions/CLI build/main apply pass. Actual Swift --enable-code-coverage probe failed on prohibited cache writes; source/mode preserved. main097 remains partial and actual target coverage is not verified. Main metadata/CI pending.",
         "8ce35f2a13905491": "Permissions changed; actual native Swift package path now runs successfully with no Xcode project and no cache/environment overrides. Public source CLI reports Core83% under its explicit100% floor while the second Auxiliary target meets100%; adding the missing Core branch passes both targets. Actual swift test coverage and reported path are consumed by the shipped measureCoverage path.",
         "373c2975e1d4f646": "Eleven native assertions verify failed/passed statuses, exact sole below-floor target, and unchanged authored package/source bytes and mode. Failed first probe from XCTest global value name collision preserved; final native fixture uses selectedValue and passes. Existing source implementation retained; designated staged/Git and cross-platform evidence remain pending.",
@@ -15050,12 +15219,12 @@
         "d283016767a09c8f": "Darwin/Bun1.4.2 native generation8pass0fail26assertions660ms; three existing init-provider plans3pass21assertions862ms with six job cases filtered. Root TypeScript exit0; native import-order correction retained, final actual three affected policy checks0findings4.4s. Independent /tmp/gspot-ci-test-assertions-independent-review-final.md verifies2hashes/preserved native job bodies/all fixture values and counterexamples; temporary patch whitespace/reverse checks pass.",
         "f897b0b6ab7080f7": "Full commands CI+generation attempt stalled before the first native job result and was interrupted through exact execsession72649, exit130; /tmp/gspot-ci-test-assertions-focused.log retained. Native CI job execution remains unproved; unrelated full per-test installation setup is not bypassed or assigned another time budget. Main metadata protected, required main commits/push/platform CI pending; no records closed.",
         "4c422e170bac4ef8": "Local11-owner /tmp/gspot-independent-test-cases-main.patch SHA256 05f700217750feb2accd7b9a9ad2f6a9b6296339089dc25ab770111d2bbb80c8; exact freeze /tmp/gspot-independent-test-cases-main-freeze.json; measured delta -705bytes/11physical lines/84TypeScriptAST nodes.",
-        "df6dfb5c3a007d44": "All eleven143 prescribed loop owners now use independently named test.each cases: missing license dependencies×scope, framework×level, Vitelevel, escapedscope, retainedPython table×scope, Next.jsroute×level, unsafepaths/Windowsmodes, managedformat×newline, spellingreason values, externalfile/directorylinks, first-read exclusions. Required vocabulary owner rules→agent-rules was already integrated; no closed record reopened.",
+        "df6dfb5c3a007d44": "All eleven143 prescribed loop owners now use independently named test.each cases: missing license dependencies\u00d7scope, framework\u00d7level, Vitelevel, escapedscope, retainedPython table\u00d7scope, Next.jsroute\u00d7level, unsafepaths/Windowsmodes, managedformat\u00d7newline, spellingreason values, externalfile/directorylinks, first-read exclusions. Required vocabulary owner rules\u2192agent-rules was already integrated; no closed record reopened.",
         "1d56dfc2dfecf524": "Original literals and contractual assertions retained. Escaped-scope test runner serves two real calls and compares each native generated syntax shape with a benign generated scope, while both retain no-undef/literal/security assertions and resource disposal. Windowsmode rows preserve writable/readonly equivalence, platform identities, idempotence and links. Vite cases own separate sandboxes, so obsolete cross-case reset is deleted. First direct comparator grew code and was replaced; first/unlabelled patches and labeltuple type findings preserved.",
         "81f2b68541a631b5": "168pass0fail754assert11files23.54s before title refinement; final titled4owner rerun89pass0fail423assert13.99s; root TypeScript exit0 after final labels, exact execsession91426; 7native affected checks0findings15.572s exit0; /tmp/gspot-independent-test-cases-policy-ready.json. Independent review verifies all22 original/final hashes and every original case/assertion; distinct LF/CRLF/root/mode titles verified by native logs. Less authored text despite additional test registration syntax; no production/policy changes.",
         "5d49b3ca162fc267": "No closures: required main commits/push and platform CI remain blocked or pending. Temporary native full staged mirror will be updated after final ledger formatting; focused results alone do not prove the complete checkpoint.",
         "dcc5449d7f2c7c62": "Local7-owner /tmp/gspot-disposable-test-environment-main.patch SHA256 71cc991b8bba377e5fb93f457d1870651aadae68a72d32d13439cd90622439b1; exact inventory /tmp/gspot-disposable-test-environment-main-freeze.json; reduction515bytes3physical lines10TypeScriptASTnodes. Existing flat harness owners define useEnvironment and usePlatform; no production/policy changes.",
-        "c026281130a15a02": "145 five exact hand-restoration families now use native disposable scopes: platform/environment, old diagnostics→tools/credentials, old installation merged→configurations/pins, old package-installer→tools/npm/client, and inspect/hints. Environment restoration keeps undefined and empty values distinct; platform restoration keeps the entire original descriptor. Names _environment/_host mark resources used only by native disposal under the existing Sonar underscore convention; no suppression, dummy reads or extra wrapper stacks introduced.",
+        "c026281130a15a02": "145 five exact hand-restoration families now use native disposable scopes: platform/environment, old diagnostics\u2192tools/credentials, old installation merged\u2192configurations/pins, old package-installer\u2192tools/npm/client, and inspect/hints. Environment restoration keeps undefined and empty values distinct; platform restoration keeps the entire original descriptor. Names _environment/_host mark resources used only by native disposal under the existing Sonar underscore convention; no suppression, dummy reads or extra wrapper stacks introduced.",
         "9396feea34c02bde": "Darwin/Bun1.4.2 final49pass1macOSskip0fail115assertions5files795ms; root TypeScript exit0; final actual seven checks0findings5.3s. Native nested clear/empty restoration and exact descriptor restoration pass after a thrown scope (/tmp/gspot-disposable-test-environment-native-probe.ts/.log); independent exact-body failure probe preserves the original error in SuppressedError and still restores remaining LIFO platform resource. No new repository test mirrors the helpers. The skipped relative-cache scenario is not platform acceptance. Temporary integration7owner hashes/whitespace/reverse checks pass.",
         "862df05a9a8937e9": "/tmp/gspot-shared-test-data-main.patch SHA256 86ebf05b76a3a36c39cac171ed2be4e907f8981e5234c3b17e12264f4b8594c2; authored owner inventory /tmp/gspot-shared-test-data-main-freeze.json",
         "2efd3db6270d0cc1": "Shared data native acceptance: Gitleaks reports the inert shared token as generic-api-key at line 1; typos reports the shared misspelling and its expected correction. Sample/API ownership changes preserve the existing assertions.",
@@ -15094,7 +15263,7 @@
         "de95cdd072df97ac": "Native tool runner preparation remains blocked by npm home-cache permissions. Main commits/push and cross-platform acceptance remain pending.",
         "99093e9d3cc0720e": "Local2-owner /tmp/gspot-duplication-test-data-main.patch SHA256 f02cf32bf5ab6676ff7ca45303781a48bc981dc83a9adfead34e28d1ad9b3515; frozenowner evidence /tmp/gspot-duplication-test-data-main-freeze.json. Removes4518authoredbytes while adding3physical lines/38TypeScriptASTnodes for nativegenerator/threecaller runner.",
         "e149548ee95da099": "Required Array.from generates40metadata rows and30Bash commands inside the existing duplicationtest; configowns counts and retains unrelated DUPLICATION_INIT. Independent Bun1.4.2/Node24.20.0 native VM probes compare against original parsedTypeScript stringliterals: exact2422JSONbytes/2049Bashbytes. Every original planted file/correction/init/PATH/timeout/disposal remains; no production changes.",
-        "2d51df25432e7311": "Nativeinitialmax-lines findings resolved by shared calculation inside testfile with three real publiccheck/exitassert/reportdecode callers. Clean/defect/correction exits0→1→0 andexactfinding/status/correctionmatchers remain; supportcode contains no added tests/assertions. Native7affectedchecks0findings13.999s; finalrootTypeScript actualexit0 execsession2611; independent /tmp/gspot-duplication-test-data-independent-review.md verifies hashes/metrics/casecontracts.",
+        "2d51df25432e7311": "Nativeinitialmax-lines findings resolved by shared calculation inside testfile with three real publiccheck/exitassert/reportdecode callers. Clean/defect/correction exits0\u21921\u21920 andexactfinding/status/correctionmatchers remain; supportcode contains no added tests/assertions. Native7affectedchecks0findings13.999s; finalrootTypeScript actualexit0 execsession2611; independent /tmp/gspot-duplication-test-data-independent-review.md verifies hashes/metrics/casecontracts.",
         "15fa5e38631008ab": "Actual native direct invocation0pass1fail beforechecks because workspace archive metadata requires the designated runner; then exact mise run test:tools -- -- tools/configurations/general/duplication.test.ts exit1 beforetests because workspace npm pack cannot write /Users/dr_stone/.npm cache. Both failed logs retained; no fulltool acceptance, cacheoverride, homepermissions or extratime budget introduced. Main commit/push/platform CI pending; recordpartial.",
         "cbd6f7fad0d84aa3": "Local6-owner /tmp/gspot-always-selected-test-configurations-main.patch SHA256 315ba69e55382e05feaa97de083259e6c422a679ac5faf9c68837033a723a97e; exact freeze /tmp/gspot-always-selected-test-configurations-main-freeze.json; measured delta -2bytes/-9physical lines/36TypeScriptAST nodes.",
         "5f6e2540f0c8d814": "Required alwaysSelectedConfigurations() is owned by existing tests/harness/policy.ts and queries native manifest general kind, always_selected and absent when. Four consumers now call it; static AUTOMATIC_GENERAL_CONFIGURATIONS and old imports are removed from tests/config/harness/policy.ts. Native registry ordering and every exact matcher remain; no production/schema changes.",
@@ -15142,7 +15311,7 @@
         "000f496ce4afd6de": "Integrated finalfour CLI check test owners; native35pass165assert6.02s, roottypes and seven affected policychecks0 with current normal plugin, one Windows-only skip explicit. All54expect sites retained, actual async Promise callbacks supervised. Growth387bytes5lines58AST; native policy-layout race spy remains precise synchronous boundary.",
         "f5b2c7130520fdcd": "Integrated eight native tools check tests+native Buffer mirror. Original16pass3fail3actualDocker-dependent skips102assert97.19s retained; narrow source macOS /private/var vs /var response paths canonicalize both operands using existing helper before relative, preserving Root containment. Xcode incremental/preservation and two compiler mandatory-reason cases3pass26assert8.53s; types/normalbuild/affectedlint0. Removed obsolete require_reasons fixture only. Production grows44bytes4AST, all507bytes8lines126AST; no closed record reopened.",
         "01d012732cb9f101": "Actual path-aware generic list editing now merges record entries by paths while retaining missing producer fields and removes individual paths without discarding remaining reason/generator. Setter applies --reason to structured list entries while scalar/primitive-list reasons retain their table owner. Existing declaration cases use typed objects, reject missing reason without writes, then update same paths with a new reason retaining producer and remove one path. Native25pass130assert6files3.68s includes canonical policy edits, input scope-leakage refusal, native CAS links, cancellation and plugin paths; source lint/format0. Commit and full obligations pending.",
-        "99e4e22d5228c959": "Removed obsolete doc_style from fixture. Both original cases retain exact distinct defect checks: reversed colon sections→section-order, dash summary→summary-line, corrected ordered colon form accepted. Actual native root link/Bash/drift group27pass94assert8files6.81s. Source one-comment-form owner already implements adopted contract; no style control restored.",
+        "99e4e22d5228c959": "Removed obsolete doc_style from fixture. Both original cases retain exact distinct defect checks: reversed colon sections\u2192section-order, dash summary\u2192summary-line, corrected ordered colon form accepted. Actual native root link/Bash/drift group27pass94assert8files6.81s. Source one-comment-form owner already implements adopted contract; no style control restored.",
         "c3444a6588935426": "Shared npm/Python/registry harness filesystem acquisition and snapshots now native async, readPackageInputs actual four callers await it and native Buffer mirrors match return type. Bun native file responses/bytes preserve registry authentication and avoid eager archive copies. markExecutable actual six caller owners await operations; repository before callback actual async hook is awaited before Git snapshot. linkInstalledModules actual eight caller owners await native enumeration/realpath/links with store priority retained. Roottypes0, focused25pass130assert and27pass94assert; earlier194case run192pass2obsolete Bash style fixturefailures retained and corrected separately. Package first4pass3external GitHub acquisition403 retained; authenticated replay pending. No full package/platform closure.",
         "58ba6327acfda569": "Integrated 24 frozen owners: generated files are writable; durable identities omit modes while native FileCopy CAS retains them. Production -2344 bytes/-51 lines/-303 AST; whole -2401 bytes/-53 lines/-284 AST. Existing 120 tests/629 assertions and mode-only publication six tests/28 assertions pass; root types pass. Separate reviewed native writer command transitions 158 existing ignored ownership entries under one claim and strict old/final schemas, preserving source bytes and native modes; normal apply then writes writable outputs. Transition probes Bun1.4.2 and Node24.2/24.20 passed. No shipped compatibility schema or manual generated-file edits. Combined source prerequisites policy12pass/0 findings. Commit and final cross-platform obligations pending.",
         "aff4846a40f6b9f4": "Deleted recordPreserved and ApplyReport.preserved; existing planned conflicts throw the same ordinary error after allowed writes/prunes before version pin. Genuine init retirement preserved paths remain. Actual package metadata readers moved directly into repository/manifests with all four native callers, eliminating generation-to-tools edge without aliases/exceptions. Seven-owner production -408 bytes/-9 lines/-65 AST. Focused113pass/476 assertions/11 files/21.89s; root/CLI types and combined27-owner native policy12pass/0 findings. Commit pending.",

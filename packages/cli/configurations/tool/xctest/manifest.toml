@@ -13,7 +13,7 @@ filenames = ["*.xctestplan"]
 kinds = ["source"]
 
 [[config]]
-template = "swiftlint.yml.tmpl"
+template = "swiftlint.yml.eta"
 target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
 scoped = true

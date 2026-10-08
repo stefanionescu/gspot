@@ -1,4 +1,4 @@
-// Render completed checks without reading process settings or repeating hook diagnostics.
+// Print completed checks without reading process settings or repeating hook diagnostics.
 import { colors } from '#cli/terminal/messages.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { Finding } from '#cli/types/parsers/output.ts';

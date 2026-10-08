@@ -5,8 +5,8 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { cp, mkdir, symlink } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { installedModules } from '#tests/harness/environment.ts';
@@ -30,7 +30,7 @@ for (const entry of JAVASCRIPT_COMPILER_CASES)
             await symlink('../typescript/bin/tsc', join(sandbox.path, '.gspot/node_modules/.bin/tsc'));
             const session = await openSession(sandbox.path);
             using log = openOwnership(sandbox.path);
-            writeOutputs(session, log);
+            writeGeneratedFiles(session, log);
             const command = ['check', '--only', 'javascript/tsc', '--json'];
             const broken = await spawnGspot(sandbox.path, command);
             expect(broken.code, broken.stdout + broken.stderr).toBe(1);

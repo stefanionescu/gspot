@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
@@ -164,7 +164,7 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
     'every shipped Semgrep file validates with the native parser at level %s',
     async (level) => {
         const manifests = [...configurationManifests().values()].filter((manifest) =>
-            manifest.configs.some((config) => config.target.includes('/semgrep/')),
+            manifest.toolFiles.some((config) => config.target.includes('/semgrep/')),
         );
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -179,7 +179,7 @@ test.skipIf(!hasToolBuild('semgrep')).each(['recommended', 'all'] as const)(
         expect(new Set(generated.map((file) => file.path))).toStrictEqual(
             new Set(
                 manifests.flatMap((manifest) =>
-                    manifest.configs
+                    manifest.toolFiles
                         .filter((config) => config.target.includes('/semgrep/'))
                         .map((config) => config.target),
                 ),

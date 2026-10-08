@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { parse as parseToml } from 'smol-toml';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import type { RuffConfiguration } from '#tests/types/generation/configuration-files.ts';
 
@@ -108,7 +108,7 @@ test('switching levels restores generated defaults and agent instructions', asyn
         const output = emitAll(session);
         const config = output.files.find((file) => file.path.endsWith('/eslint.config.mjs'))!;
         using log = openOwnership(sandbox.path);
-        writeOutputs(session, log, undefined, output);
+        writeGeneratedFiles(session, log, undefined, output);
         const block = output.blocks.find((block) => block.path === 'AGENTS.md')!.block;
         expect(block).toContain(`Selected level: \`${level}\``);
         outputs.push(config.content);

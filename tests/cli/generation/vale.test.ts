@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { VALE_PACKAGES } from '#cli/config/tools/vale.ts';

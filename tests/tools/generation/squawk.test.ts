@@ -1,11 +1,11 @@
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
 import { test, expect } from 'bun:test';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
 import type { SpawnOutcome } from '#tests/types/harness/command.ts';
@@ -43,7 +43,7 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
         '.gspot/config/transactional/child/squawk.toml': true,
     });
     using log = openOwnership(sandbox.path);
-    writeOutputs(session, log, undefined, emitted);
+    writeGeneratedFiles(session, log, undefined, emitted);
     const transactional = squawk(sandbox.path, '.gspot/config/transactional/child/squawk.toml');
     expect(transactional.code, transactional.stderr).toBe(0);
     const failed = squawk(sandbox.path, '.gspot/config/squawk.toml');

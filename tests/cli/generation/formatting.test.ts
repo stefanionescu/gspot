@@ -4,16 +4,16 @@ import { writeFile } from 'node:fs/promises';
 import { planRun } from '#cli/planning/plan.ts';
 import prettier, { type Options } from 'prettier';
 import { test, expect, describe } from 'bun:test';
+import { emitAll } from '#cli/generation/files.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { scopeView } from '#cli/policy/settings/view.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { knownSettings } from '#cli/policy/settings/known.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { XCODE_METADATA } from '#tests/config/samples/xcode.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
@@ -118,7 +118,7 @@ test('an explicit YAML width override remains consistent between EditorConfig an
     const session = await openSession(directory.path);
     const generated = emitAll(session);
     using log = openOwnership(directory.path);
-    writeOutputs(session, log, undefined, generated);
+    writeGeneratedFiles(session, log, undefined, generated);
     const path = join(directory.path, 'sample.yaml');
     const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
     const native = await prettier.resolveConfig(path, {
@@ -147,7 +147,7 @@ test('formatter overrides agree for explicit configuration and editor discovery'
         ...Object.fromEntries(FORMAT_CASES.map(({ file }) => [file, 'const greeting="hello";'])),
     });
     using log = openOwnership(root);
-    writeOutputs(await openSession(root), log);
+    writeGeneratedFiles(await openSession(root), log);
     for (const { file, ...expected } of FORMAT_CASES) {
         for (const config of ['.gspot/config/prettier.json', 'prettier.config.mjs']) {
             const resolved = await prettier.resolveConfig(join(root, file), {

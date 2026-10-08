@@ -1,10 +1,9 @@
 import { test, expect } from 'bun:test';
 import { join, basename } from 'node:path';
+import { emitAll } from '#cli/generation/files.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { computeDrift } from '#cli/lifecycle/drift.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { installTools } from '#cli/lifecycle/install.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
@@ -12,6 +11,7 @@ import { pathExists } from '#tests/harness/preservation.ts';
 import { prepareToolProjects } from '#cli/tools/project.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { commitAll, gitOutput } from '#tests/harness/git.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { stat, readdir, readFile, writeFile } from 'node:fs/promises';
@@ -24,7 +24,7 @@ async function prepareInputs(root: string, log: Log) {
     const session = await openSession(root);
     const generated = emitAll(session);
     await prepareToolProjects(session, generated.files, log.files, { refreshLockfiles: false });
-    writeOutputs(session, log, undefined, generated);
+    writeGeneratedFiles(session, log, undefined, generated);
     return { session, inputs: await readPackageInputs(root, session.packageInstaller()!.name) };
 }
 
@@ -113,7 +113,7 @@ test.each(PACKAGE_PROJECTS)(
             expect(binaries.some((path) => /(?:^|[/\\])editorconfig-checker(?:\.exe)?$/u.test(path))).toBe(true);
         }
         expect(computeDrift(root, session.policyFiles.policy, emitAll(session))).toStrictEqual([]);
-        const second = writeOutputs(await openSession(root), log);
+        const second = writeGeneratedFiles(await openSession(root), log);
         expect(second.written).toStrictEqual([]);
         expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
         if (projectPath === 'package.json' && runner === 'mise') await expectCloneInstallation(sandbox, inputs, tools);

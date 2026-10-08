@@ -23,7 +23,7 @@ min_version = "3.0.0"
 npm = "wrangler"
 
 [[config]]
-template = "semgrep/workers.yml.tmpl"
+template = "semgrep/workers.yml.eta"
 target = ".gspot/config/semgrep/workers.yml"
 tool = "semgrep"
 rule_keys = ["rules"]

@@ -11,7 +11,7 @@ import { fakeCommand } from '#tests/harness/command.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { pythonInstallerPin } from '#cli/configurations/pins.ts';
 import { pythonToolProject } from '#cli/tools/python/project.ts';
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
+import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { installToolProject, prepareToolProjects } from '#cli/tools/project.ts';
 import { AUTHORED_UV_INDEX, PRIVATE_PYTHON_PROJECT, PRIVATE_PYTHON_LOCKFILE } from '#tests/config/samples/python.ts';

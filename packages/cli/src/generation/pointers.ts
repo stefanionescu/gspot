@@ -1,8 +1,8 @@
 import { dirname, relative } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { headerFor } from '#cli/generation/headers.ts';
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
-import type { ConfigurationFile } from '#cli/types/configurations.ts';
+import type { GeneratedFile } from '#cli/types/generation/files.ts';
+import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { TARGET_PLACEHOLDER } from '#cli/config/generation/pointers.ts';
 
 function fillTarget(value: unknown, pointerPath: string, targetPath: string): unknown {
@@ -41,7 +41,7 @@ export function relativeTarget(pointerPath: string, targetPath: string): string 
  * @returns the generated file
  */
 export function bodyPointer(
-    pointer: NonNullable<ConfigurationFile['stub_file']>,
+    pointer: NonNullable<ToolFileDeclaration['stub_file']>,
     pointerPath: string,
     targetPath: string,
     version: string,

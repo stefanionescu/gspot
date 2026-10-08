@@ -1,19 +1,19 @@
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import type { EtaInputs } from '#cli/types/generation/eta.ts';
 import type { KeyChange } from '#cli/types/parsers/document.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import type { BlockStyle } from '#cli/types/platform/managed-blocks.ts';
-import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 
 /** Applicable checks and their required tools at one generation boundary. */
-export type ConfigurationConsumers = { tools: Set<string>; checks: Set<string> };
+export type ToolFileConsumers = { tools: Set<string>; checks: Set<string> };
 
 /** Repository-wide consumers and the consumers of the current scope. */
-export type EmitConsumers = { repository: ConfigurationConsumers; scope: ConfigurationConsumers };
+export type EmitConsumers = { repository: ToolFileConsumers; scope: ToolFileConsumers };
 
-export type BlockOutput = { path: string; block: string; style: BlockStyle };
+export type GeneratedBlock = { path: string; block: string; style: BlockStyle };
 
 export type GeneratedFile = {
     ruleData?: CapturedRules;
@@ -27,8 +27,8 @@ export type GeneratedFile = {
 export type Generated = {
     notes: string[];
     files: GeneratedFile[];
-    blocks: BlockOutput[];
-    configurations: ConfigurationOutput[];
+    blocks: GeneratedBlock[];
+    toolFiles: EmittedToolFile[];
 };
 
 /** The repository and resolved scope whose configurations are generated. */
@@ -36,14 +36,14 @@ export type EmitInputs = {
     root: string;
     files: TrackedFile[];
     scopes: ScopeSelection[];
-    inputs: TemplateInputs;
+    inputs: EtaInputs;
     selection: ScopeSelection;
 };
 
 /** The configuration owner within a scope's generation inputs. */
-export type ConfigurationInputs = EmitInputs & { manifest: Manifest };
+export type ToolFileInputs = EmitInputs & { manifest: Manifest };
 
-export type ConfigurationOutput = {
+export type EmittedToolFile = {
     path: string;
     changes: KeyChange[];
 };

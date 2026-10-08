@@ -3,12 +3,12 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
 import { hasFields } from '#cli/lifecycle/merge/document.ts';
+import { planMerge } from '#cli/lifecycle/ownership/plans.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { proposeMerge } from '#cli/lifecycle/ownership/plans.ts';
 import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
-import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 
 test('JSON field ownership survives reopen, updates and removal while keeping unrelated bytes and modes', async () => {
     await using sandbox = await testdir();
@@ -19,22 +19,22 @@ test('JSON field ownership survives reopen, updates and removal while keeping un
     const changes = [{ path: ['stylelint'], value: { extends: './.stylelintrc.json' } }];
     let log = openOwnership(sandbox.path);
     try {
-        expect(applyPlan(log, proposeMerge(log, path, changes, true))).toBe('changed');
+        expect(applyPlan(log, planMerge(log, path, changes, true))).toBe('changed');
         expect(log.entryFor(path)?.configuration?.format).toBe('json');
         expect(hasFields(sandbox.path, { path, changes })).toBe(true);
         const installed = log.files.read(path)!.bytes.toString('utf8');
         expect(installed).toBe(
             original.replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./.stylelintrc.json"}'),
         );
-        expect(applyPlan(log, proposeMerge(log, path, changes))).toBe('unchanged');
+        expect(applyPlan(log, planMerge(log, path, changes))).toBe('unchanged');
         await writeFile(join(sandbox.path, path), installed.replace('native-project', 'edited-project'));
         log[Symbol.dispose]();
         log = openOwnership(sandbox.path);
-        expect(
-            applyPlan(log, proposeMerge(log, path, [{ path: ['stylelint'], value: { extends: './next.json' } }])),
-        ).toBe('changed');
+        expect(applyPlan(log, planMerge(log, path, [{ path: ['stylelint'], value: { extends: './next.json' } }]))).toBe(
+            'changed',
+        );
         expect(hasFields(sandbox.path, { path, changes })).toBe(false);
-        expect(applyPlan(log, proposeRestoration(log, path))).toBe('changed');
+        expect(applyPlan(log, planRestoration(log, path))).toBe('changed');
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(
             original.replace('native-project', 'edited-project'),
         );
@@ -51,7 +51,7 @@ test('JSON ownership leaves edited managed fields and their records intact durin
     using log = openOwnership(sandbox.path);
     applyPlan(
         log,
-        proposeMerge(log, 'package.json', [{ path: ['stylelint'], value: { extends: './managed.json' } }], true),
+        planMerge(log, 'package.json', [{ path: ['stylelint'], value: { extends: './managed.json' } }], true),
     );
     const installed = log.files.read('package.json')!.bytes.toString('utf8');
     const edited = installed.replace('./managed.json', './authored.json');
@@ -60,10 +60,10 @@ test('JSON ownership leaves edited managed fields and their records intact durin
     expect(
         applyPlan(
             log,
-            proposeMerge(log, 'package.json', [{ path: ['stylelint'], value: { extends: './next.json' } }], true),
+            planMerge(log, 'package.json', [{ path: ['stylelint'], value: { extends: './next.json' } }], true),
         ),
     ).toBe('preserved');
-    expect(applyPlan(log, proposeRestoration(log, 'package.json'))).toBe('preserved');
+    expect(applyPlan(log, planRestoration(log, 'package.json'))).toBe('preserved');
     expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(edited);
     expect(log.state).toStrictEqual(records);
 });
@@ -77,10 +77,10 @@ test('JSONC merges retain comments, authored containers and array order while re
         { path: ['created', 'nested', 'owned'], value: 0 },
         { path: ['kept', 'owned'], value: false },
     ];
-    expect(applyPlan(log, proposeMerge(log, 'tool.jsonc', fields, true))).toBe('changed');
+    expect(applyPlan(log, planMerge(log, 'tool.jsonc', fields, true))).toBe('changed');
     expect(hasFields(sandbox.path, { path: 'tool.jsonc', changes: fields })).toBe(true);
     expect(log.files.read('tool.jsonc')!.bytes.toString('utf8')).toContain('// Keep this comment.\n');
-    expect(applyPlan(log, proposeMerge(log, 'tool.jsonc', []))).toBe('changed');
+    expect(applyPlan(log, planMerge(log, 'tool.jsonc', []))).toBe('changed');
     expect(log.files.read('tool.jsonc')!.bytes.toString('utf8')).toBe(original);
 });
 
@@ -92,7 +92,7 @@ test.each(['', '[]', 'false', '{"stylelint":', '{ /* comment */ "stylelint": {} 
         using log = openOwnership(sandbox.path);
         const records = structuredClone(log.state);
         expect(() =>
-            proposeMerge(log, 'package.json', [{ path: ['stylelint'], value: { extends: './managed.json' } }], true),
+            planMerge(log, 'package.json', [{ path: ['stylelint'], value: { extends: './managed.json' } }], true),
         ).toThrow('package.json is not valid JSON. Fix the file, then run gspot apply.');
         expect(await readFile(join(sandbox.path, 'package.json'), 'utf8')).toBe(source);
         expect(log.state).toStrictEqual(records);
@@ -103,18 +103,18 @@ test('JSON ownership refuses a scalar parent and a persisted native-format misma
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'tool.json': '{"settings":false}\n' });
     using log = openOwnership(sandbox.path);
-    expect(() => proposeMerge(log, 'tool.json', [{ path: ['settings', 'owned'], value: true }], true)).toThrow(
+    expect(() => planMerge(log, 'tool.json', [{ path: ['settings', 'owned'], value: true }], true)).toThrow(
         'tool.json cannot be edited at settings.owned. Fix the field, then run gspot apply.',
     );
     expect(log.files.read('tool.json')!.bytes.toString('utf8')).toBe('{"settings":false}\n');
-    applyPlan(log, proposeMerge(log, 'tool.json', [{ path: ['settings'], value: true }], true));
+    applyPlan(log, planMerge(log, 'tool.json', [{ path: ['settings'], value: true }], true));
     log.entryFor('tool.json')!.configuration!.format = 'toml';
     log.save();
     const records = structuredClone(log.state);
-    expect(() => proposeMerge(log, 'tool.json', [{ path: ['settings'], value: false }])).toThrow(
+    expect(() => planMerge(log, 'tool.json', [{ path: ['settings'], value: false }])).toThrow(
         'tool.json has a recorded configuration format that differs from its native format.',
     );
-    expect(() => proposeRestoration(log, 'tool.json')).toThrow(
+    expect(() => planRestoration(log, 'tool.json')).toThrow(
         'tool.json has a recorded configuration format that differs from its native format.',
     );
     expect(log.files.read('tool.json')!.bytes.toString('utf8')).toBe('{"settings":true}\n');

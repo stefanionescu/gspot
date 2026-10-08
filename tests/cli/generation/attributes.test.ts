@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/git.ts';
+import { emitAll } from '#cli/generation/files.ts';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 

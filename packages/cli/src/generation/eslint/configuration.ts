@@ -1,11 +1,11 @@
-// The parts of the ESLint configuration that the policy and the rendered scope decide.
+// The parts of the ESLint configuration that the policy and the emitted scope decide.
 import type { Session } from '#cli/types/planning.ts';
 import { aliasesFor } from '#cli/repository/aliases.ts';
+import type { EtaInputs } from '#cli/types/generation/eta.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
 import { eslintAllRulesSchema } from '#cli/parsers/schema/eslint.ts';
 import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
 import { readEslintPresets } from '#cli/generation/eslint/presets.ts';
-import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import { scriptPaths, runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
 import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/selectors.ts';
 import { tablesFor, harnessFolders, declaredArchitectures } from '#cli/policy/settings/lookup.ts';
@@ -43,7 +43,7 @@ import {
     TRPC_UNKNOWN_IMPORT_POLICIES,
 } from '#cli/config/generation/eslint.ts';
 
-// The globs of a role: an element name stands for the paths of that element, and the fallback holds when unset.
+// The globs of a role: a module name stands for the paths of that module, and the fallback holds when unset.
 function roleGlobs(
     architecture: ArchitectureSettings,
     name: keyof ArchitectureSettings['roles'],
@@ -51,7 +51,7 @@ function roleGlobs(
 ): string[] {
     const value = architecture.roles[name];
     const entries = value === undefined ? defaults : [value].flat();
-    return entries.flatMap((entry) => architecture.modules.find((element) => element.name === entry)?.paths ?? [entry]);
+    return entries.flatMap((entry) => architecture.modules.find((module) => module.name === entry)?.paths ?? [entry]);
 }
 
 // The roles import-direction orders, with the harness folders of the scope. A role the policy leaves out matches no file.
@@ -271,7 +271,7 @@ export function eslintInputs(
     session: Session,
     selection: ScopeSelection,
 ): Pick<
-    TemplateInputs,
+    EtaInputs,
     | 'eslint'
     | 'eslintPolicy'
     | 'eslintAllRules'

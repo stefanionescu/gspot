@@ -5,9 +5,9 @@ import { readAsset } from '#cli/platform/assets.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { emitFile } from '#tests/harness/generated.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { eta, etaInputs } from '#cli/generation/eta.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { containingAll } from '#tests/harness/expectations.ts';
-import { eta, templateInputs } from '#cli/generation/templates.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 import type {
@@ -95,8 +95,8 @@ test.each([
         await createFileTree(sandbox.path, { ...files, 'gspot.toml': policy });
         const session = await openSession(sandbox.path);
         const selection = session.scopes[0]!;
-        eta.renderString(readAsset('configurations/language/css/stylelint.json.tmpl'), {
-            ...templateInputs(session, selection, selection.selected),
+        eta.renderString(readAsset('configurations/language/css/stylelint.json.eta'), {
+            ...etaInputs(session, selection, selection.selected),
             recordRules: (document: StylelintConfiguration) => {
                 rule = document.rules['at-rule-no-unknown'];
             },

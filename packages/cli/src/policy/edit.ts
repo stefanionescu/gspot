@@ -21,7 +21,7 @@ function splitKey(key: string): PolicyKey {
  * @param mutate the change to apply to the parsed document
  * @returns the new text, the parsed policy, and whether the text changed
  */
-export function proposePolicy(root: string, text: string, mutate: Mutation): Proposal {
+export function editPolicy(root: string, text: string, mutate: Mutation): Proposal {
     const raw = parseTomlText(text, POLICY_FILE, 'policy');
     mutate(raw);
     const next = isDeepStrictEqual(raw, parseTomlText(text, POLICY_FILE, 'policy')) ? text : emitPolicy(text, raw);
@@ -148,5 +148,5 @@ export function preparePolicy(root: string, mutate: Mutation): PreparedPolicy {
     const text = readPolicyFile(root);
     if (original?.bytes.equals(Buffer.from(text)) !== true)
         throw new GspotError('policy', ['The gspot.toml file changed while gspot was running. Run the command again.']);
-    return { ...proposePolicy(root, text, mutate), original };
+    return { ...editPolicy(root, text, mutate), original };
 }

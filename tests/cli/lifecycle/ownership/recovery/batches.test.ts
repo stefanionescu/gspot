@@ -7,8 +7,8 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
-import { proposeRestoration } from '#cli/lifecycle/ownership/restoration.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 
 const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
 const boundary = getCliSourcePath('platform/root/open.ts');
@@ -32,9 +32,9 @@ if(path==='middle.txt' && ${JSON.stringify(point)}==='after') process.exit(73);
 }};
 }}));
 const {openOwnership}=await import(${JSON.stringify(implementation)});
-const {proposeReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
+const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
 const {applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
-const {proposeRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/restoration.ts'))});
+const {planRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/restoration.ts'))});
 const log=openOwnership(process.cwd());
 ${call}
 log[Symbol.dispose]();
@@ -53,7 +53,7 @@ test.each(['before', 'after'] as const)(
             directory.path,
             'write',
             point,
-            String.raw`applyPlans(log, ${JSON.stringify(paths)}.map(path=>proposeReplacement(log,{path: path, next: {bytes:Buffer.from('installed '+path+'\n'),mode:0o444}, kind: 'config', canReplace: true})));`,
+            String.raw`applyPlans(log, ${JSON.stringify(paths)}.map(path=>planReplacement(log,{path: path, next: {bytes:Buffer.from('installed '+path+'\n'),mode:0o444}, kind: 'config', canReplace: true})));`,
         );
         expect(await readFile(join(directory.path, 'first.txt'), 'utf8')).toBe('installed first.txt\n');
         expect(await readFile(join(directory.path, 'middle.txt'), 'utf8')).toBe(
@@ -69,7 +69,7 @@ test.each(['before', 'after'] as const)(
             applyPlans(
                 log,
                 paths.map((path) =>
-                    proposeReplacement(log, {
+                    planReplacement(log, {
                         path: path,
                         next: { bytes: Buffer.from(`installed ${path}\n`), mode: 0o444 },
                         kind: 'config',
@@ -95,7 +95,7 @@ test.each(['before', 'after'] as const)(
             applyPlans(
                 initial,
                 paths.map((path) =>
-                    proposeReplacement(initial, {
+                    planReplacement(initial, {
                         path: path,
                         next: { bytes: Buffer.from(path), mode: 0o644 },
                         kind: 'config',
@@ -107,7 +107,7 @@ test.each(['before', 'after'] as const)(
             directory.path,
             'remove',
             point,
-            `applyPlans(log, ${JSON.stringify(paths)}.map(path=>proposeRestoration(log, path)));`,
+            `applyPlans(log, ${JSON.stringify(paths)}.map(path=>planRestoration(log, path)));`,
         );
         {
             using log = openOwnership(directory.path);
@@ -119,7 +119,7 @@ test.each(['before', 'after'] as const)(
             expect(log.files.read('last.txt')?.bytes.toString()).toBe('last.txt');
             applyPlans(
                 log,
-                log.state.files.map((entry) => entry.path).map((path) => proposeRestoration(log, path)),
+                log.state.files.map((entry) => entry.path).map((path) => planRestoration(log, path)),
             );
             for (const path of paths) expect(log.files.read(path)).toBeUndefined();
             expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);

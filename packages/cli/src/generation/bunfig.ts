@@ -3,7 +3,7 @@ import { openRoot } from '#cli/platform/root/open.ts';
 import { parseTomlFile } from '#cli/parsers/toml/document.ts';
 import { SECONDS_PER_DAY } from '#cli/config/platform/runtime.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
-import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
+import type { EmittedToolFile } from '#cli/types/generation/files.ts';
 
 /**
  * The `[install]` keys gspot sets in each bunfig.toml beside a Bun lockfile, in scopes that select dependencies.
@@ -11,7 +11,7 @@ import type { ConfigurationOutput } from '#cli/types/generation/output.ts';
  * @param scopes every resolved scope
  * @returns each file path and its installation key changes
  */
-export function bunfigChanges(root: string, scopes: ScopeSelection[]): ConfigurationOutput[] {
+export function bunfigChanges(root: string, scopes: ScopeSelection[]): EmittedToolFile[] {
     using files = openRoot(root);
     const selected = scopes
         .filter((selection) => selection.selected.some((manifest) => manifest.configuration.name === 'dependencies'))
@@ -25,7 +25,7 @@ export function bunfigChanges(root: string, scopes: ScopeSelection[]): Configura
         const { settings } = selection.view;
         const required = Number(settings['dependencies.min_release_age_days']) * SECONDS_PER_DAY;
         const current = install?.['minimumReleaseAge'];
-        const changes: ConfigurationOutput['changes'] = [
+        const changes: EmittedToolFile['changes'] = [
             {
                 path: ['install', 'minimumReleaseAge'],
                 value: typeof current === 'number' ? Math.max(required, current) : required,

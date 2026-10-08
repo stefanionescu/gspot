@@ -6,10 +6,10 @@ import { testdir, createFileTree } from 'testdirs';
 import { readGitSetting } from '#cli/platform/git.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { hookStatus } from '#cli/lifecycle/hooks-path.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -34,7 +34,7 @@ test.each(['', 'app/'])('install points core.hooksPath at %s.gspot/hooks', async
     expect(hookStatus(await hooksOf(root))).toStrictEqual({ ready: false, text: 'not installed; run gspot install' });
     {
         using log = openOwnership(root);
-        writeOutputs(await openSession(root), log);
+        writeGeneratedFiles(await openSession(root), log);
     }
     await using registry = await createInstallationRegistry(root, runTestCommand);
     using _environment = useEnvironment(registry.environment);
@@ -72,7 +72,7 @@ test('a commit in a linked worktree runs the staged checks and blocks a defect',
     commitAll(main);
     {
         using log = openOwnership(main);
-        writeOutputs(await openSession(main), log);
+        writeGeneratedFiles(await openSession(main), log);
     }
     await using registry = await createInstallationRegistry(main, runTestCommand);
     const environment = {
@@ -121,7 +121,7 @@ command = ${JSON.stringify([process.execPath, '-e', INDEX_COMMAND])}
     expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
     {
         using log = openOwnership(project);
-        writeOutputs(await openSession(project), log);
+        writeGeneratedFiles(await openSession(project), log);
     }
     await using registry = await createInstallationRegistry(project, runTestCommand);
     const applied = await runGspot(project, ['apply']);

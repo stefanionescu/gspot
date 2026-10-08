@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { format, resolveConfig } from 'prettier';
 import { assetPath } from '#cli/platform/assets.ts';
 import { npmPins } from '#cli/configurations/pins.ts';
-import { JSON_INDENT } from '#cli/config/generation/templates.ts';
+import { JSON_INDENT } from '#cli/config/generation/eta.ts';
 import { readInstalledNpmPackage } from '#automation/parsers/npm.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { ESLINT_REFRESH_ARGUMENT_COUNT } from '#automation/config/eslint-presets.ts';

@@ -4,7 +4,7 @@ import { toPosix } from '#cli/platform/paths.ts';
 import { sourcePath } from '#cli/platform/root/reads.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import { join, posix, basename, relative } from 'node:path';
-import type { InstalledOutput } from '#cli/types/tools/install.ts';
+import type { InstalledFile } from '#cli/types/tools/install.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import type { InstallationKind } from '#cli/types/configurations.ts';
 import { MODE_BITS, EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
@@ -91,7 +91,7 @@ export function recoverInstallations(log: Log): void {
  * @param kind the installation
  * @param outputs every file of the installation, at its path under the installation folder
  */
-export function installTree(log: Log, kind: InstallationKind, outputs: InstalledOutput[]): void {
+export function installTree(log: Log, kind: InstallationKind, outputs: InstalledFile[]): void {
     const { files, state } = log;
     const { folder, staging, previous } = sideFolders(kind);
     // An install still in progress made the folder: a crash after its swap and before its record leaves it there.
@@ -131,9 +131,9 @@ export function deleteInstallation(log: Log, kind: InstallationKind): void {
  * @param kind whether the installation is the npm project or the Python environment
  * @returns every file, at its destination under .gspot/node_modules or .gspot/.venv
  */
-export function readInstalledTree(directory: string, kind: InstallationKind): InstalledOutput[] {
+export function readInstalledTree(directory: string, kind: InstallationKind): InstalledFile[] {
     const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
-    const outputs: InstalledOutput[] = [];
+    const outputs: InstalledFile[] = [];
     const entry = lstatSync(directory, { throwIfNoEntry: false });
     if (entry?.isSymbolicLink() === true) throw new Error(`Unsafe lifecycle destination: ${basename(directory)}`);
     if (entry?.isDirectory() !== true) throw new Error(`Installed output is not a directory: ${directory}`);

@@ -8,7 +8,7 @@ description = "An Express service: the Semgrep rules for request handling, an Op
 dependencies = ["express"]
 
 [[config]]
-template = "semgrep/express.yml.tmpl"
+template = "semgrep/express.yml.eta"
 target = ".gspot/config/semgrep/express.yml"
 tool = "semgrep"
 rule_keys = ["rules"]
@@ -23,7 +23,7 @@ ignored_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
 [[config]]
-template = "eslint.fragment.js.tmpl"
+template = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 fragment = true

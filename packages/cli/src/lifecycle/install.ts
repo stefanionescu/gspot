@@ -8,14 +8,14 @@ import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import type { ToolProject } from '#cli/types/tools/project.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { packageToolProject } from '#cli/tools/npm/project.ts';
+import type { Generated } from '#cli/types/generation/files.ts';
 import { applyPlans } from '#cli/lifecycle/ownership/commit.ts';
-import type { Generated } from '#cli/types/generation/output.ts';
 import { pythonToolProject } from '#cli/tools/python/project.ts';
 import { registryEnvironment } from '#cli/tools/npm/registry.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
+import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import type { LockfilePreparation } from '#cli/types/tools/install.ts';
-import { proposeReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { getHookPlan, installHooks } from '#cli/lifecycle/hooks-path.ts';
 import { hasValePackages, installValePackages } from '#cli/tools/vale.ts';
 import { toolPin, pythonPins, collectPins } from '#cli/configurations/pins.ts';
@@ -73,7 +73,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
             const plans = files.map((file) => {
                 const next = { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE };
                 context.prepared.set(file.path, next);
-                return proposeReplacement(log, {
+                return planReplacement(log, {
                     path: file.path,
                     next,
                     kind: file.kind === 'lock' ? 'lock' : 'config',

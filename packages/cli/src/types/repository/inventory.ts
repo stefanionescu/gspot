@@ -48,7 +48,7 @@ export type Verdict = { kind: FileKind; source: string; producedBy?: string };
 export type Runner = z.infer<typeof runnerSchema>;
 
 export type Tooling = {
-    configs: ToolFile[];
+    toolFiles: ToolFile[];
     hooks: {
         kind: 'githooks' | 'husky' | 'lefthook' | 'simple-git-hooks' | 'pre-commit' | 'hooksPath';
         path: string;

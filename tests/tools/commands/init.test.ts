@@ -7,8 +7,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { PLAN_INIT } from '#tests/config/tools/commands/init.ts';
+import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
-import type { ApplyPreviewJson } from '#cli/types/commands/apply.ts';
 import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';
 
 // The ESLint pointer is written for editors; the other deleted files get no pointer, because each check names
@@ -56,6 +56,6 @@ test('init replaces the files of the selected tools and leaves no drift for appl
     expect(await pathExists(join(sandbox.path, 'quality', 'lint.sh'))).toBe(true);
     await installToolProjects(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);
-    expect((JSON.parse(applied.stdout) as ApplyPreviewJson).drift).toStrictEqual([]);
+    expect((JSON.parse(applied.stdout) as ApplyPlanJson).drift).toStrictEqual([]);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
 });

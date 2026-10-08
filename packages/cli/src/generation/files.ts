@@ -1,5 +1,6 @@
 // Every generated output of a repository: configuration files, pointers, blocks, hooks, tool pins, and rules.
 import { pathKey } from '#cli/platform/paths.ts';
+import { etaInputs } from '#cli/generation/eta.ts';
 import { miseFile } from '#cli/generation/mise.ts';
 import { npmProject } from '#cli/generation/npm.ts';
 import { hookFiles } from '#cli/generation/hooks.ts';
@@ -12,17 +13,16 @@ import { pythonProject } from '#cli/generation/python.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { styleFiles } from '#cli/generation/vale-styles.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
-import { templateInputs } from '#cli/generation/templates.ts';
+import { emitToolFiles } from '#cli/generation/tool-files.ts';
 import { githubFile, gitlabFile } from '#cli/generation/ci.ts';
 import { selectRuleFiles } from '#cli/agent-rules/assemble.ts';
+import type { Generated } from '#cli/types/generation/files.ts';
 import { managedBlock } from '#cli/agent-rules/instructions.ts';
 import { stylelintChanges } from '#cli/generation/stylelint.ts';
-import type { Generated } from '#cli/types/generation/output.ts';
 import { commitlintChanges } from '#cli/generation/commitlint.ts';
 import { assertMutationTarget } from '#cli/platform/root/rules.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
-import { emitConfigurations } from '#cli/generation/configurations.ts';
-import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/outputs.ts';
+import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/files.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { everyManifest, isConfigurationSelected } from '#cli/configurations/select.ts';
@@ -106,20 +106,20 @@ function blockOutputs(
 }
 
 function combineConfigurations(generated: Generated): void {
-    const assembled = new Map<string, Generated['configurations'][number]>();
-    for (const output of generated.configurations) {
+    const assembled = new Map<string, Generated['toolFiles'][number]>();
+    for (const output of generated.toolFiles) {
         const previous = assembled.get(output.path);
         if (previous === undefined) assembled.set(output.path, { ...output, changes: [...output.changes] });
         else {
             previous.changes.push(...output.changes);
         }
     }
-    generated.configurations = [...assembled.values()];
+    generated.toolFiles = [...assembled.values()];
 }
 
 function assertDistinctPaths(generated: Generated): void {
     const paths = new Map<string, string>();
-    const outputs = [...generated.files, ...generated.blocks, ...generated.configurations];
+    const outputs = [...generated.files, ...generated.blocks, ...generated.toolFiles];
     for (const output of outputs) {
         assertMutationTarget(output.path);
         const key = pathKey(output.path);
@@ -159,10 +159,10 @@ export function emitAll(session: Session): Generated {
     const tools = new Set(manifests.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const checks = configuredChecks(session, true);
     const repositoryConsumers = { tools, checks: new Set(checks.map((check) => check.check.name)) };
-    const generated: Generated = { notes: [], files: [], blocks: [], configurations: [] };
+    const generated: Generated = { notes: [], files: [], blocks: [], toolFiles: [] };
     const seen = new Set<string>();
     for (const selection of scopes) {
-        const inputs = templateInputs(session, selection, manifests);
+        const inputs = etaInputs(session, selection, manifests);
         const scopeChecks = checks.filter(
             (check) => check.scope.scope.path === selection.scope.path || check.check.runs === 'once',
         );
@@ -170,12 +170,12 @@ export function emitAll(session: Session): Generated {
             tools: new Set(scopeChecks.flatMap((check) => requiredToolNames(check, session))),
             checks: new Set(scopeChecks.map((check) => check.check.name)),
         };
-        emitConfigurations({ root, files, scopes, inputs, selection }, generated, seen, {
+        emitToolFiles({ root, files, scopes, inputs, selection }, generated, seen, {
             repository: repositoryConsumers,
             scope: scopeConsumers,
         });
     }
-    generated.configurations.push(
+    generated.toolFiles.push(
         ...bunfigChanges(root, scopes),
         ...stylelintChanges(root, files, scopes, generated.files),
         ...commitlintChanges(root, files, generated.files),
@@ -209,9 +209,9 @@ export function emitAll(session: Session): Generated {
  * @param generated the completed generated outputs
  * @returns the destination paths
  */
-export function outputPaths(generated: Generated): Set<string> {
+export function generatedPaths(generated: Generated): Set<string> {
     const paths = new Set(
-        [...generated.files, ...generated.blocks, ...generated.configurations].map((output) => output.path),
+        [...generated.files, ...generated.blocks, ...generated.toolFiles].map((output) => output.path),
     );
     for (const file of generated.files) {
         if (file.path === TOOL_PACKAGE_PROJECT) paths.add(parseToolProject(file.content).lockfilePath);

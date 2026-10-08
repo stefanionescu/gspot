@@ -3,11 +3,11 @@ import { stringify } from 'smol-toml';
 import { join, posix } from 'node:path';
 import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
+import type { EtaInputs } from '#cli/types/generation/eta.ts';
+import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
-import type { GeneratedFile } from '#cli/types/generation/output.ts';
 import { PYTHON_TOOL_PROJECT } from '#cli/config/parsers/packages.ts';
 import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
-import type { TemplateInputs } from '#cli/types/generation/templates.ts';
 import { pythonPins, pythonConstraints } from '#cli/configurations/pins.ts';
 import { TOOL_PYTHON_PROJECT, CONFIGURATION_DIRECTORY } from '#cli/config/platform/locations.ts';
 
@@ -40,13 +40,13 @@ export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
 /**
  * Resolve native Python configuration paths for both type and lint tools.
  * @param session the repository and policy
- * @param selection the scope being rendered
+ * @param selection the scope being emitted
  * @returns the scope's environment and configuration-relative exclusions
  */
 export function pythonInputs(
     session: Session,
     selection: ScopeSelection,
-): Pick<TemplateInputs, 'pythonVenv' | 'pythonScopePath' | 'pythonExcludes' | 'ruffRules'> {
+): Pick<EtaInputs, 'pythonVenv' | 'pythonScopePath' | 'pythonExcludes' | 'ruffRules'> {
     const { root } = session;
     const { policy } = session.policyFiles;
     const base = posix.relative(posix.join(CONFIGURATION_DIRECTORY, selection.scope.path), '.');

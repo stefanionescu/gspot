@@ -3,15 +3,15 @@ import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
+import { emitAll } from '#cli/generation/files.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { testdir, createFileTree } from 'testdirs';
-import { emitAll } from '#cli/generation/outputs.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
+import { eta, etaInputs } from '#cli/generation/eta.ts';
 import { bodyPointer } from '#cli/generation/pointers.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
-import { eta, templateInputs } from '#cli/generation/templates.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 import {
@@ -74,7 +74,7 @@ test('the template YAML binding preserves literal mapping keys and scalar values
     await using sandbox = await testdir({ 'gspot.toml': buildPolicy([]) });
     const session = await openSession(sandbox.path);
     const selection = session.scopes[0]!;
-    const inputs = templateInputs(session, selection, selection.selected);
+    const inputs = etaInputs(session, selection, selection.selected);
     expect(parseYaml(eta.renderString('<%~ yaml(value) %>', { ...inputs, value: { [KEY]: VALUE } }))).toStrictEqual({
         [KEY]: VALUE,
     });
@@ -87,7 +87,7 @@ for (const configuration of ['javascript', 'markdown'])
             async () => {
                 await using sandbox = await testdir();
                 const manifest = configurationManifests().get(configuration)!;
-                const pointer = manifest.configs.find(
+                const pointer = manifest.toolFiles.find(
                     (file) => file.stub_file?.body?.includes('{target_module}') === true,
                 )!.stub_file!;
                 const target = `generated/${component}/owner.mjs`;
