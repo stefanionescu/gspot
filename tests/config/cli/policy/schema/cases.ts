@@ -1,4 +1,4 @@
-import type { RuntimeSchemaCase } from '#tests/types/cli/docs/schema.ts';
+import type { RuntimeSchemaCase } from '#tests/types/cli/policy/schema.ts';
 
 /** The public executable registration used by published-schema cases. */
 export const SCHEMA_CHECK = { command: ['lint'], paths: ['src/**'], stage: 'commit' };

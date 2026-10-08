@@ -6,21 +6,21 @@ import { isRecord } from '#cli/platform/objects.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
-import { NAMING_SCHEMA_CASES } from '#tests/config/cli/docs/naming.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { buildJsonSchema } from '#docs/src/content/reference/schema.ts';
 import { policyReference } from '#docs/src/content/reference/policy.ts';
 import { UNSAFE_DIRECTORIES } from '#tests/config/cli/policy/boundaries.ts';
-import { EXCEPTION_SCHEMA_CASES } from '#tests/config/cli/docs/exceptions.ts';
-import { POLICY_FIELD_SCHEMA_CASES } from '#tests/config/cli/docs/policy-fields.ts';
-import { SCHEMA_CHECK, LOCALE_SCHEMA_CASES, RUNTIME_SCHEMA_CASES } from '#tests/config/cli/docs/schema.ts';
+import { NAMING_SCHEMA_CASES } from '#tests/config/cli/policy/schema/naming.ts';
+import { POLICY_FIELD_SCHEMA_CASES } from '#tests/config/cli/policy/schema/fields.ts';
+import { EXCEPTION_SCHEMA_CASES } from '#tests/config/cli/policy/schema/exceptions.ts';
+import { SCHEMA_CHECK, LOCALE_SCHEMA_CASES, RUNTIME_SCHEMA_CASES } from '#tests/config/cli/policy/schema/cases.ts';
 
 import {
     TOOL_SCHEMA_CASES,
     TOOL_SCHEMA_SCOPES,
     VERBATIM_TOOL_NAMES,
     NO_VERBATIM_TOOL_NAMES,
-} from '#tests/config/cli/docs/tools.ts';
+} from '#tests/config/cli/policy/schema/tools.ts';
 
 const examples = z.array(z.unknown()).parse(policySchema.meta()?.['examples']);
 

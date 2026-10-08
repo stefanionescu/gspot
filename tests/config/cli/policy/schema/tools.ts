@@ -1,4 +1,4 @@
-import type { RuntimeSchemaCase } from '#tests/types/cli/docs/schema.ts';
+import type { RuntimeSchemaCase } from '#tests/types/cli/policy/schema.ts';
 
 /** Native tools keep the same allowed options in root and child tables. */
 export const TOOL_SCHEMA_CASES: RuntimeSchemaCase[] = [

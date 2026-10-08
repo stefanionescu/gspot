@@ -1,4 +1,4 @@
-import type { RuntimeSchemaCase } from '#tests/types/cli/docs/schema.ts';
+import type { RuntimeSchemaCase } from '#tests/types/cli/policy/schema.ts';
 
 /** Naming declarations validate identically in runtime and published schemas. */
 export const NAMING_SCHEMA_CASES: RuntimeSchemaCase[] = [

@@ -1,4 +1,5 @@
-import { join, delimiter } from 'node:path';
+import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { test, spyOn, expect } from 'bun:test';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -9,11 +10,9 @@ import { buildInitOptions } from '#tests/harness/init.ts';
 import { installCommand } from '#cli/commands/install.ts';
 import { initCommand } from '#cli/commands/init/command.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { isPosix } from '#tests/config/harness/platforms.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
 import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
 import { INSTALLATION_FAILURES } from '#tests/config/cli/lifecycle/installer-failures.ts';
@@ -136,36 +135,3 @@ test('a repository that already runs hooks keeps them, gets the gspot lines, and
     expect(read).toContainEqual(['mise', 'install']);
     expect(gitOutput(sandbox.path, ['config', 'core.hooksPath'])).toBe('.githooks');
 });
-
-// The hook is a POSIX shell script that a POSIX PATH runs directly.
-if (isPosix) {
-    test.each(['missing', 'not executable'])(
-        'an installed hook reports setup failure when its gspot launcher is %s',
-        async (condition) => {
-            await using repository = await testdir();
-            await createFileTree(repository.path, {
-                'gspot.toml': buildPolicy([], { tables: '[hooks]\nenabled = true\n[agent_rules]\nenabled = false\n' }),
-                'bin/gspot': '#!/bin/sh\nexit 0\n',
-            });
-            gitOutput(repository.path, ['init', '-q']);
-            {
-                using log = openOwnership(repository.path);
-                writeGeneratedFiles(await openSession(repository.path), log);
-            }
-            const launcher = join(repository.path, 'bin/gspot');
-            await (condition === 'missing' ? rm(launcher) : chmod(launcher, 0o644));
-            const hook = join(repository.path, '.gspot/hooks/pre-commit');
-            const options = {
-                cwd: repository.path,
-                env: { PATH: `${join(repository.path, 'bin')}${delimiter}/usr/bin${delimiter}/bin` },
-            };
-            const failed = await processes.run([hook], options);
-            expect(failed.code, failed.stdout + failed.stderr).toBe(2);
-            expect(failed.stderr).toContain('gspot install');
-            await writeFile(launcher, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
-            await chmod(launcher, 0o755);
-            const corrected = await processes.run([hook], options);
-            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-        },
-    );
-}

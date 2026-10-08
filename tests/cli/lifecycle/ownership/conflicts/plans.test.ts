@@ -2,7 +2,8 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { chmod, readFile, writeFile } from 'node:fs/promises';
+import { isPosix } from '#tests/config/harness/platforms.ts';
+import { chmod, unlink, readFile, writeFile } from 'node:fs/promises';
 import { identify, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
@@ -212,3 +213,47 @@ test('reviewed matching bytes refresh ownership without rewriting the file', asy
     using reopened = openOwnership(directory.path);
     expect(reopened.entryFor(path)?.installed).toStrictEqual(identify(reopened.files.read(path)!));
 });
+
+if (isPosix) {
+    test.each(['bytes', 'mode', 'removed'])(
+        'lifecycle ownership: stale replace %s refuses replacement and retirement, then a fresh read succeeds',
+        async (change) => {
+            await using directory = await testdir();
+            const path = join(directory.path, 'authored.json');
+            await writeFile(path, '{"semi":false}\n', { mode: 0o640 });
+            {
+                using log = openOwnership(directory.path);
+
+                const read = log.files.read('authored.json')!;
+                if (change === 'bytes') await writeFile(path, '{"semi":true}\n');
+                if (change === 'mode') await chmod(path, 0o600);
+                if (change === 'removed') await unlink(path);
+                const edited = log.files.read('authored.json');
+                expect(() => planRetirement(log, 'authored.json', read)).toThrow(
+                    'authored.json changed after gspot read it. Run the command again.',
+                );
+                expect(() =>
+                    applyPlan(
+                        log,
+                        planReplacement(log, {
+                            path: 'authored.json',
+                            next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
+                            kind: 'tool_file',
+                            canReplace: true,
+                            expected: read,
+                        }),
+                    ),
+                ).toThrow('Lifecycle destination changed during the operation: authored.json');
+                expect(log.files.read('authored.json')).toStrictEqual(edited);
+                await writeFile(path, read.bytes);
+                await chmod(path, read.mode);
+            }
+            {
+                using log = openOwnership(directory.path);
+                const refreshed = log.files.read('authored.json')!;
+                expect(applyPlan(log, planRetirement(log, 'authored.json', refreshed))).toBe('changed');
+                expect(log.files.read('authored.json')).toBeUndefined();
+            }
+        },
+    );
+}

@@ -1,5 +1,5 @@
-import { SCHEMA_CHECK } from '#tests/config/cli/docs/schema.ts';
-import type { RuntimeSchemaCase } from '#tests/types/cli/docs/schema.ts';
+import { SCHEMA_CHECK } from '#tests/config/cli/policy/schema/cases.ts';
+import type { RuntimeSchemaCase } from '#tests/types/cli/policy/schema.ts';
 
 /** Current public field names and refused obsolete names share the runtime and editor contract. */
 export const POLICY_FIELD_SCHEMA_CASES: RuntimeSchemaCase[] = [

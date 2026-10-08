@@ -545,7 +545,7 @@ reason = "The database and library namespaces match the behavioral check owners.
 
 [[ignore]]
 check = "structure/lone-files"
-paths = ["tests/cli/docs", "tests/cli/parsers/naming", "tests/config/cli/checks/language/bash", "tests/config/cli/checks/tool/xcode", "tests/config/cli/docs", "tests/config/cli/parsers/tool", "tests/config/cli/tools/python", "tests/config/tools/configurations/language/bash", "tests/types/cli/checks/framework", "tests/types/cli/checks/general", "tests/types/cli/checks/library", "tests/types/cli/docs", "tests/types/cli/execution", "tests/types/cli/generation", "tests/types/plugin/rules", "tests/types/tools/checks/supabase", "tests/types/tools/configurations/general", "tests/types/tools/generation", "tests/types/tools/lifecycle"]
+paths = ["tests/cli/docs", "tests/cli/parsers/naming", "tests/config/cli/checks/language/bash", "tests/config/cli/checks/tool/xcode", "tests/config/cli/parsers/tool", "tests/config/cli/tools/python", "tests/config/tools/configurations/language/bash", "tests/types/cli/checks/framework", "tests/types/cli/checks/general", "tests/types/cli/checks/library", "tests/types/cli/execution", "tests/types/cli/generation", "tests/types/plugin/rules", "tests/types/tools/checks/supabase", "tests/types/tools/configurations/general", "tests/types/tools/generation", "tests/types/tools/lifecycle"]
 reason = "These suite namespaces follow their behavioral source owners. The docs tests stay under cli/docs, and each matching config or types namespace owns its suite data. Their placement follows the repository ownership contract even when an owner needs one file."
 
 [[ignore]]

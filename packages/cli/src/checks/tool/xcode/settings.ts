@@ -2,7 +2,7 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/source.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
+import { scopeSourcesByEnding } from '#cli/checks/tool/xcode/project.ts';
 import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/config/checks/tool/xcode.ts';
 
 /**
@@ -11,7 +11,7 @@ import { PLIST_KEY, INCLUDE_LINE, SETTING_NAME, ARBITRARY_LOADS } from '#cli/con
  * @returns the findings
  */
 export function xcconfig(input: CheckInput): Finding[] {
-    return trackedByExtension(input, ['.xcconfig']).flatMap((path) =>
+    return scopeSourcesByEnding(input, ['.xcconfig']).flatMap((path) =>
         readSource(input.root, path, input.reads)
             .toString('utf8')
             .split('\n')
@@ -42,7 +42,7 @@ export function xcconfig(input: CheckInput): Finding[] {
  */
 export function entitlements(input: CheckInput): Finding[] {
     const allowed = new Set(input.view.options('xcode').entitlements_allowed);
-    return trackedByExtension(input, ['.entitlements']).flatMap((path) => {
+    return scopeSourcesByEnding(input, ['.entitlements']).flatMap((path) => {
         const text = readSource(input.root, path, input.reads).toString('utf8');
         return text
             .matchAll(PLIST_KEY)
@@ -66,7 +66,7 @@ export function entitlements(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export function ats(input: CheckInput): Finding[] {
-    return trackedByExtension(input, ['.plist']).flatMap((path): Finding[] => {
+    return scopeSourcesByEnding(input, ['.plist']).flatMap((path): Finding[] => {
         const text = readSource(input.root, path, input.reads).toString('utf8');
         const found = ARBITRARY_LOADS.exec(text);
         if (found === null) return [];

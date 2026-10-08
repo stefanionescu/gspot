@@ -6,7 +6,7 @@ import { readSource } from '#cli/platform/source.ts';
 import { parseJsonDocument } from '#cli/parsers/json.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { trackedByExtension } from '#cli/checks/tool/xcode/project.ts';
+import { scopeSourcesByEnding } from '#cli/checks/tool/xcode/project.ts';
 import { NOT_WORD, IMAGE_SET, NAMED_SETS } from '#cli/config/checks/tool/xcode.ts';
 import { stringsFileSchema, assetContentsSchema } from '#cli/parsers/schema/xcode.ts';
 
@@ -22,7 +22,7 @@ function assetSetName(path: string): string {
  * @returns the findings
  */
 export function contentsFindings(input: CheckInput): Finding[] {
-    return trackedByExtension(input, ['Contents.json'])
+    return scopeSourcesByEnding(input, ['Contents.json'])
         .filter((path) => path.includes('.xcassets/'))
         .flatMap((path) => {
             const read = parseJsonDocument(
@@ -50,7 +50,7 @@ export function contentsFindings(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export function orphanAssets(input: CheckInput): Finding[] {
-    const sourceTexts = trackedByExtension(input, [
+    const sourceTexts = scopeSourcesByEnding(input, [
         '.swift',
         '.storyboard',
         '.xib',
@@ -58,7 +58,7 @@ export function orphanAssets(input: CheckInput): Finding[] {
         'project.pbxproj',
         '.xcconfig',
     ]).map((path) => readSource(input.root, path, input.reads).toString('utf8'));
-    return trackedByExtension(input, ['Contents.json'])
+    return scopeSourcesByEnding(input, ['Contents.json'])
         .filter((path) => NAMED_SETS.some((ending) => path.endsWith(ending)))
         .filter((path) => {
             const name = assetSetName(path);
@@ -86,7 +86,7 @@ export function orphanAssets(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export function xcstrings(input: CheckInput): Finding[] {
-    return trackedByExtension(input, ['.xcstrings']).flatMap((path) => {
+    return scopeSourcesByEnding(input, ['.xcstrings']).flatMap((path) => {
         const read = parseJsonDocument(readSource(input.root, path, input.reads).toString('utf8'), stringsFileSchema);
         const at = { file: path, line: 1 };
         if (read.error !== undefined) return [findingAt(input, at, 'syntax', read.error)];

@@ -13,7 +13,7 @@ import { XCODE_PROJECT_FILE } from '#cli/config/checks/tool/xcode.ts';
 
 // The folder that holds the project bundle, with its trailing slash, or an empty string at the root.
 
-function folderOf(projectFile: string): string {
+function projectFolder(projectFile: string): string {
     const bundle = projectFile.slice(0, projectFile.indexOf('.xcodeproj'));
     return bundle.slice(0, bundle.lastIndexOf('/') + 1);
 }
@@ -24,11 +24,11 @@ function folderOf(projectFile: string): string {
  * @returns the findings
  */
 export function orphanSources(input: CheckInput): Finding[] {
-    const projects = trackedByExtension(input, [XCODE_PROJECT_FILE]).map((path) => ({
+    const projects = scopeSourcesByEnding(input, [XCODE_PROJECT_FILE]).map((path) => ({
         path,
         ...readPbxproj(
             readSource(input.root, path, input.reads).toString('utf8'),
-            posix.join(input.root, folderOf(path)),
+            posix.join(input.root, projectFolder(path)),
         ),
     }));
     if (projects.length === 0) return [];
@@ -45,7 +45,7 @@ export function orphanSources(input: CheckInput): Finding[] {
             prefix: `${posix.relative(input.root, path)}/`.replace(/^\//u, ''),
             excluded: new Set([...excluded].map((source) => posix.relative(input.root, source))),
         }));
-    const tree = trackedByExtension(input, ['.swift']).filter((file) => posix.basename(file) !== 'Package.swift');
+    const tree = scopeSourcesByEnding(input, ['.swift']).filter((file) => posix.basename(file) !== 'Package.swift');
     const inTree = new Set(tree);
     const untargeted = tree
         .filter(
@@ -75,7 +75,7 @@ export function orphanSources(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export function testPlans(input: CheckInput): Finding[] {
-    const plans = trackedByExtension(input, ['.xctestplan']).map((path) => ({
+    const plans = scopeSourcesByEnding(input, ['.xctestplan']).map((path) => ({
         path,
         read: parseJsonDocument(readSource(input.root, path, input.reads).toString('utf8'), testPlanSchema),
     }));
@@ -85,7 +85,7 @@ export function testPlans(input: CheckInput): Finding[] {
     const planned = new Set(
         plans.flatMap(({ read }) => (read.data?.testTargets ?? []).map((entry) => entry.target?.name ?? '')),
     );
-    const schemes = trackedByExtension(input, ['.xcscheme'])
+    const schemes = scopeSourcesByEnding(input, ['.xcscheme'])
         .filter((path) => path.includes('/xcshareddata/'))
         .filter((path) => {
             const text = readSource(input.root, path, input.reads).toString('utf8');
@@ -95,7 +95,7 @@ export function testPlans(input: CheckInput): Finding[] {
             findingAt(input, { file: path, line: 1 }, 'scheme-plan', 'This scheme runs tests and names no test plan.'),
         );
     if (syntax.length > 0) return [...syntax, ...schemes];
-    const targets = trackedByExtension(input, [XCODE_PROJECT_FILE]).flatMap((path) =>
+    const targets = scopeSourcesByEnding(input, [XCODE_PROJECT_FILE]).flatMap((path) =>
         testTargets(readSource(input.root, path, input.reads).toString('utf8'))
             .filter((name) => !planned.has(name))
             .map((name) =>
@@ -111,7 +111,7 @@ export function testPlans(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export async function symlinks(input: CheckInput): Promise<Finding[]> {
-    const folders = trackedByExtension(input, [XCODE_PROJECT_FILE]).map((projectFile) => folderOf(projectFile));
+    const folders = scopeSourcesByEnding(input, [XCODE_PROJECT_FILE]).map((projectFile) => projectFolder(projectFile));
     if (folders.length === 0 || !input.hasGit) return [];
     const entries = parseIndexRevision(input.index);
     const links = entries.filter(
@@ -143,7 +143,7 @@ export async function symlinks(input: CheckInput): Promise<Finding[]> {
  * @param endings the path endings
  * @returns the paths
  */
-export function trackedByExtension(input: CheckInput, endings: string[]): string[] {
+export function scopeSourcesByEnding(input: CheckInput, endings: string[]): string[] {
     return input.files
         .filter((file) => file.kind === 'source' && endings.some((ending) => file.path.endsWith(ending)))
         .map((file) => file.path);

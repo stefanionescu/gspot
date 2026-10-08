@@ -17,7 +17,7 @@ import { gspotDrift } from '#cli/checks/general/gspot/drift.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { UV_LOCKFILE_ARGUMENTS } from '#cli/config/tools/python.ts';
-import { GENERATED } from '#tests/config/cli/checks/generated-drift.ts';
+import { GENERATED } from '#tests/config/tools/configurations/general/gspot.ts';
 
 const GENERATED_DRIFT_OPTIONS = buildRunOptions({ only: ['gspot/drift'] });
 

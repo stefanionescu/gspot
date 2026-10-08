@@ -1,4 +1,4 @@
-import type { RuntimeSchemaCase } from '#tests/types/cli/docs/schema.ts';
+import type { RuntimeSchemaCase } from '#tests/types/cli/policy/schema.ts';
 
 /** Saved exceptions use the same accepted shapes at the root and in a project scope. */
 export const EXCEPTION_SCHEMA_CASES: RuntimeSchemaCase[] = [
