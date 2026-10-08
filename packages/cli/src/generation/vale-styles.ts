@@ -38,7 +38,7 @@ export function styleFiles(policy: Policy, view: ScopeView): GeneratedFile[] {
                 (stem === 'alt-text' && policy.level === 'all'
                     ? readAsset('configurations/general/prose/alt-text-all.txt')
                     : ''),
-            kind: 'config',
+            kind: 'tool_file',
         };
     });
     const shipped = readAsset(`configurations/general/prose/vocabularies/${GSPOT_STYLE}/accept.txt`)
@@ -52,7 +52,7 @@ export function styleFiles(policy: Policy, view: ScopeView): GeneratedFile[] {
         {
             path: `${base}/accept.txt`,
             content: `${words.join('\n')}\n`,
-            kind: 'config',
+            kind: 'tool_file',
         },
     ];
 }

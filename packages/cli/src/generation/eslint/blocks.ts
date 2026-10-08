@@ -200,8 +200,8 @@ export function fragmentSelectorGroups(
     return scopes.flatMap((scope) => {
         const resolved = fragments
             .filter(({ manifest }) => scope.selected.includes(manifest))
-            .flatMap(({ config }) =>
-                config.selectors.map(
+            .flatMap(({ toolFile }) =>
+                toolFile.selectors.map(
                     (entry): ResolvedSelector => ({
                         selector: entry.selector,
                         message: entry.message,

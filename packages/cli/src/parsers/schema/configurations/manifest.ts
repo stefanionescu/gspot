@@ -67,7 +67,7 @@ const pointerSchema = z
 
 const toolFileSchema = z
     .strictObject({
-        template: z.string().optional(),
+        source: z.string().optional(),
         imports: z.string().optional(),
         target: z.string(),
         // Emit the target when an applicable check in its scope consumes any named tool.
@@ -82,7 +82,7 @@ const toolFileSchema = z
         // Companion tools needed only when an applicable check consumes this configuration.
         required_tools: z.array(z.string().min(1)).default([]),
         rule_keys: z.array(z.string()).optional(),
-        stub_file: pointerSchema.optional(),
+        pointer: pointerSchema.optional(),
         fragment: z.boolean().default(false),
         scoped: z.boolean().default(false),
         generated_header: z.boolean().default(true),
@@ -91,17 +91,17 @@ const toolFileSchema = z
         selectors: z.array(selectorSchema).default([]),
     })
     .refine(
-        (config) => config.required_tools.length === 0 || config.tool.length > 0 || config.check.length > 0,
+        (toolFile) => toolFile.required_tools.length === 0 || toolFile.tool.length > 0 || toolFile.check.length > 0,
         'Companion tools require a consuming tool or check.',
     )
-    // A config that is not a fragment reads the template named after its target file, unless it names another.
-    .transform((config) =>
-        config.fragment
-            ? { ...config, fragment: true as const }
+    // A tool file that is not a fragment reads the source named after its target file, unless it names another.
+    .transform((toolFile) =>
+        toolFile.fragment
+            ? { ...toolFile, fragment: true as const }
             : {
-                  ...config,
+                  ...toolFile,
                   fragment: false as const,
-                  template: config.template ?? `${posix.basename(config.target)}.eta`,
+                  source: toolFile.source ?? `${posix.basename(toolFile.target)}.eta`,
               },
     );
 
@@ -233,11 +233,12 @@ export const manifestSchema = z
             // A configuration whose checks all read git is not proposed in a folder with no .git.
             when: conditionSchema.pick({ git: true }).optional(),
             description: sentence,
+            notes: z.string().optional(),
         }),
         detect: detectionSchema,
         files: filesSchema.prefault({}),
         tool: z.array(toolSchema).default([]),
-        config: z.array(toolFileSchema).default([]),
+        tool_file: z.array(toolFileSchema).default([]),
         check: z.array(checkSchema).default([]),
         setting: z.array(settingSchema).default([]),
         // Defaults this configuration sets for settings another configuration declares, by setting name; `set_all` applies at level all.
@@ -271,11 +272,11 @@ export const manifestSchema = z
             )
             .default([]),
     })
-    // A manifest writes one [[tool]], [[config]], [[check]], or [[setting]] table per entry; the code reads the lists.
-    .transform(({ tool, config, check, setting, ...rest }) => ({
+    // A manifest writes one [[tool]], [[tool_file]], [[check]], or [[setting]] table per entry; the code reads the lists.
+    .transform(({ tool, tool_file: toolFiles, check, setting, ...rest }) => ({
         ...rest,
         tools: tool,
-        toolFiles: config,
+        toolFiles,
         checks: check,
         settings: setting,
     }));

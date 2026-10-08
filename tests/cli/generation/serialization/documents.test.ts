@@ -88,8 +88,8 @@ for (const configuration of ['javascript', 'markdown'])
                 await using sandbox = await testdir();
                 const manifest = configurationManifests().get(configuration)!;
                 const pointer = manifest.toolFiles.find(
-                    (file) => file.stub_file?.body?.includes('{target_module}') === true,
-                )!.stub_file!;
+                    (file) => file.pointer?.body?.includes('{target_module}') === true,
+                )!.pointer!;
                 const target = `generated/${component}/owner.mjs`;
                 const output = bodyPointer(pointer, 'entry.mjs', target, RUNNING_VERSION);
                 await createFileTree(sandbox.path, {

@@ -23,7 +23,8 @@ export const relativePath = z
     .regex(
         /^(?!\/)(?![\s\S]*(?:^|\/)\.\.(?:\/|$))[^\\:\p{Cc}]+$/u,
         'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
-    );
+    )
+    .meta({ pathRole: 'source' });
 
 /** Project environment reader names retain the native nonempty-string constraint. */
 export const environmentReadersSchema = z.array(z.string().min(1));

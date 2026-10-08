@@ -7,6 +7,10 @@ requires = ["format", "structure"]
 suggests = ["naming"]
 description = "Python sources: Ruff for lint and layout, basedpyright for types, import contracts, docstrings that match signatures, unused dependencies, and dead code."
 
+notes = '''
+An explicit `[tool.pydoclint]` style in `pyproject.toml` takes precedence. Otherwise, pydoclint follows the project Ruff pydocstyle convention, then `tools.ruff.docstring_convention` when it is `google` or `numpy`. Without a declared style, gspot detects Google or NumPy sections in source docstrings. Other conventions do not select a pydoclint style. If neither a declaration nor the source selects a style, pydoclint uses its native default.
+'''
+
 [detect]
 extensions = [".py"]
 project_files = ["pyproject.toml", "requirements*.txt", "Pipfile"]
@@ -91,17 +95,17 @@ mise = "pipx:validate-pyproject"
 pypi = "validate-pyproject"
 version_pattern = "(\\d+\\.\\d+(?:\\.\\d+)?)"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/ruff.toml"
 tool = "ruff"
-stub_file = { path = "ruff.toml", body = 'extend = "{target}"' }
+pointer = { path = "ruff.toml", body = 'extend = "{target}"' }
 scoped = true
 rule_keys = ["lint.select", "lint.ignore", "lint.per-file-ignores"]
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/basedpyrightconfig.json"
 tool = "basedpyright"
-stub_file = { path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}" }
+pointer = { path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}" }
 scoped = true
 generated_header = false
 

@@ -19,7 +19,7 @@ kind = "library"
 version = "8.20.0"
 npm = "ajv"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/spectral.yaml"
 tool = "spectral"
 

@@ -42,7 +42,7 @@ file = "tox.ini"
 table = "sqlfluff"
 shared = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/sqlfluff.cfg"
 tool = "sqlfluff"
 scoped = true

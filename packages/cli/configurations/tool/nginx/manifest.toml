@@ -25,7 +25,7 @@ system = true
 name = "openssl"
 system = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/gixy.cfg"
 tool = "gixy"
 rule_keys = ["checks", "skips"]

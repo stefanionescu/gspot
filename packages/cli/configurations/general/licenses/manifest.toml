@@ -1,6 +1,6 @@
 [configuration]
 title = "Licenses"
-borrowed_checks = ["structure/stale-allowlists"]
+borrowed_checks = ["gspot/unmatched-paths"]
 description = "Every installed dependency reports a license from the allowed list, or carries an exception that names the license it reports."
 
 [detect]
@@ -25,7 +25,7 @@ version = "5.5.5"
 pypi = "pip-licenses"
 mise = "pipx:pip-licenses"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/licenses.json"
 tool = ["license-checker-rseidelsohn", "pip-licenses"]
 scoped = true

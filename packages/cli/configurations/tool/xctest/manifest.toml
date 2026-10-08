@@ -12,13 +12,13 @@ paths = ["**/*Tests/**/*.swift"]
 filenames = ["*.xctestplan"]
 kinds = ["source"]
 
-[[config]]
-template = "swiftlint.yml.eta"
+[[tool_file]]
+source = "swiftlint.yml.eta"
 target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
 scoped = true
 fragment = true
-stub_file = { path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
+pointer = { path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
 
 [[check]]
 name = "disabled"

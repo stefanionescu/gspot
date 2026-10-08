@@ -76,7 +76,7 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                 return planReplacement(log, {
                     path: file.path,
                     next,
-                    kind: file.kind === 'lock' ? 'lock' : 'config',
+                    kind: file.kind === 'lock' ? 'lock' : 'tool_file',
                     canReplace: file.read !== undefined,
                     expected: file.read,
                 });

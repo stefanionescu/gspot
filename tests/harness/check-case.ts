@@ -14,7 +14,7 @@ import type { FindingCase, CheckCommand, CheckCaseOutcome } from '#tests/types/h
 
 /**
  * Applies case changes, runs the selected check, and restores the repository.
- * @param cwd the test repository, already installed
+ * @param cwd the sandbox, already installed
  * @param changes the defect
  * @param environment verbatim variables, such as the PATH of the tools
  * @returns the exit code and the output of the check

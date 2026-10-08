@@ -1,4 +1,4 @@
-// The built-in Bash checks on test scripts, run in-process: each fires on its defect and accepts the correction.
+// The built-in Bash checks on test scripts, run in-process: each reports its finding and passes after the fix.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';

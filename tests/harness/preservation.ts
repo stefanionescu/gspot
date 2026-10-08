@@ -19,7 +19,7 @@ import {
 
 /**
  * Returns the index entries of the paths to the last commit, undoing what marking them executable staged.
- * @param cwd the test repository
+ * @param cwd the sandbox
  * @param paths the repository-relative files
  */
 function resetIndex(cwd: string, paths: string[]): void {

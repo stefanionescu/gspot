@@ -8,7 +8,7 @@ export const BASH_CASES_MAIN = '# main: runs the script.\nmain() {\n    echo "he
 /** The checks of the table that run a tool, ShellCheck, shfmt, Bash, or ast-grep, rather than gspot alone. */
 export const TOOL_CHECKS = ['bash/shellcheck', 'bash/shfmt', 'bash/syntax', 'bash/function-size'];
 
-/** A clean bash script every test repository starts from. Its main holds enough statements not to be trivial. */
+/** A clean bash script every sandbox starts from. Its main holds enough statements not to be trivial. */
 export const CLEAN_BASH_SCRIPT = `${HEAD}main() {\n    local name="$1"\n    local greeting="hello \${name}"\n    echo "\${greeting}"\n}\n\nmain "$@"\n`;
 
 export const BASH_CASES: FindingCase[] = [

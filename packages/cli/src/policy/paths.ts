@@ -1,42 +1,55 @@
 import { z } from 'zod';
-import { relativePath } from '#cli/policy/schema/fields.ts';
-import type { RawScope } from '#cli/types/policy/settings.ts';
+import type { KeyPath } from '#cli/types/parsers/document.ts';
 import { settingValueSchemas } from '#cli/policy/schema/setting-values.ts';
 import { scopeSchema, rootSettingSchemas } from '#cli/policy/schema/policy.ts';
+import type { RawScope, PolicyPathCallback } from '#cli/types/policy/settings.ts';
 import { valueAt, isRecord, createTable, normalizeTables } from '#cli/platform/objects.ts';
 
 const settingSchemas = new Map<string, z.ZodType>(Object.entries({ ...rootSettingSchemas, ...settingValueSchemas }));
 
-function tablePaths(schema: z.ZodType, value: unknown, scope: string): unknown {
+function tablePaths(schema: z.ZodType, value: unknown, visit: PolicyPathCallback, keys: KeyPath): unknown {
+    if (schema instanceof z.ZodArray && Array.isArray(value))
+        return value.map((entry: unknown, index) =>
+            mapPolicyPaths(z.instanceof(z.ZodType).parse(schema.element), entry, visit, [...keys, index]),
+        );
     if (!isRecord(value)) return value;
-    if (schema instanceof z.ZodRecord)
+    if (schema instanceof z.ZodRecord) {
+        const role = z.instanceof(z.ZodType).parse(schema.keyType).meta()?.pathRole;
         return Object.fromEntries(
             Object.entries(value).map(([key, entry]) => [
-                schema.keyType === relativePath ? prefixScopePath(key, scope) : key,
-                schemaPaths(z.instanceof(z.ZodType).parse(schema.valueType), entry, scope),
+                role === undefined ? key : visit(key, [...keys, key], role),
+                mapPolicyPaths(z.instanceof(z.ZodType).parse(schema.valueType), entry, visit, [...keys, key]),
             ]),
         );
+    }
     if (schema instanceof z.ZodObject)
         return Object.fromEntries(
             Object.entries(value).map(([key, entry]) => {
                 const field: unknown = schema.shape[key];
-                return [key, field instanceof z.ZodType ? schemaPaths(field, entry, scope) : entry];
+                return [key, field instanceof z.ZodType ? mapPolicyPaths(field, entry, visit, [...keys, key]) : entry];
             }),
         );
     return value;
 }
 
-function schemaPaths(schema: z.ZodType, value: unknown, scope: string): unknown {
-    if (schema === relativePath && typeof value === 'string') return prefixScopePath(value, scope);
+/**
+ * Transform declared path leaves through the same native schemas used for runtime validation.
+ * @param schema the field's authoritative validator.
+ * @param value the already validated authored value.
+ * @param visit the required native path calculation.
+ * @param keys the field's location in its authored table.
+ * @returns the value with only declared path leaves transformed.
+ */
+export function mapPolicyPaths(schema: z.ZodType, value: unknown, visit: PolicyPathCallback, keys: KeyPath): unknown {
+    const role = schema.meta()?.pathRole;
+    if (typeof value === 'string' && role !== undefined) return visit(value, keys, role);
     if (schema instanceof z.ZodOptional || schema instanceof z.ZodDefault)
-        return schemaPaths(z.instanceof(z.ZodType).parse(schema.unwrap()), value, scope);
-    if (schema instanceof z.ZodArray && Array.isArray(value))
-        return value.map((entry: unknown) => schemaPaths(z.instanceof(z.ZodType).parse(schema.element), entry, scope));
+        return mapPolicyPaths(z.instanceof(z.ZodType).parse(schema.unwrap()), value, visit, keys);
     if (schema instanceof z.ZodUnion) {
         const branch = schema.options.find((option) => z.safeParse(option, value).success);
-        return schemaPaths(z.instanceof(z.ZodType).parse(branch), value, scope);
+        return mapPolicyPaths(z.instanceof(z.ZodType).parse(branch), value, visit, keys);
     }
-    return tablePaths(schema, value, scope);
+    return tablePaths(schema, value, visit, keys);
 }
 
 /**
@@ -60,7 +73,9 @@ export function prefixScopePath(path: string, scope: string): string {
 export function settingPaths(key: string, value: unknown, scope: string): unknown {
     if (scope === '' || value === undefined) return value;
     const schema = settingSchemas.get(key);
-    return schema === undefined ? value : schemaPaths(schema, value, scope);
+    return schema === undefined
+        ? value
+        : mapPolicyPaths(schema, value, (path) => prefixScopePath(path, scope), key.split('.'));
 }
 
 /**

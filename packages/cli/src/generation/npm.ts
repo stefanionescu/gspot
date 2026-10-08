@@ -49,14 +49,14 @@ export function npmProject({ root, scopes, manifests, installer, runner }: NpmPr
                 null,
                 JSON_INDENT,
             )}\n`,
-            kind: 'config',
+            kind: 'tool_file',
         },
     ];
     if (isYarnBerry(installer))
         files.push({
             path: YARN_SETTINGS,
             content: YARN_TOOL_PROJECT_SETTINGS,
-            kind: 'config',
+            kind: 'tool_file',
         });
     return files;
 }

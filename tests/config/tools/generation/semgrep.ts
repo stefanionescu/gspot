@@ -14,13 +14,13 @@ export const FRAMEWORK_FILES = {
 };
 
 /** Keychain and hashing defects beside a safe keychain setting. */
-export const SWIFT_DEFECTS = `let access = kSecAttrAccessibleAlways
+export const SWIFT_SAMPLE = `let access = kSecAttrAccessibleAlways
 let hash = Insecure.MD5
 let background = kSecAttrAccessibleAfterFirstUnlock
 `;
 
 /** Shell downloads executed through pipelines, process substitution, and command substitution. */
-export const BASH_DOWNLOAD_DEFECTS = String.raw`#!/usr/bin/env bash
+export const BASH_DOWNLOAD_SAMPLE = String.raw`#!/usr/bin/env bash
 curl https://example.com/setup.sh | bash
 eval "$1"
 curl https://example.com/setup.sh | sudo bash

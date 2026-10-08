@@ -5,7 +5,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/platform/errors.ts';
 import { listAssets } from '#cli/platform/assets.ts';
 import { similar, codeList } from '#cli/platform/text.ts';
-import { allChecks, configurationName } from '#cli/configurations/declarations.ts';
+import { allChecks, toolFileName } from '#cli/configurations/declarations.ts';
 
 import {
     SETTING_PLACEHOLDER,
@@ -61,7 +61,7 @@ const CHECK_RULES: CheckRule[] = [
     },
 ];
 
-function configurationReaders(checks: ParsedCheck[]): Set<string> {
+function toolFileReaders(checks: ParsedCheck[]): Set<string> {
     const readers = new Set<string>();
     for (const check of checks)
         for (const argument of [
@@ -205,7 +205,7 @@ function assertSettingWait(
 }
 
 // Generated consumers and native version prerequisites must resolve to declared registry tools and checks.
-function assertConfigurationConsumers(
+function assertToolFileConsumers(
     manifest: Manifest,
     tools: Map<string, ToolPin>,
     checks: Map<string, CheckDeclaration>,
@@ -279,22 +279,22 @@ export function manifestErrors(raw: ParsedManifest): string[] {
     const declarations = [...checks, ...fragments];
     if (raw.checks.some((check) => raw.configuration.borrowed_checks.includes(check.name)))
         declarations.push('A configuration cannot both declare and reference the same check.');
-    const readers = configurationReaders(raw.checks);
+    const readers = toolFileReaders(raw.checks);
     // Built-in checks read assets in source; command placeholders cannot prove which configs they use.
     if (raw.checks.some((check) => check.command === undefined)) return declarations;
     // A config that needs another configuration is read by that configuration's check, as Semgrep reads every pack in its folder.
     const configurations = raw.toolFiles
-        .filter((config) => !config.fragment && config.stub_file === undefined && config.when === undefined)
+        .filter((config) => !config.fragment && config.pointer === undefined && config.when === undefined)
         .filter((config) => {
-            const name = configurationName(config.target);
+            const name = toolFileName(config.target);
             const isReadByTemplate = raw.toolFiles.some(
-                (other) => other !== config && other.template?.includes(name) === true,
+                (other) => other !== config && other.source?.includes(name) === true,
             );
             return !readers.has(name) && !isReadByTemplate;
         })
         .map(
             (config) =>
-                `config ${config.target} has no check that reads it ({tool_file:${configurationName(config.target)}}) and no pointer.`,
+                `config ${config.target} has no check that reads it ({tool_file:${toolFileName(config.target)}}) and no pointer.`,
         );
     return [...declarations, ...configurations];
 }
@@ -316,7 +316,7 @@ export function assertManifests(manifests: Map<string, Manifest>): void {
     for (const manifest of entries) {
         assertRuleFiles(manifest);
         assertRequirementsExist(manifest, manifests);
-        assertConfigurationConsumers(manifest, tools, checks);
+        assertToolFileConsumers(manifest, tools, checks);
         for (const tool of manifest.tools.filter((entry) => entry.system !== true)) assertToolPin(manifest, tool);
         for (const check of manifest.checks) assertSettingWait(manifest, check, settings);
         assertDefaultsDeclared(manifest, settings);

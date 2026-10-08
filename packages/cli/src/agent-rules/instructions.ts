@@ -1,15 +1,8 @@
-import { FIRST_READ } from '#cli/config/policy/settings.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { CONFIGURATION_LABELS } from '#cli/config/configurations.ts';
 import type { RuleFile, AgentRules, InstructionInputs } from '#cli/types/agent-rules.ts';
-
-import {
-    RULES_ALONE,
-    LEVEL_SUMMARY,
-    CHECKS_INSTALLED,
-    ALL_LEVEL_SUMMARY,
-    INSTRUCTION_HEADING,
-} from '#cli/config/agent-rules.ts';
+import { FIRST_READ, LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/policy/settings.ts';
+import { RULES_ALONE, CHECKS_INSTALLED, INSTRUCTION_HEADING } from '#cli/config/agent-rules.ts';
 
 function rulesByArea(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();

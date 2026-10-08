@@ -53,7 +53,7 @@ test.each(['before', 'after'] as const)(
             directory.path,
             'write',
             point,
-            String.raw`applyPlans(log, ${JSON.stringify(paths)}.map(path=>planReplacement(log,{path: path, next: {bytes:Buffer.from('installed '+path+'\n'),mode:0o444}, kind: 'config', canReplace: true})));`,
+            String.raw`applyPlans(log, ${JSON.stringify(paths)}.map(path=>planReplacement(log,{path: path, next: {bytes:Buffer.from('installed '+path+'\n'),mode:0o444}, kind: 'tool_file', canReplace: true})));`,
         );
         expect(await readFile(join(directory.path, 'first.txt'), 'utf8')).toBe('installed first.txt\n');
         expect(await readFile(join(directory.path, 'middle.txt'), 'utf8')).toBe(
@@ -72,7 +72,7 @@ test.each(['before', 'after'] as const)(
                     planReplacement(log, {
                         path: path,
                         next: { bytes: Buffer.from(`installed ${path}\n`), mode: 0o444 },
-                        kind: 'config',
+                        kind: 'tool_file',
                         canReplace: true,
                     }),
                 ),
@@ -98,7 +98,7 @@ test.each(['before', 'after'] as const)(
                     planReplacement(initial, {
                         path: path,
                         next: { bytes: Buffer.from(path), mode: 0o644 },
-                        kind: 'config',
+                        kind: 'tool_file',
                     }),
                 ),
             );

@@ -66,6 +66,7 @@ export const settingItemsSchema: z.ZodType<SettingItems> = z.union([z.enum(['str
 /** Compiler metadata shared by manifest declarations and runtime value validation. */
 export const settingValueDeclarationSchema = z.strictObject({
     type: settingTypeSchema,
+    path_role: z.enum(['source', 'destination']).optional(),
     validation: settingValidationSchema.prefault({}),
     items: settingItemsSchema.optional(),
     default: z.unknown().optional(),

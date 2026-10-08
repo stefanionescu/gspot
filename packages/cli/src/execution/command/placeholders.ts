@@ -6,7 +6,7 @@ import { toPlatform } from '#cli/platform/paths.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
-import { targetInScope, configurationName } from '#cli/configurations/declarations.ts';
+import { toolFileName, targetInScope } from '#cli/configurations/declarations.ts';
 import type { CommandPart, Substitutions, CommandInvocation } from '#cli/types/execution/command.ts';
 
 import {
@@ -59,7 +59,7 @@ function allConfigurations(session: ToolSession, planned: PlannedCheck): ToolFil
 
 function configurationPath(session: ToolSession, planned: PlannedCheck, name: string): string {
     const target = allConfigurations(session, planned).find(
-        (config) => !config.fragment && configurationName(config.target) === name,
+        (config) => !config.fragment && toolFileName(config.target) === name,
     );
     if (!target)
         throw new Error(`Check ${planned.check.name} names {tool_file:${name}} and no configuration writes it.`);
@@ -93,7 +93,7 @@ function nestedConfigurations(session: ToolSession, planned: PlannedCheck): stri
     const paths = [
         posix.join(scope, nested),
         ...allConfigurations(session, planned)
-            .filter((config) => !config.fragment && config.stub_file?.path === nested)
+            .filter((config) => !config.fragment && config.pointer?.path === nested)
             .map((config) => targetInScope(scope, config)),
     ];
     const ancestors = planned.files.flatMap((file) => {

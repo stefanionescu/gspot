@@ -41,23 +41,23 @@ file = ".trivyignore"
 name = "docker"
 system = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/hadolint.yml"
 tool = "hadolint"
 scoped = true
 rule_keys = ["ignored"]
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/trivy.yml"
 tool = "trivy"
 scoped = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/trivyignore"
 tool = "trivy"
 scoped = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/trivy-findings.tpl"
 tool = "trivy"
 scoped = true

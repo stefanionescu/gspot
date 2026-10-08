@@ -32,7 +32,7 @@ export function pythonProject(manifests: Manifest[]): GeneratedFile[] {
                     },
                 },
             }),
-            kind: 'config',
+            kind: 'tool_file',
         },
     ];
 }

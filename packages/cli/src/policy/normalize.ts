@@ -30,10 +30,10 @@ function normalizeLanguage(table: RawNaming[string]): NamingLanguageTable {
     return language;
 }
 
-function normalizeScopeTables(authored: RawScope, path: string): Partial<Policy> {
+function normalizeScopeTables(authored: RawScope, path: string): Policy['scopeTables'][string] {
     const raw = scopePolicyPaths(authored, path);
     // The tables a scope holds as written.
-    const table: Partial<Policy> = compact({
+    const table: Policy['scopeTables'][string] = compact({
         authored,
         configurationSettings: configurationTables(raw),
         reasons: raw.reasons,
@@ -167,7 +167,7 @@ export function buildPolicy(raw: RawPolicy): Policy {
         hooks: raw.hooks,
         ci: raw.ci,
     });
-    const scopeTables: Record<string, Partial<Policy>> = {};
+    const scopeTables: Policy['scopeTables'] = {};
     const scopes = Object.entries({ ...raw.scope });
     for (const [path, scope] of scopes)
         scopeTables[trimTrailingSlashes(path)] = normalizeScopeTables(scope, trimTrailingSlashes(path));

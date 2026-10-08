@@ -30,7 +30,7 @@ name = "purgecss"
 version = "7.0.2"
 npm = "purgecss"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/html-validate-built.json"
 scoped = true
 tool = "html-validate"
@@ -207,6 +207,7 @@ summary = "The command that builds the site."
 [[setting]]
 name = "site.build_folder"
 type = "path"
+path_role = "destination"
 direction = "neutral"
 default = "dist"
 summary = "The folder the build writes."

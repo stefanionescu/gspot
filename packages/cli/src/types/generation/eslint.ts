@@ -100,7 +100,7 @@ export type EslintFileSelector =
     | { runtime: { declarations: EslintRuntimeBlock[]; index: number } }
     | { scope: { scope: string; includes: string[]; excludes: string[]; flags: string } };
 
-/** Serializable rule fields shared by rendering and the last successful apply baseline. */
+/** Serializable rule fields shared by emission and the last successful apply baseline. */
 export type EslintSettingsBlock = {
     files?: (EslintFileSelector | EslintFileSelector[])[];
     ignores?: string[];
@@ -108,7 +108,7 @@ export type EslintSettingsBlock = {
     rules?: Record<string, unknown>;
 };
 
-/** The actual default blocks and a renderer bound to the owning scope. */
+/** The actual default blocks and an emitter bound to the owning scope. */
 export type EslintModule = {
     blocks: EslintSettingsBlock[];
     block: (block: EslintSettingsBlock, runtime?: string) => string;

@@ -9,7 +9,7 @@ configurations = ["python"]
 /** Minimal script sources for detection changes. */
 export const SCRIPT_SOURCE = 'echo example\n';
 
-/** Root and scope initialization overrides with literal authored source samples. */
+/** Root and scope initialization choices with literal authored source samples. */
 export const INITIAL_OVERRIDES = [
     {
         name: 'root',

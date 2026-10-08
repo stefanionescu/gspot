@@ -6,13 +6,13 @@ description = "Zustand stores: a store is created in a store file, and a compone
 [detect]
 dependencies = ["zustand"]
 
-[[config]]
-template = "eslint.fragment.js.eta"
+[[tool_file]]
+source = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 fragment = true
 
-[[config.selectors]]
+[[tool_file.selectors]]
 selector = "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0]"
 message = "Pass a selector to the store hook, so the component renders when its slice changes and at no other time."
 

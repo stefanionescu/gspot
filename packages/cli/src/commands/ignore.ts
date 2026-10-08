@@ -3,6 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { readPolicy } from '#cli/policy/read.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { printResult } from '#cli/terminal/messages.ts';
 import { savePolicy } from '#cli/commands/save-policy.ts';
@@ -133,10 +134,7 @@ export function registerIgnore(program: Program): void {
         .description(
             'Turn off a check, or one of its rules, for some paths or everywhere. The ignore goes into gspot.toml, and gspot applies the policy. Every report lists the ignores, and --verbose prints each reason. --dry-run prints the change and writes nothing.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: the ignore was written and applied, or the preview finished.\n- 2: the input was invalid, or ignore could not finish.\n\nExample:\ngspot ignore bash/syntax --paths scripts/example.sh --reason "The file tests a syntax error."\ngspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results."',
-        )
+        .addHelpText('after', commandHelp('ignore'))
         .option('--paths <glob...>', 'Apply the ignore to these paths only; without it, everywhere')
         .option('--rule <rule>', 'Turn off one rule of the check')
         .option('--reason <text>', 'Say why; required when adding an ignore')

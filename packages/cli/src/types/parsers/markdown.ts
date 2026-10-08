@@ -2,7 +2,7 @@
 export type RuleSection = { start: number; end: number; depth: number; all: boolean };
 
 /** The body and opening line of a language-tagged Markdown code fence. */
-export type FencedBlock = { line: number; language: string; body: string };
+export type FencedBlock = { line: number; language: string; body: string; meta?: string };
 
 /** One canonical syntax reader selected by the declared fence aliases. */
 export type FenceParser = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'json' | 'jsonc' | 'toml' | 'yaml';

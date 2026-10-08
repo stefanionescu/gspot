@@ -93,28 +93,28 @@ github = { name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0
 [[tool.replace]]
 file = ".editorconfig"
 
-[[config]]
-template = "editorconfig.eta"
+[[tool_file]]
+source = "editorconfig.eta"
 target = ".editorconfig"
 tool = ["ec", "prettier"]
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/prettier.json"
 tool = "prettier"
 generated_header = false
 
-[config.stub_file]
+[tool_file.pointer]
 path = "prettier.config.mjs"
 template = "pointer.mjs.eta"
 when = { configuration = "javascript" }
 
-[[config]]
-template = "prettierignore.eta"
+[[tool_file]]
+source = "prettierignore.eta"
 target = ".gspot/config/prettierignore"
 tool = "prettier"
 
-[[config]]
-template = "prettierignore.eta"
+[[tool_file]]
+source = "prettierignore.eta"
 target = ".prettierignore"
 tool = "prettier"
 when = { configuration = "javascript" }

@@ -19,14 +19,14 @@ import {
     OWN_RULE,
     APP_SEMGREP,
     BEARER_FILES,
-    SWIFT_DEFECTS,
+    SWIFT_SAMPLE,
     FASTAPI_SOURCE,
     SECURITY_CLEAN,
     FRAMEWORK_FILES,
     SEMGREP_COMMAND,
     FRAMEWORK_FINDINGS,
+    BASH_DOWNLOAD_SAMPLE,
     EXPRESS_SOURCE_CASES,
-    BASH_DOWNLOAD_DEFECTS,
     PLATFORM_SOURCE_CASES,
     SEMGREP_PROJECT_FILES,
     EXPRESS_SOURCE_FINDINGS,
@@ -92,8 +92,8 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
             tables: '[agent_rules]\nenabled = false\n',
             level: 'recommended',
         }),
-        'script.sh': BASH_DOWNLOAD_DEFECTS,
-        'Value.swift': SWIFT_DEFECTS,
+        'script.sh': BASH_DOWNLOAD_SAMPLE,
+        'Value.swift': SWIFT_SAMPLE,
     });
     const environment = await sharePythonTools(root);
     const recommended = await spawnGspot(root, SEMGREP_COMMAND, environment);
@@ -120,12 +120,12 @@ test.skipIf(!hasToolBuild('semgrep'))('Semgrep rules follow the selected configu
         { file: 'script.sh', line: 6, rule: 'gspot.bash.curl-pipe-shell' },
         { file: 'script.sh', line: 7, rule: 'gspot.bash.curl-pipe-shell' },
     ]);
-    expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_DEFECTS);
-    expect(await Bun.file(join(root, 'script.sh')).text()).toBe(BASH_DOWNLOAD_DEFECTS);
+    expect(await Bun.file(join(root, 'Value.swift')).text()).toBe(SWIFT_SAMPLE);
+    expect(await Bun.file(join(root, 'script.sh')).text()).toBe(BASH_DOWNLOAD_SAMPLE);
     await Bun.write(join(root, 'script.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$1"\n');
     await Bun.write(
         join(root, 'Value.swift'),
-        SWIFT_DEFECTS.replace('kSecAttrAccessibleAlways', 'kSecAttrAccessibleWhenUnlockedThisDeviceOnly').replace(
+        SWIFT_SAMPLE.replace('kSecAttrAccessibleAlways', 'kSecAttrAccessibleWhenUnlockedThisDeviceOnly').replace(
             'Insecure.MD5',
             'SHA256',
         ),

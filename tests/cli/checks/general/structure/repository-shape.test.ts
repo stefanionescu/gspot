@@ -11,9 +11,13 @@ import { buildCheckInput } from '#tests/harness/input.ts';
 import { buildRunOptions } from '#tests/harness/gspot.ts';
 import { largeFiles } from '#cli/checks/general/structure/large-files.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
+import { unmatchedPaths } from '#cli/checks/general/gspot/unmatched-paths.ts';
 import { configurationLogic } from '#cli/checks/general/structure/config-logic.ts';
-import { staleAllowlists } from '#cli/checks/general/structure/stale-allowlists.ts';
-import { REPOSITORY_SHAPE_POLICY } from '#tests/config/cli/checks/general/structure/repository-shape.ts';
+
+import {
+    AUTHORED_PATH_CASES,
+    REPOSITORY_SHAPE_POLICY,
+} from '#tests/config/cli/checks/general/structure/repository-shape.ts';
 
 test('check path ignores must match tracked paths even when documentation mentions them', async () => {
     await using sandbox = await testdir();
@@ -35,10 +39,11 @@ test('check path ignores must match tracked paths even when documentation mentio
             ],
         }),
     );
-    const selected = buildCheckInput(await openSession(sandbox.path), 'structure/stale-allowlists', {
+    const selected = buildCheckInput(await openSession(sandbox.path), 'gspot/unmatched-paths', {
         paths: ['docs/guide.md'],
     });
-    expect(staleAllowlists(selected).map(({ message: description }) => description)).toStrictEqual([
+    const findings = await unmatchedPaths(selected);
+    expect(findings.map(({ message: description }) => description)).toStrictEqual([
         '.reports/output.json under [[ignore]] matches no tracked file or folder.',
         '.reports/unused.json under [[ignore]] matches no tracked file or folder.',
         'missing.d.ts under [[generated]] matches no tracked file or folder.',
@@ -141,4 +146,22 @@ test('folder layout exempts installed dependencies while tracked dependency enfo
             .toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['.venv', 'venv']);
     expect(result.report.exitCode).toBe(1);
+});
+
+test.each(AUTHORED_PATH_CASES)('$name', async ({ files, policy, unmatched }) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { ...files, 'gspot.toml': stringify({ level: 'all', ...policy }) });
+    commitAll(sandbox.path);
+    const session = await openSession(sandbox.path);
+    expect(session.policyFiles.errors).toStrictEqual([]);
+    const findings = await unmatchedPaths(buildCheckInput(session, 'gspot/unmatched-paths'));
+    expect(findings.map((finding) => finding.message.split(' under ', 1)[0])).toStrictEqual(unmatched);
+    expect(findings).toMatchObject(
+        unmatched.map(() => ({
+            check: 'gspot/unmatched-paths',
+            file: 'gspot.toml',
+            line: 1,
+            rule: 'unmatched-pattern',
+        })),
+    );
 });

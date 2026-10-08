@@ -26,7 +26,7 @@ file = ".htmlvalidate.js"
 [[tool.replace]]
 file = ".htmlvalidate.cjs"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/html-validate-source.json"
 tool = "html-validate"
 check = "html/validate"

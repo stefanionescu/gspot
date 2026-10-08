@@ -46,7 +46,7 @@ export type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'exampl
 
 export type ToolFileDeclaration = ParsedManifest['toolFiles'][number];
 
-/** A complete generated file, with its render template resolved by the manifest schema. */
+/** A complete generated file, with its Eta source resolved by the manifest schema. */
 export type GeneratedToolFile = Extract<ToolFileDeclaration, { fragment: false }>;
 
 /** Validated execution variants. Repository-defined commands do not require reference examples. */

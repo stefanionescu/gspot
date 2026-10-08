@@ -18,7 +18,7 @@ export const gspot = join(workspaceRoot, SOURCE_CLI_PATH);
 
 /**
  * Runs gspot in this process over a directory with color off and CI set, capturing what it writes.
- * @param cwd the test repository
+ * @param cwd the sandbox
  * @param argv the command line after gspot
  * @param environment verbatim variables, restored afterwards
  * @param options byte input for commands that read standard input
@@ -66,7 +66,7 @@ export async function runGspot(
 
 /**
  * Runs gspot as a child process in a directory with color off and CI set, through the product's own process runner.
- * @param cwd the test repository
+ * @param cwd the sandbox
  * @param argv the command line after gspot
  * @param environment verbatim variables
  * @param options stdin for the child process
@@ -88,7 +88,7 @@ export async function spawnGspot(
 
 /**
  * Start a source CLI subprocess for signals or exact byte input.
- * @param cwd the test repository
+ * @param cwd the sandbox
  * @param argv the command line after gspot
  * @param environment verbatim variables
  * @param options stdin for the child process

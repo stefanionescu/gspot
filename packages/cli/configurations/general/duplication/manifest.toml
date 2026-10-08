@@ -15,7 +15,7 @@ mise = "npm:jscpd"
 [[tool.replace]]
 file = ".jscpd.json"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/jscpd.json"
 tool = "jscpd"
 generated_header = false

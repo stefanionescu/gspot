@@ -40,8 +40,8 @@ version = "1.0.1"
 npm = "prettier-plugin-astro"
 prettier = { entry = "dist/index.js", extensions = [".astro"], overrides = [{ files = "*.astro", options = { parser = "astro" } }] }
 
-[[config]]
-template = "eslint.fragment.js.eta"
+[[tool_file]]
+source = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"

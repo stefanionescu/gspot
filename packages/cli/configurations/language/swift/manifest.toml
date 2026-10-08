@@ -71,28 +71,28 @@ system = true
 name = "xcodebuild"
 system = true
 
-[[config]]
-template = "semgrep/swift.yml.eta"
+[[tool_file]]
+source = "semgrep/swift.yml.eta"
 target = ".gspot/config/semgrep/swift.yml"
 tool = "semgrep"
 rule_keys = ["rules"]
 when = { configuration = "security" }
 scoped = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
 rule_keys = ["opt_in_rules", "analyzer_rules", "disabled_rules", "custom_rules"]
 scoped = true
-stub_file = { path = ".swiftlint.yml", body = "parent_config: {target_json}\n" }
+pointer = { path = ".swiftlint.yml", body = "parent_config: {target_json}\n" }
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/swiftformat"
 tool = "swiftformat"
 rule_keys = ["enable", "disable", "rules", "lint-only"]
 scoped = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/periphery.yml"
 tool = "periphery"
 scoped = true

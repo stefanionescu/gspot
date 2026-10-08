@@ -53,15 +53,15 @@ system = true
 name = "bats"
 system = true
 
-[[config]]
-template = "semgrep/bash.yml.eta"
+[[tool_file]]
+source = "semgrep/bash.yml.eta"
 target = ".gspot/config/semgrep/bash.yml"
 tool = "semgrep"
 rule_keys = ["rules"]
 when = { configuration = "security" }
 scoped = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/shellcheckrc"
 tool = "shellcheck"
 rule_keys = ["enable", "disable"]

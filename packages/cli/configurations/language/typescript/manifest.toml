@@ -4,6 +4,14 @@ requires = ["javascript", "structure"]
 suggests = ["naming", "format"]
 description = "The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code."
 
+notes = '''
+JavaScript and TypeScript checks use the project's TypeScript compiler when it is installed. If the project has none, gspot prefers its pinned compiler in the tool project over a global compiler. Run `gspot install` to install that compiler. An interrupted tool-project installation reports an error; it does not block an available project compiler.
+
+TypeScript source files or an authored `tsconfig.json` select TypeScript checks. A TypeScript tool dependency or declaration files alone do not. When a scope has no authored configuration, gspot generates a standalone compiler project for its source files and declarations. The project excludes generated files, vendored files, and child scopes. An authored configuration keeps its project settings and receives the strict options required by the selected level.
+
+See [JavaScript details](/reference/configurations/javascript/#details) for policy settings translated into ESLint plugin options.
+'''
+
 [detect]
 extensions = [".ts", ".tsx", ".mts", ".cts"]
 filenames = ["tsconfig.json"]
@@ -21,14 +29,14 @@ version = "8.70.0"
 npm = "typescript-eslint"
 min_version = "8.29.0"
 
-[[config]]
-template = "eslint.fragment.js.eta"
+[[tool_file]]
+source = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"
 fragment = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/tsconfig.json"
 tool = ["tsc", "vue-tsc", "svelte-check", "next"]
 check = ["typescript/tsc", "vue/vue-tsc", "svelte/svelte-check", "nextjs/tsc"]

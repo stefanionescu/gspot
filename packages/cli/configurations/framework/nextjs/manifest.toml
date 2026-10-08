@@ -6,6 +6,12 @@ requires = ["typescript", "react"]
 suggests = ["css"]
 description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, and the configuration turns no build check off."
 
+notes = '''
+Next.js buildsrun at `all` when the selected scope contains an `app/`, `src/app/`,
+`pages/`, or `src/pages/` tree. The project must provide a supported Next.js executable
+and the dependencies its build needs. `recommended` retains the Next.js type check.
+'''
+
 [detect]
 dependencies = ["next"]
 
@@ -25,8 +31,8 @@ kind = "library"
 version = "16.3.8"
 npm = "@next/eslint-plugin-next"
 
-[[config]]
-template = "eslint.fragment.js.eta"
+[[tool_file]]
+source = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"

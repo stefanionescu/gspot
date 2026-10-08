@@ -124,7 +124,7 @@ test('disabled tests and snapshot recording report through the CLI and accept th
     ]);
 });
 
-test.each(CASES)('$check reports its defect and accepts the correction', async (entry) => {
+test.each(CASES)('$check reports its finding and passes after the fix', async (entry) => {
     await using repository = await createTestRepository(REPOSITORY, runGspot);
     const { failed, passed } = await runFindingCase(repository, entry, REPOSITORY);
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);

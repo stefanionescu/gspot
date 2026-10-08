@@ -3,12 +3,12 @@ import { compact, valueAt } from '#cli/platform/objects.ts';
 import { namingLists } from '#cli/parsers/schema/naming.ts';
 import { outputSchema } from '#cli/parsers/schema/output.ts';
 import type { AuthoredReasons } from '#cli/types/policy/settings.ts';
-import { DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
 import { architectureSchema } from '#cli/policy/schema/architecture.ts';
 import { vendoredSchema, generatedSchema } from '#cli/parsers/schema/inventory.ts';
 import { agentRulesSchema, agentRulesValuesSchema } from '#cli/policy/schema/agent-rules.ts';
 import { publicToolsSchema, configurationSettingSchemas } from '#cli/policy/schema/namespaces.ts';
 import { levelSchema, runnerSchema, operatingSystemSchema } from '#cli/parsers/schema/settings.ts';
+import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY, DEFAULT_TEST_PATTERNS } from '#cli/config/policy/settings.ts';
 import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
 
 import {
@@ -41,7 +41,7 @@ const dependenciesSchema = z.strictObject({
 const ignoreSchema = z.strictObject({
     check: z.string(),
     rule: z.string().optional(),
-    paths: z.array(z.string()).optional(),
+    paths: z.array(z.string().meta({ pathRole: 'source' })).optional(),
     reason: z.string().optional(),
     until: localDateSchema
         .optional()
@@ -51,14 +51,15 @@ const ignoreSchema = z.strictObject({
 const checkSchema = z.strictObject({
     command: commandSchema.describe('The executable and arguments to run on selected files.'),
     paths: z
-        .array(z.string().min(1))
+        .array(z.string().min(1).meta({ pathRole: 'source' }))
         .min(1)
         .meta({ description: 'Repository-relative glob patterns selecting inputs.' }),
     stage: checkStageSchema.exclude(['message']).meta({ description: 'The earliest stage that runs this check.' }),
     ignore_file: z
         .string()
         .optional()
-        .meta({ description: 'A repository-relative file containing ordered gitignore patterns for this check.' }),
+        .meta({ description: 'A repository-relative file containing ordered gitignore patterns for this check.' })
+        .meta({ pathRole: 'source' }),
     help: z.string().optional().meta({ description: 'Instructions for resolving findings.' }),
     fix: commandSchema.optional().describe('The executable and arguments that correct findings.'),
     exit_codes: findingExitCodesSchema
@@ -163,8 +164,7 @@ export const scopeSchema = z.strictObject({
 /** Top-level gspot.toml keys shown by gspot list settings and the settings reference. */
 export const rootSettingSchemas = {
     level: authoredDefault(levelSchema.default('recommended')).meta({
-        description:
-            'Recommended includes correctness, security, accessibility, type safety, routine formatting, and declared contracts. All adds stable conventions. Neither enables experimental rules.',
+        description: `${LEVEL_SUMMARY} ${ALL_LEVEL_SUMMARY}`,
     }),
     words: authoredDefault(z.record(z.string().min(1), z.string()).default({})).describe(
         'Accepted words and the reason for each spelling.',
@@ -176,7 +176,7 @@ export const rootSettingSchemas = {
     test_files: authoredDefault(z.array(relativePath).default(DEFAULT_TEST_PATTERNS)).meta({
         description: 'Test files where applicable linters relax rules intended for production source.',
     }),
-    exclude: authoredDefault(z.array(z.string()).default([])).meta({
+    exclude: authoredDefault(z.array(z.string().meta({ pathRole: 'source' })).default([])).meta({
         description: 'Paths and directory patterns excluded before reading source content.',
     }),
     generated: authoredDefault(z.array(generatedSchema).default([])).meta({
@@ -199,7 +199,78 @@ export const policySchema = z
         ci: ciSchema.optional(),
         agent_rules: authoredDefault(agentRulesSchema.default({})),
     })
-    .superRefine(validateAuthoredReasons);
+    .superRefine(validateAuthoredReasons)
+    .meta({
+        examples: [
+            { level: 'recommended' },
+            { configurations: ['typescript', 'nextjs', 'markdown'] },
+            { runner: 'mise' },
+            { test_files: ['tests/**/*.test.ts'] },
+            { exclude: ['dist/**'], reasons: { exclude: 'Build outputs have their own generated checks.' } },
+            { scope: { 'services/api': { configurations: ['python', 'fastapi'] } } },
+            { configurations: ['typescript', 'python'], limits: { function_lines: 60, python: { file_lines: 300 } } },
+            {
+                configurations: ['naming'],
+                naming: {
+                    overrides: [
+                        {
+                            paths: ['migrations/**'],
+                            allow_digits: true,
+                            reason: 'Migration filenames begin with their version.',
+                        },
+                    ],
+                },
+            },
+            { architecture: { roles: { runtime: ['src/**'], tests: ['tests/**'] } } },
+            {
+                structure: { reexports: 'index-only' },
+                reasons: { 'structure.reexports': 'Libraries expose a reviewed public index.' },
+            },
+            {
+                configurations: ['javascript'],
+                tools: { eslint: { rules: { 'no-console': [{ allow: ['warn'] }] } } },
+                reasons: { 'tools.eslint.rules.no-console': 'Scripts print reviewed warnings to the terminal.' },
+            },
+            { format: { indent_width: 4, print_width: 100 } },
+            { dependencies: { min_release_age_days: 7 } },
+            { words: { Acme: 'The project uses this product name.' } },
+            { licenses: { allowed: ['MIT', 'Apache-2.0'] } },
+            {
+                ignore: [
+                    {
+                        check: 'javascript/eslint',
+                        rule: 'no-console',
+                        paths: ['scripts/**'],
+                        reason: 'Scripts print their results.',
+                    },
+                ],
+            },
+            {
+                check: {
+                    'project/notes': {
+                        command: ['node', 'scripts/check-notes.mjs', '{files}'],
+                        paths: ['notes/**'],
+                        stage: 'commit',
+                        ignore_file: '.notesignore',
+                    },
+                },
+            },
+            { hooks: { push_files: 'changed' } },
+            { ci: { provider: 'github', platforms: ['linux'], files: 'changed' } },
+            { agent_rules: { enabled: true, instruction_files: ['.github/copilot-instructions.md'] } },
+            { tool_timeout_seconds: 300 },
+            {
+                generated: [
+                    {
+                        paths: ['src/generated/**'],
+                        generator: 'API schema generator',
+                        reason: 'The API schema owns these generated sources.',
+                    },
+                ],
+            },
+            { vendored: [{ paths: ['vendor/**'], reason: 'Copied from the reviewed upstream library.' }] },
+        ],
+    });
 
 /**
  * Refuse explanations whose setting is absent from the same authored table.

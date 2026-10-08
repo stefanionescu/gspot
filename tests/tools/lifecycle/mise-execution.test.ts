@@ -117,7 +117,7 @@ test.skipIf(!isPosix)(
                 planReplacement(log, {
                     path: '.gspot/obsolete.json',
                     next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
-                    kind: 'config',
+                    kind: 'tool_file',
                 }),
             );
         }

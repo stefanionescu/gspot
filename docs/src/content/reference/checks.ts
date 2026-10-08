@@ -34,7 +34,7 @@ export function checkPage(check: CheckDeclaration, manifest: Manifest): Referenc
         section('Example', check.example),
         check.stage === 'message'
             ? '\nThe commit-msg hook checks the message of each commit.\n'
-            : `\nRun it with \`gspot check --only ${check.name}\`, and record a path exception with \`gspot ignore ${check.name} --paths <glob> --reason "<why>"\`.\n`,
+            : `\nRun it with \`gspot check --only ${check.name}\`, and add an ignore with \`gspot ignore ${check.name} --paths <glob> --reason "<why>"\`.\n`,
     ];
     return referencePage(check.name, check.summary, lines.join(''), `packages/cli/${manifest.dir}/manifest.toml`);
 }

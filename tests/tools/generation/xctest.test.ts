@@ -12,7 +12,7 @@ import { runTestCommand } from '#tests/harness/command.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { DEFECT, CORRECT } from '#tests/config/tools/generation/xctest.ts';
+import { SAMPLE, CORRECT } from '#tests/config/tools/generation/xctest.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { commandConfigurations } from '#cli/execution/command/placeholders.ts';
 
@@ -54,9 +54,9 @@ test.skipIf(!hasToolBuild('swiftlint')).each([
     const scopeTable = scope === '' ? '' : `[scope.${JSON.stringify(scope)}]\nconfigurations = ["xctest"]\n`;
     await createFileTree(root, {
         'gspot.toml': `level = "all"\nconfigurations = ${scope === '' ? '["xctest"]' : '[]'}\n[agent_rules]\nenabled = false\n${scopeTable}`,
-        [`${prefix}Sources/Value.swift`]: DEFECT,
-        [`${prefix}AppTests/Value.swift`]: DEFECT,
-        [`${prefix}AppTests/Deep/Value.swift`]: DEFECT,
+        [`${prefix}Sources/Value.swift`]: SAMPLE,
+        [`${prefix}AppTests/Value.swift`]: SAMPLE,
+        [`${prefix}AppTests/Deep/Value.swift`]: SAMPLE,
     });
     const session = await openSession(root);
     const emitted = emitAll(session);
@@ -94,7 +94,7 @@ test.skipIf(!hasToolBuild('swiftlint')).each(['AppTests', 'AppTests/Helpers'])(
                 tables: `[scope."${scope}"]\nconfigurations = ["xctest"]\n`,
                 level: 'all',
             }),
-            [`${scope}/Value.swift`]: DEFECT,
+            [`${scope}/Value.swift`]: SAMPLE,
         });
         const session = await openSession(sandbox.path);
         const emitted = emitAll(session);

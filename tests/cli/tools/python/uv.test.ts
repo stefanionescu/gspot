@@ -44,7 +44,9 @@ test('one command acquires its pinned uv once and creates lockfiles through that
         executable,
         executable,
     ]);
-    const files: GeneratedFile[] = [{ path: '.gspot/pyproject.toml', content: PRIVATE_PYTHON_PROJECT, kind: 'config' }];
+    const files: GeneratedFile[] = [
+        { path: '.gspot/pyproject.toml', content: PRIVATE_PYTHON_PROJECT, kind: 'tool_file' },
+    ];
     {
         using log = openOwnership(repository.path);
         await prepareToolProjects(session, files, log.files, { refreshLockfiles: false });

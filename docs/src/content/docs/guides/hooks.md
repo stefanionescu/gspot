@@ -52,6 +52,6 @@ gspot set hooks.enabled true
 gspot set hooks.push_files all
 ```
 
-`git commit --no-verify` and `git push --no-verify` bypass the local hooks once. CI still runs. To accept a finding in saved policy, [record an ignore](/guides/policy/#record-one-exception).
+`git commit --no-verify` and `git push --no-verify` bypass the local hooks once. CI still runs. To accept a finding in saved policy, [record an ignore](/guides/policy/#ignore-one-finding).
 
 Checks at the manual stage run only when named with `--only`, for example `gspot check --only security/codeql`. See [CI](/guides/ci/) for pipeline setup.

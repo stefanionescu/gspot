@@ -161,7 +161,7 @@ export function buildInitPlan(
             { path: `${DOT_GSPOT}/`, note: 'generated configuration and version pin' },
             ...everySelected
                 .flatMap((manifest) => manifest.toolFiles)
-                .map((config) => config.stub_file?.path)
+                .map((config) => config.pointer?.path)
                 .filter((path) => path !== undefined)
                 .map((path) => ({ path, note: 'pointer' })),
             ...agentRows(

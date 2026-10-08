@@ -10,6 +10,51 @@ requires = ["structure"]
 suggests = ["naming", "format"]
 description = "ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code."
 
+notes = '''
+gspot translates policy settings into plugin rule options:
+
+| Policy setting | Plugin rule | Rule option |
+| --- | --- | --- |
+| `architecture.roles.env` | `env-owner` | `owners` |
+| `tools.eslint.import_extensions` | `import-extensions` | `style` |
+| `limits.index_exports` | `max-barrel-reexports` | `max` |
+| `structure.reexports = "index-only"` | `no-reexports` and `no-trivial-files` | `allowIndex: true` |
+
+Environment ownership and barrel limits apply at level `all`. Barrel limits apply when index re-exports are allowed. See the [standalone plugin reference](/reference/plugin/) for the rule options.
+
+## JavaScript runtimes
+
+ESLint gives each file one runtime. Ordinary modules use Node.js built-ins; `.cjs` and `.cts`
+files also receive CommonJS globals. React, Vue, Svelte, and Vite application sources use
+browser globals. React Native sources use native globals. Build scripts retain Node.js.
+Next.js sources retain Node.js by default because server components can use its APIs.
+
+Use `tools.eslint.runtimes` to declare another runtime for a file selector:
+
+```toml title="Runtime choices in gspot.toml"
+[tools.eslint.runtimes]
+"src/client/**" = "browser"
+"src/workers/**" = "worker"
+"src/service-worker.js" = "service-worker"
+```
+
+Selectors are relative to the scope that authors the setting. Inherited selectors keep that
+origin. A scope can add or replace selectors. Later selectors take precedence when they overlap.
+A child scope reads its own settings and framework defaults. Use an explicit `node` selector
+for server code inside a browser or native project.
+
+Runtime names follow the pinned [globals package](https://github.com/sindresorhus/globals);
+`service-worker` names its service-worker
+set. Web Workers and service workers have different APIs. Browser and native files do not
+receive Node.js rules. React Native retains the `process` and `require` globals its
+runtime supports, and does not receive Node.js globals such as `Buffer` and `__dirname`.
+Unknown runtime names fail policy validation before configuration is generated.
+
+JavaScript checks inherit an authored `jsconfig.json` first and `tsconfig.json` otherwise. The TypeScript fallback keeps compiler settings and declarations while selecting JavaScript sources for this check. An authored JSX setting remains in force; otherwise the generated project uses `jsx: "preserve"`. Scopes without either project file use Bundler resolution when an extensionless import style matches a JavaScript source file. Ambient types come from the source project, including authored custom roots.
+
+For compiler selection, see [TypeScript details](/reference/configurations/typescript/#details).
+'''
+
 [detect]
 extensions = [".js", ".jsx", ".mjs", ".cjs"]
 shebangs = ["node"]
@@ -218,27 +263,27 @@ kind = "library"
 version = "5.9.3"
 npm = "typescript"
 
-[[config]]
-template = "semgrep/javascript.yml.eta"
+[[tool_file]]
+source = "semgrep/javascript.yml.eta"
 target = ".gspot/config/semgrep/javascript.yml"
 tool = "semgrep"
 rule_keys = ["rules"]
 when = { configuration = "security" }
 scoped = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 rule_keys = ["rules"]
-stub_file = { path = "eslint.config.mjs", body = "export { default } from {target_module};" }
+pointer = { path = "eslint.config.mjs", body = "export { default } from {target_module};" }
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/jsconfig.json"
 tool = "tsc"
 check = "javascript/tsc"
 scoped = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/knip.json"
 tool = "knip"
 generated_header = false

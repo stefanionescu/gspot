@@ -90,17 +90,6 @@ why = "A suppression with no reason hides a finding nobody reviewed."
 help = "Use the tool's suppression syntax to write a meaningful reason, or fix the finding and remove the suppression."
 
 [[check]]
-name = "stale-allowlists"
-title = "Find allowlist entries that match nothing"
-example = "An `[[ignore]]` entry for `bash/shellcheck` with `paths = [\"nowhere/**\"]` reports `unmatched-pattern` when that path matches no selected file. Remove the obsolete entry or correct its path to the actual exception, preserving its reason."
-level = "recommended"
-stage = "commit"
-runs = "once"
-summary = "Checks policy path patterns and exact-version license exceptions against tracked files and dependency lockfiles."
-why = "An ignore, declaration, or package allowance that matches nothing misleads the next reader."
-help = "Remove the entry, correct its path or exact package version, or restore the project lockfile."
-
-[[check]]
 name = "large-files"
 title = "Keep large files out of git"
 example = "A tracked `notes/big.txt` containing 1,100 KiB exceeds the default 1,024 KiB ceiling and reports `size`. Remove accidental content or store a required large file through Git LFS. Generated and vendored classifications must describe the actual file ownership."

@@ -5,7 +5,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import queryPlugin from '@tanstack/eslint-plugin-query';
 import { createEslint } from '#tests/harness/generated.ts';
 import type { ResolvedEslint } from '#tests/types/generation/configuration-files.ts';
-import { QUERY_DEFECT, QUERY_PROJECT, QUERY_CORRECTION } from '#tests/config/cli/generation/eslint/tanstack-query.ts';
+import { QUERY_SAMPLE, QUERY_PROJECT, QUERY_CORRECTION } from '#tests/config/cli/generation/eslint/tanstack-query.ts';
 
 test.each(['recommended', 'all'] as const)(
     '%s TanStack rules report void queries and callback order and accept corrections',
@@ -17,7 +17,7 @@ test.each(['recommended', 'all'] as const)(
                 level: level,
                 tables: '[agent_rules]\nenabled = false\n',
             }),
-            'src/query.ts': QUERY_DEFECT,
+            'src/query.ts': QUERY_SAMPLE,
         });
         const eslint = await createEslint(sandbox.path);
         const config = (await eslint.calculateConfigForFile('src/query.ts')) as ResolvedEslint;

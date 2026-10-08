@@ -67,7 +67,7 @@ file = "package.json"
 key = "commitlint"
 shared = true
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/commitlint.config.cjs"
 tool = "commitlint"
 rule_keys = ["rules"]
@@ -119,4 +119,4 @@ name = "tools.commitlint.rules"
 type = "table"
 direction = "rule-options"
 default = {}
-summary = "Native options for active commitlint rules, by rule name: an always/never condition and optional value, without a severity. Rule selection comes from recommended or all. Accept a finding with gspot ignore commits/commitlint --rule <rule> --reason <why>."
+summary = "Native options for active commitlint rules, by rule name: an always/never condition and optional value, without a severity. The level decides which rules run. Ignore a finding with gspot ignore commits/commitlint --rule <rule> --reason <why>."

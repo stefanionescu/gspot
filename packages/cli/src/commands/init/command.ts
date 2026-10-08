@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { hasPolicy } from '#cli/policy/read.ts';
 import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { getTemplate } from '#cli/policy/templates.ts';
 import { prepare } from '#cli/commands/init/prepare.ts';
@@ -122,10 +123,7 @@ export function registerInit(program: Program): void {
         .description(
             'Read the repository, show a plan, and write it when you accept. The plan covers gspot.toml, the tool files, the agent rules, the Git hooks, and the tool installation. With --yes or your answer, gspot writes the plan and installs the tools. It replaces the tool files the selected tools already have; Git keeps the replaced files. init runs no check. --dry-run writes nothing.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: the plan was written, shown, or declined.\n- 2: the input was invalid, or init could not finish.\n\nExample:\ngspot init --yes --configurations bash\ngspot init --dry-run --yes',
-        )
+        .addHelpText('after', commandHelp('init'))
         .option('--yes', 'Accept the plan without asking')
         .option('--from <template>', 'Start from a template: a path, an https URL, or github:owner/repo')
         .option(

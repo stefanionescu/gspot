@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 import { compact } from '#cli/platform/objects.ts';
 import { emitAll } from '#cli/generation/files.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { printResult } from '#cli/terminal/messages.ts';
 import type { CommandResult } from '#cli/types/terminal.ts';
@@ -22,10 +23,7 @@ export function registerInstall(program: Program): void {
         .description(
             'Install the tools gspot.toml selects, at the versions in the committed lockfiles, and the selected Git hooks. install prepares missing or outdated tool lockfiles before installing. Run it after you clone a configured repository. If a package install fails, the previous lockfiles and installation stay. --refresh-lockfiles resolves the declared pins again before installation. --dry-run prints the commands and writes nothing.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: the tools were installed, or the preview finished.\n- 2: the input was invalid, or install could not finish.\n\nExample:\ngspot install --dry-run',
-        )
+        .addHelpText('after', commandHelp('install'))
         .option('--dry-run', 'Print the install commands and write nothing')
         .option('--refresh-lockfiles', 'Resolve the declared tool pins again and install the prepared lockfiles')
         .action(async (flags, command) => {

@@ -114,7 +114,7 @@ export const CASES: FindingCase[] = [
         },
     },
     {
-        check: 'structure/stale-allowlists',
+        check: 'gspot/unmatched-paths',
         files: {},
         policy: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\npaths = ["nowhere/**"]\nreason = "A pattern that matches no file here."\n',
         expected: {

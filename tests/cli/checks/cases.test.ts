@@ -95,7 +95,7 @@ for (const scenario of [
         });
         for (const entry of scenario.cases) {
             const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
-            test(`${entry.check} reports ${where} and accepts the correction`, async () => {
+            test(`${entry.check} reports ${where} and passes after the fix`, async () => {
                 const { failed, passed } = await runFindingCase(repository, entry, scenario.repository);
                 expect(failed.code, `${entry.check}: ${failed.stdout}${failed.stderr}`).toBe(1);
                 expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);

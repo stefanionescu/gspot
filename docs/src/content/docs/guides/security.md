@@ -35,7 +35,7 @@ gspot check --only security/semgrep-registry
 ```
 
 The rule packs need network access. To turn a rule off for some paths, record an ignore with a
-reason; see [the policy file](/guides/policy/#record-one-exception).
+reason; see [the policy file](/guides/policy/#ignore-one-finding).
 
 ## Swift security rules
 

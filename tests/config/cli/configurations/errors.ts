@@ -20,10 +20,10 @@ export const MINIMUM_VERSION_CASES = [
 export const INVALID_VERSION_FLOORS = ['future', '4.4-beta', '4.4.0.1234'];
 
 /** A generated file with a pointer and an executable supplied by another configuration. */
-export const CONSUMER_DECLARATION = `[[config]]
+export const CONSUMER_DECLARATION = `[[tool_file]]
 target = ".gspot/config/example.toml"
 tool = ["example"]
-[config.stub_file]
+[tool_file.pointer]
 path = "example.toml"
 body = "config = {config}"
 `;

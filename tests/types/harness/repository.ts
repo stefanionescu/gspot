@@ -1,7 +1,7 @@
 import type { Level } from '#cli/types/configurations.ts';
 import type { Correction, FindingCase, CheckCommand } from '#tests/types/harness/check-case.ts';
 
-/** What a test repository holds and selects. */
+/** What a sandbox holds and selects. */
 export type RepositorySetup = {
     /** The configurations init selects by name. */
     configurations: string[];
@@ -25,7 +25,7 @@ export type RepositorySetup = {
     installs?: boolean;
 };
 
-/** A test repository after its install: the root and the environment every command of the test runs with. */
+/** A sandbox after its install: the root and the environment every command of the test runs with. */
 export type TestRepository = { root: string; environment: Record<string, string> };
 
 /** A test table's repository, setup, and default correction. */

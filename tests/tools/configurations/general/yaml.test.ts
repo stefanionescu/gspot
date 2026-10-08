@@ -10,7 +10,7 @@ import { installToolProjects } from '#tests/harness/install.ts';
 
 import {
     YAML_SCOPE_FILES,
-    YAML_SCOPE_DEFECT,
+    YAML_SCOPE_SAMPLE,
     YAML_SCOPE_TABLES,
 } from '#tests/config/tools/configurations/general/yaml.ts';
 
@@ -48,7 +48,7 @@ test('native YAML keeps scoped options and formatter width through recommended/a
         expect((JSON.parse(formatted.stdout) as RunReport).checks).toMatchObject([
             { check: 'format/prettier', scope: '', status: 'passed', findings: [] },
         ]);
-        await Bun.write(join(sandbox.path, 'app/settings/project.yaml'), YAML_SCOPE_DEFECT);
+        await Bun.write(join(sandbox.path, 'app/settings/project.yaml'), YAML_SCOPE_SAMPLE);
         await expectYamlFiles(sandbox.path, 'truthy');
         await Bun.write(join(sandbox.path, 'app/settings/project.yaml'), YAML_SCOPE_FILES['app/settings/project.yaml']);
         await expectYamlFiles(sandbox.path);

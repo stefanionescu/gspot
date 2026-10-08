@@ -2,6 +2,7 @@
 import { resolve } from 'node:path';
 import { hasPolicy } from '#cli/policy/read.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { printResult } from '#cli/terminal/messages.ts';
@@ -200,10 +201,7 @@ export function registerExplain(program: Program): void {
         .description(
             'Explain a check, a rule, a configuration, a setting, or a file path: what it is and what to do about it. A rule also gets the gspot ignore and gspot set lines that change it. A setting gets its value, its default, and where the value comes from. A file gets the checks that read it. explain changes nothing.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: the explanation was printed.\n- 2: the subject is unknown, or the input was invalid.\n\nExample:\ngspot explain bash/syntax\ngspot explain ./src/app.ts',
-        )
+        .addHelpText('after', commandHelp('explain'))
         .action(async (subject, _flags, command) => {
             const global = command.optsWithGlobals();
             const cwd = resolve(global.C ?? process.cwd());

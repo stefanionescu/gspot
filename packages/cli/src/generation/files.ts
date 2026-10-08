@@ -1,4 +1,4 @@
-// Every generated output of a repository: configuration files, pointers, blocks, hooks, tool pins, and rules.
+// Every generated file of a repository: tool files, pointers, blocks, hooks, tool pins, and rules.
 import { pathKey } from '#cli/platform/paths.ts';
 import { etaInputs } from '#cli/generation/eta.ts';
 import { miseFile } from '#cli/generation/mise.ts';
@@ -83,7 +83,7 @@ function attributesBlock(files: Generated['files']): string {
     return [GIT_ATTRIBUTES_BLOCK, ...lines].join('\n');
 }
 
-function blockOutputs(
+function emitBlocks(
     repository: Repository,
     policy: Policy,
     manifests: Manifest[],
@@ -105,13 +105,13 @@ function blockOutputs(
         generated.blocks.push({ path, block, style: 'markdown' });
 }
 
-function combineConfigurations(generated: Generated): void {
+function combineToolFiles(generated: Generated): void {
     const assembled = new Map<string, Generated['toolFiles'][number]>();
-    for (const output of generated.toolFiles) {
-        const previous = assembled.get(output.path);
-        if (previous === undefined) assembled.set(output.path, { ...output, changes: [...output.changes] });
+    for (const file of generated.toolFiles) {
+        const previous = assembled.get(file.path);
+        if (previous === undefined) assembled.set(file.path, { ...file, changes: [...file.changes] });
         else {
-            previous.changes.push(...output.changes);
+            previous.changes.push(...file.changes);
         }
     }
     generated.toolFiles = [...assembled.values()];
@@ -119,18 +119,18 @@ function combineConfigurations(generated: Generated): void {
 
 function assertDistinctPaths(generated: Generated): void {
     const paths = new Map<string, string>();
-    const outputs = [...generated.files, ...generated.blocks, ...generated.toolFiles];
-    for (const output of outputs) {
-        assertMutationTarget(output.path);
-        const key = pathKey(output.path);
+    const files = [...generated.files, ...generated.blocks, ...generated.toolFiles];
+    for (const file of files) {
+        assertMutationTarget(file.path);
+        const key = pathKey(file.path);
         const previous = paths.get(key);
-        if (previous !== undefined) throw new Error(`Generated destinations collide: ${previous} and ${output.path}`);
-        paths.set(key, output.path);
+        if (previous !== undefined) throw new Error(`Generated destinations collide: ${previous} and ${file.path}`);
+        paths.set(key, file.path);
     }
 }
 
 /**
- * The managed .gitignore block for tool projects and generated outputs.
+ * The managed .gitignore block for tool projects and generated files.
  * @param manifests the manifests whose ignored paths count, every shipped configuration by default
  * @returns the paths that Git must leave untracked
  */
@@ -142,7 +142,7 @@ export function gitignoreBlock(
 }
 
 /**
- * Renders every output in memory and writes nothing.
+ * Emits every generated file in memory and writes nothing.
  * @param session the repository inventory, effective policy, and selected tools
  * @returns the files, managed blocks, authored config-file edits, and notes
  */
@@ -197,22 +197,20 @@ export function emitAll(session: Session): Generated {
         })),
     );
     if (tools.has('vale')) generated.files.push(...styleFiles(policy, rootView(scopes)));
-    blockOutputs(repository, policy, selected, rules, generated);
+    emitBlocks(repository, policy, selected, rules, generated);
     generated.files.sort((a, b) => a.path.localeCompare(b.path));
-    combineConfigurations(generated);
+    combineToolFiles(generated);
     assertDistinctPaths(generated);
     return generated;
 }
 
 /**
  * Every managed destination, including lockfiles owned by applicable tool projects.
- * @param generated the completed generated outputs
+ * @param generated the completed generated files
  * @returns the destination paths
  */
 export function generatedPaths(generated: Generated): Set<string> {
-    const paths = new Set(
-        [...generated.files, ...generated.blocks, ...generated.toolFiles].map((output) => output.path),
-    );
+    const paths = new Set([...generated.files, ...generated.blocks, ...generated.toolFiles].map((file) => file.path));
     for (const file of generated.files) {
         if (file.path === TOOL_PACKAGE_PROJECT) paths.add(parseToolProject(file.content).lockfilePath);
         if (file.path === TOOL_PYTHON_PROJECT) paths.add(UV_LOCKFILE);

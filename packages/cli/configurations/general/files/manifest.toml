@@ -66,17 +66,17 @@ system = true
 brew = "libxml2"
 apt = "libxml2-utils"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/taplo.toml"
 tool = "taplo"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/yamllint.yml"
 tool = "yamllint"
 scoped = true
 rule_keys = ["rules"]
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/v8r.yml"
 tool = "v8r"
 
@@ -173,7 +173,7 @@ name = "tools.yamllint.rules"
 type = "table"
 direction = "rule-options"
 default = {}
-summary = "Native option tables for active YAML rules. Coverage comes from recommended or all, and formatting width comes from [format]. Accept a finding with gspot ignore files/yamllint --rule <rule> --reason <why>."
+summary = "Native option tables for active YAML rules. The level decides which rules run, and formatting width comes from [format]. Ignore a finding with gspot ignore files/yamllint --rule <rule> --reason <why>."
 
 [[setting]]
 name = "tools.v8r.schemas"

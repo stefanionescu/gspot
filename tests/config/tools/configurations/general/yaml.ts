@@ -9,4 +9,4 @@ export const YAML_SCOPE_FILES = {
 };
 
 /** A child value accepted only by the root reveals leaked native options. */
-export const YAML_SCOPE_DEFECT = 'parent:\n  enabled: yes\non:\n  enabled: no\n';
+export const YAML_SCOPE_SAMPLE = 'parent:\n  enabled: yes\non:\n  enabled: no\n';

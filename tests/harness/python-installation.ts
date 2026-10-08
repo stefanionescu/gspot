@@ -79,7 +79,7 @@ export async function installSuitePythonTools(root: string, cancelSignal: AbortS
             planReplacement(log, {
                 path: file.path,
                 next: { bytes: Buffer.from(file.content), mode: OWNER_WRITABLE_FILE },
-                kind: file.kind === 'lock' ? 'lock' : 'config',
+                kind: file.kind === 'lock' ? 'lock' : 'tool_file',
             }),
         );
     console.log(

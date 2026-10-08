@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
+import { DETECTION_LABELS } from '../../config/reference.ts';
 import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
-import { DETECTION_LABELS, CONFIGURATION_NOTES } from '../../config/reference.ts';
 import { configurationFiles } from '@gspothq/cli/src/configurations/declarations.ts';
 
 // The configuration's rule files and the conditions that install them.
@@ -104,7 +104,7 @@ export function configurationPage(manifest: Manifest, manifests: Manifest[]): Re
         ['Generated tool files', targets.map((item) => '- ' + item).join('\n')],
         ['Kept out of Git', manifest.ignored.map((path) => '- `' + path + '`').join('\n')],
         ['Checks', configurationChecks(manifest)],
-        ['Details', CONFIGURATION_NOTES[configuration.name] ?? ''],
+        ['Details', configuration.notes ?? ''],
         ['Settings', manifest.settings.map((setting) => `- \`${setting.name}\`: ${setting.summary}`).join('\n')],
         ['Defaults set for other configurations', defaults.map((item) => '- ' + item).join('\n')],
         ['Rule exclusions', ruleExclusions(manifest)],

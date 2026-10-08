@@ -2,9 +2,9 @@
 import { kindOf } from '#cli/repository/kind.ts';
 import { tagEntry } from '#cli/repository/tags.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
+import { toolFileName } from '#cli/configurations/declarations.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
-import { configurationName } from '#cli/configurations/declarations.ts';
 import { DOT_GSPOT, POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 import type { Session, PlanEntry, PlanInputs, PlannedCheck } from '#cli/types/planning.ts';
@@ -134,7 +134,7 @@ export function runsAtRoot(manifest: Manifest | undefined, check: CheckDeclarati
         (config) =>
             config.scoped &&
             !config.fragment &&
-            command.some((part) => part.includes(`{tool_file:${configurationName(config.target)}}`)),
+            command.some((part) => part.includes(`{tool_file:${toolFileName(config.target)}}`)),
     );
 }
 

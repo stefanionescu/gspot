@@ -1,4 +1,4 @@
-// The built-in Cloudflare checks on a test site, run in-process: each fires on its defect and accepts the correction.
+// The built-in Cloudflare checks on a test site, run in-process: each reports its finding and passes after the fix.
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';

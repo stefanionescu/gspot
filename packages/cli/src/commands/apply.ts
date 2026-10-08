@@ -1,6 +1,7 @@
 import { join, resolve } from 'node:path';
 import { emitAll } from '#cli/generation/files.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { preparePolicy } from '#cli/policy/edit.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import type { Session } from '#cli/types/planning.ts';
@@ -74,10 +75,7 @@ export function registerApply(program: Program): void {
         .description(
             'Reconcile configurations with the repository, then write the tool files, agent rules, Git hooks, and CI workflow from gspot.toml. A generated file you edited stays as it is, and apply names it. --dry-run shows every change, including each rule that changes, without writing project files. apply installs no tools: run gspot install after it.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: the generated files were written, or the preview finished.\n- 2: the input was invalid, or apply could not finish.\n\nExample:\ngspot apply --dry-run\ngspot apply',
-        )
+        .addHelpText('after', commandHelp('apply'))
         .option('--dry-run', 'Show the changes without writing project files')
         .action(async (flags, command) => {
             const global = command.optsWithGlobals();

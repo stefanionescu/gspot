@@ -12,8 +12,8 @@ kind = "library"
 version = "6.10.2"
 npm = "eslint-plugin-jsx-a11y"
 
-[[config]]
-template = "eslint.fragment.js.eta"
+[[tool_file]]
+source = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"

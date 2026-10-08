@@ -44,7 +44,7 @@ export const ALREADY_INSTALLED =
 
 export const DETECTION_LABEL_WIDTH = 20;
 
-// eslint-disable-next-line unicorn/prefer-string-repeat -- reason: Configuration modules own literal display data; rendering performs calculations.
+// eslint-disable-next-line unicorn/prefer-string-repeat -- reason: Configuration modules own literal display data; generation performs calculations.
 export const DETECTION_GAP = '   ';
 
 export const PREFACE = `${SCHEMA_LINE}

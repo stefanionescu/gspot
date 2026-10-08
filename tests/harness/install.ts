@@ -64,7 +64,7 @@ export function buildSandboxPath(names: string[]): string {
 
 /**
  * Run gspot init. Remove the named configurations and install the tool projects.
- * @param cwd the test repository, with one commit.
+ * @param cwd the sandbox, with one commit.
  * @param argv the init command line.
  * @param environment verbatim variables, such as the PATH of the tools.
  * @param settings the configurations to omit and the level to select before installing tools.

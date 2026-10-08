@@ -111,7 +111,7 @@ test('apply validates obsolete output parents before publishing new configuratio
             planReplacement(log, {
                 path: '.gspot/obsolete/old.txt',
                 next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
-                kind: 'config',
+                kind: 'tool_file',
             }),
         );
     }

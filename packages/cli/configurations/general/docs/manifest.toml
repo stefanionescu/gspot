@@ -21,7 +21,7 @@ file = "lychee.toml"
 [[tool.replace]]
 file = ".lycheeignore"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/lychee.toml"
 tool = "lychee"
 scoped = true

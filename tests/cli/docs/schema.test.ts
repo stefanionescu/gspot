@@ -1,12 +1,15 @@
+import { z } from 'zod';
 import { stringify } from 'smol-toml';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { test, expect, describe } from 'bun:test';
+import { isRecord } from '#cli/platform/objects.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { NAMING_SCHEMA_CASES } from '#tests/config/cli/docs/naming.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { buildJsonSchema } from '#docs/src/content/reference/schema.ts';
+import { policyReference } from '#docs/src/content/reference/policy.ts';
 import { UNSAFE_DIRECTORIES } from '#tests/config/cli/policy/boundaries.ts';
 import { EXCEPTION_SCHEMA_CASES } from '#tests/config/cli/docs/exceptions.ts';
 import { POLICY_FIELD_SCHEMA_CASES } from '#tests/config/cli/docs/policy-fields.ts';
@@ -18,6 +21,8 @@ import {
     VERBATIM_TOOL_NAMES,
     NO_VERBATIM_TOOL_NAMES,
 } from '#tests/config/cli/docs/tools.ts';
+
+const examples = z.array(z.unknown()).parse(policySchema.meta()?.['examples']);
 
 const validate = new Ajv2020({ strict: false }).compile(buildJsonSchema());
 
@@ -133,3 +138,15 @@ for (const scope of TOOL_SCHEMA_SCOPES)
             expect(policyFindings(stringify(document)).length === 0).toBe(accepted);
         },
     );
+
+test.each(examples)('native policy metadata example %j parses in every published surface', (example) => {
+    const document = policySchema.parse(example);
+    expect(() => parseStrictPolicy(stringify(document))).not.toThrow();
+    expect(validate(example)).toBe(true);
+});
+
+test('the policy reference retains every native metadata example', () => {
+    expect(buildJsonSchema()['examples']).toEqual(examples);
+    const reference = policyReference();
+    for (const example of examples.filter(isRecord)) expect(reference).toContain(stringify(example));
+});

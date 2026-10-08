@@ -74,7 +74,7 @@ export function serializeEslintBlock(block: EslintSettingsBlock, runtime = ''): 
 }
 
 /**
- * Bind default block rendering to its level and optional project scope.
+ * Bind default block emission to its level and optional project scope.
  * @param input the level, generated file selectors, authored options, and optional fragment scope
  * @returns emitted defaults and their identical ordered rule data
  */

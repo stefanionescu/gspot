@@ -101,7 +101,7 @@ if (isPosix) {
                             mode,
                             isLink: true,
                         },
-                        kind: 'config',
+                        kind: 'tool_file',
                     }),
                 ),
             ).toThrow();
@@ -114,7 +114,7 @@ if (isPosix) {
                     planReplacement(log, {
                         path: 'valid',
                         next: { bytes: Buffer.from('corrected input'), mode: 0o644 },
-                        kind: 'config',
+                        kind: 'tool_file',
                     }),
                 ),
             ).toBe('changed');
@@ -133,7 +133,7 @@ if (isPosix) {
                     planReplacement(log, {
                         path: 'config.txt',
                         next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
-                        kind: 'config',
+                        kind: 'tool_file',
                         canReplace: true,
                     }),
                 ),
@@ -145,7 +145,7 @@ if (isPosix) {
                     planReplacement(log, {
                         path: 'config.txt',
                         next: { bytes: Buffer.from('upgrade\n'), mode: 0o644 },
-                        kind: 'config',
+                        kind: 'tool_file',
                     }),
                 ),
             ).toBe('preserved');
@@ -178,7 +178,7 @@ if (isPosix) {
                         planReplacement(log, {
                             path: 'authored.json',
                             next: { bytes: Buffer.from('{}\n'), mode: 0o444 },
-                            kind: 'config',
+                            kind: 'tool_file',
                             canReplace: true,
                             expected: read,
                         }),

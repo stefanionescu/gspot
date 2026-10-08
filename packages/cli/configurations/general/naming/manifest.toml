@@ -26,7 +26,7 @@ stage = "commit"
 alternatives_checked = ["ls-lint", "eslint-plugin-unicorn filename-case"]
 summary = "Checks every file stem and folder name against the language's case rules and the banned terms."
 why = "A file named `enhanced-utils.ts` is a home for code nobody placed; the case rule keeps imports predictable."
-help = "Rename the file or folder, or add a path rule under [[naming.paths]] with a reason."
+help = "Rename the file or folder, or add a path rule under [[naming.overrides]] with a reason."
 
 [[check]]
 name = "policy"

@@ -29,8 +29,8 @@ brew = "supabase/tap/supabase"
 npm = "supabase"
 scoop = "supabase"
 
-[[config]]
-template = "semgrep/supabase.yml.eta"
+[[tool_file]]
+source = "semgrep/supabase.yml.eta"
 target = ".gspot/config/semgrep/supabase.yml"
 tool = "semgrep"
 rule_keys = ["rules"]
@@ -129,6 +129,7 @@ summary = "The database schemas to include in generated types."
 [[setting]]
 name = "supabase.types_file"
 type = "path"
+path_role = "destination"
 direction = "neutral"
 default = ""
 summary = "The committed database types file, relative to the scope; empty turns the comparison off."

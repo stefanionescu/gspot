@@ -5,6 +5,21 @@ title = "Markdown"
 requires = ["format"]
 description = "Markdown files: markdownlint, Prettier, and fenced code blocks that must parse."
 
+notes = '''
+## Markdown rule options
+
+Markdown rule settings hold native option tables, without an enable/disable value or a `default` key:
+
+```toml
+[tools.markdownlint.rules]
+MD024 = { siblings_only = false }
+```
+
+This reports repeated headings throughout a document, rather than only under the same parent heading.
+The selected level decides which rules run. Options cannot enable a rule outside that level.
+Both levels check image alt text. Accept a specific finding with `gspot ignore markdown/markdownlint --rule <rule> --reason "<why>"`.
+'''
+
 [detect]
 extensions = [".md", ".mdx"]
 
@@ -47,17 +62,17 @@ file = ".markdownlint.yaml"
 [[tool.replace]]
 file = ".markdownlint.yml"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/markdownlint.jsonc"
 tool = "markdownlint-cli2"
 scoped = true
 rule_keys = [""]
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/markdownlint-cli2.mjs"
 tool = "markdownlint-cli2"
 scoped = true
-stub_file = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};", when = { configuration = "javascript" } }
+pointer = { path = ".markdownlint-cli2.mjs", body = "export { default } from {target_module};", when = { configuration = "javascript" } }
 
 [[check]]
 name = "markdownlint"
@@ -91,4 +106,4 @@ name = "tools.markdownlint.rules"
 type = "table"
 direction = "rule-options"
 default = {}
-summary = "Native option tables by Markdown rule ID, such as MD024. Coverage comes from recommended or all; accept a finding with gspot ignore markdown/markdownlint --rule <rule> --reason <why>."
+summary = "Native option tables by Markdown rule ID, such as MD024. The level decides which rules run; ignore a finding with gspot ignore markdown/markdownlint --rule <rule> --reason <why>."

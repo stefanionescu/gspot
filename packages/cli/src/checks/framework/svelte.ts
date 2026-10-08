@@ -3,9 +3,9 @@ import { toPosix } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { toolFileName, targetInScope } from '#cli/configurations/declarations.ts';
 import { diagnosticSchema, svelteFailureSchema } from '#cli/parsers/schema/svelte.ts';
 import { FAILURE_LINE, DIAGNOSTIC_LINE } from '#cli/config/checks/framework/svelte.ts';
-import { targetInScope, configurationName } from '#cli/configurations/declarations.ts';
 
 /**
  * Reads the machine-verbose report of svelte-check.
@@ -49,7 +49,7 @@ export async function svelteCheck(input: CheckInput): Promise<Finding[]> {
     // A scope with a generated TypeScript configuration is checked with its strict compiler options.
     const tsconfig = input.selection.selected
         .flatMap((manifest) => manifest.toolFiles)
-        .find((config) => !config.fragment && configurationName(config.target) === 'tsconfig');
+        .find((config) => !config.fragment && toolFileName(config.target) === 'tsconfig');
     const command = [
         'svelte-check',
         '--workspace',

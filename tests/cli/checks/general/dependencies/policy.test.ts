@@ -1,4 +1,4 @@
-// The built-in dependency checks on a test repository, run in-process: install policy, lockfile hosts, and manifests.
+// The built-in dependency checks on a sandbox, run in-process: install policy, lockfile hosts, and manifests.
 import { join } from 'node:path';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';

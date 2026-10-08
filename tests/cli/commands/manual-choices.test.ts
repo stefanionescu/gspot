@@ -15,7 +15,7 @@ import {
     INITIAL_OVERRIDES,
     AUTHORED_OVERRIDES,
     AUTHORED_SCRIPT_SCOPE,
-} from '#tests/config/cli/commands/configuration-overrides.ts';
+} from '#tests/config/cli/commands/manual-choices.ts';
 
 test('authored language overrides survive root and scope reconciliation without detection evidence', async () => {
     await using sandbox = await testdir();

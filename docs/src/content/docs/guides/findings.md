@@ -73,7 +73,7 @@ To add a fixer for your own command, see [command checks](/guides/command-checks
 
 ## When a rule does not fit
 
-- To turn a rule off for some paths, [record an ignore](/guides/policy/#record-one-exception)
+- To turn a rule off for some paths, [record an ignore](/guides/policy/#ignore-one-finding)
   with a reason.
 - To change a limit, such as the longest function, [change the setting](/guides/policy/#change-a-limit).
 

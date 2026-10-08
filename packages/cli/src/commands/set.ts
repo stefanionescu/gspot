@@ -2,6 +2,7 @@
 import { resolve } from 'node:path';
 import { readPolicy } from '#cli/policy/read.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { parseTomlText } from '#cli/policy/file.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { Option } from '@commander-js/extra-typings';
@@ -179,10 +180,7 @@ export function registerSet(program: Program): void {
         .description(
             'Write one setting to gspot.toml and apply it. gspot checks the value first. The setting is the dotted name that gspot list settings prints. A list value adds to the list unless you pass --replace or --remove. Use only one of --replace, --remove, and --default. --default takes no value. set installs no tools: run gspot install for that. --dry-run prints the change and writes nothing.',
         )
-        .addHelpText(
-            'after',
-            '\nLevels:\nrecommended, the default, checks correctness, security, accessibility, type safety, dependency health, formatting, and declared project contracts. all adds stable conventions for naming, architecture, documentation, API style, and complexity. Neither level turns on experimental or preview rules.\n\nExit codes:\n- 0: the setting was written and applied, or the preview finished.\n- 2: the input was invalid, or set could not finish.\n\nExample:\ngspot set level all',
-        )
+        .addHelpText('after', commandHelp('set'))
         .option('--reason <text>', 'Say why; required to loosen a setting')
         .option('--scope <path>', 'Write the setting in this scope instead of the root')
         .addOption(new Option('--replace', 'Replace the whole list; use --replace or --remove').conflicts('remove'))

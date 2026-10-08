@@ -34,15 +34,6 @@ function withoutPunctuation(token: string): string {
     return token.slice(0, end);
 }
 
-function getCodeFences(text: string): FencedBlock[] {
-    const blocks: FencedBlock[] = [];
-    visit(fromMarkdown(text), 'code', (node) => {
-        if (typeof node.lang !== 'string' || node.lang === '') return;
-        blocks.push({ line: node.position?.start.line ?? 1, language: node.lang, body: node.value });
-    });
-    return blocks;
-}
-
 function findJsonSyntaxFinding(body: string, options: ParseOptions): FenceSyntaxFinding | undefined {
     const errors: ParseError[] = [];
     parse(body, errors, options);
@@ -83,6 +74,25 @@ async function findTreeSyntaxFinding(
     } finally {
         tree.delete();
     }
+}
+
+/**
+ * Read language-tagged Markdown examples with native source positions and metadata.
+ * @param text the Markdown source
+ * @returns the parsed code fences
+ */
+export function codeFences(text: string): FencedBlock[] {
+    const blocks: FencedBlock[] = [];
+    visit(fromMarkdown(text), 'code', (node) => {
+        if (typeof node.lang !== 'string' || node.lang === '') return;
+        blocks.push({
+            line: node.position?.start.line ?? 1,
+            language: node.lang,
+            body: node.value,
+            ...(node.meta === null || node.meta === undefined ? {} : { meta: node.meta }),
+        });
+    });
+    return blocks;
 }
 
 /**
@@ -178,7 +188,7 @@ export async function findFenceSyntaxFindings(
         python: (body) => findTreeSyntaxFinding('python', body, context),
     };
     const findings: FenceSyntaxFinding[] = [];
-    for (const fence of getCodeFences(text)) {
+    for (const fence of codeFences(text)) {
         const parser = FENCE_PARSERS[fence.language];
         if (typeof parser !== 'string' || fence.body.trim() === '') continue;
         // Omitted code and placeholder values keep their lines without becoming syntax errors.

@@ -38,13 +38,15 @@ commit hook rejects the forwarding helper. Read [Requirements](/guides/requireme
             "exactOptionalPropertyTypes": true,
             "noImplicitOverride": true,
             "noFallthroughCasesInSwitch": true,
-            "noImplicitReturns": true,
-            "noPropertyAccessFromIndexSignature": true,
             "module": "nodenext",
             "target": "es2022",
-            "noEmit": true
+            "noEmit": true,
+            "noImplicitReturns": true,
+            "noPropertyAccessFromIndexSignature": true
         },
-        "include": ["src"]
+        "include": [
+            "src"
+        ]
     }
     ```
 

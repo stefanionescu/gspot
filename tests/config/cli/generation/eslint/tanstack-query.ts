@@ -12,7 +12,7 @@ export const QUERY_PROJECT = {
         'import { useQuery } from "@tanstack/react-query";\nuseQuery({ queryKey: ["neighbor"], queryFn: () => 2 });\n',
 };
 
-export const QUERY_DEFECT =
+export const QUERY_SAMPLE =
     'import { useQuery, useMutation } from "@tanstack/react-query";\nuseQuery({ queryKey: ["users"], queryFn: () => {} });\nuseMutation({ onError: () => {}, onMutate: () => 1 });\n';
 export const QUERY_CORRECTION =
     'import { useQuery, useMutation } from "@tanstack/react-query";\nuseQuery({ queryKey: ["users"], queryFn: () => 1 });\nuseMutation({ onMutate: () => 1, onError: () => {} });\n';

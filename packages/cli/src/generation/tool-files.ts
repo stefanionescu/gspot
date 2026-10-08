@@ -1,4 +1,4 @@
-// The selected configuration files in one scope, with the pointers that lead tools to them.
+// The selected tool files in one scope, with the pointers that lead tools to them.
 import { posix } from 'node:path';
 import { emitTarget } from '#cli/generation/eta.ts';
 import { collectRules } from '#cli/generation/rules.ts';
@@ -31,14 +31,10 @@ function pointerDirectories(scope: string, file: TrackedFile, matches: (path: st
     return directories;
 }
 
-// One pointer per directory the configuration's owned files sit in, when the pointer names directories.
-function directoryPointers(
-    context: ToolFileInputs,
-    configuration: ToolFileDeclaration,
-    target: string,
-): GeneratedFile[] {
+// One pointer per directory the tool file's owned files sit in, when the pointer names directories.
+function directoryPointers(context: ToolFileInputs, toolFile: ToolFileDeclaration, target: string): GeneratedFile[] {
     const { files, inputs, selection, manifest } = context;
-    const pointer = configuration.stub_file;
+    const pointer = toolFile.pointer;
     if (pointer?.directories === undefined) return [];
     const scope = selection.scope.path;
     const children = nestedScopes(
@@ -55,21 +51,21 @@ function directoryPointers(
     );
 }
 
-// Adds the pointer a configuration declares for its generated file.
+// Adds the pointer a tool file declares for its generated file.
 function addPointer(
     context: ToolFileInputs,
-    configuration: ToolFileDeclaration,
+    toolFile: ToolFileDeclaration,
     file: GeneratedFile,
     generated: Generated,
     fragmentPaths: ReadonlySet<string>,
 ): void {
-    const { stub_file: pointer } = configuration;
+    const { pointer } = toolFile;
     if (!pointer) return;
     if (pointer.directories !== undefined) {
-        generated.files.push(...directoryPointers(context, configuration, file.path));
+        generated.files.push(...directoryPointers(context, toolFile, file.path));
         return;
     }
-    const scope = configuration.scoped ? context.selection.scope.path : '';
+    const scope = toolFile.scoped ? context.selection.scope.path : '';
     const pointerPath = scope === '' ? pointer.path : `${scope}/${pointer.path}`;
     // A fragment's directory pointer includes its native overrides and must keep precedence over the base pointer.
     const isWrittenByFragment = fragmentPaths.has(pointerPath);
@@ -85,47 +81,44 @@ function addPointer(
                       `${manifest.dir}/${pointer.template}`,
                       pointerPath,
                       inputs,
-                      configuration.generated_header,
+                      toolFile.generated_header,
                   ),
               };
     generated.files.push(pointed);
 }
 
 function isConditionMet(
-    configuration: ToolFileDeclaration,
+    toolFile: ToolFileDeclaration,
     context: EmitInputs,
     condition: ToolFileDeclaration['when'],
 ): boolean {
     if (condition === undefined) return true;
-    return isConfigurationSelected(
-        configuration.scoped ? [context.selection] : context.scopes,
-        condition.configuration,
-    );
+    return isConfigurationSelected(toolFile.scoped ? [context.selection] : context.scopes, condition.configuration);
 }
 
 // Scoped targets require their dependency in the same scope; repository-wide targets use the full selection.
-function isTargetEnabled(configuration: ToolFileDeclaration, context: EmitInputs, consumers: EmitConsumers): boolean {
-    const needed = configuration.scoped ? consumers.scope : consumers.repository;
+function isTargetEnabled(toolFile: ToolFileDeclaration, context: EmitInputs, consumers: EmitConsumers): boolean {
+    const needed = toolFile.scoped ? consumers.scope : consumers.repository;
     const constraints = [
-        [configuration.tool, needed.tools],
-        [configuration.check, needed.checks],
+        [toolFile.tool, needed.tools],
+        [toolFile.check, needed.checks],
     ] as const;
     if (constraints.some(([names, available]) => names.length > 0 && !names.some((name) => available.has(name))))
         return false;
-    return isConditionMet(configuration, context, configuration.when);
+    return isConditionMet(toolFile, context, toolFile.when);
 }
 
-// Emits one configuration target: its file, its nested copies, and its pointer.
-function emitConfiguration(
+// Emits one tool file target: its file, its nested copies, and its pointer.
+function emitToolFile(
     context: ToolFileInputs,
-    configuration: GeneratedToolFile,
+    toolFile: GeneratedToolFile,
     target: string,
     generated: Generated,
     fragmentPaths: ReadonlySet<string>,
 ): void {
     const { scopes, selection, manifest } = context;
     const payload: CapturedRules = {};
-    const paths = configuration.rule_keys;
+    const paths = toolFile.rule_keys;
     const capture = { recorded: false };
     const inputs = {
         ...context.inputs,
@@ -138,27 +131,22 @@ function emitConfiguration(
                   },
               }),
     };
-    Object.assign(inputs, fragmentInputs(scopes, selection, configuration, inputs));
+    Object.assign(inputs, fragmentInputs(scopes, selection, toolFile, inputs));
     const file: GeneratedFile = {
         path: target,
-        content: emitTarget(
-            `${manifest.dir}/${configuration.template}`,
-            target,
-            inputs,
-            configuration.generated_header,
-        ),
-        kind: 'config',
+        content: emitTarget(`${manifest.dir}/${toolFile.source}`, target, inputs, toolFile.generated_header),
+        kind: 'tool_file',
         ...(paths === undefined ? {} : { ruleData: payload }),
     };
     if (paths !== undefined && !capture.recorded)
-        throw new Error(`The render template for ${target} did not provide its declared rule data.`);
+        throw new Error(`The Eta source for ${target} did not provide its declared rule data.`);
     generated.files.push(file);
-    if (isConditionMet(configuration, context, configuration.stub_file?.when))
-        addPointer({ ...context, inputs }, configuration, file, generated, fragmentPaths);
+    if (isConditionMet(toolFile, context, toolFile.pointer?.when))
+        addPointer({ ...context, inputs }, toolFile, file, generated, fragmentPaths);
 }
 
 /**
- * Emits the selected configurations in one scope, each target once across scopes.
+ * Emits the selected tool files in one scope, each target once across scopes.
  * @param context the repository, resolved scope, and template inputs
  * @param generated the generated the files are added to
  * @param seen the targets already emitted
@@ -173,18 +161,18 @@ export function emitToolFiles(
     const { selection } = context;
     const targets = selection.selected.flatMap((manifest) => {
         const owner = { ...context, manifest };
-        return manifest.toolFiles.map((configuration) => ({
-            configuration,
+        return manifest.toolFiles.map((toolFile) => ({
+            toolFile,
             owner,
-            pointers: configuration.fragment
-                ? directoryPointers(owner, configuration, targetInScope(selection.scope.path, configuration))
+            pointers: toolFile.fragment
+                ? directoryPointers(owner, toolFile, targetInScope(selection.scope.path, toolFile))
                 : [],
         }));
     });
-    for (const { configuration, owner, pointers } of targets) {
-        if (!isTargetEnabled(configuration, context, consumers)) continue;
-        const target = targetInScope(selection.scope.path, configuration);
-        if (configuration.fragment) {
+    for (const { toolFile, owner, pointers } of targets) {
+        if (!isTargetEnabled(toolFile, context, consumers)) continue;
+        const target = targetInScope(selection.scope.path, toolFile);
+        if (toolFile.fragment) {
             generated.files.push(...pointers);
             continue;
         }
@@ -192,9 +180,9 @@ export function emitToolFiles(
         seen.add(target);
         const fragmentPaths = new Set(
             targets
-                .filter((entry) => entry.configuration.fragment && entry.configuration.target === configuration.target)
+                .filter((entry) => entry.toolFile.fragment && entry.toolFile.target === toolFile.target)
                 .flatMap((entry) => entry.pointers.map((pointer) => pointer.path)),
         );
-        emitConfiguration(owner, configuration, target, generated, fragmentPaths);
+        emitToolFile(owner, toolFile, target, generated, fragmentPaths);
     }
 }

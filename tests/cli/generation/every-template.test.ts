@@ -56,7 +56,7 @@ test.each(['recommended', 'all'])(
         await linkInstalledModules(join(sandbox.path, 'node_modules'));
         const session = await openSession(sandbox.path);
         const output = emitAll(session);
-        const generated = output.files.filter((file) => file.kind === 'config' || file.kind === 'pointer');
+        const generated = output.files.filter((file) => file.kind === 'tool_file' || file.kind === 'pointer');
         const selected = new Set(
             session.scopes
                 .flatMap((scope) => scope.selected)

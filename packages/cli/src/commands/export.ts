@@ -2,6 +2,7 @@
 import { readPolicy } from '#cli/policy/read.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { printResult } from '#cli/terminal/messages.ts';
@@ -76,10 +77,7 @@ export function registerExport(program: Program): void {
         .description(
             'Write the policy to a template other repositories can start from. Every authored entry is copied except scopes, which export lists. Add any local command files in the destination repository. gspot.toml does not change.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: the template was written.\n- 2: the input was invalid, or export could not finish.\n\nExample:\ngspot export team.template.toml\ngspot --json export team.template.toml',
-        )
+        .addHelpText('after', commandHelp('export'))
         .option('--dry-run', 'Print the template without writing its destination')
         .action(async (file, flags, command) => {
             const global = command.optsWithGlobals();

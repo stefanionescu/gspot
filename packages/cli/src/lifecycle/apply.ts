@@ -49,7 +49,7 @@ function writeGenerated(log: Log, request: WriteRequest): void {
     });
     const authorized = new Map([...(conflictedOutputs ?? []), ...(reviewedOriginals ?? [])]);
     const replacements = generated.files.map((file) => {
-        const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'config';
+        const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'tool_file';
         // A reviewed original or a file with merge conflict markers is replaced whatever its bytes are.
         const read = file.kind === 'lock' ? file.read : authorized.get(file.path);
         const replacement = {

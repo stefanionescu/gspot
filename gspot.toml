@@ -201,7 +201,7 @@ paths = ["packages/eslint-plugin/src/**", "packages/eslint-plugin/build.ts"]
 [architecture.roles]
 config = ["packages/*/src/config/**", "tests/config/**", "scripts/config/**", "docs/src/config/**"]
 env = ["packages/cli/src/platform/environment.ts", "tests/harness/environment.ts"]
-runtime = ["src/**", "packages/*/src/**"]
+runtime = ["packages/*/src/**"]
 scripts = ["scripts/**", "packages/*/scripts/**", "docs/src/content/reference/**"]
 test_harness = "tests/harness"
 tests = ["tests/cli/**", "tests/plugin/**", "tests/tools/**", "tests/packages/**", "**/*.test.*"]

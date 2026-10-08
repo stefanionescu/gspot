@@ -4,6 +4,27 @@ requires = ["react"]
 suggests = ["typescript"]
 description = "React Native components, styles, and native APIs. Lists use stable keys and virtualized rendering, touch targets use Pressable, and AsyncStorage stores no credentials."
 
+notes = '''
+Initialization detects`react-native` from React Native dependencies and `expo` from Expo
+dependencies. The Expo configuration requires React Native and adds Expo rules and
+`expo/doctor`. A bare React Native project does not require either Expo tool. React web
+projects that depend on `react-dom` also select the React DOM configuration, which supplies
+the DOM accessibility plugin. Native sources retain React's hooks and component rules.
+
+## Custom native text components
+
+If a component wraps React Native's `Text`, include its name in the rule's `skip` option:
+
+```toml
+[tools.eslint.rules]
+"react-native/no-raw-text" = [{ skip = ["ThemedText"] }]
+```
+
+Option arrays omit the native severity. The selected level decides which rules run, and options
+apply only where that level enables the rule. This allows text inside `ThemedText`. The rule still reports bare text inside a `View`.
+Set the option in the native project's scope when other projects use different components.
+'''
+
 [detect]
 dependencies = ["react-native"]
 
@@ -23,22 +44,22 @@ kind = "library"
 version = "5.0.0"
 npm = "eslint-plugin-react-native"
 
-[[config]]
-template = "eslint.fragment.js.eta"
+[[tool_file]]
+source = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"
 fragment = true
 
-[[config.selectors]]
+[[tool_file.selectors]]
 selector = "ImportDeclaration[source.value='react-native'] > ImportSpecifier[imported.name=/^Touchable(Opacity|Highlight|WithoutFeedback|NativeFeedback)$/]"
 message = "Use Pressable. The Touchable components are kept for old code and get no new behavior."
 
-[[config.selectors]]
+[[tool_file.selectors]]
 selector = "JSXElement[openingElement.name.name='ScrollView'] > JSXExpressionContainer > CallExpression[callee.property.name='map']"
 message = "A ScrollView renders every row at once. Render a list that grows through FlatList."
 
-[[config.selectors]]
+[[tool_file.selectors]]
 selector = "CallExpression[callee.object.name='AsyncStorage'][callee.property.name='setItem'] > Literal:first-child[value=/token|secret|password|credential/i]"
 message = "AsyncStorage is plain text on the device. Keep a secret in the secure store of the platform."
 

@@ -56,18 +56,11 @@ export function getOrderTotal(order: any): number {
 At level `all`, the commit hook rejects the forwarding helper. This is a findings excerpt:
 
 ```text
-root  javascript/eslint                   failed     2 files     1.0s
-  src/utils.ts:1:1  gspot/no-trivial-files  This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file.
-  src/utils.ts:8:31  @typescript-eslint/explicit-module-boundary-types  Argument 'order' should be typed with a non-any type.
-  src/utils.ts:8:38  @typescript-eslint/no-explicit-any  Unexpected any. Specify a different type.
-  src/utils.ts:9:27  @typescript-eslint/no-unsafe-argument  Unsafe argument of type `any` assigned to a parameter of type `Order`.
-    help: Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> links the rule documentation.
-  reproduce: gspot check --only javascript/eslint --staged
-root  naming/paths                        failed     2 files     0.0s
-  src/utils.ts:1:1  banned-term  typescript file "utils": "utils" is banned (roles group).
-    help: Rename the file or folder, or add a path rule under [[naming.overrides]] with a reason.
-  reproduce: gspot check --only naming/paths --staged
-
+src/utils.ts:1:1  gspot/no-trivial-files  This file has only forwarding code, aliases, or small functions. Move that code to the module that uses it and delete this file.
+src/utils.ts:8:31  @typescript-eslint/explicit-module-boundary-types  Argument 'order' should be typed with a non-any type.
+src/utils.ts:8:38  @typescript-eslint/no-explicit-any  Unexpected any. Specify a different type.
+src/utils.ts:9:27  @typescript-eslint/no-unsafe-argument  Unsafe argument of type `any` assigned to a parameter of type `Order`.
+src/utils.ts:1:1  banned-term  typescript file "utils": "utils" is banned (roles group).
 ```
 
 Each finding names the file, the line, the rule, and what to do. The

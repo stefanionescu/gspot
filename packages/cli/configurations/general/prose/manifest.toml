@@ -38,7 +38,7 @@ file = "_vale.ini"
 [[tool.replace]]
 file = "vale.ini"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/vale.ini"
 tool = "vale"
 rule_keys = ["*.rules", "*.BasedOnStyles"]

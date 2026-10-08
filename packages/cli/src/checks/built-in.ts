@@ -34,6 +34,7 @@ import { guards, guardDefaults } from '#cli/checks/language/bash/guards.ts';
 import { tsc, checkjs, tsconfig } from '#cli/checks/language/typescript.ts';
 import { suppressions } from '#cli/checks/general/structure/suppressions.ts';
 import { sleeps, disabled, xctestCoverage } from '#cli/checks/tool/xctest.ts';
+import { unmatchedPaths } from '#cli/checks/general/gspot/unmatched-paths.ts';
 import { migrationDocs } from '#cli/checks/database/postgres/migration-docs.ts';
 import { testPlacement } from '#cli/checks/general/structure/test-placement.ts';
 import { unreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
@@ -50,7 +51,6 @@ import { lockfileHosts } from '#cli/checks/general/dependencies/lockfile/hosts.t
 import { sourceOrder, sourceComments } from '#cli/checks/language/bash/sources.ts';
 import { bunReleaseAge } from '#cli/checks/general/dependencies/bun-release-age.ts';
 import { envOwner as swiftEnvOwner } from '#cli/checks/language/swift/env-owner.ts';
-import { staleAllowlists } from '#cli/checks/general/structure/stale-allowlists.ts';
 import { prefixCollisions } from '#cli/checks/general/structure/prefix-collisions.ts';
 import { recording, references } from '#cli/checks/library/swift-snapshot-testing.ts';
 import { trivialFunctions as sqlTrivialFunctions } from '#cli/checks/language/sql.ts';
@@ -61,7 +61,6 @@ import { migrationOrder, migrationsFrozen } from '#cli/checks/database/postgres/
 import { trackedDependencies } from '#cli/checks/general/structure/tracked-dependencies.ts';
 import { privatePrefix, privateBeforePublic } from '#cli/checks/language/bash/visibility.ts';
 import { functionSize as bashFunctionSize } from '#cli/checks/language/bash/function-size.ts';
-import { gspotDrift, fixPolicyLayout, gspotPolicyLayout } from '#cli/checks/general/gspot.ts';
 import { headings, stalePaths, readmeShape, readmePresent } from '#cli/checks/general/docs.ts';
 import { lazyExports as pythonLazyExports } from '#cli/checks/language/python/lazy-exports.ts';
 import { scripts as htmlScripts, literals as htmlLiterals } from '#cli/checks/language/html.ts';
@@ -71,6 +70,7 @@ import { functionSize as pythonFunctionSize } from '#cli/checks/language/python/
 import { importLinter as pythonImportLinter } from '#cli/checks/language/python/imports/linter.ts';
 import { swiftBuild, swiftPeriphery, swiftlintAnalyze } from '#cli/checks/language/swift/build.ts';
 import { envFiles, trufflehog, envTemplate, gitleaksHistory } from '#cli/checks/general/secrets.ts';
+import { gspotDrift, fixPolicyLayout, gspotPolicyLayout } from '#cli/checks/general/gspot/drift.ts';
 import { svgo, deadAssets, webManifest, securityHeaders } from '#cli/checks/general/site/source.ts';
 import { trivialFunctions as swiftTrivialFunctions } from '#cli/checks/language/swift/functions.ts';
 import { NEXT_VERSION_PAIRS, REACT_VERSION_PAIRS } from '#cli/config/checks/general/dependencies.ts';
@@ -123,7 +123,7 @@ export const BUILT_IN_CHECKS: BuiltInChecks = {
     'structure/file-lines': { run: runBuiltInCheck(fileLines) },
     'structure/config-logic': { run: runBuiltInCheck(configurationLogic) },
     'structure/suppressions': { run: runBuiltInCheck(suppressions) },
-    'structure/stale-allowlists': { run: runBuiltInCheck(staleAllowlists) },
+    'gspot/unmatched-paths': { run: runBuiltInCheck(unmatchedPaths) },
     'structure/large-files': { run: runBuiltInCheck(largeFiles) },
     'structure/tracked-dependencies': { run: runBuiltInCheck(trackedDependencies) },
     'typescript/tsconfig': { run: runBuiltInCheck(tsconfig) },

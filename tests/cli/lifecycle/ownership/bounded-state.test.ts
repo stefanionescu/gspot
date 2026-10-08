@@ -103,7 +103,7 @@ test('a replaced file keeps no copy, and giving it back deletes it', async () =>
             planReplacement(log, {
                 path: 'config.txt',
                 next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
-                kind: 'config',
+                kind: 'tool_file',
                 canReplace: true,
             }),
         );
@@ -125,7 +125,7 @@ test('giving back the last file of a folder removes the folders it leaves empty'
             planReplacement(log, {
                 path: 'guides/agent/rules/WORKING.md',
                 next: { bytes: Buffer.from('guide\n'), mode: 0o644 },
-                kind: 'config',
+                kind: 'tool_file',
                 canReplace: true,
             }),
         );
@@ -150,7 +150,7 @@ test.each(ADOPTED_FILE_CASES)(
                     planReplacement(log, {
                         path: path,
                         next: { bytes: Buffer.from('{"v":1}\n'), mode },
-                        kind: 'config',
+                        kind: 'tool_file',
                     }),
                 ),
             ).toBe('unchanged');
@@ -161,7 +161,7 @@ test.each(ADOPTED_FILE_CASES)(
                     planReplacement(log, {
                         path: path,
                         next: { bytes: Buffer.from('{"v":2}\n'), mode },
-                        kind: 'config',
+                        kind: 'tool_file',
                     }),
                 );
             expect(applyPlan(log, planRestoration(log, path))).toBe('changed');

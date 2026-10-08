@@ -60,8 +60,8 @@ const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/owne
 const {planRestoration}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/restoration.ts'))});
 let log = openOwnership(process.cwd());
 try {
-    const first = applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'config', canReplace: true}));
-    const repeated = applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'config'}));
+    const first = applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'tool_file', canReplace: true}));
+    const repeated = applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed bytes'), mode: 0o755}, kind: 'tool_file'}));
     log[Symbol.dispose]();
     log = openOwnership(process.cwd());
     const restored = applyPlan(log, planRestoration(log, 'config.txt'));

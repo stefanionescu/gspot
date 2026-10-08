@@ -1,4 +1,4 @@
-// A test repository with its tool projects installed: the files, the selected configurations, and the level each framework test starts from.
+// Sandbox for framework checks with installed tool projects, selected configurations, and the initial level.
 import { join } from 'node:path';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -25,7 +25,7 @@ function buildManifest(dependencies: Record<string, string> | undefined): Record
         name: 'example',
         version: '1.0.0',
         private: true,
-        description: 'A test repository.',
+        description: 'A sandbox.',
         type: 'module',
         dependencies,
     };
@@ -99,7 +99,7 @@ export async function createTestRepository(
 }
 
 /**
- * Restore source, policy, index and generated outputs after commands mutate a shared test repository.
+ * Restore source, policy, index and generated outputs after commands mutate a shared sandbox.
  * @param repository the prepared repository and public command runner
  * @param changes the authored files and policy changed by the test
  * @returns cleanup of the test's source and generated state

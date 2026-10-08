@@ -25,7 +25,7 @@ gspot set test_files "tests/**/*.test.ts"
 
 `test_files` identifies test files for test-specific rules. It does not exclude those files. A scope can declare its own test patterns.
 
-## Accept a finding
+## Ignore a finding
 
 ```shell
 gspot ignore javascript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print their results to the terminal."

@@ -24,7 +24,7 @@ file = ".squawk.toml"
 [[tool.replace]]
 file = "squawk.toml"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/squawk.toml"
 tool = "squawk"
 scoped = true

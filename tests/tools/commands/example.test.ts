@@ -26,7 +26,7 @@ function recorded(findings: readonly Pick<Finding, 'check' | 'file' | 'line' | '
         );
 }
 
-test('the recorded example rejects the agent commit with its findings and accepts the fixed commit', async () => {
+test('the recorded example reports the agent findings and passes after the fix', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         ...Object.fromEntries(example.project.map((file) => [file.path, file.content])),
@@ -43,6 +43,9 @@ test('the recorded example rejects the agent commit with its findings and accept
         Object.fromEntries(example.agent.files.map((file) => [file.path, file.content])),
     );
     gitOutput(sandbox.path, ['add', '-A']);
+    const rejectedHuman = await spawnGspot(sandbox.path, ['check', '--staged']);
+    expect(rejectedHuman.code, rejectedHuman.stdout + rejectedHuman.stderr).toBe(1);
+    expect(rejectedHuman.stdout.replaceAll(/\b\d+(?:\.\d+)?s\b/gu, '0.0s').trimEnd()).toBe(example.rejected.trimEnd());
     const rejected = await spawnGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
     const findings = (JSON.parse(rejected.stdout) as RunReport).checks.flatMap((check) => check.findings);
@@ -52,4 +55,13 @@ test('the recorded example rejects the agent commit with its findings and accept
     expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
     const passed = await spawnGspot(sandbox.path, ['check', '--staged', '--json']);
     expect(passed.code, passed.stdout + passed.stderr).toBe(0);
+    const passedHuman = await spawnGspot(sandbox.path, ['check', '--staged']);
+    expect(passedHuman.code, passedHuman.stdout + passedHuman.stderr).toBe(0);
+    expect(
+        passedHuman.stdout
+            .trimEnd()
+            .split('\n')
+            .at(-1)!
+            .replaceAll(/\b\d+(?:\.\d+)?s\b/gu, '0.0s'),
+    ).toBe(example.passed.trimEnd());
 });

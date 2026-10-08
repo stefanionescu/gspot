@@ -1,4 +1,4 @@
-// The built-in Supabase checks on a test project, run in-process: each fires on its defect and accepts the correction.
+// The built-in Supabase checks on a test project, run in-process: each reports its finding and passes after the fix.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';

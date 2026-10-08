@@ -1,4 +1,4 @@
-// Select agent instructions from configuration assets and render them into the configured rules folder.
+// Select agent instructions from configuration assets and emit them into the configured rules folder.
 import { posix } from 'node:path';
 import { readAsset } from '#cli/platform/assets.ts';
 import { ruleSections } from '#cli/parsers/markdown.ts';

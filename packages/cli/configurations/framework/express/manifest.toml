@@ -7,8 +7,8 @@ description = "An Express service: the Semgrep rules for request handling, an Op
 [detect]
 dependencies = ["express"]
 
-[[config]]
-template = "semgrep/express.yml.eta"
+[[tool_file]]
+source = "semgrep/express.yml.eta"
 target = ".gspot/config/semgrep/express.yml"
 tool = "semgrep"
 rule_keys = ["rules"]
@@ -22,12 +22,12 @@ categories = ["functions", "methods"]
 ignored_prefix = "^handle(?=[A-Z])"
 reason = "A handler starts with handle and then names the event."
 
-[[config]]
-template = "eslint.fragment.js.eta"
+[[tool_file]]
+source = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 fragment = true
 
-[[config.selectors]]
+[[tool_file.selectors]]
 selector = 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]'
 message = "A message a client reads names no identifier; put the value in its own field."

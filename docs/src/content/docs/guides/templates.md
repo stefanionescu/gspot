@@ -11,7 +11,7 @@ A template is an exported setup another repository can reuse. It carries authore
 gspot export team.template.toml
 ```
 
-A template carries every `gspot.toml` entry except scopes, including command checks. Empty authored tables stay in the export. It copies authored values without adding defaults. The destination's `structure/stale-allowlists` check reports carried paths that match no tracked file or folder. Review path choices for the destination; commands that name local executables produce a warning.
+A template carries every `gspot.toml` entry except scopes, including command checks. Empty authored tables stay in the export. It copies authored values without adding defaults. The destination's `gspot/unmatched-paths` check reports carried paths that match no tracked file or folder. Review path choices for the destination; commands that name local executables produce a warning.
 
 A template carries hooks, CI, agent-rule, and runner settings, but no generated hook scripts, lockfiles, or installed tools. `hooks.enabled` controls hook setup.
 

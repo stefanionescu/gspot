@@ -66,11 +66,11 @@ file = "syncpack.config.mjs"
 [[tool.replace]]
 file = "syncpack.config.ts"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/osv-scanner.toml"
 tool = "osv-scanner"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/syncpack.json"
 tool = "syncpack"
 generated_header = false

@@ -288,7 +288,7 @@ for (const declared of SCENARIOS) {
                 const where = [entry.expected.rule, entry.expected.file].filter(Boolean).join(' in ');
                 const isElsewhere = entry.platforms !== undefined && !entry.platforms.includes(process.platform);
                 test.skipIf(isElsewhere || (entry.docker === true && !hasLinuxDocker()))(
-                    `${entry.check} reports ${where} and accepts the correction`,
+                    `${entry.check} reports ${where} and passes after the fix`,
                     async () => {
                         const { failed, passed } = await runFindingCase(repository, entry, scenario.repository);
                         const { message, ...position } = entry.expected;

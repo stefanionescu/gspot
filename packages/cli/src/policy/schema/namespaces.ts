@@ -147,7 +147,7 @@ export const settingNamespaceSchemas = {
     }),
     site: z.strictObject({
         build_command: z.array(z.string()).optional(),
-        build_folder: relativePath.optional(),
+        build_folder: relativePath.meta({ pathRole: 'destination' }).optional(),
         max_kilobytes: z
             .array(z.strictObject({ paths: z.array(z.string()), kb: z.number().int(undefined).min(0, undefined) }))
             .optional(),
@@ -157,7 +157,7 @@ export const settingNamespaceSchemas = {
     supabase: z.strictObject({
         functions_folder: relativePath.optional(),
         schemas: z.array(z.string()).optional(),
-        types_file: z.union([z.literal(''), relativePath]).optional(),
+        types_file: z.union([z.literal(''), relativePath.meta({ pathRole: 'destination' })]).optional(),
     }),
     swift: z.strictObject({
         xcode_destination: z.string().optional(),

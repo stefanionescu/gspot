@@ -2,6 +2,7 @@
 import { resolve } from 'node:path';
 import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { getScopeTable } from '#cli/policy/edit.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { printResult } from '#cli/terminal/messages.ts';
@@ -65,10 +66,7 @@ export function registerAdd(program: Program): void {
         .description(
             'Add configurations to the root selection or to one scope, apply the policy. Run gspot install when the change needs tools. Required configurations are added with them. --dry-run prints the change and writes nothing.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: the configurations were added, or the preview finished.\n- 2: the input was invalid, or add could not finish.\n\nExample:\ngspot add bash --dry-run\ngspot add pytest --scope services/api',
-        )
+        .addHelpText('after', commandHelp('add'))
         .option('--scope <path>', 'Add the configurations to this scope')
         .option('--dry-run', 'Print the change and write nothing')
         .action(async (configurations, flags, command) => {

@@ -10,7 +10,7 @@ const reservedCategories = z
 
 /** A path-specific naming override shared by policy, manifests, and shipped naming data. */
 export const namingOverrideSchema = z.strictObject({
-    paths: z.array(z.string().min(1)).min(1),
+    paths: z.array(z.string().min(1).meta({ pathRole: 'source' })).min(1),
     languages: z.array(z.string()).optional(),
     categories: z.array(z.string()).optional(),
     names: z.array(z.string()).optional(),

@@ -14,7 +14,7 @@ import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { createInstallationRegistry } from '#tests/harness/registry.ts';
-import { INDEX_COMMAND, DEFECT_COMMAND } from '#tests/config/tools/lifecycle/hooks.ts';
+import { INDEX_COMMAND, SAMPLE_COMMAND } from '#tests/config/tools/lifecycle/hooks.ts';
 import { useEnvironment, sourceLauncherDirectory } from '#tests/harness/environment.ts';
 
 // The policy and repository of a session: what install and doctor both read.
@@ -65,7 +65,7 @@ test('a commit in a linked worktree runs the staged checks and blocks a defect',
 
     await createFileTree(main, {
         'gspot.toml': buildPolicy([], {
-            tables: `[hooks]\nenabled = true\n[agent_rules]\nenabled = false\n[check."sandbox/defect"]\ncommand = ${JSON.stringify([process.execPath, '-e', DEFECT_COMMAND, '{files}'])}\npaths = ["src/**"]\nstage = "commit"\n[check."sandbox/defect".output]\nformat = "lines"\n`,
+            tables: `[hooks]\nenabled = true\n[agent_rules]\nenabled = false\n[check."sandbox/defect"]\ncommand = ${JSON.stringify([process.execPath, '-e', SAMPLE_COMMAND, '{files}'])}\npaths = ["src/**"]\nstage = "commit"\n[check."sandbox/defect".output]\nformat = "lines"\n`,
         }),
         'src/kept.txt': 'clean\n',
     });

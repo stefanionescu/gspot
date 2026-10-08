@@ -75,3 +75,9 @@ export const DEFAULT_TEST_PATTERNS = [
 
 /** The files the managed block tells the reader to open first; they cannot be left out. */
 export const FIRST_READ = ['general/engineering/agent/WORKING.md', 'general/engineering/prose/WRITING.md'];
+
+export const LEVEL_SUMMARY =
+    'Correctness, security, accessibility, type safety, routine formatting, and declared project contracts apply at both levels.';
+
+export const ALL_LEVEL_SUMMARY =
+    'These rules apply only at level `all`: word choice, architecture, naming, doc comments, declaration order, API style, and complexity. Neither level enables experimental or preview lint rules.';

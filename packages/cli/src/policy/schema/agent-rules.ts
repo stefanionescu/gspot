@@ -6,7 +6,7 @@ export const agentRulesSchema = z.strictObject({
     enabled: authoredDefault(z.boolean().default(true)).meta({
         description: 'Write the agent rules and agent instructions.',
     }),
-    folder: authoredDefault(relativePath.default(RULES_DIRECTORY)).describe(
+    folder: authoredDefault(relativePath.meta({ pathRole: 'destination' }).default(RULES_DIRECTORY)).describe(
         'Repository-relative folder the rules install into.',
     ),
     own_rules_folder: relativePath.optional().meta({
@@ -15,7 +15,7 @@ export const agentRulesSchema = z.strictObject({
     exclude: authoredDefault(z.array(z.string()).default([])).meta({
         description: 'Rule files and folders left out of the installed selection.',
     }),
-    instruction_files: authoredDefault(z.array(relativePath).default([])).meta({
+    instruction_files: authoredDefault(z.array(relativePath.meta({ pathRole: 'destination' })).default([])).meta({
         description:
             'Other files that get the managed block, besides AGENTS.md. Paths are relative to the repository root.',
     }),

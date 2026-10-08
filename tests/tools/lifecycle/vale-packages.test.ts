@@ -99,7 +99,7 @@ test.each([
                         ),
                         mode: 0o444,
                     },
-                    kind: 'config',
+                    kind: 'tool_file',
                 }),
             );
         }

@@ -10,7 +10,7 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 
 /**
  * Runs git with a throwaway identity, keeping the line endings the sandbox specifies.
- * @param cwd the test repository
+ * @param cwd the sandbox
  * @param argv the command line after git
  * @param environment verbatim variables
  * @returns the exit code and both streams
@@ -45,7 +45,7 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
 
 /**
  * Runs git and returns what it printed, for a command a test needs the answer of.
- * @param cwd the test repository
+ * @param cwd the sandbox
  * @param argv the command line after git
  * @returns the trimmed standard output
  */
@@ -57,7 +57,7 @@ export function gitOutput(cwd: string, argv: string[]): string {
 
 /**
  * Makes the test directory a git repository with one commit, the state init expects.
- * @param cwd the test repository
+ * @param cwd the sandbox
  */
 export function commitAll(cwd: string): void {
     for (const args of [
@@ -73,7 +73,7 @@ export function commitAll(cwd: string): void {
 /**
  * Marks a test file executable where each platform keeps the bit: the file mode, and on Windows, whose file systems
  * keep none, the Git index.
- * @param cwd the test repository
+ * @param cwd the sandbox
  * @param path the repository-relative file
  */
 export async function markExecutable(cwd: string, path: string): Promise<void> {
@@ -92,7 +92,7 @@ export async function markExecutable(cwd: string, path: string): Promise<void> {
 
 /**
  * Creates committed source and conflicting working-tree bytes for native and command push selection.
- * @param root the test repository
+ * @param root the sandbox
  * @returns the commit objects and the zero object for a new ref
  */
 export async function preparePushRepository(root: string): Promise<PushRepository> {

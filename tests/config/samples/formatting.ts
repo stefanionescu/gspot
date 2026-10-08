@@ -1,4 +1,4 @@
-// The formatter overrides of a test repository and what each file resolves to.
+// The formatter overrides of a sandbox and what each file resolves to.
 /** A policy with formatter overrides at the root, for a path, and in nested scopes. */
 export const FORMAT_OVERRIDES_POLICY = `level = "all"
 configurations = ["format", "javascript"]

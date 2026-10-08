@@ -7,7 +7,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/apply.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
-// What a test repository's policy generates: the files its selected configurations write, and the ESLint instance its
+// What a sandbox policy generates: the files its selected configurations write, and the ESLint instance its
 // configuration produces.
 
 export const eslintConfigurationSchema = z.object({
@@ -19,7 +19,7 @@ export const eslintConfigurationSchema = z.object({
 
 /**
  * Links installed test packages, writes outputs through the managed lifecycle, and loads the ESLint configuration.
- * @param root the test repository with its gspot.toml
+ * @param root the sandbox with its gspot.toml
  * @returns ESLint reading the generated configuration
  */
 export async function createEslint(root: string, options: ESLint.Options = {}): Promise<ESLint> {
@@ -43,6 +43,6 @@ export async function emitFile(policy: string, path: string, files: Record<strin
     const session = await openSession(sandbox.path);
     const output = emitAll(session);
     const file = output.files.find((entry) => entry.path === path);
-    if (file === undefined) throw new Error(`The test repository generates no ${path}.`);
+    if (file === undefined) throw new Error(`The sandbox generates no ${path}.`);
     return file.content;
 }

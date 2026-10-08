@@ -1,6 +1,6 @@
 import type { Manifest, ParsedManifest, ToolFileDeclaration } from '#cli/types/configurations.ts';
 
-export type Fragment = { manifest: Manifest; config: ToolFileDeclaration };
+export type Fragment = { manifest: Manifest; toolFile: ToolFileDeclaration };
 
 /** A fragment selector with the allowed setting replaced by the paths it holds. */
 export type ResolvedSelector = Pick<FragmentSelector, 'selector' | 'message' | 'files'> & { except?: string[] };

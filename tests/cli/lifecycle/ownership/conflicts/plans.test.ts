@@ -63,7 +63,7 @@ test.each(['replacement', 'block'] as const)(
                     ? planReplacement(log, {
                           path: 'config.txt',
                           next: { bytes: Buffer.from('replacement\n'), mode: 0o444 },
-                          kind: 'config',
+                          kind: 'tool_file',
                           canReplace: true,
                       })
                     : planBlock(log, 'config.txt', 'managed content', 'hash');
@@ -95,7 +95,7 @@ test('a batch journals published files and preserves a later edited destination'
             planReplacement(log, {
                 path: path,
                 next: { bytes: Buffer.from('replacement'), mode: 0o644 },
-                kind: 'config',
+                kind: 'tool_file',
                 canReplace: true,
             }),
         );
@@ -118,7 +118,7 @@ test('a preserved file refuses the whole batch and leaves every proposed destina
             planReplacement(log, {
                 path: 'owned.txt',
                 next: { bytes: Buffer.from('installed'), mode: 0o644 },
-                kind: 'config',
+                kind: 'tool_file',
                 canReplace: true,
             }),
         );
@@ -126,7 +126,7 @@ test('a preserved file refuses the whole batch and leaves every proposed destina
             planReplacement(log, {
                 path: path,
                 next: { bytes: Buffer.from('replacement'), mode: 0o644 },
-                kind: 'config',
+                kind: 'tool_file',
             }),
         );
         expect(() => applyPlans(log, plans)).toThrow(
@@ -148,7 +148,7 @@ test('restoration journals completed removals and preserves a later edit', async
             planReplacement(log, {
                 path: 'authored.txt',
                 next: { bytes: Buffer.from('installed\n'), mode: 0o444 },
-                kind: 'config',
+                kind: 'tool_file',
                 canReplace: true,
             }),
         );
@@ -157,7 +157,7 @@ test('restoration journals completed removals and preserves a later edit', async
             planReplacement(log, {
                 path: 'generated.txt',
                 next: { bytes: Buffer.from('generated\n'), mode: 0o644 },
-                kind: 'config',
+                kind: 'tool_file',
             }),
         );
         const plans = ['authored.txt', 'generated.txt'].map((path) => planRestoration(log, path));
@@ -192,10 +192,10 @@ test('reviewed matching bytes refresh ownership without rewriting the file', asy
     const next = { bytes: Buffer.from('installed\n'), mode: getKeptMode(0o644) };
     {
         using log = openOwnership(directory.path);
-        applyPlan(log, planReplacement(log, { path, next, kind: 'config' }));
+        applyPlan(log, planReplacement(log, { path, next, kind: 'tool_file' }));
         await writeFile(join(directory.path, path), 'reviewed\n');
         const reviewed = log.files.read(path)!;
-        const request = { path, next: reviewed, kind: 'config' as const };
+        const request = { path, next: reviewed, kind: 'tool_file' as const };
         expect(applyPlan(log, planReplacement(log, request))).toBe('preserved');
         expect(log.entryFor(path)?.installed).toStrictEqual(identify(next));
         const plan = planReplacement(log, { ...request, expected: reviewed, canReplace: true });

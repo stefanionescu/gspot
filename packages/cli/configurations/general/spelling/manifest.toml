@@ -26,7 +26,7 @@ file = ".typos.toml"
 [[tool.replace]]
 file = "_typos.toml"
 
-[[config]]
+[[tool_file]]
 target = ".gspot/config/typos.toml"
 tool = "typos"
 scoped = true

@@ -1,6 +1,7 @@
 import { resolve } from 'node:path';
 import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import type { Session } from '#cli/types/planning.ts';
 import { Argument } from '@commander-js/extra-typings';
 import { openSession } from '#cli/commands/session.ts';
@@ -142,10 +143,7 @@ export function registerList(program: Program): void {
         .description(
             'List the selected, detected, and available configurations. Each check has one row with its state in each scope that selects its configuration. gspot list settings shows root values and the settings each scope changes. Long values are shortened; --json retains complete values and inherited settings. list changes nothing and runs no check.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: the list was printed.\n- 2: the input was invalid, or list could not finish.\n\nExample:\ngspot list settings\ngspot list configurations',
-        )
+        .addHelpText('after', commandHelp('list'))
         .addArgument(
             new Argument('[kind]', 'List configurations or effective settings').choices(['configurations', 'settings']),
         )

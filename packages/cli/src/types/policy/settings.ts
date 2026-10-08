@@ -3,6 +3,7 @@ import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { KeyPath } from '#cli/types/parsers/document.ts';
 import type { namingLists } from '#cli/parsers/schema/naming.ts';
+import type { SettingValueDeclaration } from '#cli/types/parsers/settings.ts';
 import type { scopeSchema, policySchema } from '#cli/policy/schema/policy.ts';
 import type { agentRulesValuesSchema } from '#cli/policy/schema/agent-rules.ts';
 import type { ScopeEntry, FileDeclaration } from '#cli/types/repository/inventory.ts';
@@ -127,7 +128,7 @@ export type Policy = {
     ci?: Defined<Required<NonNullable<RawPolicy['ci']>>>;
     agent_rules: z.output<typeof agentRulesValuesSchema>;
     runner?: NonNullable<RawPolicy['runner']>;
-    scopeTables: Record<string, Partial<Policy>>;
+    scopeTables: Record<string, Partial<Policy> & Pick<Policy, 'authored'>>;
 };
 
 export type AuthoredSetting = Pick<ResolvedSetting, 'value' | 'reason'>;
@@ -166,7 +167,7 @@ export type ArchitectureSettings = Omit<Defined<Required<RawArchitecture>>, 'mod
 export type ArchitectureDeclaration = { selection: ScopeSelection; architecture: ArchitectureSettings };
 
 /** Root or scoped values and their source-document location. */
-export type PolicyLocation = { table: Partial<Policy>; scope?: string; path: KeyPath };
+export type PolicyLocation = { table: Partial<Policy> & Pick<Policy, 'authored'>; scope?: string; path: KeyPath };
 
 /** A setting default and the configuration responsible for it. */
 export type SettingDefault = { value: unknown; configuration: string };
@@ -188,3 +189,10 @@ export type Mutation = (raw: TomlTable) => void;
 
 /** Dotted mutation key split into its containing tables and leaf field. */
 export type PolicyKey = { path: string[]; name: string };
+
+/** Transform or observe one declared native path without changing its role. */
+export type PolicyPathCallback = (
+    path: string,
+    keys: KeyPath,
+    role: NonNullable<SettingValueDeclaration['path_role']>,
+) => string;

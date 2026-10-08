@@ -1,11 +1,13 @@
+import { stringify } from 'smol-toml';
 import type { JSONSchema } from 'zod/v4/core';
 import { buildJsonSchema } from './schema.ts';
 import { isDeepStrictEqual } from 'node:util';
 import { cell, table, section, referencePage } from './page.ts';
+import { isRecord } from '@gspothq/cli/src/platform/objects.ts';
 import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
 import { knownSettings } from '@gspothq/cli/src/policy/settings/known.ts';
 import type { ReferencePage, SettingVariant } from '../../types/reference.ts';
-import { SETTINGS_INTRO, POLICY_EXAMPLES, SCHEMA_TYPE_LABELS } from '../../config/reference.ts';
+import { SETTINGS_INTRO, SCHEMA_TYPE_LABELS } from '../../config/reference.ts';
 
 function acceptedValue(node: JSONSchema.JSONSchema | boolean): string {
     if (typeof node === 'boolean') return node ? 'Any value' : 'Not accepted';
@@ -52,10 +54,10 @@ export function policyReference(): string {
                     ? cell(value.description)
                     : `See the [settings reference](/reference/settings/) for ${topic}.`,
             ]);
-        const example = POLICY_EXAMPLES[name];
+        const example = schema.examples?.filter(isRecord).find((document) => Object.hasOwn(document, name));
         return section(
             name,
-            (example === undefined ? '' : `\`\`\`toml\n${example}\n\`\`\`\n\n`) +
+            (example === undefined ? '' : `\`\`\`toml\n${stringify(example)}\`\`\`\n\n`) +
                 table(['Key', 'Accepted value', 'Meaning'], rows),
         );
     });

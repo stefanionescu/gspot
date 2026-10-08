@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { addAbortSignal } from 'node:stream';
 import { resolve, relative } from 'node:path';
 import { compact } from '#cli/platform/objects.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { progress } from '#cli/terminal/reporter.ts';
 import { checkTree } from '#cli/commands/check/tree.ts';
@@ -172,10 +173,7 @@ export function registerCheck(program: Program): void {
         .description(
             'Run the selected checks and print each finding with its file, line, rule, and help. --json prints the report as JSON. A plain check reads the working tree, --staged reads the staged files, and --changed reads the files changed since a branch. --fix runs the fixers and can change your source files. --fix --dry-run shows those changes in a copy.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: every check that ran passed. The report lists the skipped checks.\n- 1: findings remain, or a fix failed.\n- 2: the run could not finish: a tool is missing, a report is invalid, or the input is invalid.\n\nExample:\ngspot check --staged\ngspot check --base origin/main',
-        )
+        .addHelpText('after', commandHelp('check'))
         .option('--only <checks...>', 'Run only these checks')
         .option('--staged', 'Check staged files in an exact copy of the index')
         .option('--changed', 'Check files changed from the upstream or default branch')

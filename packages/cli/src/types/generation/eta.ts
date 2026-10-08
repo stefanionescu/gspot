@@ -27,7 +27,7 @@ export type ScopeEtaInputs = {
 export type EtaInputs = {
     /** Present for a configuration whose manifest declares rule paths. */
     recordRules?: (document: unknown) => void;
-    /** The parts of the ESLint configuration the policy decides, computed when that template renders. */
+    /** The parts of the ESLint configuration the policy decides, computed when that Eta source emits. */
     eslint: () => EslintConfiguration;
     eslintModule: EslintModule;
     eslintFiles: EslintFiles;

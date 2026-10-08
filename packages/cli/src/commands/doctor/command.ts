@@ -1,5 +1,6 @@
 import { join, resolve } from 'node:path';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { missingBuild } from '#cli/planning/skips.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { collectPins } from '#cli/configurations/pins.ts';
@@ -162,10 +163,7 @@ export function registerDoctor(program: Program): void {
         .description(
             'Report tools, Git hooks, setup suggestions, existing lint jobs, duplicate tool pins, and submodules. Detect stale configuration choices. doctor repairs nothing. Each problem includes the command to correct it.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: the selected tools and hooks are ready.\n- 1: a selected tool is missing, invalid, newer, or outdated, or a hook is not ready.\n- 2: doctor could not finish.\n\nExample:\ngspot doctor\ngspot --json doctor',
-        )
+        .addHelpText('after', commandHelp('doctor'))
         .action(async (_flags, command) => {
             const global = command.optsWithGlobals();
             const cwd = resolve(global.C ?? process.cwd());

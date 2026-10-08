@@ -31,8 +31,8 @@ kind = "library"
 version = "7.16.2"
 npm = "eslint-plugin-testing-library"
 
-[[config]]
-template = "eslint.fragment.js.eta"
+[[tool_file]]
+source = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"

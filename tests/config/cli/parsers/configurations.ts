@@ -6,10 +6,10 @@ export const SUPPRESSION_DECLARATION =
     '[[tool]]\nname = "example"\n[tool.suppression]\nmarker = "# file-disable"\nreason = "reason: (?<reason>.+)"\n';
 
 /** A fragment selector retains its file selection and reasoned path allowance without another coverage field. */
-export const SYNTAX_SELECTOR_DECLARATION = `[[config]]
+export const SYNTAX_SELECTOR_DECLARATION = `[[tool_file]]
 target = ".gspot/config/eslint.config.mjs"
 fragment = true
-[[config.selectors]]
+[[tool_file.selectors]]
 selector = "CallExpression[callee.name='query']"
 message = "Use the declared query contract."
 files = ["**/*.ts"]

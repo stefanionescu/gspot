@@ -2,6 +2,7 @@
 import { resolve } from 'node:path';
 import { compact } from '#cli/platform/objects.ts';
 import { findRoot } from '#cli/repository/root.ts';
+import { commandHelp } from '#cli/commands/help.ts';
 import { getScopeTable } from '#cli/policy/edit.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { printResult } from '#cli/terminal/messages.ts';
@@ -69,10 +70,7 @@ export function registerRemove(program: Program): void {
         .description(
             'Remove a configuration from the root selection or from one scope, apply the policy. Run gspot install when the remaining configuration needs tools. gspot refuses to remove a configuration that another selected configuration requires. --dry-run prints the change and writes nothing.',
         )
-        .addHelpText(
-            'after',
-            '\nExit codes:\n- 0: the configuration was removed, or the preview finished.\n- 2: the input was invalid, or remove could not finish.\n\nExample:\ngspot remove bash --dry-run\ngspot remove nextjs --scope apps/web',
-        )
+        .addHelpText('after', commandHelp('remove'))
         .option('--scope <path>', 'Remove the configuration from this scope')
         .option('--dry-run', 'Print the change and write nothing')
         .action(async (configuration, flags, command) => {

@@ -33,7 +33,7 @@ export function relativeTarget(pointerPath: string, targetPath: string): string 
 }
 
 /**
- * Renders a body pointer: the body with the target placeholder replaced, under the header.
+ * Emits a body pointer: the body with the target placeholder replaced, under the header.
  * @param pointer the pointer declaration
  * @param pointerPath the pointer's path
  * @param targetPath the generated file's path
@@ -41,7 +41,7 @@ export function relativeTarget(pointerPath: string, targetPath: string): string 
  * @returns the generated file
  */
 export function bodyPointer(
-    pointer: NonNullable<ToolFileDeclaration['stub_file']>,
+    pointer: NonNullable<ToolFileDeclaration['pointer']>,
     pointerPath: string,
     targetPath: string,
     version: string,

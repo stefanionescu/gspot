@@ -1,4 +1,4 @@
-// Render configuration assets with the effective settings and inputs of their scope.
+// Emit tool-file assets with the effective settings and inputs of their scope.
 import { Eta } from 'eta';
 import { relative } from 'node:path/posix';
 import { stringify as stringifyYaml } from 'yaml';
@@ -186,7 +186,7 @@ export function etaInputs(session: Session, selection: ScopeSelection, manifests
 }
 
 /**
- * Renders a configuration template asset to the final text of a target, header included unless the target's reader refuses unknown keys.
+ * Emits an Eta source to the final text of a target, header included unless the target's reader refuses unknown keys.
  * @param templatePath the asset path of the template.
  * @param targetPath the path the text is written to.
  * @param inputs the template inputs.

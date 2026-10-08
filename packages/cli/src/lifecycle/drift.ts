@@ -1,4 +1,4 @@
-// Compares generated outputs with the files on disk.
+// Compares generated files with the files on disk.
 import { createTwoFilesPatch } from 'diff';
 import { isDeepStrictEqual } from 'node:util';
 import { toPosix } from '#cli/platform/paths.ts';
@@ -75,7 +75,7 @@ function blockDrift(root: string, generated: Generated): Drift[] {
     return entries;
 }
 
-// The merged and configuration outputs whose fields are gone: missing when the file is gone, changed otherwise.
+// The merged tool files whose fields are gone: missing when the file is gone, changed otherwise.
 function keyDrift(root: string, generated: Generated): Drift[] {
     using files = openRoot(root);
     return [...generated.toolFiles]
@@ -84,7 +84,7 @@ function keyDrift(root: string, generated: Generated): Drift[] {
 }
 
 /**
- * Every generated file that differs from its render, is missing, or is a stray gspot file. Managed blocks and authored config-file edits count too.
+ * Every generated file that differs from its emitted text, is missing, or is a stray gspot file. Managed blocks and authored config-file edits count too.
  * @param root the repository root
  * @param policy the repository policy
  * @param generated the generated files as generated now

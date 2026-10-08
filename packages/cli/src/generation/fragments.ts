@@ -20,10 +20,10 @@ function fragmentOwners(scopes: ScopeSelection[], selection: ScopeSelection, tar
 // The emitted text of every fragment that has a template.
 function emittedFragments(fragments: Fragment[], inputs: EtaInputs, scopes: ScopeSelection[]): string[] {
     const emitted: string[] = [];
-    for (const { manifest, config } of fragments) {
-        if (config.template === undefined) continue;
-        const source = readAsset(`${manifest.dir}/${config.template}`);
-        if (!config.target.endsWith('eslint.config.mjs')) {
+    for (const { manifest, toolFile } of fragments) {
+        if (toolFile.source === undefined) continue;
+        const source = readAsset(`${manifest.dir}/${toolFile.source}`);
+        if (!toolFile.target.endsWith('eslint.config.mjs')) {
             emitted.push(eta.renderString(source, inputs));
             continue;
         }
@@ -65,7 +65,7 @@ function emittedFragments(fragments: Fragment[], inputs: EtaInputs, scopes: Scop
  * @param scopes every resolved scope.
  * @param selection the scope the target is written for.
  * @param target the configuration target
- * @param inputs the scope's template inputs, which the fragment templates render with.
+ * @param inputs the scope's Eta inputs for emitting the fragments.
  * @returns the emitted fragments, their imports, file globs, and selector groups.
  */
 export function fragmentInputs(
@@ -86,11 +86,11 @@ export function fragmentInputs(
 > {
     const fragments = fragmentOwners(scopes, selection, target).flatMap((manifest) =>
         manifest.toolFiles
-            .filter((config) => config.fragment && config.target === target.target)
-            .map((config) => ({ manifest, config })),
+            .filter((toolFile) => toolFile.fragment && toolFile.target === target.target)
+            .map((toolFile) => ({ manifest, toolFile })),
     );
-    const components = fragments.flatMap(({ manifest, config }) =>
-        config.component_globs.map((pattern) => ({ pattern, configuration: manifest.configuration.name })),
+    const components = fragments.flatMap(({ manifest, toolFile }) =>
+        toolFile.component_globs.map((pattern) => ({ pattern, configuration: manifest.configuration.name })),
     );
     const fragmentFiles = [...new Set(components.map(({ pattern }) => pattern))];
     const config = target.target.endsWith('eslint.config.mjs') ? inputs.eslint() : undefined;
@@ -109,8 +109,8 @@ export function fragmentInputs(
         { ...inputs, fragmentFiles, eslintFragmentBlocks, eslintFiles },
         scopes,
     );
-    const imports = fragments.flatMap(({ manifest, config }) =>
-        config.imports === undefined ? [] : readAsset(`${manifest.dir}/${config.imports}`).split('\n'),
+    const imports = fragments.flatMap(({ manifest, toolFile }) =>
+        toolFile.imports === undefined ? [] : readAsset(`${manifest.dir}/${toolFile.imports}`).split('\n'),
     );
     return {
         fragments: emitted.join('\n'),

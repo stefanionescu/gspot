@@ -15,9 +15,9 @@ import type { CheckInputOptions } from '#tests/types/harness/input.ts';
 export function buildCheckInput(session: ToolSession, checkId: string, options: CheckInputOptions = {}): CheckInput {
     const path = options.scope ?? '';
     const scope = session.scopes.find((entry) => entry.scope.path === path);
-    if (scope === undefined) throw new Error(`The test repository has no scope at ${path || 'the root'}.`);
+    if (scope === undefined) throw new Error(`The sandbox has no scope at ${path || 'the root'}.`);
     const check = scope.selected.flatMap((manifest) => manifest.checks).find((entry) => entry.name === checkId);
-    if (check === undefined) throw new Error(`The test repository selects no check called ${checkId}.`);
+    if (check === undefined) throw new Error(`The sandbox selects no check called ${checkId}.`);
     const paths = options.paths;
     const files = session.repository.files.filter(
         (file) =>

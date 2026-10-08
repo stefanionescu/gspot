@@ -104,12 +104,19 @@ function compileNumberSetting(validation: SettingValueDeclaration['validation'])
 export function compileSettingValue(declaration: SettingValueDeclaration): CompiledSetting {
     switch (declaration.type) {
         case 'path': {
+            const path =
+                declaration.path_role === undefined
+                    ? { schema: relativePath, expression: 'relativePath' }
+                    : {
+                          schema: relativePath.meta({ pathRole: declaration.path_role }),
+                          expression: `relativePath.meta(${JSON.stringify({ pathRole: declaration.path_role })})`,
+                      };
             return declaration.default === '' || declaration.default_all === ''
                 ? {
-                      schema: z.union([z.literal(''), relativePath]),
-                      expression: "z.union([z.literal(''),relativePath])",
+                      schema: z.union([z.literal(''), path.schema]),
+                      expression: `z.union([z.literal(''),${path.expression}])`,
                   }
-                : { schema: relativePath, expression: 'relativePath' };
+                : path;
         }
         case 'list': {
             return compileSettingField({ type: 'list', items: settingItemsSchema.parse(declaration.items) });

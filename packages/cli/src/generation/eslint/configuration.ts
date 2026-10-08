@@ -265,7 +265,7 @@ export function eslintConfiguration(context: EslintContext): EslintConfiguration
  * Bind rule data and preset reads to one generation run without acquiring installed tools.
  * @param session the repository and parsed policy of this run
  * @param selection the current scope
- * @returns the data and callbacks used by the ESLint render assets
+ * @returns the data and callbacks for emitting the ESLint assets
  */
 export function eslintInputs(
     session: Session,

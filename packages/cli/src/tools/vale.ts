@@ -24,7 +24,7 @@ function folderOfFile(path: string): string[] {
     return rest.length > 0 ? [`${STYLES_DIRECTORY}/${top}`] : [];
 }
 
-// Replaces one package folder with its synced copy: written beside it, then renamed in.
+// Replaces one package folder with its installed copy: written beside it, then renamed in.
 function swapPackage(files: Root, work: string, folder: string, paths: string[]): void {
     const next = `${folder}.next`;
     files.removeTree(next);
@@ -47,7 +47,7 @@ function stageInputs(files: Root, work: string): void {
     }
 }
 
-// Replaces every installed package with its synced copy, and deletes a package the configuration does not name.
+// Replaces every installed package with its installed copy, and deletes a package the configuration does not name.
 function replacePackages(files: Root, work: string): string | undefined {
     const missing = VALE_PACKAGE_FOLDERS.find((folder) => {
         const path = `${STYLES_DIRECTORY}/${folder}`;

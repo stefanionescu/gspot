@@ -34,7 +34,7 @@ if (isPosix) {
 const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
 const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
             using log = openOwnership(process.cwd());
-            applyPlan(log, planReplacement(log,{path: 'tool', next: {bytes: Buffer.from('target'), mode: 511, isLink: true}, kind: 'config', canReplace: true}));
+            applyPlan(log, planReplacement(log,{path: 'tool', next: {bytes: Buffer.from('target'), mode: 511, isLink: true}, kind: 'tool_file', canReplace: true}));
         `;
             const child = runTestCommandBlocking([process.execPath, '-e', script], { cwd: directory.path });
             expect(child.code, child.stderr).toBe(73);
@@ -73,7 +73,7 @@ const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/owne
 const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/plans.ts'))});
 const {applyPlan}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
             using log = openOwnership(process.cwd());
-            applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 420}, kind: 'config', canReplace: true}));
+            applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 420}, kind: 'tool_file', canReplace: true}));
         `;
             const child = runTestCommandBlocking([process.execPath, '-e', script], { cwd: directory.path });
             expect(child.code, child.stdout + child.stderr).toBe(73);

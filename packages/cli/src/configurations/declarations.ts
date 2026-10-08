@@ -23,24 +23,24 @@ export function allChecks(manifests: Iterable<Manifest>): Map<string, OwnedCheck
 }
 
 /**
- * The repository-relative path of a config file generated for a scope.
+ * The repository-relative path of a tool file generated for a scope.
  * @param scope the scope path, empty for the root
- * @param config the config-file declaration
- * @returns the path of the generated config file
+ * @param toolFile the tool-file declaration
+ * @returns the path of the generated tool file
  */
-export function targetInScope(scope: string, config: ToolFileDeclaration): string {
-    if (scope === '' || !config.scoped) return config.target;
-    if (config.target.startsWith(CONFIG_PREFIX))
-        return posix.join(CONFIG_PREFIX, scope, config.target.slice(CONFIG_PREFIX.length));
-    return `${scope}/${config.target}`;
+export function targetInScope(scope: string, toolFile: ToolFileDeclaration): string {
+    if (scope === '' || !toolFile.scoped) return toolFile.target;
+    if (toolFile.target.startsWith(CONFIG_PREFIX))
+        return posix.join(CONFIG_PREFIX, scope, toolFile.target.slice(CONFIG_PREFIX.length));
+    return `${scope}/${toolFile.target}`;
 }
 
 /**
- * The name a `{tool_file:<name>}` placeholder uses for a config file.
+ * The name a `{tool_file:<name>}` placeholder uses for a tool file.
  * @param target the target path
  * @returns the file name under .gspot/config without its extensions
  */
-export function configurationName(target: string): string {
+export function toolFileName(target: string): string {
     const bare = target.startsWith(CONFIG_PREFIX) ? target.slice(CONFIG_PREFIX.length) : target;
     const dot = bare.indexOf('.');
     return dot === -1 ? bare : bare.slice(0, dot);

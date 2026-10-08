@@ -20,9 +20,9 @@ test('the folder gives a configuration its name and kind, and the [configuration
 });
 
 test('a template pointer rejects a conflicting emission mode', () => {
-    const source = `[[config]]\ntemplate = "config.eta"\ntarget = ".gspot/config.toml"\n[config.stub_file]\npath = "config.toml"\ntemplate = "editor.eta"\n`;
+    const source = `[[tool_file]]\nsource = "config.eta"\ntarget = ".gspot/config.toml"\n[tool_file.pointer]\npath = "config.toml"\ntemplate = "editor.eta"\n`;
     expect(() => parseConfigurationManifest('example', { kind: 'general', tables: `${source}copy = true\n` })).toThrow(
-        'config.0.stub_file: Unrecognized key: "copy"',
+        'tool_file.0.pointer: Unrecognized key: "copy"',
     );
     expect(() => parseConfigurationManifest('example', { kind: 'general', tables: source })).not.toThrow();
 });
@@ -106,7 +106,7 @@ test('companion tools refuse a configuration with no consuming tool or check', (
     expect(() =>
         parseConfigurationManifest('consumer', {
             kind: 'tool',
-            tables: '[[config]]\ntarget = ".gspot/config/example.json"\nfragment = true\nrequired_tools = ["example"]\n',
+            tables: '[[tool_file]]\ntarget = ".gspot/config/example.json"\nfragment = true\nrequired_tools = ["example"]\n',
         }),
     ).toThrow('Companion tools require a consuming tool or check.');
 });
@@ -117,7 +117,7 @@ test('syntax selector coverage has no separate level declaration and retains its
             parseConfigurationManifest('example', {
                 tables: `${SYNTAX_SELECTOR_DECLARATION}level = "${level}"\n`,
             }),
-        ).toThrow('config.0.selectors.0: Unrecognized key: "level"');
+        ).toThrow('tool_file.0.selectors.0: Unrecognized key: "level"');
     expect(
         parseConfigurationManifest('example', { tables: SYNTAX_SELECTOR_DECLARATION }).toolFiles[0]?.selectors,
     ).toStrictEqual([

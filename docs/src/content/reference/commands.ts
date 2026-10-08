@@ -4,20 +4,7 @@ import type { ReferencePage } from '../../types/reference.ts';
 import { cell, table, section, referencePage } from './page.ts';
 import { buildProgram } from '@gspothq/cli/src/commands/program.ts';
 import type { CommandUnknownOpts } from '@commander-js/extra-typings';
-
-// The help after the options as Markdown: the levels of set, then the exit codes and an example of every command.
-function helpSections(name: string, help: string): string {
-    const exits = help.indexOf('\nExit codes:\n');
-    const example = help.indexOf('\n\nExample:\n');
-    if (exits === -1 || example === -1) throw new Error(`Command ${name} has no exits or example documentation.`);
-    const levels = help.indexOf('\nLevels:\n');
-    const levelText = levels === -1 ? '' : section('Levels', help.slice(levels + '\nLevels:\n'.length, exits).trim());
-    return (
-        section('Examples', `\`\`\`shell\n${help.slice(example + '\n\nExample:\n'.length).trim()}\n\`\`\``) +
-        section('Exit codes', help.slice(exits + '\nExit codes:\n'.length, example).trim()) +
-        levelText
-    );
-}
+import { COMMAND_HELP } from '@gspothq/cli/src/config/commands/help.ts';
 
 async function commandPage(command: CommandUnknownOpts, name: string): Promise<ReferencePage> {
     const [rootCommand = name] = name.split(' ', 1);
@@ -35,19 +22,12 @@ async function commandPage(command: CommandUnknownOpts, name: string): Promise<R
         `\`${argument.name()}\``,
         cell(argument.description || (argument.required ? 'required' : 'optional')),
     ]);
-    let help = '';
-    const output = { ...command.configureOutput() };
-    try {
-        command.configureOutput({
-            writeOut: (text) => {
-                help += text;
-            },
-        });
-        command.outputHelp();
-    } finally {
-        command.configureOutput(output);
-    }
-    const behavior = helpSections(name, help);
+    const help = COMMAND_HELP[rootCommand];
+    if (help === undefined) throw new Error(`Command ${name} has no help metadata.`);
+    const behavior =
+        section('Examples', '```shell\n' + help.examples + '\n```') +
+        section('Exit codes', help.exitCodes) +
+        (help.levels === undefined ? '' : section('Levels', help.levels));
     const sections = [
         `\`\`\`text\n${usage}\n\`\`\`\n`,
         section('Arguments', argumentRows.length === 0 ? '' : table(['Argument', 'Meaning'], argumentRows)),

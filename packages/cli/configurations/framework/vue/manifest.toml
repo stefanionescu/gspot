@@ -42,16 +42,16 @@ name = "vue-tsc"
 version = "3.3.11"
 npm = "vue-tsc"
 
-[[config]]
-template = "eslint.fragment.js.eta"
+[[tool_file]]
+source = "eslint.fragment.js.eta"
 target = ".gspot/config/eslint.config.mjs"
 tool = "eslint"
 imports = "eslint.imports.js.eta"
 fragment = true
 component_globs = ["**/*.vue"]
 
-[[config]]
-template = "stylelint.fragment.json.eta"
+[[tool_file]]
+source = "stylelint.fragment.json.eta"
 target = ".gspot/config/stylelint.json"
 tool = "stylelint"
 required_tools = ["postcss-html"]

@@ -106,7 +106,7 @@ async function assertManifestsUnchanged(
 }
 
 /**
- * Copy the installed Vale packages into a copy whose Vale configuration matches the one they were synced for.
+ * Copy the installed Vale packages into a copy whose Vale configuration matches the one they were installed for.
  * @param root the repository root
  * @param checkout the copy directory the packages are copied into
  * @param paths the copy's files, among them the Vale configurations that name packages

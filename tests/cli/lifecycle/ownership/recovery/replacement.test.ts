@@ -49,7 +49,7 @@ const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycl
 const {applyPlan,applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
 const log = openOwnership(process.cwd());
 try {
-    applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 0o444}, kind: 'config', canReplace: true}));
+    applyPlan(log, planReplacement(log,{path: 'config.txt', next: {bytes: Buffer.from('installed\n'), mode: 0o444}, kind: 'tool_file', canReplace: true}));
     throw new Error('Expected publication failure');
 } catch (error) {
     if (point === 'restoration error') {
@@ -91,7 +91,7 @@ test.each(['interruption', 'restoration error'] as const)(
                     planReplacement(log, {
                         path: 'config.txt',
                         next: { bytes: Buffer.from('installed\n'), mode: 0o444 },
-                        kind: 'config',
+                        kind: 'tool_file',
                     }),
                 ),
             ).toBe('changed');
@@ -119,7 +119,7 @@ test('an inconsistent interrupted log cannot acquire ownership of current bytes'
             planReplacement(log, {
                 path: 'config.txt',
                 next: { bytes: Buffer.from('installed\n'), mode: 0o644 },
-                kind: 'config',
+                kind: 'tool_file',
                 canReplace: true,
             }),
         );
@@ -168,7 +168,7 @@ const {planReplacement}=await import(${JSON.stringify(getCliSourcePath('lifecycl
 const {applyPlan,applyPlans}=await import(${JSON.stringify(getCliSourcePath('lifecycle/ownership/commit.ts'))});
 const log = openOwnership(${JSON.stringify(directory.path)});
 try {
-    applyPlans(log, ['first.bin', 'second.bin'].map(path => planReplacement(log,{path: path, next: { bytes: Buffer.from('installed'), mode: 0o444 }, kind: 'config', canReplace: true})));
+    applyPlans(log, ['first.bin', 'second.bin'].map(path => planReplacement(log,{path: path, next: { bytes: Buffer.from('installed'), mode: 0o444 }, kind: 'tool_file', canReplace: true})));
 } catch (error) {
     console.log(JSON.stringify({ code: error.code }));
 } finally { log[Symbol.dispose](); }
@@ -189,7 +189,7 @@ try {
             planReplacement(log, {
                 path: path,
                 next: { bytes: Buffer.from('installed'), mode: 0o444 },
-                kind: 'config',
+                kind: 'tool_file',
                 canReplace: true,
             }),
         );

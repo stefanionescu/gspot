@@ -41,7 +41,7 @@ function parseHeader(line: string): string | undefined {
 }
 
 /**
- * Whether a shared tool config file contains the declared key or table.
+ * Whether a shared tool file contains the declared key or table.
  * @param text the authored file text
  * @param path the file path, whose extension names the format
  * @param selector the key or table that the tool owns
