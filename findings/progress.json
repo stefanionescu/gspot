@@ -243,6 +243,18 @@
                 "Explicit user answer: Keep strict repository enforcement and reorganize the source into public API owners.",
                 "Native read-only audit /tmp/gspot-native-role-audit-evidence.json:1184 test/harness value-to-runtime findings across381 files and230 runtime targets; other three role directions have zero findings."
             ]
+        },
+        {
+            "id": "handlebars-security-release-age-exception",
+            "date": "2026-10-08",
+            "scope": "Root npm dependency security advisories GHSA-8r5x-fm3f-whwj, GHSA-p8wg-vrv2-v86f, GHSA-xw65-4hp5-5hc7",
+            "decision": "Use the explicitly approved Handlebars-only minimum release-age exception while resolving fixed 4.7.10. Restore the ordinary seven-day gate immediately after producing the lock; retain the exact override because eslint-plugin-boundaries and @boundaries/elements still require vulnerable 4.7.9. Keep the native security scanner and all other dependency gates.",
+            "evidence": [
+                "Explicit user answer: Allow the Handlebars security-fix exception.",
+                "Native refused install: /tmp/gspot-handlebars-security-native-install.log.",
+                "Normal approved install: /tmp/gspot-handlebars-security-approved-install.log.",
+                "Normal frozen install after restoring the age gate: /tmp/gspot-handlebars-security-restored-age-frozen.log."
+            ]
         }
     ],
     "implementationBatches": {
