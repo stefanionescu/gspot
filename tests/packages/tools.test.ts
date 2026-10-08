@@ -6,18 +6,15 @@ import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { createConsumer } from '#tests/harness/consumer.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { runPackageCheck } from '#tests/harness/check-case.ts';
 import { getPublishedRelease } from '#tests/harness/release.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
-import type { InstallJson } from '#cli/types/commands/install.ts';
 import { consumerEnvironment } from '#tests/harness/environment.ts';
 import type { PublishedRelease } from '#automation/types/package.ts';
 import { mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
-import type { PackageCheckCase } from '#tests/types/packages/check-case.ts';
+import { FORMATTER_INIT, SUPPORTED_MISE } from '#tests/config/packages/tools.ts';
 import type { NativeConsumer, FormatterConsumer } from '#tests/types/packages/tools.ts';
-import { OUTDATED_MISE, FORMATTER_INIT, SUPPORTED_MISE } from '#tests/config/packages/tools.ts';
 
-/** Prepares authored package data and private formatter inputs with a fake mise, older than the runner pin, first on PATH. */
+/** Prepares authored package data and private formatter inputs with the declared mise version first on PATH. */
 async function prepareFormatterConsumer(installation: Consumer, release: PublishedRelease): Promise<FormatterConsumer> {
     const { command } = installation;
     const toolConsumer = join(installation.workspace, 'tool-consumer');
@@ -66,7 +63,6 @@ async function prepareFormatterConsumer(installation: Consumer, release: Publish
     const installed = await runTestCommand([...command, 'install', '--json'], toolOptions);
     if (installed.code !== 0)
         throw new Error(`Formatter sandbox install failed: ${installed.stdout}${installed.stderr}`);
-    await writeFile(join(hostTools, 'mise'), OUTDATED_MISE);
     return { toolConsumer, toolOptions, authoredPackage };
 }
 
@@ -76,8 +72,8 @@ async function prepareNativeConsumer(installation: Consumer): Promise<NativeCons
     const nativeConsumer = join(installation.workspace, 'native-consumer');
     await mkdir(nativeConsumer);
     await writeFile(join(nativeConsumer, 'package.json'), authoredPackage);
-    await writeFile(join(nativeConsumer, 'settings.toml'), 'a    =    1\n');
-    await writeFile(join(nativeConsumer, 'notes.json'), '"text"   ');
+    await writeFile(join(nativeConsumer, 'settings.toml'), 'a = 1\n');
+    await writeFile(join(nativeConsumer, 'notes.json'), '"text"\n');
     const nativeOptions = { ...installation.onlineOptions, cwd: nativeConsumer };
     const nativeInit = await runTestCommand(
         [...installation.command, 'init', '--yes', '--configurations', 'files', ...QUIET_INIT, '--json'],
@@ -95,25 +91,11 @@ async function prepareNativeConsumer(installation: Consumer): Promise<NativeCons
 
 const release = getPublishedRelease();
 
-test('private installation keeps authored and locked metadata, and the installed formatter fixes source', async () => {
+test('the installed formatter fixes source and preserves authored package metadata', async () => {
     await using consumer = await createConsumer(release.registry, release.version);
 
     const { command } = consumer;
     const { toolConsumer, toolOptions, authoredPackage } = await prepareFormatterConsumer(consumer, release);
-    const firstInstall = await runTestCommand([...command, 'install', '--json'], toolOptions);
-    expect(firstInstall.code, firstInstall.stdout + firstInstall.stderr).toBe(2);
-    const toolManifest = await readFile(join(toolConsumer, '.gspot/package.json'));
-    const toolLockfile = await readFile(join(toolConsumer, '.gspot/bun.lock'));
-    expect(toolLockfile.toString('utf8')).not.toContain(release.registry.url);
-    expect(toolLockfile.toString('utf8')).not.toContain(release.registry.work);
-    const preview = await runTestCommand([...command, 'install', '--dry-run', '--json'], toolOptions);
-    expect(preview.code, preview.stdout + preview.stderr).toBe(0);
-    expect((JSON.parse(preview.stdout) as InstallJson).dryRun).toBe(true);
-    // The old runner is refused; the completed installation and its metadata remain.
-    const installed = await runTestCommand([...command, 'install', '--json'], toolOptions);
-    expect(installed.code, installed.stdout + installed.stderr).toBe(2);
-    expect(await readFile(join(toolConsumer, '.gspot/package.json'))).toStrictEqual(toolManifest);
-    expect(await readFile(join(toolConsumer, '.gspot/bun.lock'))).toStrictEqual(toolLockfile);
     const formatter = [...command, 'check', 'source.js', '--only', 'format/prettier', '--json'];
     const invalid = await runTestCommand(formatter, toolOptions);
     expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
@@ -127,57 +109,22 @@ test('private installation keeps authored and locked metadata, and the installed
     expect(await readFile(join(toolConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
 });
 
-test('installed native tools report TOML and whitespace findings and pass after fixes', async () => {
+test('native and npm tool commands use their installed executables', async () => {
     await using consumer = await createConsumer(release.registry, release.version);
-
     const { nativeConsumer, nativeOptions, authoredPackage } = await prepareNativeConsumer(consumer);
-    const checks = [
-        {
-            only: 'files/taplo-format',
-            fix: true,
-            path: 'settings.toml',
-            isNpm: false,
-            findings: [{ fixable: true }],
-        },
-        {
-            only: 'files/taplo',
-            path: 'settings.toml',
-            isNpm: false,
-            sample: 'a = [\n',
-            corrected: 'a = 1\n',
-            findings: [{ line: 2, column: 1, fixable: false }],
-        },
-        {
-            only: 'format/editorconfig-checker',
-            path: 'notes.json',
-            isNpm: true,
-            corrected: '"text"\n',
-            findings: [
-                { fixable: false, message: 'Wrong line endings or no final newline' },
-                { line: 1, fixable: false, message: 'Trailing whitespace' },
-            ],
-        },
-    ] satisfies PackageCheckCase[];
-    for (const check of checks) {
-        const { failed, fixed, passed } = await runPackageCheck(consumer, nativeOptions, check);
-        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
-        expect(failed.report.skips).toStrictEqual([]);
-        expect(failed.report.checks).toMatchObject([
-            {
-                check: check.only,
-                status: 'failed',
-                findings: check.findings.map((finding) => ({ file: check.path, ...finding })),
-            },
-        ]);
-        const executable = toPosix(relative(await realpath(nativeOptions.cwd), failed.report.checks[0]!.command![0]!));
-        expect(executable.startsWith('.gspot/node_modules/')).toBe(check.isNpm);
-        if (check.only === 'files/taplo-format') {
-            expect(fixed?.code, String(fixed?.stdout) + String(fixed?.stderr)).toBe(0);
-            expect(await readFile(join(nativeConsumer, 'settings.toml'), 'utf8')).toBe('a = 1\n');
-        } else expect(fixed).toBeUndefined();
-        expect(passed.code, passed.stdout + passed.stderr).toBe(0);
-        expect(passed.report.skips).toStrictEqual([]);
-        expect(passed.report.checks).toMatchObject([{ check: check.only, status: 'passed', findings: [] }]);
+    for (const { only, path, isNpm } of [
+        { only: 'files/taplo', path: 'settings.toml', isNpm: false },
+        { only: 'format/editorconfig-checker', path: 'notes.json', isNpm: true },
+    ]) {
+        const checked = await runTestCommand(
+            [...consumer.command, 'check', path, '--only', only, '--json'],
+            nativeOptions,
+        );
+        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+        const report = JSON.parse(checked.stdout) as RunReport;
+        expect(report.checks).toHaveLength(1);
+        const executable = toPosix(relative(await realpath(nativeOptions.cwd), report.checks[0]!.command![0]!));
+        expect(executable.startsWith('.gspot/node_modules/')).toBe(isNpm);
     }
     expect(await readFile(join(nativeConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
 });

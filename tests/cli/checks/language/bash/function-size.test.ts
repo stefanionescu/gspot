@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
@@ -41,7 +41,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
     });
     using processRun = spyOn(processes, 'run').mockImplementation((command) => {
         const batch = command.slice(5);
-        const isBranchQuery = command[4]?.endsWith('/branches.yml') === true;
+        const isBranchQuery = basename(command[4] ?? '') === 'branches.yml';
         if (isBranchQuery) received.push(...batch);
         return Promise.resolve({
             code: 1,

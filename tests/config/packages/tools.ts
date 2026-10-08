@@ -13,4 +13,3 @@ export const FORMATTER_INIT = [
 ];
 
 export const SUPPORTED_MISE = `#!/bin/sh\nprintf "${CLI_PINS.mise}\\n"\n`;
-export const OUTDATED_MISE = '#!/bin/sh\nprintf "2026.5.15\\n"\n';

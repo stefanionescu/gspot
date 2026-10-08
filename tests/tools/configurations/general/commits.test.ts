@@ -1,21 +1,21 @@
 // The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.
+import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-import { join, delimiter } from 'node:path';
-import { chmod, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
+import { spawnGspot } from '#tests/harness/gspot.ts';
 import { quoteArgument } from '#cli/platform/text.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { git, commitAll } from '#tests/harness/git.ts';
 import { LICENSE } from '#tests/config/samples/docs.ts';
 import { containing } from '#tests/harness/expectations.ts';
-import { gspot, spawnGspot } from '#tests/harness/gspot.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { COMMITS_INIT } from '#tests/config/tools/commands/commits.ts';
-import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';
+import { buildToolsPath, buildSandboxPath, installToolProjects } from '#tests/harness/install.ts';
 import { COMMIT_MESSAGES, DERIVED_SCOPE_POLICY } from '#tests/config/tools/configurations/general/commits.ts';
 
 // The message check refuses a bad message, and a later range check rejects a bypassed hook.
@@ -39,8 +39,8 @@ async function expectCommitChecks(root: string, environment: Record<string, stri
     const accepted = await spawnGspot(root, ['check', '--only', 'commits/commitlint-range'], environment);
     expect(accepted.code).toBe(0);
     await Bun.write(join(root, 'more.md'), '# More\n');
-    git(root, ['add', '-A']);
-    git(root, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']);
+    expect(git(root, ['add', '-A']).code).toBe(0);
+    expect(git(root, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']).code).toBe(0);
     const range = await spawnGspot(root, ['check', '--only', 'commits/commitlint-range'], environment);
     expect(range.code).toBe(1);
     expect(range.stdout).toContain('type-empty');
@@ -148,18 +148,8 @@ test('native commitlint keeps exact project scopes optional and restores coverag
 
 test('the commits configuration > the commit-msg hook refuses a free-form message and takes a conventional one', async () => {
     await using sandbox = await testdir();
-    await using launcher = await testdir();
-    await createFileTree(launcher.path, {
-        gspot: `#!/usr/bin/env bun
-const child = Bun.spawnSync([process.execPath, ${JSON.stringify(gspot)}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
-process.exit(child.exitCode);
-`,
-    });
-    await chmod(join(launcher.path, 'gspot'), 0o755);
     await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT, 'README.md': '# Test\n', LICENSE });
-    git(sandbox.path, ['init', '-q']);
-    git(sandbox.path, ['add', '-A']);
-    git(sandbox.path, ['commit', '-qm', 'init']);
+    commitAll(sandbox.path);
     const init = await spawnGspot(sandbox.path, COMMITS_INIT);
     expect(init.code, init.stdout + init.stderr).toBe(0);
     const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
@@ -167,10 +157,10 @@ process.exit(child.exitCode);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);
     await Bun.write(join(sandbox.path, 'notes.md'), '# Notes\n');
-    git(sandbox.path, ['add', '-A']);
+    expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
     const environment = {
         NO_COLOR: '1',
-        PATH: `${launcher.path}${delimiter}${buildToolsPath(['commitlint'])}`,
+        PATH: buildSandboxPath(['commitlint']),
     };
     const bad = git(sandbox.path, ['commit', '-qm', 'Added notes.'], environment);
     expect(bad.code).not.toBe(0);

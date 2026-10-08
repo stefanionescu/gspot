@@ -113,7 +113,14 @@ test('nested TOML ownership preserves authored entries and comments through upda
                 ]),
             ),
         ).toBe('changed');
-        expect(log.files.read('tool.toml')!.bytes.toString('utf8')).toContain('echo authored-later');
+        expect(parseToml(log.files.read('tool.toml')!.bytes.toString('utf8'))).toMatchObject({
+            checks: {
+                commands: {
+                    authored: { run: 'echo authored-later' },
+                    gspot: { run: 'gspot check --staged --verbose' },
+                },
+            },
+        });
         expect(applyPlan(log, planRestoration(log, 'tool.toml'))).toBe('changed');
         expect(log.files.read('tool.toml')!.bytes.toString('utf8')).toBe(
             original.replace('echo original', 'echo authored-later'),
@@ -184,7 +191,7 @@ test('shared TOML removes created empty parents and preserves authored empty par
     try {
         applyPlan(log, planMerge(log, path, fields, true));
         const installed = log.files.read(path)!.bytes.toString('utf8');
-        const edited = installed.replace('4', '99');
+        const edited = installed.replace('fourth = 4', 'fourth = 99');
         await writeFile(join(directory.path, path), edited);
         expect(applyPlan(log, planMerge(log, path, []))).toBe('preserved');
         expect(log.files.read(path)!.bytes.toString('utf8')).toBe(edited);
@@ -200,7 +207,7 @@ test('shared TOML removes created empty parents and preserves authored empty par
         applyPlan(log, planMerge(log, path, fields, true));
         await writeFile(
             join(directory.path, path),
-            log.files.read(path)!.bytes.toString('utf8').replace('true', 'false'),
+            log.files.read(path)!.bytes.toString('utf8').replace('authored = true', 'authored = false'),
         );
         expect(applyPlan(log, planRestoration(log, path))).toBe('changed');
         expect(parseToml(log.files.read(path)!.bytes.toString('utf8'))).toStrictEqual({ authored: false, kept: {} });

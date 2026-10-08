@@ -1,4 +1,4 @@
-import type { RulePreviewCase } from '#tests/types/cli/lifecycle/rule-preview.ts';
+import type { RulePreviewCase } from '#tests/types/cli/lifecycle.ts';
 
 /** Actual policy transitions for native rule additions, removals, and option changes. */
 export const RULE_PREVIEW_CASES: RulePreviewCase[] = [

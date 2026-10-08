@@ -1,8 +1,8 @@
 // Init deletes the files of the selected tools, writes the editor pointer, and leaves nothing for apply to change.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/harness/git.ts';
 import { readFile } from 'node:fs/promises';
+import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
@@ -42,9 +42,7 @@ test('init replaces the files of the selected tools and leaves no drift for appl
         'README.md': '# test\n',
         'quality/lint.sh': CLEAN_BASH_SCRIPT,
     });
-    git(sandbox.path, ['init', '-q']);
-    git(sandbox.path, ['add', '-A']);
-    git(sandbox.path, ['commit', '-qm', 'init']);
+    commitAll(sandbox.path);
     const environment = { PATH: buildToolsPath(['ast-grep']) };
     const init = await spawnGspot(sandbox.path, PLAN_INIT, environment);
     expect(init.code, init.stdout + init.stderr).toBe(0);

@@ -31,7 +31,9 @@ test.each(RUNTIME_CASES)('runtime globals and Node.js rules are isolated: %j', a
     const computed = (await eslint.calculateConfigForFile('application/source.js')) as RuntimeConfiguration;
     for (const name of entry.globals) expect(computed.languageOptions.globals[name]).toBeDefined();
     for (const name of entry.absent) expect(computed.languageOptions.globals[name]).toBeUndefined();
-    expect(Object.keys(computed.rules).filter((name) => name.startsWith('n/'))).toStrictEqual([]);
+    expect(Object.keys(computed.rules).filter((name) => name.startsWith('n/'))).toStrictEqual([
+        'n/file-extension-in-import',
+    ]);
     const [result] = await eslint.lintFiles(['application/source.js']);
     expect(result!.messages.some(({ ruleId }) => ruleId === 'n/no-process-exit')).toBe(false);
     expect(

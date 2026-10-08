@@ -2,38 +2,25 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import type { FileCopy } from '#cli/types/platform/root.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
+import { OWNERSHIP_BYTES } from '#tests/config/samples/ownership.ts';
 import { planRestoration } from '#cli/lifecycle/ownership/restoration.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { planBlock, planReplacement } from '#cli/lifecycle/ownership/plans.ts';
 import { stat, chmod, lstat, unlink, readdir, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 import { BLOCK_CASES, ADOPTED_FILE_CASES } from '#tests/config/cli/lifecycle/ownership/preservation/restoration.ts';
 
-// Later user edits remain intact across replacement and giving the file back.
 const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
-
-async function expectEditedLinkPreserved(log: Log, path: string, absolute: string, next: FileCopy): Promise<void> {
-    expect(applyPlan(log, planReplacement(log, { path: path, next: next, kind: 'tool_file', canReplace: true }))).toBe(
-        'changed',
-    );
-    await unlink(absolute);
-    await symlink('../tool/original.sh', absolute);
-    expect(applyPlan(log, planReplacement(log, { path: path, next: next, kind: 'tool_file' }))).toBe('preserved');
-    expect(applyPlan(log, planRestoration(log, path))).toBe('preserved');
-    expect(await readlink(absolute)).toBe('../tool/original.sh');
-}
 
 if (isPosix) {
     test('lifecycle ownership: giving back a twice replaced file deletes it, keeps unowned files, and keeps the log private', async () => {
         await using directory = await testdir();
         await createFileTree(directory.path, { '.gspot/authored.txt': 'keep\n' });
-        const original = Buffer.from([0, 255, 1, 10]);
+        const original = Buffer.from(OWNERSHIP_BYTES.restoration);
         await writeFile(join(directory.path, 'config.txt'), original, { mode: 0o640 });
         let log = openOwnership(directory.path);
         try {
@@ -98,14 +85,25 @@ if (isPosix) {
             const executed = runTestCommandBlocking([absolute], { cwd: directory.path });
             expect(executed.code, executed.stderr).toBe(0);
             expect(executed.stdout).toBe('installed');
-            expect(() => log.files.read(path)).toThrow();
+            // A lifecycle file read refuses an installed link instead of reading its target.
+            expect(() => log.files.read(path)).toThrow(`Lifecycle destination is not a private regular file: ${path}`);
             log[Symbol.dispose]();
             log = openOwnership(directory.path);
             expect(applyPlan(log, planRestoration(log, path))).toBe('changed');
             expect(await lstat(absolute).catch((error: unknown) => error)).toMatchObject({ code: 'ENOENT' });
             const originalMetadata = await stat(join(directory.path, 'vendor/tools/tool/original.sh'));
             expect(originalMetadata.mode & 0o777).toBe(getKeptMode(0o755));
-            await expectEditedLinkPreserved(log, path, absolute, next);
+            expect(
+                applyPlan(log, planReplacement(log, { path: path, next: next, kind: 'tool_file', canReplace: true })),
+            ).toBe('changed');
+            // Later user edits remain intact across replacement and giving the file back.
+            await unlink(absolute);
+            await symlink('../tool/original.sh', absolute);
+            expect(applyPlan(log, planReplacement(log, { path: path, next: next, kind: 'tool_file' }))).toBe(
+                'preserved',
+            );
+            expect(applyPlan(log, planRestoration(log, path))).toBe('preserved');
+            expect(await readlink(absolute)).toBe('../tool/original.sh');
         } finally {
             log[Symbol.dispose]();
         }

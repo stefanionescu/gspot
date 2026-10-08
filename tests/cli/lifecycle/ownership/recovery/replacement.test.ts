@@ -6,19 +6,18 @@ import { getKeptMode } from '#tests/harness/platforms.ts';
 import { getCliSourcePath } from '#tests/harness/process.ts';
 import { stat, readFile, writeFile } from 'node:fs/promises';
 import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
+import { OWNERSHIP_BYTES } from '#tests/config/samples/ownership.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/schema.ts';
 import { applyPlan, applyPlans } from '#cli/lifecycle/ownership/commit.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { PublicationProject } from '#tests/types/cli/lifecycle/ownership.ts';
 import { runTestCommand, runTestCommandBlocking } from '#tests/harness/command.ts';
 
 const implementation = getCliSourcePath('lifecycle/ownership/log.ts');
 const boundary = getCliSourcePath('platform/root/open.ts');
 
-async function publish(point: 'error' | 'restoration error' | 'interruption' | 'edited'): Promise<PublicationProject> {
-    const directory = await testdir();
-    const original = Buffer.from([0, 255, 10, 13]);
-    const destination = join(directory.path, 'config.txt');
+async function publish(root: string, point: 'error' | 'restoration error' | 'interruption' | 'edited'): Promise<void> {
+    const original = Buffer.from(OWNERSHIP_BYTES.replacement);
+    const destination = join(root, 'config.txt');
     await writeFile(destination, original, { mode: 0o444 });
     const program = String.raw`
 import { mock } from 'bun:test';
@@ -57,19 +56,20 @@ try {
     } else if (point !== 'error' || error.message !== 'Publication failed') throw error;
 } finally { log[Symbol.dispose](); }
 `;
-    const child = runTestCommandBlocking([process.execPath, '-e', program], { cwd: directory.path });
+    const child = runTestCommandBlocking([process.execPath, '-e', program], { cwd: root });
     expect(child.code, child.stdout + child.stderr).toBe(['error', 'restoration error'].includes(point) ? 0 : 73);
-    return { directory, original, destination };
 }
 
 test('a failed read-only replacement keeps the original bytes and mode with Windows semantics', async () => {
-    const published = await publish('error');
-    await using directory = published.directory;
+    await using directory = await testdir();
+    await publish(directory.path, 'error');
     {
         using log = openOwnership(directory.path);
 
-        expect(await readFile(published.destination)).toStrictEqual(published.original);
-        const publishedMetadata = await stat(published.destination);
+        expect(await readFile(join(directory.path, 'config.txt'))).toStrictEqual(
+            Buffer.from(OWNERSHIP_BYTES.replacement),
+        );
+        const publishedMetadata = await stat(join(directory.path, 'config.txt'));
         expect(publishedMetadata.mode & 0o777).toBe(getKeptMode(0o444));
         expect(log.state.files.map((entry) => entry.path)).toStrictEqual([]);
     }
@@ -78,8 +78,8 @@ test('a failed read-only replacement keeps the original bytes and mode with Wind
 test.each(['interruption', 'restoration error'] as const)(
     'after %s, a read-only replacement removed on Windows counts as not written, and the next write publishes it',
     async (point) => {
-        const published = await publish(point);
-        await using directory = published.directory;
+        await using directory = await testdir();
+        await publish(directory.path, point);
         {
             using log = openOwnership(directory.path);
 
@@ -100,12 +100,12 @@ test.each(['interruption', 'restoration error'] as const)(
 );
 
 test('a file edited during an interrupted replacement is kept, and recovery refuses to overwrite it', async () => {
-    const published = await publish('edited');
-    await using directory = published.directory;
+    await using directory = await testdir();
+    await publish(directory.path, 'edited');
     expect(() => openOwnership(directory.path)).toThrow(
         'A previous gspot run stopped while writing config.txt, and the file changed since then.',
     );
-    expect(await readFile(published.destination, 'utf8')).toBe('developer edit\n');
+    expect(await readFile(join(directory.path, 'config.txt'), 'utf8')).toBe('developer edit\n');
 });
 
 test('an inconsistent interrupted log cannot acquire ownership of current bytes', async () => {
@@ -141,9 +141,9 @@ test('an inconsistent interrupted log cannot acquire ownership of current bytes'
     expect(await readFile(record, 'utf8')).toBe(inconsistent);
 });
 
-test('a full disk while logging a batch keeps every file and permits a corrected batch', async () => {
+test('a full disk while logging a batch keeps every file, and the same batch succeeds afterwards', async () => {
     await using directory = await testdir();
-    const original = Buffer.from([0, 255, 10, 13, 42]);
+    const original = Buffer.from(OWNERSHIP_BYTES.batch);
     for (const name of ['first.bin', 'second.bin'])
         await writeFile(join(directory.path, name), original, { mode: 0o444 });
     const originalMetadata = await stat(join(directory.path, 'first.bin'));

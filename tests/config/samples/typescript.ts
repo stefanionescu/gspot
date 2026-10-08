@@ -37,3 +37,5 @@ export const STRICT_COMPILER_OPTIONS = {
 
 export const VALID =
     '{"compilerOptions":{"strict":true,"noImplicitReturns":true,"noPropertyAccessFromIndexSignature":true,"noFallthroughCasesInSwitch":true,"noUncheckedIndexedAccess":true,"noImplicitOverride":true,"exactOptionalPropertyTypes":true}}';
+
+export const COMPILER_SOURCE = 'export const value = missing;\n';
