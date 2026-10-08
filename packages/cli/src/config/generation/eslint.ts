@@ -51,8 +51,31 @@ export const ESLINT_JAVASCRIPT_LIMITS: Record<string, string> = {
     parameters: 'function_parameters',
 };
 
-// The roles import-direction reads from architecture.roles; the types and harness roles also have their own settings.
-export const DIRECTION_ROLES = ['tests', 'config', 'env', 'runtime'] as const;
+/** Role precedence keeps test support and type declarations outside the runtime layer. */
+export const ROLE_ORDER = ['test_harness', 'tests', 'types', 'env', 'config', 'runtime'] as const;
+
+/** Role policies use file categories independently of declared module identities. */
+export const ROLE_IMPORT_POLICIES: EslintBoundaryPolicy[] = [
+    {
+        from: { file: { categories: 'role:types' } },
+        disallow: { to: { file: { categories: { noneOf: ['role:types'] } } }, dependency: { kind: 'value' } },
+    },
+    {
+        from: { file: { categories: 'role:runtime' } },
+        disallow: { to: { file: { categories: { anyOf: ['role:tests', 'role:test_harness'] } } } },
+    },
+    {
+        from: { file: { categories: { anyOf: ['role:tests', 'role:test_harness'] } } },
+        disallow: {
+            to: { file: { categories: 'role:runtime', path: '**/!(public|contracts).*' } },
+            dependency: { kind: 'value' },
+        },
+    },
+    {
+        from: { file: { categories: { anyOf: ['role:config', 'role:env'] } } },
+        disallow: { to: { file: { categories: 'role:runtime' } }, dependency: { kind: 'value' } },
+    },
+];
 
 /** Frameworks whose application sources use browser APIs. Build scripts retain Node.js. */
 export const ESLINT_BROWSER_CONFIGURATIONS = ['react', 'vue', 'svelte', 'vite'];
@@ -95,8 +118,8 @@ export const TRPC_UNKNOWN_IMPORT_POLICIES: EslintBoundaryPolicy[] = [
 
 /** The final native policy refuses server values even when an authored edge permits the import. */
 export const TRPC_SERVER_VALUE_POLICY: EslintBoundaryPolicy = {
-    from: { file: [{ isUnknown: true }, { categories: { noneOf: ['server'] } }] },
-    disallow: { to: { file: { categories: 'server' } }, dependency: { kind: 'value' } },
+    from: { file: [{ isUnknown: true }, { categories: { noneOf: ['module:server'] } }] },
+    disallow: { to: { file: { categories: 'module:server' } }, dependency: { kind: 'value' } },
 };
 
 /** Native selectors cover alias import suffixes alongside the relative-import rule. */

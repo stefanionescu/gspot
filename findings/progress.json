@@ -1,5 +1,5 @@
 {
-    "openRecords": 685,
+    "openRecords": 679,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 685,
+        "openRecords": 679,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 93,
-                "unresolvedAssignments": 198
+                "completedAssignments": 95,
+                "unresolvedAssignments": 196
             },
             {
                 "id": "python",
@@ -696,8 +696,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 11,
-                "unresolvedAssignments": 88
+                "completedAssignments": 12,
+                "unresolvedAssignments": 87
             },
             {
                 "id": "swift-bash-sql",
@@ -1950,8 +1950,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 47,
-                "unresolvedAssignments": 12
+                "completedAssignments": 50,
+                "unresolvedAssignments": 9
             },
             {
                 "id": "names",
@@ -3527,14 +3527,20 @@
             ]
         },
         "areas/kits/075": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 780649c77214e43b.", "Evidence 404b17c6c7cee1e4."],
+            "commit": "48298e0be89d77c0778acbc63382381a26ef202d",
+            "verification": [
+                "Evidence 780649c77214e43b.",
+                "Evidence 404b17c6c7cee1e4.",
+                "Testing Library lint blocks follow an actual @testing-library/* dependency through the dedicated library owner; absent dependencies omit blocks and native root/child controls preserve manual selection.",
+                "Main223 CLI cases734 assertions and native per-record controls pass. Root types/policy ESLint, normal build/schema generation, preset idempotence and owned gspot apply/install pass. Explicit staged check, normal commit and push hooks pass; source checkpoint is pushed to main.",
+                "Authored fragment ownership production reduces657 bytes; manifest metadata production reduces56 bytes; structure pair reduces25 bytes. Captured generated data and new regression tests are recorded separately. Named-tool036 growth remains explicitly partial; no broad batch or cross-platform completion claim."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-javascript-web-framework-options-final-freeze.json",
-                    "commit": null,
+                    "commit": "48298e0be89d77c0778acbc63382381a26ef202d",
                     "verification": ["Evidence 780649c77214e43b.", "Evidence 404b17c6c7cee1e4."]
                 }
             ]
@@ -6057,10 +6063,14 @@
             ]
         },
         "review/configurations-plugin/024": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "48298e0be89d77c0778acbc63382381a26ef202d",
+            "verification": [
+                "Infer existing ESLint fragment assets from their configuration folder; native TypeScript import spans preserve import comments and separate fragment bodies. Sixteen imports-only assets and repeated declarations are deleted; existing explicit selectors remain.",
+                "Main223 CLI cases734 assertions and native per-record controls pass. Root types/policy ESLint, normal build/schema generation, preset idempotence and owned gspot apply/install pass. Explicit staged check, normal commit and push hooks pass; source checkpoint is pushed to main.",
+                "Authored fragment ownership production reduces657 bytes; manifest metadata production reduces56 bytes; structure pair reduces25 bytes. Captured generated data and new regression tests are recorded separately. Named-tool036 growth remains explicitly partial; no broad batch or cross-platform completion claim."
+            ]
         },
         "review/configurations-plugin/025": {
             "status": "complete",
@@ -6129,10 +6139,14 @@
             ]
         },
         "review/configurations-plugin/033": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "48298e0be89d77c0778acbc63382381a26ef202d",
+            "verification": [
+                "Configuration manifests now own preset-source exports and all-level rules; the native preset maintenance and generation readers use these declarations. Central table/type and JavaScript all-rule JSON are deleted. Native292-rule set and12 source maps retain their original identities. Always-written agent rules use always_selected, with TALKING at both levels. Broader053 topic moves remain separate.",
+                "Main223 CLI cases734 assertions and native per-record controls pass. Root types/policy ESLint, normal build/schema generation, preset idempotence and owned gspot apply/install pass. Explicit staged check, normal commit and push hooks pass; source checkpoint is pushed to main.",
+                "Authored fragment ownership production reduces657 bytes; manifest metadata production reduces56 bytes; structure pair reduces25 bytes. Captured generated data and new regression tests are recorded separately. Named-tool036 growth remains explicitly partial; no broad batch or cross-platform completion claim."
+            ]
         },
         "review/configurations-plugin/035": {
             "status": "complete",
@@ -6145,10 +6159,13 @@
             ]
         },
         "review/configurations-plugin/036": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "root",
+            "commit": "48298e0be89d77c0778acbc63382381a26ef202d",
+            "verification": [
+                "One full named tool declaration; name-only references, duplicate/missing-owner refusal and order-independent metadata pass native143 cases318 assertions. Main combined223 CLI cases734 assertions, types, policy lint, build/schema/preset-idempotence/apply/install and staged/normal commit/push pass.",
+                "Mandatory simplification remains: production grows1991 bytes44 lines268 AST nodes in the immutable functional packet. This record remains outstanding; current full-platform acceptance is not claimed."
+            ]
         },
         "review/configurations-plugin/038": {
             "status": "complete",
@@ -6255,10 +6272,14 @@
             ]
         },
         "review/configurations-plugin/051": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "48298e0be89d77c0778acbc63382381a26ef202d",
+            "verification": [
+                "One dependency-detected library/testing-library owner supplies the pin, preset capture and ESLint block. React/Svelte/Vue copies are removed; native dependency, manual-selection, scope and level controls pass.",
+                "Main223 CLI cases734 assertions and native per-record controls pass. Root types/policy ESLint, normal build/schema generation, preset idempotence and owned gspot apply/install pass. Explicit staged check, normal commit and push hooks pass; source checkpoint is pushed to main.",
+                "Authored fragment ownership production reduces657 bytes; manifest metadata production reduces56 bytes; structure pair reduces25 bytes. Captured generated data and new regression tests are recorded separately. Named-tool036 growth remains explicitly partial; no broad batch or cross-platform completion claim."
+            ]
         },
         "review/configurations-plugin/052": {
             "status": "complete",
@@ -11664,16 +11685,24 @@
             ]
         },
         "slices/kits-general/056": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "48298e0be89d77c0778acbc63382381a26ef202d",
+            "verification": [
+                "Delete the obsolete .qlty replacement declaration from structure; Qlty metadata is preserved by native takeover controls.",
+                "Main223 CLI cases734 assertions and native per-record controls pass. Root types/policy ESLint, normal build/schema generation, preset idempotence and owned gspot apply/install pass. Explicit staged check, normal commit and push hooks pass; source checkpoint is pushed to main.",
+                "Authored fragment ownership production reduces657 bytes; manifest metadata production reduces56 bytes; structure pair reduces25 bytes. Captured generated data and new regression tests are recorded separately. Named-tool036 growth remains explicitly partial; no broad batch or cross-platform completion claim."
+            ]
         },
         "slices/kits-general/057": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "48298e0be89d77c0778acbc63382381a26ef202d",
+            "verification": [
+                "The limits.prefix_collisions summary now states the number of siblings sharing a prefix that makes a finding. Existing >= comparison and default remain unchanged.",
+                "Main223 CLI cases734 assertions and native per-record controls pass. Root types/policy ESLint, normal build/schema generation, preset idempotence and owned gspot apply/install pass. Explicit staged check, normal commit and push hooks pass; source checkpoint is pushed to main.",
+                "Authored fragment ownership production reduces657 bytes; manifest metadata production reduces56 bytes; structure pair reduces25 bytes. Captured generated data and new regression tests are recorded separately. Named-tool036 growth remains explicitly partial; no broad batch or cross-platform completion claim."
+            ]
         },
         "slices/kits-general/058": {
             "status": "complete",
@@ -16500,6 +16529,24 @@
             ],
             "limitations": [
                 "SQL046 outside SQL remains partial. Current Windows/Linux and database workflow not claimed."
+            ]
+        },
+        {
+            "commit": "48298e0be89d77c0778acbc63382381a26ef202d",
+            "completedRecords": [
+                "review/configurations-plugin/024",
+                "review/configurations-plugin/033",
+                "review/configurations-plugin/051",
+                "areas/kits/075",
+                "slices/kits-general/056",
+                "slices/kits-general/057"
+            ],
+            "unresolvedRecords": 679,
+            "validation": [
+                "Main223 CLI cases/734assertions; root TypeScript and current policy ESLint; native preset producer repeated16 artifacts byte-identically; normal CLI build/compiled policy schema freshness/apply/install:checks/staged check."
+            ],
+            "limitations": [
+                "Named tool references036 remain partial due production growth; broader053 topic moves and current full-platform CI/release acceptance remain outstanding."
             ]
         }
     ],

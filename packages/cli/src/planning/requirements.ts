@@ -104,7 +104,10 @@ export function requiredToolNames(check: PlannedCheck, session: Pick<Session, 's
  */
 export function applicableManifests(session: Session): Manifest[] {
     const checks = configuredChecks(session, true);
-    const architectures = declaredArchitectures(session.scopes);
+    const boundaries =
+        declaredArchitectures(session.scopes).length > 0 ||
+        (session.policyFiles.policy.level === 'all' &&
+            session.scopes.some(({ view }) => Object.values(view.roles).flat().length > 0));
     const needed = new Set(checks.flatMap((check) => requiredToolNames(check, session)));
     const selected = everyManifest(session.scopes);
     const owners = new Set(selected);
@@ -122,7 +125,7 @@ export function applicableManifests(session: Session): Manifest[] {
         return {
             ...manifest,
             tools: manifest.tools
-                .filter((tool) => tool.name !== 'eslint-plugin-boundaries' || architectures.length > 0)
+                .filter((tool) => tool.name !== 'eslint-plugin-boundaries' || boundaries)
                 .filter(
                     (tool) =>
                         needed.has(tool.name) ||

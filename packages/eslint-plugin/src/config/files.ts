@@ -14,6 +14,4 @@ export const STDIN_NAMES = new Set(['', '<input>', '<text>']);
 
 export const FILE_SCHEME = 'file://';
 
-export const CODE_EXTENSION = /\.[cm]?[jt]sx?$/u;
-
 export const INTERNAL_PREFIXES = ['./', '../', '@/', '#'];

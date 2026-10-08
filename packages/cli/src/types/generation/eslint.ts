@@ -2,7 +2,7 @@ import type { Manifest } from '#cli/types/configurations.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { EslintAllRules } from '#cli/types/parsers/eslint.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
-import type { Policy, RawPolicy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import type { Policy, RawPolicy, ScopeView, ScopeSelection } from '#cli/types/policy/settings.ts';
 
 export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
 
@@ -49,7 +49,19 @@ export type EslintBoundaryFile = {
 export type EslintBoundaryPolicy = {
     from?: { file: EslintBoundaryFile | EslintBoundaryFile[] };
     allow?: { to: { file: EslintBoundaryFile } };
-    disallow?: { to: { file: EslintBoundaryFile }; dependency: { kind: 'value' } };
+    disallow?: {
+        to: { file: EslintBoundaryFile };
+        dependency?: { kind: 'value' };
+    };
+};
+
+/** Native classification data shared by the settings and dependency policy constructors. */
+export type EslintBoundaryContext = {
+    prefix: string;
+    modules: NonNullable<ScopeView['values']['architecture']>['modules'];
+    roles: { category: string; pattern: string[]; stopMatching: boolean }[];
+    tests: string[];
+    trpc: boolean;
 };
 
 /** Native dependency selectors classify declaration and per-specifier type imports. */

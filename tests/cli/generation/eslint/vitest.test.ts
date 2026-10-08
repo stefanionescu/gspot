@@ -35,8 +35,8 @@ test.each(['jest', 'vitest'])('%s closes test support to runtime code in its sco
                   }),
     });
     const eslint = await createEslint(sandbox.path);
-    expect(await ruleReports(eslint, `${prefix}src/runtime.js`, 'gspot/import-direction')).toMatchObject([
-        { message: textContaining('Runtime code imports test code') },
+    expect(await ruleReports(eslint, `${prefix}src/runtime.js`, 'boundaries/dependencies')).toMatchObject([
+        { message: textContaining('test_harness') },
     ]);
 });
 

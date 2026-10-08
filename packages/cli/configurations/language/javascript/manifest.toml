@@ -4,7 +4,6 @@ eslint_all_rules = [
     "gspot/env-owner",
     "gspot/header-first",
     "gspot/import-boundaries",
-    "gspot/import-direction",
     "gspot/no-alias-exports",
     "gspot/no-index-imports",
     "gspot/no-trivial-files",

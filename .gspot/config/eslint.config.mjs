@@ -203,7 +203,7 @@ export default [
 
     {...unicorn.configs.recommended, "rules": {"no-negated-condition":"off","no-nested-ternary":"off","unicorn/better-dom-traversing":"error","unicorn/catch-error-name":"error","unicorn/consistent-assert":"error","unicorn/consistent-compound-words":"error","unicorn/consistent-date-clone":"error","unicorn/consistent-destructuring":"off","unicorn/consistent-empty-array-spread":"error","unicorn/consistent-existence-index-check":"error","unicorn/consistent-function-scoping":"error","unicorn/consistent-json-file-read":"error","unicorn/consistent-template-literal-escape":"error","unicorn/custom-error-definition":"off","unicorn/dom-node-dataset":"error","unicorn/empty-brace-spaces":"error","unicorn/error-message":"error","unicorn/escape-case":"error","unicorn/expiring-todo-comments":"error","unicorn/explicit-length-check":"error","unicorn/filename-case":"error","unicorn/import-style":"error","unicorn/isolated-functions":"error","unicorn/new-for-builtins":"error","unicorn/no-abusive-eslint-disable":"error","unicorn/no-accessor-recursion":"error","unicorn/no-anonymous-default-export":"error","unicorn/no-array-callback-reference":"error","unicorn/no-array-fill-with-reference-type":"error","unicorn/no-array-for-each":"error","unicorn/no-array-from-fill":"error","unicorn/no-array-method-this-argument":"error","unicorn/no-array-reduce":"error","unicorn/no-array-reverse":"error","unicorn/no-array-sort":"error","unicorn/no-await-expression-member":"error","unicorn/no-await-in-promise-methods":"error","unicorn/no-blob-to-file":"error","unicorn/no-canvas-to-image":"error","unicorn/no-confusing-array-splice":"error","unicorn/no-console-spaces":"error","unicorn/no-document-cookie":"error","unicorn/no-duplicate-set-values":"error","unicorn/no-empty-file":"error","unicorn/no-exports-in-scripts":"error","unicorn/no-for-loop":"error","unicorn/no-hex-escape":"error","unicorn/no-immediate-mutation":"error","unicorn/no-incorrect-query-selector":"error","unicorn/no-instanceof-builtins":"error","unicorn/no-invalid-fetch-options":"error","unicorn/no-invalid-file-input-accept":"off","unicorn/no-invalid-remove-event-listener":"error","unicorn/no-keyword-prefix":"off","unicorn/no-late-current-target-access":"error","unicorn/no-lonely-if":"error","unicorn/no-magic-array-flat-depth":"error","unicorn/no-manually-wrapped-comments":"off","unicorn/no-named-default":"error","unicorn/no-negated-condition":"error","unicorn/no-negation-in-equality-check":"error","unicorn/no-nested-ternary":"error","unicorn/no-new-array":"error","unicorn/no-new-buffer":"error","unicorn/no-null":"error","unicorn/no-object-as-default-parameter":"error","unicorn/no-process-exit":"error","unicorn/no-single-promise-in-promise-methods":"error","unicorn/no-static-only-class":"error","unicorn/no-thenable":"error","unicorn/no-this-assignment":"error","unicorn/no-this-outside-of-class":"error","unicorn/no-typeof-undefined":"error","unicorn/no-unnecessary-array-flat-depth":"error","unicorn/no-unnecessary-array-splice-count":"error","unicorn/no-unnecessary-await":"error","unicorn/no-unnecessary-nested-ternary":"error","unicorn/no-unnecessary-polyfills":"error","unicorn/no-unnecessary-slice-end":"error","unicorn/no-unreadable-array-destructuring":"error","unicorn/no-unreadable-iife":"error","unicorn/no-unused-array-method-return":"error","unicorn/no-unused-properties":"off","unicorn/no-useless-collection-argument":"error","unicorn/no-useless-error-capture-stack-trace":"error","unicorn/no-useless-fallback-in-spread":"error","unicorn/no-useless-iterator-to-array":"error","unicorn/no-useless-length-check":"error","unicorn/no-useless-promise-resolve-reject":"error","unicorn/no-useless-spread":"error","unicorn/no-useless-switch-case":"error","unicorn/no-useless-undefined":"error","unicorn/no-zero-fractions":"error","unicorn/number-literal-case":"error","unicorn/numeric-separators-style":"error","unicorn/prefer-add-event-listener":"error","unicorn/prefer-array-find":"error","unicorn/prefer-array-flat":"error","unicorn/prefer-array-flat-map":"error","unicorn/prefer-array-index-of":"error","unicorn/prefer-array-last-methods":"error","unicorn/prefer-array-some":"error","unicorn/prefer-at":"error","unicorn/prefer-bigint-literals":"error","unicorn/prefer-blob-reading-methods":"error","unicorn/prefer-class-fields":"error","unicorn/prefer-classlist-toggle":"error","unicorn/prefer-code-point":"error","unicorn/prefer-date-now":"error","unicorn/prefer-default-parameters":"error","unicorn/prefer-dom-node-append":"error","unicorn/prefer-dom-node-remove":"error","unicorn/prefer-dom-node-text-content":"error","unicorn/prefer-event-target":"error","unicorn/prefer-export-from":"error","unicorn/prefer-get-or-insert-computed":"error","unicorn/prefer-global-this":"error","unicorn/prefer-https":"error","unicorn/prefer-import-meta-properties":"off","unicorn/prefer-includes":"error","unicorn/prefer-includes-over-repeated-comparisons":"error","unicorn/prefer-iterator-concat":"off","unicorn/prefer-iterator-to-array-at-end":"error","unicorn/prefer-keyboard-event-key":"error","unicorn/prefer-logical-operator-over-ternary":"error","unicorn/prefer-math-abs":"error","unicorn/prefer-math-min-max":"error","unicorn/prefer-math-trunc":"error","unicorn/prefer-modern-dom-apis":"error","unicorn/prefer-modern-math-apis":"error","unicorn/prefer-module":"error","unicorn/prefer-native-coercion-functions":"error","unicorn/prefer-negative-index":"error","unicorn/prefer-node-protocol":"error","unicorn/prefer-number-properties":"error","unicorn/prefer-object-from-entries":"error","unicorn/prefer-optional-catch-binding":"error","unicorn/prefer-prototype-methods":"error","unicorn/prefer-query-selector":"error","unicorn/prefer-queue-microtask":"error","unicorn/prefer-reflect-apply":"error","unicorn/prefer-regexp-test":"error","unicorn/prefer-response-static-json":"error","unicorn/prefer-set-has":"error","unicorn/prefer-set-size":"error","unicorn/prefer-simple-condition-first":"error","unicorn/prefer-single-call":"error","unicorn/prefer-split-limit":"error","unicorn/prefer-spread":"error","unicorn/prefer-string-match-all":"error","unicorn/prefer-string-pad-start-end":"error","unicorn/prefer-string-raw":"error","unicorn/prefer-string-repeat":"error","unicorn/prefer-string-replace-all":"error","unicorn/prefer-string-slice":"error","unicorn/prefer-string-starts-ends-with":"error","unicorn/prefer-string-trim-start-end":"error","unicorn/prefer-structured-clone":"error","unicorn/prefer-switch":"error","unicorn/prefer-ternary":"error","unicorn/prefer-top-level-await":"error","unicorn/prefer-type-error":"error","unicorn/prevent-abbreviations":"error","unicorn/relative-url-style":"error","unicorn/require-array-join-separator":"error","unicorn/require-css-escape":"error","unicorn/require-module-attributes":"error","unicorn/require-module-specifiers":"error","unicorn/require-number-to-fixed-digits-argument":"error","unicorn/require-passive-events":"error","unicorn/require-post-message-target-origin":"off","unicorn/string-content":"off","unicorn/switch-case-braces":"error","unicorn/switch-case-break-position":"error","unicorn/template-indent":"error","unicorn/text-encoding-identifier-case":"error","unicorn/throw-new-error":"error","unicorn/try-complexity":"off"}, files: ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*.astro", "**/*.svelte", "scripts/gspot"]},
 
-    {plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }, 'boundaries/root-path': root }, "rules": {"max-lines":["error",{"max":300,"skipBlankLines":true,"skipComments":true}],"max-lines-per-function":["error",{"max":60,"skipBlankLines":true,"skipComments":true,"IIFEs":true}],"max-params":["error",{"max":7,"countVoidThis":false}],"max-depth":["error",3],"max-statements":["error",30],"max-nested-callbacks":["error",3],"complexity":["error",8],"no-empty-character-class":"off","no-useless-constructor":"error","no-useless-return":"error","no-useless-call":"error","no-useless-rename":"error","no-duplicate-imports":"off","eqeqeq":["error","always"],"no-param-reassign":"error","prefer-const":"error","no-empty":["error",{"allowEmptyCatch":false}],"no-restricted-syntax":["error",{"selector":"TSEnumDeclaration","message":"Use a literal union or an as-const object instead of an enum."},{"selector":"TSAsExpression[expression.type=\"TSAsExpression\"]","message":"Do not assert twice. Narrow the value, improve the type, or add a typed boundary."},{"selector":"TSTypeAssertion[expression.type=\"TSTypeAssertion\"]","message":"Do not assert twice. Narrow the value, improve the type, or add a typed boundary."},{"selector":"TSAsExpression > TSAnyKeyword","message":"Do not assert to any. Add a typed boundary or runtime narrowing instead."},{"selector":"TSTypeAssertion > TSAnyKeyword","message":"Do not assert to any. Add a typed boundary or runtime narrowing instead."},{"selector":"TSAsExpression > TSNeverKeyword","message":"Do not assert to never to silence the type system."},{"selector":"TSTypeAssertion > TSNeverKeyword","message":"Do not assert to never to silence the type system."},{"selector":"LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]","message":"An empty-object fallback hides a missing value. Handle the missing case."},{"selector":"LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]","message":"An empty-object fallback hides a missing value. Handle the missing case."},{"selector":"NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]","message":"Start an error message with a capital letter."},{"selector":"NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]","message":"Start an error message with a capital letter."},{"selector":"CallExpression[callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]","message":"Log a stable message and pass the values as fields."}],"gspot/no-client-env":"error","gspot/no-alias-exports":"error","gspot/no-index-imports":"error","gspot/header-first":"error","gspot/sort-imports":"error","gspot/sort-exports":"error","gspot/import-boundaries":["error",{"folders":["*/*","docs","packages/cli","packages/eslint-plugin","tests"],"aliases":{"#automation/":"scripts/","#cli/":"packages/cli/src/","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#cli-package":"packages/cli/package.json","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json"}}],"import-x/exports-last":"error","gspot/import-direction":["error",{"roles":{"types":["packages/*/src/types/**","tests/types/**","scripts/types/**","docs/src/types/**"],"harness":["tests/harness/**"],"tests":["tests/cli/**","tests/plugin/**","tests/tools/**","tests/packages/**","**/*.test.*"],"config":["packages/*/src/config/**","tests/config/**","scripts/config/**","docs/src/config/**"],"env":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"],"runtime":["packages/*/src/**"]},"aliases":{"#automation/":"scripts/","#cli/":"packages/cli/src/","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#cli-package":"packages/cli/package.json","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json"}}],"gspot/env-owner":["error",{"owners":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"]}],"sonarjs/slow-regex":"off","sonarjs/no-unused-vars":"off","sonarjs/unused-import":"off","sonarjs/no-empty-character-class":"off","sonarjs/no-useless-catch":"off","sonarjs/no-parameter-reassignment":"off","sonarjs/for-loop-increment-sign":"off","sonarjs/no-hardcoded-passwords":"off","sonarjs/no-hardcoded-secrets":"off","sonarjs/no-empty-test-file":"off","sonarjs/cognitive-complexity":["error",8],"sonarjs/no-identical-functions":["error",8],"sonarjs/no-collapsible-if":"error","sonarjs/no-nested-switch":"error","sonarjs/prefer-object-literal":"error","sonarjs/no-commented-code":"error","sonarjs/prefer-immediate-return":"error","unicorn/no-lonely-if":"off","unicorn/prevent-abbreviations":"off","unicorn/filename-case":"off","unicorn/no-null":"off","unicorn/no-useless-undefined":"off","unicorn/import-style":"off","unicorn/prefer-export-from":"off","unicorn/prefer-ternary":["error","only-single-line"],"unicorn/expiring-todo-comments":["error",{"allowWarningComments":false}],"security/detect-child-process":"error","security/detect-disable-mustache-escape":"error","security/detect-eval-with-expression":"off","security/detect-new-buffer":"off","security/detect-non-literal-regexp":"off","security/detect-non-literal-require":"error","security/detect-possible-timing-attacks":"error","security/detect-pseudoRandomBytes":"error","security/detect-unsafe-regex":"off","security/detect-object-injection":"off","security/detect-non-literal-fs-filename":"off","jsdoc/require-jsdoc":["error",{"publicOnly":true,"require":{"FunctionDeclaration":true,"ArrowFunctionExpression":true,"FunctionExpression":true,"MethodDefinition":true}}],"jsdoc/require-description":"error","jsdoc/require-param":"error","jsdoc/require-param-description":"error","jsdoc/require-param-name":"error","jsdoc/require-returns":"error","jsdoc/require-returns-description":"error","jsdoc/check-param-names":"error","jsdoc/check-tag-names":"error","jsdoc/no-types":"off","regexp/no-super-linear-backtracking":"error","regexp/no-empty-alternative":"error","regexp/no-empty-capturing-group":"error","regexp/no-empty-character-class":"error","regexp/no-empty-group":"error","regexp/no-empty-lookarounds-assertion":"error","regexp/no-useless-assertions":"error","regexp/no-useless-backreference":"error","regexp/no-useless-character-class":"error","regexp/no-useless-dollar-replacements":"error","regexp/no-useless-lazy":"error","regexp/no-useless-quantifier":"error","regexp/no-useless-range":"error","regexp/no-lazy-ends":"error","regexp/no-optional-assertion":"error","regexp/no-invalid-regexp":"error","regexp/no-misleading-capturing-group":"error","regexp/no-contradiction-with-assertion":"error","regexp/strict":"error","import-x/export":"error","import-x/first":"error","import-x/newline-after-import":["error",{"count":1}],"import-x/no-cycle":["error",{"ignoreExternal":false}],"import-x/no-self-import":"error","import-x/no-useless-path-segments":"error","import-x/no-empty-named-blocks":"error","import-x/no-duplicates":"error","@eslint-community/eslint-comments/require-description":"error"}, files: ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*.astro", "**/*.svelte", "scripts/gspot"]},
+    {plugins: { gspot, 'import-x': importX, jsdoc, n: nodePlugin, regexp, security, boundaries, '@eslint-community/eslint-comments': eslintComments }, linterOptions: { reportUnusedDisableDirectives: 'error' }, languageOptions: { ecmaVersion: 'latest', sourceType: 'module', globals: globals.es2024 }, settings: { gspot: { root }, 'boundaries/root-path': root }, "rules": {"max-lines":["error",{"max":300,"skipBlankLines":true,"skipComments":true}],"max-lines-per-function":["error",{"max":60,"skipBlankLines":true,"skipComments":true,"IIFEs":true}],"max-params":["error",{"max":7,"countVoidThis":false}],"max-depth":["error",3],"max-statements":["error",30],"max-nested-callbacks":["error",3],"complexity":["error",8],"no-empty-character-class":"off","no-useless-constructor":"error","no-useless-return":"error","no-useless-call":"error","no-useless-rename":"error","no-duplicate-imports":"off","eqeqeq":["error","always"],"no-param-reassign":"error","prefer-const":"error","no-empty":["error",{"allowEmptyCatch":false}],"no-restricted-syntax":["error",{"selector":"TSEnumDeclaration","message":"Use a literal union or an as-const object instead of an enum."},{"selector":"TSAsExpression[expression.type=\"TSAsExpression\"]","message":"Do not assert twice. Narrow the value, improve the type, or add a typed boundary."},{"selector":"TSTypeAssertion[expression.type=\"TSTypeAssertion\"]","message":"Do not assert twice. Narrow the value, improve the type, or add a typed boundary."},{"selector":"TSAsExpression > TSAnyKeyword","message":"Do not assert to any. Add a typed boundary or runtime narrowing instead."},{"selector":"TSTypeAssertion > TSAnyKeyword","message":"Do not assert to any. Add a typed boundary or runtime narrowing instead."},{"selector":"TSAsExpression > TSNeverKeyword","message":"Do not assert to never to silence the type system."},{"selector":"TSTypeAssertion > TSNeverKeyword","message":"Do not assert to never to silence the type system."},{"selector":"LogicalExpression[operator=\"||\"][right.type=\"ObjectExpression\"][right.properties.length=0]","message":"An empty-object fallback hides a missing value. Handle the missing case."},{"selector":"LogicalExpression[operator=\"??\"][right.type=\"ObjectExpression\"][right.properties.length=0]","message":"An empty-object fallback hides a missing value. Handle the missing case."},{"selector":"NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > Literal.arguments:first-child[value=/^[a-z]/]","message":"Start an error message with a capital letter."},{"selector":"NewExpression[callee.name=/Error$/]:matches([arguments.length=1], [arguments.1.type=\"ObjectExpression\"]) > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]","message":"Start an error message with a capital letter."},{"selector":"CallExpression[callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]","message":"Log a stable message and pass the values as fields."}],"gspot/no-client-env":"error","gspot/no-alias-exports":"error","gspot/no-index-imports":"error","gspot/header-first":"error","gspot/sort-imports":"error","gspot/sort-exports":"error","gspot/import-boundaries":["error",{"folders":["*/*","docs","packages/cli","packages/eslint-plugin","tests"],"aliases":{"#automation/":"scripts/","#cli/":"packages/cli/src/","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#cli-package":"packages/cli/package.json","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json"}}],"import-x/exports-last":"error","gspot/env-owner":["error",{"owners":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"]}],"sonarjs/slow-regex":"off","sonarjs/no-unused-vars":"off","sonarjs/unused-import":"off","sonarjs/no-empty-character-class":"off","sonarjs/no-useless-catch":"off","sonarjs/no-parameter-reassignment":"off","sonarjs/for-loop-increment-sign":"off","sonarjs/no-hardcoded-passwords":"off","sonarjs/no-hardcoded-secrets":"off","sonarjs/no-empty-test-file":"off","sonarjs/cognitive-complexity":["error",8],"sonarjs/no-identical-functions":["error",8],"sonarjs/no-collapsible-if":"error","sonarjs/no-nested-switch":"error","sonarjs/prefer-object-literal":"error","sonarjs/no-commented-code":"error","sonarjs/prefer-immediate-return":"error","unicorn/no-lonely-if":"off","unicorn/prevent-abbreviations":"off","unicorn/filename-case":"off","unicorn/no-null":"off","unicorn/no-useless-undefined":"off","unicorn/import-style":"off","unicorn/prefer-export-from":"off","unicorn/prefer-ternary":["error","only-single-line"],"unicorn/expiring-todo-comments":["error",{"allowWarningComments":false}],"security/detect-child-process":"error","security/detect-disable-mustache-escape":"error","security/detect-eval-with-expression":"off","security/detect-new-buffer":"off","security/detect-non-literal-regexp":"off","security/detect-non-literal-require":"error","security/detect-possible-timing-attacks":"error","security/detect-pseudoRandomBytes":"error","security/detect-unsafe-regex":"off","security/detect-object-injection":"off","security/detect-non-literal-fs-filename":"off","jsdoc/require-jsdoc":["error",{"publicOnly":true,"require":{"FunctionDeclaration":true,"ArrowFunctionExpression":true,"FunctionExpression":true,"MethodDefinition":true}}],"jsdoc/require-description":"error","jsdoc/require-param":"error","jsdoc/require-param-description":"error","jsdoc/require-param-name":"error","jsdoc/require-returns":"error","jsdoc/require-returns-description":"error","jsdoc/check-param-names":"error","jsdoc/check-tag-names":"error","jsdoc/no-types":"off","regexp/no-super-linear-backtracking":"error","regexp/no-empty-alternative":"error","regexp/no-empty-capturing-group":"error","regexp/no-empty-character-class":"error","regexp/no-empty-group":"error","regexp/no-empty-lookarounds-assertion":"error","regexp/no-useless-assertions":"error","regexp/no-useless-backreference":"error","regexp/no-useless-character-class":"error","regexp/no-useless-dollar-replacements":"error","regexp/no-useless-lazy":"error","regexp/no-useless-quantifier":"error","regexp/no-useless-range":"error","regexp/no-lazy-ends":"error","regexp/no-optional-assertion":"error","regexp/no-invalid-regexp":"error","regexp/no-misleading-capturing-group":"error","regexp/no-contradiction-with-assertion":"error","regexp/strict":"error","import-x/export":"error","import-x/first":"error","import-x/newline-after-import":["error",{"count":1}],"import-x/no-cycle":["error",{"ignoreExternal":false}],"import-x/no-self-import":"error","import-x/no-useless-path-segments":"error","import-x/no-empty-named-blocks":"error","import-x/no-duplicates":"error","@eslint-community/eslint-comments/require-description":"error"}, files: ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*.astro", "**/*.svelte", "scripts/gspot"]},
     {"rules": {"no-unused-vars":["error",{"args":"all","argsIgnorePattern":"^_","varsIgnorePattern":"^_","destructuredArrayIgnorePattern":"^_"}]}, files: ["**/*.{js,mjs,cjs,jsx}", "scripts/gspot"]},
     {"rules": {"jsdoc/require-param-type":"error","jsdoc/require-returns-type":"error","jsdoc/check-types":"error","jsdoc/no-undefined-types":"error","jsdoc/valid-types":"error"}, files: ["**/*.{js,mjs,cjs,jsx}", "scripts/gspot"]},
 
@@ -297,24 +297,24 @@ export default [
     }
 }, "ignores": [], "rules": {"n/file-extension-in-import":["error","always"]}, files: [["tests/**/*", "**/*", "**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]]},
 
-    {"rules": {"gspot/import-boundaries":["error",{"folders":["*/*","docs","packages/cli","packages/eslint-plugin","tests"],"aliases":{"#cli/":"packages/cli/src/","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#cli-package":"packages/cli/package.json","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#automation/":"scripts/"}}],"gspot/import-direction":["error",{"roles":{"types":["packages/*/src/types/**","tests/types/**","scripts/types/**","docs/src/types/**"],"harness":["tests/harness/**"],"tests":["tests/cli/**","tests/plugin/**","tests/tools/**","tests/packages/**","**/*.test.*"],"config":["packages/*/src/config/**","tests/config/**","scripts/config/**","docs/src/config/**"],"env":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"],"runtime":["packages/*/src/**"]},"aliases":{"#cli/":"packages/cli/src/","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#cli-package":"packages/cli/package.json","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#automation/":"scripts/"},"scope":"docs"}]}, files: ["docs/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
+    {"rules": {"gspot/import-boundaries":["error",{"folders":["*/*","docs","packages/cli","packages/eslint-plugin","tests"],"aliases":{"#cli/":"packages/cli/src/","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#cli-package":"packages/cli/package.json","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#automation/":"scripts/"}}]}, files: ["docs/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
 
-    {"rules": {"gspot/import-boundaries":["error",{"folders":["*/*","docs","packages/cli","packages/eslint-plugin","tests"],"aliases":{"#cli/":"packages/cli/src/","#cli-package":"packages/cli/package.json","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#automation/":"scripts/"}}],"gspot/import-direction":["error",{"roles":{"types":["packages/*/src/types/**","tests/types/**","scripts/types/**","docs/src/types/**"],"harness":["tests/harness/**"],"tests":["tests/cli/**","tests/plugin/**","tests/tools/**","tests/packages/**","**/*.test.*"],"config":["packages/*/src/config/**","tests/config/**","scripts/config/**","docs/src/config/**"],"env":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"],"runtime":["packages/*/src/**"]},"aliases":{"#cli/":"packages/cli/src/","#cli-package":"packages/cli/package.json","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#automation/":"scripts/"},"scope":"packages/cli"}]}, files: ["packages/cli/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
+    {"rules": {"gspot/import-boundaries":["error",{"folders":["*/*","docs","packages/cli","packages/eslint-plugin","tests"],"aliases":{"#cli/":"packages/cli/src/","#cli-package":"packages/cli/package.json","#plugin/":"packages/eslint-plugin/src/","#tests/":"tests/","#docs/":"docs/","#workspace-package":"package.json","#plugin-package":"packages/eslint-plugin/package.json","#automation/":"scripts/"}}]}, files: ["packages/cli/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
 
-    {"rules": {"gspot/import-boundaries":["error",{"folders":["*/*","docs","packages/cli","packages/eslint-plugin","tests"],"aliases":{"#plugin/":"packages/eslint-plugin/src/","#plugin-package":"packages/eslint-plugin/package.json"}}],"gspot/import-direction":["error",{"roles":{"types":["packages/*/src/types/**","tests/types/**","scripts/types/**","docs/src/types/**"],"harness":["tests/harness/**"],"tests":["tests/cli/**","tests/plugin/**","tests/tools/**","tests/packages/**","**/*.test.*"],"config":["packages/*/src/config/**","tests/config/**","scripts/config/**","docs/src/config/**"],"env":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"],"runtime":["packages/*/src/**"]},"aliases":{"#plugin/":"packages/eslint-plugin/src/","#plugin-package":"packages/eslint-plugin/package.json"},"scope":"packages/eslint-plugin"}]}, files: ["packages/eslint-plugin/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
+    {"rules": {"gspot/import-boundaries":["error",{"folders":["*/*","docs","packages/cli","packages/eslint-plugin","tests"],"aliases":{"#plugin/":"packages/eslint-plugin/src/","#plugin-package":"packages/eslint-plugin/package.json"}}]}, files: ["packages/eslint-plugin/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
 
-    {"rules": {"gspot/import-boundaries":["error",{"folders":["*/*","docs","packages/cli","packages/eslint-plugin","tests"],"aliases":{}}],"gspot/import-direction":["error",{"roles":{"types":["packages/*/src/types/**","tests/types/**","scripts/types/**","docs/src/types/**"],"harness":["tests/harness/**"],"tests":["tests/cli/**","tests/plugin/**","tests/tools/**","tests/packages/**","**/*.test.*"],"config":["packages/*/src/config/**","tests/config/**","scripts/config/**","docs/src/config/**"],"env":["packages/cli/src/platform/environment.ts","tests/harness/environment.ts"],"runtime":["packages/*/src/**"]},"aliases":{},"scope":"tests"}]}, files: ["tests/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
+    {"rules": {"gspot/import-boundaries":["error",{"folders":["*/*","docs","packages/cli","packages/eslint-plugin","tests"],"aliases":{}}]}, files: ["tests/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
 
     {settings: { ...{
     "boundaries/files": [
         {
-            "category": "main",
+            "category": "module:main",
             "pattern": [
                 "packages/cli/src/main.ts"
             ]
         },
         {
-            "category": "commands",
+            "category": "module:commands",
             "pattern": [
                 "packages/cli/src/commands/**",
                 "packages/cli/src/config/commands/**",
@@ -322,7 +322,7 @@ export default [
             ]
         },
         {
-            "category": "checks",
+            "category": "module:checks",
             "pattern": [
                 "packages/cli/src/checks/**",
                 "packages/cli/src/config/checks/**",
@@ -330,7 +330,7 @@ export default [
             ]
         },
         {
-            "category": "terminal",
+            "category": "module:terminal",
             "pattern": [
                 "packages/cli/src/terminal/**",
                 "packages/cli/src/config/terminal.ts",
@@ -338,7 +338,7 @@ export default [
             ]
         },
         {
-            "category": "execution",
+            "category": "module:execution",
             "pattern": [
                 "packages/cli/src/execution/**",
                 "packages/cli/src/config/execution/**",
@@ -346,7 +346,7 @@ export default [
             ]
         },
         {
-            "category": "lifecycle",
+            "category": "module:lifecycle",
             "pattern": [
                 "packages/cli/src/lifecycle/**",
                 "packages/cli/src/config/lifecycle/**",
@@ -354,7 +354,7 @@ export default [
             ]
         },
         {
-            "category": "generation",
+            "category": "module:generation",
             "pattern": [
                 "packages/cli/src/generation/**",
                 "packages/cli/src/config/generation/**",
@@ -362,7 +362,7 @@ export default [
             ]
         },
         {
-            "category": "planning",
+            "category": "module:planning",
             "pattern": [
                 "packages/cli/src/planning/**",
                 "packages/cli/src/config/planning.ts",
@@ -370,7 +370,7 @@ export default [
             ]
         },
         {
-            "category": "tools",
+            "category": "module:tools",
             "pattern": [
                 "packages/cli/src/tools/**",
                 "packages/cli/src/config/tools/!(vale).ts",
@@ -378,7 +378,7 @@ export default [
             ]
         },
         {
-            "category": "policy",
+            "category": "module:policy",
             "pattern": [
                 "packages/cli/src/policy/**",
                 "packages/cli/src/config/policy/**",
@@ -386,7 +386,7 @@ export default [
             ]
         },
         {
-            "category": "agent-rules",
+            "category": "module:agent-rules",
             "pattern": [
                 "packages/cli/src/agent-rules/**",
                 "packages/cli/src/config/agent-rules.ts",
@@ -394,7 +394,7 @@ export default [
             ]
         },
         {
-            "category": "configurations",
+            "category": "module:configurations",
             "pattern": [
                 "packages/cli/src/configurations/**",
                 "packages/cli/src/parsers/schema/configurations/**",
@@ -404,7 +404,7 @@ export default [
             ]
         },
         {
-            "category": "repository",
+            "category": "module:repository",
             "pattern": [
                 "packages/cli/src/repository/**",
                 "packages/cli/src/config/repository/**",
@@ -412,7 +412,7 @@ export default [
             ]
         },
         {
-            "category": "parsers",
+            "category": "module:parsers",
             "pattern": [
                 "packages/cli/src/parsers/*.ts",
                 "packages/cli/src/parsers/naming/**",
@@ -428,7 +428,7 @@ export default [
             ]
         },
         {
-            "category": "platform",
+            "category": "module:platform",
             "pattern": [
                 "packages/cli/src/platform/**",
                 "packages/cli/src/config/platform/**",
@@ -436,24 +436,105 @@ export default [
             ]
         },
         {
-            "category": "plugin",
+            "category": "module:plugin",
             "pattern": [
                 "packages/eslint-plugin/src/**",
                 "packages/eslint-plugin/build.ts"
             ]
+        },
+        {
+            "category": "role:test_harness",
+            "pattern": [
+                "tests/harness/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:tests",
+            "pattern": [
+                "tests/cli/**",
+                "tests/plugin/**",
+                "tests/tools/**",
+                "tests/packages/**",
+                "**/*.test.*"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:types",
+            "pattern": [
+                "packages/*/src/types/**",
+                "tests/types/**",
+                "scripts/types/**",
+                "docs/src/types/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:env",
+            "pattern": [
+                "packages/cli/src/platform/environment.ts",
+                "tests/harness/environment.ts"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:config",
+            "pattern": [
+                "packages/*/src/config/**",
+                "tests/config/**",
+                "scripts/config/**",
+                "docs/src/config/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:runtime",
+            "pattern": [
+                "packages/*/src/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:other",
+            "pattern": [
+                "**/*"
+            ]
         }
     ],
-    "boundaries/ignore": [
-        "**/test/**",
-        "**/tests/**",
-        "**/__tests__/**",
-        "**/*.test.*",
-        "**/*.spec.*",
-        "**/test_*.py",
-        "**/*_test.py",
-        "**/conftest.py",
-        "**/Tests/**",
-        "**/*Tests.swift"
+    "boundaries/ignore": [],
+    "boundaries/elements": [
+        {
+            "type": "other",
+            "pattern": "**",
+            "partialMatch": false
+        }
+    ],
+    "boundaries/dependency-nodes": [
+        "require",
+        "dynamic-import"
+    ],
+    "boundaries/additional-dependency-nodes": [
+        {
+            "selector": "ImportDeclaration:not([importKind=type]):matches([specifiers.length=0], :has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier)) > Literal",
+            "kind": "value",
+            "name": "import"
+        },
+        {
+            "selector": "ImportDeclaration:matches([importKind=type], [specifiers.length>0]:not(:has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier))) > Literal",
+            "kind": "type",
+            "name": "import"
+        },
+        {
+            "selector": ":matches(ExportAllDeclaration:not([exportKind=type]), ExportNamedDeclaration:not([exportKind=type]):matches([specifiers.length=0], :has(ExportSpecifier:not([exportKind=type])))) > Literal",
+            "kind": "value",
+            "name": "export"
+        },
+        {
+            "selector": ":matches(ExportAllDeclaration[exportKind=type], ExportNamedDeclaration:matches([exportKind=type], [specifiers.length>0]:not(:has(ExportSpecifier:not([exportKind=type]))))) > Literal",
+            "kind": "type",
+            "name": "export"
+        }
     ]
 }, 'import/resolver': { typescript: { project: [
     "tsconfig.json",
@@ -461,18 +542,18 @@ export default [
     "packages/cli/tsconfig.json",
     "packages/eslint-plugin/tsconfig.json",
     "tests/tsconfig.json"
-].map((project) => join(root, project)) } } }, "ignores": ["docs/**","packages/cli/**","packages/eslint-plugin/**","tests/**"], "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"main"}},"allow":{"to":{"file":{"categories":{"anyOf":["main","commands","platform"]}}}}},{"from":{"file":{"categories":"commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","commands","checks","terminal","execution","lifecycle","generation","tools","policy","agent-rules","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","checks","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"terminal"}},"allow":{"to":{"file":{"categories":{"anyOf":["terminal","execution","parsers","platform"]}}}}},{"from":{"file":{"categories":"execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","execution","lifecycle","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","lifecycle","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","policy","agent-rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","policy","repository","configurations","parsers","platform"]}}}}},{"from":{"file":{"categories":"tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"agent-rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["agent-rules","policy","parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","platform"]}}}}},{"from":{"file":{"categories":"platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["platform"]}}}}},{"from":{"file":{"categories":"plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["plugin"]}}}}}],"checkInternals":false}]}, files: ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "scripts/gspot"]},
+].map((project) => join(root, project)) } } }, "ignores": ["docs/**","packages/cli/**","packages/eslint-plugin/**","tests/**"], "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"module:main"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:main","module:commands","module:platform"]}}}}},{"from":{"file":{"categories":"module:commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:checks","module:execution","module:lifecycle","module:generation","module:tools","module:policy","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:terminal"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:terminal","module:execution","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:execution","module:lifecycle","module:tools","module:policy","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:lifecycle","module:generation","module:tools","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:generation","module:policy","module:agent-rules","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:policy","module:repository","module:configurations","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:generation","module:tools","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:agent-rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:agent-rules","module:policy","module:parsers","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:configurations","module:platform"]}}}}},{"from":{"file":{"categories":"module:platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:platform"]}}}}},{"from":{"file":{"categories":"module:plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:plugin"]}}}}},{"from":{"file":{"isUnknown":true}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"isUnknown":true}}}},{"from":{"file":{"path":["**/test/**","**/tests/**","**/__tests__/**","**/*.test.*","**/*.spec.*","**/test_*.py","**/*_test.py","**/conftest.py","**/Tests/**","**/*Tests.swift"]}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"path":["**/test/**","**/tests/**","**/__tests__/**","**/*.test.*","**/*.spec.*","**/test_*.py","**/*_test.py","**/conftest.py","**/Tests/**","**/*Tests.swift"]}}}},{"from":{"file":{"categories":{"noneOf":["module:main","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:planning","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform","module:plugin"]}}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"categories":{"noneOf":["module:main","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:planning","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform","module:plugin"]}}}}},{"from":{"file":{"categories":"role:types"}},"disallow":{"to":{"file":{"categories":{"noneOf":["role:types"]}}},"dependency":{"kind":"value"}}},{"from":{"file":{"categories":"role:runtime"}},"disallow":{"to":{"file":{"categories":{"anyOf":["role:tests","role:test_harness"]}}}}},{"from":{"file":{"categories":{"anyOf":["role:tests","role:test_harness"]}}},"disallow":{"to":{"file":{"categories":"role:runtime","path":"**/!(public|contracts).*"}},"dependency":{"kind":"value"}}},{"from":{"file":{"categories":{"anyOf":["role:config","role:env"]}}},"disallow":{"to":{"file":{"categories":"role:runtime"}},"dependency":{"kind":"value"}}}],"checkInternals":true}]}, files: ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "scripts/gspot"]},
 
     {settings: { ...{
     "boundaries/files": [
         {
-            "category": "main",
+            "category": "module:main",
             "pattern": [
                 "packages/cli/src/main.ts"
             ]
         },
         {
-            "category": "commands",
+            "category": "module:commands",
             "pattern": [
                 "packages/cli/src/commands/**",
                 "packages/cli/src/config/commands/**",
@@ -480,7 +561,7 @@ export default [
             ]
         },
         {
-            "category": "checks",
+            "category": "module:checks",
             "pattern": [
                 "packages/cli/src/checks/**",
                 "packages/cli/src/config/checks/**",
@@ -488,7 +569,7 @@ export default [
             ]
         },
         {
-            "category": "terminal",
+            "category": "module:terminal",
             "pattern": [
                 "packages/cli/src/terminal/**",
                 "packages/cli/src/config/terminal.ts",
@@ -496,7 +577,7 @@ export default [
             ]
         },
         {
-            "category": "execution",
+            "category": "module:execution",
             "pattern": [
                 "packages/cli/src/execution/**",
                 "packages/cli/src/config/execution/**",
@@ -504,7 +585,7 @@ export default [
             ]
         },
         {
-            "category": "lifecycle",
+            "category": "module:lifecycle",
             "pattern": [
                 "packages/cli/src/lifecycle/**",
                 "packages/cli/src/config/lifecycle/**",
@@ -512,7 +593,7 @@ export default [
             ]
         },
         {
-            "category": "generation",
+            "category": "module:generation",
             "pattern": [
                 "packages/cli/src/generation/**",
                 "packages/cli/src/config/generation/**",
@@ -520,7 +601,7 @@ export default [
             ]
         },
         {
-            "category": "planning",
+            "category": "module:planning",
             "pattern": [
                 "packages/cli/src/planning/**",
                 "packages/cli/src/config/planning.ts",
@@ -528,7 +609,7 @@ export default [
             ]
         },
         {
-            "category": "tools",
+            "category": "module:tools",
             "pattern": [
                 "packages/cli/src/tools/**",
                 "packages/cli/src/config/tools/!(vale).ts",
@@ -536,7 +617,7 @@ export default [
             ]
         },
         {
-            "category": "policy",
+            "category": "module:policy",
             "pattern": [
                 "packages/cli/src/policy/**",
                 "packages/cli/src/config/policy/**",
@@ -544,7 +625,7 @@ export default [
             ]
         },
         {
-            "category": "agent-rules",
+            "category": "module:agent-rules",
             "pattern": [
                 "packages/cli/src/agent-rules/**",
                 "packages/cli/src/config/agent-rules.ts",
@@ -552,7 +633,7 @@ export default [
             ]
         },
         {
-            "category": "configurations",
+            "category": "module:configurations",
             "pattern": [
                 "packages/cli/src/configurations/**",
                 "packages/cli/src/parsers/schema/configurations/**",
@@ -562,7 +643,7 @@ export default [
             ]
         },
         {
-            "category": "repository",
+            "category": "module:repository",
             "pattern": [
                 "packages/cli/src/repository/**",
                 "packages/cli/src/config/repository/**",
@@ -570,7 +651,7 @@ export default [
             ]
         },
         {
-            "category": "parsers",
+            "category": "module:parsers",
             "pattern": [
                 "packages/cli/src/parsers/*.ts",
                 "packages/cli/src/parsers/naming/**",
@@ -586,7 +667,7 @@ export default [
             ]
         },
         {
-            "category": "platform",
+            "category": "module:platform",
             "pattern": [
                 "packages/cli/src/platform/**",
                 "packages/cli/src/config/platform/**",
@@ -594,24 +675,105 @@ export default [
             ]
         },
         {
-            "category": "plugin",
+            "category": "module:plugin",
             "pattern": [
                 "packages/eslint-plugin/src/**",
                 "packages/eslint-plugin/build.ts"
             ]
+        },
+        {
+            "category": "role:test_harness",
+            "pattern": [
+                "tests/harness/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:tests",
+            "pattern": [
+                "tests/cli/**",
+                "tests/plugin/**",
+                "tests/tools/**",
+                "tests/packages/**",
+                "**/*.test.*"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:types",
+            "pattern": [
+                "packages/*/src/types/**",
+                "tests/types/**",
+                "scripts/types/**",
+                "docs/src/types/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:env",
+            "pattern": [
+                "packages/cli/src/platform/environment.ts",
+                "tests/harness/environment.ts"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:config",
+            "pattern": [
+                "packages/*/src/config/**",
+                "tests/config/**",
+                "scripts/config/**",
+                "docs/src/config/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:runtime",
+            "pattern": [
+                "packages/*/src/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:other",
+            "pattern": [
+                "docs/**/*"
+            ]
         }
     ],
-    "boundaries/ignore": [
-        "docs/**/test/**",
-        "docs/**/tests/**",
-        "docs/**/__tests__/**",
-        "docs/**/*.test.*",
-        "docs/**/*.spec.*",
-        "docs/**/test_*.py",
-        "docs/**/*_test.py",
-        "docs/**/conftest.py",
-        "docs/**/Tests/**",
-        "docs/**/*Tests.swift"
+    "boundaries/ignore": [],
+    "boundaries/elements": [
+        {
+            "type": "other",
+            "pattern": "docs/**",
+            "partialMatch": false
+        }
+    ],
+    "boundaries/dependency-nodes": [
+        "require",
+        "dynamic-import"
+    ],
+    "boundaries/additional-dependency-nodes": [
+        {
+            "selector": "ImportDeclaration:not([importKind=type]):matches([specifiers.length=0], :has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier)) > Literal",
+            "kind": "value",
+            "name": "import"
+        },
+        {
+            "selector": "ImportDeclaration:matches([importKind=type], [specifiers.length>0]:not(:has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier))) > Literal",
+            "kind": "type",
+            "name": "import"
+        },
+        {
+            "selector": ":matches(ExportAllDeclaration:not([exportKind=type]), ExportNamedDeclaration:not([exportKind=type]):matches([specifiers.length=0], :has(ExportSpecifier:not([exportKind=type])))) > Literal",
+            "kind": "value",
+            "name": "export"
+        },
+        {
+            "selector": ":matches(ExportAllDeclaration[exportKind=type], ExportNamedDeclaration:matches([exportKind=type], [specifiers.length>0]:not(:has(ExportSpecifier:not([exportKind=type]))))) > Literal",
+            "kind": "type",
+            "name": "export"
+        }
     ]
 }, 'import/resolver': { typescript: { project: [
     "tsconfig.json",
@@ -619,18 +781,18 @@ export default [
     "packages/cli/tsconfig.json",
     "packages/eslint-plugin/tsconfig.json",
     "tests/tsconfig.json"
-].map((project) => join(root, project)) } } }, "ignores": [], "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"main"}},"allow":{"to":{"file":{"categories":{"anyOf":["main","commands","platform"]}}}}},{"from":{"file":{"categories":"commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","commands","checks","terminal","execution","lifecycle","generation","tools","policy","agent-rules","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","checks","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"terminal"}},"allow":{"to":{"file":{"categories":{"anyOf":["terminal","execution","parsers","platform"]}}}}},{"from":{"file":{"categories":"execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","execution","lifecycle","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","lifecycle","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","policy","agent-rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","policy","repository","configurations","parsers","platform"]}}}}},{"from":{"file":{"categories":"tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"agent-rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["agent-rules","policy","parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","platform"]}}}}},{"from":{"file":{"categories":"platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["platform"]}}}}},{"from":{"file":{"categories":"plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["plugin"]}}}}}],"checkInternals":false}]}, files: ["docs/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
+].map((project) => join(root, project)) } } }, "ignores": [], "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"module:main"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:main","module:commands","module:platform"]}}}}},{"from":{"file":{"categories":"module:commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:checks","module:execution","module:lifecycle","module:generation","module:tools","module:policy","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:terminal"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:terminal","module:execution","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:execution","module:lifecycle","module:tools","module:policy","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:lifecycle","module:generation","module:tools","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:generation","module:policy","module:agent-rules","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:policy","module:repository","module:configurations","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:generation","module:tools","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:agent-rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:agent-rules","module:policy","module:parsers","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:configurations","module:platform"]}}}}},{"from":{"file":{"categories":"module:platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:platform"]}}}}},{"from":{"file":{"categories":"module:plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:plugin"]}}}}},{"from":{"file":{"isUnknown":true}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"isUnknown":true}}}},{"from":{"file":{"path":["docs/**/test/**","docs/**/tests/**","docs/**/__tests__/**","docs/**/*.test.*","docs/**/*.spec.*","docs/**/test_*.py","docs/**/*_test.py","docs/**/conftest.py","docs/**/Tests/**","docs/**/*Tests.swift"]}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"path":["docs/**/test/**","docs/**/tests/**","docs/**/__tests__/**","docs/**/*.test.*","docs/**/*.spec.*","docs/**/test_*.py","docs/**/*_test.py","docs/**/conftest.py","docs/**/Tests/**","docs/**/*Tests.swift"]}}}},{"from":{"file":{"categories":{"noneOf":["module:main","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:planning","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform","module:plugin"]}}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"categories":{"noneOf":["module:main","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:planning","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform","module:plugin"]}}}}},{"from":{"file":{"categories":"role:types"}},"disallow":{"to":{"file":{"categories":{"noneOf":["role:types"]}}},"dependency":{"kind":"value"}}},{"from":{"file":{"categories":"role:runtime"}},"disallow":{"to":{"file":{"categories":{"anyOf":["role:tests","role:test_harness"]}}}}},{"from":{"file":{"categories":{"anyOf":["role:tests","role:test_harness"]}}},"disallow":{"to":{"file":{"categories":"role:runtime","path":"**/!(public|contracts).*"}},"dependency":{"kind":"value"}}},{"from":{"file":{"categories":{"anyOf":["role:config","role:env"]}}},"disallow":{"to":{"file":{"categories":"role:runtime"}},"dependency":{"kind":"value"}}}],"checkInternals":true}]}, files: ["docs/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
 
     {settings: { ...{
     "boundaries/files": [
         {
-            "category": "main",
+            "category": "module:main",
             "pattern": [
                 "packages/cli/src/main.ts"
             ]
         },
         {
-            "category": "commands",
+            "category": "module:commands",
             "pattern": [
                 "packages/cli/src/commands/**",
                 "packages/cli/src/config/commands/**",
@@ -638,7 +800,7 @@ export default [
             ]
         },
         {
-            "category": "checks",
+            "category": "module:checks",
             "pattern": [
                 "packages/cli/src/checks/**",
                 "packages/cli/src/config/checks/**",
@@ -646,7 +808,7 @@ export default [
             ]
         },
         {
-            "category": "terminal",
+            "category": "module:terminal",
             "pattern": [
                 "packages/cli/src/terminal/**",
                 "packages/cli/src/config/terminal.ts",
@@ -654,7 +816,7 @@ export default [
             ]
         },
         {
-            "category": "execution",
+            "category": "module:execution",
             "pattern": [
                 "packages/cli/src/execution/**",
                 "packages/cli/src/config/execution/**",
@@ -662,7 +824,7 @@ export default [
             ]
         },
         {
-            "category": "lifecycle",
+            "category": "module:lifecycle",
             "pattern": [
                 "packages/cli/src/lifecycle/**",
                 "packages/cli/src/config/lifecycle/**",
@@ -670,7 +832,7 @@ export default [
             ]
         },
         {
-            "category": "generation",
+            "category": "module:generation",
             "pattern": [
                 "packages/cli/src/generation/**",
                 "packages/cli/src/config/generation/**",
@@ -678,7 +840,7 @@ export default [
             ]
         },
         {
-            "category": "planning",
+            "category": "module:planning",
             "pattern": [
                 "packages/cli/src/planning/**",
                 "packages/cli/src/config/planning.ts",
@@ -686,7 +848,7 @@ export default [
             ]
         },
         {
-            "category": "tools",
+            "category": "module:tools",
             "pattern": [
                 "packages/cli/src/tools/**",
                 "packages/cli/src/config/tools/!(vale).ts",
@@ -694,7 +856,7 @@ export default [
             ]
         },
         {
-            "category": "policy",
+            "category": "module:policy",
             "pattern": [
                 "packages/cli/src/policy/**",
                 "packages/cli/src/config/policy/**",
@@ -702,7 +864,7 @@ export default [
             ]
         },
         {
-            "category": "agent-rules",
+            "category": "module:agent-rules",
             "pattern": [
                 "packages/cli/src/agent-rules/**",
                 "packages/cli/src/config/agent-rules.ts",
@@ -710,7 +872,7 @@ export default [
             ]
         },
         {
-            "category": "configurations",
+            "category": "module:configurations",
             "pattern": [
                 "packages/cli/src/configurations/**",
                 "packages/cli/src/parsers/schema/configurations/**",
@@ -720,7 +882,7 @@ export default [
             ]
         },
         {
-            "category": "repository",
+            "category": "module:repository",
             "pattern": [
                 "packages/cli/src/repository/**",
                 "packages/cli/src/config/repository/**",
@@ -728,7 +890,7 @@ export default [
             ]
         },
         {
-            "category": "parsers",
+            "category": "module:parsers",
             "pattern": [
                 "packages/cli/src/parsers/*.ts",
                 "packages/cli/src/parsers/naming/**",
@@ -744,7 +906,7 @@ export default [
             ]
         },
         {
-            "category": "platform",
+            "category": "module:platform",
             "pattern": [
                 "packages/cli/src/platform/**",
                 "packages/cli/src/config/platform/**",
@@ -752,24 +914,105 @@ export default [
             ]
         },
         {
-            "category": "plugin",
+            "category": "module:plugin",
             "pattern": [
                 "packages/eslint-plugin/src/**",
                 "packages/eslint-plugin/build.ts"
             ]
+        },
+        {
+            "category": "role:test_harness",
+            "pattern": [
+                "tests/harness/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:tests",
+            "pattern": [
+                "tests/cli/**",
+                "tests/plugin/**",
+                "tests/tools/**",
+                "tests/packages/**",
+                "**/*.test.*"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:types",
+            "pattern": [
+                "packages/*/src/types/**",
+                "tests/types/**",
+                "scripts/types/**",
+                "docs/src/types/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:env",
+            "pattern": [
+                "packages/cli/src/platform/environment.ts",
+                "tests/harness/environment.ts"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:config",
+            "pattern": [
+                "packages/*/src/config/**",
+                "tests/config/**",
+                "scripts/config/**",
+                "docs/src/config/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:runtime",
+            "pattern": [
+                "packages/*/src/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:other",
+            "pattern": [
+                "packages/cli/**/*"
+            ]
         }
     ],
-    "boundaries/ignore": [
-        "packages/cli/**/test/**",
-        "packages/cli/**/tests/**",
-        "packages/cli/**/__tests__/**",
-        "packages/cli/**/*.test.*",
-        "packages/cli/**/*.spec.*",
-        "packages/cli/**/test_*.py",
-        "packages/cli/**/*_test.py",
-        "packages/cli/**/conftest.py",
-        "packages/cli/**/Tests/**",
-        "packages/cli/**/*Tests.swift"
+    "boundaries/ignore": [],
+    "boundaries/elements": [
+        {
+            "type": "other",
+            "pattern": "packages/cli/**",
+            "partialMatch": false
+        }
+    ],
+    "boundaries/dependency-nodes": [
+        "require",
+        "dynamic-import"
+    ],
+    "boundaries/additional-dependency-nodes": [
+        {
+            "selector": "ImportDeclaration:not([importKind=type]):matches([specifiers.length=0], :has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier)) > Literal",
+            "kind": "value",
+            "name": "import"
+        },
+        {
+            "selector": "ImportDeclaration:matches([importKind=type], [specifiers.length>0]:not(:has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier))) > Literal",
+            "kind": "type",
+            "name": "import"
+        },
+        {
+            "selector": ":matches(ExportAllDeclaration:not([exportKind=type]), ExportNamedDeclaration:not([exportKind=type]):matches([specifiers.length=0], :has(ExportSpecifier:not([exportKind=type])))) > Literal",
+            "kind": "value",
+            "name": "export"
+        },
+        {
+            "selector": ":matches(ExportAllDeclaration[exportKind=type], ExportNamedDeclaration:matches([exportKind=type], [specifiers.length>0]:not(:has(ExportSpecifier:not([exportKind=type]))))) > Literal",
+            "kind": "type",
+            "name": "export"
+        }
     ]
 }, 'import/resolver': { typescript: { project: [
     "tsconfig.json",
@@ -777,18 +1020,18 @@ export default [
     "packages/cli/tsconfig.json",
     "packages/eslint-plugin/tsconfig.json",
     "tests/tsconfig.json"
-].map((project) => join(root, project)) } } }, "ignores": [], "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"main"}},"allow":{"to":{"file":{"categories":{"anyOf":["main","commands","platform"]}}}}},{"from":{"file":{"categories":"commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","commands","checks","terminal","execution","lifecycle","generation","tools","policy","agent-rules","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","checks","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"terminal"}},"allow":{"to":{"file":{"categories":{"anyOf":["terminal","execution","parsers","platform"]}}}}},{"from":{"file":{"categories":"execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","execution","lifecycle","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","lifecycle","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","policy","agent-rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","policy","repository","configurations","parsers","platform"]}}}}},{"from":{"file":{"categories":"tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"agent-rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["agent-rules","policy","parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","platform"]}}}}},{"from":{"file":{"categories":"platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["platform"]}}}}},{"from":{"file":{"categories":"plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["plugin"]}}}}}],"checkInternals":false}]}, files: ["packages/cli/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
+].map((project) => join(root, project)) } } }, "ignores": [], "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"module:main"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:main","module:commands","module:platform"]}}}}},{"from":{"file":{"categories":"module:commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:checks","module:execution","module:lifecycle","module:generation","module:tools","module:policy","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:terminal"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:terminal","module:execution","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:execution","module:lifecycle","module:tools","module:policy","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:lifecycle","module:generation","module:tools","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:generation","module:policy","module:agent-rules","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:policy","module:repository","module:configurations","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:generation","module:tools","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:agent-rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:agent-rules","module:policy","module:parsers","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:configurations","module:platform"]}}}}},{"from":{"file":{"categories":"module:platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:platform"]}}}}},{"from":{"file":{"categories":"module:plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:plugin"]}}}}},{"from":{"file":{"isUnknown":true}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"isUnknown":true}}}},{"from":{"file":{"path":["packages/cli/**/test/**","packages/cli/**/tests/**","packages/cli/**/__tests__/**","packages/cli/**/*.test.*","packages/cli/**/*.spec.*","packages/cli/**/test_*.py","packages/cli/**/*_test.py","packages/cli/**/conftest.py","packages/cli/**/Tests/**","packages/cli/**/*Tests.swift"]}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"path":["packages/cli/**/test/**","packages/cli/**/tests/**","packages/cli/**/__tests__/**","packages/cli/**/*.test.*","packages/cli/**/*.spec.*","packages/cli/**/test_*.py","packages/cli/**/*_test.py","packages/cli/**/conftest.py","packages/cli/**/Tests/**","packages/cli/**/*Tests.swift"]}}}},{"from":{"file":{"categories":{"noneOf":["module:main","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:planning","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform","module:plugin"]}}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"categories":{"noneOf":["module:main","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:planning","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform","module:plugin"]}}}}},{"from":{"file":{"categories":"role:types"}},"disallow":{"to":{"file":{"categories":{"noneOf":["role:types"]}}},"dependency":{"kind":"value"}}},{"from":{"file":{"categories":"role:runtime"}},"disallow":{"to":{"file":{"categories":{"anyOf":["role:tests","role:test_harness"]}}}}},{"from":{"file":{"categories":{"anyOf":["role:tests","role:test_harness"]}}},"disallow":{"to":{"file":{"categories":"role:runtime","path":"**/!(public|contracts).*"}},"dependency":{"kind":"value"}}},{"from":{"file":{"categories":{"anyOf":["role:config","role:env"]}}},"disallow":{"to":{"file":{"categories":"role:runtime"}},"dependency":{"kind":"value"}}}],"checkInternals":true}]}, files: ["packages/cli/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
 
     {settings: { ...{
     "boundaries/files": [
         {
-            "category": "main",
+            "category": "module:main",
             "pattern": [
                 "packages/cli/src/main.ts"
             ]
         },
         {
-            "category": "commands",
+            "category": "module:commands",
             "pattern": [
                 "packages/cli/src/commands/**",
                 "packages/cli/src/config/commands/**",
@@ -796,7 +1039,7 @@ export default [
             ]
         },
         {
-            "category": "checks",
+            "category": "module:checks",
             "pattern": [
                 "packages/cli/src/checks/**",
                 "packages/cli/src/config/checks/**",
@@ -804,7 +1047,7 @@ export default [
             ]
         },
         {
-            "category": "terminal",
+            "category": "module:terminal",
             "pattern": [
                 "packages/cli/src/terminal/**",
                 "packages/cli/src/config/terminal.ts",
@@ -812,7 +1055,7 @@ export default [
             ]
         },
         {
-            "category": "execution",
+            "category": "module:execution",
             "pattern": [
                 "packages/cli/src/execution/**",
                 "packages/cli/src/config/execution/**",
@@ -820,7 +1063,7 @@ export default [
             ]
         },
         {
-            "category": "lifecycle",
+            "category": "module:lifecycle",
             "pattern": [
                 "packages/cli/src/lifecycle/**",
                 "packages/cli/src/config/lifecycle/**",
@@ -828,7 +1071,7 @@ export default [
             ]
         },
         {
-            "category": "generation",
+            "category": "module:generation",
             "pattern": [
                 "packages/cli/src/generation/**",
                 "packages/cli/src/config/generation/**",
@@ -836,7 +1079,7 @@ export default [
             ]
         },
         {
-            "category": "planning",
+            "category": "module:planning",
             "pattern": [
                 "packages/cli/src/planning/**",
                 "packages/cli/src/config/planning.ts",
@@ -844,7 +1087,7 @@ export default [
             ]
         },
         {
-            "category": "tools",
+            "category": "module:tools",
             "pattern": [
                 "packages/cli/src/tools/**",
                 "packages/cli/src/config/tools/!(vale).ts",
@@ -852,7 +1095,7 @@ export default [
             ]
         },
         {
-            "category": "policy",
+            "category": "module:policy",
             "pattern": [
                 "packages/cli/src/policy/**",
                 "packages/cli/src/config/policy/**",
@@ -860,7 +1103,7 @@ export default [
             ]
         },
         {
-            "category": "agent-rules",
+            "category": "module:agent-rules",
             "pattern": [
                 "packages/cli/src/agent-rules/**",
                 "packages/cli/src/config/agent-rules.ts",
@@ -868,7 +1111,7 @@ export default [
             ]
         },
         {
-            "category": "configurations",
+            "category": "module:configurations",
             "pattern": [
                 "packages/cli/src/configurations/**",
                 "packages/cli/src/parsers/schema/configurations/**",
@@ -878,7 +1121,7 @@ export default [
             ]
         },
         {
-            "category": "repository",
+            "category": "module:repository",
             "pattern": [
                 "packages/cli/src/repository/**",
                 "packages/cli/src/config/repository/**",
@@ -886,7 +1129,7 @@ export default [
             ]
         },
         {
-            "category": "parsers",
+            "category": "module:parsers",
             "pattern": [
                 "packages/cli/src/parsers/*.ts",
                 "packages/cli/src/parsers/naming/**",
@@ -902,7 +1145,7 @@ export default [
             ]
         },
         {
-            "category": "platform",
+            "category": "module:platform",
             "pattern": [
                 "packages/cli/src/platform/**",
                 "packages/cli/src/config/platform/**",
@@ -910,24 +1153,105 @@ export default [
             ]
         },
         {
-            "category": "plugin",
+            "category": "module:plugin",
             "pattern": [
                 "packages/eslint-plugin/src/**",
                 "packages/eslint-plugin/build.ts"
             ]
+        },
+        {
+            "category": "role:test_harness",
+            "pattern": [
+                "tests/harness/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:tests",
+            "pattern": [
+                "tests/cli/**",
+                "tests/plugin/**",
+                "tests/tools/**",
+                "tests/packages/**",
+                "**/*.test.*"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:types",
+            "pattern": [
+                "packages/*/src/types/**",
+                "tests/types/**",
+                "scripts/types/**",
+                "docs/src/types/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:env",
+            "pattern": [
+                "packages/cli/src/platform/environment.ts",
+                "tests/harness/environment.ts"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:config",
+            "pattern": [
+                "packages/*/src/config/**",
+                "tests/config/**",
+                "scripts/config/**",
+                "docs/src/config/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:runtime",
+            "pattern": [
+                "packages/*/src/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:other",
+            "pattern": [
+                "packages/eslint-plugin/**/*"
+            ]
         }
     ],
-    "boundaries/ignore": [
-        "packages/eslint-plugin/**/test/**",
-        "packages/eslint-plugin/**/tests/**",
-        "packages/eslint-plugin/**/__tests__/**",
-        "packages/eslint-plugin/**/*.test.*",
-        "packages/eslint-plugin/**/*.spec.*",
-        "packages/eslint-plugin/**/test_*.py",
-        "packages/eslint-plugin/**/*_test.py",
-        "packages/eslint-plugin/**/conftest.py",
-        "packages/eslint-plugin/**/Tests/**",
-        "packages/eslint-plugin/**/*Tests.swift"
+    "boundaries/ignore": [],
+    "boundaries/elements": [
+        {
+            "type": "other",
+            "pattern": "packages/eslint-plugin/**",
+            "partialMatch": false
+        }
+    ],
+    "boundaries/dependency-nodes": [
+        "require",
+        "dynamic-import"
+    ],
+    "boundaries/additional-dependency-nodes": [
+        {
+            "selector": "ImportDeclaration:not([importKind=type]):matches([specifiers.length=0], :has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier)) > Literal",
+            "kind": "value",
+            "name": "import"
+        },
+        {
+            "selector": "ImportDeclaration:matches([importKind=type], [specifiers.length>0]:not(:has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier))) > Literal",
+            "kind": "type",
+            "name": "import"
+        },
+        {
+            "selector": ":matches(ExportAllDeclaration:not([exportKind=type]), ExportNamedDeclaration:not([exportKind=type]):matches([specifiers.length=0], :has(ExportSpecifier:not([exportKind=type])))) > Literal",
+            "kind": "value",
+            "name": "export"
+        },
+        {
+            "selector": ":matches(ExportAllDeclaration[exportKind=type], ExportNamedDeclaration:matches([exportKind=type], [specifiers.length>0]:not(:has(ExportSpecifier:not([exportKind=type]))))) > Literal",
+            "kind": "type",
+            "name": "export"
+        }
     ]
 }, 'import/resolver': { typescript: { project: [
     "tsconfig.json",
@@ -935,18 +1259,18 @@ export default [
     "packages/cli/tsconfig.json",
     "packages/eslint-plugin/tsconfig.json",
     "tests/tsconfig.json"
-].map((project) => join(root, project)) } } }, "ignores": [], "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"main"}},"allow":{"to":{"file":{"categories":{"anyOf":["main","commands","platform"]}}}}},{"from":{"file":{"categories":"commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","commands","checks","terminal","execution","lifecycle","generation","tools","policy","agent-rules","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","checks","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"terminal"}},"allow":{"to":{"file":{"categories":{"anyOf":["terminal","execution","parsers","platform"]}}}}},{"from":{"file":{"categories":"execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","execution","lifecycle","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","lifecycle","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","policy","agent-rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","policy","repository","configurations","parsers","platform"]}}}}},{"from":{"file":{"categories":"tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"agent-rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["agent-rules","policy","parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","platform"]}}}}},{"from":{"file":{"categories":"platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["platform"]}}}}},{"from":{"file":{"categories":"plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["plugin"]}}}}}],"checkInternals":false}]}, files: ["packages/eslint-plugin/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
+].map((project) => join(root, project)) } } }, "ignores": [], "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"module:main"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:main","module:commands","module:platform"]}}}}},{"from":{"file":{"categories":"module:commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:checks","module:execution","module:lifecycle","module:generation","module:tools","module:policy","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:terminal"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:terminal","module:execution","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:execution","module:lifecycle","module:tools","module:policy","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:lifecycle","module:generation","module:tools","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:generation","module:policy","module:agent-rules","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:policy","module:repository","module:configurations","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:generation","module:tools","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:agent-rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:agent-rules","module:policy","module:parsers","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:configurations","module:platform"]}}}}},{"from":{"file":{"categories":"module:platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:platform"]}}}}},{"from":{"file":{"categories":"module:plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:plugin"]}}}}},{"from":{"file":{"isUnknown":true}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"isUnknown":true}}}},{"from":{"file":{"path":["packages/eslint-plugin/**/test/**","packages/eslint-plugin/**/tests/**","packages/eslint-plugin/**/__tests__/**","packages/eslint-plugin/**/*.test.*","packages/eslint-plugin/**/*.spec.*","packages/eslint-plugin/**/test_*.py","packages/eslint-plugin/**/*_test.py","packages/eslint-plugin/**/conftest.py","packages/eslint-plugin/**/Tests/**","packages/eslint-plugin/**/*Tests.swift"]}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"path":["packages/eslint-plugin/**/test/**","packages/eslint-plugin/**/tests/**","packages/eslint-plugin/**/__tests__/**","packages/eslint-plugin/**/*.test.*","packages/eslint-plugin/**/*.spec.*","packages/eslint-plugin/**/test_*.py","packages/eslint-plugin/**/*_test.py","packages/eslint-plugin/**/conftest.py","packages/eslint-plugin/**/Tests/**","packages/eslint-plugin/**/*Tests.swift"]}}}},{"from":{"file":{"categories":{"noneOf":["module:main","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:planning","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform","module:plugin"]}}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"categories":{"noneOf":["module:main","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:planning","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform","module:plugin"]}}}}},{"from":{"file":{"categories":"role:types"}},"disallow":{"to":{"file":{"categories":{"noneOf":["role:types"]}}},"dependency":{"kind":"value"}}},{"from":{"file":{"categories":"role:runtime"}},"disallow":{"to":{"file":{"categories":{"anyOf":["role:tests","role:test_harness"]}}}}},{"from":{"file":{"categories":{"anyOf":["role:tests","role:test_harness"]}}},"disallow":{"to":{"file":{"categories":"role:runtime","path":"**/!(public|contracts).*"}},"dependency":{"kind":"value"}}},{"from":{"file":{"categories":{"anyOf":["role:config","role:env"]}}},"disallow":{"to":{"file":{"categories":"role:runtime"}},"dependency":{"kind":"value"}}}],"checkInternals":true}]}, files: ["packages/eslint-plugin/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
 
     {settings: { ...{
     "boundaries/files": [
         {
-            "category": "main",
+            "category": "module:main",
             "pattern": [
                 "packages/cli/src/main.ts"
             ]
         },
         {
-            "category": "commands",
+            "category": "module:commands",
             "pattern": [
                 "packages/cli/src/commands/**",
                 "packages/cli/src/config/commands/**",
@@ -954,7 +1278,7 @@ export default [
             ]
         },
         {
-            "category": "checks",
+            "category": "module:checks",
             "pattern": [
                 "packages/cli/src/checks/**",
                 "packages/cli/src/config/checks/**",
@@ -962,7 +1286,7 @@ export default [
             ]
         },
         {
-            "category": "terminal",
+            "category": "module:terminal",
             "pattern": [
                 "packages/cli/src/terminal/**",
                 "packages/cli/src/config/terminal.ts",
@@ -970,7 +1294,7 @@ export default [
             ]
         },
         {
-            "category": "execution",
+            "category": "module:execution",
             "pattern": [
                 "packages/cli/src/execution/**",
                 "packages/cli/src/config/execution/**",
@@ -978,7 +1302,7 @@ export default [
             ]
         },
         {
-            "category": "lifecycle",
+            "category": "module:lifecycle",
             "pattern": [
                 "packages/cli/src/lifecycle/**",
                 "packages/cli/src/config/lifecycle/**",
@@ -986,7 +1310,7 @@ export default [
             ]
         },
         {
-            "category": "generation",
+            "category": "module:generation",
             "pattern": [
                 "packages/cli/src/generation/**",
                 "packages/cli/src/config/generation/**",
@@ -994,7 +1318,7 @@ export default [
             ]
         },
         {
-            "category": "planning",
+            "category": "module:planning",
             "pattern": [
                 "packages/cli/src/planning/**",
                 "packages/cli/src/config/planning.ts",
@@ -1002,7 +1326,7 @@ export default [
             ]
         },
         {
-            "category": "tools",
+            "category": "module:tools",
             "pattern": [
                 "packages/cli/src/tools/**",
                 "packages/cli/src/config/tools/!(vale).ts",
@@ -1010,7 +1334,7 @@ export default [
             ]
         },
         {
-            "category": "policy",
+            "category": "module:policy",
             "pattern": [
                 "packages/cli/src/policy/**",
                 "packages/cli/src/config/policy/**",
@@ -1018,7 +1342,7 @@ export default [
             ]
         },
         {
-            "category": "agent-rules",
+            "category": "module:agent-rules",
             "pattern": [
                 "packages/cli/src/agent-rules/**",
                 "packages/cli/src/config/agent-rules.ts",
@@ -1026,7 +1350,7 @@ export default [
             ]
         },
         {
-            "category": "configurations",
+            "category": "module:configurations",
             "pattern": [
                 "packages/cli/src/configurations/**",
                 "packages/cli/src/parsers/schema/configurations/**",
@@ -1036,7 +1360,7 @@ export default [
             ]
         },
         {
-            "category": "repository",
+            "category": "module:repository",
             "pattern": [
                 "packages/cli/src/repository/**",
                 "packages/cli/src/config/repository/**",
@@ -1044,7 +1368,7 @@ export default [
             ]
         },
         {
-            "category": "parsers",
+            "category": "module:parsers",
             "pattern": [
                 "packages/cli/src/parsers/*.ts",
                 "packages/cli/src/parsers/naming/**",
@@ -1060,7 +1384,7 @@ export default [
             ]
         },
         {
-            "category": "platform",
+            "category": "module:platform",
             "pattern": [
                 "packages/cli/src/platform/**",
                 "packages/cli/src/config/platform/**",
@@ -1068,24 +1392,105 @@ export default [
             ]
         },
         {
-            "category": "plugin",
+            "category": "module:plugin",
             "pattern": [
                 "packages/eslint-plugin/src/**",
                 "packages/eslint-plugin/build.ts"
             ]
+        },
+        {
+            "category": "role:test_harness",
+            "pattern": [
+                "tests/harness/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:tests",
+            "pattern": [
+                "tests/cli/**",
+                "tests/plugin/**",
+                "tests/tools/**",
+                "tests/packages/**",
+                "**/*.test.*"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:types",
+            "pattern": [
+                "packages/*/src/types/**",
+                "tests/types/**",
+                "scripts/types/**",
+                "docs/src/types/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:env",
+            "pattern": [
+                "packages/cli/src/platform/environment.ts",
+                "tests/harness/environment.ts"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:config",
+            "pattern": [
+                "packages/*/src/config/**",
+                "tests/config/**",
+                "scripts/config/**",
+                "docs/src/config/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:runtime",
+            "pattern": [
+                "packages/*/src/**"
+            ],
+            "stopMatching": true
+        },
+        {
+            "category": "role:other",
+            "pattern": [
+                "tests/**/*"
+            ]
         }
     ],
-    "boundaries/ignore": [
-        "tests/**/test/**",
-        "tests/**/tests/**",
-        "tests/**/__tests__/**",
-        "tests/**/*.test.*",
-        "tests/**/*.spec.*",
-        "tests/**/test_*.py",
-        "tests/**/*_test.py",
-        "tests/**/conftest.py",
-        "tests/**/Tests/**",
-        "tests/**/*Tests.swift"
+    "boundaries/ignore": [],
+    "boundaries/elements": [
+        {
+            "type": "other",
+            "pattern": "tests/**",
+            "partialMatch": false
+        }
+    ],
+    "boundaries/dependency-nodes": [
+        "require",
+        "dynamic-import"
+    ],
+    "boundaries/additional-dependency-nodes": [
+        {
+            "selector": "ImportDeclaration:not([importKind=type]):matches([specifiers.length=0], :has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier)) > Literal",
+            "kind": "value",
+            "name": "import"
+        },
+        {
+            "selector": "ImportDeclaration:matches([importKind=type], [specifiers.length>0]:not(:has(ImportSpecifier:not([importKind=type]), ImportDefaultSpecifier, ImportNamespaceSpecifier))) > Literal",
+            "kind": "type",
+            "name": "import"
+        },
+        {
+            "selector": ":matches(ExportAllDeclaration:not([exportKind=type]), ExportNamedDeclaration:not([exportKind=type]):matches([specifiers.length=0], :has(ExportSpecifier:not([exportKind=type])))) > Literal",
+            "kind": "value",
+            "name": "export"
+        },
+        {
+            "selector": ":matches(ExportAllDeclaration[exportKind=type], ExportNamedDeclaration:matches([exportKind=type], [specifiers.length>0]:not(:has(ExportSpecifier:not([exportKind=type]))))) > Literal",
+            "kind": "type",
+            "name": "export"
+        }
     ]
 }, 'import/resolver': { typescript: { project: [
     "tsconfig.json",
@@ -1093,7 +1498,7 @@ export default [
     "packages/cli/tsconfig.json",
     "packages/eslint-plugin/tsconfig.json",
     "tests/tsconfig.json"
-].map((project) => join(root, project)) } } }, "ignores": [], "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"main"}},"allow":{"to":{"file":{"categories":{"anyOf":["main","commands","platform"]}}}}},{"from":{"file":{"categories":"commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","commands","checks","terminal","execution","lifecycle","generation","tools","policy","agent-rules","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","checks","execution","lifecycle","generation","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"terminal"}},"allow":{"to":{"file":{"categories":{"anyOf":["terminal","execution","parsers","platform"]}}}}},{"from":{"file":{"categories":"execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","execution","lifecycle","tools","policy","configurations","repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","lifecycle","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","policy","agent-rules","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","policy","repository","configurations","parsers","platform"]}}}}},{"from":{"file":{"categories":"tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["planning","parsers","generation","tools","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","policy","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"agent-rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["agent-rules","policy","parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","repository","platform"]}}}}},{"from":{"file":{"categories":"repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["repository","parsers","platform"]}}}}},{"from":{"file":{"categories":"parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["parsers","configurations","platform"]}}}}},{"from":{"file":{"categories":"platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["platform"]}}}}},{"from":{"file":{"categories":"plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["plugin"]}}}}}],"checkInternals":false}]}, files: ["tests/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
+].map((project) => join(root, project)) } } }, "ignores": [], "rules": {"boundaries/dependencies":["error",{"default":"disallow","policies":[{"from":{"file":{"categories":"module:main"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:main","module:commands","module:platform"]}}}}},{"from":{"file":{"categories":"module:commands"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:checks"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:checks","module:execution","module:lifecycle","module:generation","module:tools","module:policy","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:terminal"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:terminal","module:execution","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:execution"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:execution","module:lifecycle","module:tools","module:policy","module:configurations","module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:lifecycle"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:lifecycle","module:generation","module:tools","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:generation"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:generation","module:policy","module:agent-rules","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:planning"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:policy","module:repository","module:configurations","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:tools"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:planning","module:parsers","module:generation","module:tools","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:policy"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:policy","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:agent-rules"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:agent-rules","module:policy","module:parsers","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:configurations"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:configurations","module:repository","module:platform"]}}}}},{"from":{"file":{"categories":"module:repository"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:repository","module:parsers","module:platform"]}}}}},{"from":{"file":{"categories":"module:parsers"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:parsers","module:configurations","module:platform"]}}}}},{"from":{"file":{"categories":"module:platform"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:platform"]}}}}},{"from":{"file":{"categories":"module:plugin"}},"allow":{"to":{"file":{"categories":{"anyOf":["module:plugin"]}}}}},{"from":{"file":{"isUnknown":true}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"isUnknown":true}}}},{"from":{"file":{"path":["tests/**/test/**","tests/**/tests/**","tests/**/__tests__/**","tests/**/*.test.*","tests/**/*.spec.*","tests/**/test_*.py","tests/**/*_test.py","tests/**/conftest.py","tests/**/Tests/**","tests/**/*Tests.swift"]}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"path":["tests/**/test/**","tests/**/tests/**","tests/**/__tests__/**","tests/**/*.test.*","tests/**/*.spec.*","tests/**/test_*.py","tests/**/*_test.py","tests/**/conftest.py","tests/**/Tests/**","tests/**/*Tests.swift"]}}}},{"from":{"file":{"categories":{"noneOf":["module:main","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:planning","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform","module:plugin"]}}},"allow":{"to":{"file":{"path":"**/*"}}}},{"allow":{"to":{"file":{"categories":{"noneOf":["module:main","module:commands","module:checks","module:terminal","module:execution","module:lifecycle","module:generation","module:planning","module:tools","module:policy","module:agent-rules","module:configurations","module:repository","module:parsers","module:platform","module:plugin"]}}}}},{"from":{"file":{"categories":"role:types"}},"disallow":{"to":{"file":{"categories":{"noneOf":["role:types"]}}},"dependency":{"kind":"value"}}},{"from":{"file":{"categories":"role:runtime"}},"disallow":{"to":{"file":{"categories":{"anyOf":["role:tests","role:test_harness"]}}}}},{"from":{"file":{"categories":{"anyOf":["role:tests","role:test_harness"]}}},"disallow":{"to":{"file":{"categories":"role:runtime","path":"**/!(public|contracts).*"}},"dependency":{"kind":"value"}}},{"from":{"file":{"categories":{"anyOf":["role:config","role:env"]}}},"disallow":{"to":{"file":{"categories":"role:runtime"}},"dependency":{"kind":"value"}}}],"checkInternals":true}]}, files: ["tests/**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}"]},
 
 
 stripRuntimeGlobals({...tseslint.configs.strictTypeChecked[0], "ignores": ["docs/**","packages/cli/**","packages/eslint-plugin/**","tests/**"], "rules": {}, files: [["**/*.{ts,mts,cts,tsx}", "**/*"]]}),

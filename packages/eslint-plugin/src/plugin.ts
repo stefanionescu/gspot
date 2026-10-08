@@ -8,7 +8,6 @@ import { noAliasExports } from '#plugin/rules/no-alias-exports.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
 import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';
 import packageManifest from '#plugin-package' with { type: 'json' };
-import { importDirection } from '#plugin/rules/import-direction.ts';
 import { importBoundaries } from '#plugin/rules/import-boundaries.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
 import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
@@ -17,7 +16,6 @@ const rules = {
     'env-owner': envOwner,
     'sort-exports': sortExports,
     'header-first': headerFirst,
-    'import-direction': importDirection,
     'sort-imports': sortImports,
     'no-client-env': noClientEnv,
     'import-boundaries': importBoundaries,

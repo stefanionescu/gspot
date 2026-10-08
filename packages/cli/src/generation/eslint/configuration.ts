@@ -1,21 +1,18 @@
 // The parts of the ESLint configuration that the policy and the emitted scope decide.
 import type { Session } from '#cli/types/planning.ts';
 import { aliasesFor } from '#cli/repository/aliases.ts';
+import { tablesFor } from '#cli/policy/settings/lookup.ts';
 import type { EtaInputs } from '#cli/types/generation/eta.ts';
 import type { EslintPresets } from '#cli/types/parsers/eslint.ts';
+import { boundaryBlocks } from '#cli/generation/eslint/boundaries.ts';
 import { generatedIgnores } from '#cli/generation/ignore-patterns.ts';
+import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { readEslintPresets } from '#cli/generation/eslint/presets.ts';
+import type { ScopeView, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { scriptPaths, runtimeBlocks } from '#cli/generation/eslint/runtimes.ts';
-import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/selectors.ts';
-import { tablesFor, harnessFolders, declaredArchitectures } from '#cli/policy/settings/lookup.ts';
-import type { ScopeView, ScopeSelection, ArchitectureSettings } from '#cli/types/policy/settings.ts';
+import type { EslintBlock, EslintContext, EslintConfiguration } from '#cli/types/generation/eslint.ts';
+import { ESLINT_LIMITS, ESLINT_BOUNDARY_FOLDERS, ESLINT_JAVASCRIPT_LIMITS } from '#cli/config/generation/eslint.ts';
 
-import type {
-    EslintBlock,
-    EslintContext,
-    EslintConfiguration,
-    EslintBoundaryPolicy,
-} from '#cli/types/generation/eslint.ts';
 import {
     eslintRuleOptions,
     importStyleBlocks,
@@ -31,38 +28,8 @@ import {
     eslintRuleSettings,
     eslintSourcePattern,
 } from '#cli/generation/eslint/serialize.ts';
-import {
-    ESLINT_LIMITS,
-    DIRECTION_ROLES,
-    TRPC_DEPENDENCY_NODES,
-    ESLINT_BOUNDARY_FOLDERS,
-    ESLINT_JAVASCRIPT_LIMITS,
-    TRPC_SERVER_VALUE_POLICY,
-    TRPC_DEPENDENCY_SELECTORS,
-    TRPC_UNKNOWN_IMPORT_POLICIES,
-} from '#cli/config/generation/eslint.ts';
 
-// The globs of a role: a module name stands for the paths of that module, and the fallback holds when unset.
-function roleGlobs(
-    architecture: ArchitectureSettings,
-    name: keyof ArchitectureSettings['roles'],
-    defaults: string[],
-): string[] {
-    const value = architecture.roles[name];
-    const entries = value === undefined ? defaults : [value].flat();
-    return entries.flatMap((entry) => architecture.modules.find((module) => module.name === entry)?.paths ?? [entry]);
-}
-
-// The roles import-direction orders, with the harness folders of the scope. A role the policy leaves out matches no file.
-function directionRoles(architecture: ArchitectureSettings, harness: string[]): Record<string, string[]> {
-    return {
-        types: roleGlobs(architecture, 'types', []),
-        harness: harness.map((folder) => `${folder}/**`),
-        ...Object.fromEntries(DIRECTION_ROLES.map((role) => [role, roleGlobs(architecture, role, [])])),
-    };
-}
-
-// Each nested scope resolves imports against its own aliases and harness folders.
+// Each nested scope resolves its import boundaries against its own aliases.
 function scopeBlocks(context: EslintContext): EslintBlock[] {
     const { root, reads, policy, scopes, nodeFiles } = context;
     if (policy.level !== 'all') return [];
@@ -75,8 +42,6 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
         .map((entry) => {
             const path = entry.scope.path;
             const aliases = aliasesFor(root, path, reads);
-            const architecture = policy.scopeTables[path]?.architecture ?? policy.architecture;
-            const roles = directionRoles({ ...architecture, roles: entry.view.roles }, harnessFolders(policy, path));
             return {
                 files: [
                     `${path}/${eslintSourcePattern('javascript', 'typescript')}`,
@@ -87,70 +52,13 @@ function scopeBlocks(context: EslintContext): EslintBlock[] {
                 ],
                 rules: {
                     'gspot/import-boundaries': ['error', { folders, aliases }],
-                    'gspot/import-direction': ['error', { roles, aliases, scope: path }],
                 },
             };
         });
 }
 
-// One boundaries block for each scope with declared modules. Authored paths are already repository-relative.
-function boundaryBlocks(context: EslintContext): EslintBlock[] {
-    const { scopes, nodeFiles } = context;
-    return declaredArchitectures(scopes).map(({ selection: { scope, view, selected }, architecture: table }) => {
-        const { path } = scope;
-        const prefix = path === '' ? '' : `${path}/`;
-        const trpc =
-            selected.some(({ configuration }) => configuration.name === 'trpc') &&
-            table.modules.some(({ name }) => name === 'server');
-        const tests = view.test_files;
-        const policies: EslintBoundaryPolicy[] = table.modules.map((module) => ({
-            from: { file: { categories: module.name } },
-            allow: { to: { file: { categories: { anyOf: module.may_import } } } },
-        }));
-        if (trpc) {
-            // Native element classification covers clients outside the declared modules without giving them architecture edges.
-            policies.push(
-                ...TRPC_UNKNOWN_IMPORT_POLICIES,
-                { from: { file: { path: tests } }, allow: { to: { file: { path: '**/*' } } } },
-                { allow: { to: { file: { path: tests } } } },
-                TRPC_SERVER_VALUE_POLICY,
-            );
-        }
-        return {
-            files: [
-                `${prefix}${eslintSourcePattern('javascript', 'typescript')}`,
-                ...eslintNodePatterns(
-                    nodeFiles.filter((file) => isInScope(file, path)),
-                    '',
-                ),
-            ],
-            ignores: nestedScopes(
-                scopes.map(({ scope }) => scope.path),
-                path,
-            ).map((scope) => `${scope}/**`),
-            settings: {
-                'boundaries/files': table.modules.map((module) => ({
-                    category: module.name,
-                    pattern: module.paths,
-                })),
-                'boundaries/ignore': trpc ? [] : tests,
-                ...(trpc
-                    ? {
-                          'boundaries/elements': [{ type: 'trpc', pattern: `${prefix}**`, partialMatch: false }],
-                          'boundaries/dependency-nodes': TRPC_DEPENDENCY_NODES,
-                          'boundaries/additional-dependency-nodes': TRPC_DEPENDENCY_SELECTORS,
-                      }
-                    : {}),
-            },
-            rules: {
-                'boundaries/dependencies': ['error', { default: 'disallow', policies, checkInternals: trpc }],
-            },
-        };
-    });
-}
-
 // The gspot rules the all level adds: import layout, direction, ownership, and re-exports.
-function allLevelRules(context: EslintContext, aliases: Record<string, string>, roles: Record<string, string[]>) {
+function allLevelRules(context: EslintContext, aliases: Record<string, string>, owners: string[]) {
     const scopePaths = context.scopes.map((entry) => entry.scope.path).filter((path) => path !== '');
     return {
         'gspot/no-alias-exports': 'error',
@@ -160,8 +68,7 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
         'gspot/sort-exports': 'error',
         'gspot/import-boundaries': ['error', { folders: [...ESLINT_BOUNDARY_FOLDERS, ...scopePaths], aliases }],
         'import-x/exports-last': 'error',
-        'gspot/import-direction': ['error', { roles, aliases }],
-        'gspot/env-owner': ['error', { owners: roles['env'] }],
+        'gspot/env-owner': ['error', { owners }],
     };
 }
 
@@ -169,10 +76,9 @@ function allLevelRules(context: EslintContext, aliases: Record<string, string>, 
 function gspotRules(context: EslintContext, aliases: Record<string, string>, limits: EslintConfiguration['limits']) {
     const { policy, selection } = context;
     const { architecture } = policy;
-    const roles = directionRoles(
-        { ...architecture, roles: selection.view.roles },
-        harnessFolders(policy, selection.scope.path),
-    );
+    const owners = [selection.view.roles.env ?? []]
+        .flat()
+        .flatMap((entry) => architecture.modules.find((module) => module.name === entry)?.paths ?? [entry]);
     const barrels = {
         'barrel-files/avoid-barrel-files': [
             'error',
@@ -180,7 +86,7 @@ function gspotRules(context: EslintContext, aliases: Record<string, string>, lim
         ],
     };
     return {
-        ...(policy.level === 'all' ? allLevelRules(context, aliases, roles) : {}),
+        ...(policy.level === 'all' ? allLevelRules(context, aliases, owners) : {}),
         ...(policy.level === 'all' && policy.structure.reexports !== 'none' ? barrels : {}),
     };
 }

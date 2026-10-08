@@ -28,3 +28,67 @@ export const ARCHITECTURE_PROJECT = {
 };
 
 export const ARCHITECTURE_CORRECTION = "import { value } from './value.js';\nexport const result = value;\n";
+
+/** Native directions include per-specifier types, aliases, overlapping roles, and public contracts. */
+export const ROLE_IMPORT_CASES = [
+    { folder: 'unrelated', source: "import { value } from '../tests/value.js';", rejected: false },
+    { folder: 'runtime', source: "import { value } from '../other/value.test.js';", rejected: true },
+    { folder: 'types', source: "import { value } from '../runtime/value.js';", rejected: true },
+    { folder: 'types', source: "import type { Value } from '../runtime/value.js';", rejected: false },
+    { folder: 'types', source: "import { type Value } from '@/runtime/value.js';", rejected: false },
+    { folder: 'types', source: "import { type Value, value } from '@/runtime/value.js';", rejected: true },
+    { folder: 'types', source: "export { type Value } from '../runtime/value.js';", rejected: false },
+    { folder: 'types', source: "import { value } from '../types/value.js';", rejected: false },
+    { folder: 'runtime', source: "import { value } from '../tests/value.js';", rejected: true },
+    { folder: 'runtime', source: "import type { Value } from '../tests/value.js';", rejected: true },
+    { folder: 'runtime', source: "import { value } from '../support/value.js';", rejected: true },
+    { folder: 'tests', source: "import { value } from '../runtime/value.js';", rejected: true },
+    { folder: 'support', source: "import { value } from '../runtime/value.js';", rejected: true },
+    { folder: 'tests', source: "import { value } from '../runtime/public.js';", rejected: false },
+    { folder: 'support', source: "import { value } from '../runtime/contracts.js';", rejected: false },
+    { folder: 'tests', source: "import type { Value } from '../runtime/value.js';", rejected: false },
+    { folder: 'config', source: "import { value } from '../runtime/value.js';", rejected: true },
+    { folder: 'env', source: "import { value } from '@/runtime/value.js';", rejected: true },
+    { folder: 'config', source: "import type { Value } from '../runtime/value.js';", rejected: false },
+    { folder: 'other', source: "import { value } from '../runtime/value.js';", rejected: false },
+];
+
+/** Both scopes retain authored role paths. Runtime and test patterns can overlap. */
+export const ROLE_TABLES = `[[architecture.modules]]
+name = "role:runtime"
+paths = ["unrelated/**"]
+may_import = ["role:runtime"]
+[architecture.roles]
+types = "types/**"
+tests = ["tests/**", "**/*.test.*"]
+test_harness = "support"
+config = "config/**"
+env = "env/**"
+runtime = ["runtime/**", "types/**", "tests/**", "support/**", "config/**", "env/**"]
+[scope.app]
+configurations = ["typescript"]
+[scope.app.architecture.roles]
+types = "types/**"
+tests = ["tests/**", "**/*.test.*"]
+test_harness = "support"
+config = "config/**"
+env = "env/**"
+runtime = ["runtime/**", "types/**", "tests/**", "support/**", "config/**", "env/**"]
+`;
+
+export const ROLE_TSCONFIG =
+    '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","baseUrl":".","paths":{"@/*":["./*"]},"types":[]},"include":["**/*.ts"]}';
+
+export const ROLE_TARGETS = {
+    'unrelated/value.ts': 'export const value = 1;\n',
+    'runtime/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+    'types/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+    'tests/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+    'support/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+    'config/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+    'env/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+    'other/value.ts': 'export const value = 1;\nexport type Value = number;\n',
+    'other/value.test.ts': 'export const value = 1;\n',
+    'runtime/public.ts': 'export const value = 1;\n',
+    'runtime/contracts.ts': 'export const value = 1;\n',
+};
