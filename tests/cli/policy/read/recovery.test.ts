@@ -1,3 +1,4 @@
+import { stringify } from 'smol-toml';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { textContaining } from '#tests/harness/expectations.ts';
@@ -82,3 +83,19 @@ test('unknown configurations retain duplicate root entries and scoped declaratio
         textContaining('gspot.toml: scope.api.configurations.1: There is no configuration called `bas`.'),
     ]);
 });
+
+test.each(["author's name", '$(printf injected); *'])(
+    'an existing naming entry %j asks for a reason on that entry',
+    (name) => {
+        const found = policyFindings(stringify({ configurations: ['naming'], naming: { allowed: { [name]: '' } } }));
+        expect(found).toHaveLength(1);
+        expect(found[0]).toContain(name);
+        expect(found[0]).toContain('reason');
+        expect(found[0]).not.toContain('run:');
+        const reason = 'The external interface fixes this exact name.';
+        const corrected = parseStrictPolicy(
+            stringify({ configurations: ['naming'], naming: { allowed: { [name]: reason } } }),
+        );
+        expect(corrected.naming.allowed).toStrictEqual({ [name]: reason });
+    },
+);

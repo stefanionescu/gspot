@@ -1,5 +1,5 @@
 {
-    "openRecords": 853,
+    "openRecords": 845,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 853,
+        "openRecords": 845,
         "records": 1092,
         "batches": [
             {
@@ -1950,8 +1950,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 18,
-                "unresolvedAssignments": 41
+                "completedAssignments": 26,
+                "unresolvedAssignments": 33
             },
             {
                 "id": "names",
@@ -5680,10 +5680,12 @@
             "verification": []
         },
         "review/configurations-plugin/004": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "88496e133baa930637e18af9a26036d0e32c857c",
+            "verification": [
+                "Deleted custom reexport rule, types and tests. Native three selectors preserve none/index-only applicability, index exclusions and simultaneous framework selectors."
+            ]
         },
         "review/configurations-plugin/005": {
             "status": "pending",
@@ -5692,16 +5694,20 @@
             "verification": []
         },
         "review/configurations-plugin/006": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "88496e133baa930637e18af9a26036d0e32c857c",
+            "verification": [
+                "Deleted custom extension rule/types/tests. Native n/file-extension-in-import covers relative imports, TS-to-JS maps and JSON attributes; native alias selectors preserve ordered scoped extension policies at both levels."
+            ]
         },
         "review/configurations-plugin/007": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "88496e133baa930637e18af9a26036d0e32c857c",
+            "verification": [
+                "Pinned barrel-files3.0.1 replaces custom barrel rule/config/types/tests. Native index-only limit uses the adopted index_exports name; native multi-specifier and declaration controls pass."
+            ]
         },
         "review/configurations-plugin/008": {
             "status": "complete",
@@ -5727,10 +5733,12 @@
             ]
         },
         "review/configurations-plugin/011": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "88496e133baa930637e18af9a26036d0e32c857c",
+            "verification": [
+                "Existing compiler-owned tsc --emitDeclarationOnly producer verified; no handwritten declarations. Packed strict native TSESLint config consumer and Node/Bun/Bun-without-Node runtime controls pass."
+            ]
         },
         "review/configurations-plugin/012": {
             "status": "complete",
@@ -5742,16 +5750,20 @@
             ]
         },
         "review/configurations-plugin/015": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "88496e133baa930637e18af9a26036d0e32c857c",
+            "verification": [
+                "Deleted duplicated Next.js no-client-env fragment entry; native base rule and existing level/project applicability remain."
+            ]
         },
         "review/configurations-plugin/016": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "88496e133baa930637e18af9a26036d0e32c857c",
+            "verification": [
+                "Plugin preset tests use in-process Linter.verify with fixed cwd and no sandbox. Full plugin366pass across14files."
+            ]
         },
         "review/configurations-plugin/017": {
             "status": "pending",
@@ -5866,16 +5878,20 @@
             "verification": []
         },
         "review/configurations-plugin/038": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "88496e133baa930637e18af9a26036d0e32c857c",
+            "verification": [
+                "Ruff uses140 recommended and77 additional prefix selectors plus17 exclusions;20 explicit D selectors retain native convention behavior. Sixteen native configurations plus16 actual scoped configurations have equal enabled rules and diagnostics. Reasoned scoped native ignores use the scope prefix once."
+            ]
         },
         "review/configurations-plugin/039": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "88496e133baa930637e18af9a26036d0e32c857c",
+            "verification": [
+                "basedpyright selects recommended/all modes and retains only native deviations.106 native severity/behavior keys and four actual CLI diagnostic runs match the original policy."
+            ]
         },
         "review/configurations-plugin/040": {
             "status": "pending",
@@ -15404,6 +15420,29 @@
             "limitations": [
                 "Historical067 seventh prose owner is absent; all six current owners treated and no file invented.",
                 "CI327fc run pending after obsolete4137 cancellation; no Windows/runtime platform acceptance inferred. No publication/tag/deploy."
+            ]
+        },
+        {
+            "commit": "88496e133baa930637e18af9a26036d0e32c857c",
+            "completedRecords": [
+                "review/configurations-plugin/004",
+                "review/configurations-plugin/006",
+                "review/configurations-plugin/007",
+                "review/configurations-plugin/011",
+                "review/configurations-plugin/015",
+                "review/configurations-plugin/016",
+                "review/configurations-plugin/038",
+                "review/configurations-plugin/039"
+            ],
+            "unresolvedRecords": 845,
+            "validation": [
+                "Main167CLIpass741assert14files42.33s;366pluginpass21assert14files824ms; root/CLItypes0; normal plugin/CLI builds, metadata producer, apply and install pass.",
+                "Whole staged151pass14skip with one Oxford-comma comment finding; corrected comment and affected native Vale pass. Normal commit and push evidence retained in /tmp/gspot-native-presets-main-* logs."
+            ],
+            "limitations": [
+                "Core ESLint Linter.Config declaration consumer has an upstream RuleContext incompatibility; no cast/shim or universal public-type compatibility claim.",
+                "No Windows runtime acceptance inferred from native path probes. Current CI, final all-platform suite measurement, release preparation and main001 external publication/setup remain pending.",
+                "Native site six cases and SVG pass; default-only corrected rerun passes. No final unexecuted whole8/0 claim."
             ]
         }
     ],

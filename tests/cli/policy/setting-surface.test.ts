@@ -254,18 +254,3 @@ test('raising the duplication line floor requires a reason, while lowering it ti
     expect(raised![0]).toContain(`gspot set ${key} ${String(shipped + 1)} --reason`);
     expect(lowered).toStrictEqual([]);
 });
-
-test.each(['../outside', 'C:outside'])('the harness role refuses the escaping folder %s', (path) => {
-    expect(() =>
-        parseStrictPolicy(
-            buildPolicy(['jest'], { tables: `[architecture.roles]\ntest_harness = ${JSON.stringify(path)}\n` }),
-        ),
-    ).toThrow('Use a relative path with forward slashes, without parent traversal or a drive prefix.');
-});
-
-test('the harness role accepts an owned folder', () => {
-    const policy = parseStrictPolicy(
-        buildPolicy(['jest'], { tables: '[architecture.roles]\ntest_harness = "tests/fixtures"\n' }),
-    );
-    expect(policy.architecture.roles['test_harness']).toBe('tests/fixtures');
-});

@@ -2,7 +2,9 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
+import { textContaining } from '#tests/harness/expectations.ts';
 import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
+import { readPolicyText, parseStrictPolicy } from '#cli/policy/read.ts';
 
 test.each([
     {
@@ -113,3 +115,35 @@ test.each(['linked', 'linked/nested'])(
 test('parseStrictPolicy > invalid TOML is reported as such', () => {
     expect(policyFindings('level = \n')[0]).toContain('is not valid TOML');
 });
+
+test.each([
+    { source: 'paths = []\nrules = {eqeqeq = ["always"]}', message: 'gspot.toml: tools.eslint.overrides.0.paths:' },
+    { source: 'paths = ["src"]\nrules = {eqeqeq = 0}', message: 'gspot.toml: tools.eslint.overrides.0.rules.eqeqeq:' },
+    {
+        source: 'paths = ["src"]\nrules = {eqeqeq = true}',
+        message: 'gspot.toml: tools.eslint.overrides.0.rules.eqeqeq:',
+    },
+    {
+        source: 'paths = ["src"]\nrulez = {eqeqeq = ["always"]}',
+        message: 'gspot.toml: `rulez` is not a setting gspot knows under [tools.eslint.overrides.0]',
+    },
+])('invalid ESLint override names its refusal: $message', ({ source, message: diagnostic }) => {
+    const errors = policyFindings(buildPolicy(['javascript'], { tables: `[[tools.eslint.overrides]]\n${source}\n` }));
+    expect(errors).toContainEqual(textContaining(diagnostic));
+});
+
+test.each([false, true])(
+    'override rule severities are refused without accepting sibling rule selections (scoped: %s)',
+    (nested) => {
+        const prefix = nested ? '[scope."app"]\n[[scope."app".tools.eslint.overrides]]' : '[[tools.eslint.overrides]]';
+        const source = buildPolicy(['javascript'], {
+            tables: `${prefix}\npaths = ["src/**"]\nrules = {eqeqeq = 0, "no-var" = []}\n`,
+        });
+        expect(() => parseStrictPolicy(source)).toThrow('gspot ignore');
+        expect(() => readPolicyText(source)).toThrow('gspot ignore');
+        const corrected = parseStrictPolicy(source.replace('eqeqeq = 0, ', ''));
+        expect(nested ? corrected.scopeTables['app']?.tools?.['eslint'] : corrected.tools['eslint']).toStrictEqual({
+            overrides: [{ paths: [nested ? 'app/src/**' : 'src/**'], rules: { 'no-var': [] } }],
+        });
+    },
+);
