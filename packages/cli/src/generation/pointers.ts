@@ -5,8 +5,14 @@ import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { ToolFileDeclaration } from '#cli/types/configurations.ts';
 import { TARGET_PLACEHOLDER } from '#cli/config/generation/pointers.ts';
 
-function fillTarget(value: unknown, pointerPath: string, targetPath: string): unknown {
-    if (typeof value !== 'string') return value;
+/**
+ * Resolve target placeholders in native pointer text.
+ * @param value the body text or rendered Eta source
+ * @param pointerPath the native pointer file
+ * @param targetPath the generated tool file
+ * @returns the native text with quoted module and JSON paths preserved
+ */
+export function fillTarget(value: string, pointerPath: string, targetPath: string): string {
     const target = relativeTarget(pointerPath, targetPath);
     return value.replaceAll(TARGET_PLACEHOLDER, (placeholder) => {
         if (placeholder === '{target_module}') {
@@ -46,7 +52,7 @@ export function bodyPointer(
     targetPath: string,
     version: string,
 ): GeneratedFile {
-    const body = String(fillTarget(pointer.body ?? '', pointerPath, targetPath));
+    const body = fillTarget(pointer.body ?? '', pointerPath, targetPath);
     const ended = body.endsWith('\n') ? body : `${body}\n`;
     return {
         path: pointerPath,

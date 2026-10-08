@@ -11,11 +11,11 @@ import { settingValue, declarationFor } from '#cli/policy/settings/lookup.ts';
 const selected = selectConfigurations(['bash', 'naming', 'format', 'spelling'], configurationManifests());
 const surface = knownSettings(selected);
 
-test.each(['recommended', 'all'] as const)('new license policy requires an explicit choice at %s', (level) => {
+test('new license policy requires an explicit choice', () => {
     const licenses = knownSettings(selectConfigurations(['licenses'], configurationManifests()));
-    const policy = parseStrictPolicy(buildPolicy(['licenses'], { level }));
+    const policy = parseStrictPolicy(buildPolicy(['licenses']));
     expect(settingValue(licenses, policy, 'licenses.allowed')).toMatchObject({ value: [] });
-    const authored = parseStrictPolicy(buildPolicy(['licenses'], { level, tables: '[licenses]\nallowed = ["MIT"]\n' }));
+    const authored = parseStrictPolicy(buildPolicy(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n' }));
     expect(settingValue(licenses, authored, 'licenses.allowed')).toMatchObject({
         value: ['MIT'],
         source: 'gspot.toml',

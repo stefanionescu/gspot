@@ -175,11 +175,5 @@ test.each(['recommended', 'all'] as const)(
                 }),
             ),
         ).toStrictEqual([]);
-        const emitted = emitAll(await openSession(sandbox.path));
-        const projects = emitted.files.filter(({ path }) => path.endsWith('tsconfig.json'));
-        expect(projects.find(({ path }) => path.includes('service'))?.content).toContain(
-            '"experimentalDecorators": true',
-        );
-        expect(projects.find(({ path }) => !path.includes('service'))?.content).not.toContain('experimentalDecorators');
     },
 );

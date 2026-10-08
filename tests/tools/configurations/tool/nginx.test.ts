@@ -1,10 +1,10 @@
 // Sandbox for the nginx configuration: a proxy target the request chooses.
 import { join } from 'node:path';
+import { commitAll } from '#tests/harness/git.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { git, commitAll } from '#tests/harness/git.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -65,7 +65,7 @@ test.skipIf(!hasLinuxDocker())(
 );
 
 describe('the nginx configuration', () => {
-    test('gixy finds the forged proxy target, and the container test waits for push', async () => {
+    test('gixy finds the forged proxy target and passes after the fix', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'proxy/nginx.conf': CLEAN });
         commitAll(sandbox.path);
@@ -93,13 +93,5 @@ describe('the nginx configuration', () => {
         expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([
             { check: 'nginx/gixy', status: isWindows ? 'skipped' : 'passed', findings: [] },
         ]);
-        expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-        const command = ['check', '--hook', 'pre-commit', '--only', 'nginx/gixy', 'nginx/test', '--json'];
-        const checked = await spawnGspot(sandbox.path, command, environment);
-        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        const atCommit = JSON.parse(checked.stdout) as RunReport;
-        const ids = atCommit.checks.map((check) => check.check);
-        expect(ids).toContain('nginx/gixy');
-        expect(ids).not.toContain('nginx/test');
     });
 });

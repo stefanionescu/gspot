@@ -11,6 +11,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['site', 'supabase', 'i18n'], {
+            level: 'all',
             tables: '[i18n]\nmessages_folder = "messages"\nbase_locale = "en"\n[scope."apps/backend"]\n[scope."apps/backend".i18n]\nmessages_folder = "messages"\n',
         }),
         'package.json': '{"private":true,"dependencies":{"next-intl":"4.8.3"}}',
@@ -29,7 +30,7 @@ test('scoped readers receive their own files and preserve binary asset inputs', 
     });
     for (const entry of EXPECTED_READERS) {
         const result = await runGspot(sandbox.path, ['check', '--only', entry.check, '--json']);
-        expect(result.code, result.stdout + result.stderr).toBe(1);
+        expect(result.code, `${entry.check}: ${result.stdout}${result.stderr}`).toBe(1);
         expect(
             (JSON.parse(result.stdout) as RunReport).checks.map((check) => ({
                 scope: check.scope,

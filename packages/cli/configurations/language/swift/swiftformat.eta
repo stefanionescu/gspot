@@ -21,7 +21,7 @@ const document = {
         guardelse: 'next-line',
         emptybraces: 'no-space',
         trimwhitespace: 'always',
-        linebreaks: 'lf',
+        linebreaks: format.line_ending,
         importgrouping: 'length,alpha',
         self: 'init-only',
         ...(version === undefined ? {} : { swiftversion: version }),
@@ -103,8 +103,6 @@ const document = {
                   'yodaConditions',
               ]),
     ])],
-    rules: [],
-    'lint-only': [],
     comments: {
         trailingClosures: '# SwiftLint trailing_closure owns closure syntax, so one tool reports it.',
         initCoderUnavailable:

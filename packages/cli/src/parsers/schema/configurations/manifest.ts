@@ -60,9 +60,8 @@ const pointerSchema = z
         'A template pointer cannot also specify a body.',
     )
     .refine(
-        (pointer) =>
-            pointer.directories === undefined || (pointer.body !== undefined && pointer.template === undefined),
-        'Directory pointers require a body without a template.',
+        (pointer) => pointer.directories === undefined || pointer.body !== undefined || pointer.template !== undefined,
+        'Directory pointers require a body or a template.',
     );
 
 const toolFileSchema = z

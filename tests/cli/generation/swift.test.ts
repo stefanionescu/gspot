@@ -1,11 +1,12 @@
 import { join } from 'node:path';
-import { testdir } from 'testdirs';
 import { test, expect } from 'bun:test';
 import { emitAll } from '#cli/generation/files.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { XCODE_METADATA } from '#tests/config/samples/xcode.ts';
 import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
-import { SWIFT_VERSION_FILES, SWIFT_PROJECT_POLICY } from '#tests/config/cli/generation/swift.ts';
+import { SWIFT_LINE_ENDINGS, SWIFT_VERSION_FILES, SWIFT_PROJECT_POLICY } from '#tests/config/cli/generation/swift.ts';
 
 test('SwiftFormat reads each scope native package version without changing its source', async () => {
     await using sandbox = await testdir(SWIFT_VERSION_FILES);
@@ -50,4 +51,28 @@ test('SwiftFormat uses effective Xcode project choices and preserves authored de
     );
     for (const [path, text] of Object.entries(files))
         expect(await Bun.file(join(sandbox.path, path)).text()).toBe(text);
+});
+
+test.each(SWIFT_LINE_ENDINGS)('SwiftFormat emits native %s line endings and only actual rule keys', async (ending) => {
+    await using sandbox = await testdir();
+    for (const level of ['recommended', 'all'] as const) {
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['swift', 'nginx'], {
+                level,
+                tables: `[format]\nline_ending = "${ending}"\n[scope."child"]\nconfigurations = ["swift"]\n[scope."child".format]\nline_ending = "${ending === 'lf' ? 'crlf' : 'lf'}"\n`,
+            }),
+            'Value.swift': CLEAN_SWIFT,
+            'child/Value.swift': CLEAN_SWIFT,
+            'nginx.conf': 'events {}\nhttp {}\n',
+        });
+        const files = emitAll(await openSession(sandbox.path)).files;
+        const root = files.find((file) => file.path === '.gspot/config/swiftformat')!;
+        const child = files.find((file) => file.path === '.gspot/config/child/swiftformat')!;
+        expect(root.content).toContain(`--linebreaks ${ending}\n`);
+        expect(child.content).toContain(`--linebreaks ${ending === 'lf' ? 'crlf' : 'lf'}\n`);
+        expect(Object.keys(root.ruleData!)).toStrictEqual(['enable', 'disable']);
+        expect(Object.keys(files.find((file) => file.path === '.gspot/config/gixy.cfg')!.ruleData!)).toStrictEqual([
+            'skips',
+        ]);
+    }
 });

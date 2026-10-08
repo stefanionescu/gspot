@@ -8,93 +8,70 @@ import {
     MARKDOWNLINT_REJECTED_SELECTIONS,
 } from '#tests/config/cli/policy/read/tools.ts';
 
-test.each(['recommended', 'all'] as const)('%s refuses unsupported Python verbatim options in every scope', (level) => {
-    for (const scope of ['', 'app']) {
+test.each(UNSUPPORTED_PYTHON_OPTIONS.flatMap((entry) => ['', 'app'].map((scope) => ({ ...entry, scope }))))(
+    '$tool refuses $options with scope=$scope',
+    ({ scope, tool, options, diagnostic }) => {
         const prefix = scope === '' ? '' : `scope.${scope}.`;
-        for (const { tool, options, diagnostic } of UNSUPPORTED_PYTHON_OPTIONS) {
-            const source = buildPolicy(['python'], {
-                level,
-                tables: `[${prefix}tools.${tool}.verbatim]\n${options}\n`,
-            });
-            expect(() => parseStrictPolicy(source)).toThrow(diagnostic.replace('[tools', `[${prefix}tools`));
+        const source = buildPolicy(['python'], {
+            tables: `[${prefix}tools.${tool}.verbatim]\n${options}\n`,
+        });
+        expect(() => parseStrictPolicy(source)).toThrow(diagnostic.replace('[tools', `[${prefix}tools`));
+    },
+);
+
+test('keeps ShellCheck rule selection with its coverage level and ignores', () => {
+    for (const scope of ['', '[scope."app"]\n']) {
+        const table = scope === '' ? 'tools' : 'scope.app.tools';
+        for (const option of ['enable = "all"', 'disable = "SC2086"'])
+            expect(() =>
+                parseStrictPolicy(
+                    buildPolicy(['bash'], {
+                        tables: `${scope}[${table}.shellcheck.verbatim]\n${option}`,
+                    }),
+                ),
+            ).toThrow('ShellCheck rule selection');
+    }
+});
+
+test('refuses authored ESLint coverage choices in root and scoped native options', () => {
+    for (const scope of ['', '[scope."app"]\n']) {
+        const table = scope === '' ? 'tools' : 'scope.app.tools';
+        for (const selection of ESLINT_REJECTED_SELECTIONS) {
+            const tables = `${scope}[${table}.eslint.rules]\neqeqeq = ${selection}\n`;
+            expect(() => parseStrictPolicy(buildPolicy(['javascript'], { tables }))).toThrow('ESLint rule selection');
+        }
+        for (const key of ['rules', 'overrides', 'extends']) {
+            const tables = `${scope}[${table}.eslint.verbatim]\n${key} = []\n`;
+            expect(() => parseStrictPolicy(buildPolicy(['javascript'], { tables }))).toThrow('ESLint rule selection');
         }
     }
 });
 
-test.each(['recommended', 'all'] as const)(
-    '%s keeps ShellCheck rule selection with its coverage level and ignores',
-    (level) => {
-        for (const scope of ['', '[scope."app"]\n']) {
-            const table = scope === '' ? 'tools' : 'scope.app.tools';
-            for (const option of ['enable = "all"', 'disable = "SC2086"'])
-                expect(() =>
-                    parseStrictPolicy(
-                        buildPolicy(['bash'], {
-                            level,
-                            tables: `${scope}[${table}.shellcheck.verbatim]\n${option}`,
-                        }),
-                    ),
-                ).toThrow('ShellCheck rule selection');
-        }
-    },
-);
-
-test.each(['recommended', 'all'] as const)(
-    '%s refuses authored ESLint coverage choices in root and scoped native options',
-    (level) => {
-        for (const scope of ['', '[scope."app"]\n']) {
-            const table = scope === '' ? 'tools' : 'scope.app.tools';
-            for (const selection of ESLINT_REJECTED_SELECTIONS) {
-                const tables = `${scope}[${table}.eslint.rules]\neqeqeq = ${selection}\n`;
-                expect(() => parseStrictPolicy(buildPolicy(['javascript'], { level, tables }))).toThrow(
-                    'ESLint rule selection',
-                );
-            }
-            for (const key of ['rules', 'overrides', 'extends']) {
-                const tables = `${scope}[${table}.eslint.verbatim]\n${key} = []\n`;
-                expect(() => parseStrictPolicy(buildPolicy(['javascript'], { level, tables }))).toThrow(
-                    'ESLint rule selection',
-                );
-            }
-        }
-    },
-);
-
-test.each(['recommended', 'all'] as const)(
-    '%s refuses authored Markdown coverage choices in root and scoped settings',
-    (level) => {
-        for (const scope of ['', '[scope."app"]\n']) {
-            const table = scope === '' ? 'tools' : 'scope.app.tools';
-            for (const selection of MARKDOWNLINT_REJECTED_SELECTIONS)
-                expect(() =>
-                    parseStrictPolicy(
-                        buildPolicy(['markdown'], {
-                            level,
-                            tables: `${scope}[${table}.markdownlint.rules]\n${selection}\n`,
-                        }),
-                    ),
-                ).toThrow('Markdownlint rule selection');
+test('refuses authored Markdown coverage choices in root and scoped settings', () => {
+    for (const scope of ['', '[scope."app"]\n']) {
+        const table = scope === '' ? 'tools' : 'scope.app.tools';
+        for (const selection of MARKDOWNLINT_REJECTED_SELECTIONS)
             expect(() =>
                 parseStrictPolicy(
                     buildPolicy(['markdown'], {
-                        level,
-                        tables: `${scope}[${table}.markdownlint.verbatim]\ndefault = true\n`,
+                        tables: `${scope}[${table}.markdownlint.rules]\n${selection}\n`,
                     }),
                 ),
-            ).toThrow('verbatim');
-        }
-    },
-);
+            ).toThrow('Markdownlint rule selection');
+        expect(() =>
+            parseStrictPolicy(
+                buildPolicy(['markdown'], {
+                    tables: `${scope}[${table}.markdownlint.verbatim]\ndefault = true\n`,
+                }),
+            ),
+        ).toThrow('verbatim');
+    }
+});
 
-test.each(['recommended', 'all'] as const)(
-    '%s refuses authored Stylelint warning severity in root and scoped native options',
-    (level) => {
-        for (const scope of ['', '[scope."app"]\n']) {
-            const table = scope === '' ? 'tools' : 'scope.app.tools';
-            const tables = `${scope}[${table}.stylelint.rules]\ncolor-hex-length = ["short", { severity = "warning" }]\n`;
-            expect(() => parseStrictPolicy(buildPolicy(['css'], { level, tables }))).toThrow(
-                'Stylelint rule selection',
-            );
-        }
-    },
-);
+test('refuses authored Stylelint warning severity in root and scoped native options', () => {
+    for (const scope of ['', '[scope."app"]\n']) {
+        const table = scope === '' ? 'tools' : 'scope.app.tools';
+        const tables = `${scope}[${table}.stylelint.rules]\ncolor-hex-length = ["short", { severity = "warning" }]\n`;
+        expect(() => parseStrictPolicy(buildPolicy(['css'], { tables }))).toThrow('Stylelint rule selection');
+    }
+});

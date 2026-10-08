@@ -80,3 +80,30 @@ export const MANUAL_SELECTIONS = [
     { configurations: [] },
     { configurations: ['python'] },
 ];
+
+export const HOOK_STAGES = [
+    ['pre-commit', 'commit'],
+    ['pre-push', 'push'],
+] as const;
+
+export const HOOK_STAGE_CHECKS = [
+    'files/taplo',
+    'files/v8r',
+    'swift/swiftlint',
+    'swift/build',
+    'swift/swiftlint-analyze',
+    'swift/periphery',
+    'nginx/gixy',
+    'nginx/test',
+    'docs/lychee',
+    'docs/lychee-external',
+    'typescript/tsc',
+];
+
+export const HOOK_STAGE_FILES = {
+    'source.ts': 'export const value = 1;\n',
+    'guide.md': '# Guide\n',
+    'settings.toml': 'enabled = true\n',
+    'Sources/App/Greeting.swift': 'func greeting() {}\n',
+    'nginx.conf': 'events {}\nhttp {}\n',
+};

@@ -1,1 +1,5 @@
-# Swift test folders carry their rule overrides in nested configuration files.
+parent_config: {target_json}
+disabled_rules:
+    - force_unwrapping
+    - missing_docs
+    - no_magic_numbers

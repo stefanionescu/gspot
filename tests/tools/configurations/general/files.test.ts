@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { git } from '#tests/harness/git.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { test, expect, afterAll, beforeAll } from 'bun:test';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { REPOSITORY } from '#tests/config/tools/configurations/general/files.ts';
@@ -17,22 +17,6 @@ beforeAll(async () => {
 afterAll(async () => {
     await resources.disposeAsync();
 });
-describe('the files configuration', () => {
-    test('the commit stage keeps schema validation for push', async () => {
-        const { root, environment } = testRepository;
-        expect(git(root, ['add', '-A']).code).toBe(0);
-        const checked = await spawnGspot(
-            root,
-            ['check', '--hook', 'pre-commit', '--only', 'files/taplo', 'files/v8r', '--json'],
-            environment,
-        );
-        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        const ids = (JSON.parse(checked.stdout) as RunReport).checks.map((check) => check.check);
-        expect(ids).not.toContain('files/v8r');
-        expect(ids).toContain('files/taplo');
-    });
-});
-
 test('Taplo preserves default spacing across levels and accepts authored inline formatting', async () => {
     const { root, environment } = testRepository;
     await using state = new AsyncDisposableStack();
@@ -57,11 +41,27 @@ test('Taplo preserves default spacing across levels and accepts authored inline 
             { check: 'files/taplo-format', status: 'passed', findings: [] },
         ]);
     }
-    const setting = await spawnGspot(
-        root,
-        ['set', 'tools.taplo.formatting', '{"compact_inline_tables":true}'],
-        environment,
+});
+
+test('Taplo applies authored native inline formatting and returns to its default', async () => {
+    const { root, environment } = testRepository;
+    await using state = new AsyncDisposableStack();
+    state.use(
+        await preserveRepositoryChanges(testRepository, {
+            check: 'files/taplo-format',
+            files: { 'settings/inline.toml': 'entry = { key = true }\n' },
+        }),
     );
+    const path = join(root, 'settings/inline.toml');
+    const command = ['check', 'settings/inline.toml', '--only', 'files/taplo-format', '--json'];
+    const policyPath = join(root, 'gspot.toml');
+    const policy = await Bun.file(policyPath).text();
+    await Bun.write(
+        policyPath,
+        policy +
+            '\n[tools.taplo.verbatim]\ncompact_inline_tables = true\n[reasons]\n"tools.taplo.verbatim" = "The project uses compact inline tables in TOML."\n',
+    );
+    const setting = await spawnGspot(root, ['apply'], environment);
     expect(setting.code, setting.stdout + setting.stderr).toBe(0);
     const rejected = await spawnGspot(root, command, environment);
     expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
@@ -71,7 +71,8 @@ test('Taplo preserves default spacing across levels and accepts authored inline 
     const fixed = await spawnGspot(root, [...command, '--fix'], environment);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
     expect(await Bun.file(path).text()).toBe('entry = {key = true}\n');
-    const reset = await spawnGspot(root, ['set', 'tools.taplo.formatting', '--default'], environment);
+    await Bun.write(policyPath, policy);
+    const reset = await spawnGspot(root, ['apply'], environment);
     expect(reset.code, reset.stdout + reset.stderr).toBe(0);
     const selected = await spawnGspot(root, ['set', 'level', 'all'], environment);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
@@ -85,7 +86,17 @@ test('Schema validation finds nested Unicode paths through the real tool', async
             files: { 'settings/café.json': '', '.v8rrc.yml': '' },
         }),
     );
-    const mapping = JSON.stringify({ pattern: 'settings/café.json', schema: 'schema.json' });
+    const server = Bun.serve({
+        hostname: '127.0.0.1',
+        port: 0,
+        fetch() {
+            return new Response(Bun.file(join(root, 'schema.json')));
+        },
+    });
+    state.defer(async () => {
+        await server.stop(true);
+    });
+    const mapping = JSON.stringify({ 'settings/café.json': `${server.url.toString()}schema.json` });
     const setting = await spawnGspot(root, ['set', 'tools.v8r.schemas', mapping], environment);
     expect(setting.code, setting.stdout + setting.stderr).toBe(0);
     const applied = await spawnGspot(root, ['apply'], environment);

@@ -3,11 +3,11 @@ import { posix } from 'node:path';
 import { emitTarget } from '#cli/generation/eta.ts';
 import { collectRules } from '#cli/generation/rules.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
-import { bodyPointer } from '#cli/generation/pointers.ts';
 import { fragmentInputs } from '#cli/generation/fragments.ts';
 import type { CapturedRules } from '#cli/types/generation/rules.ts';
 import { targetInScope } from '#cli/configurations/declarations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { fillTarget, bodyPointer } from '#cli/generation/pointers.ts';
 import { isConfigurationSelected } from '#cli/configurations/select.ts';
 import { isInScope, pathMatcher, nestedScopes } from '#cli/repository/selectors.ts';
 import type { GeneratedToolFile, ToolFileDeclaration } from '#cli/types/configurations.ts';
@@ -31,60 +31,38 @@ function pointerDirectories(scope: string, file: TrackedFile, matches: (path: st
     return directories;
 }
 
-// One pointer per directory the tool file's owned files sit in, when the pointer names directories.
-function directoryPointers(context: ToolFileInputs, toolFile: ToolFileDeclaration, target: string): GeneratedFile[] {
+// Root and directory pointers share native body or Eta emission with target placeholders.
+function pointerFiles(context: ToolFileInputs, toolFile: ToolFileDeclaration, target: string): GeneratedFile[] {
     const { files, inputs, selection, manifest } = context;
-    const pointer = toolFile.pointer;
-    if (pointer?.directories === undefined) return [];
-    const scope = selection.scope.path;
-    const children = nestedScopes(
-        context.scopes.map((entry) => entry.scope.path),
-        scope,
-    );
-    const matches = pathMatcher(pointer.directories);
-    const owned = ownedBy(manifest.files, selection.selected, files, scope).filter((file) =>
-        children.every((child) => !isInScope(file.path, child)),
-    );
-    const directories = new Set(owned.flatMap((file) => pointerDirectories(scope, file, matches)));
-    return [...directories].map((directory) =>
-        bodyPointer(pointer, `${directory}/${pointer.path}`, target, inputs.version),
-    );
-}
-
-// Adds the pointer a tool file declares for its generated file.
-function addPointer(
-    context: ToolFileInputs,
-    toolFile: ToolFileDeclaration,
-    file: GeneratedFile,
-    generated: Generated,
-    fragmentPaths: ReadonlySet<string>,
-): void {
     const { pointer } = toolFile;
-    if (!pointer) return;
+    if (pointer === undefined) return [];
+    const scope = selection.scope.path;
+    let paths = [toolFile.scoped && scope !== '' ? `${scope}/${pointer.path}` : pointer.path];
     if (pointer.directories !== undefined) {
-        generated.files.push(...directoryPointers(context, toolFile, file.path));
-        return;
+        const children = nestedScopes(
+            context.scopes.map((entry) => entry.scope.path),
+            scope,
+        );
+        const matches = pathMatcher(pointer.directories);
+        const owned = ownedBy(manifest.files, selection.selected, files, scope).filter((file) =>
+            children.every((child) => !isInScope(file.path, child)),
+        );
+        const directories = new Set(owned.flatMap((file) => pointerDirectories(scope, file, matches)));
+        paths = [...directories].map((directory) => `${directory}/${pointer.path}`);
     }
-    const scope = toolFile.scoped ? context.selection.scope.path : '';
-    const pointerPath = scope === '' ? pointer.path : `${scope}/${pointer.path}`;
-    // A fragment's directory pointer includes its native overrides and must keep precedence over the base pointer.
-    const isWrittenByFragment = fragmentPaths.has(pointerPath);
-    if (isWrittenByFragment) return;
-    const { inputs, manifest } = context;
-    const pointed =
+    return paths.map((path) =>
         pointer.template === undefined
-            ? bodyPointer(pointer, pointerPath, file.path, inputs.version)
+            ? bodyPointer(pointer, path, target, inputs.version)
             : {
-                  path: pointerPath,
-                  kind: 'pointer' as const,
-                  content: emitTarget(
-                      `${manifest.dir}/${pointer.template}`,
-                      pointerPath,
-                      inputs,
-                      toolFile.generated_header,
+                  path,
+                  kind: 'pointer',
+                  content: fillTarget(
+                      emitTarget(`${manifest.dir}/${pointer.template}`, path, inputs, toolFile.generated_header),
+                      path,
+                      target,
                   ),
-              };
-    generated.files.push(pointed);
+              },
+    );
 }
 
 function isConditionMet(
@@ -142,7 +120,11 @@ function emitToolFile(
         throw new Error(`The Eta source for ${target} did not provide its declared rule data.`);
     generated.files.push(file);
     if (isConditionMet(toolFile, context, toolFile.pointer?.when))
-        addPointer({ ...context, inputs }, toolFile, file, generated, fragmentPaths);
+        generated.files.push(
+            ...pointerFiles({ ...context, inputs }, toolFile, target).filter(
+                (pointer) => toolFile.pointer?.directories !== undefined || !fragmentPaths.has(pointer.path),
+            ),
+        );
 }
 
 /**
@@ -164,9 +146,10 @@ export function emitToolFiles(
         return manifest.toolFiles.map((toolFile) => ({
             toolFile,
             owner,
-            pointers: toolFile.fragment
-                ? directoryPointers(owner, toolFile, targetInScope(selection.scope.path, toolFile))
-                : [],
+            pointers:
+                toolFile.fragment && toolFile.pointer?.directories !== undefined
+                    ? pointerFiles(owner, toolFile, targetInScope(selection.scope.path, toolFile))
+                    : [],
         }));
     });
     for (const { toolFile, owner, pointers } of targets) {

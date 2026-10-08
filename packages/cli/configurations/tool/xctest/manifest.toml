@@ -13,12 +13,11 @@ filenames = ["*.xctestplan"]
 kinds = ["source"]
 
 [[tool_file]]
-source = "swiftlint.yml.eta"
 target = ".gspot/config/swiftlint.yml"
 tool = "swiftlint"
 scoped = true
 fragment = true
-pointer = { path = ".swiftlint.yml", directories = ["**/*Tests"], body = "parent_config: {target_json}\ndisabled_rules:\n    - force_unwrapping\n    - missing_docs\n    - no_magic_numbers\n" }
+pointer = { path = ".swiftlint.yml", directories = ["**/*Tests"], template = "swiftlint.yml.eta" }
 
 [[check]]
 name = "skip-reasons"

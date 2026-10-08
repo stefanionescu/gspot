@@ -18,3 +18,5 @@ xcode_destination = ""
 [scope."disabled".swift]
 xcode_project = ""
 `;
+
+export const SWIFT_LINE_ENDINGS = [['lf'], ['crlf']] as const;

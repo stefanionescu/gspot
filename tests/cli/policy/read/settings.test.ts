@@ -16,23 +16,19 @@ import {
     INVALID_ENVIRONMENT_SETTINGS,
 } from '#tests/config/cli/policy/read/settings.ts';
 
-test.each(['recommended', 'all'] as const)(
-    '%s validates environment declarations in root and scope tables',
-    (level) => {
-        for (const scope of ['', '[scope."app"]\n']) {
-            const prefix = scope === '' ? '' : 'scope.app.';
-            for (const { table, value, diagnostic } of INVALID_ENVIRONMENT_SETTINGS) {
-                const source = buildPolicy([], { level, tables: `${scope}[${prefix}${table}]\n${value}\n` });
-                expect(() => parseStrictPolicy(source)).toThrow(diagnostic);
-            }
-            const source = buildPolicy([], {
-                level,
-                tables: `${scope}[${prefix}secrets]\nreader_functions = ["config.$env", "read_env"]\nenv_examples = ["example.env"]\n`,
-            });
-            expect(policyFindings(source)).toStrictEqual([]);
+test('validates environment declarations in root and scope tables', () => {
+    for (const scope of ['', '[scope."app"]\n']) {
+        const prefix = scope === '' ? '' : 'scope.app.';
+        for (const { table, value, diagnostic } of INVALID_ENVIRONMENT_SETTINGS) {
+            const source = buildPolicy([], { tables: `${scope}[${prefix}${table}]\n${value}\n` });
+            expect(() => parseStrictPolicy(source)).toThrow(diagnostic);
         }
-    },
-);
+        const source = buildPolicy([], {
+            tables: `${scope}[${prefix}secrets]\nreader_functions = ["config.$env", "read_env"]\nenv_examples = ["example.env"]\n`,
+        });
+        expect(policyFindings(source)).toStrictEqual([]);
+    }
+});
 
 test.each(
     MALFORMED_REASON_CASES.flatMap((entry) => [
@@ -223,32 +219,27 @@ test('at-rule exceptions use native Stylelint options without a duplicate settin
     expect(policyFindings(native)).toStrictEqual([]);
 });
 
-test.each(['recommended', 'all'] as const)(
-    '%s refuses native documentation link flags as extra coverage controls in every scope',
-    (level) => {
-        for (const scope of ['', '[scope."app"]\n']) {
-            const table = scope === '' ? 'tools' : 'scope.app.tools';
-            const owner = scope === '' ? 'tools.lychee' : 'scope.app.tools.lychee';
-            for (const field of ['offline', 'include_fragments', 'scheme', 'accept'])
-                expect(() =>
-                    parseStrictPolicy(
-                        buildPolicy([], {
-                            level,
-                            tables: `${scope}[${table}.lychee]\n${field} = false\n`,
-                        }),
-                    ),
-                ).toThrow(`\`${field}\` is not a setting gspot knows under [${owner}]`);
+test('refuses native documentation link flags as extra coverage controls in every scope', () => {
+    for (const scope of ['', '[scope."app"]\n']) {
+        const table = scope === '' ? 'tools' : 'scope.app.tools';
+        const owner = scope === '' ? 'tools.lychee' : 'scope.app.tools.lychee';
+        for (const field of ['offline', 'include_fragments', 'scheme', 'accept'])
             expect(() =>
                 parseStrictPolicy(
                     buildPolicy([], {
-                        level,
-                        tables: `${scope}[${table}.lychee.verbatim]\noffline = true\nreason = "Project preference"\n`,
+                        tables: `${scope}[${table}.lychee]\n${field} = false\n`,
                     }),
                 ),
-            ).toThrow(`\`verbatim\` is not a setting gspot knows under [${owner}]`);
-        }
-    },
-);
+            ).toThrow(`\`${field}\` is not a setting gspot knows under [${owner}]`);
+        expect(() =>
+            parseStrictPolicy(
+                buildPolicy([], {
+                    tables: `${scope}[${table}.lychee.verbatim]\noffline = true\nreason = "Project preference"\n`,
+                }),
+            ),
+        ).toThrow(`\`verbatim\` is not a setting gspot knows under [${owner}]`);
+    }
+});
 
 test.each(REMOVED_STRUCTURE_SETTINGS)('removed structure setting %s is refused in root and scope tables', (name) => {
     for (const scope of ['', '[scope."app"]\n']) {

@@ -18,10 +18,13 @@ import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy
 
 import {
     COMPONENTS,
+    HOOK_STAGES,
     LINK_POLICY,
     POLICY_PATHS,
     AUTOMATIC_CHECKS,
+    HOOK_STAGE_FILES,
     NEXT_BUILD_FILES,
+    HOOK_STAGE_CHECKS,
     MANUAL_SELECTIONS,
     NEXT_BUILD_ROUTES,
     NEXT_BUILD_TABLES,
@@ -223,30 +226,6 @@ test.each(NODE_REQUIREMENTS)(
     },
 );
 
-test('commit planning leaves external document links for later stages', async () => {
-    await using sandbox = await testdir({ 'gspot.toml': buildPolicy(['docs']), 'guide.md': '# Guide\n' });
-    const plans = planRun(await openSession(sandbox.path), { stage: 'commit', skips: [] });
-    const checks = plans.map(({ check }) => check.name);
-    expect(checks).toContain('docs/lychee');
-    expect(checks).not.toContain('docs/lychee-external');
-});
-
-test('project type checking belongs to push and preserves explicit selection', async () => {
-    const check = 'typescript/tsc';
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy(['typescript']),
-        'source.ts': 'export const value = 1;\n',
-    });
-    const session = await openSession(sandbox.path);
-    const commit = planRun(session, { stage: 'commit', skips: [], only: [check] });
-    expect(commit.map((entry) => entry.check.name)).not.toContain(check);
-    for (const stage of ['push', 'all'] as const) {
-        const planned = planRun(session, { stage, skips: [], only: [check] });
-        expect(planned.map((entry) => entry.check.name)).toContain(check);
-    }
-});
-
 test.each(['bun', 'mise'])('private schema tools include their runtime peer under %s', async (runner) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
@@ -288,5 +267,38 @@ test.each((['recommended', 'all'] as const).flatMap((level) => NEXT_BUILD_ROUTES
                 left.localeCompare(right),
             ),
         );
+    },
+);
+
+test.each(['recommended', 'all'] as const)(
+    '%s hooks plan only the stages declared by their manifests',
+    async (level) => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildPolicy(['files', 'swift', 'nginx', 'typescript', 'docs'], { level }),
+            ...HOOK_STAGE_FILES,
+        });
+        const session = await openSession(sandbox.path);
+        for (const stage of ['push', 'all'] as const) {
+            const explicit = planRun(session, { stage, skips: [], only: ['typescript/tsc'] });
+            expect(explicit.map((entry) => entry.check.name)).toContain('typescript/tsc');
+        }
+        const every = planRun(session, { stage: 'any', skips: [], includeUnsupported: true });
+        const names = every.map((entry) => entry.check.name);
+        for (const check of HOOK_STAGE_CHECKS) expect(names).toContain(check);
+        for (const [hook, stage] of HOOK_STAGES) {
+            const planned = planRun(session, { stage, skips: [], includeUnsupported: true });
+            const ids = planned.map((entry) => entry.check.name);
+            const expected = every
+                .filter(
+                    ({ check, manifest }) => manifest!.checks.find(({ name }) => name === check.name)!.stage === stage,
+                )
+                .map((entry) => entry.check.name);
+            expect(ids, hook).toStrictEqual(expected);
+            if (stage === 'commit') {
+                expect(ids).toContain('docs/lychee');
+                expect(ids).not.toContain('docs/lychee-external');
+                expect(ids).not.toContain('typescript/tsc');
+            }
+        }
     },
 );

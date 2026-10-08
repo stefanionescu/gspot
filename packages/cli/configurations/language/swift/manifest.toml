@@ -81,7 +81,7 @@ pointer = { path = ".swiftlint.yml", body = "parent_config: {target_json}\n" }
 [[tool_file]]
 target = ".gspot/config/swiftformat"
 tool = "swiftformat"
-rule_keys = ["enable", "disable", "rules", "lint-only"]
+rule_keys = ["enable", "disable"]
 scoped = true
 
 [[tool_file]]
