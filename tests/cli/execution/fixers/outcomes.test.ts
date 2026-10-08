@@ -12,6 +12,7 @@ import { pathExists } from '#tests/harness/preservation.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { runCheckCommand } from '#cli/execution/command/check.ts';
 import { planFixer, buildFixerPolicy } from '#tests/harness/fixer.ts';
+import { FIXER_OUTCOMES } from '#tests/config/cli/execution/fixers/outcomes.ts';
 
 test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', async (code) => {
     await using sandbox = await testdir();
@@ -40,48 +41,23 @@ test.each([0, 3])('a declared fatal diagnostic overrides correction exit %s', as
     });
 });
 
-test.each([
-    { code: 3, content: 'original', status: 'unchanged' },
-    { code: 3, content: 'corrected', status: 'changed' },
-    { code: 4, content: 'partial', status: 'failed' },
-])('declared finding exit $code retains the $status correction outcome', async ({ code, content, status }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': 'original' });
-    const session = await openSession(sandbox.path);
-    const planned = planFixer(
-        session,
-        `await Bun.write('source.txt', ${JSON.stringify(content)}); process.exitCode = ${String(code)}`,
-    );
-    planned.check.exit_codes = [3];
-    const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
-        ({ results }) => results[0]!,
-    );
-    expect(result.status).toBe(status);
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(content);
-    expect(result.changed).toStrictEqual(content === 'original' ? [] : ['source.txt']);
-});
-test.each([
-    { script: 'process.exitCode = 0', status: 'unchanged', after: 'original' },
-    { script: "await Bun.write('source.txt', 'corrected')", status: 'changed', after: 'corrected' },
-    { script: 'process.exitCode = 3', status: 'failed', after: 'original' },
-    {
-        script: "await Bun.write('source.txt', 'partial'); process.exitCode = 3",
-        status: 'failed',
-        after: 'partial',
+test.each(FIXER_OUTCOMES)(
+    '$name classifies $status from execution and resulting bytes',
+    async ({ script, exit_codes: exitCodes, status, after, note }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': 'original' });
+        const session = await openSession(sandbox.path);
+        const planned = planFixer(session, script);
+        if (exitCodes !== undefined) planned.check.exit_codes = exitCodes;
+        const result = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: false }).then(
+            ({ results }) => results[0]!,
+        );
+        expect(result).toMatchObject({ status });
+        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
+        expect(result.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
+        if (note !== undefined) expect(result).toMatchObject({ note: textContaining(note) });
     },
-])('classifies $status from execution and resulting bytes', async ({ script, status, after }) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': 'original' });
-    const session = await openSession(sandbox.path);
-    const result = await applyFixers(session, [planFixer(session, script)], {
-        checks: BUILT_IN_CHECKS,
-        isDryRun: false,
-    }).then(({ results }) => results[0]!);
-    expect(result.status).toBe(status);
-    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
-    expect(result.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
-    expect(result.status === 'failed' && result.note.includes('exited 3')).toBe(status === 'failed');
-});
+);
 
 test('compares bytes that decode to the same replacement character', async () => {
     await using sandbox = await testdir();

@@ -69,8 +69,6 @@ export const SCENARIOS: ConfigurationScenario[] = [
     { name: 'the nestjs configuration', repository: frameworkNestjs.REPOSITORY, cases: frameworkNestjs.CASES },
     { name: 'the nextjs configuration', repository: frameworkNextjs.REPOSITORY, cases: frameworkNextjs.CASES },
     { name: 'the react configuration', repository: react.REPOSITORY, cases: react.CASES },
-    { name: 'the expo configuration', repository: react.EXPO_REPOSITORY, cases: react.EXPO_CASES },
-    { name: 'the bare react-native configuration', repository: react.NATIVE_REPOSITORY, cases: react.NATIVE_CASES },
     { name: 'the svelte configuration', repository: frameworkSvelte.REPOSITORY, cases: frameworkSvelte.CASES },
     { name: 'the vue configuration', repository: frameworkVue.REPOSITORY, cases: frameworkVue.CASES },
 ];

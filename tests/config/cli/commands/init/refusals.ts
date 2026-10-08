@@ -1,6 +1,13 @@
 export const QUIET = ['--no-task', '--no-ci', '--no-agent-rules', '--no-install'];
 
-export const PREVIEW = ['init', '--yes', '--no-hooks', ...QUIET, '--dry-run', '--json'];
+export const ARGUMENT_REFUSALS = [
+    { name: 'a choice outside its list', argv: ['init', '--yes', '--ci', 'foo'], cause: 'foo' },
+    {
+        name: 'an unknown configuration',
+        argv: ['init', '--yes', '--configurations', 'bassh', ...QUIET],
+        cause: 'bassh',
+    },
+];
 
 /** Git-dependent plan rows belong only to a repository with a Git index. */
 export const GIT_PLAN_CASES = [

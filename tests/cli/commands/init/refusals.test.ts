@@ -13,29 +13,22 @@ import { initCommand } from '#cli/commands/init/command.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
-import { QUIET, PREVIEW, GIT_PLAN_CASES, UNSAFE_SCOPE_CASES } from '#tests/config/cli/commands/init/refusals.ts';
 
-test('a preview writes nothing and prints parseable JSON', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
-    commitAll(sandbox.path);
-    const json = await runGspot(sandbox.path, PREVIEW);
-    expect(json.code, json.stdout + json.stderr).toBe(0);
-    expect(() => JSON.parse(json.stdout) as unknown).not.toThrow();
-    expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
-});
+import {
+    QUIET,
+    GIT_PLAN_CASES,
+    ARGUMENT_REFUSALS,
+    UNSAFE_SCOPE_CASES,
+} from '#tests/config/cli/commands/init/refusals.ts';
 
-test.each([
-    ['a choice outside its list', ['init', '--yes', '--ci', 'foo']],
-    ['an unknown configuration', ['init', '--yes', '--configurations', 'bassh', ...QUIET]],
-    ['an unknown hook', ['check', '--hook', 'later']],
-])('%s exits 2 and writes nothing', async (_name, argv) => {
+test.each(ARGUMENT_REFUSALS)('$name exits 2 and writes nothing', async ({ argv, cause }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, argv);
     expect(result.code, result.stdout + result.stderr).toBe(2);
+    expect(result.stdout + result.stderr).toContain(cause);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 

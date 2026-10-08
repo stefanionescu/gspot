@@ -13,7 +13,6 @@ import type { InitJson } from '#cli/types/commands/init.ts';
 import { parseToolProject } from '#cli/parsers/packages.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
-import { PREVIEW } from '#tests/config/cli/commands/init/refusals.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { COMPONENT, SELECTION_INIT } from '#tests/config/cli/commands/init/selection.ts';
@@ -152,13 +151,8 @@ test('init proposes workspace scopes without a lockfile and preserves files afte
     const before = await readTree(sandbox.path);
     const refused = await runGspot(sandbox.path, command);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(refused.stdout + refused.stderr).toContain('end with a ]');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
-    await writeFile(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: ["packages/*"]\n');
-    const corrected = await runGspot(sandbox.path, [...command, '--dry-run', '--json']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(Object.keys(parseStrictPolicy((JSON.parse(corrected.stdout) as InitJson).policy!).scope)).toStrictEqual([
-        'packages/api',
-    ]);
 });
 
 test('init previews only applicable tool projects and duplicate pins for the selected runner', async () => {
@@ -229,25 +223,26 @@ test('a named configuration brings its suggested configurations, and one --scope
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'tools/a.sh': CLEAN_BASH_SCRIPT, 'jobs/b.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);
-    const named = await runGspot(sandbox.path, [...PREVIEW, '--configurations', 'bash']);
+    const preview = [...SELECTION_INIT, ...QUIET_INIT];
+    const named = await runGspot(sandbox.path, [...preview, '--configurations', 'bash']);
     expect(named.code, named.stdout + named.stderr).toBe(0);
     const { plan } = JSON.parse(named.stdout) as Required<Pick<InitJson, 'plan'>>;
     const configurations = plan.configurations.map(({ configuration }) => configuration);
     for (const configuration of ['bash', 'format', 'naming']) expect(configurations).toContain(configuration);
-    const twoScopes = await runGspot(sandbox.path, [...PREVIEW, '--scope-configurations', 'tools=bash', 'jobs=bash']);
+    const twoScopes = await runGspot(sandbox.path, [...preview, '--scope-configurations', 'tools=bash', 'jobs=bash']);
     expect(twoScopes.code, twoScopes.stdout + twoScopes.stderr).toBe(0);
     const parsed = parseStrictPolicy((JSON.parse(twoScopes.stdout) as Required<Pick<InitJson, 'policy'>>).policy);
     expect(parsed.scope['tools']?.configurations).toContain('bash');
     expect(parsed.scope['jobs']?.configurations).toContain('bash');
 });
 
-test('initialization flags control integrations, and the plan names the formatter file init deletes', async () => {
+test('initialization flags control integrations without changing the authored formatter file', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'source.js': 'export const port = 8080;\n',
         '.prettierrc.json': '{"semi":false,"tabWidth":8}\n',
     });
-    const preview = await runGspot(sandbox.path, [...PREVIEW, '--configurations', 'javascript']);
+    const preview = await runGspot(sandbox.path, [...SELECTION_INIT, ...QUIET_INIT, '--configurations', 'javascript']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const plan = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;
     const policy = parseStrictPolicy(plan.policy);
@@ -255,10 +250,6 @@ test('initialization flags control integrations, and the plan names the formatte
     expect(policy).not.toHaveProperty('ci');
     expect(policy).not.toHaveProperty('runner');
     expect(policy.format).toStrictEqual({});
-    expect(plan.plan.remove).toContainEqual({
-        path: '.prettierrc.json',
-        note: 'replaced by the generated prettier configuration',
-    });
     expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
     expect(await Bun.file(join(sandbox.path, '.prettierrc.json')).text()).toBe('{"semi":false,"tabWidth":8}\n');
 });

@@ -9,7 +9,8 @@ import { pathExists } from '#tests/harness/preservation.ts';
 import { waitForExit, waitForFile } from '#tests/harness/process.ts';
 import { planFixer, buildFixerPolicy } from '#tests/harness/fixer.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
-import { rm, mkdir, readdir, symlink, readFile, writeFile } from 'node:fs/promises';
+import { SCRATCH_FAILURES } from '#tests/config/cli/execution/fixers/isolation.ts';
+import { rm, stat, mkdir, readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 
 test.each([
     { preview: false, isolated: false },
@@ -119,50 +120,45 @@ test('removes the scratch directory after a failed correction and preserves sour
         session,
         "await Bun.write('source.txt', 'partial'); process.stdout.write(process.cwd()); process.exitCode = 3",
     );
+    const temporary = join(sandbox.path, 'scratch');
+    await mkdir(temporary);
+    using _temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary);
     const report = await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: true });
-    const result = report.results[0];
-    expect(result?.status).toBe('failed');
-    if (result?.status !== 'failed') throw new Error('The correction did not report its failure.');
-    const scratch = result.note.slice(result.note.indexOf(': ') + 2);
-    expect(scratch).toContain('gspot-fix-');
-    expect(await pathExists(scratch)).toBe(false);
+    expect(report.results).toMatchObject([{ status: 'failed' }]);
+    expect(await readdir(temporary)).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
     expect(report.changed).toStrictEqual(['source.txt']);
     expect(report.diffs.join('\n')).toContain('+partial');
 });
 
-test.each(['copy', 'read'])('cleans the scratch directory after a failed %s', async (operation) => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': 'original' });
-    const session = await openSession(sandbox.path);
-    const planned = planFixer(
-        session,
-        "const fs = require('node:fs'); fs.unlinkSync('source.txt'); fs.mkdirSync('source.txt');",
-    );
-    if (operation === 'copy') {
-        await rm(join(sandbox.path, 'source.txt'));
-        await mkdir(join(sandbox.path, 'source.txt'));
-    }
-    const temporary = join(sandbox.path, 'scratch');
-    await mkdir(temporary);
-    const temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary);
-    try {
-        let failure: unknown;
-        try {
-            await applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: true });
-        } catch (error) {
-            failure = error;
+test.each(SCRATCH_FAILURES)(
+    'cleans the scratch directory after a failed $operation',
+    async ({ operation, diagnostic }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': buildFixerPolicy(), 'source.txt': 'original' });
+        const session = await openSession(sandbox.path);
+        const planned = planFixer(
+            session,
+            "const fs = require('node:fs'); fs.unlinkSync('source.txt'); fs.mkdirSync('source.txt');",
+        );
+        if (operation === 'copy') {
+            await rm(join(sandbox.path, 'source.txt'));
+            await mkdir(join(sandbox.path, 'source.txt'));
         }
-        expect(failure).toBeInstanceOf(Error);
+        const temporary = join(sandbox.path, 'scratch');
+        await mkdir(temporary);
+        using _temporaryDirectory = spyOn(os, 'tmpdir').mockReturnValue(temporary);
+        expect(await rejection(applyFixers(session, [planned], { checks: BUILT_IN_CHECKS, isDryRun: true }))).toContain(
+            diagnostic,
+        );
         expect(await readdir(temporary)).toStrictEqual([]);
-    } finally {
-        temporaryDirectory.mockRestore();
-    }
-    // The copy row replaces the source with a directory before the run.
-    expect(operation !== 'read' || (await readFile(join(sandbox.path, 'source.txt'), 'utf8')) === 'original').toBe(
-        true,
-    );
-});
+        // The copy row replaces the source with a directory before the run.
+        if (operation === 'copy') {
+            const attributes = await stat(join(sandbox.path, 'source.txt'));
+            expect(attributes.isDirectory()).toBe(true);
+        } else expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+    },
+);
 
 test.each([false, true])(
     'a canceled correction retains partial changes and reports the process failure (isolated %p)',

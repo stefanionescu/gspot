@@ -40,8 +40,7 @@ test('list shows selected policy states, detected configurations, and setting va
     expect(rows.find((row) => row.key === 'level')?.value).toBe('recommended');
     const invalid = await runGspot(directory.path, ['list', 'unknown']);
     expect(invalid.code).toBe(2);
-    const obsolete = await runGspot(directory.path, ['doctor', '--settings']);
-    expect(obsolete.code).toBe(2);
+    expect(invalid.stdout + invalid.stderr).toContain('unknown');
     expect(await readFile(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
     expect(await pathExists(join(directory.path, '.gspot'))).toBe(false);
     expect(await readTree(directory.path)).toStrictEqual(before);

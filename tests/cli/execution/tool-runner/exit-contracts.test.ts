@@ -61,9 +61,18 @@ test.each(['{file}', '{files}'])(
     },
 );
 
-test.each([0, 1, 3] as const)(
-    'Actionlint removes its prepared project after adapter exit %i without changing source permissions',
-    async (code) => {
+test.each([
+    { code: 0, status: 'passed', findings: [], note: undefined },
+    {
+        code: 1,
+        status: 'failed',
+        findings: [{ file: '.github/workflows/caller.yml', rule: 'workflow-call' }],
+        note: undefined,
+    },
+    { code: 3, status: 'error', findings: [], note: 'exit 3' },
+])(
+    'Actionlint removes its prepared project after adapter exit $code without changing source permissions',
+    async ({ code, status, findings, note }) => {
         await using sandbox = await testdir();
         const record = join(sandbox.path, 'workspace.txt');
         const executable = join(sandbox.path, 'actionlint');
@@ -80,7 +89,7 @@ test.each([0, 1, 3] as const)(
         const planned = plans[0]!;
         planned.tool = { ...planned.tool!, name: executable };
         const result = await checkRun(planned.check, BUILT_IN_CHECKS)(session, planned);
-        expect(result.status, JSON.stringify(result)).toBe(({ 0: 'passed', 1: 'failed', 3: 'error' } as const)[code]);
+        expect(result.status, JSON.stringify(result)).toBe(status);
         const workspace = await Bun.file(record).text();
         expect(workspace).not.toBe(sandbox.path);
         expect(await pathExists(workspace)).toBe(false);
@@ -88,9 +97,8 @@ test.each([0, 1, 3] as const)(
         const attributes = await stat(join(sandbox.path, '.github/workflows/caller.yml'));
         expect(attributes.mode & 0o777).toBe(getKeptMode(0o444));
         expect(await pathExists(join(sandbox.path, '.git'))).toBe(false);
-        // An exit outside the contract is an error that names the exit code and carries no findings.
-        expect(result.note?.includes('exit 3') ?? false).toBe(code === 3);
-        expect(result.findings.length > 0).toBe(code === 1);
+        if (note !== undefined) expect(result.note).toContain(note);
+        expect(result.findings).toMatchObject(findings);
     },
 );
 

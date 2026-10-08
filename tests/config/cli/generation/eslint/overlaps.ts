@@ -209,3 +209,26 @@ export const BINDING_SEVERITIES = {
     'security/detect-new-buffer': 0,
     'n/no-deprecated-api': 2,
 };
+
+export const OVERLAP_RULE_NAMES = [
+    'no-empty-character-class',
+    'regexp/no-empty-character-class',
+    'sonarjs/no-empty-character-class',
+    'no-useless-catch',
+    'sonarjs/no-useless-catch',
+    'unicorn/no-lonely-if',
+    'sonarjs/no-collapsible-if',
+];
+export const OVERLAP_PATTERNS = ['*.js', '*.ts'];
+
+export const BINDING_RULE_NAMES = [
+    'no-unused-vars',
+    '@typescript-eslint/no-unused-vars',
+    'sonarjs/no-unused-vars',
+    'sonarjs/unused-import',
+    'security/detect-eval-with-expression',
+    'sonarjs/code-eval',
+    'security/detect-new-buffer',
+    'n/no-deprecated-api',
+];
+export const BINDING_PATTERNS = ['*.js', '*.ts', '*.cjs', '*.cts'];

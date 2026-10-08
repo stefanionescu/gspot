@@ -1,11 +1,11 @@
 // Gitleaks and pinned TruffleHog scan pushed history for secrets removed by later commits.
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
+import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { chmod, writeFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { git, gitOutput } from '#tests/harness/git.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import { containingAll } from '#tests/harness/expectations.ts';
@@ -125,7 +125,7 @@ test('verified-secret history scans every changed blob without exposing raw cred
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('passed');
     expect(requests).toStrictEqual([]);
-    expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(removed);
+    expect(gitOutput(sandbox.path, ['rev-parse', 'HEAD'])).toBe(removed);
 });
 
 test.each(['malformed', 'crashed'])(
@@ -157,6 +157,6 @@ test.each(['malformed', 'crashed'])(
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as PushReport).revisions[0]?.report.checks[0]?.status).toBe('passed');
         expect(requests).toStrictEqual([]);
-        expect(git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim()).toBe(removed);
+        expect(gitOutput(sandbox.path, ['rev-parse', 'HEAD'])).toBe(removed);
     },
 );

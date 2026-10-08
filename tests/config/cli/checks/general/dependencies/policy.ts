@@ -13,6 +13,11 @@ export const INVALID: (CaseChanges & Record<'expected', string>)[] = [
         files: { 'package.json': '{"dependencies":{"example":false}}' },
         expected: 'Cannot read package manifest package.json',
     },
+    {
+        check: 'dependencies/manifests',
+        files: { 'package.json': '{"dependencies":{"example":5}}' },
+        expected: 'Cannot read package manifest package.json',
+    },
 ];
 
 export const CLEAN = `{\n    "name": "example",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@${Bun.version}"\n}\n`;

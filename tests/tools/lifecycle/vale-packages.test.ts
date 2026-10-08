@@ -8,8 +8,8 @@ import { rootView } from '#cli/policy/settings/view.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/plans.ts';
-import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { VALE_PACKAGES, VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 import { INSTALLED, ENCODED_ARCHIVE } from '#tests/config/tools/lifecycle/vale-packages.ts';
 import { hasValePackages, removeValePackages, installValePackages } from '#cli/tools/vale.ts';
@@ -46,7 +46,9 @@ async function expectPrunedRules(root: string): Promise<void> {
     ).toBeUndefined();
     expect(await pathExists(join(root, '.gspot/config/vale/styles/Retired'))).toBe(false);
     expect(await pathExists(join(root, INSTALLED))).toBe(true);
+    const configuration = await readFile(join(root, '.gspot/config/vale.ini'));
     removeValePackages(root);
+    expect(await readFile(join(root, '.gspot/config/vale.ini'))).toStrictEqual(configuration);
     expect(await pathExists(join(root, '.gspot/config/vale/styles/Google'))).toBe(false);
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe('keep\n');
 }
@@ -76,7 +78,6 @@ test.each([
     await using directory = await testdir();
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy(['prose'], { level: 'all' }),
-        'guide.md': 'An ambiguousword.\n',
         'authored.txt': 'keep\n',
     });
     const server = Bun.serve({
@@ -115,7 +116,6 @@ test.each([
         expect(hasValePackages(directory.path, 'all')).toBe(true);
         for (const folder of VALE_PACKAGE_FOLDERS)
             expect(await pathExists(join(directory.path, '.gspot/config/vale/styles', folder))).toBe(true);
-        expect(getOwnership(directory.path).files.map((file) => file.path)).toStrictEqual(['.gspot/config/vale.ini']);
         await verify(directory.path);
     } finally {
         await server.stop(true);

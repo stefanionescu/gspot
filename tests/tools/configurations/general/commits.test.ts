@@ -1,80 +1,26 @@
 // The commits configuration: the commit-msg hook refuses a message outside the convention and passes one inside it.
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { quoteArgument } from '#cli/platform/text.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { git, commitAll } from '#tests/harness/git.ts';
 import { LICENSE } from '#tests/config/samples/docs.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
+import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
+import { test, expect, afterAll, describe, beforeAll, beforeEach } from 'bun:test';
 import { buildToolsPath, buildSandboxPath, installToolProjects } from '#tests/harness/install.ts';
 
 import {
-    COMMITS_INIT,
+    COMMITS_SETUP,
     COMMIT_MESSAGES,
     DERIVED_SCOPE_POLICY,
 } from '#tests/config/tools/configurations/general/commits.ts';
-
-// The message check refuses a bad message, and a later range check rejects a bypassed hook.
-async function expectCommitChecks(root: string, environment: Record<string, string>): Promise<void> {
-    const draft = join(root, 'draft.txt');
-    await Bun.write(draft, 'Fixed stuff.\n');
-    const refused = await spawnGspot(
-        root,
-        ['check', '--only', 'commits/commitlint', '--message-file', draft, '--json'],
-        environment,
-    );
-    expect(refused.code).toBe(1);
-    expect((JSON.parse(refused.stdout) as RunReport).checks).toMatchObject([
-        { check: 'commits/commitlint', status: 'failed' },
-    ]);
-    expect((JSON.parse(refused.stdout) as RunReport).checks[0]?.findings.map(({ rule }) => rule)).toStrictEqual([
-        'type-empty',
-        'subject-empty',
-        'subject-full-stop',
-    ]);
-    const accepted = await spawnGspot(root, ['check', '--only', 'commits/commitlint-range'], environment);
-    expect(accepted.code).toBe(0);
-    await Bun.write(join(root, 'more.md'), '# More\n');
-    expect(git(root, ['add', '-A']).code).toBe(0);
-    expect(git(root, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']).code).toBe(0);
-    const range = await spawnGspot(root, ['check', '--only', 'commits/commitlint-range'], environment);
-    expect(range.code).toBe(1);
-    expect(range.stdout).toContain('type-empty');
-}
-
-// A push checks every distinct commit message even when the pushed trees and changed paths are identical.
-async function expectDistinctMessages(root: string, environment: Record<string, string>): Promise<void> {
-    const base = git(root, ['rev-parse', 'HEAD']).stdout.trim();
-    const tree = git(root, ['rev-parse', 'HEAD^{tree}']).stdout.trim();
-    const good = git(root, ['commit-tree', tree, '-p', base, '-m', 'docs: reviewed']).stdout.trim();
-    const bad = git(root, ['commit-tree', tree, '-p', base, '-m', 'Bad message.']).stdout.trim();
-    const command = ['check', '--hook', 'pre-push', '--only', 'commits/commitlint-range', '--json'];
-    const rejected = await spawnGspot(root, command, environment, {
-        stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/bad ${bad} refs/heads/bad ${base}\n`,
-    });
-    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
-    const report = JSON.parse(rejected.stdout) as PushReport;
-    expect(report.revisions).toHaveLength(1);
-    expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set([good, bad]));
-    expect(
-        report.revisions[0]?.report.checks[0]?.findings.some(
-            (finding) => finding.rule === 'type-empty' && finding.message.includes(bad),
-        ),
-    ).toBe(true);
-    const corrected = await spawnGspot(root, command, environment, {
-        stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
-    });
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect(git(root, ['rev-parse', 'HEAD']).stdout.trim()).toBe(base);
-}
 
 // Completed history includes every selected commit and passes its range check.
 function expectCompleteHistory(output: string, commits: string[]): void {
@@ -150,34 +96,104 @@ test('native commitlint keeps exact project scopes optional and restores coverag
     }
 });
 
-test('the commits configuration > the commit-msg hook refuses a free-form message and takes a conventional one', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT, 'README.md': '# Test\n', LICENSE });
-    commitAll(sandbox.path);
-    const init = await spawnGspot(sandbox.path, COMMITS_INIT);
-    expect(init.code, init.stdout + init.stderr).toBe(0);
-    const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all']);
-    expect(selected.code, selected.stdout + selected.stderr).toBe(0);
-    const installed = await spawnGspot(sandbox.path, ['install']);
-    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
-    await Bun.write(join(sandbox.path, 'notes.md'), '# Notes\n');
-    expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
-    const environment = {
-        NO_COLOR: '1',
-        PATH: buildSandboxPath(['commitlint']),
-    };
-    const bad = git(sandbox.path, ['commit', '-qm', 'Added notes.'], environment);
+let sandbox: Awaited<ReturnType<typeof testdir>>;
+let root: string;
+const environment = { NO_COLOR: '1', PATH: buildSandboxPath(['commitlint']) };
+let initial: string;
+
+const prepareCommits = async () => {
+    sandbox = await testdir();
+    root = sandbox.path;
+    await createFileTree(root, { 'scripts/a.sh': CLEAN_BASH_SCRIPT, 'README.md': '# Test\n', LICENSE });
+    commitAll(root);
+    for (const command of COMMITS_SETUP) {
+        const prepared = await spawnGspot(root, command);
+        expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
+    }
+    gitOutput(root, ['add', '-A']);
+    gitOutput(root, ['commit', '-qm', 'chore: configure checks', '--no-verify']);
+    initial = gitOutput(root, ['rev-parse', 'HEAD']);
+};
+
+const checkCommitHook = async () => {
+    await Bun.write(join(root, 'notes.md'), '# Notes\n');
+    expect(git(root, ['add', '-A']).code).toBe(0);
+    const bad = git(root, ['commit', '-qm', 'Added notes.'], environment);
     expect(bad.code).not.toBe(0);
     expect(`${bad.stdout}${bad.stderr}`).toContain('type-empty');
     // The reproduction quotes the path, which holds backslashes on Windows.
-    expect(bad.stdout + bad.stderr).toContain(
-        `--message-file ${quoteArgument(join(sandbox.path, '.git/COMMIT_EDITMSG'))}`,
-    );
+    expect(bad.stdout + bad.stderr).toContain(`--message-file ${quoteArgument(join(root, '.git/COMMIT_EDITMSG'))}`);
     expect(bad.stdout + bad.stderr).toContain('Bypass this hook once: git commit --no-verify');
-    const good = git(sandbox.path, ['commit', '-qm', 'docs: add the notes page'], environment);
+    const good = git(root, ['commit', '-qm', 'docs: add the notes page'], environment);
     expect(good.code, good.stdout + good.stderr).toBe(0);
-    await expectCommitChecks(sandbox.path, environment);
-    await expectDistinctMessages(sandbox.path, environment);
+};
+
+const checkMessageFile = async () => {
+    const draft = join(root, 'draft.txt');
+    await Bun.write(draft, 'Fixed stuff.\n');
+    const refused = await spawnGspot(
+        root,
+        ['check', '--only', 'commits/commitlint', '--message-file', draft, '--json'],
+        environment,
+    );
+    expect(refused.code).toBe(1);
+    expect((JSON.parse(refused.stdout) as RunReport).checks).toMatchObject([
+        { check: 'commits/commitlint', status: 'failed' },
+    ]);
+    expect((JSON.parse(refused.stdout) as RunReport).checks[0]?.findings.map(({ rule }) => rule)).toStrictEqual([
+        'type-empty',
+        'subject-empty',
+        'subject-full-stop',
+    ]);
+};
+
+const checkBypassedHook = async () => {
+    const accepted = await spawnGspot(root, ['check', '--only', 'commits/commitlint-range'], environment);
+    expect(accepted.code).toBe(0);
+    await Bun.write(join(root, 'more.md'), '# More\n');
+    expect(git(root, ['add', '-A']).code).toBe(0);
+    expect(git(root, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']).code).toBe(0);
+    const range = await spawnGspot(root, ['check', '--only', 'commits/commitlint-range'], environment);
+    expect(range.code).toBe(1);
+    expect(range.stdout).toContain('type-empty');
+};
+
+const checkDistinctMessages = async () => {
+    const base = gitOutput(root, ['rev-parse', 'HEAD']);
+    const tree = gitOutput(root, ['rev-parse', 'HEAD^{tree}']);
+    const good = gitOutput(root, ['commit-tree', tree, '-p', base, '-m', 'docs: reviewed']);
+    const bad = gitOutput(root, ['commit-tree', tree, '-p', base, '-m', 'Bad message.']);
+    const command = ['check', '--hook', 'pre-push', '--only', 'commits/commitlint-range', '--json'];
+    const rejected = await spawnGspot(root, command, environment, {
+        stdin: `refs/heads/good ${good} refs/heads/good ${base}\nrefs/heads/bad ${bad} refs/heads/bad ${base}\n`,
+    });
+    expect(rejected.code, rejected.stdout + rejected.stderr).toBe(1);
+    const report = JSON.parse(rejected.stdout) as PushReport;
+    expect(report.revisions).toHaveLength(1);
+    expect(new Set(report.revisions[0]?.commits)).toStrictEqual(new Set([good, bad]));
+    expect(
+        report.revisions[0]?.report.checks[0]?.findings.some(
+            (finding) => finding.rule === 'type-empty' && finding.message.includes(bad),
+        ),
+    ).toBe(true);
+    const corrected = await spawnGspot(root, command, environment, {
+        stdin: `refs/heads/good ${good} refs/heads/good ${base}\n`,
+    });
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    expect(gitOutput(root, ['rev-parse', 'HEAD'])).toBe(base);
+};
+
+describe('the commits configuration', () => {
+    beforeAll(prepareCommits);
+    afterAll(() => sandbox[Symbol.asyncDispose]());
+    beforeEach(() => {
+        gitOutput(root, ['reset', '--hard', initial]);
+        gitOutput(root, ['clean', '-fd']);
+    });
+    test('the commit-msg hook refuses a free-form message and takes a conventional one', checkCommitHook);
+    test('the message-file check refuses a free-form message', checkMessageFile);
+    test('the range check rejects a bypassed hook', checkBypassedHook);
+    test('a push checks distinct messages with identical trees and changed paths', checkDistinctMessages);
 });
 
 test('a shallow push checks source content but refuses incomplete required history until it is fetched', async () => {
@@ -196,17 +212,18 @@ test('a shallow push checks source content but refuses incomplete required histo
     await installToolProjects(source);
     expect(git(source, ['add', '-A']).code).toBe(0);
     expect(git(source, ['commit', '-qm', 'chore: initialize']).code).toBe(0);
-    const base = git(source, ['rev-parse', 'HEAD']).stdout.trim();
+    const base = gitOutput(source, ['rev-parse', 'HEAD']);
     await Bun.write(join(source, 'source.sh'), 'echo selected\n');
     expect(git(source, ['commit', '-qam', 'feat: select source']).code).toBe(0);
-    const selected = git(source, ['rev-parse', 'HEAD']).stdout.trim();
+    // A zero object names an absent remote ref and has this repository's object width.
+    const [selected, ZERO_SHA] = [gitOutput(source, ['rev-parse', 'HEAD']), '0'.repeat(base.length)] as const;
     expect(git(sandbox.path, ['clone', '--depth=1', pathToFileURL(source).href, 'checkout']).code).toBe(0);
     const { checkout, command, env, remote, input } = {
         checkout: join(sandbox.path, 'checkout'),
         command: ['check', '--hook', 'pre-push', '--json', '--only'],
         env: { PATH: buildToolsPath(['commitlint']) },
         remote: ['--', 'unseen', 'unused'],
-        input: { stdin: `refs/heads/main ${selected} refs/heads/main ${'0'.repeat(40)}\n` },
+        input: { stdin: `refs/heads/main ${selected} refs/heads/main ${ZERO_SHA}\n` },
     };
     expect(git(checkout, ['remote', 'add', 'unseen', pathToFileURL(source).href]).code).toBe(0);
     await installToolProjects(checkout);
@@ -226,6 +243,6 @@ test('a shallow push checks source content but refuses incomplete required histo
     const completed = await spawnGspot(checkout, [...command, 'commits/commitlint-range', ...remote], env, input);
     expect(completed.code, completed.stdout + completed.stderr).toBe(0);
     expectCompleteHistory(completed.stdout, [base, selected]);
-    expect(git(checkout, ['rev-parse', 'HEAD']).stdout.trim()).toBe(selected);
+    expect(gitOutput(checkout, ['rev-parse', 'HEAD'])).toBe(selected);
     expect(await readFile(join(checkout, 'source.sh'), 'utf8')).toBe('echo selected\n');
 });

@@ -289,7 +289,7 @@ test('Prisma content discovery returns the native read error while ordinary sess
         () => detectConfigurations(sandbox.path, repository.files, manifests, []),
         (error) => error === failure,
     );
-    expect(String(read.mock.calls[0]?.[0])).toEndWith('/prisma/schema.prisma');
+    expect(String(read.mock.calls[0]?.[0])).toBe(join(sandbox.path, 'prisma/schema.prisma'));
     read.mockClear();
     const session = await openSession(sandbox.path);
     const selected = session.scopes.flatMap((scope) => scope.selected.map((manifest) => manifest.configuration.name));

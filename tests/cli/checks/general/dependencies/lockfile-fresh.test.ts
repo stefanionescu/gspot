@@ -1,4 +1,5 @@
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
+import * as tools from '#cli/tools/inspect.ts';
 import { test, spyOn, expect } from 'bun:test';
 import { executeRun } from '#cli/execution/run.ts';
 import { testdir, createFileTree } from 'testdirs';
@@ -60,3 +61,37 @@ test.each(['missing', 'deadline', 'cancellation', 'unexpected'] as const)(
         }
     },
 );
+
+test('Yarn Berry validates metadata locks with install --immutable and preserves repository inputs', async () => {
+    await using directory = await testdir();
+    const files = {
+        'gspot.toml': buildPolicy(['dependencies']),
+        'package.json': '{"name":"example","private":true}\n',
+        'yarn.lock': '__metadata:\n  version: 8\n',
+    };
+    await createFileTree(directory.path, files);
+    const commands: string[][] = [];
+    const copies: string[] = [];
+    using _inspection = spyOn(tools, 'inspectTool').mockReturnValue({ name: 'yarn', state: 'ok', path: 'yarn' });
+    using _yarn = spyOn(processes, 'run').mockImplementation((command, options) => {
+        commands.push([...command]);
+        copies.push(options.cwd);
+        return Promise.resolve({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
+    });
+    const session = await openSession(directory.path);
+    const outcome = await executeRun(
+        session,
+        buildRunOptions({
+            stage: 'push',
+            skips: [],
+            only: ['dependencies/lockfile-fresh'],
+        }),
+    );
+    expect(outcome.report.checks[0]!.status).toBe('passed');
+    expect(
+        commands.map(([executable, ...commandArguments]) => [basename(executable!), ...commandArguments]),
+    ).toStrictEqual([['yarn', 'install', '--immutable']]);
+    for (const [path, text] of Object.entries(files))
+        expect(await readFile(join(directory.path, path), 'utf8')).toBe(text);
+    expect(await Promise.all(copies.map((path) => pathExists(path)))).toStrictEqual([false]);
+});

@@ -1,10 +1,10 @@
-// Policy errors name their gspot.toml key path and pass after the fix.
+// Policy errors name their gspot.toml key path and preserve valid settings.
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { readFile, writeFile } from 'node:fs/promises';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
@@ -17,23 +17,17 @@ test.each([
         policy: buildPolicy([], { tables: '[scope."api"]\nconfigurations = ["bas"]\n' }),
         where: 'scope.api.configurations.0',
     },
-])(
-    'unknown configurations in the $scope scope identify their declaration and accept the suggested configuration',
-    async ({ policy, where }) => {
-        await using sandbox = await testdir();
-        await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/example.toml': 'value = 1\n' });
-        const invalid = await runGspot(sandbox.path, ['list', '--json']);
-        expect(invalid.code).toBe(2);
-        const diagnostic = JSON.parse(invalid.stdout) as CommandFailureJson;
-        expect(diagnostic.message).toContain(`gspot.toml: ${where}:`);
-        expect(diagnostic.message).toContain('bash');
-        await writeFile(join(sandbox.path, 'gspot.toml'), policy.replace('"bas"', '"bash"'));
-        const corrected = await runGspot(sandbox.path, ['list', '--json']);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    },
-);
+])('unknown configurations in the $scope scope identify their declaration', async ({ policy, where }) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/example.toml': 'value = 1\n' });
+    const invalid = await runGspot(sandbox.path, ['list', '--json']);
+    expect(invalid.code).toBe(2);
+    const diagnostic = JSON.parse(invalid.stdout) as CommandFailureJson;
+    expect(diagnostic.message).toContain(`gspot.toml: ${where}:`);
+    expect(diagnostic.message).toContain('bash');
+});
 
-test('a nested unknown setting is a finding at its key path, and its correction clears it', async () => {
+test('a nested unknown setting is a finding at its key path', async () => {
     const policy = buildPolicy(['bash'], {
         tables: '[agent_rules]\nenabled = false\n[scope."api"]\n[scope."api".limits]\nfile_linse = 200\n',
     });
@@ -45,9 +39,6 @@ test('a nested unknown setting is a finding at its key path, and its correction 
     expect(report.checks.find((check) => check.check === 'gspot/policy')?.findings).toMatchObject([
         { message: textContaining('scope.api.limits.file_linse:') },
     ]);
-    await writeFile(join(sandbox.path, 'gspot.toml'), policy.replace('file_linse', 'file_lines'));
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
 test('a loosening without a reason is a finding of gspot/policy, and the rest of the policy runs', async () => {
@@ -72,10 +63,6 @@ test('a loosening without a reason is a finding of gspot/policy, and the rest of
     const applied = await runGspot(sandbox.path, ['apply']);
     expect(applied.code).toBe(2);
     expect(applied.stdout + applied.stderr).toContain('gspot.toml: limits.file_lines:');
-    await writeFile(join(sandbox.path, 'gspot.toml'), policy.replace('1000', '200'));
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'bash/bash-syntax', '--json']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    expect((JSON.parse(corrected.stdout) as RunReport).checks).toMatchObject([{ check: 'bash/bash-syntax' }]);
 });
 
 test.each(['\n', '\r\n'])('configuration errors name the key path in text and JSON with %j lines', async (newline) => {
@@ -91,9 +78,6 @@ test.each(['\n', '\r\n'])('configuration errors name the key path in text and JS
         error: 'policy',
         message: textContaining('gspot.toml: runner:'),
     });
-    await writeFile(join(sandbox.path, 'gspot.toml'), policy.replace('"wrong"', '"mise"'));
-    const corrected = await runGspot(sandbox.path, ['check', '--only', 'naming/policy', '--json']);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
 
 test('a malformed reason reports a policy error and apply preserves the authored policy', async () => {

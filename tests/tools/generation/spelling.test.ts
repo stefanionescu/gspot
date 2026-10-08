@@ -29,30 +29,40 @@ test('native spelling file-type allowances preserve unrelated findings and neigh
     expect(configs.map(({ path }) => path)).toStrictEqual(['.gspot/config/typos.toml']);
     using log = openOwnership(sandbox.path);
     writeGeneratedFiles(session, log, undefined, emitted);
-    for (const config of configs) {
-        const policy = runTestCommandBlocking(['typos', '--isolated', '--config', config.path, 'gspot.toml'], {
+    const policy = runTestCommandBlocking(
+        ['typos', '--isolated', '--config', '.gspot/config/typos.toml', 'gspot.toml'],
+        {
             cwd: sandbox.path,
-        });
-        expect(policy.code, policy.stdout + policy.stderr).toBe(0);
-        const result = runTestCommandBlocking(
-            ['typos', '--isolated', '--config', config.path, '--format', 'json', 'fixture.txt', 'neighbor.txt'],
-            { cwd: sandbox.path },
-        );
-        expect(result.code, result.stderr).toBe(2);
-        const found = result.stdout
-            .trim()
-            .split('\n')
-            .map((line) => JSON.parse(line) as Record<string, unknown>)
-            .map((record) => ({ path: record['path'], line: record['line_num'], typo: record['typo'] }));
-        expect(found).toHaveLength(3);
-        expect(found).toStrictEqual(
-            containingAll([
-                { path: 'fixture.txt', line: 1, typo: TYPO.the },
-                { path: 'neighbor.txt', line: 1, typo: TYPO.color },
-                { path: 'neighbor.txt', line: 1, typo: TYPO.the },
-            ]),
-        );
-    }
+        },
+    );
+    expect(policy.code, policy.stdout + policy.stderr).toBe(0);
+    const result = runTestCommandBlocking(
+        [
+            'typos',
+            '--isolated',
+            '--config',
+            '.gspot/config/typos.toml',
+            '--format',
+            'json',
+            'fixture.txt',
+            'neighbor.txt',
+        ],
+        { cwd: sandbox.path },
+    );
+    expect(result.code, result.stderr).toBe(2);
+    const found = result.stdout
+        .trim()
+        .split('\n')
+        .map((line) => JSON.parse(line) as Record<string, unknown>)
+        .map((record) => ({ path: record['path'], line: record['line_num'], typo: record['typo'] }));
+    expect(found).toHaveLength(3);
+    expect(found).toStrictEqual(
+        containingAll([
+            { path: 'fixture.txt', line: 1, typo: TYPO.the },
+            { path: 'neighbor.txt', line: 1, typo: TYPO.color },
+            { path: 'neighbor.txt', line: 1, typo: TYPO.the },
+        ]),
+    );
 });
 
 test('spelling locales and word allowances remain scoped in generated configurations at all', async () => {
@@ -107,15 +117,15 @@ test('spelling locales and word allowances remain scoped in generated configurat
 });
 
 test.each([
-    ['nested/src/**'],
-    ['**/src/**'],
-    ['*.txt', '!**/keep.txt'],
-    ['{nested/src,other/lib}/**'],
-    ['nested/[st]rc/**'],
-    ['/nested/src/'],
-    ['nested'],
-    ['**/nested/**/src/*'],
-])('spelling exclusions %j report the same files in a scope configuration', async (...patterns) => {
+    [['nested/src/**']],
+    [['**/src/**']],
+    [['*.txt', '!**/keep.txt']],
+    [['{nested/src,other/lib}/**']],
+    [['nested/[st]rc/**']],
+    [['/nested/src/']],
+    [['nested']],
+    [['**/nested/**/src/*']],
+])('spelling exclusions %j report the same files in a scope configuration', async (patterns) => {
     await using sandbox = await testdir();
     const paths = ['src/bad.txt', 'src/keep.txt', 'trc/bad.txt', 'child/src/bad.txt', 'child/bad.txt', 'bad.txt'];
     await createFileTree(sandbox.path, {

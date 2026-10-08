@@ -37,3 +37,6 @@ export const DEPRECATION_FINDINGS = [
 ];
 
 export const DEPRECATION_CORRECTION = "import { current } from './api.js';\nexport const result = current;\n";
+
+export const DEPRECATION_RULE_NAMES = ['@typescript-eslint/no-deprecated', 'sonarjs/deprecation'];
+export const DEPRECATION_SEVERITIES = [2, 0];

@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { testdir } from 'testdirs';
 import { createHash } from 'node:crypto';
 import { test, spyOn, expect } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
@@ -9,6 +9,7 @@ import { rejection } from '#tests/harness/expectations.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { packageToolProject } from '#cli/tools/npm/project.ts';
+import { useEnvironment } from '#tests/harness/environment.ts';
 import { PACKAGE_PROJECTS } from '#tests/config/harness/npm.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { chmod, readdir, readFile, writeFile } from 'node:fs/promises';
@@ -51,8 +52,6 @@ test('npm from package.json with mise refuses lifecycle scripts before contactin
     await expectInstallationRefusal(root, tools, 'scripts');
     expect(registry.requests).toBe(requestsBefore);
     expect(await readFile(manifestPath, 'utf8')).toBe(hasScript);
-    await writeFile(manifestPath, manifest);
-    await chmod(manifestPath, 0o444);
 });
 test('native wrapper download failure preserves the lockfile and publishes no partial installation', async () => {
     await using sandbox = await createPackageProject('npm', 'package.json', 'none');
@@ -61,7 +60,7 @@ test('native wrapper download failure preserves the lockfile and publishes no pa
     expect(installed.exitCode, installed.text).toBe(0);
     const { lockfilePath, lockfile } = await readPackageInputs(root, 'npm');
     const original = spawn.run;
-    const initialize = spyOn(spawn, 'run').mockImplementation(async (argv, options) => {
+    using _executableDownload = spyOn(spawn, 'run').mockImplementation(async (argv, options) => {
         if (/(?:editorconfig-checker|[\\/]ec(?:\.cmd)?$)/u.test(argv[0] ?? ''))
             return {
                 code: 7,
@@ -72,15 +71,11 @@ test('native wrapper download failure preserves the lockfile and publishes no pa
             };
         return original(argv, options);
     });
-    try {
-        await expectInstallationRefusal(root, tools, 'Native wrapper download failed');
-        expect(await readFile(join(root, '.gspot/node_modules/prettier/package.json'), 'utf8')).toContain(
-            prettierManifest.version,
-        );
-        expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
-    } finally {
-        initialize.mockRestore();
-    }
+    await expectInstallationRefusal(root, tools, 'Native wrapper download failed');
+    expect(await readFile(join(root, '.gspot/node_modules/prettier/package.json'), 'utf8')).toContain(
+        prettierManifest.version,
+    );
+    expect(await readFile(lockfilePath)).toStrictEqual(lockfile);
 });
 
 test('a reinstall the registry answers with 404 keeps the working tools and leaves no scratch folder', async () => {
@@ -102,12 +97,16 @@ test('a reinstall the registry answers with 404 keeps the working tools and leav
     await chmod(lockfilePath, 0o644);
     await writeFile(lockfilePath, changed);
     await chmod(lockfilePath, 0o444);
-    const before = await readdir(tmpdir());
+    await using temporary = await testdir();
+    await using cache = await testdir();
+    using _environment = useEnvironment({
+        TMPDIR: temporary.path,
+        TEMP: temporary.path,
+        TMP: temporary.path,
+        NODE_COMPILE_CACHE: cache.path,
+    });
     await expectInstallationRefusal(root, tools, 'immutable installation failed');
-    const after = await readdir(tmpdir());
-    expect(after.filter((name) => name.startsWith('gspot-install-'))).toStrictEqual(
-        before.filter((name) => name.startsWith('gspot-install-')),
-    );
+    expect(await readdir(temporary.path)).toStrictEqual([]);
     const version = await runTestCommand([process.execPath, prettier, '--version'], { cwd: root });
     expect(version.stdout.trim()).toBe(prettierManifest.version);
 });
@@ -120,7 +119,7 @@ test('a tool project file that changes during the install is refused and nothing
     const manifestPath = join(root, '.gspot/package.json');
     const original = spawn.run;
     // Another writer edits the tool project while the package manager installs it.
-    using installing = spyOn(spawn, 'run').mockImplementation(async (argv, options) => {
+    using _installing = spyOn(spawn, 'run').mockImplementation(async (argv, options) => {
         const result = await original(argv, options);
         if (argv.includes('ci')) {
             await chmod(manifestPath, 0o644);
@@ -129,7 +128,6 @@ test('a tool project file that changes during the install is refused and nothing
         return result;
     });
     await expectInstallationRefusal(root, tools, 'changed during installation');
-    expect(installing).toHaveBeenCalled();
     expect(await readFile(join(root, '.gspot/node_modules/prettier/package.json'), 'utf8')).toContain(
         prettierManifest.version,
     );

@@ -16,13 +16,9 @@ export const COMMIT_MESSAGES = [
     { message: 'fix(Core): xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', rule: 'header-max-length' },
 ];
 
-export const COMMITS_INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'commits',
-    '--no-task',
-    '--no-ci',
-    '--no-agent-rules',
-    '--no-install',
+/** Native preparation commands shared by the four installed commit scenarios. */
+export const COMMITS_SETUP = [
+    ['init', '--yes', '--configurations', 'commits', '--no-task', '--no-ci', '--no-agent-rules', '--no-install'],
+    ['set', 'level', 'all'],
+    ['install'],
 ];

@@ -13,21 +13,6 @@ import { MANIFEST, REGISTRY_ALIASES } from '#tests/config/cli/checks/general/dep
 const DEPENDENCIES_POLICY = buildPolicy(['dependencies']);
 
 describe('manifest policy reads', () => {
-    test.each(['{', '{"dependencies":{"example":5}}'])(
-        'reports malformed manifest %s with its path',
-        async (content) => {
-            await using sandbox = await testdir();
-            await createFileTree(sandbox.path, { 'gspot.toml': DEPENDENCIES_POLICY, 'package.json': MANIFEST });
-            const inspected = buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests');
-            await writeFile(join(sandbox.path, 'package.json'), content);
-            expect(() => manifests(inspected)).toThrow('Cannot read package manifest package.json');
-            await writeFile(join(sandbox.path, 'package.json'), MANIFEST);
-            expect(manifests(buildCheckInput(await openSession(sandbox.path), 'dependencies/manifests'))).toStrictEqual(
-                [],
-            );
-        },
-    );
-
     test('accepts an absent optional manifest and a valid manifest', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': DEPENDENCIES_POLICY, 'README.md': '# Example\n' });

@@ -12,8 +12,8 @@ import type { SpawnOutcome } from '#tests/types/harness/command.ts';
 
 // Runs the pinned Squawk over the test migration with one generated configuration.
 
-function squawk(root: string, config: string): SpawnOutcome {
-    const result = runTestCommandBlocking(['squawk', '--reporter', 'json', '--config', config, 'migration.sql'], {
+function squawk(root: string, config: string, path: string): SpawnOutcome {
+    const result = runTestCommandBlocking(['squawk', '--reporter', 'json', '--config', config, path], {
         cwd: root,
     });
     return { code: result.code, stdout: result.stdout, stderr: result.stderr };
@@ -28,6 +28,7 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
             tables: '[tools.squawk]\nassume_in_transaction = false\n[scope."transactional"]\n[scope."transactional".tools.squawk]\nassume_in_transaction = true\n[scope."transactional/child"]\n',
         }),
         'migration.sql': sample,
+        'transactional/child/migration.sql': sample,
         'supabase/migrations/0001_initial.sql': sample,
         'transactional/supabase/migrations/0001_initial.sql': 'SELECT 1;\n',
         'transactional/child/supabase/migrations/0001_initial.sql': 'SELECT 1;\n',
@@ -44,12 +45,16 @@ test('Squawk uses the effective transaction setting for each scope and honors fa
     });
     using log = openOwnership(sandbox.path);
     writeGeneratedFiles(session, log, undefined, emitted);
-    const transactional = squawk(sandbox.path, '.gspot/config/transactional/child/squawk.toml');
+    const transactional = squawk(
+        sandbox.path,
+        '.gspot/config/transactional/child/squawk.toml',
+        'transactional/child/migration.sql',
+    );
     expect(transactional.code, transactional.stderr).toBe(0);
-    const failed = squawk(sandbox.path, '.gspot/config/squawk.toml');
+    const failed = squawk(sandbox.path, '.gspot/config/squawk.toml', 'migration.sql');
     expect(failed.code, failed.stderr).toBe(1);
     expect(JSON.parse(failed.stdout)).toMatchObject([{ rule_name: 'prefer-robust-stmts' }]);
     await Bun.write(join(sandbox.path, 'migration.sql'), sample.replace('ADD COLUMN ', 'ADD COLUMN IF NOT EXISTS '));
-    const corrected = squawk(sandbox.path, '.gspot/config/squawk.toml');
+    const corrected = squawk(sandbox.path, '.gspot/config/squawk.toml', 'migration.sql');
     expect(corrected.code, corrected.stderr).toBe(0);
 });

@@ -32,7 +32,7 @@ test.skipIf(!hasLinuxDocker())(
             'proxy/unrelated.conf': 'include /outside/not-used.conf;\n',
         });
         commitAll(sandbox.path);
-        const command = ['check', '--hook', 'pre-push', '--only', 'nginx/test', '--json'];
+        const command = ['check', '--only', 'nginx/test', '--json'];
         const failed = await spawnGspot(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);
         expect((JSON.parse(failed.stdout) as RunReport).checks.flatMap((check) => check.findings)).toMatchObject([

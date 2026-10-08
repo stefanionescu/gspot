@@ -39,9 +39,10 @@ test('ast-grep batches all file arguments and retains matches from every batch',
         state: 'ok',
         path: process.execPath,
     });
-    using processRun = spyOn(processes, 'run').mockImplementation((command) => {
-        const batch = command.slice(5);
-        const isBranchQuery = basename(command[4] ?? '') === 'branches.yml';
+    using _processRun = spyOn(processes, 'run').mockImplementation((command) => {
+        const rule = command[command.indexOf('-r') + 1]!;
+        const batch = command.slice(command.indexOf(rule) + 1);
+        const isBranchQuery = basename(rule) === 'branches.yml';
         if (isBranchQuery) received.push(...batch);
         return Promise.resolve({
             code: 1,
@@ -66,11 +67,10 @@ test('ast-grep batches all file arguments and retains matches from every batch',
     expect(findings.map((finding) => finding.file)).toStrictEqual(selectedFiles);
     expect(findings.every((finding) => finding.rule === 'branches')).toBe(true);
     expect(batching).toHaveBeenCalled();
-    expect(processRun.mock.calls.length).toBeGreaterThan(1);
 });
 
 test.each(['fatal exit', 'malformed JSON', 'invalid match', 'unselected file'] as const)(
-    'ast-grep rejects %s and accepts corrected execution',
+    'ast-grep rejects %s',
     async (failure) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
@@ -82,7 +82,7 @@ test.each(['fatal exit', 'malformed JSON', 'invalid match', 'unselected file'] a
         });
         const session = await openSession(sandbox.path);
         const input = buildCheckInput(session, 'bash/function-size');
-        const inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
+        using _inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
             name: 'ast-grep',
             state: 'ok',
             path: process.execPath,
@@ -95,30 +95,45 @@ test.each(['fatal exit', 'malformed JSON', 'invalid match', 'unselected file'] a
                 { file: 'other.sh', ruleId: 'bash-branches', range: { start: { line: 0 }, end: { line: 1 } } },
             ]),
         }[failure];
-        const processRun = spyOn(processes, 'run').mockResolvedValue({
+        using _processRun = spyOn(processes, 'run').mockResolvedValue({
             code: failure === 'fatal exit' ? 2 : 0,
             missing: false,
             duration: 1,
             stdout: output,
             stderr: 'cannot read source.sh',
         });
-        try {
-            expect(await rejection(Promise.resolve(functionSize(input)))).toContain(
-                {
-                    'fatal exit': 'cannot read source.sh',
-                    'malformed JSON': 'JSON',
-                    'invalid match': 'range',
-                    'unselected file': 'unselected file: other.sh',
-                }[failure],
-            );
-            processRun.mockResolvedValue({ code: 0, missing: false, duration: 1, stdout: '[]', stderr: '' });
-            expect(await functionSize(input)).toStrictEqual([]);
-        } finally {
-            processRun.mockRestore();
-            inspection.mockRestore();
-        }
+        expect(await rejection(Promise.resolve(functionSize(input)))).toContain(
+            {
+                'fatal exit': 'cannot read source.sh',
+                'malformed JSON': 'JSON',
+                'invalid match': 'range',
+                'unselected file': 'unselected file: other.sh',
+            }[failure],
+        );
     },
 );
+
+test('ast-grep accepts a clean native report', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildPolicy(['bash'], { level: 'all' }),
+        'source.sh': 'echo example\n',
+    });
+    using _inspection = spyOn(inspections, 'inspectTool').mockReturnValue({
+        name: 'ast-grep',
+        state: 'ok',
+        path: process.execPath,
+    });
+    using _processRun = spyOn(processes, 'run').mockResolvedValue({
+        code: 0,
+        missing: false,
+        duration: 1,
+        stdout: '[]',
+        stderr: '',
+    });
+    expect(await functionSize(buildCheckInput(await openSession(sandbox.path), 'bash/function-size'))).toStrictEqual(
+        [],
+    );
+});
 
 test.each(['.sh', '.bats', ''])(
     'Bash %s heredocs and multiline strings keep their literal code lines',

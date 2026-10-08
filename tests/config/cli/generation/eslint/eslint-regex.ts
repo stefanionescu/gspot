@@ -60,3 +60,10 @@ export const REGEX_FINDINGS = [
 ];
 
 export const REGEX_CORRECTION = 'export const pattern = /^a+$/;\n';
+
+export const REGEX_RULE_NAMES = [
+    'regexp/no-super-linear-backtracking',
+    'sonarjs/slow-regex',
+    'security/detect-unsafe-regex',
+];
+export const REGEX_SEVERITIES = [2, 0, 0];

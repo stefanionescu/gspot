@@ -24,6 +24,7 @@ test('apply preserves a policy replaced after session opening and publishes no g
     const replacement = `${original}[scope.worker]\nconfigurations = ["python"]\n`;
     await createFileTree(directory.path, { 'gspot.toml': original, 'entry.sh': 'echo example\n' });
     const policyPath = join(directory.path, 'gspot.toml');
+    const originalPolicyAttributes = await stat(policyPath);
     const read = fs.readFileSync;
     let replaced = false;
     const observer = spyOn(fs, 'readFileSync').mockImplementation(((path, options) => {
@@ -48,7 +49,7 @@ test('apply preserves a policy replaced after session opening and publishes no g
     expect(replaced).toBe(true);
     expect(await readFile(policyPath, 'utf8')).toBe(replacement);
     const policyAttributes = await stat(policyPath);
-    expect(policyAttributes.mode & 0o777).toBe(0o644);
+    expect(policyAttributes.mode).toBe(originalPolicyAttributes.mode);
     expect(await pathExists(join(directory.path, '.gspot/version'))).toBe(false);
     expect(await pathExists(join(directory.path, '.gspot/config/shellcheckrc'))).toBe(false);
     expect(await readFile(join(directory.path, 'entry.sh'), 'utf8')).toBe('echo example\n');

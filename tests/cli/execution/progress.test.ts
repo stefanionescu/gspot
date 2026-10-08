@@ -32,7 +32,7 @@ test('completion callbacks publish filtered results before the remaining check f
                     command: [
                         process.execPath,
                         '-e',
-                        'for (let attempt = 0; attempt < 100; attempt++) { if (await Bun.file("completed").exists()) process.exit(0); await Bun.sleep(10); } process.exit(1);',
+                        'while (!await Bun.file("completed").exists()) await Bun.sleep(10);',
                     ],
                 },
             },

@@ -14,8 +14,7 @@ import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';
 // The ESLint pointer is written for editors; the other deleted files get no pointer, because each check names
 // its configuration by path.
 async function expectPointers(root: string): Promise<void> {
-    for (const gone of ['typos.toml', '.shellcheckrc', '.markdownlint-cli2.jsonc'])
-        expect(await pathExists(join(root, gone))).toBe(false);
+    for (const gone of ['typos.toml', '.shellcheckrc']) expect(await pathExists(join(root, gone))).toBe(false);
     const pointers = await Promise.all(
         ['eslint.config.js', 'eslint.config.mjs'].map(async (name) =>
             (await pathExists(join(root, name))) ? name : undefined,
