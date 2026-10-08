@@ -60,6 +60,7 @@ export type LocateOptions = {
 /** The tool search, selected pin, and process limits of Vale package installation. */
 export type ValeInstallation = {
     level: Policy['level'];
+    owner: ToolOwner;
     search: ToolSearch;
     tool: ToolPin;
     timeoutSeconds: number;

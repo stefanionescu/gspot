@@ -218,6 +218,205 @@ target = ".gspot/config/vale/styles/config/vocabularies/words/accept.txt"
 tool = "vale"
 generated_header = false
 
+[[tool_file]]
+source = "styles/gspot/ampm.yml.eta"
+target = ".gspot/config/vale/styles/gspot/ampm.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/bias-free.yml.eta"
+target = ".gspot/config/vale/styles/gspot/bias-free.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/dash-spacing.yml.eta"
+target = ".gspot/config/vale/styles/gspot/dash-spacing.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/date-ordinals.yml.eta"
+target = ".gspot/config/vale/styles/gspot/date-ordinals.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/numeric-dates.yml.eta"
+target = ".gspot/config/vale/styles/gspot/numeric-dates.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/gendered-terms.yml.eta"
+target = ".gspot/config/vale/styles/gspot/gendered-terms.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/jargon.yml.eta"
+target = ".gspot/config/vale/styles/gspot/jargon.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/militaristic-language.yml.eta"
+target = ".gspot/config/vale/styles/gspot/militaristic-language.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/negative-numbers.yml.eta"
+target = ".gspot/config/vale/styles/gspot/negative-numbers.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/ordinal-adverbs.yml.eta"
+target = ".gspot/config/vale/styles/gspot/ordinal-adverbs.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/percentage-numbers.yml.eta"
+target = ".gspot/config/vale/styles/gspot/percentage-numbers.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/time-ranges.yml.eta"
+target = ".gspot/config/vale/styles/gspot/time-ranges.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/suspended-hyphens.yml.eta"
+target = ".gspot/config/vale/styles/gspot/suspended-hyphens.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/url-prepositions.yml.eta"
+target = ".gspot/config/vale/styles/gspot/url-prepositions.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/numbered-units.yml.eta"
+target = ".gspot/config/vale/styles/gspot/numbered-units.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/leading-conjunctions.yml.eta"
+target = ".gspot/config/vale/styles/gspot/leading-conjunctions.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/conscious-language.yml.eta"
+target = ".gspot/config/vale/styles/gspot/conscious-language.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/contractions.yml.eta"
+target = ".gspot/config/vale/styles/gspot/contractions.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/punctuated-headings.yml.eta"
+target = ".gspot/config/vale/styles/gspot/punctuated-headings.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/obvious-fields.yml.eta"
+target = ".gspot/config/vale/styles/gspot/obvious-fields.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/product-centric-writing.yml.eta"
+target = ".gspot/config/vale/styles/gspot/product-centric-writing.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/release-notes.yml.eta"
+target = ".gspot/config/vale/styles/gspot/release-notes.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/topic-references.yml.eta"
+target = ".gspot/config/vale/styles/gspot/topic-references.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/session-identifiers.yml.eta"
+target = ".gspot/config/vale/styles/gspot/session-identifiers.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/straight-quotes.yml.eta"
+target = ".gspot/config/vale/styles/gspot/straight-quotes.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/merge-conflict-markers.yml.eta"
+target = ".gspot/config/vale/styles/gspot/merge-conflict-markers.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/unneeded-adverbs.yml.eta"
+target = ".gspot/config/vale/styles/gspot/unneeded-adverbs.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/auto-prefixes.yml.eta"
+target = ".gspot/config/vale/styles/gspot/auto-prefixes.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/question-marks.yml.eta"
+target = ".gspot/config/vale/styles/gspot/question-marks.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/case-sensitive-terms.yml.eta"
+target = ".gspot/config/vale/styles/gspot/case-sensitive-terms.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/gerund-headings.yml.eta"
+target = ".gspot/config/vale/styles/gspot/gerund-headings.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/slash-alternatives.yml.eta"
+target = ".gspot/config/vale/styles/gspot/slash-alternatives.yml"
+tool = "vale"
+generated_header = false
+
+[[tool_file]]
+source = "styles/gspot/no-gerunds-in-titles.tengo.eta"
+target = ".gspot/config/vale/styles/gspot/no-gerunds-in-titles.tengo"
+tool = "vale"
+generated_header = false
+
+
 [[check]]
 name = "vale"
 tool = "vale"

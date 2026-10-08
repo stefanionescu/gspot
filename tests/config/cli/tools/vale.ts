@@ -19,14 +19,14 @@ export const VALE_ACQUISITION_FAILURES = [
     ],
     [
         'incomplete native output',
-        "const { mkdirSync } = await import('node:fs'); mkdirSync('.gspot/config/vale/styles/Google', { recursive: true });",
-        'Vale setup output is missing: .gspot/config/vale/styles/Microsoft',
+        "const { mkdirSync } = await import('node:fs'); mkdirSync('.gspot/vale/Google', { recursive: true });",
+        'Vale setup output is missing: .gspot/vale/write-good',
         'tool_timeout_seconds = 1\n',
     ],
     [
         'missing Harper dictionaries',
-        `const { mkdirSync } = await import('node:fs'); for (const name of ["Google", "Microsoft", "write-good", "proselint", "alex", "RedHat", "Harper"]) mkdirSync('.gspot/config/vale/styles/' + name, { recursive: true });`,
-        'Vale setup output is missing: .gspot/config/vale/styles/config/dictionaries',
+        `const { mkdirSync } = await import('node:fs'); for (const name of ["Google", "write-good", "proselint", "alex", "Harper"]) mkdirSync('.gspot/vale/' + name, { recursive: true });`,
+        'Vale setup output is missing: .gspot/vale/config/dictionaries',
         'tool_timeout_seconds = 1\n',
     ],
 ] as const;
@@ -34,21 +34,21 @@ export const VALE_ACQUISITION_FAILURES = [
 export const CORRECTED_VALE_ACQUISITION = String.raw`
 if (process.env.NO_COLOR !== '1' || process.env.FORCE_COLOR !== '0') process.exit(9);
 const { mkdirSync, writeFileSync } = await import('node:fs');
-for (const name of ["Google", "Microsoft", "write-good", "proselint", "alex", "RedHat", "Harper", "config/dictionaries"]) {
-    mkdirSync('.gspot/config/vale/styles/' + name, { recursive: true });
-    writeFileSync('.gspot/config/vale/styles/' + name + '/terms.yml', 'package bytes\\n');
+for (const name of ["Google", "write-good", "proselint", "alex", "Harper", "config/dictionaries"]) {
+    mkdirSync('.gspot/vale/' + name, { recursive: true });
+    writeFileSync('.gspot/vale/' + name + '/terms.yml', 'package bytes\\n');
 }
-writeFileSync('.gspot/config/vale/styles/Google/terms.yml', 'corrected bytes\n');
+writeFileSync('.gspot/vale/Google/terms.yml', 'corrected bytes\n');
 `;
 
-export const CONFIG = `StylesPath = vale/styles\nPackages = Google, Microsoft, write-good, proselint, alex, RedHat, Harper\n`;
+export const CONFIG = `StylesPath = ../vale\nPackages = Google, write-good, proselint, alex, Harper\n`;
 
 export const VALE_DETECTION_LINKS = [
     ['configuration', 'Lifecycle destination is not a private regular file: .gspot/config/vale.ini'],
-    ['package', 'Unsafe lifecycle destination: .gspot/config/vale/styles/Google'],
+    ['package', 'Unsafe lifecycle destination: .gspot/vale/Google'],
 ] as const;
 
 export const VALE_REMOVAL_LINKS = [
-    ['package', 'Unsafe lifecycle destination: .gspot/config/vale/styles/Google'],
-    ['nested directory', 'Unsafe lifecycle destination: .gspot/config/vale/styles/Google/nested'],
+    ['package', 'Unsafe lifecycle destination: .gspot/vale/Google'],
+    ['nested directory', 'Unsafe lifecycle destination: .gspot/vale/Google/nested'],
 ] as const;

@@ -9,8 +9,11 @@ import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
-import { chmod, mkdir, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
-import { hasValePackages, removeValePackages, installValePackages } from '#cli/lifecycle/install/contracts.ts';
+import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
+import type { InstallationKind } from '#cli/types/configurations.ts';
+import { rm, chmod, unlink, symlink, readFile, writeFile } from 'node:fs/promises';
+import { hasValePackages, installValePackages } from '#cli/lifecycle/install/contracts.ts';
+import { installTree, readInstalledTree, deleteInstallation } from '#cli/lifecycle/ownership/state/public.ts';
 
 import {
     CONFIG,
@@ -24,18 +27,26 @@ test.each(VALE_ACQUISITION_FAILURES)(
     'Vale package installation preserves styles after %s and succeeds after the fix',
     async (failure, script, expected, tables) => {
         await using directory = await testdir();
-        const installed = '.gspot/config/vale/styles/Google/terms.yml';
+        const installed = '.gspot/vale/Google/terms.yml';
         await createFileTree(directory.path, {
             'gspot.toml': buildPolicy(['prose'], { level: 'all', tables }),
             '.gspot/config/vale.ini': CONFIG,
-            [installed]: 'original bytes\n',
+            'staged/Google/terms.yml': 'original bytes\n',
             'guide.md': 'Authored text.\n',
         });
+        using log = openOwnership(directory.path);
         const session = await openSession(directory.path);
+        installTree(log, 'vale', readInstalledTree(join(directory.path, 'staged'), 'vale'));
         const tool = toolPin(session.manifests.values(), 'vale');
         const version = tool.version;
         const request = {
             search: session,
+            owner: {
+                read: (path: string) => log.files.read(path),
+                installTree: (kind: InstallationKind, output: string) => {
+                    installTree(log, kind, readInstalledTree(output, kind));
+                },
+            },
             level: session.policyFiles.policy.level,
             tool,
             timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),
@@ -63,19 +74,24 @@ test.each(VALE_ACQUISITION_FAILURES)(
 async function linkedStyles(directory: string, kind: string): Promise<string> {
     await createFileTree(directory, {
         'project/.gspot/config/vale.ini': CONFIG,
-        'project/.gspot/config/vale/styles/.keep': '',
+        'staged/Google/.keep': '',
         'outside/vale.ini': CONFIG,
         'outside/terms.yml': 'external bytes\n',
     });
     const root = join(directory, 'project');
+    {
+        using log = openOwnership(root);
+        installTree(log, 'vale', readInstalledTree(join(directory, 'staged'), 'vale'));
+    }
     if (kind === 'configuration') {
         await unlink(join(root, '.gspot/config/vale.ini'));
         await symlink('../../outside/vale.ini', join(root, '.gspot/config/vale.ini'));
     } else if (kind === 'package') {
-        await symlink('../../../../outside', join(root, '.gspot/config/vale/styles/Google'));
+        await unlink(join(root, '.gspot/vale/Google/.keep'));
+        await rm(join(root, '.gspot/vale/Google'), { recursive: true });
+        await symlink('../../outside', join(root, '.gspot/vale/Google'));
     } else {
-        await createFileTree(root, { '.gspot/config/vale/styles/Google/.keep': '' });
-        await symlink('../../../../../outside', join(root, '.gspot/config/vale/styles/Google/nested'));
+        await symlink('../../../outside', join(root, '.gspot/vale/Google/nested'));
     }
     return root;
 }
@@ -93,7 +109,8 @@ test.each(VALE_REMOVAL_LINKS)(
         const root = await linkedStyles(directory.path, kind);
         throws(
             () => {
-                removeValePackages(root);
+                using log = openOwnership(root);
+                deleteInstallation(log, 'vale');
             },
             { message },
         );
@@ -106,8 +123,9 @@ test.each(['recommended', 'all'] as const)('package readiness requires the gener
     expect(hasValePackages(sandbox.path, level)).toBe(false);
     await createFileTree(sandbox.path, { '.gspot/config/vale.ini': CONFIG });
     expect(hasValePackages(sandbox.path, level)).toBe(level === 'recommended');
-    for (const folder of VALE_PACKAGE_FOLDERS)
-        await mkdir(join(sandbox.path, '.gspot/config/vale/styles', folder), { recursive: true });
+    for (const folder of VALE_PACKAGE_FOLDERS) await createFileTree(sandbox.path, { [`staged/${folder}/.keep`]: '' });
+    using log = openOwnership(sandbox.path);
+    installTree(log, 'vale', readInstalledTree(join(sandbox.path, 'staged'), 'vale'));
     expect(hasValePackages(sandbox.path, level)).toBe(true);
 });
 
@@ -117,7 +135,9 @@ test.each(VALE_PACKAGE_FOLDERS)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { '.gspot/config/vale.ini': 'Packages = \n' });
         for (const folder of VALE_PACKAGE_FOLDERS.filter((folder) => folder !== missing))
-            await mkdir(join(sandbox.path, '.gspot/config/vale/styles', folder), { recursive: true });
+            await createFileTree(sandbox.path, { [`staged/${folder}/.keep`]: '' });
+        using log = openOwnership(sandbox.path);
+        installTree(log, 'vale', readInstalledTree(join(sandbox.path, 'staged'), 'vale'));
         expect(hasValePackages(sandbox.path, 'all')).toBe(false);
     },
 );
@@ -130,9 +150,16 @@ test.each([false, true])(
             'gspot.toml': buildPolicy(['prose'], { level: 'recommended' }),
             ...(configured ? { '.gspot/config/vale.ini': CONFIG } : {}),
         });
+        using log = openOwnership(directory.path);
         const session = await openSession(directory.path);
         const request = {
             search: session,
+            owner: {
+                read: (path: string) => log.files.read(path),
+                installTree: (kind: InstallationKind, output: string) => {
+                    installTree(log, kind, readInstalledTree(output, kind));
+                },
+            },
             level: session.policyFiles.policy.level,
             tool: toolPin(session.manifests.values(), 'vale'),
             timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),

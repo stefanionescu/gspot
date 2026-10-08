@@ -33,7 +33,7 @@ export const MISE_BACKENDS: MiseBackend[] = [
 ];
 
 /** Tool project trees owned and replaced as complete installations. */
-export const INSTALLATION_KINDS = ['npm', 'python'] as const;
+export const INSTALLATION_KINDS = ['npm', 'python', 'vale'] as const;
 
 /** The npm backend that installs the published CLI. */
 export const GSPOT_MISE_TOOL = 'npm:@gspothq/cli';

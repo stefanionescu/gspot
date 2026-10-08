@@ -8,13 +8,12 @@ import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { MODE_BITS } from '#cli/config/platform/modes.ts';
 import { lockfileEntry } from '#cli/parsers/contracts.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
-import { isValePackageFile } from '#cli/repository/public.ts';
 import { nativeSegments } from '#cli/platform/root/contracts.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { listStyleFiles } from '#cli/lifecycle/install/contracts.ts';
-import { DOT_GSPOT, VALE_CONFIG } from '#cli/config/platform/locations.ts';
 import { join, posix, dirname, resolve, basename, relative } from 'node:path';
 import { CLONE_OPTIONS, PACKAGE_MANIFESTS } from '#cli/config/execution/copy.ts';
+import { DOT_GSPOT, VALE_CONFIG, VALE_PACKAGE_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 import type {
     TreeCopy,
@@ -108,9 +107,9 @@ function assertDependencyReady(checkout: string, folder: string, pending: string
 }
 
 // Refuses a copy whose Vale configuration differs from the one the packages were installed for.
-function assertValeMatches(installed: Root, destination: Root): void {
-    const current = installed.read(VALE_CONFIG);
-    const selected = destination.read(VALE_CONFIG);
+function assertValeMatches(installed: Root, destination: Root, config: string): void {
+    const current = installed.read(config);
+    const selected = destination.read(config);
     if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
         throw new GspotError('selection', [
             'Installed Vale packages do not match the revision configuration. Prepare this revision separately and run gspot apply.',
@@ -206,15 +205,12 @@ export async function copyDependencies(input: ScratchCopy): Promise<void> {
  */
 export function copyValePackages(root: string, checkout: string, paths: string[]): void {
     const configurations = paths.filter((path) => path === VALE_CONFIG || path.endsWith(`/${VALE_CONFIG}`));
-    for (const config of configurations) {
-        const folder = config.slice(0, -VALE_CONFIG.length);
-        using installed = openRoot(join(root, folder));
-        using destination = openRoot(resolve(checkout, folder), 'native');
-        const packages = listStyleFiles(installed).filter((path) => isValePackageFile(path));
-        if (packages.length === 0) continue;
-        assertValeMatches(installed, destination);
-        for (const path of packages) copyPackageFile(installed, destination, path);
-    }
+    using installed = openRoot(root);
+    using destination = openRoot(resolve(checkout), 'native');
+    const packages = listStyleFiles(installed, VALE_PACKAGE_DIRECTORY);
+    if (packages.length === 0) return;
+    for (const config of configurations) assertValeMatches(installed, destination, config);
+    for (const path of packages) copyPackageFile(installed, destination, path);
 }
 
 /**

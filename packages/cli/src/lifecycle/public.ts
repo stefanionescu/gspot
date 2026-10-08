@@ -20,7 +20,6 @@ import { DRIFT_DIFF_CONTEXT } from '#cli/config/lifecycle/drift.ts';
 import { RETAINED_PATHS } from '#cli/config/lifecycle/ownership.ts';
 import type { Log, Ownership } from '#cli/types/lifecycle/ownership.ts';
 import { planClaudeMove } from '#cli/lifecycle/ownership/claude-file.ts';
-import { removeValePackages } from '#cli/lifecycle/install/contracts.ts';
 import { deleteInstallation } from '#cli/lifecycle/ownership/state/public.ts';
 import { EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import type { Drift, ApplyReport, WriteRequest } from '#cli/types/lifecycle/apply.ts';
@@ -36,10 +35,10 @@ import {
 } from '#cli/config/platform/locations.ts';
 
 // An installation no selected configuration needs any more goes whole, and so do the Vale packages once nothing checks prose.
-function pruneInstallations(log: Log, root: string, retained: WriteRequest['retained']): void {
+function pruneInstallations(log: Log, retained: WriteRequest['retained']): void {
     if (!retained.packages) deleteInstallation(log, 'npm');
     if (!retained.python) deleteInstallation(log, 'python');
-    if (!retained.prose) removeValePackages(root);
+    if (!retained.prose) deleteInstallation(log, 'vale');
 }
 
 // The text of `CLAUDE.md` lands after the block the batch wrote to `AGENTS.md`, and the file goes.
@@ -55,7 +54,7 @@ function moveClaudeFile(log: Log, report: ApplyReport): void {
  * @param request generated outputs, pruning policy, and reviewed originals.
  */
 function writeGenerated(log: Log, request: WriteRequest): void {
-    const { root, generated, report, retained, reviewedOriginals, conflictedOutputs } = request;
+    const { generated, report, retained, reviewedOriginals, conflictedOutputs } = request;
     const configurations = generated.toolFiles.map((output) => {
         const plan = planMerge(log, output.path, output.changes, true);
         return reviewedOriginals?.has(output.path) === true
@@ -99,7 +98,7 @@ function writeGenerated(log: Log, request: WriteRequest): void {
         plans.filter((plan) => plan.status !== 'preserved'),
     );
     if (request.agentRulesEnabled) moveClaudeFile(log, report);
-    pruneInstallations(log, root, retained);
+    pruneInstallations(log, retained);
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
     report.updated.push(

@@ -4,55 +4,66 @@ import { testdir, createFileTree } from 'testdirs';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { getOwnership, openOwnership } from '#cli/lifecycle/ownership/public.ts';
-import { SWAP_CASES } from '#tests/config/cli/lifecycle/ownership/installations.ts';
 import { rm, lstat, unlink, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
+import { SWAP_CASES, INSTALLATIONS } from '#tests/config/cli/lifecycle/ownership/installations.ts';
 import { installTree, readInstalledTree, deleteInstallation } from '#cli/lifecycle/ownership/state/public.ts';
 
-test('an installation is one record, and removing it deletes the folder', async () => {
-    await using directory = await testdir();
-    await using staged = await testdir();
-    await createFileTree(staged.path, { 'tool/index.js': 'export {};\n' });
-    {
-        using log = openOwnership(directory.path);
+test.each([...INSTALLATIONS])(
+    '$kind installation is one record, and removing it deletes the folder',
+    async ({ kind, folder }) => {
+        await using directory = await testdir();
+        await using staged = await testdir();
+        await createFileTree(staged.path, { 'tool/index.js': 'export {};\n' });
+        {
+            using log = openOwnership(directory.path);
 
-        installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
-        expect(getOwnership(directory.path)).toMatchObject({ files: [], installed: ['npm'] });
-        deleteInstallation(log, 'npm');
-        expect(await pathExists(join(directory.path, '.gspot/node_modules'))).toBe(false);
-        expect(getOwnership(directory.path).installed).toBeUndefined();
-    }
-});
+            installTree(log, kind, readInstalledTree(staged.path, kind));
+            expect(getOwnership(directory.path)).toMatchObject({ files: [], installed: [kind] });
+            deleteInstallation(log, kind);
+            expect(await pathExists(join(directory.path, folder))).toBe(false);
+            expect(getOwnership(directory.path).installed).toBeUndefined();
+        }
+    },
+);
 
-test('an installation refuses a folder gspot did not install and leaves it as it was', async () => {
-    await using directory = await testdir();
-    await using staged = await testdir();
-    await createFileTree(directory.path, { '.gspot/node_modules/authored/index.js': 'authored\n' });
-    await createFileTree(staged.path, { 'tool/index.js': 'export {};\n' });
-    {
-        using log = openOwnership(directory.path);
+test.each([...INSTALLATIONS])(
+    '$kind installation refuses a folder gspot did not install and leaves it as it was',
+    async ({ kind, folder }) => {
+        await using directory = await testdir();
+        await using staged = await testdir();
+        await createFileTree(directory.path, { [`${folder}/authored/index.js`]: 'authored\n' });
+        await createFileTree(staged.path, { 'tool/index.js': 'export {};\n' });
+        {
+            using log = openOwnership(directory.path);
 
-        expect(() => {
-            installTree(log, 'npm', readInstalledTree(staged.path, 'npm'));
-        }).toThrow('.gspot/node_modules exists and gspot did not create it. Move it aside, then run gspot install.');
-        expect(await pathExists(join(directory.path, '.gspot/node_modules/authored/index.js'))).toBe(true);
-        expect(getOwnership(directory.path).installing).toBeUndefined();
-    }
-});
+            expect(() => {
+                installTree(log, kind, readInstalledTree(staged.path, kind));
+            }).toThrow(`${folder} exists and gspot did not create it. Move it aside, then run gspot install.`);
+            expect(await pathExists(join(directory.path, folder, 'authored/index.js'))).toBe(true);
+            expect(getOwnership(directory.path).installing).toBeUndefined();
+        }
+    },
+);
 
-test.each(SWAP_CASES)('an interrupted swap retains the correct folder when $name', async ({ files, kept }) => {
-    await using directory = await testdir();
-    await createFileTree(directory.path, {
-        '.gspot/state/ownership.json': `${JSON.stringify({ version: 1, files: [], installing: ['npm'] })}\n`,
-        '.gspot/node_modules.previous/tool/index.js': 'previous\n',
-        '.gspot/node_modules.next/tool/index.js': 'partial\n',
-        ...files,
-    });
-    openOwnership(directory.path)[Symbol.dispose]();
-    expect(await readFile(join(directory.path, '.gspot/node_modules/tool/index.js'), 'utf8')).toBe(kept);
-    expect(await pathExists(join(directory.path, '.gspot/node_modules.previous'))).toBe(false);
-    expect(await pathExists(join(directory.path, '.gspot/node_modules.next'))).toBe(false);
-    expect(getOwnership(directory.path).installing).toStrictEqual(['npm']);
-});
+test.each(INSTALLATIONS.flatMap((installation) => SWAP_CASES.map((entry) => ({ ...installation, ...entry }))))(
+    'an interrupted $kind swap retains the correct folder when $name',
+    async ({ kind, folder, files, kept }) => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, {
+            '.gspot/state/ownership.json': `${JSON.stringify({ version: 1, files: [], installing: [kind] })}\n`,
+            [`${folder}.previous/tool/index.js`]: 'previous\n',
+            [`${folder}.next/tool/index.js`]: 'partial\n',
+            ...Object.fromEntries(
+                Object.entries(files).map(([path, text]) => [path.replace('.gspot/node_modules', folder), text]),
+            ),
+        });
+        openOwnership(directory.path)[Symbol.dispose]();
+        expect(await readFile(join(directory.path, folder, 'tool/index.js'), 'utf8')).toBe(kept);
+        expect(await pathExists(join(directory.path, `${folder}.previous`))).toBe(false);
+        expect(await pathExists(join(directory.path, `${folder}.next`))).toBe(false);
+        expect(getOwnership(directory.path).installing).toStrictEqual([kind]);
+    },
+);
 
 test('an install killed after its swap and before its record is replaced by the next install', async () => {
     await using directory = await testdir();

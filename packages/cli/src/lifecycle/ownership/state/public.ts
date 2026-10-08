@@ -7,14 +7,10 @@ import { join, posix, basename, relative } from 'node:path';
 import type { InstalledFile } from '#cli/types/tools/install.ts';
 import type { InstallationKind } from '#cli/types/configurations.ts';
 import { assertMutationTarget } from '#cli/platform/root/contracts.ts';
-import { MODE_BITS, EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
+import { INSTALLATION_DIRECTORIES } from '#cli/config/platform/locations.ts';
 import type { Log, InstallationFolders } from '#cli/types/lifecycle/ownership.ts';
+import { MODE_BITS, READ_ONLY_FILE, EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 
-import {
-    NODE_MODULES_DIRECTORY,
-    INSTALLATION_DIRECTORIES,
-    PYTHON_ENVIRONMENT_DIRECTORY,
-} from '#cli/config/platform/locations.ts';
 import {
     openSync,
     closeSync,
@@ -53,7 +49,13 @@ function linkTarget(entry: string): string | undefined {
 }
 
 // Preserve file links at their original location and copy their bytes inside a directory alias.
-function installedFile(directory: string, realPath: string, outputPath: string, source: string): FileCopy {
+function installedFile(
+    directory: string,
+    realPath: string,
+    outputPath: string,
+    source: string,
+    kind: InstallationKind,
+): FileCopy {
     if (realPath === outputPath) {
         const entry = join(directory, realPath);
         const link = linkTarget(entry);
@@ -63,8 +65,12 @@ function installedFile(directory: string, realPath: string, outputPath: string, 
     const descriptor = openSync(source, constants.O_RDONLY | constants.O_NONBLOCK);
     try {
         const stat = fstatSync(descriptor);
+        if (kind === 'vale' && (!stat.isFile() || stat.nlink !== 1))
+            throw new Error(
+                `Lifecycle destination is not a private regular file: ${INSTALLATION_DIRECTORIES[kind]}/${outputPath}`,
+            );
         if (!stat.isFile()) throw new Error(`Unsupported installed entry: ${realPath}`);
-        return { bytes: readFileSync(descriptor), mode: stat.mode & MODE_BITS };
+        return { bytes: readFileSync(descriptor), mode: kind === 'vale' ? READ_ONLY_FILE : stat.mode & MODE_BITS };
     } finally {
         closeSync(descriptor);
     }
@@ -121,6 +127,8 @@ export function installTree(log: Log, kind: InstallationKind, outputs: Installed
  */
 export function deleteInstallation(log: Log, kind: InstallationKind): void {
     if (log.state.installed?.includes(kind) !== true) return;
+    if (kind === 'vale' && log.files.stat(INSTALLATION_DIRECTORIES[kind]) !== undefined)
+        readInstalledTree(log.files.realPath(INSTALLATION_DIRECTORIES[kind]), kind);
     log.files.removeTree(INSTALLATION_DIRECTORIES[kind]);
     setKind(log, 'installed', kind, false);
 }
@@ -128,11 +136,11 @@ export function deleteInstallation(log: Log, kind: InstallationKind): void {
 /**
  * Reads a complete isolated installation before the owner swaps it in. A link cycle or a link that leaves it is refused.
  * @param directory the isolated installation
- * @param kind whether the installation is the npm project or the Python environment
- * @returns every file, at its destination under .gspot/node_modules or .gspot/.venv
+ * @param kind the logged installation kind
+ * @returns every file, at its declared installation destination
  */
 export function readInstalledTree(directory: string, kind: InstallationKind): InstalledFile[] {
-    const destination = kind === 'npm' ? NODE_MODULES_DIRECTORY : PYTHON_ENVIRONMENT_DIRECTORY;
+    const destination = INSTALLATION_DIRECTORIES[kind];
     const outputs: InstalledFile[] = [];
     const entry = lstatSync(directory, { throwIfNoEntry: false });
     if (entry?.isSymbolicLink() === true) throw new Error(`Unsafe lifecycle destination: ${basename(directory)}`);
@@ -142,16 +150,21 @@ export function readInstalledTree(directory: string, kind: InstallationKind): In
     const collect = (prefix: string | undefined, output: string, ancestors: string[]): void => {
         const canonical = join(root, prefix ?? '');
         if (ancestors.includes(canonical)) throw new Error(`Installed directory link forms a cycle: ${output}`);
-        for (const name of readdirSync(canonical).toSorted((left, right) => left.localeCompare(right))) {
+        const names = readdirSync(canonical).filter(
+            (name) =>
+                name !== cacheDirectory || !lstatSync(sourcePath(root, posix.join(prefix ?? '', name))).isDirectory(),
+        );
+        for (const name of names.toSorted((left, right) => left.localeCompare(right))) {
             const realPath = posix.join(prefix ?? '', name);
             const outputPath = posix.join(output, name);
             const path = `${destination}/${outputPath}`;
             assertMutationTarget(path);
+            if (kind === 'vale' && lstatSync(join(root, realPath)).isSymbolicLink())
+                throw new Error(`Unsafe lifecycle destination: ${path}`);
             const source = sourcePath(root, realPath);
             if (lstatSync(source).isDirectory()) {
-                if (name === cacheDirectory) continue;
                 collect(toPosix(relative(root, source)), outputPath, [...ancestors, canonical]);
-            } else outputs.push({ path, file: installedFile(directory, realPath, outputPath, source) });
+            } else outputs.push({ path, file: installedFile(directory, realPath, outputPath, source, kind) });
         }
     };
     collect(undefined, '', []);

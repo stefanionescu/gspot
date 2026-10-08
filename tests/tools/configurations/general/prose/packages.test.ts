@@ -10,45 +10,55 @@ import { chmod, readFile, writeFile } from 'node:fs/promises';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { VALE_PACKAGES, VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
+import { hasValePackages, installValePackages } from '#cli/lifecycle/install/contracts.ts';
 import { INSTALLED, ENCODED_ARCHIVE } from '#tests/config/tools/configurations/general/prose/packages.ts';
-import { hasValePackages, removeValePackages, installValePackages } from '#cli/lifecycle/install/contracts.ts';
+import { installTree, readInstalledTree, deleteInstallation } from '#cli/lifecycle/ownership/state/public.ts';
+
+// Acquires the same native packages through the locked owner for all four installation controls.
+async function installPackages(root: string): Promise<string | undefined> {
+    const session = await openSession(root);
+    using log = openOwnership(root);
+    return await installValePackages({
+        search: session,
+        owner: {
+            read: (path) => log.files.read(path),
+            installTree: (kind, output) => {
+                installTree(log, kind, readInstalledTree(output, kind));
+            },
+        },
+        level: session.policyFiles.policy.level,
+        tool: toolPin(session.manifests.values(), 'vale'),
+        timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),
+    });
+}
 
 async function expectPublishedRules(root: string): Promise<void> {
     await using clone = await testdir();
     await createFileTree(clone.path, {
         'gspot.toml': buildPolicy(['prose'], { level: 'all' }),
         '.gspot/config/vale.ini': await readFile(join(root, '.gspot/config/vale.ini'), 'utf8'),
-        [INSTALLED]: 'cloned bytes\n',
+        'staged/Google/terms.yml': 'cloned bytes\n',
     });
-    const session = await openSession(clone.path);
-    expect(
-        await installValePackages({
-            search: session,
-            level: session.policyFiles.policy.level,
-            tool: toolPin(session.manifests.values(), 'vale'),
-            timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),
-        }),
-    ).toBeUndefined();
+    {
+        using log = openOwnership(clone.path);
+        installTree(log, 'vale', readInstalledTree(join(clone.path, 'staged'), 'vale'));
+    }
+    expect(await installPackages(clone.path)).toBeUndefined();
     expect(await readFile(join(clone.path, INSTALLED))).toStrictEqual(await readFile(join(root, INSTALLED)));
 }
 
 async function expectPrunedRules(root: string): Promise<void> {
-    await createFileTree(root, { '.gspot/config/vale/styles/Retired/terms.yml': 'old rule\n' });
-    const session = await openSession(root);
-    expect(
-        await installValePackages({
-            search: session,
-            level: session.policyFiles.policy.level,
-            tool: toolPin(session.manifests.values(), 'vale'),
-            timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),
-        }),
-    ).toBeUndefined();
-    expect(await pathExists(join(root, '.gspot/config/vale/styles/Retired'))).toBe(false);
+    await createFileTree(root, { '.gspot/vale/Retired/terms.yml': 'old rule\n' });
+    expect(await installPackages(root)).toBeUndefined();
+    expect(await pathExists(join(root, '.gspot/vale/Retired'))).toBe(false);
     expect(await pathExists(join(root, INSTALLED))).toBe(true);
     const configuration = await readFile(join(root, '.gspot/config/vale.ini'));
-    removeValePackages(root);
+    {
+        using log = openOwnership(root);
+        deleteInstallation(log, 'vale');
+    }
     expect(await readFile(join(root, '.gspot/config/vale.ini'))).toStrictEqual(configuration);
-    expect(await pathExists(join(root, '.gspot/config/vale/styles/Google'))).toBe(false);
+    expect(await pathExists(join(root, '.gspot/vale/Google'))).toBe(false);
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe('keep\n');
 }
 
@@ -56,15 +66,7 @@ async function expectEditedRules(root: string): Promise<void> {
     const installed = await readFile(join(root, INSTALLED));
     await chmod(join(root, INSTALLED), 0o644);
     await writeFile(join(root, INSTALLED), 'edited\n');
-    const session = await openSession(root);
-    expect(
-        await installValePackages({
-            search: session,
-            level: session.policyFiles.policy.level,
-            tool: toolPin(session.manifests.values(), 'vale'),
-            timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),
-        }),
-    ).toBeUndefined();
+    expect(await installPackages(root)).toBeUndefined();
     expect(await readFile(join(root, INSTALLED))).toStrictEqual(installed);
     expect(await readFile(join(root, 'authored.txt'), 'utf8')).toBe('keep\n');
 }
@@ -78,6 +80,7 @@ test.each([
     await createFileTree(directory.path, {
         'gspot.toml': buildPolicy(['prose'], { level: 'all' }),
         'authored.txt': 'keep\n',
+        '.gspot/config/vale/styles/Google/legacy.yml': 'authored legacy bytes\n',
     });
     const server = Bun.serve({
         hostname: '127.0.0.1',
@@ -95,7 +98,7 @@ test.each([
                     path: '.gspot/config/vale.ini',
                     next: {
                         bytes: Buffer.from(
-                            `StylesPath = vale/styles\nPackages = ${packages}\n\n[*]\nBasedOnStyles = Google\n`,
+                            `StylesPath = ../vale\nPackages = ${packages}\n\n[*]\nBasedOnStyles = Google\n`,
                         ),
                         mode: 0o444,
                     },
@@ -103,19 +106,14 @@ test.each([
                 }),
             );
         }
-        const session = await openSession(directory.path);
-        expect(
-            await installValePackages({
-                search: session,
-                level: session.policyFiles.policy.level,
-                tool: toolPin(session.manifests.values(), 'vale'),
-                timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),
-            }),
-        ).toBeUndefined();
+        expect(await installPackages(directory.path)).toBeUndefined();
         expect(hasValePackages(directory.path, 'all')).toBe(true);
         for (const folder of VALE_PACKAGE_FOLDERS)
-            expect(await pathExists(join(directory.path, '.gspot/config/vale/styles', folder))).toBe(true);
+            expect(await pathExists(join(directory.path, '.gspot/vale', folder))).toBe(true);
         await verify(directory.path);
+        expect(await readFile(join(directory.path, '.gspot/config/vale/styles/Google/legacy.yml'), 'utf8')).toBe(
+            'authored legacy bytes\n',
+        );
     } finally {
         await server.stop(true);
     }

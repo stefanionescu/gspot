@@ -89,7 +89,7 @@ export type UnknownConfiguration<Declaration extends Pick<ConfigurationDeclarati
 export type PinRequirement = { version: string; owner: string };
 
 /** A pinned package installed in the npm or Python tool project. */
-export type ToolProjectPackage = { kind: InstallationKind; name: string; version: string };
+export type ToolProjectPackage = { kind: Exclude<InstallationKind, 'vale'>; name: string; version: string };
 
 /** One tool pin as mise reads it: the version, the operating systems that have a build, and backend options. */
 export type MisePin = {
@@ -99,7 +99,7 @@ export type MisePin = {
     options?: Record<string, string | number | boolean>;
 };
 
-/** A tool project installation gspot writes whole: the npm tools or the Python environment. */
+/** A tool project installation gspot writes whole: the npm tools, Python environment, or Vale packages. */
 export type InstallationKind = (typeof INSTALLATION_KINDS)[number];
 
 /** A declared mise installer and its backend prefix. */

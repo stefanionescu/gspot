@@ -34,9 +34,9 @@ import {
     VALE_CONFIG,
     YARN_SETTINGS,
     MISE_CONFIG_PATH,
-    STYLES_DIRECTORY,
     TOOL_PYTHON_PROJECT,
     TOOL_PACKAGE_PROJECT,
+    VALE_PACKAGE_DIRECTORY,
 } from '#cli/config/platform/locations.ts';
 
 // Previews share the same authored runner and generated manifest lookup.
@@ -165,16 +165,17 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
                     ? [['vale', '--config', VALE_CONFIG, 'sync']]
                     : [],
         }),
-        run: async (session, manifests) => {
+        run: async (session, manifests, context) => {
             if (hasValePackages(session.root, session.policyFiles.policy.level)) return '';
             const problem = await installValePackages({
+                owner: context.inputs,
                 level: session.policyFiles.policy.level,
                 search: session,
                 tool: toolPin(manifests, 'vale'),
                 timeoutSeconds: Number(rootView(session.scopes).settings['tool_timeout_seconds']),
                 cancelSignal: session.cancelSignal,
             });
-            if (problem === undefined) return `installed Vale packages in ${STYLES_DIRECTORY}`;
+            if (problem === undefined) return `installed Vale packages in ${VALE_PACKAGE_DIRECTORY}`;
             const failure = `Vale package installation failed: ${problem}. Run: gspot install`;
             throw new GspotError('installation', failure);
         },

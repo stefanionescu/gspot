@@ -55,6 +55,7 @@ EOL
 ERR
 ESLint
 ESM
+Facter
 FAST
 GET
 GIF
@@ -122,6 +123,7 @@ NPM
 NUL
 NVIDIA
 OCSP
+ODF
 OIDC
 ORM
 osv-scanner

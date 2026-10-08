@@ -147,22 +147,21 @@ test('a nested revision refuses its incomplete managed dependency installation',
 test.each(['', 'nested/'])('revision prose checks reuse the installed packages under %s', async (prefix) => {
     await using sandbox = await testdir();
     const config = `${prefix}.gspot/config/vale.ini`;
-    const packagePath = '.gspot/config/vale/styles/Example/rule.yml';
+    const packagePath = '.gspot/vale/Example/rule.yml';
     await createFileTree(sandbox.path, {
-        [config]: 'StylesPath = vale/styles\nPackages = Example\n',
-        [`${prefix}${packagePath}`]: 'extends: existence\n',
-        '.gitignore': '.gspot/config/vale/styles/Example/\n',
+        [config]: 'StylesPath = ../vale\nPackages = Example\n',
+        [packagePath]: 'extends: existence\n',
+        '.gitignore': '.gspot/vale/\n',
     });
     stageRevision(sandbox.path);
-    const project = join(sandbox.path, prefix);
     const source = await checkOutRevision(sandbox.path, { kind: 'index' }, async (copy) => {
-        const copied = join(copy, prefix, packagePath);
+        const copied = join(copy, packagePath);
         const text = await Bun.file(copied).text();
         await Bun.write(copied, 'copy-only edit');
         return text;
     });
     expect(source).toBe('extends: existence\n');
-    expect(await Bun.file(join(project, packagePath)).text()).toBe('extends: existence\n');
+    expect(await Bun.file(join(sandbox.path, packagePath)).text()).toBe('extends: existence\n');
     await Bun.write(join(sandbox.path, config), 'Packages = Different\n');
     expect(await revisionFailure(sandbox.path)).toContain('do not match the revision configuration');
 });

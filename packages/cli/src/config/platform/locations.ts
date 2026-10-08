@@ -14,6 +14,9 @@ export const VALE_CONFIG = '.gspot/config/vale.ini';
 /** The style directory Vale reads, where Vale packages land beside the gspot style. */
 export const STYLES_DIRECTORY = '.gspot/config/vale/styles';
 
+/** The logged upstream Vale packages are separate from emitted and authored styles. */
+export const VALE_PACKAGE_DIRECTORY = '.gspot/vale';
+
 export const NODE_MODULES_DIRECTORY = '.gspot/node_modules';
 
 export const PYTHON_ENVIRONMENT_DIRECTORY = '.gspot/.venv';
@@ -38,4 +41,8 @@ export const RULES_DIRECTORY = '.gspot/rules';
 export const MISE_CONFIG_PATH = '.mise/conf.d/gspot-tools.toml';
 
 /** The tool project folder written and replaced for each installation kind. */
-export const INSTALLATION_DIRECTORIES = { npm: NODE_MODULES_DIRECTORY, python: PYTHON_ENVIRONMENT_DIRECTORY } as const;
+export const INSTALLATION_DIRECTORIES = {
+    npm: NODE_MODULES_DIRECTORY,
+    python: PYTHON_ENVIRONMENT_DIRECTORY,
+    vale: VALE_PACKAGE_DIRECTORY,
+} as const;

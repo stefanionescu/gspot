@@ -1,0 +1,49 @@
+# Adapted from RedHat.NoGerundsInTitles; see ../LICENSES.md.
+extends: existence
+message: Where possible, avoid using gerunds in topic titles. Use the imperative form instead.
+level: suggestion
+scope: heading
+tokens:
+    - ^\w+ing\b
+exceptions:
+    - String
+    - Spring
+    - Ring
+    - Bring
+    - Thing
+    - Swing
+    - Ping
+    - Cling
+    - Fling
+    - Sling
+    - Sting
+    - Wing
+    - Wring
+    - King
+    - Everything
+    - Something
+    - Nothing
+    - Anything
+    - During
+    - Existing
+    - Underlying
+    - Corresponding
+    - Remaining
+    - Outstanding
+    - Preceding
+    - Overarching
+    - Forthcoming
+    - Longstanding
+    - Following
+    - Interesting
+    - Competing
+    - Overwhelming
+    - Overlapping
+    - Lingering
+    - Missing
+    - Leading
+    - Pending
+action:
+    name: suggest
+    params:
+        - no-gerunds-in-titles.tengo

@@ -1,0 +1,9 @@
+# Adapted from RedHat.ReleaseNotes; see ../LICENSES.md.
+extends: substitution
+ignorecase: false
+level: suggestion
+link: https://redhat-documentation.github.io/vale-at-red-hat/reference-guide.html#release-notes
+message: For release notes, consider using '%s' rather than '%s'.
+swap:
+    Now: With this update
+    Previously: Before this update

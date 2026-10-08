@@ -8,10 +8,10 @@ import { buildScope } from '#cli/repository/paths/contracts.ts';
 import { runGitBlocking } from '#cli/platform/git/contracts.ts';
 import { MANAGED_BLOCK_START } from '#cli/config/platform/managed-blocks.ts';
 import { trackedEntries, readIndexEntries } from '#cli/repository/contracts.ts';
-import { DOT_GSPOT, POLICY_FILE, STYLES_DIRECTORY } from '#cli/config/platform/locations.ts';
 import { gitAttributes, attributeRules, resolvedAttributes } from '#cli/parsers/attributes.ts';
 import { tagEntry, isGitRepository, swiftSourceTags } from '#cli/repository/discovery/contracts.ts';
 import { openRoot, readText, readPrefix, readSource, createReadCache } from '#cli/platform/root/public.ts';
+import { DOT_GSPOT, POLICY_FILE, STYLES_DIRECTORY, VALE_PACKAGE_DIRECTORY } from '#cli/config/platform/locations.ts';
 
 import type {
     Tagged,
@@ -186,7 +186,10 @@ export async function readRepository(
  * @returns true for a package file
  */
 export function isValePackageFile(path: string): boolean {
-    return path.startsWith(`${STYLES_DIRECTORY}/`) && VALE_OWN_PREFIXES.every((prefix) => !path.startsWith(prefix));
+    return (
+        path.startsWith(`${VALE_PACKAGE_DIRECTORY}/`) ||
+        (path.startsWith(`${STYLES_DIRECTORY}/`) && VALE_OWN_PREFIXES.every((prefix) => !path.startsWith(prefix)))
+    );
 }
 
 /**

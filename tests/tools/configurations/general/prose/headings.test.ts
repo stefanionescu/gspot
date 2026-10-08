@@ -13,6 +13,7 @@ import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { installValePackages } from '#cli/lifecycle/install/contracts.ts';
 import type { HeadingCase } from '#tests/types/tools/configurations/general/prose.ts';
+import { installTree, readInstalledTree } from '#cli/lifecycle/ownership/state/public.ts';
 import { HEADING_SCOPES } from '#tests/config/tools/configurations/general/prose/headings.ts';
 
 const directory = testdir();
@@ -29,6 +30,12 @@ beforeAll(async () => {
     expect(
         await installValePackages({
             search: session,
+            owner: {
+                read: (path) => ownership.files.read(path),
+                installTree: (kind, output) => {
+                    installTree(ownership, kind, readInstalledTree(output, kind));
+                },
+            },
             level: 'all',
             tool: toolPin(session.manifests.values(), 'vale'),
             timeoutSeconds: Number(session.scopes[0]!.view.settings['tool_timeout_seconds']),

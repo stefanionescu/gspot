@@ -1,0 +1,10 @@
+# Adapted from Microsoft.GenderBias; see ../LICENSES.md.
+extends: substitution
+message: Consider using '%s' instead of '%s'.
+link: https://learn.microsoft.com/en-us/style-guide/bias-free-communication
+ignorecase: true
+level: error
+action:
+    name: replace
+swap:
+    mans: operates

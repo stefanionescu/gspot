@@ -1,5 +1,5 @@
 /** The upstream styles shipped at level all. */
-export const VALE_PACKAGES = ['Google', 'Microsoft', 'write-good', 'proselint', 'alex', 'RedHat', 'Harper'];
+export const VALE_PACKAGES = ['Google', 'write-good', 'proselint', 'alex', 'Harper'];
 
 /** Vale packages that also install shared files outside their style folder. */
 export const PACKAGE_FOLDERS = { Harper: ['config/dictionaries'] };

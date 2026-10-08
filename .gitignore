@@ -27,6 +27,7 @@ node_modules/
 # >>> gspot managed >>>
 .gspot/node_modules/
 .gspot/.venv/
+.gspot/vale/
 .gspot/state/
 .gspot/config/vale/styles/Google/
 .gspot/config/vale/styles/Microsoft/
