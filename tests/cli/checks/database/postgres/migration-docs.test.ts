@@ -2,7 +2,13 @@ import { test, expect, describe } from 'bun:test';
 import { parseMigration } from '#tests/harness/migrations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { docFindings } from '#cli/checks/database/postgres/migration-docs.ts';
-import { NAME, SECTIONS, DOCUMENTED } from '#tests/config/cli/checks/database/postgres/migration-docs.ts';
+
+import {
+    NAME,
+    SECTIONS,
+    DOCUMENTED,
+    HEADER_FINDINGS,
+} from '#tests/config/cli/checks/database/postgres/migration-docs.ts';
 
 const input = {
     check: configurationManifests()
@@ -29,4 +35,14 @@ describe('docFindings', () => {
         ]);
         expect(findings[0]?.message).toContain('belongs under "Tables", and it is under "Indexes"');
     });
+});
+
+test('migration header and section findings name the line and corrective action', async () => {
+    const lines = DOCUMENTED.split('\n');
+    lines[0] = '-- wrong separator';
+    lines[1] = '-- wrong migration name';
+    lines[3] = '-- missing purpose';
+    lines[6] = '-- wrong section separator';
+    const findings = docFindings(input, await parseMigration(NAME, lines.join('\n'), '20240101000000'), SECTIONS);
+    expect(findings.map(({ rule, line, message }) => ({ rule, line, message }))).toStrictEqual(HEADER_FINDINGS);
 });

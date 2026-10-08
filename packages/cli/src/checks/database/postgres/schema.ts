@@ -25,7 +25,6 @@ function qualifyRelation(relation: RangeVar | undefined): string {
 function forgetTable(state: SchemaState, table: string): void {
     state.tables.delete(table);
     state.secured.delete(table);
-    state.policies.delete(table);
     state.constraints.delete(table);
     state.indexes = state.indexes.filter((index) => index.table !== table);
 }
@@ -116,11 +115,6 @@ const readDrop: StatementReader<'DropStmt'> = (statement, state) => {
                 forgetTable(state, qualifyParts(parts));
                 break;
             }
-            case 'OBJECT_POLICY': {
-                const policy = parts.at(-1);
-                if (policy !== undefined) state.policies.get(qualifyParts(parts.slice(0, -1)))?.delete(policy);
-                break;
-            }
             case 'OBJECT_INDEX': {
                 const name = qualifyParts(parts);
                 state.indexes = state.indexes.filter(
@@ -139,12 +133,6 @@ const READERS: SqlStatementReaders<void, [SchemaState, Migration]> = {
     DropStmt: readDrop,
     CreateStmt: readCreateTable,
     AlterTableStmt: readAlterTable,
-    CreatePolicyStmt: (statement, state) => {
-        const table = qualifyRelation(statement.fields.table);
-        const policies = state.policies.get(table) ?? new Set<string>();
-        policies.add(statement.fields.policy_name ?? '');
-        state.policies.set(table, policies);
-    },
     IndexStmt: (statement, state) => {
         const [first] = nodesOf(statement.fields.indexParams, 'IndexElem');
         const column = first?.name ?? '';
@@ -153,9 +141,8 @@ const READERS: SqlStatementReaders<void, [SchemaState, Migration]> = {
         state.indexes.push({ table, name: statement.fields.idxname ?? '', column, constraint: '' });
     },
 };
-// The state the checks read: policed tables, every foreign key, and the indexed columns of each table.
+// The state the checks read: table security, foreign keys, and indexed columns.
 function summarize(state: SchemaState): Schema {
-    const policed = new Set([...state.policies].filter(([, policies]) => policies.size > 0).map(([table]) => table));
     const foreignKeys = [...state.constraints.values()].flatMap((constraints) => [...constraints.values()].flat());
     const indexed = new Map<string, Set<string>>();
     for (const index of state.indexes) {
@@ -163,7 +150,7 @@ function summarize(state: SchemaState): Schema {
         columns.add(index.column);
         indexed.set(index.table, columns);
     }
-    return { tables: state.tables, secured: state.secured, policed, foreignKeys, indexed };
+    return { tables: state.tables, secured: state.secured, foreignKeys, indexed };
 }
 
 /**
@@ -173,7 +160,6 @@ function summarize(state: SchemaState): Schema {
  */
 export function buildSchema(migrations: Migration[]): Schema {
     const state: SchemaState = {
-        policies: new Map(),
         indexes: [],
         constraints: new Map(),
         tables: new Map(),

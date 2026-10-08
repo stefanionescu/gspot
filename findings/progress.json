@@ -1,5 +1,5 @@
 {
-    "openRecords": 718,
+    "openRecords": 692,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 718,
+        "openRecords": 692,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 77,
-                "unresolvedAssignments": 214
+                "completedAssignments": 91,
+                "unresolvedAssignments": 200
             },
             {
                 "id": "python",
@@ -925,8 +925,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 17,
-                "unresolvedAssignments": 114
+                "completedAssignments": 18,
+                "unresolvedAssignments": 113
             },
             {
                 "id": "test-quality",
@@ -1402,8 +1402,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 127,
-                "unresolvedAssignments": 342
+                "completedAssignments": 153,
+                "unresolvedAssignments": 316
             },
             {
                 "id": "scripts-repository",
@@ -1542,8 +1542,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 27,
-                "unresolvedAssignments": 105
+                "completedAssignments": 28,
+                "unresolvedAssignments": 104
             },
             {
                 "id": "installation-docs",
@@ -1687,8 +1687,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 54,
-                "unresolvedAssignments": 83
+                "completedAssignments": 56,
+                "unresolvedAssignments": 81
             },
             {
                 "id": "policy-file",
@@ -2546,10 +2546,13 @@
             ]
         },
         "areas/integration-tests/007": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Merge the two tests at `tests/cli/commands/declarations.test.ts:9` and `:78`, which run the same flow, into one `test.each` table over `generated` and `exclude`, and drop the final fixed runs (lines 38-43 and 97-102).",
+                "Main affected CLI corpus: 227 distinct cases. Types, actual policy ESLint, staged check and normal hooks pass. Duplicate correction replays removed; distinct command, exit, diagnostic, source and policy preservation controls retained."
+            ]
         },
         "areas/integration-tests/009": {
             "status": "partial",
@@ -2569,28 +2572,40 @@
             ]
         },
         "areas/integration-tests/010": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Delete the two `doctor --settings` lines at `tests/cli/commands/list.test.ts:43-44`; they only show that the argument parser rejects an unknown doctor option, inside a list test.",
+                "Main affected CLI corpus: 227 distinct cases. Types, actual policy ESLint, staged check and normal hooks pass. Duplicate correction replays removed; distinct command, exit, diagnostic, source and policy preservation controls retained."
+            ]
         },
         "areas/integration-tests/011": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Delete the test \"a preview writes nothing and prints parseable JSON\" at `tests/cli/commands/init/refusals.test.ts:16`; the dry-run tests in `tests/cli/commands/init/selection.test.ts` parse the JSON and check that nothing was written.",
+                "Main affected CLI corpus: 227 distinct cases. Types, actual policy ESLint, staged check and normal hooks pass. Duplicate correction replays removed; distinct command, exit, diagnostic, source and policy preservation controls retained."
+            ]
         },
         "areas/integration-tests/012": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Delete the 'an unknown hook' row from the table at `tests/cli/commands/init/refusals.test.ts:26-30`: it runs `check`, not `init`, and reaches the same argument-parser choice check as 'a choice outside its list'.",
+                "Main affected CLI corpus: 227 distinct cases. Types, actual policy ESLint, staged check and normal hooks pass. Duplicate correction replays removed; distinct command, exit, diagnostic, source and policy preservation controls retained."
+            ]
         },
         "areas/integration-tests/013": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Move the tests at `tests/cli/commands/init/refusals.test.ts:97` and `:113` to `tests/cli/commands/init/selection.test.ts`; neither is a refusal. In the second, drop the `.prettierrc.json` removal note, which repeats `tests/cli/commands/init/replace.test.ts`.",
+                "Main affected CLI corpus: 227 distinct cases. Types, actual policy ESLint, staged check and normal hooks pass. Duplicate correction replays removed; distinct command, exit, diagnostic, source and policy preservation controls retained."
+            ]
         },
         "areas/integration-tests/014": {
             "status": "partial",
@@ -2654,10 +2669,13 @@
             "verification": []
         },
         "areas/integration-tests/024": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Keep the reference-resolution cases (an invalid ref, a deleted upstream, the remote default for a new branch) only in `tests/cli/repository/staged.test.ts:64,74,107`. In `tests/cli/commands/changed.test.ts:59-69,72-96`, delete those cases and keep only the `use --changed --base <ref>` message and the comparison label.",
+                "Main affected CLI corpus: 227 distinct cases. Types, actual policy ESLint, staged check and normal hooks pass. Duplicate correction replays removed; distinct command, exit, diagnostic, source and policy preservation controls retained."
+            ]
         },
         "areas/integration-tests/025": {
             "status": "pending",
@@ -2672,16 +2690,24 @@
             "verification": []
         },
         "areas/integration-tests/027": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Delete native process call count; collect batches from actual file argv following the actual rule file (no fixed command.slice(5)). Keep every selected file/match and batching outcome.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "areas/integration-tests/028": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Four exact refusal vectors remain registered; one separate clean control replaces four repeated clean reruns. Preserve fatal/JSON/range/unselected-path diagnostics.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "areas/integration-tests/029": {
             "status": "pending",
@@ -2696,16 +2722,25 @@
             "verification": []
         },
         "areas/integration-tests/035": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Own a temporary child scratch folder through existing testdir; spy native os.tmpdir and assert empty after failed preview, retaining original bytes/partial diff/changed list.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "areas/integration-tests/036": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Main227 distinct CLI and46 native cases pass; types/current-policy lint/staged and normal hooks pass."
+            ],
+            "remaining": [
+                "Merged classification runners; all seven distinct authored exit/byte contracts preserved. Prescribed overlapping-row deletion not yet satisfied."
+            ]
         },
         "areas/integration-tests/037": {
             "status": "pending",
@@ -2732,16 +2767,24 @@
             "verification": []
         },
         "areas/integration-tests/043": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Delete policy-findings test and sole dead static mirror after actual consumer search. Map other-check-runs, exact key diagnostic, strict write refusal to retained check/policy-errors and policy/read/recovery controls; report a prerequisite if any distinct assertion is absent.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "areas/integration-tests/044": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Waiting child polls actual callback marker without attempt cap; retain Promise.race cleanup/order and existing shared TEST_TIMEOUT_MS/production child enforcement. No timer additions.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "areas/integration-tests/046": {
             "status": "partial",
@@ -2757,10 +2800,14 @@
             ]
         },
         "areas/integration-tests/049": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Only truthful exact title an adapter reports a version below the floor as missing; preserve real before/below/unsupported/correction controls.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "areas/integration-tests/051": {
             "status": "complete",
@@ -4250,10 +4297,14 @@
             ]
         },
         "areas/unit-tests/006": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Delete duplicate malformed-manifest table, preserving numeric5 input in existing stronger INVALID matrix.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "areas/unit-tests/007": {
             "status": "pending",
@@ -10521,10 +10572,14 @@
             ]
         },
         "review/tests-tools/008": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: One actual test.each over four native scenario descriptors and both levels replaces four copied runners. Required configuration callbacks remain test-owned; literal names/patterns/severities and matching descriptor type remain correct mirrors. One shared exact report projection/correction/preservation body.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "review/tests-tools/009": {
             "status": "pending",
@@ -10533,22 +10588,34 @@
             "verification": []
         },
         "review/tests-tools/010": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Delete Expo/bare native descriptors, dead mirrors and standalone bare install. Retain exact ordinary React repository/case. Exact Counter moves to shared samples for native + CLI consumers; exact ExpoBox and Label native text migrate to CLI. Add hooks/no-inline controls and all four bare emitted-dependency assertions. Two actual native SDK correction rows retain original COMPONENT_SOURCE correction, exact rule/line/file, authored source/policy bytes.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "review/tests-tools/011": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Delete only duplicate library Zod case.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "review/tests-tools/012": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Delete only TS no-debugger case.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "review/tests-tools/013": {
             "status": "complete",
@@ -11820,16 +11887,22 @@
             ]
         },
         "slices/tests-acceptance/001": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Required mode, unused-file, Git-output or native SHA-width correction implemented in its actual test owner.",
+                "Main CLI clone case and native init, commits and pushed-secret cases pass within the 227 CLI/46 native corpus. SHA-1 and SHA-256 probes retained; current native platform proof is macOS only. Types, current-policy ESLint, staged check and normal hooks pass."
+            ]
         },
         "slices/tests-acceptance/003": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Required mode, unused-file, Git-output or native SHA-width correction implemented in its actual test owner.",
+                "Main CLI clone case and native init, commits and pushed-secret cases pass within the 227 CLI/46 native corpus. SHA-1 and SHA-256 probes retained; current native platform proof is macOS only. Types, current-policy ESLint, staged check and normal hooks pass."
+            ]
         },
         "slices/tests-acceptance/004": {
             "status": "complete",
@@ -11850,10 +11923,13 @@
             ]
         },
         "slices/tests-acceptance/008": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Required mode, unused-file, Git-output or native SHA-width correction implemented in its actual test owner.",
+                "Main CLI clone case and native init, commits and pushed-secret cases pass within the 227 CLI/46 native corpus. SHA-1 and SHA-256 probes retained; current native platform proof is macOS only. Types, current-policy ESLint, staged check and normal hooks pass."
+            ]
         },
         "slices/tests-acceptance/012": {
             "status": "pending",
@@ -11880,10 +11956,14 @@
             "verification": []
         },
         "slices/tests-acceptance/018": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Retained Zustand and tRPC cases require distinct actual configuration message fragments.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "slices/tests-acceptance/027": {
             "status": "complete",
@@ -11941,16 +12021,24 @@
             "verification": []
         },
         "slices/tests-acceptance/040": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Main227 distinct CLI and46 native cases pass; types/current-policy lint/staged and normal hooks pass."
+            ],
+            "remaining": [
+                "Shared lazy installation and four named native scenarios pass; corrected packet grows156 bytes while removing21 AST nodes. Mandatory simplification remains explicit."
+            ]
         },
         "slices/tests-acceptance/041": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Required mode, unused-file, Git-output or native SHA-width correction implemented in its actual test owner.",
+                "Main CLI clone case and native init, commits and pushed-secret cases pass within the 227 CLI/46 native corpus. SHA-1 and SHA-256 probes retained; current native platform proof is macOS only. Types, current-policy ESLint, staged check and normal hooks pass."
+            ]
         },
         "slices/tests-acceptance/042": {
             "status": "partial",
@@ -12281,9 +12369,14 @@
         },
         "slices/tests-integration-commands/010": {
             "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Main227 distinct CLI and46 native cases pass; types/current-policy lint/staged and normal hooks pass."
+            ],
+            "remaining": [
+                "Granted command corrections implemented; ungranted command families and queued runtime changes remain."
+            ]
         },
         "slices/tests-integration-commands/012": {
             "status": "pending",
@@ -12371,10 +12464,13 @@
             ]
         },
         "slices/tests-integration-commands/042": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Inline `expectRecommendedLevel` (`tests/cli/commands/levels.test.ts:9-26`) into its caller, so the restore of `entry.sh` (`:25`) is visible in the test.",
+                "Main affected CLI corpus: 227 distinct cases. Types, actual policy ESLint, staged check and normal hooks pass. Duplicate correction replays removed; distinct command, exit, diagnostic, source and policy preservation controls retained."
+            ]
         },
         "slices/tests-integration-commands/044": {
             "status": "in-progress",
@@ -12385,10 +12481,15 @@
             ]
         },
         "slices/tests-integration-commands/045": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Main227 distinct CLI and46 native cases pass; types/current-policy lint/staged and normal hooks pass."
+            ],
+            "remaining": [
+                "Granted command corrections implemented; ungranted command families and queued runtime changes remain."
+            ]
         },
         "slices/tests-integration-commands/048": {
             "status": "partial",
@@ -12422,30 +12523,40 @@
             "verification": ["Evidence ab2ac0d5268126a7.", "Evidence 74123bdcdee621fe.", "Evidence 999a19c9a211b7d7."]
         },
         "slices/tests-integration-execution/005": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Replace broad caught Error assertion with rejection text per actual copy/read failure; native host code/path boundary, no guessed message.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "slices/tests-integration-execution/007": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Binding implemented: Replace boolean note/content assertions with direct row expectations; copy row asserts a directory, read row original bytes; Actionlint exit rows preserve note/findings/mode/workspace cleanup. Ansible note rows already correct and remain unchanged.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "slices/tests-integration-execution/010": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
             "verification": [
                 "Replaced failed-status-only assertion with status and the actual diagnostic naming the absolute absent executable as not installed. Native current toolAvailability wording is asserted; unrelated errors cannot satisfy it.",
                 "Evidence 1ec1fc72d0ade7f6.",
                 "Evidence 28089dc8ed78b792.",
                 "Evidence 592a26d5228f318c.",
                 "Evidence 872d36bbc394edf8.",
-                "Evidence 999a19c9a211b7d7."
-            ],
-            "remaining": ["Mandatory staged check and coherent mechanical/behavior commits, push, CI evidence."]
+                "Evidence 999a19c9a211b7d7.",
+                "Binding implemented: Unavailable fixer note must name absent-tool, alongside failed vs selected-skip distinction and unchanged authored bytes.",
+                "Main affected CLI corpus: 227 distinct cases; native tools: 46 cases, 329 assertions. Root TypeScript, actual policy ESLint, staged check and normal commit hooks pass. Exact immutable original assertions and test vectors retained in the handoff evidence.",
+                "Zod and JavaScript survivor tests were mapped read-only; deletion follows the prescribed duplicate removal. Current Windows/Linux verification and final full suites remain pending."
+            ]
         },
         "slices/tests-integration-execution/015": {
             "status": "partial",
@@ -13051,22 +13162,37 @@
             ]
         },
         "slices/tests-tools-samples/017": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Five native table rows have manager names and exact commands; Bun executable is derived inside the test. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/018": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Pinned Yarn Classic has no unreachable Berry setup/version branches; tool-free CLI stub records resolved yarn install --immutable for native metadata header. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/019": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Real pnpm-lock.yaml and uv.lock generated from local dependencies both report stale after authored dependency changes and pass after restoring manifest, preserving locks/source/no published node_modules. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/020": {
             "status": "complete",
@@ -13202,22 +13328,37 @@
             ]
         },
         "slices/tests-tools-samples/044": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "One typos configuration is used directly, retaining emitted path and exact native findings. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/046": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Eight pattern vectors are passed as [patterns]; native titles show full vectors, exact reported-file contracts retained. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/047": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Both scope configs lint actual separate root/transactional child migration.sql files; root defect and correction remain. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/048": {
             "status": "complete",
@@ -13244,16 +13385,26 @@
             ]
         },
         "slices/tests-tools-samples/051": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Only unused planted Vale guide.md removed; package archive consumer vectors retained. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/052": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "removePackages now proves actual vale.ini bytes remain, replacing ownership-list inventory. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/053": {
             "status": "partial",
@@ -13287,22 +13438,37 @@
             "verification": []
         },
         "slices/tests-tools-samples/064": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Unnecessary manifest/mode restore removed before disposable sandbox teardown; authored changed-manifest preservation assertion retained. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/065": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "404 refusal owns empty TMPDIR/TEMP/TMP scratch; external Node compile cache owns separate disposable sibling via native NODE_COMPILE_CACHE, preserving native npm cache behavior. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/066": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "verification": [
+                "Redundant called assertion removed; native download spy names its actual boundary and using restores both native spies. Native controls pass in Main46-case corpus; root types, current-policy ESLint and staged gate pass."
+            ],
+            "remaining": [
+                "Implementation and native acceptance complete; affected packet grows 2792 bytes/223 AST nodes, so mandatory simplification remains unresolved."
+            ]
         },
         "slices/tests-tools-samples/067": {
             "status": "pending",
@@ -16252,6 +16418,44 @@
             ],
             "limitations": [
                 "Related production contract deletes more source than it adds; generated catalog and required regression test growth retained explicitly. Final suites/platforms and release-boundary work remain outstanding."
+            ]
+        },
+        {
+            "commit": "53e2a2ba33e5fa8ebda745a1f3c39a0be448b75c",
+            "completedRecords": [
+                "slices/tests-acceptance/001",
+                "slices/tests-acceptance/003",
+                "slices/tests-acceptance/008",
+                "slices/tests-acceptance/018",
+                "slices/tests-acceptance/041",
+                "slices/tests-integration-commands/042",
+                "slices/tests-integration-execution/005",
+                "slices/tests-integration-execution/007",
+                "slices/tests-integration-execution/010",
+                "areas/integration-tests/007",
+                "areas/integration-tests/010",
+                "areas/integration-tests/011",
+                "areas/integration-tests/012",
+                "areas/integration-tests/013",
+                "areas/integration-tests/024",
+                "areas/integration-tests/027",
+                "areas/integration-tests/028",
+                "areas/integration-tests/035",
+                "areas/integration-tests/043",
+                "areas/integration-tests/044",
+                "areas/integration-tests/049",
+                "areas/unit-tests/006",
+                "review/tests-tools/008",
+                "review/tests-tools/010",
+                "review/tests-tools/011",
+                "review/tests-tools/012"
+            ],
+            "unresolvedRecords": 692,
+            "validation": [
+                "227 distinct CLI cases; 46 native tool cases, 329 assertions; types/current-policy lint/staged/normal hooks pass."
+            ],
+            "limitations": [
+                "Outcome-row deletion remains partial because distinct authored exit contracts were preserved. Broad command records, evidence-only retired owner and individual growth obligations remain open. Final suites/platforms/CI not claimed complete."
             ]
         }
     ],

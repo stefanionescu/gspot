@@ -161,3 +161,9 @@ items = "string"
 direction = "neutral"
 default = ["Schema", "Tables", "Indexes", "Functions", "Triggers", "Extensions", "Row Level Security", "Grants"]
 summary = "The section names a documented migration may box."
+
+[[naming.overrides]]
+paths = ["**/migrations/**"]
+categories = ["directories"]
+allow_digits = true
+reason = "Migration directories use the migration tool timestamp names."

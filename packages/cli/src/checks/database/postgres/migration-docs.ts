@@ -27,19 +27,21 @@ function headerFindings(input: Pick<CheckInput, 'check'>, migration: Migration, 
                 input,
                 { file: migration.path, line: 1 },
                 'header',
-                'The migration header sits between separator lines.',
+                'Put the migration header between separator lines.',
             ),
         );
     const wanted = `-- Migration: ${migration.name}`;
     if (lines[1] !== wanted)
-        findings.push(findingAt(input, { file: migration.path, line: 2 }, 'header', `The second line is "${wanted}".`));
+        findings.push(
+            findingAt(input, { file: migration.path, line: 2 }, 'header', `Write "${wanted}" on the second line.`),
+        );
     if (!PURPOSE.test(lines[3] ?? ''))
         findings.push(
             findingAt(
                 input,
                 { file: migration.path, line: HEADER_LINES },
                 'header',
-                'The fourth line starts with "-- Purpose:".',
+                'Start the fourth line with "-- Purpose:".',
             ),
         );
     return findings;
@@ -60,7 +62,7 @@ function sectionFindings(
                 input,
                 { file: migration.path, line: index + 1 },
                 'section',
-                `The "${name}" heading sits between separator lines.`,
+                `Put the "${name}" heading between separator lines.`,
             ),
         ];
     });

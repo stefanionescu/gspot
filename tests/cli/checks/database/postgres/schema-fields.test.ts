@@ -21,14 +21,13 @@ test('keys count as indexes, a table constraint names its columns, and a dropped
     expect(fields.indexed.get('public.posts')).toStrictEqual(new Set(['id', 'author_id']));
 });
 
-test('table recreation discards security, policies, keys, and indexes from the old table', async () => {
+test('table recreation discards security, keys, and indexes from the old table', async () => {
     const fields = buildSchema([
         await parseMigration(
             '1_reset.sql',
             `
         CREATE TABLE posts (id int PRIMARY KEY, author_id int REFERENCES users(id));
         ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-        CREATE POLICY readers ON posts USING (true);
         CREATE INDEX authors ON posts(author_id);
         DROP TABLE posts;
         CREATE TABLE posts (id int, author_id int REFERENCES users(id));
@@ -37,40 +36,33 @@ test('table recreation discards security, policies, keys, and indexes from the o
     ]);
     expect([...fields.tables.keys()]).toStrictEqual(['public.posts']);
     expect([...fields.secured]).toStrictEqual([]);
-    expect([...fields.policed]).toStrictEqual([]);
     expect([...fields.indexed]).toStrictEqual([]);
     expect(fields.foreignKeys.map((key) => key.column)).toStrictEqual(['author_id']);
 });
 
-test('removing one policy or equivalent index preserves the other until it is removed', async () => {
+test('removing one equivalent index preserves the other until it is removed', async () => {
     const initial = await parseMigration(
         '1_create.sql',
         `
         CREATE TABLE posts (author_id int REFERENCES users(id));
         ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-        CREATE POLICY first ON posts USING (true);
-        CREATE POLICY second ON posts USING (true);
         CREATE INDEX first ON posts(author_id);
         CREATE INDEX second ON posts(author_id);
-        DROP POLICY first ON posts;
         DROP INDEX first;
     `,
     );
     const retained = buildSchema([initial]);
-    expect(retained.policed.has('public.posts')).toBe(true);
     expect(retained.indexed.get('public.posts')).toStrictEqual(new Set(['author_id']));
     const removed = buildSchema([
         initial,
         await parseMigration(
             '2_drop.sql',
             `
-        DROP POLICY second ON posts;
         DROP INDEX second;
         ALTER TABLE posts DISABLE ROW LEVEL SECURITY;
     `,
         ),
     ]);
-    expect([...removed.policed]).toStrictEqual([]);
     expect([...removed.secured]).toStrictEqual([]);
     expect([...removed.indexed]).toStrictEqual([]);
 });

@@ -30,13 +30,8 @@ rules:
   - id: gspot.javascript.ssrf-web-request-user-input
     patterns:
       - pattern-either:
-          - pattern: $HTTP(req.body.$VALUE, ...)
-          - pattern: $HTTP(req.query.$VALUE, ...)
-          - pattern: $HTTP(req.params.$VALUE, ...)
-          - pattern: $HTTP($URL.searchParams.get(...), ...)
-      - metavariable-regex:
-          metavariable: $HTTP
-          regex: ^f[e]tch$
+          - pattern: fetch(req.$PART.$VALUE, ...)
+          - pattern: fetch($URL.searchParams.get(...), ...)
     message: >
       SSRF risk - web request called with a URL from user input. Validate and
       allowlist target hosts.

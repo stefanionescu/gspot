@@ -22,8 +22,6 @@ export const CATEGORY_PARENTS: Record<string, string> = {
 
 export const REACT_FILE = /\.[jt]sx$/u;
 
-export const MIGRATION_PREFIX = /^\d{14}_/u;
-
 export const WRAPPERS: PathContainer[] = [
     { open: '[', close: ']', category: 'path_parameters' },
     { open: '(', close: ')', category: 'directories' },

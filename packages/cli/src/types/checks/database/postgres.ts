@@ -33,14 +33,12 @@ export type Schema = {
     /** Qualified table name to where it was created. */
     tables: Map<string, Declared>;
     secured: Set<string>;
-    policed: Set<string>;
     foreignKeys: ForeignKey[];
     /** Qualified table name to the leading column of each index and key on it. */
     indexed: Map<string, Set<string>>;
 };
 
 export type SchemaState = Pick<Schema, 'tables' | 'secured'> & {
-    policies: Map<string, Set<string>>;
     indexes: { table: string; name: string; column: string; constraint: string }[];
     constraints: Map<string, Map<string, Schema['foreignKeys']>>;
 };

@@ -19,9 +19,9 @@ import { isInScope, pathMatcher } from '#cli/repository/selectors.ts';
 import { nameFindings } from '#cli/checks/general/naming/findings.ts';
 import { effectivePolicy } from '#cli/checks/general/naming/policy.ts';
 import { typescriptIdentifiers } from '#cli/parsers/naming/typescript.ts';
+import { WRAPPERS, REACT_FILE } from '#cli/config/checks/general/naming.ts';
 import { everyTable, harnessFolders } from '#cli/policy/settings/lookup.ts';
 import type { CheckInput, BuiltInCheck } from '#cli/types/execution/check.ts';
-import { WRAPPERS, REACT_FILE, MIGRATION_PREFIX } from '#cli/config/checks/general/naming.ts';
 import type { FileNames, NamingSource, EffectivePolicy } from '#cli/types/checks/general/naming.ts';
 
 function segmentName(segment: string): Pick<Identifier, 'name' | 'category'> {
@@ -181,7 +181,7 @@ export function fileIdentifier(path: string, language: string): Identifier {
 }
 
 /**
- * Every directory on a file's path as an identifier, from the top down. Dot folders and migration folders are skipped.
+ * Every directory on a file's path as an identifier, from the top down. Dot folders are skipped.
  * @param path the file path
  * @param language the language configuration the file belongs to
  * @returns the identifiers
@@ -189,7 +189,7 @@ export function fileIdentifier(path: string, language: string): Identifier {
 export function directoryIdentifiers(path: string, language: string): Identifier[] {
     const segments = path.split('/').slice(0, -1);
     return segments.flatMap((segment, index) => {
-        const named = segment.startsWith('.') || MIGRATION_PREFIX.test(segment) ? undefined : segmentName(segment);
+        const named = segment.startsWith('.') ? undefined : segmentName(segment);
         if (named === undefined || named.name === '') return [];
         const directory = segments.slice(0, index + 1).join('/');
         return [

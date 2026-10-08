@@ -49,22 +49,10 @@ const document = {
                 {
                     'pattern-either': [
                         {
-                            pattern: '$HTTP(req.body.$VALUE, ...)',
+                            pattern: 'fetch(req.$PART.$VALUE, ...)',
                         },
-                        {
-                            pattern: '$HTTP(req.query.$VALUE, ...)',
-                        },
-                        {
-                            pattern: '$HTTP(req.params.$VALUE, ...)',
-                        },
-                        { pattern: '$HTTP($URL.searchParams.get(...), ...)' },
+                        { pattern: 'fetch($URL.searchParams.get(...), ...)' },
                     ],
-                },
-                {
-                    'metavariable-regex': {
-                        metavariable: '$HTTP',
-                        regex: '^f[e]tch$',
-                    },
                 },
             ],
             message:

@@ -6,6 +6,8 @@ import { positionAt } from '#cli/parsers/sql/statements.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import type { SqlStatementView } from '#cli/types/parsers/sql.ts';
 import { buildSchema } from '#cli/checks/database/postgres/schema.ts';
+import { frozenMigrationPaths } from '#cli/parsers/sql/migrations.ts';
+import type { Migration } from '#cli/types/checks/database/postgres.ts';
 import { migrationsOf } from '#cli/checks/database/postgres/migrations.ts';
 
 function isLooseDefiner(statement: SqlStatementView): boolean {
@@ -20,13 +22,13 @@ function isLooseDefiner(statement: SqlStatementView): boolean {
     return isDefiner && !hasPath;
 }
 
-async function statementFindings(
+function statementFindings(
     input: CheckInput,
+    migrations: Migration[],
     rule: string,
     diagnostic: string,
     isWrong: (statement: SqlStatementView) => boolean,
-): Promise<Finding[]> {
-    const migrations = await migrationsOf(input);
+): Finding[] {
     return migrations.flatMap((migration) =>
         migration.statements
             .filter((statement) => isWrong(statement))
@@ -42,7 +44,7 @@ async function statementFindings(
 }
 
 /**
- * One finding for each table in a client schema with no row security, or with row security and no policy.
+ * One finding for each table in a client schema with row security off.
  * @param input the check input
  * @returns the findings
  */
@@ -51,25 +53,32 @@ export async function rls(input: CheckInput): Promise<Finding[]> {
     const schemas = new Set(input.view.options('postgres')['client_schemas']);
     return schema.tables
         .entries()
-        .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))))
-        .flatMap(([table, at]): Finding[] => {
-            const place = { file: at.path, ...positionAt(at.text, at.offset) };
-            if (!schema.secured.has(table))
-                return [findingAt(input, place, 'row-security', `${table} does not have row level security enabled.`)];
-            if (schema.policed.has(table)) return [];
-            return [findingAt(input, place, 'policy', `${table} enables row level security and has no policy.`)];
-        })
+        .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))) && !schema.secured.has(table))
+        .map(([table, at]) =>
+            findingAt(
+                input,
+                { file: at.path, ...positionAt(at.text, at.offset) },
+                'row-security',
+                `${table} does not have row level security enabled.`,
+            ),
+        )
         .toArray();
 }
 
 /**
- * One finding for each grant of every privilege.
+ * One finding for each mutable migration that grants every privilege.
  * @param input the check input
  * @returns the findings
  */
-export function grants(input: CheckInput): Promise<Finding[]> {
+export async function grants(input: CheckInput): Promise<Finding[]> {
+    const migrations = await migrationsOf(input);
+    const frozen = frozenMigrationPaths(
+        migrations.map(({ path }) => path),
+        input.view.options('postgres').frozen_through,
+    );
     return statementFindings(
         input,
+        migrations.filter(({ path }) => !frozen.has(path)),
         'grant-all',
         'GRANT ALL gives every privilege, present and future; name the privileges.',
         (statement: SqlStatementView): boolean => {
@@ -87,8 +96,8 @@ export function grants(input: CheckInput): Promise<Finding[]> {
  * @param input the check input
  * @returns the findings
  */
-export function definerSearchPath(input: CheckInput): Promise<Finding[]> {
+export async function definerSearchPath(input: CheckInput): Promise<Finding[]> {
     const diagnostic =
         'This SECURITY DEFINER function sets no search_path. Set an explicit search_path so callers cannot choose the objects it accesses.';
-    return statementFindings(input, 'definer-search-path', diagnostic, isLooseDefiner);
+    return statementFindings(input, await migrationsOf(input), 'definer-search-path', diagnostic, isLooseDefiner);
 }
