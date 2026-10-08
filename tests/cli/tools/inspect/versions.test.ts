@@ -11,13 +11,9 @@ import { toolPin } from '#cli/configurations/contracts.ts';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { buildBinaryPin, buildLibraryPin } from '#tests/harness/pins.ts';
-import { PACKAGE_METADATA_FAILURES } from '#tests/config/cli/tools/versions.ts';
+import { VERSION_PROCESS_CASES, PACKAGE_METADATA_FAILURES } from '#tests/config/cli/tools/versions.ts';
 
-test.each([
-    ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],
-    ['console.log("unrecognized output");', 'error', 'valid version'],
-    ['console.error("3.8.1");', 'ok', undefined],
-] as const)('a version process classifies %s as %s', async (script, state, note) => {
+test.each(VERSION_PROCESS_CASES)('a version process classifies %s as %s', async (script, state, note) => {
     await using sandbox = await testdir();
     using _which = spyOn(executables, 'sync').mockReturnValue(process.execPath);
     const tool = { ...buildBinaryPin('version-teller', '3.8.1'), version_command: ['-e', script] };

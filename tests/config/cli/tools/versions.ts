@@ -33,3 +33,10 @@ export const HOST_PLUGIN_REPORTS = [
     { name: 'failed', stdout: '', code: 7, missing: false, state: 'error', note: 'exited 7' },
     { name: 'missing', stdout: '', code: 0, missing: true, state: 'missing', note: '' },
 ] as const;
+
+/** Native version-process bytes and their inspection outcomes. */
+export const VERSION_PROCESS_CASES = [
+    ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],
+    ['console.log("unrecognized output");', 'error', 'valid version'],
+    ['console.error("3.8.1");', 'ok', undefined],
+] as const;
