@@ -10,15 +10,14 @@ import type { CommandResult } from '#cli/types/terminal.ts';
 import { EXIT_ERROR } from '#cli/config/platform/runtime.ts';
 import { Option, Command } from '@commander-js/extra-typings';
 import { getStaged } from '#cli/repository/revisions/public.ts';
-import { PUSH_ARGUMENTS } from '#cli/config/commands/options.ts';
 import { checkOutRevision } from '#cli/execution/copy/public.ts';
 import { printResult, selectVerbosity } from '#cli/terminal/public.ts';
 import type { Program, GlobalFlags } from '#cli/types/commands/program.ts';
 import { GspotError, environmentVariables } from '#cli/platform/public.ts';
-import { HOOKS, CHECK_FLAG_DEFAULTS } from '#cli/config/commands/check.ts';
 import { checkPush, assertPushOptions } from '#cli/commands/check/push.ts';
 import type { CheckFlags, CheckOptions } from '#cli/types/commands/check.ts';
 import { findRoot, isGitRepository } from '#cli/repository/discovery/contracts.ts';
+import { HOOKS, PUSH_ARGUMENTS, CHECK_FLAG_DEFAULTS } from '#cli/config/commands/check.ts';
 
 // Reads the pre-push protocol from standard input, stopping when the run is canceled.
 async function readPushInput(signal: AbortSignal): Promise<string> {

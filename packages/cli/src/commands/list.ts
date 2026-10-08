@@ -8,7 +8,7 @@ import { selectionStatus } from '#cli/planning/contracts.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { findRoot } from '#cli/repository/discovery/contracts.ts';
 import { commandHelp, openSession } from '#cli/commands/public.ts';
-import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/options.ts';
+import { KEY_GAP, VALUE_WIDTH } from '#cli/config/commands/list.ts';
 import { everyManifest } from '#cli/configurations/selection/public.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { everyTable, listSettings } from '#cli/policy/settings/contracts.ts';

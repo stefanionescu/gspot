@@ -1,28 +1,23 @@
 import ts from 'typescript';
 import { parse } from 'smol-toml';
+import { join, posix, relative } from 'node:path';
 import { findingAt } from '#cli/checks/finding.ts';
-import { ownedInputs } from '#cli/planning/public.ts';
+import { toPosix } from '#cli/platform/contracts.ts';
 import { emptyResult } from '#cli/execution/report.ts';
 import type { Root } from '#cli/types/platform/root.ts';
-import { parseJsonRecord } from '#cli/parsers/public.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
-import { join, posix, dirname, relative } from 'node:path';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { PRIVATE_FILE } from '#cli/config/platform/modes.ts';
-import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { getTsconfig } from '#cli/parsers/packages/public.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { RAN_STATUSES } from '#cli/config/execution/runtime.ts';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { targetInScope } from '#cli/configurations/contracts.ts';
-import { toPosix, extensionOf } from '#cli/platform/contracts.ts';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
+import { writeScopeProject } from '#cli/checks/language/contracts.ts';
 import type { PythonDocstringStyle } from '#cli/types/parsers/python.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/platform/runtime.ts';
 import type { CheckInput, CheckResult } from '#cli/types/execution/check.ts';
 import { docstringStyleSchema } from '#cli/parsers/schema/python/docstrings.ts';
 import { docstringOf, parsePythonModule } from '#cli/parsers/source/contracts.ts';
@@ -74,51 +69,13 @@ function assertBuildInside(root: string, path: string, reads: ReadCache, visited
         assertBuildInside(root, ts.resolveProjectReferencePath(reference), reads, visited);
 }
 
-// Restrict the disposable JavaScript project to its scope and ambient roots, and retain its effective options.
-function writeScopeProject(
-    session: ToolSession,
-    scratch: string,
-    planned: PlannedCheck,
-    target: string,
-): ts.CompilerOptions | undefined {
-    if (ownedInputs(session, planned).length === 0) return undefined;
-    const scope = planned.scope.scope.path;
-    const generatedPath = join(scratch, target);
-    const generated = getTsconfig(scratch, generatedPath, { root: scratch, sources: new Map(), memo: new Map() });
-    if (generated === undefined) throw new Error(`Missing JavaScript configuration: ${target}`);
-    const scopeFiles = generated.fileNames.filter(
-        (path) =>
-            DECLARATION_EXTENSIONS.includes(extensionOf(path)) ||
-            scopeOf(toPosix(relative(scratch, path)), session.repository.scopes).path === scope,
-    );
-    if (scopeFiles.length === 0) return undefined;
-    const authored = parseJsonRecord(readFileSync(generatedPath, 'utf8'));
-    // Managed configurations are read-only; only the disposable copy is rewritten.
-    chmodSync(generatedPath, PRIVATE_FILE);
-    writeFileSync(
-        generatedPath,
-        JSON.stringify({
-            ...authored,
-            compilerOptions: {
-                ...(authored['compilerOptions'] as Record<string, unknown>),
-                typeRoots:
-                    ts.getEffectiveTypeRoots(
-                        { ...generated.options, configFilePath: join(scratch, scope, 'jsconfig.json') },
-                        {},
-                    ) ?? [],
-            },
-            files: scopeFiles.map((path) => toPosix(relative(dirname(generatedPath), path))),
-            include: [],
-            exclude: [],
-        }),
-    );
-    return generated.options;
-}
-
 // Restore every scratch path in the recorded invocation while retaining a result with no launched command.
 function restoreCommandPaths(result: CheckResult, scratch: string, root: string): CheckResult {
     if (result.command === undefined) return result;
-    return { ...result, command: result.command.map((part) => part.replaceAll(scratch, () => root)) };
+    return {
+        ...result,
+        command: result.command.map((part) => part.replaceAll(scratch, () => root)),
+    };
 }
 
 async function sourceStyle(session: ToolSession, path: string): Promise<PythonDocstringStyle | undefined> {
@@ -211,10 +168,20 @@ export async function checkjs(session: ToolSession, planned: PlannedCheck): Prom
     const options = writeScopeProject(session, scratch, planned, target);
     // A push that changes no JavaScript file leaves the project empty, and the compiler refuses an empty project.
     if (options === undefined)
-        return { check: planned.check.name, scope, status: 'passed', fileCount: 0, findings: [], duration: 0 };
+        return {
+            check: planned.check.name,
+            scope,
+            status: 'passed',
+            fileCount: 0,
+            findings: [],
+            duration: 0,
+        };
     const command = ['tsc', '-p', '{tool_file:jsconfig}', '--pretty', 'false'];
     appendBuildMetadata(command, options, scratch, 'jsconfig.check.tsbuildinfo');
-    const result = await runCheckCommand(session, planned, { command: command, workspace: scratch });
+    const result = await runCheckCommand(session, planned, {
+        command: command,
+        workspace: scratch,
+    });
     return restoreCommandPaths(result, scratch, session.root);
 }
 

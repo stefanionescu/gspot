@@ -6,7 +6,7 @@ import { registerApply } from '#cli/commands/public.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
 import { registerRemove } from '#cli/commands/remove.ts';
 import { registerInit } from '#cli/commands/init/public.ts';
-import { HELP_CODES } from '#cli/config/commands/options.ts';
+import { HELP_CODES } from '#cli/config/commands/program.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerDoctor } from '#cli/commands/doctor/public.ts';
