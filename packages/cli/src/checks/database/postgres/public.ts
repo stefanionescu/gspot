@@ -4,11 +4,11 @@ import { memo } from '#cli/platform/memo.ts';
 import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
+import type { Migration } from '#cli/types/checks/postgres.ts';
 import { MIGRATION_VERSION } from '#cli/config/parsers/sql.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { ownedBy } from '#cli/configurations/selection/public.ts';
 import { positionAt, parseSqlFile } from '#cli/parsers/sql/public.ts';
-import type { Migration } from '#cli/types/checks/database/postgres.ts';
 
 import {
     PURPOSE,
@@ -20,7 +20,7 @@ import {
     DOC_SEPARATOR,
     MIGRATION_DOWN,
     MIGRATION_STATEMENTS,
-} from '#cli/config/checks/database/postgres.ts';
+} from '#cli/config/checks/postgres.ts';
 
 const MIGRATION_MEMO = { create: () => new Map<string, Promise<Migration[]>>() };
 

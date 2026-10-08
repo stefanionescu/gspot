@@ -1,19 +1,19 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
-import { stat, writeFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { prepare } from '#cli/commands/init/public.ts';
 import { buildInitOptions } from '#tests/harness/init.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
+import { stat, readFile, writeFile } from 'node:fs/promises';
 import { writeSetup } from '#cli/commands/init/contracts.ts';
 import { identify } from '#cli/lifecycle/ownership/public.ts';
 import { parseTemplate } from '#cli/policy/document/contracts.ts';
 import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
-import { rejection, containing } from '#tests/harness/expectations.ts';
 import { INVALID_CSS, TAKEOVER_PACKAGE } from '#tests/config/samples/css.ts';
 import { ownershipSchema } from '#cli/lifecycle/ownership/state/contracts.ts';
 import { INACTIVE_CONFIGURATIONS } from '#tests/config/cli/generation/commitlint.ts';
+import { rejection, containing, textContaining } from '#tests/harness/expectations.ts';
 
 test('initialization refuses publication of a shared package field edited after preview', async () => {
     await using sandbox = await testdir();
@@ -101,4 +101,26 @@ test('recommended initialization keeps authored configurations of inactive stric
     const project = parseToolProject(await Bun.file(join(sandbox.path, '.gspot/package.json')).text());
     expect(project.dependencies).not.toHaveProperty('@commitlint/cli');
     expect(project.dependencies).not.toHaveProperty('syncpack');
+});
+
+test('initialization preserves a retained shared configuration edited after its plan', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'setup.cfg': '[sqlfluff]\nexclude_rules = LT01\n',
+        'query.sql': 'SELECT 1;\n',
+    });
+    const options = buildInitOptions(sandbox.path, {
+        configurations: ['sql'],
+    });
+    const prepared = await prepare(sandbox.path, options);
+    expect(prepared.plan.retained).toContainEqual({
+        path: 'setup.cfg',
+        note: textContaining('Delete the section when ready'),
+    });
+    const edited = '[sqlfluff]\nexclude_rules = LT01, RF01\n[flake8]\nignore = E501\n';
+    await writeFile(join(sandbox.path, 'setup.cfg'), edited);
+    const initialized = await writeSetup(sandbox.path, options, prepared);
+    expect(initialized.exitCode).toBe(0);
+    expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
+    expect(await pathExists(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(true);
 });

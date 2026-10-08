@@ -1,4 +1,4 @@
-import type { MigrationStatement } from '#cli/types/checks/database/postgres.ts';
+import type { MigrationStatement } from '#cli/types/checks/postgres.ts';
 
 export const CONSTRAINT_SUFFIXES: Record<string, string> = {
     CONSTR_PRIMARY: 'pkey',

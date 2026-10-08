@@ -224,21 +224,3 @@ test('init refuses an unsafe output ancestor before attempting installation', as
         '[default.extend-words]\nAuthored = "Authored"\n',
     );
 });
-
-test('init retains old configuration when a conflicting replacement cannot be published', async () => {
-    await using sandbox = await testdir();
-    const authored = '[default.extend-words]\nAuthored = "Authored"\n';
-    const conflict = '# Maintained independently.\n';
-    await createFileTree(sandbox.path, { 'typos.toml': authored, '.gspot/config/typos.toml': conflict });
-    expect(
-        await rejection(
-            initCommand(
-                buildInitOptions(sandbox.path, {
-                    configurations: ['spelling'],
-                }),
-            ),
-        ),
-    ).toContain('These files were not overwritten by gspot: .gspot/config/typos.toml.');
-    expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
-    expect(await readFile(join(sandbox.path, '.gspot/config/typos.toml'), 'utf8')).toBe(conflict);
-});

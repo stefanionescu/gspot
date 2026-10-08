@@ -185,28 +185,6 @@ test.each([true, false])(
     },
 );
 
-test('initialization preserves a retained shared configuration edited after its plan', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'setup.cfg': '[sqlfluff]\nexclude_rules = LT01\n',
-        'query.sql': 'SELECT 1;\n',
-    });
-    const options = buildInitOptions(sandbox.path, {
-        configurations: ['sql'],
-    });
-    const prepared = await prepare(sandbox.path, options);
-    expect(prepared.plan.retained).toContainEqual({
-        path: 'setup.cfg',
-        note: textContaining('Delete the section when ready'),
-    });
-    const edited = '[sqlfluff]\nexclude_rules = LT01, RF01\n[flake8]\nignore = E501\n';
-    await writeFile(join(sandbox.path, 'setup.cfg'), edited);
-    const initialized = await writeSetup(sandbox.path, options, prepared);
-    expect(initialized.exitCode).toBe(0);
-    expect(await readFile(join(sandbox.path, 'setup.cfg'), 'utf8')).toBe(edited);
-    expect(await pathExists(join(sandbox.path, '.gspot/config/sqlfluff.cfg'))).toBe(true);
-});
-
 test.each(PYPROJECT_TAKEOVERS.flatMap((row) => ['', 'app'].map((scope) => ({ ...row, scope }))))(
     'initialization identifies retained $table settings in Python project scope "$scope"',
     async ({ configuration, table, text, source, generated, scope }) => {
@@ -305,4 +283,22 @@ test('failed initialization preserves the previous pin when generated publicatio
     const options = buildInitOptions(directory.path, { configurations: ['none'] });
     expect(await rejection(initCommand(options))).toContain('Generated write denied');
     expect(await readFile(join(directory.path, '.gspot/version'), 'utf8')).toBe('0.0.1\n');
+});
+
+test('init retains old configuration when a conflicting replacement cannot be published', async () => {
+    await using sandbox = await testdir();
+    const authored = '[default.extend-words]\nAuthored = "Authored"\n';
+    const conflict = '# Maintained independently.\n';
+    await createFileTree(sandbox.path, { 'typos.toml': authored, '.gspot/config/typos.toml': conflict });
+    expect(
+        await rejection(
+            initCommand(
+                buildInitOptions(sandbox.path, {
+                    configurations: ['spelling'],
+                }),
+            ),
+        ),
+    ).toContain('These files were not overwritten by gspot: .gspot/config/typos.toml.');
+    expect(await readFile(join(sandbox.path, 'typos.toml'), 'utf8')).toBe(authored);
+    expect(await readFile(join(sandbox.path, '.gspot/config/typos.toml'), 'utf8')).toBe(conflict);
 });

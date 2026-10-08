@@ -540,11 +540,6 @@ reason = "Astro maps this directory to the published /schema/gspot.schema.json e
 
 [[ignore]]
 check = "structure/lone-files"
-paths = ["packages/cli/src/config/checks/database", "packages/cli/src/types/checks/database"]
-reason = "The database and library namespaces match the behavioral check owners. Repository policy keeps each owner’s static constants and declarations in config and types even when that category currently has one file."
-
-[[ignore]]
-check = "structure/lone-files"
 paths = ["tests/cli/docs", "tests/cli/parsers/naming", "tests/config/cli/checks/language/bash", "tests/config/cli/checks/tool/xcode", "tests/config/cli/parsers/tool", "tests/config/cli/tools/python", "tests/config/tools/configurations/language/bash", "tests/types/cli/checks/framework", "tests/types/cli/checks/general", "tests/types/cli/checks/library", "tests/types/cli/execution", "tests/types/cli/generation", "tests/types/tools/configurations/general", "tests/types/tools/generation", "tests/types/tools/lifecycle"]
 reason = "These suite namespaces follow their behavioral source owners. The docs tests stay under cli/docs, and each matching config or types namespace owns its suite data. Their placement follows the repository ownership contract even when an owner needs one file."
 
