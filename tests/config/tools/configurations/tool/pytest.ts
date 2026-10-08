@@ -23,3 +23,10 @@ export const CASES: FindingCase[] = [
         corrected: { files: { 'tests/test_math.py': ARITHMETIC_TESTS } },
     },
 ];
+
+export const PROVIDER_FLOORS = [
+    ['recommended', 80],
+    ['recommended', 0],
+    ['all', 80],
+    ['all', 0],
+] as const;

@@ -19,8 +19,8 @@ import { ENTRY_MODES, GITLINK_MODE } from '#cli/config/repository/revisions.ts';
 import { EXECUTABLE_BITS, EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
 import { statSync, lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
 import { isInScope, pathMatcher, isToolingPath } from '#cli/repository/paths/public.ts';
-import type { PackageJson, DependencyMap, PackageManifest } from '#cli/types/parsers/packages.ts';
 import { getTsconfig, manifestParser, parsePackageManifest } from '#cli/parsers/packages/public.ts';
+import type { PackageJson, DependencyMap, PackageManifest, InstalledDependency } from '#cli/types/parsers/packages.ts';
 
 import type {
     RawEntry,
@@ -310,13 +310,13 @@ export function installedPackage(files: Root | undefined, root: string, manifest
 }
 
 /**
- * Read the version of a dependency resolved from its actual project manifest, including hoisted installations.
+ * Read the path and version of a dependency resolved from its actual project manifest, including hoisted installations.
  * @param root the repository root.
  * @param manifest the repository-relative source project manifest.
  * @param name the installed dependency name.
- * @returns the installed version, or undefined when the dependency is absent.
+ * @returns the resolved manifest and its version, or undefined when the dependency is absent.
  */
-export function installedDependencyVersion(root: string, manifest: string, name: string): string | undefined {
+export function installedDependency(root: string, manifest: string, name: string): InstalledDependency | undefined {
     let path: string;
     try {
         path = createRequire(join(root, manifest)).resolve(`${name}/package.json`);
@@ -324,7 +324,7 @@ export function installedDependencyVersion(root: string, manifest: string, name:
         if (error instanceof Error && 'code' in error && error.code === 'MODULE_NOT_FOUND') return undefined;
         throw error;
     }
-    return installedPackage(undefined, root, path)?.version;
+    return { path, version: installedPackage(undefined, root, path)?.version };
 }
 
 /**

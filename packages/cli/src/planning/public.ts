@@ -1,18 +1,18 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 // Tool requirements derived from the same applicable check plan used by execution.
-import { HISTORY_CHECKS } from '#cli/config/planning.ts';
 import { scopeOf } from '#cli/repository/paths/contracts.ts';
 import { GspotError, hostPlatform } from '#cli/platform/public.ts';
 import { readPackageManifests } from '#cli/repository/contracts.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { COVERAGE_FLAGS, HISTORY_CHECKS } from '#cli/config/planning.ts';
 import { declaredArchitectures } from '#cli/policy/settings/contracts.ts';
 import { filesFor, runsAtRoot, childScopes } from '#cli/planning/files.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Manifest, CheckDeclaration } from '#cli/types/configurations.ts';
 import { ownedBy, everyManifest } from '#cli/configurations/selection/public.ts';
 import { isOutsideChildren, isToolProjectPath } from '#cli/repository/paths/public.ts';
-import { skipFor, selectionStatus, restrictIgnoredPaths } from '#cli/planning/contracts.ts';
 import { toolPin, toolName, checkToolPin, toolProjectPackage } from '#cli/configurations/contracts.ts';
+import { skipFor, selectionStatus, coverageArguments, restrictIgnoredPaths } from '#cli/planning/contracts.ts';
 
 import type {
     Stage,
@@ -201,9 +201,14 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
  * Companion tools consumed by a check's command and its selected native configuration.
  * @param scope the effective configuration selection
  * @param check the declared check
+ * @param command the argv actually executed when supplied
  * @returns each explicit and configuration-owned companion once
  */
-export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration): string[] {
+export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration, command?: string[]): string[] {
+    const manifest = scope.selected.find((owner) => owner.checks.includes(check));
+    const gated = coverageArguments({ scope, check, ...(manifest === undefined ? {} : { manifest }) }, {});
+    const withoutCoverage =
+        gated !== check.command && command?.some((part) => COVERAGE_FLAGS.has(part.replace(/=.*/su, ''))) !== true;
     const tools = new Set([check.tool, check.command?.[0], check.fix?.[0], ...(check.other_tools ?? [])]);
     const companions = scope.selected
         .flatMap((manifest) => manifest.toolFiles)
@@ -211,7 +216,11 @@ export function checkCompanions(scope: ScopeSelection, check: CheckDeclaration):
         .filter((config) => config.check.length === 0 || config.check.includes(check.name))
         .filter((config) => config.when === undefined || scope.view.configurations.includes(config.when.configuration))
         .flatMap((config) => config.required_tools);
-    return [...new Set([...(check.other_tools ?? []), ...companions])];
+    return [...new Set([...(check.other_tools ?? []), ...companions])].filter((name) => {
+        if (!withoutCoverage) return true;
+        const pin = toolPin(scope.selected, name);
+        return pin.system !== true || pin.kind !== 'library';
+    });
 }
 
 /**
@@ -314,7 +323,9 @@ export function applicableManifests(session: Session): Manifest[] {
                 .filter(
                     (tool) =>
                         needed.has(tool.name) ||
-                        (ownsEslint && (tool.kind === 'library' || tool.name === 'eslint-config-prettier')) ||
+                        (ownsEslint &&
+                            tool.system !== true &&
+                            (tool.kind === 'library' || tool.name === 'eslint-config-prettier')) ||
                         (ownsPrettier && tool.prettier !== undefined),
                 )
                 .map((tool) => {

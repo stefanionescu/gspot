@@ -20,6 +20,9 @@ export type PackageInstallerDeclaration = z.infer<typeof packageInstallerDeclara
 
 export type PackageJson = z.infer<typeof packageManifestSchema>;
 
+/** An installed dependency resolved from an actual project manifest. */
+export type InstalledDependency = { path: string; version: string | undefined };
+
 export type DependencyMap = Record<string, string>;
 
 /** Dependencies and runtime evidence from one supported project manifest. */

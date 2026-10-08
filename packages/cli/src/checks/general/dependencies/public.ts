@@ -2,8 +2,8 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { readSource } from '#cli/platform/root/public.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
+import { installedDependency } from '#cli/repository/contracts.ts';
 import { parsePackageManifest } from '#cli/parsers/packages/public.ts';
-import { installedDependencyVersion } from '#cli/repository/contracts.ts';
 
 /**
  * Compare installed versions of declared packages that ship together.
@@ -19,8 +19,8 @@ export function versionPairs(input: CheckInput, pairs: [string, string][]): Find
             const dependencies = { ...parsed.devDependencies, ...parsed.dependencies };
             return pairs.flatMap(([left, right]) => {
                 if (dependencies[left] === undefined || dependencies[right] === undefined) return [];
-                const leftVersion = installedDependencyVersion(input.root, path, left);
-                const rightVersion = installedDependencyVersion(input.root, path, right);
+                const leftVersion = installedDependency(input.root, path, left)?.version;
+                const rightVersion = installedDependency(input.root, path, right)?.version;
                 if (leftVersion === undefined || rightVersion === undefined || leftVersion === rightVersion) return [];
                 return [
                     findingAt(

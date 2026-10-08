@@ -15,13 +15,13 @@ import { emitToolFiles } from '#cli/generation/tool-files.ts';
 import { stylelintChanges } from '#cli/generation/stylelint.ts';
 import { commitlintChanges } from '#cli/generation/commitlint.ts';
 import { etaInputs } from '#cli/generation/compilation/public.ts';
+import { installedDependency } from '#cli/repository/contracts.ts';
 import type { NpmProjectInputs } from '#cli/types/generation/npm.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import { GIT_ATTRIBUTES_BLOCK } from '#cli/config/generation/files.ts';
 import { assertMutationTarget } from '#cli/platform/root/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { hookFiles, pythonProject } from '#cli/generation/contracts.ts';
-import { installedDependencyVersion } from '#cli/repository/contracts.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { githubFile, gitlabFile } from '#cli/generation/documents/public.ts';
 import type { Generated, GeneratedFile } from '#cli/types/generation/files.ts';
@@ -237,7 +237,7 @@ export function npmProject({ root, scopes, manifests, installer, runner }: NpmPr
     const nextVersions = scopes
         .filter(({ selected }) => selected.some(({ configuration }) => configuration.name === 'nextjs'))
         .flatMap(({ scope }) => {
-            const version = installedDependencyVersion(root, join(scope.path, 'package.json'), 'next');
+            const version = installedDependency(root, join(scope.path, 'package.json'), 'next')?.version;
             return version === undefined ? [] : [{ scope: scope.path, major: semver.major(version) }];
         });
     const majors = new Set(nextVersions.map(({ major }) => major));

@@ -36,3 +36,10 @@ export const CASES: FindingCase[] = [
         corrected: { files: { 'src/public.ts': UNTESTED, 'src/math.test.ts': TEST } },
     },
 ];
+
+export const PROVIDER_FLOORS = [
+    ['recommended', 80],
+    ['recommended', 0],
+    ['all', 80],
+    ['all', 0],
+] as const;

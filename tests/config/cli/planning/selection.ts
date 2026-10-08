@@ -67,3 +67,26 @@ export const HOOK_STAGE_FILES = {
     'Sources/App/Greeting.swift': 'func greeting() {}\n',
     'nginx.conf': 'events {}\nhttp {}\n',
 };
+
+export const COVERAGE_PLUGIN_CASES = [
+    ['pytest', 'recommended', 'lines'],
+    ['pytest', 'recommended', 'branches'],
+    ['pytest', 'recommended', 'functions'],
+    ['pytest', 'recommended', 'statements'],
+    ['pytest', 'recommended', 'zero'],
+    ['pytest', 'all', 'lines'],
+    ['pytest', 'all', 'branches'],
+    ['pytest', 'all', 'functions'],
+    ['pytest', 'all', 'statements'],
+    ['pytest', 'all', 'zero'],
+    ['vitest', 'recommended', 'lines'],
+    ['vitest', 'recommended', 'branches'],
+    ['vitest', 'recommended', 'functions'],
+    ['vitest', 'recommended', 'statements'],
+    ['vitest', 'recommended', 'zero'],
+    ['vitest', 'all', 'lines'],
+    ['vitest', 'all', 'branches'],
+    ['vitest', 'all', 'functions'],
+    ['vitest', 'all', 'statements'],
+    ['vitest', 'all', 'zero'],
+] as const;

@@ -15,8 +15,17 @@ min_version = "7.0.0"
 pypi = "pytest"
 version_pattern = "(\\d+\\.\\d+\\.\\d+)"
 
+[[tool]]
+name = "pytest-cov"
+kind = "library"
+system = true
+pypi = "pytest-cov"
+version_command = ["pytest", "--version", "--version"]
+version_pattern = "pytest-cov-(\\d+(?:\\.\\d+)+)"
+
 [[check]]
 name = "coverage"
+tool = ["pytest", "pytest-cov"]
 title = "Check Python test coverage"
 example = "A branch that no test exercises can leave coverage below the floor configured under `coverage.lines`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
 level = "recommended"

@@ -10,8 +10,8 @@ import { buildInitOptions } from '#tests/harness/init.ts';
 import { usePlatform } from '#tests/harness/platforms.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
-import { planRun, applicableManifests } from '#cli/planning/public.ts';
 import { buildPolicy, alwaysSelectedConfigurations } from '#tests/harness/policy.ts';
+import { planRun, checkCompanions, requiredToolNames, applicableManifests } from '#cli/planning/public.ts';
 
 import {
     HOOK_STAGES,
@@ -24,6 +24,7 @@ import {
     MANUAL_SELECTIONS,
     NEXT_BUILD_ROUTES,
     NEXT_BUILD_TABLES,
+    COVERAGE_PLUGIN_CASES,
 } from '#tests/config/cli/planning/selection.ts';
 
 test.each(MANUAL_SELECTIONS)(
@@ -191,5 +192,40 @@ test.each(['recommended', 'all'] as const)(
         expect(planRun(session, { stage: 'all', skips: [], only: ['security/semgrep'] })).toMatchObject([
             { check: { name: 'security/semgrep' }, skip: { cause: 'platform' } },
         ]);
+    },
+);
+
+test.each([...COVERAGE_PLUGIN_CASES])(
+    '%s %s coverage requires its host plugin for the %s floor',
+    async (configuration, level, dimension) => {
+        await using sandbox = await testdir();
+        const provider = configuration === 'pytest' ? 'pytest-cov' : '@vitest/coverage-v8';
+        const source = configuration === 'pytest' ? 'test_math.py' : 'math.test.js';
+        const setups = configuration === 'pytest' ? ['python', 'pytest'] : ['javascript', 'vitest'];
+        await createFileTree(sandbox.path, { [source]: '', ['app/' + source]: '' });
+        const floors = { lines: 0, branches: 0, functions: 0, statements: 0 };
+        if (dimension !== 'zero') floors[dimension] = 80;
+        const tables =
+            '[coverage]\n' +
+            Object.entries(floors)
+                .map(([name, value]) => `${name} = ${String(value)}`)
+                .join('\n') +
+            '\n[reasons]\n"coverage.lines" = "This fixture tests optional coverage."\n"coverage.branches" = "This fixture tests optional coverage."\n"coverage.functions" = "This fixture tests optional coverage."\n"coverage.statements" = "This fixture tests optional coverage."\n' +
+            '[scope."app"]\nconfigurations = [' +
+            setups.map((name) => `"${name}"`).join(', ') +
+            ']\n';
+        await Bun.write(join(sandbox.path, 'gspot.toml'), buildPolicy(setups, { level, tables }));
+        const session = await openSession(sandbox.path);
+        const checks = planRun(session, { stage: 'push', skips: [], only: [configuration + '/coverage'] });
+        expect(checks.map((check) => check.scope.scope.path)).toStrictEqual(['', 'app']);
+        for (const check of checks) {
+            expect(requiredToolNames(check, session).includes(provider)).toBe(dimension !== 'zero');
+            expect(checkCompanions(check.scope, check.check, check.check.command)).toContain(provider);
+        }
+        expect(
+            applicableManifests(session)
+                .flatMap((manifest) => manifest.tools.map((tool) => tool.name))
+                .includes(provider),
+        ).toBe(dimension !== 'zero');
     },
 );

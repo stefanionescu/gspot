@@ -151,7 +151,7 @@ async function runInWorkspace(run: CommandRun, workspace: string | undefined): P
         root === undefined ? environment : commandEnvironment(workspaceSession, planned),
         toolPath,
     );
-    prepared.env = companionEnvironment(session, checkCompanions(planned.scope, planned.check), prepared.env);
+    prepared.env = companionEnvironment(session, checkCompanions(planned.scope, planned.check, command), prepared.env);
     const result = await runCommands(workspaceSession, planned, tool, prepared, base);
     if (root === undefined) return result;
     const reported = substitute(session, planned, command, environment.substitutions);
@@ -160,10 +160,15 @@ async function runInWorkspace(run: CommandRun, workspace: string | undefined): P
 }
 
 // A declared companion tool must be usable before this command runs.
-function unavailableCompanion(session: ToolSession, planned: PlannedCheck): ExecutionFailure | undefined {
-    for (const name of checkCompanions(planned.scope, planned.check)) {
+function unavailableCompanion(
+    session: ToolSession,
+    planned: PlannedCheck,
+    command: string[],
+    cwd: string,
+): ExecutionFailure | undefined {
+    for (const name of checkCompanions(planned.scope, planned.check, command)) {
         const required = checkToolPin(toolPin(session.manifests.values(), name), planned.check);
-        const availability = toolAvailability(required, inspectTool(session, required));
+        const availability = toolAvailability(required, inspectTool({ ...session, cwd }, required));
         if ('status' in availability) return availability;
     }
     return undefined;
@@ -247,7 +252,7 @@ export async function runCheckCommand(
     if (missing !== undefined) return missing;
     const availability = toolAvailability(tool, inspection);
     if ('status' in availability) return { ...base, ...availability };
-    const companion = unavailableCompanion(session, planned);
+    const companion = unavailableCompanion(session, planned, command, cwd);
     if (companion !== undefined) return { ...base, ...companion };
     return runInWorkspace(
         { session, planned, tool, command, toolPath: availability.path, environment, base },

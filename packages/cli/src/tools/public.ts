@@ -7,11 +7,11 @@ import { MISE_BACKENDS } from '#cli/config/configurations.ts';
 import { packageToolProject } from '#cli/tools/npm/public.ts';
 import type { ToolProject } from '#cli/types/tools/project.ts';
 import { TOOL_PROJECT_FILES } from '#cli/config/tools/mise.ts';
-import { installedPackage } from '#cli/repository/contracts.ts';
 import { pythonToolProject } from '#cli/tools/python/public.ts';
 import { openRoot, readText } from '#cli/platform/root/public.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import type { PythonPreparation } from '#cli/types/tools/python.ts';
+import { installedPackage, installedDependency } from '#cli/repository/contracts.ts';
 import { misePin, collectPins, toolProjectPackage } from '#cli/configurations/contracts.ts';
 import { DOT_GSPOT, YARN_SETTINGS, MISE_CONFIG_PATH, NODE_MODULES_DIRECTORY } from '#cli/config/platform/locations.ts';
 
@@ -41,14 +41,59 @@ import type {
 function libraryInspection(root: string, tool: ToolPin, path: string, found: string, hint: string): ToolInspection {
     const want = tool.version === undefined ? {} : { want: tool.version };
     const floor = tool.min_version ?? tool.version ?? found;
-    const state = tool.version === undefined ? 'ok' : toolVersionState(found, tool.version, floor);
-    return { name: tool.name, state, path: join(root, path), found, hint, floor, ...want };
+    let state = tool.version === undefined ? 'ok' : toolVersionState(found, tool.version, floor);
+    if (tool.system === true) state = isBelowFloor(found, floor) ? 'outdated' : 'host';
+    return {
+        name: tool.name,
+        state,
+        path: tool.system === true ? path : join(root, path),
+        found,
+        hint,
+        floor,
+        ...want,
+    };
+}
+
+// Query a host library through the declared native executable and its complete argument list.
+function inspectLibraryCommand(context: ToolSearch, cwd: string, tool: ToolPin, command: string[]): ToolInspection {
+    const hint = installHint(tool);
+    const [program, ...args] = command;
+    if (program === undefined)
+        return { name: tool.name, state: 'error', hint, note: `${tool.name} has no host version command.` };
+    const [path] = locateCandidates(context.root, program, {
+        searchFolders: [cwd, context.root],
+        installedRoot: context.installedRoot,
+    });
+    const root = context.installedRoot ?? context.root;
+    return path === undefined
+        ? missingInspection(tool, hint)
+        : hostInspection({
+              root,
+              cwd: join(root, relative(context.root, cwd)),
+              tool: { ...tool, version_command: args },
+              path,
+              hint,
+          });
+}
+
+// Read a host library from its project's package resolution, or use its declared full native query.
+function inspectHostLibrary(context: ToolSearch, cwd: string, tool: ToolPin): ToolInspection {
+    if (tool.version_command !== undefined) return inspectLibraryCommand(context, cwd, tool, tool.version_command);
+    const root = context.installedRoot ?? context.root;
+    const hint = installHint(tool);
+    const name = tool.installers['npm']?.name ?? tool.name;
+    const dependency = installedDependency(root, join(relative(context.root, cwd), 'package.json'), name);
+    return dependency?.version === undefined
+        ? missingInspection(tool, hint)
+        : libraryInspection(root, tool, dependency.path, dependency.version, hint);
 }
 
 // Read library versions from the tool project installation used by generated configurations.
-function inspectLibrary(root: string, tool: ToolPin): ToolInspection {
-    using files = openRoot(root);
+function inspectLibrary(context: ToolSearch, cwd: string, tool: ToolPin): ToolInspection {
+    if (tool.system === true) return inspectHostLibrary(context, cwd, tool);
+    const root = context.installedRoot ?? context.root;
     const hint = installHint(tool);
+    using files = openRoot(root);
     const name = tool.installers['npm']?.name ?? tool.name;
     const path = `${NODE_MODULES_DIRECTORY}/${name}/package.json`;
     const parsed = installedPackage(files, root, join(root, path));
@@ -210,9 +255,7 @@ export function inspectTool(context: ToolSearch, tool: ToolPin): ToolInspection 
     const cached = inspections.get(key);
     if (cached) return cached;
     const inspection =
-        tool.kind === 'library'
-            ? inspectLibrary(context.installedRoot ?? root, tool)
-            : inspectExecutable(context, cwd, tool, runner);
+        tool.kind === 'library' ? inspectLibrary(context, cwd, tool) : inspectExecutable(context, cwd, tool, runner);
     inspections.set(key, inspection);
     return inspection;
 }

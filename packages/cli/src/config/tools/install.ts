@@ -3,6 +3,8 @@ export const SETUP = 'Run: gspot apply, then gspot install';
 export const VERSION_TIMEOUT_MS = 15_000;
 
 export const HOST_HINTS: Record<string, string> = {
+    'pytest-cov': 'Install pytest-cov in the Python environment used by pytest.',
+    '@vitest/coverage-v8': 'Run: npm install --save-dev @vitest/coverage-v8',
     tsc: 'Run: npm install --save-dev typescript',
     'drizzle-kit': 'Run: npm install --save-dev drizzle-kit',
     wrangler: 'Run: npm install --save-dev wrangler',

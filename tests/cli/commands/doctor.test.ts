@@ -1,7 +1,9 @@
 import semver from 'semver';
-import { join } from 'node:path';
+import executables from 'which';
+import { join, basename } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import * as processes from '#cli/platform/public.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -176,3 +178,52 @@ test('doctor detects installed test frameworks instead of recommending a differe
     expect(changed.suggestions.detected.map((row) => row.configuration)).toContain('vitest');
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(policy);
 });
+
+test.each(['recommended', 'all'] as const)(
+    'doctor names an absent coverage plugin at %s and omits it when all floors are zero',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['python', 'pytest'], { level, tables: '[coverage]\nlines = 80\n' }),
+            'test_math.py': '',
+        });
+        const session = await openSession(sandbox.path);
+        const tools = collectPins(applicableManifests(session));
+        using _which = spyOn(executables, 'sync').mockReturnValue(join(sandbox.path, 'tool-bin', 'pytest'));
+        const nativeVersion = processes.runBlocking;
+        let present = false;
+        using _version = spyOn(processes, 'runBlocking').mockImplementation((command, options) => {
+            if (command.slice(1).join(' ') === '--version --version')
+                return {
+                    code: 0,
+                    stdout: present ? 'pytest-cov-7.1.0' : 'pytest 9.1.1',
+                    stderr: '',
+                    missing: false,
+                    duration: 1,
+                };
+            const pin = tools.find((tool) => tool.name === basename(command[0] ?? ''));
+            const version = pin?.version ?? pin?.min_version;
+            if (version === undefined) return nativeVersion(command, options);
+            return { code: 0, stdout: version, stderr: '', missing: false, duration: 1 };
+        });
+        const missing = await doctorCommand(sandbox.path);
+        expect((missing.json as DoctorReport).tools).toContainEqual(
+            containing({ name: 'pytest-cov', state: 'missing' }),
+        );
+        expect(missing.text).toContain('pytest-cov');
+        present = true;
+        const available = await doctorCommand(sandbox.path);
+        expect((available.json as DoctorReport).tools).toContainEqual(
+            containing({ name: 'pytest-cov', state: 'host', found: '7.1.0' }),
+        );
+        await Bun.write(
+            join(sandbox.path, 'gspot.toml'),
+            buildPolicy(['python', 'pytest'], {
+                level,
+                tables: '[coverage]\nlines = 0\nbranches = 0\nfunctions = 0\nstatements = 0\n[reasons]\n"coverage.lines" = "This fixture tests optional coverage."\n"coverage.branches" = "This fixture tests optional coverage."\n"coverage.functions" = "This fixture tests optional coverage."\n"coverage.statements" = "This fixture tests optional coverage."\n',
+            }),
+        );
+        const zero = await doctorCommand(sandbox.path);
+        expect((zero.json as DoctorReport).tools.map((tool) => tool.name)).not.toContain('pytest-cov');
+    },
+);

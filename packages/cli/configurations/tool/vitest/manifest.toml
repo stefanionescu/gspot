@@ -28,8 +28,15 @@ kind = "library"
 version = "1.3.4"
 npm = "@vitest/eslint-plugin"
 
+[[tool]]
+name = "@vitest/coverage-v8"
+kind = "library"
+system = true
+npm = "@vitest/coverage-v8"
+
 [[check]]
 name = "coverage"
+tool = ["vitest", "@vitest/coverage-v8"]
 title = "Check Vitest coverage"
 example = "A branch that no test exercises can leave coverage below the floor configured under `coverage`. Add a test for the missing behavior and rerun the native test runner. A passing test run still fails this check when required coverage remains below its floor."
 level = "recommended"

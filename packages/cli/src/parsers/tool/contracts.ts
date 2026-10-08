@@ -131,11 +131,18 @@ function parsedVersion(text: string, tool: ToolPin): string | undefined {
     return match?.[1] ?? match?.[0];
 }
 
-function versionFailure(result: SpawnResult, tool: ToolPin, text: string): ParsedToolVersion | undefined {
+function versionFailure(
+    result: SpawnResult,
+    tool: ToolPin,
+    text: string,
+    version: string | undefined,
+): ParsedToolVersion | undefined {
     if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version inspection timed out.` };
     if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
     if (result.code !== (tool.version_exit_code ?? 0))
         return { state: 'error', note: `${tool.name} version inspection exited ${String(result.code)}: ${text}` };
+    if (version === undefined && tool.kind === 'library')
+        return { state: 'missing', note: `${tool.name} is not reported by its host version command.` };
     return undefined;
 }
 
@@ -224,9 +231,9 @@ export function parseVersionOutput(tool: ToolPin, result: SpawnResult, installed
     const npm = tool.installers['npm'];
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
     // A shim with no selected version starts nothing, regardless of other mise installations.
-    const failure = versionFailure(result, tool, text);
-    if (failure !== undefined) return failure;
     const version = (npm?.version === tool.version ? installedPackage : undefined) ?? parsedVersion(text, tool);
+    const failure = versionFailure(result, tool, text, version);
+    if (failure !== undefined) return failure;
     if (version === undefined || semver.coerce(version) === null)
         return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };
     return { version };
