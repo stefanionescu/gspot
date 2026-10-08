@@ -7,7 +7,7 @@ export const WORKSPACE_SUFFIX = '.xcworkspace';
 export const DIAGNOSTIC =
     /^(?<file>(?:[A-Za-z]:)?[/\\][^\r\n]+?):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
 
-export const RESPONSE_FILE = /@(?<path>\/\S+)/gu;
+export const RESPONSE_FILE = /@(?<path>(?:[A-Za-z]:[\\/]|[\\/])\S+)/gu;
 
 export const MACOS_PRIVATE_PATH = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
 

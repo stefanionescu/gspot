@@ -4,7 +4,8 @@ requires = ["sql"]
 description = "Postgres migrations: squawk for the changes that lock or break, ordered versions, and migrations that never change after they run. The schema checks ask for row security, explicit grants, and an index under every foreign key."
 
 [detect]
-paths = ["supabase/migrations/*.sql", "db/migrations/*.sql", "migrations/*.sql", "**/supabase/migrations/*.sql"]
+dependencies = ["pg", "postgres", "psycopg", "asyncpg", "@neondatabase/serverless"]
+content = { "prisma/schema.prisma" = '(?:^|\n)[\t ]*provider[\t ]*=[\t ]*"postgresql"' }
 
 [files]
 paths = ["supabase/migrations/*.sql", "db/migrations/*.sql", "migrations/*.sql", "**/supabase/migrations/*.sql"]
@@ -146,7 +147,7 @@ name = "postgres.client_schemas"
 type = "list"
 items = "string"
 direction = "tightening"
-default = ["public"]
+default = []
 summary = "The schemas clients reach, where every table needs row level security."
 
 [[setting]]

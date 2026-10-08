@@ -54,12 +54,6 @@ into one remote shell string, so local quoting does not keep remote argument bou
 host, user, service, and path values before using them, never build a remote command from user
 input, and give every remote call that can hang a timeout.
 
-Bad:
-
-```bash
-ssh "$host" "cd $dir && docker compose up -d $service"
-```
-
 Good, for a remote login shell that is Bash:
 
 ```bash

@@ -1,5 +1,5 @@
 {
-    "openRecords": 813,
+    "openRecords": 806,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 813,
+        "openRecords": 806,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 58,
-                "unresolvedAssignments": 233
+                "completedAssignments": 59,
+                "unresolvedAssignments": 232
             },
             {
                 "id": "python",
@@ -925,8 +925,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 5,
-                "unresolvedAssignments": 126
+                "completedAssignments": 6,
+                "unresolvedAssignments": 125
             },
             {
                 "id": "test-quality",
@@ -1402,8 +1402,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 90,
-                "unresolvedAssignments": 379
+                "completedAssignments": 97,
+                "unresolvedAssignments": 372
             },
             {
                 "id": "scripts-repository",
@@ -1687,8 +1687,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 43,
-                "unresolvedAssignments": 94
+                "completedAssignments": 44,
+                "unresolvedAssignments": 93
             },
             {
                 "id": "policy-file",
@@ -8409,10 +8409,13 @@
             ]
         },
         "review/tests-cli/005": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "36a97f4d948919634b787d9fa9206f8389b59dfb",
+            "verification": [
+                "Removed copied Ruff preview Set; native pinned catalog queried once in beforeAll, handles real nullable code only; catalog970 entries /141preview /140 named preview codes. Existing both-level native correctness tests read generated select and exclude those codes. Existing fatal/defect/correction assertions unchanged; duplicated exact native argv merged once.",
+                "Main integrated CLI117/394/11files7.86s and native pinned Ruff2/10/1.098s passed. Root types, actual ESLint and formatting passed; no platform-wide proof claimed."
+            ]
         },
         "review/tests-cli/006": {
             "status": "pending",
@@ -8597,10 +8600,13 @@
             "verification": []
         },
         "review/tests-cli/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "36a97f4d948919634b787d9fa9206f8389b59dfb",
+            "verification": [
+                "Three real files and fileBatches spy returning two batches; findings from all three prove both batches. Original selected-order, branch-rule, count, and multiple-execution assertions retained; spy dispose now native using. Other seven native ast-grep/refusal/file/function controls retained.",
+                "Main integrated CLI117/394/11files7.86s and native pinned Ruff2/10/1.098s passed. Root types, actual ESLint and formatting passed; no platform-wide proof claimed."
+            ]
         },
         "review/tests-cli/027": {
             "status": "pending",
@@ -8722,16 +8728,22 @@
             ]
         },
         "review/tests-cli/042": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "36a97f4d948919634b787d9fa9206f8389b59dfb",
+            "verification": [
+                "Two extra source.test registrations moved into sources.test; stage command now in-process, cleanup native await using repository. Removed duplicate central XCTest descriptor and old REPOSITORY/CASES; clean file map moved matching final config. All14skip argument,3sleep syntax,full SwiftTesting defect/correction,per-scope skip+sleep/unreadable-file controls retained. Original two duplicate samples/coordinates/corrections checked with native built-in readers in frozen separate evidence.",
+                "Main integrated CLI117/394/11files7.86s and native pinned Ruff2/10/1.098s passed. Root types, actual ESLint and formatting passed; no platform-wide proof claimed."
+            ]
         },
         "review/tests-cli/043": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "36a97f4d948919634b787d9fa9206f8389b59dfb",
+            "verification": [
+                "Evidence-only: obsolete repeated disabled/recording section already absent at seed; no newer distinct row deleted.",
+                "Main integrated CLI117/394/11files7.86s and native pinned Ruff2/10/1.098s passed. Root types, actual ESLint and formatting passed; no platform-wide proof claimed."
+            ]
         },
         "review/tests-cli/044": {
             "status": "pending",
@@ -9041,10 +9053,13 @@
             "verification": ["Evidence ab2ac0d5268126a7.", "Evidence 74123bdcdee621fe.", "Evidence 999a19c9a211b7d7."]
         },
         "review/tests-cli/071": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "36a97f4d948919634b787d9fa9206f8389b59dfb",
+            "verification": [
+                "Four original Python/Swift observation/standalone registrations become two actual two-row test.each registrations, identical native expanded titles/functions/source bytes/paths/cache/resource cleanup. Existing Swift accessors/name regression and four general tree cache/error tests retained. Native read function identity preserved; typed union callback dispatches actual native disposers. Old literal mirrors deleted; native coverage mirror flattened as independent mechanical move.",
+                "Main integrated CLI117/394/11files7.86s and native pinned Ruff2/10/1.098s passed. Root types, actual ESLint and formatting passed; no platform-wide proof claimed."
+            ]
         },
         "review/tests-cli/072": {
             "status": "complete",
@@ -11864,10 +11879,13 @@
             "verification": []
         },
         "slices/tests-integration-checks/042": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "36a97f4d948919634b787d9fa9206f8389b59dfb",
+            "verification": [
+                "Stage-only XCTest test uses runGspot in final sources owner; original precommit skip-only and push coverage planning assertions retained.",
+                "Main integrated CLI117/394/11files7.86s and native pinned Ruff2/10/1.098s passed. Root types, actual ESLint and formatting passed; no platform-wide proof claimed."
+            ]
         },
         "slices/tests-integration-checks/046": {
             "status": "partial",
@@ -12117,10 +12135,13 @@
             "verification": []
         },
         "slices/tests-integration-execution/037": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "36a97f4d948919634b787d9fa9206f8389b59dfb",
+            "verification": [
+                "All15retained literal source values and expected lines exact by native AST expression+VM evaluation. Added15distinct meaningful labels; deleted only duplicate folded .yml row. No prototype/realm equivalence claim.",
+                "Main integrated CLI117/394/11files7.86s and native pinned Ruff2/10/1.098s passed. Root types, actual ESLint and formatting passed; no platform-wide proof claimed."
+            ]
         },
         "slices/tests-integration-execution/038": {
             "status": "pending",
@@ -15610,6 +15631,25 @@
             "limitations": [
                 "macOS native tests; explicit planner Windows simulation is not native Windows proof.",
                 "Final all-platform suites and timeout measurement remain outstanding; baseline failure and cancelled overly broad filter logs preserved."
+            ]
+        },
+        {
+            "commit": "36a97f4d948919634b787d9fa9206f8389b59dfb",
+            "completedRecords": [
+                "review/tests-cli/005",
+                "review/tests-cli/026",
+                "review/tests-cli/042",
+                "review/tests-cli/043",
+                "review/tests-cli/071",
+                "slices/tests-integration-checks/042",
+                "slices/tests-integration-execution/037"
+            ],
+            "unresolvedRecords": 806,
+            "validation": [
+                "Main117 CLI tests/394 assertions; native Ruff2/10; types/lint/format0; staged gate corrected only the banned Ruff variable name."
+            ],
+            "limitations": [
+                "macOS native; final whole-suites and Linux/macOS/Windows CI outstanding. Original failures retained."
             ]
         }
     ],

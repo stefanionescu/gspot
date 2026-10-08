@@ -46,7 +46,7 @@ test('staged snapshots copy all workspace dependency trees before validating cro
     await unlink(join(sandbox.path, 'node_modules/owned'));
     await symlink(sandbox.path, join(sandbox.path, 'node_modules/owned'), 'dir');
     expect(await revisionFailure(sandbox.path)).toContain(
-        'Installed dependency link node_modules/owned leaves the repository.',
+        `Installed dependency link ${join('node_modules', 'owned')} leaves the repository.`,
     );
 });
 

@@ -29,10 +29,9 @@ import type { PackageInstaller, PackageInstallerIdentity } from '#cli/types/pars
 // Resolves every scope: its selected configurations, settings surface, and merged view.
 function scopeSelections(policy: Policy, repository: Repository, manifests: Map<string, Manifest>): ScopeSelection[] {
     const { files, scopes } = repository;
-    const automatic = detectConfigurations(files, manifests, []).flatMap(({ configuration, kind }) =>
-        kind === 'general' && (manifests.get(configuration)?.configuration.when?.git !== true || repository.hasGit)
-            ? [configuration]
-            : [],
+    const general = new Map([...manifests].filter(([, manifest]) => manifest.configuration.kind === 'general'));
+    const automatic = detectConfigurations(repository.root, files, general, []).flatMap(({ configuration }) =>
+        manifests.get(configuration)?.configuration.when?.git !== true || repository.hasGit ? [configuration] : [],
     );
     const effective = { ...policy, configurations: [...new Set([...policy.configurations, ...automatic])] };
     return scopes.map((scope) => {

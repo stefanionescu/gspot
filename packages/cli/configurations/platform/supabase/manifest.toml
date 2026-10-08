@@ -134,4 +134,5 @@ default = "supabase/functions"
 summary = "The folder relative to the scope that holds one folder for each edge function."
 
 [set]
+"postgres.client_schemas" = ["public"]
 "tools.squawk.assume_in_transaction" = true

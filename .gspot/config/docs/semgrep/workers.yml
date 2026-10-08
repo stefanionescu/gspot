@@ -7,9 +7,6 @@ rules:
       - javascript
       - typescript
     severity: ERROR
-    paths:
-      include:
-        - /functions/**
     metadata:
       cwe:
         - CWE-918
@@ -27,6 +24,3 @@ rules:
       - javascript
       - typescript
     severity: ERROR
-    paths:
-      include:
-        - /functions/**

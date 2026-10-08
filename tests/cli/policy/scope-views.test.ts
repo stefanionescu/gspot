@@ -201,3 +201,49 @@ for (const level of ['recommended', 'all'] as const) {
         ).toStrictEqual(['setting']);
     });
 }
+
+for (const level of ['recommended', 'all'] as const) {
+    test(`Postgres client schemas are chosen by Supabase or authored policy at ${level}`, async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `level = "${level}"\nconfigurations = ["postgres"]\n[scope.api]\nconfigurations = ["supabase"]\n[scope.authored]\n[scope.authored.postgres]\nclient_schemas = ["client"]\n`,
+            'migration.sql': 'CREATE TABLE public.entries (id int);\n',
+            'api/migration.sql': 'CREATE TABLE public.entries (id int);\n',
+            'authored/migration.sql': 'CREATE TABLE client.entries (id int);\n',
+        });
+        const session = await openSession(sandbox.path);
+        expect(
+            session.scopes.map(({ scope, view }) => [scope.path, view.options('postgres').client_schemas]),
+        ).toStrictEqual([
+            ['', []],
+            ['api', ['public']],
+            ['authored', ['client']],
+        ]);
+    });
+
+    test(`Apple native parsers belong to selected Xcode scopes at ${level}`, async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `level = "${level}"\nconfigurations = []\n[scope.api]\nconfigurations = ["xcode"]\n`,
+            'root.plist': '<plist><dict/></plist>\n',
+            'api/app.plist': '<plist><dict/></plist>\n',
+            'api/app.storyboard': '<document/>\n',
+            'api/data.xml': '<document/>\n',
+        });
+        const session = await openSession(sandbox.path);
+        const checks = planRun(session, {
+            stage: 'all',
+            skips: [],
+            only: ['files/plutil', 'xcode/plutil', 'files/xmllint', 'xcode/xmllint'],
+        });
+        expect(
+            checks
+                .filter(({ files }) => files.length > 0)
+                .map(({ check, files }) => [check.name, files.map(({ path }) => path)]),
+        ).toStrictEqual([
+            ['files/xmllint', ['api/data.xml']],
+            ['xcode/plutil', ['api/app.plist']],
+            ['xcode/xmllint', ['api/app.storyboard']],
+        ]);
+    });
+}

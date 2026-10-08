@@ -5,6 +5,15 @@ import { cell, table, section, referencePage } from './page.ts';
 import type { Manifest } from '@gspothq/cli/src/types/configurations.ts';
 import { configurationFiles } from '@gspothq/cli/src/configurations/declarations.ts';
 
+// Describe each native detection value, including content expressions.
+function detectionConditions(detect: Manifest['detect']): string[] {
+    return Object.entries(detect).flatMap(([kind, patterns]) =>
+        Array.isArray(patterns)
+            ? patterns.map((pattern) => `${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS]} \`${pattern}\``)
+            : Object.entries(patterns).map(([path, pattern]) => `file \`${path}\` matches \`${pattern}\``),
+    );
+}
+
 // The configuration's rule files and the conditions that install them.
 function ruleSelection(manifest: Manifest): string {
     return configurationFiles(manifest)
@@ -14,9 +23,7 @@ function ruleSelection(manifest: Manifest): string {
                     posix.relative(`${manifest.configuration.kind}/${manifest.configuration.name}`, path)
                 ];
             if (condition === undefined) return `- \`${path}\``;
-            const conditions = Object.entries(condition).flatMap(([kind, patterns]) =>
-                patterns.map((pattern) => `${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS]} \`${pattern}\``),
-            );
+            const conditions = detectionConditions(condition);
             return `- \`${path}\` when the repository matches any of: ${conditions.join(', ')}.`;
         })
         .join('\n');
@@ -71,11 +78,8 @@ export function configurationPage(manifest: Manifest, manifests: Manifest[]): Re
             ? `\`${config.target}\``
             : `\`${config.target}\` when the [${config.when.configuration} configuration](/reference/configurations/${config.when.configuration}/) is selected`,
     );
-    const selected = Object.entries(manifest.detect)
-        .map(([kind, patterns]) => {
-            const spellings = patterns.map((pattern) => '`' + pattern + '`').join(', ');
-            return `- ${DETECTION_LABELS[kind as keyof typeof DETECTION_LABELS]}: ${spellings}`;
-        })
+    const selected = detectionConditions(manifest.detect)
+        .map((condition) => `- ${condition}`)
         .join('\n');
     const requiredBy = manifests
         .filter((owner) => owner.configuration.requires.includes(configuration.name))

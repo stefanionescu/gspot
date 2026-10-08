@@ -37,6 +37,7 @@ export const DETECTION_LABELS = {
     filenames: 'filenames',
     dependencies: 'dependencies',
     shebangs: 'script interpreters',
+    runtimes: 'JavaScript runtimes',
     tags: 'file tags',
     paths: 'file paths',
     project_files: 'project files',

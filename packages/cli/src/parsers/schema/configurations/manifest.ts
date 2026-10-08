@@ -8,7 +8,13 @@ import { namingOverrideSchema } from '#cli/parsers/schema/naming.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/packages.ts';
 import { toolSchema, versionFloorSchema } from '#cli/parsers/schema/configurations/tool.ts';
 import { commandSchema, checkStageSchema, findingExitCodesSchema } from '#cli/parsers/schema/command.ts';
-import { levelSchema, operatingSystemSchema, settingValueDeclarationSchema } from '#cli/parsers/schema/settings.ts';
+
+import {
+    levelSchema,
+    operatingSystemSchema,
+    settingValidationSchema,
+    settingValueDeclarationSchema,
+} from '#cli/parsers/schema/settings.ts';
 
 const stringList = z.array(z.string()).default([]);
 
@@ -203,6 +209,7 @@ function isIgnoredPath(path: string): boolean {
 
 const detectionSchema = z
     .strictObject({
+        content: z.record(z.string().min(1), settingValidationSchema.shape.pattern.unwrap()).default({}),
         extensions: stringList,
         filenames: stringList,
         dependencies: stringList,

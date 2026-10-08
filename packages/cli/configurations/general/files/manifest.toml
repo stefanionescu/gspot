@@ -5,8 +5,7 @@ requires = ["format"]
 description = "Checks JSON, YAML, TOML, XML, and related formats. Its tool files configure the tools that read these files."
 
 [files]
-extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".plist", ".entitlements", ".xcconfig", ".xcstrings", ".xml", ".storyboard", ".xib"]
-filenames = ["_headers", "_redirects"]
+extensions = [".json", ".jsonc", ".json5", ".yaml", ".yml", ".toml", ".xml"]
 kinds = ["source"]
 
 [[tool]]
@@ -53,12 +52,6 @@ name = "ajv"
 kind = "library"
 version = "8.20.0"
 npm = "ajv"
-
-[[tool]]
-name = "plutil"
-system = true
-crash_pattern = "couldn['’]t be opened"
-platforms = ["macos"]
 
 [[tool]]
 name = "xmllint"
@@ -140,21 +133,6 @@ why = "A key the schema refuses is a setting that never applies, and nobody find
 help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schemas."
 
 [[check]]
-name = "plutil"
-title = "Parse property lists"
-example = "A plist containing an unclosed dictionary fails native validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
-level = "recommended"
-stage = "commit"
-runs = "files"
-platforms = ["macos"]
-command = ["plutil", "-lint", "{files}"]
-files = { extensions = [".plist", ".entitlements"] }
-output = { format = "regex", pattern = "^(?<file>[^:]+): (?<message>(?!OK$).+)$" }
-summary = "Parses every property list and entitlements file with plutil."
-why = "A broken plist fails the build or, worse, ships an app whose settings silently fell back to defaults."
-help = "Fix the element plutil names."
-
-[[check]]
 name = "xmllint"
 title = "Validate XML"
 example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
@@ -162,9 +140,9 @@ level = "recommended"
 stage = "commit"
 runs = "files"
 command = ["xmllint", "--noout", "{files}"]
-files = { extensions = [".xml", ".storyboard", ".xib"] }
+files = { extensions = [".xml"] }
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$" }
-summary = "Parses every XML file, storyboard, and xib with xmllint."
+summary = "Parses every XML file with xmllint."
 why = "Malformed XML is refused by the reader at the worst moment."
 help = "Fix the line xmllint names."
 

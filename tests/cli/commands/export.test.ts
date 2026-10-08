@@ -53,22 +53,26 @@ test('template export resolves a parent destination inside the repository from a
     expect(await readFile(join(directory.path, 'app/entry.sh'), 'utf8')).toBe('echo example\n');
 });
 
-test.each(['C:outside.toml', String.raw`C:\outside.toml`, 'linked.toml'])(
-    'template export refuses unsafe destination %s without changing external bytes',
-    async (file) => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
-            'project/gspot.toml': buildPolicy([]),
-            'outside/template.toml': 'original',
-        });
-        const root = join(directory.path, 'project');
-        const outside = join(directory.path, 'outside/template.toml');
-        await symlink('../outside', join(root, 'linked'), 'dir');
-        await symlink(outside, join(root, 'linked.toml'));
-        expect(await rejection(exportCommand({ cwd: root, file, isDryRun: false }))).not.toBe('');
-        expect(await readFile(outside, 'utf8')).toBe('original');
-    },
-);
+test.each([
+    [
+        'C:outside.toml',
+        'Template export cannot use a drive-relative destination. Choose an absolute or repository-relative path.',
+    ],
+    ['linked/template.toml', 'Template export cannot write through a linked parent directory. Choose its real path.'],
+    ['linked.toml', 'Lifecycle destination is not a private regular file: linked.toml'],
+])('template export refuses unsafe destination %s without changing external bytes', async (file, message) => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, {
+        'project/gspot.toml': buildPolicy([]),
+        'outside/template.toml': 'original',
+    });
+    const root = join(directory.path, 'project');
+    const outside = join(directory.path, 'outside/template.toml');
+    await symlink('../outside', join(root, 'linked'), 'dir');
+    await symlink(outside, join(root, 'linked.toml'));
+    expect(await rejection(exportCommand({ cwd: root, file, isDryRun: false }))).toBe(message);
+    expect(await readFile(outside, 'utf8')).toBe('original');
+});
 
 test('template export replaces an unowned destination and preserves its read-only mode', async () => {
     await using directory = await testdir();

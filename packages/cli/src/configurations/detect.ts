@@ -1,4 +1,5 @@
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
+import { readText } from '#cli/platform/source.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { projectFolder } from '#cli/repository/scopes.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
@@ -65,12 +66,25 @@ function extensionEvidence(detect: Manifest['detect'], tree: Layout): DetectionE
     return { evidence: `${String(count)} ${extensions.join(', ')} file${count === 1 ? '' : 's'}`, count };
 }
 
-function evidenceFor(manifest: Manifest, tree: Layout): ConfigurationEvidence | undefined {
-    const { configuration } = manifest;
-    for (const source of evidenceReaders) {
-        const evidence = source(manifest.detect, tree);
-        if (evidence !== undefined) return { configuration: configuration.name, kind: configuration.kind, ...evidence };
+function contentEvidence(root: string, detect: Manifest['detect'], tree: Layout): DetectionEvidence | undefined {
+    for (const [path, pattern] of Object.entries(detect.content)) {
+        const target = tree.scope === '' ? path : `${tree.scope}/${path}`;
+        const file = tree.candidates.find((candidate) => candidate.path === target);
+        if (file === undefined) continue;
+        const text = readText(root, file.path);
+        if (text !== undefined && new RegExp(pattern, 'u').test(text)) return { evidence: file.path };
     }
+    return undefined;
+}
+
+function evidenceFor(root: string, manifest: Manifest, tree: Layout): ConfigurationEvidence | undefined {
+    const { configuration } = manifest;
+    const evidence =
+        evidenceReaders
+            .values()
+            .map((source) => source(manifest.detect, tree))
+            .find((found) => found !== undefined) ?? contentEvidence(root, manifest.detect, tree);
+    if (evidence !== undefined) return { configuration: configuration.name, kind: configuration.kind, ...evidence };
     return configuration.always_selected && tree.scope === ''
         ? { configuration: configuration.name, kind: configuration.kind, evidence: 'every repository' }
         : undefined;
@@ -134,6 +148,7 @@ function tagEvidence(detect: Manifest['detect'], tree: Layout): DetectionEvidenc
 
 /**
  * Proposes configurations from the tree, the manifests and the dependencies, with the evidence for each.
+ * @param root the repository that supplies tracked source content.
  * @param files the tracked files
  * @param manifests every configuration manifest
  * @param packageManifests the parsed package manifests
@@ -141,6 +156,7 @@ function tagEvidence(detect: Manifest['detect'], tree: Layout): DetectionEvidenc
  * @returns each applicable configuration with its repository evidence
  */
 export function detectConfigurations(
+    root: string,
     files: TrackedFile[],
     manifests: Map<string, Manifest>,
     packageManifests: PackageManifest[],
@@ -149,7 +165,7 @@ export function detectConfigurations(
     const tree = layout(files, packageManifests, scope);
     return manifests
         .values()
-        .map((manifest) => evidenceFor(manifest, tree))
+        .map((manifest) => evidenceFor(root, manifest, tree))
         .filter((evidence) => evidence !== undefined)
         .toArray();
 }
@@ -189,7 +205,7 @@ export function detectUnselected(
 ): ConfigurationSuggestion[] {
     const selected = new Set(configured.map((manifest) => manifest.configuration.name));
     const packageManifests = readPackageManifests(root, files);
-    return detectConfigurations(files, manifests, packageManifests)
+    return detectConfigurations(root, files, manifests, packageManifests)
         .filter((detection) => detection.kind !== 'general' && !selected.has(detection.configuration))
         .map((detection) => ({
             configuration: detection.configuration,

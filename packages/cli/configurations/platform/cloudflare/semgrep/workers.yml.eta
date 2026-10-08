@@ -7,9 +7,6 @@ const document = {
             message: 'SSRF risk. Validate and allowlist outbound fetch targets.',
             languages: ['javascript', 'typescript'],
             severity: 'ERROR',
-            paths: {
-                include: ['/functions/**'],
-            },
             metadata: {
                 cwe: ['CWE-918'],
                 category: 'security',
@@ -36,9 +33,6 @@ const document = {
                       message: 'Cloudflare middleware must not send wildcard CORS origins.',
                       languages: ['javascript', 'typescript'],
                       severity: 'ERROR',
-                      paths: {
-                          include: ['/functions/**'],
-                      },
                   },
               ]
             : []),

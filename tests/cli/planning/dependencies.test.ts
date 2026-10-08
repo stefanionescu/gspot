@@ -54,6 +54,7 @@ test.each(['next-intl', 'react-i18next'])(
         });
         const session = await openSession(sandbox.path);
         const detected = detectConfigurations(
+            session.root,
             session.repository.files,
             session.manifests,
             readPackageManifests(session.root, session.repository.files),

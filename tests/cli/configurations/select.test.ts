@@ -2,7 +2,7 @@ import { test, expect, describe } from 'bun:test';
 import { parseConfigurationManifest } from '#tests/harness/tooling.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { selectForScope, selectConfigurations } from '#cli/configurations/select.ts';
-import { PROJECT_CHOICES, PROJECT_SELECTIONS } from '#tests/config/cli/configurations/select.ts';
+import { PROJECT_CHOICES, OPENAPI_FRAMEWORKS, PROJECT_SELECTIONS } from '#tests/config/cli/configurations/select.ts';
 
 describe('selectConfigurations', () => {
     test('pulls required configurations in, dependencies first, in order of first mention', () => {
@@ -35,4 +35,21 @@ test.each(PROJECT_SELECTIONS)('scope %s retains configuration %s: %s', (scope, n
     );
     expect(names.includes(name)).toBe(selected);
     expect(names).toContain('gspot');
+});
+
+test.each(OPENAPI_FRAMEWORKS)('%s keeps %s required and OpenAPI suggested', (framework, language) => {
+    const manifests = configurationManifests();
+    for (const scope of ['', 'api']) {
+        const policy = {
+            configurations: [framework],
+            removed_configurations: [],
+            scope: { api: { configurations: [], removed_configurations: [] } },
+        };
+        const names = selectForScope(policy, scope, manifests).map(({ configuration }) => configuration.name);
+        expect(names).toContain(language);
+        expect(names).not.toContain('openapi');
+        expect(manifests.get(framework)!.configuration.suggests).toContain('openapi');
+        const chosen = selectForScope({ ...policy, configurations: [framework, 'openapi'] }, scope, manifests);
+        expect(chosen.map(({ configuration }) => configuration.name)).toContain('openapi');
+    }
 });

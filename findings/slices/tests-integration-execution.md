@@ -1,6 +1,6 @@
 # Tests: Execution Integration Tests
 
-18 unresolved review records remain.
+17 unresolved review records remain.
 
 ## Open findings
 
@@ -49,3 +49,11 @@ A read-only verification checked every record against the code at commit `3e1445
 | `slices/tests-integration-execution/037` | open    | `execution/comment-syntax.test.ts:115,121,122` (no multiline value), `:124` (`.yml` duplicates the YAML path), `:138` (the title shows only the path).                                | In `tests/cli/execution/comment-syntax.test.ts`, add a case label to each row and to the title at `:138`, label the rows at `:115,121,122` for what they test (none holds a multiline value), and delete the `.yml` row at `:124`. `review/tests-layout/035` moves this file to `tests/cli/parsers/comments.test.ts`.                                                  |
 | `slices/tests-integration-execution/038` | open    | `checks/general/structure/suppressions.test.ts:41-72`: four `source.ts` rows share one title, and the policy is hand-written at `:72`.                                                | In `tests/cli/checks/general/structure/suppressions.test.ts:41-72`, add a case column for the title, and replace the hand-written policy at `:72` with `buildPolicy(['typescript', 'bash'], { level: 'all' })`, without `require_reasons`, which `review/policy-format/021` deletes (reasons are always required).                                                     |
 | `slices/tests-integration-execution/042` | partial | Fixed: "Ruff owns case now" and "Five cases plant" are gone. Fixed: `engine-input.test.ts:99` reads "cannot hold a newline".                                                          | Change the comment at `tests/cli/execution/fixers/isolation.test.ts:153` to "The copy row replaces the source with a directory before the run."                                                                                                                                                                                                                        |
+
+## Implementation checkpoint 36a97f4d9 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `36a97f4d948919634b787d9fa9206f8389b59dfb`.
+
+| ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-execution/037` | complete | All15retained literal source values and expected lines exact by native AST expression+VM evaluation. Added15distinct meaningful labels; deleted only duplicate folded .yml row. No prototype/realm equivalence claim. Main integrated CLI117/394/11files7.86s and native pinned Ruff2/10/1.098s passed. Root types, actual ESLint and formatting passed; no platform-wide proof claimed. Commit `36a97f4d948919634b787d9fa9206f8389b59dfb`. |

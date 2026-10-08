@@ -9,6 +9,7 @@ paths = ["**/*.xcodeproj/project.pbxproj", "*.xcodeproj/project.pbxproj"]
 project_files = ["*.xcodeproj"]
 
 [files]
+extensions = [".plist", ".entitlements", ".xcconfig", ".xcstrings", ".storyboard", ".xib"]
 paths = ["**/project.pbxproj", "**/*.xcscheme", "**/*.xctestplan", "**/*.xcassets/**/Contents.json"]
 kinds = ["source"]
 
@@ -16,6 +17,35 @@ kinds = ["source"]
 name = "plutil"
 system = true
 crash_pattern = "couldn['’]t be opened"
+
+[[check]]
+name = "plutil"
+title = "Parse property lists"
+example = "A plist containing an unclosed dictionary fails native validation. Close the dictionary and plist elements, then rerun with plutil available on a declared platform."
+level = "recommended"
+stage = "commit"
+runs = "files"
+platforms = ["macos"]
+command = ["plutil", "-lint", "{files}"]
+files = { extensions = [".plist", ".entitlements"] }
+output = { format = "regex", pattern = "^(?<file>[^:]+): (?<message>(?!OK$).+)$" }
+summary = "Parses every property list and entitlements file with plutil."
+why = "A broken plist fails the build or, worse, ships an app whose settings silently fell back to defaults."
+help = "Fix the element plutil names."
+
+[[check]]
+name = "xmllint"
+title = "Validate storyboard XML"
+example = "The XML text `<settings><enabled>true</settings>` has mismatched tags. Close the child element as `<enabled>true</enabled>` before closing `settings`."
+level = "recommended"
+stage = "commit"
+runs = "files"
+command = ["xmllint", "--noout", "{files}"]
+files = { extensions = [".storyboard", ".xib"] }
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$" }
+summary = "Parses every storyboard and xib with xmllint."
+why = "Malformed XML is refused by the reader at the worst moment."
+help = "Fix the line xmllint names."
 
 [[check]]
 name = "xcconfig"

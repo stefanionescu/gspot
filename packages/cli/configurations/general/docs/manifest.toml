@@ -47,7 +47,7 @@ level = "recommended"
 stage = "manual"
 runs = "files"
 needs = ["network"]
-command = ["lychee", "--config", "{tool_file:lychee}", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
+command = ["lychee", "--config", "{tool_file:lychee}", "--root-dir", "{root}", "--scheme", "http", "--scheme", "https", "--include-fragments=full", "--format", "detailed", "--no-progress", "{files}"]
 output = { format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$" }
 summary = "Checks every external link over the network."
 why = "An external link rots on its own schedule; this run says which ones did."

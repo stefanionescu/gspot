@@ -1,4 +1,5 @@
 // Saves a reusable policy template.
+import { lstatSync } from 'node:fs';
 import { readPolicy } from '#cli/policy/read.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { findRoot } from '#cli/repository/root.ts';
@@ -12,8 +13,8 @@ import type { Program } from '#cli/types/commands/program.ts';
 import { readIndexEntries } from '#cli/repository/tracked.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { dirname, resolve, basename, relative } from 'node:path';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
+import { win32, dirname, resolve, basename, relative } from 'node:path';
 import { parseTemplate, exportTemplate } from '#cli/policy/templates.ts';
 import type { ExportJson, ExportOptions } from '#cli/types/commands/export.ts';
 
@@ -27,11 +28,20 @@ import type { ExportJson, ExportOptions } from '#cli/types/commands/export.ts';
  */
 export async function exportCommand(options: ExportOptions): Promise<CommandResult<ExportJson>> {
     const { cwd, file, isDryRun } = options;
+    if (win32.parse(file).root.endsWith(':'))
+        throw new GspotError('policy', [
+            'Template export cannot use a drive-relative destination. Choose an absolute or repository-relative path.',
+        ]);
+    const parentPath = dirname(resolve(cwd, file));
+    if (lstatSync(parentPath).isSymbolicLink())
+        throw new GspotError('policy', [
+            'Template export cannot write through a linked parent directory. Choose its real path.',
+        ]);
     const root = findRoot(cwd);
     const policyFile = readPolicy(root);
     const saved = exportTemplate(policyFile.text, file);
     const template = parseTemplate(saved.text, file);
-    const parent = canonicalPath(dirname(resolve(cwd, file)));
+    const parent = canonicalPath(parentPath);
     using destination = openRoot(parent);
     const name = basename(file);
     const path = toPosix(relative(root, resolve(parent, name)));

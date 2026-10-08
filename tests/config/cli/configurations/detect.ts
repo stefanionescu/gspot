@@ -52,3 +52,46 @@ export const SWIFT_TARGET_CASES = [
         declared: false,
     },
 ];
+
+/** Postgres libraries retain their native JavaScript and Python manifest readers. */
+export const POSTGRES_DEPENDENCY_CASES = [
+    { name: 'pg', path: 'package.json', source: '{"private":true,"dependencies":{"pg":"8.16.3"}}\n' },
+    { name: 'postgres', path: 'package.json', source: '{"private":true,"dependencies":{"postgres":"3.4.7"}}\n' },
+    { name: 'psycopg', path: 'pyproject.toml', source: '[project]\ndependencies = ["psycopg>=3"]\n' },
+    { name: 'asyncpg', path: 'pyproject.toml', source: '[project]\ndependencies = ["asyncpg>=0.31"]\n' },
+    {
+        name: '@neondatabase/serverless',
+        path: 'package.json',
+        source: '{"private":true,"dependencies":{"@neondatabase/serverless":"1.0.2"}}\n',
+    },
+];
+
+/** Only the scoped Prisma schema's actual provider assignment supplies Postgres evidence. */
+export const POSTGRES_CONTENT_CASES = [
+    {
+        name: 'Postgres provider',
+        path: 'prisma/schema.prisma',
+        source: 'datasource db {\n  provider = "postgresql"\n}\n',
+        detected: true,
+    },
+    {
+        name: 'SQLite provider',
+        path: 'prisma/schema.prisma',
+        source: 'datasource db {\n  provider = "sqlite"\n}\n',
+        detected: false,
+    },
+    {
+        name: 'MySQL provider',
+        path: 'prisma/schema.prisma',
+        source: 'datasource db {\n  provider = "mysql"\n}\n',
+        detected: false,
+    },
+    {
+        name: 'a commented provider',
+        path: 'prisma/schema.prisma',
+        source: '// provider = "postgresql"\n',
+        detected: false,
+    },
+    { name: 'an unrelated text file', path: 'notes.txt', source: 'provider = "postgresql"\n', detected: false },
+    { name: 'migrations without a provider', path: 'migrations/1_initial.sql', source: 'SELECT 1;\n', detected: false },
+];

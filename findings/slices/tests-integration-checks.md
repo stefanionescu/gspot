@@ -1,6 +1,6 @@
 # Tests: Check Integration Tests
 
-32 unresolved review records remain.
+31 unresolved review records remain.
 
 ## Open findings
 
@@ -100,3 +100,11 @@ Original records and quotations remain above. These records are complete at `0a7
 | ------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-checks/005` | complete | Removed ignored without/init fields and the planted npm lockfile. Native original-input probe confirms no lockfile reads; static configuration and runtime-body equivalence preserve actual cases. Main focused tests and staged checks pass. Commit `0a7108489e8091269f2cf615ff9985e13f5d9199`.                        |
 | `slices/tests-integration-checks/033` | complete | Deleted three CodeQL forwarding/assertion helpers. Direct native cases retain every ignore vector, exact refusal title, isolated location, and command contract. Native 91-case inventory preserved with four stronger assertions; main focused security tests pass. Commit `0a7108489e8091269f2cf615ff9985e13f5d9199`. |
+
+## Implementation checkpoint 36a97f4d9 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `36a97f4d948919634b787d9fa9206f8389b59dfb`.
+
+| ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-checks/042` | complete | Stage-only XCTest test uses runGspot in final sources owner; original precommit skip-only and push coverage planning assertions retained. Main integrated CLI117/394/11files7.86s and native pinned Ruff2/10/1.098s passed. Root types, actual ESLint and formatting passed; no platform-wide proof claimed. Commit `36a97f4d948919634b787d9fa9206f8389b59dfb`. |

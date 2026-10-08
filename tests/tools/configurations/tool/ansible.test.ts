@@ -27,7 +27,7 @@ test.skipIf(!hasToolBuild('ansible-lint')).each(levelSchema.options)(
         const session = await openSession(sandbox.path);
         for (const scope of ['', 'app']) {
             expect(
-                detectConfigurations(session.repository.files, session.manifests, [], scope).map(
+                detectConfigurations(sandbox.path, session.repository.files, session.manifests, [], scope).map(
                     ({ configuration }) => configuration,
                 ),
             ).toContain('ansible');

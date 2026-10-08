@@ -74,7 +74,9 @@ test('generated Gradle and Maven launchers do not select Bash or receive source 
         session.scopes.flatMap(({ selected }) => selected.map(({ configuration }) => configuration.name)),
     ).not.toContain('bash');
     expect(
-        detectConfigurations(session.repository.files, session.manifests, []).map(({ configuration }) => configuration),
+        detectConfigurations(session.root, session.repository.files, session.manifests, []).map(
+            ({ configuration }) => configuration,
+        ),
     ).not.toContain('bash');
     const declared = await readRepository(sandbox.path, [{ paths: ['mvnw'], kind: 'vendored' }], [], []);
     expect(declared.files.find(({ path }) => path === 'mvnw')).toMatchObject({

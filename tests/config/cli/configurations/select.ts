@@ -18,3 +18,9 @@ export const PROJECT_SELECTIONS = [
     ['sibling', 'nextjs', true],
     ['required', 'javascript', true],
 ] as const;
+
+/** Framework language prerequisites remain required; document checks remain a manual choice. */
+export const OPENAPI_FRAMEWORKS = [
+    ['express', 'javascript'],
+    ['fastapi', 'python'],
+] as const;

@@ -1,7 +1,9 @@
 import { join } from 'node:path';
-import { test, expect } from 'bun:test';
-import { writeFile } from 'node:fs/promises';
+import * as filesystem from 'node:fs';
+import { throws } from 'node:assert/strict';
+import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { unlink, writeFile } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
@@ -15,11 +17,13 @@ import { parseManifest, configurationManifests } from '#cli/configurations/manif
 import {
     SWIFT_TEST_CASES,
     SWIFT_TARGET_CASES,
+    POSTGRES_CONTENT_CASES,
     PYTHON_DEPENDENCY_CASES,
+    POSTGRES_DEPENDENCY_CASES,
 } from '#tests/config/cli/configurations/detect.ts';
 
 test('proposes a language from an extension and the defaults for every repository', () => {
-    const plans = detectConfigurations([buildTrackedFile('a.sh')], configurationManifests(), []);
+    const plans = detectConfigurations(process.cwd(), [buildTrackedFile('a.sh')], configurationManifests(), []);
     expect(plans.find((plan) => plan.configuration === 'bash')?.evidence).toBe('1 .sh file');
     expect(plans.some((plan) => plan.configuration === 'spelling')).toBe(true);
 });
@@ -75,12 +79,14 @@ test.each([
 ])('%s detects the supported project path %s without unrelated file evidence', (configuration, path, evidence) => {
     const manifests = configurationManifests();
     expect(
-        detectConfigurations([buildTrackedFile(path)], manifests, []).find(
+        detectConfigurations(process.cwd(), [buildTrackedFile(path)], manifests, []).find(
             (row) => row.configuration === configuration,
         ),
     ).toMatchObject({ configuration, evidence: evidence ?? path });
     expect(
-        detectConfigurations([buildTrackedFile('config.toml')], manifests, []).map((row) => row.configuration),
+        detectConfigurations(process.cwd(), [buildTrackedFile('config.toml')], manifests, []).map(
+            (row) => row.configuration,
+        ),
     ).not.toContain(configuration);
 });
 
@@ -117,7 +123,7 @@ test('Python project detection uses captured dependencies after the authored man
     const packageManifests = readPackageManifests(sandbox.path, repository.files);
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
     expect(
-        detectConfigurations(repository.files, configurationManifests(), packageManifests, 'api').some(
+        detectConfigurations(sandbox.path, repository.files, configurationManifests(), packageManifests, 'api').some(
             (entry) => entry.configuration === 'fastapi',
         ),
     ).toBe(true);
@@ -132,18 +138,18 @@ test.each(PYTHON_DEPENDENCY_CASES)('Python dependency detection reads $name from
         Object.keys(packageManifests[0]!.dependencies).toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['fastapi', 'friendly-bard']);
     const manifests = configurationManifests();
-    const proposed = detectConfigurations(repository.files, manifests, packageManifests, 'api');
+    const proposed = detectConfigurations(sandbox.path, repository.files, manifests, packageManifests, 'api');
     expect(proposed.find((entry) => entry.configuration === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);
     expect(proposed.find((entry) => entry.configuration === 'python')?.evidence).toBe(`api/${path}`);
     expect(
-        detectConfigurations(repository.files, manifests, packageManifests, 'other').some(
+        detectConfigurations(sandbox.path, repository.files, manifests, packageManifests, 'other').some(
             (entry) => entry.configuration === 'fastapi',
         ),
     ).toBe(false);
     await writeFile(join(sandbox.path, 'api', path), path.endsWith('.txt') ? '# dependencies removed\n' : '');
     const corrected = readPackageManifests(sandbox.path, repository.files);
     expect(
-        detectConfigurations(repository.files, manifests, corrected, 'api').some(
+        detectConfigurations(sandbox.path, repository.files, manifests, corrected, 'api').some(
             (entry) => entry.configuration === 'fastapi',
         ),
     ).toBe(false);
@@ -163,7 +169,13 @@ test.each(runtimeEvidenceCases())('$name determines runtime applicability within
         `[configuration]\ntitle = "Runtime"\ndescription = "Detects the runtime declared by this project."\n[detect]\nruntimes = ["${entry.runtime}"]\n`,
         'configurations/general/runtime',
     );
-    const detected = detectConfigurations(repository.files, new Map([['runtime', manifest]]), packageManifests, 'api');
+    const detected = detectConfigurations(
+        sandbox.path,
+        repository.files,
+        new Map([['runtime', manifest]]),
+        packageManifests,
+        'api',
+    );
     expect(detected.map(({ configuration }) => configuration)).toStrictEqual(entry.detected ? ['runtime'] : []);
 });
 
@@ -173,7 +185,7 @@ test.each(SWIFT_TEST_CASES)('Swift test detection identifies $name', async ({ so
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(repository.files[0]!.tags.includes('swift-test')).toBe(selected);
     expect(
-        detectConfigurations(repository.files, configurationManifests(), []).some(
+        detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
             ({ configuration }) => configuration === 'xctest',
         ),
     ).toBe(selected);
@@ -184,8 +196,105 @@ test.each(SWIFT_TARGET_CASES)('Swift package test detection recognizes $name', a
     await createFileTree(sandbox.path, { 'Package.swift': source });
     const repository = await readRepository(sandbox.path, [], [], []);
     expect(
-        detectConfigurations(repository.files, configurationManifests(), []).some(
+        detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
             ({ configuration }) => configuration === 'xctest',
         ),
     ).toBe(declared);
+});
+
+test.each(POSTGRES_DEPENDENCY_CASES.flatMap((entry) => ['', 'apps/api'].map((scope) => ({ ...entry, scope }))))(
+    'Postgres detection reads $name from "$scope" and leaves sibling scopes independent',
+    async ({ name, path, source, scope }) => {
+        await using sandbox = await testdir();
+        const owned = scope === '' ? path : `${scope}/${path}`;
+        await createFileTree(sandbox.path, { [owned]: source, 'other/migrations/1_initial.sql': 'SELECT 1;\n' });
+        const repository = await readRepository(sandbox.path, [], [], []);
+        const manifests = configurationManifests();
+        const packages = readPackageManifests(sandbox.path, repository.files);
+        expect(
+            detectConfigurations(sandbox.path, repository.files, manifests, packages, scope).find(
+                (entry) => entry.configuration === 'postgres',
+            ),
+        ).toMatchObject({ evidence: `${name} in ${owned}` });
+        expect(
+            detectConfigurations(sandbox.path, repository.files, manifests, packages, 'other').some(
+                (entry) => entry.configuration === 'postgres',
+            ),
+        ).toBe(false);
+        await writeFile(join(sandbox.path, owned), path === 'package.json' ? '{"private":true}\n' : '');
+        const corrected = readPackageManifests(sandbox.path, repository.files);
+        expect(
+            detectConfigurations(sandbox.path, repository.files, manifests, corrected, scope).some(
+                (entry) => entry.configuration === 'postgres',
+            ),
+        ).toBe(false);
+    },
+);
+
+test.each(POSTGRES_CONTENT_CASES.flatMap((entry) => ['', 'apps/api'].map((scope) => ({ ...entry, scope }))))(
+    'Postgres content detection handles $name in "$scope" without borrowing sibling evidence',
+    async ({ path, source, detected, scope }) => {
+        await using sandbox = await testdir();
+        const owned = scope === '' ? path : `${scope}/${path}`;
+        await createFileTree(sandbox.path, {
+            [owned]: source,
+            'other/prisma/schema.prisma': 'datasource db {\n  provider = "postgresql"\n}\n',
+        });
+        const repository = await readRepository(sandbox.path, [], [], []);
+        const manifests = configurationManifests();
+        expect(
+            detectConfigurations(sandbox.path, repository.files, manifests, [], scope).some(
+                (entry) => entry.configuration === 'postgres',
+            ),
+        ).toBe(detected);
+        expect(
+            detectConfigurations(sandbox.path, repository.files, manifests, [], 'other').find(
+                (entry) => entry.configuration === 'postgres',
+            ),
+        ).toStrictEqual({ configuration: 'postgres', kind: 'database', evidence: 'other/prisma/schema.prisma' });
+    },
+);
+
+test('Postgres content detection retains native missing-file behavior and refuses invalid declared patterns', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'prisma/schema.prisma': 'provider = "postgresql"\n' });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    await unlink(join(sandbox.path, 'prisma/schema.prisma'));
+    expect(
+        detectConfigurations(sandbox.path, repository.files, configurationManifests(), []).some(
+            (entry) => entry.configuration === 'postgres',
+        ),
+    ).toBe(false);
+    expect(() =>
+        parseManifest(
+            '[configuration]\ntitle = "Content"\ndescription = "Detects declared content."\n[detect.content]\n"prisma/schema.prisma" = "["\n',
+            'configurations/database/content',
+        ),
+    ).toThrow('valid Unicode regular expression');
+});
+
+test('Prisma content discovery returns the native read error while ordinary sessions retain manual selection', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['javascript']),
+        'prisma/schema.prisma': 'provider = "postgresql"\n',
+    });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    const manifests = configurationManifests();
+    const failure = Object.assign(new Error('Prisma read failed.'), { code: 'EIO' });
+    using read = spyOn(filesystem, 'readFileSync').mockImplementationOnce(() => {
+        throw failure;
+    });
+    throws(
+        () => detectConfigurations(sandbox.path, repository.files, manifests, []),
+        (error) => error === failure,
+    );
+    expect(String(read.mock.calls[0]?.[0])).toEndWith('/prisma/schema.prisma');
+    read.mockClear();
+    const session = await openSession(sandbox.path);
+    const selected = session.scopes.flatMap((scope) => scope.selected.map((manifest) => manifest.configuration.name));
+    expect(selected).toContain('javascript');
+    expect(selected).not.toContain('postgres');
+    expect(read.mock.calls.some(([path]) => String(path).endsWith('/prisma/schema.prisma'))).toBe(false);
+    expect(await Bun.file(join(sandbox.path, 'prisma/schema.prisma')).text()).toBe('provider = "postgresql"\n');
 });

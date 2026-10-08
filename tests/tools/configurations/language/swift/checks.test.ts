@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { applyChanges } from '#tests/harness/preservation.ts';
 import { CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
@@ -18,7 +19,7 @@ afterAll(async () => {
     await resources.disposeAsync();
 });
 
-test('swiftformat keeps the source header when it fixes spacing', async () => {
+test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header when it fixes spacing', async () => {
     const { root, environment } = testRepository;
     const header = '// Greeting.swift\n// Created by Alex Garcia.\n// Copyright 2026 Example Contributors.\n\n';
     const path = join(root, 'Sources/App/Greeting.swift');

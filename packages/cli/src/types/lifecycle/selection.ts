@@ -29,6 +29,7 @@ export type ConfigurationReason = 'named' | 'detected' | 'suggested' | 'required
 
 /** What init selection reads. */
 export type InitDetection = {
+    root: string;
     manifests: Map<string, Manifest>;
     files: TrackedFile[];
     packageManifests: PackageManifest[];
