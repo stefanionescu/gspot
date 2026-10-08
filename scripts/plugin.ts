@@ -2,8 +2,8 @@
 import { testdir } from 'testdirs';
 import { stringify } from 'smol-toml';
 import { writeFileSync } from 'node:fs';
+import { CLI_PINS } from '#cli/config/pins.ts';
 import { join, resolve, delimiter } from 'node:path';
-import { CLI_PINS } from '#cli/config/configurations.ts';
 import { workspaceRoot } from '#automation/workspace.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
 import { TEST_TIMEOUT_MS } from '#tests/config/timeouts.ts';
@@ -39,7 +39,7 @@ async function installSuiteTools(work: string, execute: typeof run, cancelSignal
     const config = join(work, 'mise.toml');
     writeFileSync(
         config,
-        stringify({ min_version: CLI_PINS.mise, settings: { npm: { package_manager: 'npm' } }, tools }),
+        stringify({ min_version: CLI_PINS.mise.version, settings: { npm: { package_manager: 'npm' } }, tools }),
     );
     const trusted = await execute(['mise', 'trust', config], { cwd: work });
     if (trusted.code !== 0) throw new Error(`Test tools configuration failed: ${trusted.stderr}`);

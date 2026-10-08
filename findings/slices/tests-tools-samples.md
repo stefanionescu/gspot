@@ -1,6 +1,6 @@
 # Tests: Native-Tool Tests and Samples
 
-40 unresolved review records remain.
+39 unresolved review records remain.
 
 ## Open findings
 
@@ -138,3 +138,11 @@ Original records and quotations remain above. These records are complete at `989
 | ID                               | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | -------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-tools-samples/042` | complete | Native test title is Semgrep rules follow the level; original selected configurations, exact findings and correction controls retained. Main CLI37/152 passed. Initial native tool family26pass/3fail; malformed declared-pack replay1/9 and both-level native pack syntax replay2/6 passed. Native full prose1711files0findings; types/format and staged148passing checks plus corrected11affected checks passed. Original failures retained. Agent native boundary/byte-equivalence evidence retained in frozen handoffs; no whole-suite/all-platform claim. Commit `989aafe5ba0d3794ab7928d050801d718b5f5813`. |
+
+## Implementation checkpoint 9a3851a9a of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `9a3851a9ad5626d65229aa8208302ed5c7f065b6`.
+
+| ID                               | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-tools-samples/010` | complete | One shared Xcode project literal under tests/config/samples/swift/xcode.ts serves coverage and build tests; the build variant is derived inside its test. Original coverage text is byte-identical, derived build has the same complete native project tree under Bun1.4.2 and Node24.20.0. Main native Swift/XCTest13pass74assert2files33.04s, no skips; actual callback56/60, all five affected policy checks pass. Xcode slice removes602bytes. Commit `9a3851a9ad5626d65229aa8208302ed5c7f065b6`. |

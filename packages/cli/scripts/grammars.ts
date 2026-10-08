@@ -1,10 +1,11 @@
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { createRequire } from 'node:module';
+import { CLI_PINS } from '#cli/config/pins.ts';
 import { createHash, randomUUID } from 'node:crypto';
 import type { PinnedDownload } from '#cli/types/platform/assets.ts';
 import { rm, mkdir, rename, copyFile, readFile, writeFile } from 'node:fs/promises';
-import { RUNTIME_WASM, SWIFT_GRAMMAR, GRAMMAR_PACKAGES, DOWNLOAD_TIMEOUT_MS } from '#cli/config/platform/assets.ts';
+import { RUNTIME_WASM, GRAMMAR_PACKAGES, DOWNLOAD_TIMEOUT_MS } from '#cli/config/platform/assets.ts';
 
 /**
  * Downloads a pinned file unless it exists, and verifies its SHA-256.
@@ -31,7 +32,7 @@ async function downloadPinnedFile(path: string, input: PinnedDownload): Promise<
         throw new Error(
             isCached
                 ? `Build input checksum mismatch: ${path}. Remove the cached file and run setup again.`
-                : `The download does not match its pinned checksum: ${input.url}. Update SWIFT_GRAMMAR.`,
+                : `The download does not match its pinned checksum: ${input.url}. Update CLI_PINS.swiftGrammar.`,
         );
     if (isCached) return;
     await mkdir(dirname(path), { recursive: true });
@@ -61,6 +62,6 @@ async function copyGrammars(folder: string): Promise<void> {
             join(folder, 'licenses', `${packageName}.txt`),
         );
     }
-    await downloadPinnedFile(join(folder, SWIFT_GRAMMAR.name), SWIFT_GRAMMAR);
-    await downloadPinnedFile(join(folder, 'licenses', 'tree-sitter-swift.txt'), SWIFT_GRAMMAR.license);
+    await downloadPinnedFile(join(folder, CLI_PINS.swiftGrammar.name), CLI_PINS.swiftGrammar);
+    await downloadPinnedFile(join(folder, 'licenses', 'tree-sitter-swift.txt'), CLI_PINS.swiftGrammar.license);
 }

@@ -1,4 +1,4 @@
-import { CLI_PINS } from '#cli/config/configurations.ts';
+import { CLI_PINS } from '#cli/config/pins.ts';
 
 export const FORMATTER_INIT = [
     'init',
@@ -12,4 +12,4 @@ export const FORMATTER_INIT = [
     '--no-install',
 ];
 
-export const SUPPORTED_MISE = `#!/bin/sh\nprintf "${CLI_PINS.mise}\\n"\n`;
+export const SUPPORTED_MISE = `#!/bin/sh\nprintf "${CLI_PINS.mise.version}\\n"\n`;

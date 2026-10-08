@@ -1,5 +1,5 @@
 {
-    "openRecords": 679,
+    "openRecords": 674,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -246,7 +246,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 679,
+        "openRecords": 674,
         "records": 1092,
         "batches": [
             {
@@ -552,8 +552,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 95,
-                "unresolvedAssignments": 196
+                "completedAssignments": 97,
+                "unresolvedAssignments": 194
             },
             {
                 "id": "python",
@@ -706,8 +706,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 12,
-                "unresolvedAssignments": 87
+                "completedAssignments": 15,
+                "unresolvedAssignments": 84
             },
             {
                 "id": "swift-bash-sql",
@@ -796,8 +796,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 31,
-                "unresolvedAssignments": 51
+                "completedAssignments": 32,
+                "unresolvedAssignments": 50
             },
             {
                 "id": "frameworks-platforms",
@@ -935,8 +935,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 24,
-                "unresolvedAssignments": 107
+                "completedAssignments": 25,
+                "unresolvedAssignments": 106
             },
             {
                 "id": "test-quality",
@@ -1412,8 +1412,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 153,
-                "unresolvedAssignments": 316
+                "completedAssignments": 154,
+                "unresolvedAssignments": 315
             },
             {
                 "id": "scripts-repository",
@@ -1552,8 +1552,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 28,
-                "unresolvedAssignments": 104
+                "completedAssignments": 29,
+                "unresolvedAssignments": 103
             },
             {
                 "id": "installation-docs",
@@ -1697,8 +1697,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 56,
-                "unresolvedAssignments": 81
+                "completedAssignments": 57,
+                "unresolvedAssignments": 80
             },
             {
                 "id": "policy-file",
@@ -1960,8 +1960,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 50,
-                "unresolvedAssignments": 9
+                "completedAssignments": 51,
+                "unresolvedAssignments": 8
             },
             {
                 "id": "names",
@@ -2166,10 +2166,14 @@
             ]
         },
         "areas/checks/031": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": [
+                "The generated native boundaries rule replaces the tRPC graph check, rejects server value imports and permits type imports at both levels; old library/trpc.ts and language/javascript/imports.ts are deleted.",
+                "Native generated tRPC matrix passes both levels, aliases, scopes and malformed-source controls in the106case evidence corpus. Main staged gate and root types pass.",
+                "Main replay47pass659assert5files4.78s verifies the current source and metadata."
+            ]
         },
         "areas/checks/032": {
             "status": "partial",
@@ -2397,10 +2401,14 @@
             ]
         },
         "areas/checks/062": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": [
+                "Framework manifests own NextJS, Svelte and Astro path containers. The general naming engine no longer has REACT_FILE, isReactFile or WRAPPERS; selected and inherited configuration metadata determines containers.",
+                "Native naming paths/contracts/findings/manifest controls pass, including root/child at both levels, in106case evidence corpus. Main staged gate and root types pass.",
+                "Main replay47pass659assert5files4.78s verifies the current source and metadata."
+            ]
         },
         "areas/checks/070": {
             "status": "pending",
@@ -3561,10 +3569,14 @@
             "verification": []
         },
         "areas/kits/083": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": [
+                "The sole handle-prefix declaration is in the JavaScript manifest. Express, NestJS, NextJS and React copies and CALLBACK_VERB are deleted. Naming reads the verb from the declaration.",
+                "Native framework/naming evidence corpus106pass1215assert8files; Main staged gate152passed14skippedzero findings, root types pass.",
+                "Main replay47pass659assert5files4.78s verifies the current source and metadata."
+            ]
         },
         "areas/kits/085": {
             "status": "partial",
@@ -5910,20 +5922,22 @@
             ]
         },
         "review/configurations-plugin/002": {
-            "status": "partial",
-            "owner": "root",
-            "commit": "e29aa7d0df6ddf9f7eb13acd143daffdb239a3f0",
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
             "verification": [
                 "Native role replacement and private rule/data/type/test deletion pushed. Main15 CLI cases373 assertions and105 retained plugin cases pass; types, affected lint, normal builds/apply, staged and normal commit/push checks pass.",
-                "Production reduction8484 bytes970 AST nodes in immutable source packet. Full repository native-role audit requires newly authorized public API ownership redesign for1184 existing imports; record stays outstanding until integration resolves it."
+                "Production reduction8484 bytes970 AST nodes in immutable source packet. Full repository native-role audit requires newly authorized public API ownership redesign for1184 existing imports; record stays outstanding until integration resolves it.",
+                "Native boundaries policies express the four role directions. Custom import-direction implementation, config, type, tests and hard-coded CONTRACTS are deleted. Actual implementation API owners replace the repository private imports; no forwarding exports or waiver.",
+                "Full native role audit1489fileszero prohibited imports; graph493owners1722valueedgeszero cycles. Final in-process ESLint/explain72pass624assert6files; command/copy/tool378pass1803assert; check/command827pass3433assert(two platform skips); additional parser/site/compiler/repository replays recorded in progress. Main staged gate152passed14skippedzero findings and root types pass."
             ],
             "additionalChanges": [
                 {
-                    "commit": null,
+                    "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
                     "scope": "Strict repository redesign underway: agent rules, plugin real assembly/path APIs and ownership log/batch implementations integrated. Plugin335 native cases/types/build0; other private imports remain."
                 },
                 {
-                    "commit": null,
+                    "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
                     "scope": "Strict implementation API ownership integrated: commands/init and doctor, policy/template/errors/settings/schema, agent rules, platform/root/process primitives, repositories/revisions/tracked and path readers, lifecycle/ownership/install/merge, configurations/selection/pins, shared parsing, generation documents, check implementations, execution commands/copies/fixers and npm/Python tool projects. Actual moved or merged implementations; no compatibility exports, role waiver or removed assertions.",
                     "verification": [
                         "Immutable root intake proofs preserve original implementation bodies and current caller statements. Three command/copy/tool-project packets integrated into 118 current owners; residual repository/configuration/doctor packet into 42 owners. Shared parser and check-owner intake proofs are preserved separately.",
@@ -5932,7 +5946,7 @@
                     ]
                 },
                 {
-                    "commit": null,
+                    "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
                     "scope": "Strict repository public API owners integrated; final native role audit has zero prohibited imports. Real implementation bodies moved and merged; no forwarding exports or repository exceptions.",
                     "verification": [
                         "Full native boundaries-role audit: 1,491 requested files, 1,489 linted, zero role findings; every audited source hash unchanged. Final production graph: 493 owners, 1,722 value edges, zero cycles.",
@@ -13327,10 +13341,13 @@
             ]
         },
         "slices/tests-tools-samples/010": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": [
+                "One shared Xcode project literal under tests/config/samples/swift/xcode.ts serves coverage and build tests; the build variant is derived inside its test. Original coverage text is byte-identical, derived build has the same complete native project tree under Bun1.4.2 and Node24.20.0.",
+                "Main native Swift/XCTest13pass74assert2files33.04s, no skips; actual callback56/60, all five affected policy checks pass. Xcode slice removes602bytes."
+            ]
         },
         "slices/tests-tools-samples/011": {
             "status": "partial",
@@ -16851,6 +16868,28 @@
             ],
             "limitations": [
                 "Named tool references036 remain partial due production growth; broader053 topic moves and current full-platform CI/release acceptance remain outstanding."
+            ]
+        },
+        {
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "completedRecords": [
+                "slices/tests-tools-samples/010",
+                "areas/kits/083",
+                "areas/checks/031",
+                "areas/checks/062",
+                "review/configurations-plugin/002"
+            ],
+            "unresolvedRecords": 674,
+            "validation": [
+                "gspot check --staged:152passed14skippedzero findings69.567s",
+                "Root TypeScript0; build:docs300pages",
+                "Native API/role/graph and focused records as above",
+                "Main native naming/tRPC replay47pass659assert5files4.78s; selected and inherited metadata tests pass.",
+                "Normal pre-commit113passed3skippedzero findings; commit-message1passedzero findings."
+            ],
+            "limitations": [
+                "Linux/macOS/Windows new CI still pending; skipped checks provide no platform proof",
+                "Release main001 remains partial; no publication/tag/deployment/live setup"
             ]
         }
     ],

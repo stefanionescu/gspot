@@ -1,10 +1,11 @@
+import { CLI_PINS } from '#cli/config/pins.ts';
 import { BARE_KEY } from '#cli/config/parsers/toml.ts';
 import { misePins } from '#cli/configurations/public.ts';
+import { GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
 import { headerFor } from '#cli/generation/documents/contracts.ts';
 import type { GeneratedFile } from '#cli/types/generation/files.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import type { MisePin, Manifest } from '#cli/types/configurations.ts';
-import { CLI_PINS, GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
 
 /**
  * One mise tool line: a bare version, or a table when the tool has platforms or backend options.
@@ -30,7 +31,7 @@ export function miseFile(manifests: Manifest[], version: string): GeneratedFile 
     const lines = [
         headerFor(MISE_CONFIG_PATH, version).trimEnd(),
         '',
-        `min_version = "${CLI_PINS.mise}"`,
+        `min_version = "${CLI_PINS.mise.version}"`,
         '',
         '[tools]',
         miseToolLine({ name: GSPOT_MISE_TOOL, version }),

@@ -1,8 +1,8 @@
 // Git runs the gspot hooks through core.hooksPath. A repository that already runs hooks keeps them, and gets the
 // lines to add to them instead.
 import semver from 'semver';
+import { CLI_PINS } from '#cli/config/pins.ts';
 import { GspotError } from '#cli/platform/public.ts';
-import { CLI_PINS } from '#cli/config/configurations.ts';
 import { rootView } from '#cli/policy/settings/public.ts';
 import { prepareToolProjects } from '#cli/tools/public.ts';
 import type { Log } from '#cli/types/lifecycle/ownership.ts';
@@ -120,8 +120,11 @@ const installations: [InstallationStep, ...InstallationStep[]] = [
             if (session.policyFiles.policy.runner !== 'mise') return '';
             const read = await runTool(['mise', '--version'], { cwd: session.root });
             const version = semver.coerce(read.stdout);
-            if (read.code !== 0 || version === null || semver.lt(version, CLI_PINS.mise))
-                throw new GspotError('tool', `Install mise ${CLI_PINS.mise} or newer to read ${MISE_CONFIG_PATH}.`);
+            if (read.code !== 0 || version === null || semver.lt(version, CLI_PINS.mise.version))
+                throw new GspotError(
+                    'tool',
+                    `Install mise ${CLI_PINS.mise.version} or newer to read ${MISE_CONFIG_PATH}.`,
+                );
             const notes: string[] = [];
             const env = await registryEnvironment(session.root);
             for (const command of preview.steps) {

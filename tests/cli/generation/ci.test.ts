@@ -3,10 +3,10 @@
 import { parse } from 'yaml';
 import { test, expect } from 'bun:test';
 import { join, delimiter } from 'node:path';
+import { CLI_PINS } from '#cli/config/pins.ts';
 import { chmod, readFile } from 'node:fs/promises';
 import { testdir, createFileTree } from 'testdirs';
 import { runTestCommand } from '#tests/harness/command.ts';
-import { NODE_VERSION } from '#cli/config/generation/ci.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 import { githubFile, gitlabFile } from '#cli/generation/documents/public.ts';
 import type { GithubWorkflow, GitlabPipeline } from '#tests/types/generation/workflow.ts';
@@ -54,7 +54,7 @@ test('the GitHub workflow without mise sets up Node and installs the pinned gspo
     const workflow = parse(githubFile({ ...PIPELINE, isMise: false }).content) as GithubWorkflow;
     const steps = workflow.jobs['check-linux']!.steps;
     const setup = steps.find((step) => step.uses?.startsWith('actions/setup-node@') === true);
-    expect(setup?.with).toStrictEqual({ 'node-version': NODE_VERSION });
+    expect(setup?.with).toStrictEqual({ 'node-version': CLI_PINS.node });
     expect(steps.map((step) => step.run)).toContain('npm install --global @gspothq/cli@1.2.3');
 });
 

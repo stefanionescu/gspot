@@ -6,7 +6,6 @@ import * as nextjs from '#tests/config/cli/checks/framework/nextjs.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { CaseChanges } from '#tests/types/harness/preservation.ts';
 import type { FindingScenario } from '#tests/types/cli/checks/cases.ts';
-import { BASH_CASES, TOOL_CHECKS } from '#tests/config/samples/bash.ts';
 import * as siteOutput from '#tests/config/cli/checks/general/site/output.ts';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import * as bashStructure from '#tests/config/cli/checks/language/bash/structure.ts';
@@ -67,7 +66,7 @@ for (const scenario of [
                 },
             }),
         },
-        cases: BASH_CASES.filter((entry) => !TOOL_CHECKS.includes(entry.check)),
+        cases: bashStructure.CASES,
     },
     { name: 'the Swift snapshot checks', repository: swiftSnapshots.REPOSITORY, cases: swiftSnapshots.CASES },
     { name: 'the built-output site checks', repository: siteOutput.REPOSITORY, cases: siteOutput.CASES },

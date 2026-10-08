@@ -1,8 +1,8 @@
 // Generate provider workflows from the same installation, version, and check selections.
 // The Prettier and EditorConfig settings a policy generates, with authored overrides carried along.
 import { dirname, relative } from 'node:path';
+import { CLI_PINS } from '#cli/config/pins.ts';
 import { Scalar, Document, stringify } from 'yaml';
-import { CLI_PINS } from '#cli/config/configurations.ts';
 import { compact, toPosix } from '#cli/platform/contracts.ts';
 import { HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 import { everyTable } from '#cli/policy/settings/contracts.ts';
@@ -12,6 +12,7 @@ import type { Policy, FormatSettings } from '#cli/types/policy/settings.ts';
 import { byScopeDepth, expandedPaths } from '#cli/repository/paths/public.ts';
 import { UNREPRESENTABLE_SELECTOR } from '#cli/config/generation/formatting.ts';
 import type { Pipeline, ActionPin, GithubCheck } from '#cli/types/generation/ci.ts';
+import { CACHED_PATHS, GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/ci.ts';
 
 import {
     DOT_GSPOT,
@@ -30,17 +31,6 @@ import type {
     EditorconfigOverride,
     PrettierPluginOptions,
 } from '#cli/types/generation/formatting.ts';
-import {
-    RUNNERS,
-    MISE_ACTION,
-    CACHED_PATHS,
-    CACHE_ACTION,
-    NODE_VERSION,
-    CHECKOUT_ACTION,
-    GITHUB_WORKFLOW,
-    GITLAB_WORKFLOW,
-    SETUP_NODE_ACTION,
-} from '#cli/config/generation/ci.ts';
 
 // An action pinned to a commit, with the version the pin stands for as its comment, which pinact verifies.
 function pinned({ name, sha, version }: ActionPin): Scalar {
@@ -52,12 +42,12 @@ function pinned({ name, sha, version }: ActionPin): Scalar {
 function setupSteps(pipeline: Pipeline): Record<string, unknown>[] {
     if (pipeline.isMise)
         return [
-            { uses: pinned(MISE_ACTION), with: { version: CLI_PINS.mise, cache: false } },
+            { uses: pinned(CLI_PINS.actions.mise), with: { version: CLI_PINS.mise.version, cache: false } },
             { run: `${HOOK_RUNNERS.mise.command} install` },
             { run: `${HOOK_RUNNERS.mise.command} doctor` },
         ];
     return [
-        { uses: pinned(SETUP_NODE_ACTION), with: { 'node-version': NODE_VERSION } },
+        { uses: pinned(CLI_PINS.actions.node), with: { 'node-version': CLI_PINS.node } },
         { run: `npm install --global @gspothq/cli@${pipeline.version}` },
         { run: 'gspot install' },
         { run: 'gspot doctor' },
@@ -87,7 +77,7 @@ function buildJob(
     platform: Pipeline['platforms'][number],
     check: GithubCheck,
 ): Record<string, unknown> {
-    const runner = RUNNERS[platform];
+    const runner = CLI_PINS.runners[platform];
     const cacheFiles = [
         TOOL_PACKAGE_PROJECT,
         `${DOT_GSPOT}/*lock*`,
@@ -103,9 +93,9 @@ function buildJob(
         ...(check.condition === undefined ? {} : { if: check.condition }),
         defaults: { run: { shell: 'bash' } },
         steps: [
-            { uses: pinned(CHECKOUT_ACTION), with: { 'fetch-depth': 0, 'persist-credentials': false } },
+            { uses: pinned(CLI_PINS.actions.checkout), with: { 'fetch-depth': 0, 'persist-credentials': false } },
             {
-                uses: pinned(CACHE_ACTION),
+                uses: pinned(CLI_PINS.actions.cache),
                 with: {
                     key: `gspot-\${{ runner.os }}-\${{ runner.arch }}-\${{ hashFiles(${cacheFiles}) }}`,
                     path: `${CACHED_PATHS.join('\n')}\n`,

@@ -1,3 +1,4 @@
+import { CLI_PINS } from '#cli/config/pins.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
@@ -10,17 +11,17 @@ import { isPosix } from '#tests/config/harness/platforms.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { environmentVariables } from '#cli/platform/public.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
+import { GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
 import type { InstallJson } from '#cli/types/commands/install.ts';
 import { MISE_CONFIG_PATH } from '#cli/config/platform/locations.ts';
 import { planReplacement } from '#cli/lifecycle/ownership/contracts.ts';
 import { sourceLauncherDirectory } from '#tests/harness/environment.ts';
-import { CLI_PINS, GSPOT_MISE_TOOL } from '#cli/config/configurations.ts';
 import { chmod, mkdir, symlink, readFile, realpath } from 'node:fs/promises';
 import { applyPlan, openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import type { MiseProject } from '#tests/types/tools/lifecycle/mise-execution.ts';
 
-const previousMiseVersion = `${String(Number(CLI_PINS.mise.split('.', 1)[0]) - 1)}.12.31`;
+const previousMiseVersion = `${String(Number(CLI_PINS.mise.version.split('.', 1)[0]) - 1)}.12.31`;
 
 const resources = new AsyncDisposableStack();
 let project: MiseProject;
@@ -91,7 +92,7 @@ test.skipIf(!isPosix)('install rejects an old runner and succeeds with the pinne
         PATH: `${join(state, 'old')}${delimiter}${environment['PATH']}`,
     });
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as InstallJson).message).toContain(CLI_PINS.mise);
+    expect((JSON.parse(refused.stdout) as InstallJson).message).toContain(CLI_PINS.mise.version);
     expect(await readFile(join(root, MISE_CONFIG_PATH))).toStrictEqual(generated);
     const selected = await runTestCommand(['mise', 'which', 'gspot'], { cwd: root, env: environment });
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);

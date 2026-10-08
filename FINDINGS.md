@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-679 unresolved review records remain. 323 come from the review of October 6, 2026 and the owner decisions of that day. 356 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+674 unresolved review records remain. 322 come from the review of October 6, 2026 and the owner decisions of that day. 352 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: test time limits sit in at least six places. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-413 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain.
+418 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain.
 
 ## Review of October 6, 2026
 
@@ -38,7 +38,7 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | [Source layout, names, and import graph](findings/review/source-layout.md)                            |           11 |
 | [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |           38 |
 | [Code: execution, tools, parsers, platform, repository, checks](findings/review/code-execution.md)    |            8 |
-| [Configurations and the ESLint plugin](findings/review/configurations-plugin.md)                      |            9 |
+| [Configurations and the ESLint plugin](findings/review/configurations-plugin.md)                      |            8 |
 | [Test layout and wiring](findings/review/tests-layout.md)                                             |           31 |
 | [Tests in tests/cli](findings/review/tests-cli.md)                                                    |           63 |
 | [Tests in tests/tools, tests/plugin, tests/packages, and the harness](findings/review/tests-tools.md) |           26 |
@@ -54,10 +54,10 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | -------------------------------------------------------------------------------------------------------------- | -----------: |
 | Pending summary records (below)                                                                                |            5 |
 | [Findings From Implementation Verification](findings/additional.md)                                            |            1 |
-| [Built-in Checks](findings/areas/checks.md)                                                                    |           26 |
+| [Built-in Checks](findings/areas/checks.md)                                                                    |           24 |
 | [Developer Experience in Non-JavaScript and Mixed Projects](findings/areas/developer-experience.md)            |            7 |
 | [Integration Tests Outside the Checks Folder](findings/areas/integration-tests.md)                             |           42 |
-| [Kits, Settings, and Names](findings/areas/kits.md)                                                            |           48 |
+| [Kits, Settings, and Names](findings/areas/kits.md)                                                            |           47 |
 | [Repository Setup and Ceremony](findings/areas/repository.md)                                                  |            4 |
 | [Native-Tool, Acceptance, and Package Tests](findings/areas/tool-tests.md)                                     |           24 |
 | [Unit Tests and Check Integration Tests](findings/areas/unit-tests.md)                                         |            6 |
@@ -73,7 +73,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Tests: Execution Integration Tests](findings/slices/tests-integration-execution.md)                           |           14 |
 | [Tests: Generation Integration Tests](findings/slices/tests-integration-generation.md)                         |            2 |
 | [Tests: Lifecycle and Repository Integration Tests](findings/slices/tests-integration-lifecycle.md)            |           25 |
-| [Tests: Native-Tool Tests and Samples](findings/slices/tests-tools-samples.md)                                 |           40 |
+| [Tests: Native-Tool Tests and Samples](findings/slices/tests-tools-samples.md)                                 |           39 |
 
 ## Pending summary records
 

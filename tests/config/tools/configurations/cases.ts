@@ -1,4 +1,3 @@
-import { BASH_CASES } from '#tests/config/samples/bash.ts';
 import * as libraries from '#tests/config/tools/configurations/library.ts';
 import * as postgres from '#tests/config/tools/configurations/database.ts';
 import * as toolXcode from '#tests/config/tools/configurations/tool/xcode.ts';
@@ -53,7 +52,7 @@ export const SCENARIOS: ConfigurationScenario[] = [
         cases: languageSwiftPackage.CASES,
         platforms: ['darwin'],
     },
-    { name: 'the bash configuration', repository: languageBashChecks.REPOSITORY, cases: BASH_CASES },
+    { name: 'the bash configuration', repository: languageBashChecks.REPOSITORY, cases: languageBashChecks.CASES },
     { name: 'the files configuration', repository: generalFiles.REPOSITORY, cases: generalFiles.CASES },
     {
         name: 'the markdown, docs and prose configurations',

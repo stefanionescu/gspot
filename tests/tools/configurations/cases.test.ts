@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { commitAll } from '#tests/harness/git.ts';
+import { HEAD } from '#tests/config/samples/bash.ts';
 import { chmod, appendFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { GUIDE } from '#tests/config/samples/docs.ts';
@@ -15,7 +16,6 @@ import { configurationManifests } from '#cli/configurations/public.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import * as postgres from '#tests/config/tools/configurations/database.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { HEAD, BASH_CASES, TOOL_CHECKS } from '#tests/config/samples/bash.ts';
 import * as toolPytest from '#tests/config/tools/configurations/tool/pytest.ts';
 import * as toolVitest from '#tests/config/tools/configurations/tool/vitest.ts';
 import * as languageSql from '#tests/config/tools/configurations/language/sql.ts';
@@ -203,7 +203,7 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
                 files: Object.fromEntries(Object.keys(entry.files).map((path) => [path, languageBashChecks.CLEAN])),
             }),
             cases: [
-                ...BASH_CASES.filter((entry) => TOOL_CHECKS.includes(entry.check)),
+                ...languageBashChecks.CASES,
                 ...BOUNDARIES.map((entry) => ({
                     check: entry.expected.rule === 'file-lines' ? 'structure/file-lines' : 'bash/function-size',
                     files: { [entry.expected.file]: entry.source },
