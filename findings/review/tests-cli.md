@@ -1,6 +1,6 @@
 # Tests in `tests/cli`
 
-82 unresolved review records remain.
+77 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -297,3 +297,15 @@ Original records and quotations remain above. These records are complete at `b9b
 | `review/tests-cli/098` | complete | Current npm tests/config owners are source-owned install/client/registry and generation/npm; focused actual final owners pass. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                         |
 | `review/tests-cli/099` | complete | Current fakeCommand delegates unrelated commands and disposes its spy; npm/UV native unit contracts pass. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`.                                                              |
 | `review/tests-cli/145` | complete | Current useEnvironment/usePlatform resources restore globals in mapped environment, credentials, manager, installation and hint owners; actual final owner tests pass. Commit `b9b1fca985dd99984b80dc76eb3640a91fded6bc`. |
+
+## Implementation checkpoint 12e795541 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `12e795541e69ea1ba58821533d8f7ee2ee868808`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-cli/035` | complete | Template command and policy-library registrations use their final owners; duplicate managed refusal transport is removed while occupied destination mode, native claim refusal and lexical resource cleanup obligations remain covered. Native combined main run: 147 passed, 447 assertions, nine actual files; claims and resource owners are included. Root types, actual ESLint and formatting passed. Commit `12e795541e69ea1ba58821533d8f7ee2ee868808`. |
+| `review/tests-cli/079` | complete | Template command and policy-library registrations use their final owners; duplicate managed refusal transport is removed while occupied destination mode, native claim refusal and lexical resource cleanup obligations remain covered. Native combined main run: 147 passed, 447 assertions, nine actual files; claims and resource owners are included. Root types, actual ESLint and formatting passed. Commit `12e795541e69ea1ba58821533d8f7ee2ee868808`. |
+| `review/tests-cli/083` | complete | Template command and policy-library registrations use their final owners; duplicate managed refusal transport is removed while occupied destination mode, native claim refusal and lexical resource cleanup obligations remain covered. Native combined main run: 147 passed, 447 assertions, nine actual files; claims and resource owners are included. Root types, actual ESLint and formatting passed. Commit `12e795541e69ea1ba58821533d8f7ee2ee868808`. |
+| `review/tests-cli/084` | complete | Template command and policy-library registrations use their final owners; duplicate managed refusal transport is removed while occupied destination mode, native claim refusal and lexical resource cleanup obligations remain covered. Native combined main run: 147 passed, 447 assertions, nine actual files; claims and resource owners are included. Root types, actual ESLint and formatting passed. Commit `12e795541e69ea1ba58821533d8f7ee2ee868808`. |
+| `review/tests-cli/142` | complete | Template command and policy-library registrations use their final owners; duplicate managed refusal transport is removed while occupied destination mode, native claim refusal and lexical resource cleanup obligations remain covered. Native combined main run: 147 passed, 447 assertions, nine actual files; claims and resource owners are included. Root types, actual ESLint and formatting passed. Commit `12e795541e69ea1ba58821533d8f7ee2ee868808`. |

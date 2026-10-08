@@ -12,7 +12,7 @@ export const REPOSITORY: InProcessScenario = {
             '{\n    "name": "example",\n    "private": true,\n    "devDependencies": { "wrangler": "4.0.0" }\n}\n',
         'wrangler.jsonc': WRANGLER,
         _headers: '/*\n    X-Frame-Options: DENY\n',
-        _redirects: '# Old addresses.\n/old /new 301\n/docs/* https://docs.example.test/:splat 302!\n',
+        _redirects: '# Old addresses.\n/old /new 301\n/docs/* https://docs.example.test/:splat 302\n',
         'functions/hello.js':
             '// Says hello.\n\n/**\n * Answers every request.\n * @returns {Response} the greeting\n */\nexport function onRequest() {\n    return new Response("hello");\n}\n',
     },

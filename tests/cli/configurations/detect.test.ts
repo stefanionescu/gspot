@@ -60,6 +60,8 @@ test.each([
     ['cloudflare', 'functions/_middleware.js', undefined],
     ['cloudflare', 'functions/_middleware.ts', undefined],
     ['cloudflare', 'apps/api/functions/_middleware.ts', undefined],
+    ['openapi', 'swagger.json', undefined],
+    ['openapi', 'apps/api/swagger.yaml', undefined],
     ['supabase', 'supabase/config.toml', undefined],
     ['supabase', 'apps/api/supabase/config.toml', undefined],
     ['python', 'pyproject.toml', undefined],

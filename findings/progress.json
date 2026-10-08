@@ -1,5 +1,5 @@
 {
-    "openRecords": 833,
+    "openRecords": 821,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 833,
+        "openRecords": 821,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 55,
-                "unresolvedAssignments": 236
+                "completedAssignments": 57,
+                "unresolvedAssignments": 234
             },
             {
                 "id": "python",
@@ -1402,8 +1402,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 73,
-                "unresolvedAssignments": 396
+                "completedAssignments": 85,
+                "unresolvedAssignments": 384
             },
             {
                 "id": "scripts-repository",
@@ -1542,8 +1542,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 16,
-                "unresolvedAssignments": 116
+                "completedAssignments": 23,
+                "unresolvedAssignments": 109
             },
             {
                 "id": "installation-docs",
@@ -8659,10 +8659,13 @@
             ]
         },
         "review/tests-cli/035": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "verification": [
+                "Template command and policy-library registrations use their final owners; duplicate managed refusal transport is removed while occupied destination mode, native claim refusal and lexical resource cleanup obligations remain covered.",
+                "Native combined main run: 147 passed, 447 assertions, nine actual files; claims and resource owners are included. Root types, actual ESLint and formatting passed."
+            ]
         },
         "review/tests-cli/037": {
             "status": "complete",
@@ -9093,10 +9096,13 @@
             ]
         },
         "review/tests-cli/079": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "verification": [
+                "Template command and policy-library registrations use their final owners; duplicate managed refusal transport is removed while occupied destination mode, native claim refusal and lexical resource cleanup obligations remain covered.",
+                "Native combined main run: 147 passed, 447 assertions, nine actual files; claims and resource owners are included. Root types, actual ESLint and formatting passed."
+            ]
         },
         "review/tests-cli/080": {
             "status": "partial",
@@ -9124,19 +9130,24 @@
             "verification": ["Split native invalid UTF8 and mode-change refusals; all27 contractual assertions remain."]
         },
         "review/tests-cli/083": {
-            "status": "in-progress",
-            "owner": "registry implementation; main integration",
-            "commit": null,
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
             "verification": [
                 "Exact independent claim/lockfile contract dispatched in isolated refactor/claim-contract worktree at bce72e26bbc55fc48e976aea29c466d0ce2e91b9 through /tmp/gspot-claim-mechanism-assignment.md; source033 final lockfiles and source007 live callback prerequisites complete. Mechanical names/test moves separate from narrow race behavior; no acceptance yet. code-commands006 safety deletions deferred as a whole, not claimed.",
-                "Isolated mechanical/race changes frozen separately: focused135 pass, 835 assertions, 12 files, 8.37s; shared native runner27 pass, 323 assertions, five files, 206.53s; root/CLI types and affected-owner full-policy lint pass. No integration commit/closure yet. Simplification includes obsolete child protocol, redundant claim diagnostics/type, direct resource cleanup; aggregate active-code metrics under review and no net-shrink assertion claimed."
+                "Isolated mechanical/race changes frozen separately: focused135 pass, 835 assertions, 12 files, 8.37s; shared native runner27 pass, 323 assertions, five files, 206.53s; root/CLI types and affected-owner full-policy lint pass. No integration commit/closure yet. Simplification includes obsolete child protocol, redundant claim diagnostics/type, direct resource cleanup; aggregate active-code metrics under review and no net-shrink assertion claimed.",
+                "Template command and policy-library registrations use their final owners; duplicate managed refusal transport is removed while occupied destination mode, native claim refusal and lexical resource cleanup obligations remain covered.",
+                "Native combined main run: 147 passed, 447 assertions, nine actual files; claims and resource owners are included. Root types, actual ESLint and formatting passed."
             ]
         },
         "review/tests-cli/084": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "verification": [
+                "Template command and policy-library registrations use their final owners; duplicate managed refusal transport is removed while occupied destination mode, native claim refusal and lexical resource cleanup obligations remain covered.",
+                "Native combined main run: 147 passed, 447 assertions, nine actual files; claims and resource owners are included. Root types, actual ESLint and formatting passed."
+            ]
         },
         "review/tests-cli/085": {
             "status": "partial",
@@ -9792,16 +9803,18 @@
             ]
         },
         "review/tests-cli/142": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
             "verification": [
                 "Evidence 8ab8198c84053574.",
                 "Evidence 6cb769bee27585bd.",
                 "Evidence 5e393fd7269d9443.",
                 "Evidence 20c2f89725488b8a.",
                 "Evidence e21341d2b84cbd16.",
-                "Evidence 0a4a426cd56e8208."
+                "Evidence 0a4a426cd56e8208.",
+                "Template command and policy-library registrations use their final owners; duplicate managed refusal transport is removed while occupied destination mode, native claim refusal and lexical resource cleanup obligations remain covered.",
+                "Native combined main run: 147 passed, 447 assertions, nine actual files; claims and resource owners are included. Root types, actual ESLint and formatting passed."
             ]
         },
         "review/tests-cli/143": {
@@ -12271,10 +12284,13 @@
             "verification": []
         },
         "slices/tests-integration-lifecycle/024": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "verification": [
+                "Repository test leaves consolidated with all 48 substantive registration signatures retained; exact directory EISDIR refusal, pruning, scope, sibling, private-state and link assertions retained.",
+                "Native discovery followup: 15 passed, 33 assertions. Directory symlink calls explicitly use dir; POSIX newline eligibility and a Windows registration control are distinguished from Windows filesystem execution."
+            ]
         },
         "slices/tests-integration-lifecycle/025": {
             "status": "pending",
@@ -12283,16 +12299,22 @@
             "verification": []
         },
         "slices/tests-integration-lifecycle/026": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "verification": [
+                "Repository test leaves consolidated with all 48 substantive registration signatures retained; exact directory EISDIR refusal, pruning, scope, sibling, private-state and link assertions retained.",
+                "Native discovery followup: 15 passed, 33 assertions. Directory symlink calls explicitly use dir; POSIX newline eligibility and a Windows registration control are distinguished from Windows filesystem execution."
+            ]
         },
         "slices/tests-integration-lifecycle/027": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "verification": [
+                "Repository test leaves consolidated with all 48 substantive registration signatures retained; exact directory EISDIR refusal, pruning, scope, sibling, private-state and link assertions retained.",
+                "Native discovery followup: 15 passed, 33 assertions. Directory symlink calls explicitly use dir; POSIX newline eligibility and a Windows registration control are distinguished from Windows filesystem execution."
+            ]
         },
         "slices/tests-integration-lifecycle/028": {
             "status": "partial",
@@ -12301,10 +12323,13 @@
             "verification": []
         },
         "slices/tests-integration-lifecycle/029": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "verification": [
+                "Repository test leaves consolidated with all 48 substantive registration signatures retained; exact directory EISDIR refusal, pruning, scope, sibling, private-state and link assertions retained.",
+                "Native discovery followup: 15 passed, 33 assertions. Directory symlink calls explicitly use dir; POSIX newline eligibility and a Windows registration control are distinguished from Windows filesystem execution."
+            ]
         },
         "slices/tests-integration-lifecycle/030": {
             "status": "pending",
@@ -12355,22 +12380,31 @@
             "verification": []
         },
         "slices/tests-integration-lifecycle/038": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "verification": [
+                "Repository test leaves consolidated with all 48 substantive registration signatures retained; exact directory EISDIR refusal, pruning, scope, sibling, private-state and link assertions retained.",
+                "Native discovery followup: 15 passed, 33 assertions. Directory symlink calls explicitly use dir; POSIX newline eligibility and a Windows registration control are distinguished from Windows filesystem execution."
+            ]
         },
         "slices/tests-integration-lifecycle/039": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "verification": [
+                "Repository test leaves consolidated with all 48 substantive registration signatures retained; exact directory EISDIR refusal, pruning, scope, sibling, private-state and link assertions retained.",
+                "Native discovery followup: 15 passed, 33 assertions. Directory symlink calls explicitly use dir; POSIX newline eligibility and a Windows registration control are distinguished from Windows filesystem execution."
+            ]
         },
         "slices/tests-integration-lifecycle/040": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "verification": [
+                "Repository test leaves consolidated with all 48 substantive registration signatures retained; exact directory EISDIR refusal, pruning, scope, sibling, private-state and link assertions retained.",
+                "Native discovery followup: 15 passed, 33 assertions. Directory symlink calls explicitly use dir; POSIX newline eligibility and a Windows registration control are distinguished from Windows filesystem execution."
+            ]
         },
         "slices/tests-integration-lifecycle/041": {
             "status": "partial",
@@ -15492,6 +15526,32 @@
                 "Initial combined-patch reapplication conflicted because Main already contained the mechanical phase; zero repository files changed. Correct exact behavior-phase before/after payload then integrated successfully.",
                 "Initial requested20 test paths matched17 current owners; actual3 moved credentials/inspection/UV owners were run separately, with exact files and results retained.",
                 "No Windows execution, timeout measurement, full suite, current CI success or release publication claimed."
+            ]
+        },
+        {
+            "commit": "12e795541e69ea1ba58821533d8f7ee2ee868808",
+            "completedRecords": [
+                "review/tests-cli/035",
+                "review/tests-cli/079",
+                "review/tests-cli/083",
+                "review/tests-cli/084",
+                "review/tests-cli/142",
+                "slices/tests-integration-lifecycle/024",
+                "slices/tests-integration-lifecycle/026",
+                "slices/tests-integration-lifecycle/027",
+                "slices/tests-integration-lifecycle/029",
+                "slices/tests-integration-lifecycle/038",
+                "slices/tests-integration-lifecycle/039",
+                "slices/tests-integration-lifecycle/040"
+            ],
+            "unresolvedRecords": 821,
+            "validation": [
+                "Main native combined 147/447/nine files; discovery final 15/33; root types and actual ESLint/Prettier passed.",
+                "Native gspot check --staged: 51 passed, nine skipped, zero findings. Commit and push hooks recorded independently."
+            ],
+            "limitations": [
+                "macOS native evidence; Windows CI filesystem acceptance remains outstanding.",
+                "Template deletion delta -1014 bytes/-22 lines/-131 AST; repository consolidation -878 bytes/-35 lines/-177 AST. Root adds explicit directory symlink kind for platform correctness."
             ]
         }
     ],

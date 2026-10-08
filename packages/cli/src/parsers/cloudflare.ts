@@ -73,7 +73,7 @@ export function redirectFindings(text: string): NumberedLine[] {
         if (!source.startsWith('/') && !source.startsWith('https://'))
             return [{ number: line.number, text: 'Start the redirect source with / or https://.' }];
         if (status === undefined) return [];
-        const isKnown = STATUS_CODES.has(status.replace(/!$/u, ''));
+        const isKnown = STATUS_CODES.has(status);
         return isKnown
             ? []
             : [{ number: line.number, text: `Use a supported Cloudflare redirect status instead of ${status}.` }];

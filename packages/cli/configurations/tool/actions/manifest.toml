@@ -4,10 +4,10 @@ requires = ["files"]
 description = "GitHub Actions workflows: actionlint for syntax and expressions, pinact for the commits actions are pinned to, and zizmor for security audits."
 
 [detect]
-paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+paths = ["**/.github/workflows/*.{yml,yaml}", "**/action.{yml,yaml}"]
 
 [files]
-paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]
+paths = ["**/.github/workflows/*.{yml,yaml}", "**/action.{yml,yaml}"]
 kinds = ["source"]
 
 [[tool]]
@@ -43,6 +43,10 @@ pypi = "zizmor"
 brew = "zizmor"
 cargo = "zizmor"
 
+[[tool_file]]
+target = ".gspot/config/zizmor.yml"
+tool = "zizmor"
+
 [[check]]
 name = "actionlint"
 title = "Validate GitHub Actions workflows"
@@ -51,6 +55,7 @@ level = "recommended"
 stage = "commit"
 runs = "files"
 tool = ["actionlint", "shellcheck"]
+files = { paths = ["**/.github/workflows/*.{yml,yaml}"] }
 exit_codes = [1]
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*?) \\[(?<rule>[a-z-]+)\\]$" }
 summary = "Checks every GitHub Actions workflow with actionlint: syntax, expressions, action inputs, and shell steps."
@@ -78,9 +83,9 @@ example = "A workflow interpolating pull-request text directly into a shell comm
 level = "recommended"
 stage = "commit"
 runs = "files"
-command = ["zizmor", "--offline", "--no-progress", "--format", "github", "{files}"]
+command = ["zizmor", "--offline", "--no-progress", "--format", "github", "--config", "{tool_file:zizmor}", "{files}"]
 exit_codes = [11, 12, 13, 14]
 output = { format = "regex", pattern = "^::(?:warning|error|notice) file=(?<file>[^,]+),line=(?<line>\\d+),title=(?<rule>[^:]+)::(?<message>.*)$" }
-summary = "Audits every GitHub Actions workflow with zizmor: template injection, unpinned actions, excessive permissions, dangerous triggers."
-why = "A workflow runs with the repository's credentials; an injectable expression or an unpinned action hands them to a stranger."
+summary = "Audits GitHub Actions workflows and composite actions with zizmor for template injection, excessive permissions, and dangerous triggers."
+why = "A workflow runs with the repository's credentials; an injectable expression can hand them to a stranger."
 help = "Apply the fix zizmor names, or turn one audit off with gspot ignore actions/zizmor --rule `<audit>` --reason \"`<why>`\"."

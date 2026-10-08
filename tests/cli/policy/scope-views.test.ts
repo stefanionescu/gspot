@@ -6,11 +6,11 @@ import { test, expect, setSystemTime } from 'bun:test';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
-import { POLICY } from '#tests/config/cli/policy/scope-views.ts';
 import { emitPolicy, parseExpiryDate } from '#cli/policy/file.ts';
 import { rootView, scopeView } from '#cli/policy/settings/view.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { POLICY, OPENAPI_DOCUMENTS, OPENAPI_PATH_CASES } from '#tests/config/cli/policy/scope-views.ts';
 
 // The validated selections of a repository with inherited and overridden scope policy.
 async function readScopeViews(): Promise<ScopeSelection[]> {
@@ -152,3 +152,52 @@ test('ignore expiry uses the UTC date and keeps expired authored policy saved', 
         setSystemTime();
     }
 });
+
+for (const level of ['recommended', 'all'] as const) {
+    test.each(OPENAPI_DOCUMENTS)(`OpenAPI detects %s before tool activation at ${level}`, async (document) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `level = "${level}"\nconfigurations = ["openapi"]\n[scope.api]\n`,
+            [document]: 'openapi: 3.1.0\n',
+            [`api/${document}`]: 'openapi: 3.1.0\n',
+        });
+        const session = await openSession(sandbox.path);
+        expect(session.scopes.map(({ view }) => view.options('openapi').document)).toStrictEqual([
+            document,
+            `api/${document}`,
+        ]);
+        const checks = planRun(session, { stage: 'all', skips: [], only: ['openapi/spectral'] });
+        expect(checks.map(({ tool, skip }) => [tool?.name, skip?.cause])).toStrictEqual([
+            ['spectral', undefined],
+            ['spectral', undefined],
+        ]);
+    });
+
+    test.each(OPENAPI_PATH_CASES)(
+        `OpenAPI $name path keeps its authored origin at ${level}`,
+        async ({ root, child, expected }) => {
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
+                'gspot.toml': `level = "${level}"\nconfigurations = ["openapi"]\n${root}[scope.api]\n${child}`,
+                'openapi.yaml': 'openapi: 3.1.0\n',
+                'api/swagger.yaml': 'openapi: 3.1.0\n',
+            });
+            const session = await openSession(sandbox.path);
+            expect(session.scopes.map(({ view }) => view.options('openapi').document)).toStrictEqual(expected);
+        },
+    );
+
+    test(`OpenAPI absent documents and unselected scopes stay inactive at ${level}`, async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `level = "${level}"\nconfigurations = ["openapi"]\n[scope.api]\nremoved_configurations = ["openapi"]\n`,
+            'api/swagger.yaml': 'openapi: 3.1.0\n',
+        });
+        const session = await openSession(sandbox.path);
+        expect(session.scopes[0]!.view.options('openapi').document).toBe('');
+        expect(session.scopes[1]!.selected.some(({ configuration }) => configuration.name === 'openapi')).toBe(false);
+        expect(
+            planRun(session, { stage: 'all', skips: [], only: ['openapi/spectral'] }).map(({ skip }) => skip?.cause),
+        ).toStrictEqual(['setting']);
+    });
+}

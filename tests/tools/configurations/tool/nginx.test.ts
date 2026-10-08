@@ -30,6 +30,7 @@ test.skipIf(!hasLinuxDocker())(
                 'ssl_certificate "/etc/nginx/ssl/server  certificate.pem"; ssl_certificate_key "/etc/nginx/ssl/server key.pem";\n# include /outside/ignored.conf;\n',
             'proxy/unrelated.conf': 'include /outside/not-used.conf;\n',
         });
+        commitAll(sandbox.path);
         const command = ['check', '--hook', 'pre-push', '--only', 'nginx/test', '--json'];
         const failed = await spawnGspot(sandbox.path, command);
         expect(failed.code, failed.stdout + failed.stderr).toBe(1);

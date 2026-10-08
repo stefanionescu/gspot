@@ -40,11 +40,11 @@ export const REPOSITORY: InstalledScenario = {
 export const CASES: FindingCase[] = [
     {
         check: 'openapi/spectral',
+        policy: OPENAPI_POLICY,
         files: {
             'openapi.yaml':
                 "openapi: 3.1.0\ninfo:\n    title: Test\n    version: 1.0.0\n    description: The test service.\n    contact:\n        name: Owner\n        url: https://example.test\nservers:\n    - url: https://example.test\ntags:\n    - name: health\npaths:\n    /health:\n        get:\n            description: Says the service is up.\n            tags:\n                - health\n            responses:\n                '204':\n                    description: The service is up.\n",
         },
-        policy: OPENAPI_POLICY,
         expected: { file: 'openapi.yaml', rule: 'operation-operationId', line: 15 },
     },
 ];

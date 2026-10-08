@@ -1,6 +1,7 @@
 // Attach the original tool installation to a read-only revision copy.
 import { memo } from '#cli/platform/memo.ts';
 import { runGit } from '#cli/platform/git.ts';
+import { statSync, lstatSync } from 'node:fs';
 import { listStyleFiles } from '#cli/tools/vale.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
@@ -14,13 +15,11 @@ import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { packageWorkspaces } from '#cli/repository/scopes.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { PACKAGE_MANIFESTS } from '#cli/config/execution/copy.ts';
-import { PRIVATE_DIRECTORY } from '#cli/config/platform/modes.ts';
 import { join, posix, dirname, resolve, basename } from 'node:path';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { DOT_GSPOT, VALE_CONFIG } from '#cli/config/platform/locations.ts';
 import { readPackageManifest } from '#cli/repository/package-manifests.ts';
 import type { DependencyCopy, DependencyFolder } from '#cli/types/execution/copy.ts';
-import { statSync, chmodSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const WORKSPACE_SOURCE_MEMO = { create: () => new Map<string, string[]>() };
 
@@ -43,37 +42,22 @@ function assertDependencyReady(checkout: string, folder: string, pending: string
 }
 
 // Refuses a copy whose Vale configuration differs from the one the packages were installed for.
-function assertValeMatches(installed: Root, destination: string): void {
+function assertValeMatches(installed: Root, destination: Root): void {
     const current = installed.read(VALE_CONFIG);
-    const path = join(destination, VALE_CONFIG);
-    const selected = lstatSync(path, { throwIfNoEntry: false });
-    if (selected !== undefined && (!selected.isFile() || selected.nlink !== 1))
-        throw new Error(`Lifecycle destination is not a private regular file: ${VALE_CONFIG}`);
-    if (current === undefined || selected === undefined || !current.bytes.equals(readFileSync(path)))
+    const selected = destination.read(VALE_CONFIG);
+    if (current === undefined || selected === undefined || !current.bytes.equals(selected.bytes))
         throw new GspotError('selection', [
             'Installed Vale packages do not match the revision configuration. Prepare this revision separately and run gspot apply.',
         ]);
 }
 
-// Copies one package file the copy lacks.
-function copyPackageFile(installed: Root, destination: string, path: string): void {
-    const target = join(destination, path);
-    for (let directory = dirname(target); directory !== destination; directory = dirname(directory)) {
-        const parent = lstatSync(directory, { throwIfNoEntry: false });
-        if (parent?.isDirectory() === false) throw new Error(`Unsafe lifecycle parent: ${path}`);
-    }
-    const selected = lstatSync(target, { throwIfNoEntry: false });
-    if (selected !== undefined) {
-        if (!selected.isFile() || selected.nlink !== 1)
-            throw new Error(`Lifecycle destination is not a private regular file: ${path}`);
-        return;
-    }
+// Copies one package file the copy lacks through the same confined native writer.
+function copyPackageFile(installed: Root, destination: Root, path: string): void {
+    if (destination.read(path) !== undefined) return;
     const content = installed.read(path);
     if (content === undefined)
         throw new GspotError('selection', [`Installed Vale package file ${path} disappeared. Run gspot apply.`]);
-    mkdirSync(dirname(target), { recursive: true, mode: PRIVATE_DIRECTORY });
-    writeFileSync(target, content.bytes, { flag: 'wx', mode: content.mode });
-    chmodSync(target, content.mode);
+    destination.write(path, content, undefined);
 }
 
 // The dependency folders the copy's projects own, when the working tree has them installed. Python
@@ -124,7 +108,7 @@ export function copyValePackages(root: string, checkout: string, paths: string[]
     for (const config of configurations) {
         const folder = config.slice(0, -VALE_CONFIG.length);
         using installed = openRoot(join(root, folder));
-        const destination = resolve(checkout, folder);
+        using destination = openRoot(resolve(checkout, folder), 'native');
         const packages = listStyleFiles(installed).filter((path) => isValePackageFile(path));
         if (packages.length === 0) continue;
         assertValeMatches(installed, destination);

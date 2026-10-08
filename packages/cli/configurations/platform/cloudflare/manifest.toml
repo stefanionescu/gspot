@@ -51,7 +51,7 @@ example = "The `_redirects` line `/old /new 999` reports an unsupported redirect
 level = "recommended"
 stage = "commit"
 runs = "scope"
-summary = "Checks that every redirect is a source, a destination, and an optional status Cloudflare knows."
+summary = "Checks each redirect source, destination, and optional status: 200, 301, 302, 303, 307, or 308, without a force suffix."
 why = "A redirect Cloudflare cannot read is dropped, and the old address starts to answer 404."
 help = "Write the rule as source, destination, status."
 

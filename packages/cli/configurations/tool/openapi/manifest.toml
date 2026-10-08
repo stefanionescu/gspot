@@ -4,7 +4,7 @@ requires = ["files"]
 description = "A committed OpenAPI document: Spectral lints it, and the command that writes it must not change it."
 
 [detect]
-filenames = ["openapi.yaml", "openapi.yml", "openapi.json"]
+filenames = ["openapi.yaml", "openapi.yml", "openapi.json", "swagger.json", "swagger.yaml"]
 
 [[tool]]
 name = "spectral"
@@ -56,7 +56,7 @@ name = "openapi.document"
 type = "path"
 direction = "neutral"
 default = ""
-summary = "The committed OpenAPI document, relative to the project scope; empty turns both OpenAPI checks off."
+summary = "The committed OpenAPI document, detected in the project scope by default; an explicit empty path turns both OpenAPI checks off."
 
 [[setting]]
 name = "openapi.generate_command"

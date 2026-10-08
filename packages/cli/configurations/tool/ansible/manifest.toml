@@ -1,13 +1,13 @@
 [configuration]
 title = "Ansible"
 requires = ["files"]
-description = "Ansible playbooks: ansible-lint in every folder that holds an ansible.cfg."
+description = "Ansible playbooks, roles, and collections checked by ansible-lint."
 
 [detect]
-paths = ["ansible.cfg", "**/ansible.cfg"]
+paths = ["ansible.cfg", "**/ansible.cfg", "**/galaxy.yml", "**/requirements.yml", "**/roles/*/tasks/main.yml"]
 
 [files]
-paths = ["ansible.cfg", "**/ansible.cfg"]
+paths = ["ansible.cfg", "**/ansible.cfg", "**/galaxy.yml", "**/requirements.yml", "**/roles/*/tasks/main.yml"]
 kinds = ["source"]
 
 [[tool]]
@@ -25,10 +25,10 @@ title = "Lint Ansible projects"
 example = "A task using `ansible.builtin.command: systemctl restart nginx` reports `command-instead-of-module`. Use `ansible.builtin.systemd` with `name: nginx` and `state: restarted` to express the intended service operation."
 level = "recommended"
 stage = "commit"
-runs = "once"
+runs = "scope"
 platforms = ["macos", "linux"]
 tool = "ansible-lint"
 files = { extensions = [".yml", ".yaml", ".cfg", ".j2"] }
-summary = "Runs ansible-lint in every folder that holds an ansible.cfg."
+summary = "Runs ansible-lint beside each ansible.cfg, or at the selected scope root when no configuration file is present."
 why = "A playbook runs as root on production hosts, and a task that is not idempotent changes them on every run."
 help = "Change the task the way the rule says. Turn one rule off with gspot ignore ansible/lint --rule `<id>` --reason \"`<why>`\"."

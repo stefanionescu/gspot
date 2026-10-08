@@ -110,11 +110,11 @@ level = "recommended"
 stage = "push"
 runs = "scope"
 run_in_copy = true
-command = ["trivy", "config", "--quiet", "--skip-check-update", "--config", "{tool_file:trivy}", "--ignorefile", "{tool_file:trivyignore}", "--exit-code", "10", "--format", "template", "--template", "@{tool_file:trivy-findings}", "{root}"]
+command = ["trivy", "config", "--misconfig-scanners", "dockerfile", "--quiet", "--skip-check-update", "--config", "{tool_file:trivy}", "--ignorefile", "{tool_file:trivyignore}", "--exit-code", "10", "--format", "template", "--template", "@{tool_file:trivy-findings}", "{root}"]
 tool = "trivy"
 exit_codes = [10]
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<rule>[^:]+):(?<message>.*)$" }
-summary = "Scans Dockerfiles and Compose files for misconfiguration: a root user, a missing health check, an exposed secret."
+summary = "Scans Dockerfiles for HIGH and CRITICAL misconfigurations, including a root user and exposed secrets."
 why = "A container that runs as root turns any bug in the service into control of the container."
 help = "Change the file the way the message says. Accept one advisory with gspot ignore docker/trivy-config --rule `<id>` --reason \"...\"."
 

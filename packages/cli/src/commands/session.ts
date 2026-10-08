@@ -7,7 +7,6 @@ import { npmPins } from '#cli/configurations/pins.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { scopeView } from '#cli/policy/settings/view.ts';
 import { createReadCache } from '#cli/platform/source.ts';
-import { pathMatcher } from '#cli/repository/selectors.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { knownSettings } from '#cli/policy/settings/known.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
@@ -23,6 +22,7 @@ import { fileDeclarations } from '#cli/configurations/declarations.ts';
 import { FILE_PREFIX_BYTES } from '#cli/config/repository/inventory.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
+import { pathMatcher, filenameMatcher } from '#cli/repository/selectors.ts';
 import { selectPackageInstaller, inspectPackageInstaller } from '#cli/tools/npm/client.ts';
 import type { PackageInstaller, PackageInstallerIdentity } from '#cli/types/parsers/packages.ts';
 
@@ -46,6 +46,19 @@ function scopeSelections(policy: Policy, repository: Repository, manifests: Map<
             surface.defaults.set('swift.xcode_project', {
                 ...declared,
                 value: project === undefined ? '' : posix.relative(scope.path, posix.dirname(project.path)),
+            });
+        }
+        const openapi = selected.find((manifest) => manifest.configuration.name === 'openapi');
+        const document = surface.defaults.get('openapi.document');
+        if (openapi !== undefined && document !== undefined) {
+            const matches = filenameMatcher(openapi.detect.filenames);
+            const detected = files.find(
+                (file) =>
+                    file.kind === 'source' && matches(file.path) && scopeOf(file.path, scopes).path === scope.path,
+            );
+            surface.defaults.set('openapi.document', {
+                ...document,
+                value: detected === undefined ? '' : posix.relative(scope.path, detected.path),
             });
         }
         const view = scopeView(surface, effective, selected, scope.path);

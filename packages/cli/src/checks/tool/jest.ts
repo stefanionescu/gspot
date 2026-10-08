@@ -1,8 +1,8 @@
 // Jest run over a disposable copy of the sources, with failed tests and coverage under its floors as findings.
 import { join, relative } from 'node:path';
-import { statSync, readFileSync } from 'node:fs';
 import { findingAt } from '#cli/checks/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { openRoot } from '#cli/platform/root/open.ts';
 import { scratchFolder } from '#cli/platform/scratch.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
@@ -21,10 +21,10 @@ import {
 
 // Read the Jest report and refuse a run that cannot execute its suites.
 function readReport(work: string, stderr: string): TestReport {
-    const path = join(work, TEST_REPORT);
-    if (statSync(path, { throwIfNoEntry: false }) === undefined)
-        throw new Error(`Jest produced no test report: ${stripVTControlCharacters(stderr).trim()}`);
-    const tested = reportSchema.parse(JSON.parse(readFileSync(path, 'utf8')));
+    using files = openRoot(work, 'native');
+    const text = files.read(TEST_REPORT)?.bytes.toString('utf8');
+    if (text === undefined) throw new Error(`Jest produced no test report: ${stripVTControlCharacters(stderr).trim()}`);
+    const tested = reportSchema.parse(JSON.parse(text));
     if (tested.numRuntimeErrorTestSuites > 0)
         throw new Error('Jest could not load or execute a test suite. Correct its configuration and imports.');
     if (tested.numTotalTests === 0)
@@ -43,10 +43,11 @@ function suitePath(source: string, suite: Suite): string {
 
 // One finding per coverage dimension under its floor.
 function coverageFindings(run: JestRun, settings: JestSettings): Finding[] {
-    const path = join(run.work, COVERAGE_SUMMARY);
-    if (statSync(path, { throwIfNoEntry: false }) === undefined)
+    using files = openRoot(run.work, 'native');
+    const text = files.read(COVERAGE_SUMMARY)?.bytes.toString('utf8');
+    if (text === undefined)
         throw new Error('Jest produced no coverage summary. Enable coverage for the selected project.');
-    const covered = coverageSchema.parse(JSON.parse(readFileSync(path, 'utf8'))).total;
+    const covered = coverageSchema.parse(JSON.parse(text)).total;
     return COVERAGE_DIMENSIONS.flatMap((name) => {
         const floor = settings[name];
         if (covered[name].pct >= floor) return [];

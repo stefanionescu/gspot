@@ -6,6 +6,5 @@ rules:
     info-contact: off
     info-description: off
     operation-description: off
-    operation-operationId: off
     operation-tags: off
 <% } %>
