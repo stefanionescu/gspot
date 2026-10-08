@@ -1,5 +1,5 @@
 {
-    "openRecords": 878,
+    "openRecords": 869,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 878,
+        "openRecords": 869,
         "records": 1092,
         "batches": [
             {
@@ -542,8 +542,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 53,
-                "unresolvedAssignments": 238
+                "completedAssignments": 55,
+                "unresolvedAssignments": 236
             },
             {
                 "id": "python",
@@ -589,8 +589,8 @@
                     "slices/tests-integration-commands/049",
                     "slices/tests-integration-execution/042"
                 ],
-                "completedAssignments": 10,
-                "unresolvedAssignments": 29
+                "completedAssignments": 12,
+                "unresolvedAssignments": 27
             },
             {
                 "id": "javascript-web",
@@ -696,8 +696,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 2,
-                "unresolvedAssignments": 97
+                "completedAssignments": 3,
+                "unresolvedAssignments": 96
             },
             {
                 "id": "swift-bash-sql",
@@ -786,8 +786,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 7,
-                "unresolvedAssignments": 75
+                "completedAssignments": 8,
+                "unresolvedAssignments": 74
             },
             {
                 "id": "frameworks-platforms",
@@ -1402,8 +1402,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 47,
-                "unresolvedAssignments": 422
+                "completedAssignments": 55,
+                "unresolvedAssignments": 414
             },
             {
                 "id": "scripts-repository",
@@ -1687,8 +1687,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 41,
-                "unresolvedAssignments": 96
+                "completedAssignments": 42,
+                "unresolvedAssignments": 95
             },
             {
                 "id": "policy-file",
@@ -2277,11 +2277,12 @@
             ]
         },
         "areas/checks/048": {
-            "status": "partial",
-            "owner": "packaging",
-            "commit": null,
+            "status": "complete",
+            "owner": "main",
+            "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
             "verification": [
-                "Exact shared four-house-rule consolidation assigned to isolated Python/Bash/Swift source owner from native query feasibility proof; preserves unrelated Bash/Python checks and native import-linter. Implementation and acceptance remain pending."
+                "Exact shared four-house-rule consolidation assigned to isolated Python/Bash/Swift source owner from native query feasibility proof; preserves unrelated Bash/Python checks and native import-linter. Implementation and acceptance remain pending.",
+                "Replaced eleven Bash, Python, and Swift house registrations with four level-all structure checks and shared native queries. Native original/shared findings match in eleven cases; six root/child and level matrix rows pass. Main: 135 tests, 543 assertions; affected readers: seven tests, 20 assertions. Production source is smaller; separate ESLint env-owner replacement remains configurations-plugin/005."
             ]
         },
         "areas/checks/049": {
@@ -9280,19 +9281,20 @@
             ]
         },
         "review/tests-cli/100": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
             "verification": [
                 "Evidence 87a24612d4d7ae4b.",
                 "Evidence b0bc9e5ebe9d9f79.",
                 "Evidence 89faa450416afe5e.",
-                "Main metadata staging/commit/push and full cross-platform acceptance remain pending."
+                "Main metadata staging/commit/push and full cross-platform acceptance remain pending.",
+                "The Python installation collector already has one shared substantive local step and two callers in tools/python/uv.test.ts. Native 91-case corpus verifies retained collector outcomes."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-six-tool-test-owner-freeze.json",
-                    "commit": null,
+                    "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
                     "verification": [
                         "Evidence 87a24612d4d7ae4b.",
                         "Evidence b0bc9e5ebe9d9f79.",
@@ -9303,19 +9305,20 @@
             ]
         },
         "review/tests-cli/101": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
             "verification": [
                 "Evidence 87a24612d4d7ae4b.",
                 "Evidence b0bc9e5ebe9d9f79.",
                 "Evidence 89faa450416afe5e.",
-                "Main metadata staging/commit/push and full cross-platform acceptance remain pending."
+                "Main metadata staging/commit/push and full cross-platform acceptance remain pending.",
+                "Replaced the three remaining dedicated mockRestore try/finally wrappers with using in installer-failures. Existing installation and version owners already use disposal. Native rejection probe restores process identity; main installer cases pass."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-six-tool-test-owner-freeze.json",
-                    "commit": null,
+                    "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
                     "verification": [
                         "Evidence 87a24612d4d7ae4b.",
                         "Evidence b0bc9e5ebe9d9f79.",
@@ -9326,9 +9329,9 @@
             ]
         },
         "review/tests-cli/102": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
             "verification": [
                 "/tmp/gspot-redundant-test-steps-main.patch SHA256 d07939b6dd647f3cb0d8a37fbeae83077ba4547ba1e57198f352c815f613ddbc",
                 "99 CLI tests pass, 293 assertions across eight files; /tmp/gspot-redundant-test-steps-cli-tests.log.",
@@ -9336,7 +9339,8 @@
                 "Evidence 4274c37f1991ecbf.",
                 "Evidence 31cc8fb0f45d1c4c.",
                 "Evidence 00285fb212d8638d.",
-                "Main commit/push and cross-platform acceptance remain pending."
+                "Main commit/push and cross-platform acceptance remain pending.",
+                "The reasoned deadline row is absent; five distinct deadline, cancellation, native-error, incomplete-output, and dictionary cases remain. Native six-file 91-case corpus passes."
             ]
         },
         "review/tests-cli/103": {
@@ -9437,19 +9441,20 @@
             ]
         },
         "review/tests-cli/114": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
             "verification": [
                 "Evidence 7d5a7e28cdd5834c.",
                 "Evidence ccbae0f6d4f25198.",
                 "Evidence 3142ce44f04114bf.",
-                "Evidence ed935fc24cd36735."
+                "Evidence ed935fc24cd36735.",
+                "CodeQL execution cases and data have one flat general/security owner; old owners are absent. Original case inventory and native assertions remain; main security tests pass."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-output-contract-final-freeze.json",
-                    "commit": null,
+                    "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
                     "verification": [
                         "Evidence 7d5a7e28cdd5834c.",
                         "Evidence ccbae0f6d4f25198.",
@@ -10615,10 +10620,12 @@
             "verification": []
         },
         "review/verification/018": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
+            "verification": [
+                "Removed all eleven no-op isDryRun fields from nine remaining owners when fix is false. Genuine fixer previews remain. Main: 75 tests, 275 assertions; all affected native checks pass. No native executable XCTest run is credited."
+            ]
         },
         "review/verification/019": {
             "status": "pending",
@@ -10627,10 +10634,12 @@
             "verification": []
         },
         "review/verification/025": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
+            "verification": [
+                "RepositoryScenario separates InProcessScenario and InstalledScenario. Twelve native type refusal cases reject CLI installation fields; three valid controls pass. CLI preparation creates no modules or tool projects. Native installed preparation and failure cleanup pass; main root/CLI types and 135 focused tests pass."
+            ]
         },
         "review/verification/026": {
             "status": "pending",
@@ -11492,14 +11501,18 @@
             "verification": []
         },
         "slices/tests-integration-checks/005": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."],
+            "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
+            "verification": [
+                "Evidence 9048c67a3d621f62.",
+                "Evidence 42194dcb89d937cf.",
+                "Removed ignored without/init fields and the planted npm lockfile. Native original-input probe confirms no lockfile reads; static configuration and runtime-body equivalence preserve actual cases. Main focused tests and staged checks pass."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-python-domain-checkpoint1-final-freeze.json",
-                    "commit": null,
+                    "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
                     "verification": ["Evidence 9048c67a3d621f62.", "Evidence 42194dcb89d937cf."]
                 }
             ]
@@ -11711,10 +11724,12 @@
             "verification": []
         },
         "slices/tests-integration-checks/033": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
+            "verification": [
+                "Deleted three CodeQL forwarding/assertion helpers. Direct native cases retain every ignore vector, exact refusal title, isolated location, and command contract. Native 91-case inventory preserved with four stronger assertions; main focused security tests pass."
+            ]
         },
         "slices/tests-integration-checks/035": {
             "status": "pending",
@@ -15297,6 +15312,31 @@
             "limitations": [
                 "CI on all three platforms and final suite timeout measurement remain pending.",
                 "main/001 external publication, accounts and deployment remain partial."
+            ]
+        },
+        {
+            "commit": "0a7108489e8091269f2cf615ff9985e13f5d9199",
+            "completedRecords": [
+                "areas/checks/048",
+                "review/verification/025",
+                "slices/tests-integration-checks/005",
+                "review/verification/018",
+                "review/tests-cli/100",
+                "review/tests-cli/101",
+                "review/tests-cli/102",
+                "review/tests-cli/114",
+                "slices/tests-integration-checks/033"
+            ],
+            "unresolvedRecords": 869,
+            "validation": [
+                "Main focused: 135 pass, 543 assertions, 14 files; run options: 75 pass, 275 assertions, eight files; affected readers: seven pass, 20 assertions.",
+                "Root and CLI TypeScript pass. Normal schema producer, gspot apply, and CLI build pass.",
+                "Full staged check ran; seven diagnostics corrected. Affected staged checks pass. Commit hook: 52 pass, three skips, zero findings; message hook: one pass. Push hook: 68 pass, ten skips, zero findings."
+            ],
+            "limitations": [
+                "CI 37743608545 at prior4137 is incomplete and has actual failures; no cross-platform acceptance claimed.",
+                "Installed native XCTest coverage not rerun for no-op option deletion.",
+                "No package publication, tag, deployment, or live setup."
             ]
         }
     ],

@@ -1,6 +1,6 @@
 # Built-in Checks
 
-31 unresolved review records remain.
+30 unresolved review records remain.
 
 ## Findings
 
@@ -184,3 +184,11 @@ Original records and quotations remain above. These records are complete at `1ec
 | `areas/checks/060` | complete | Deleted all nine language folder bans and the repository allowance; retained vague-name bans. Native structure tests: 27 pass, 92 assertions. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`.                                                                           |
 | `areas/checks/071` | complete | site/dead-assets runs at all only. Native source assets: 21 tests, 43 assertions; exact lower-level exclusion verified. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`.                                                                                                 |
 | `areas/checks/037` | complete | Already implemented: deleted stale-exclusions implementation, manifest check, registry entry and obsolete correction data. No compatibility alias. Native evidence: /tmp/gspot-python-leaf-contracts-final-freeze.json. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`. |
+
+## Implementation checkpoint 0a7108489 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `0a7108489e8091269f2cf615ff9985e13f5d9199`.
+
+| ID                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/checks/048` | complete | Replaced eleven Bash, Python, and Swift house registrations with four level-all structure checks and shared native queries. Native original/shared findings match in eleven cases; six root/child and level matrix rows pass. Main: 135 tests, 543 assertions; affected readers: seven tests, 20 assertions. Production source is smaller; separate ESLint env-owner replacement remains configurations-plugin/005. Commit `0a7108489e8091269f2cf615ff9985e13f5d9199`. |

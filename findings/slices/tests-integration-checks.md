@@ -1,6 +1,6 @@
 # Tests: Check Integration Tests
 
-34 unresolved review records remain.
+32 unresolved review records remain.
 
 ## Open findings
 
@@ -91,3 +91,12 @@ Original records and quotations remain above. These records are complete at `1ec
 | ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                            |
 | ------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-checks/027` | complete | General cases set file_kb=1 and plant 1025 bytes; Python cases set file_lines=12 and function_lines=6 with thirteen and seven lines. All defect/correction cases pass. Native evidence: /tmp/gspot-python-leaf-contracts-cases.log, /tmp/gspot-explicit-file-size-main-test.log. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`. |
+
+## Implementation checkpoint 0a7108489 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `0a7108489e8091269f2cf615ff9985e13f5d9199`.
+
+| ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-checks/005` | complete | Removed ignored without/init fields and the planted npm lockfile. Native original-input probe confirms no lockfile reads; static configuration and runtime-body equivalence preserve actual cases. Main focused tests and staged checks pass. Commit `0a7108489e8091269f2cf615ff9985e13f5d9199`.                        |
+| `slices/tests-integration-checks/033` | complete | Deleted three CodeQL forwarding/assertion helpers. Direct native cases retain every ignore vector, exact refusal title, isolated location, and command contract. Native 91-case inventory preserved with four stronger assertions; main focused security tests pass. Commit `0a7108489e8091269f2cf615ff9985e13f5d9199`. |

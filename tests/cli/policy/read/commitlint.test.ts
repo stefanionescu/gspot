@@ -1,7 +1,7 @@
 import { test, expect } from 'bun:test';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { parseStrictPolicy } from '#cli/policy/read.ts';
-import { COMMITLINT_REJECTED_SELECTIONS } from '#tests/config/cli/generation/level-contract.ts';
+import { COMMITLINT_REJECTED_SELECTIONS } from '#tests/config/cli/policy/read/commitlint.ts';
 
 test.each(['recommended', 'all'] as const)(
     '%s keeps commitlint severity and coverage with the level in root and scoped settings',
