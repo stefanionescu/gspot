@@ -12,15 +12,15 @@ import { isMacos } from '#tests/config/harness/platforms.ts';
 import { checkedFindings } from '#cli/execution/command/findings.ts';
 
 describe.if(isMacos)('native property lists', () => {
-    test('files/plutil classifies mixed native parse and input failures as execution errors', async () => {
+    test('xcode/plutil classifies mixed native parse and input failures as execution errors', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['files']),
+            'gspot.toml': buildPolicy(['xcode']),
             'bad.plist': '<plist><dict>',
             'private.plist': '<plist><dict/></plist>\n',
         });
         const session = await openSession(sandbox.path);
-        const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['files/plutil'] });
+        const [planned] = planRun(session, { stage: 'commit', skips: [], only: ['xcode/plutil'] });
         const paths = { cwd: sandbox.path, root: sandbox.path };
         await chmod(join(sandbox.path, 'private.plist'), 0);
         try {

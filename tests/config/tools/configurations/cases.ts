@@ -2,6 +2,7 @@ import { BASH_CASES } from '#tests/config/samples/bash.ts';
 import * as postgres from '#tests/config/tools/configurations/postgres.ts';
 import * as supabase from '#tests/config/tools/configurations/supabase.ts';
 import * as libraries from '#tests/config/tools/configurations/libraries.ts';
+import * as toolXcode from '#tests/config/tools/configurations/tool/xcode.ts';
 import * as react from '#tests/config/tools/configurations/framework/react.ts';
 import * as toolDocker from '#tests/config/tools/configurations/tool/docker.ts';
 import * as toolPytest from '#tests/config/tools/configurations/tool/pytest.ts';
@@ -27,6 +28,7 @@ import * as languageTypescriptChecks from '#tests/config/tools/configurations/la
 import * as generalSecretsEnvironment from '#tests/config/tools/configurations/general/secrets/environment.ts';
 /** Literal scenario names, authored repositories, and finding tables. */
 export const SCENARIOS: ConfigurationScenario[] = [
+    { name: 'the xcode configuration', repository: toolXcode.REPOSITORY, cases: toolXcode.CASES },
     { name: 'the pytest configuration', repository: toolPytest.REPOSITORY, cases: toolPytest.CASES },
     { name: 'the ansible configuration', repository: toolAnsible.REPOSITORY, cases: toolAnsible.CASES },
     { name: 'the library configurations', repository: libraries.REPOSITORY, cases: libraries.CASES },

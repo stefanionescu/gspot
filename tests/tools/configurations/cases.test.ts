@@ -226,14 +226,6 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
     [
         frameworkNextjs.REPOSITORY,
         {
-            prepare: async (root, environment) => {
-                const configured = await spawnGspot(
-                    root,
-                    ['set', 'tools.next.build_flags', '--', '--webpack'],
-                    environment,
-                );
-                if (configured.code !== 0) throw new Error(configured.stdout + configured.stderr);
-            },
             dirname: join(installedModules, '../..', `gspot-test-${randomUUID()}`),
         },
     ],

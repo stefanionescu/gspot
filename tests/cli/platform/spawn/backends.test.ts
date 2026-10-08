@@ -101,6 +101,20 @@ process.exitCode = ${String(status)};`;
     });
 }
 
+test('a pre-aborted immediate process reports cancellation instead of success', async () => {
+    await using sandbox = await testdir();
+    const controller = new AbortController();
+    controller.abort(new Error('Native cancellation'));
+    const result = await run([process.execPath, '-e', 'process.exit(0)'], {
+        cwd: sandbox.path,
+        cancelSignal: controller.signal,
+    });
+    expect(result.isCanceled).toBe(true);
+    expect(result.code).not.toBe(0);
+    expect(result.isTimedOut).toBe(false);
+    expect(result.missing).toBe(false);
+});
+
 test('cancellation terminates the process without reporting a timeout', async () => {
     await using sandbox = await testdir();
     const command = [process.execPath, '-e', 'setInterval(() => {}, 1000)'];

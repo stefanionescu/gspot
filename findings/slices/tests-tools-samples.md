@@ -1,6 +1,6 @@
 # Tests: Native-Tool Tests and Samples
 
-41 unresolved review records remain.
+40 unresolved review records remain.
 
 ## Open findings
 
@@ -130,3 +130,11 @@ Original records and quotations remain above. These records are complete at `1ec
 | `slices/tests-tools-samples/048` | complete | Recommended asserts the Swift documentation rule is off; all runs actual native diagnostics, correction and policy ignore. Native Swift documentation tests: eight pass, 51 assertions. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`. |
 | `slices/tests-tools-samples/049` | complete | Shared native SwiftFormat command is a config constant; obsolete SwiftLint commands and policy text replacement are deleted. Native correction and ignores pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`.                        |
 | `slices/tests-tools-samples/050` | complete | Nested Swift findings assert file, line and column at native root/child source positions. Native Swift documentation tests pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`.                                                        |
+
+## Implementation checkpoint 989aafe5b of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `989aafe5ba0d3794ab7928d050801d718b5f5813`.
+
+| ID                               | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-tools-samples/042` | complete | Native test title is Semgrep rules follow the level; original selected configurations, exact findings and correction controls retained. Main CLI37/152 passed. Initial native tool family26pass/3fail; malformed declared-pack replay1/9 and both-level native pack syntax replay2/6 passed. Native full prose1711files0findings; types/format and staged148passing checks plus corrected11affected checks passed. Original failures retained. Agent native boundary/byte-equivalence evidence retained in frozen handoffs; no whole-suite/all-platform claim. Commit `989aafe5ba0d3794ab7928d050801d718b5f5813`. |

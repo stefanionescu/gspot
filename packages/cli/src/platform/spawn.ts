@@ -3,6 +3,7 @@ import { statSync } from 'node:fs';
 import { onExit } from 'signal-exit';
 import { execa, execaSync } from 'execa';
 import type { ChildProcess } from 'node:child_process';
+import { setTimeout as delay } from 'node:timers/promises';
 import { dirname, resolve, delimiter, isAbsolute } from 'node:path';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
@@ -131,7 +132,13 @@ function terminate(child: ChildProcess, state: ProcessTermination): void {
     }, DRAIN_MS);
 }
 
-function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
+function supervise(executable: string, argv: string[], options: AsyncSpawnOptions, output: StdoutRead) {
+    const base = commandOptions(options, executable, output);
+    const child = execa(executable, argv, {
+        ...base,
+        ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
+        detached: process.platform !== 'win32',
+    });
     const state = { isTimedOut: false, isCanceled: false };
     const termination: ProcessTermination = { stopped: false, failure: undefined, drainTimer: undefined };
     const stopTree = terminate.bind(undefined, child, termination);
@@ -152,19 +159,19 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
     let exitCleanup: Promise<void> | undefined;
     const exited = () => {
         clearTimeout(timer);
-        exitCleanup = new Promise((complete) => {
-            setTimeout(() => {
-                if (process.platform !== 'win32') stopTree();
-                termination.stopped = true;
-                complete();
-            }, REAP_MS);
+        exitCleanup = delay(REAP_MS).then(() => {
+            if (process.platform !== 'win32') stopTree();
+            termination.stopped = true;
         });
     };
+    const streams = child.stdio.filter((stream) => stream !== null);
     child.once('exit', exited);
-    for (const stream of child.stdio) stream?.once('error', stopTree);
+    for (const stream of streams) stream.once('error', stopTree);
     options.cancelSignal?.addEventListener('abort', cancel, { once: true });
     if (options.cancelSignal?.aborted === true) cancel();
     return {
+        child,
+        encoding: base.encoding,
         state,
         stop: stopTree,
         async dispose(executionFailure: unknown) {
@@ -174,15 +181,14 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
             removeExitListener();
             options.cancelSignal?.removeEventListener('abort', cancel);
             child.removeListener('exit', exited);
-            for (const stream of child.stdio) stream?.removeListener('error', stopTree);
-            if (termination.failure !== undefined && !isGroupGone(termination.failure, child)) {
-                if (executionFailure !== undefined)
-                    throw new AggregateError(
-                        [executionFailure, termination.failure],
-                        'Tool execution and process cleanup failed.',
-                    );
-                throw termination.failure;
-            }
+            for (const stream of streams) stream.removeListener('error', stopTree);
+            if (termination.failure === undefined || isGroupGone(termination.failure, child)) return;
+            if (executionFailure !== undefined)
+                throw new AggregateError(
+                    [executionFailure, termination.failure],
+                    'Tool execution and process cleanup failed.',
+                );
+            throw termination.failure;
         },
     };
 }
@@ -203,12 +209,8 @@ export async function runStream(
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
     if (missingExecutable(executable, options.cwd)) return completed(notFound(executable), started, '');
-    const base = commandOptions(options, executable, output);
-    const child = execa(executable, argv, {
-        ...base,
-        detached: process.platform !== 'win32',
-    });
-    const supervision = supervise(child, options);
+    const supervision = supervise(executable, argv, options, output);
+    const { child, encoding } = supervision;
     if (options.onStdout !== undefined) child.stdout.on('data', options.onStdout);
     if (options.onStderr !== undefined) child.stderr.on('data', options.onStderr);
     let executionFailure: unknown;
@@ -223,7 +225,7 @@ export async function runStream(
         }
         const result = await child;
         if (result.failed) executionFailure = new Error(result.shortMessage);
-        const diagnostic = Buffer.from(result.stderr, base.encoding).toString('utf8');
+        const diagnostic = Buffer.from(result.stderr, encoding).toString('utf8');
         return { ...completed(result, started, diagnostic), ...supervision.state };
     } catch (error) {
         executionFailure = error;

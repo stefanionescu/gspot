@@ -1,6 +1,6 @@
 // Checks used by a TypeScript repository report their expected findings and pass after the fixes.
 import { join } from 'node:path';
-import { mkdir, appendFile } from 'node:fs/promises';
+import { appendFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { applyChanges } from '#tests/harness/preservation.ts';
@@ -15,8 +15,6 @@ import type { InstalledScenario, OwnedTestRepository } from '#tests/types/harnes
 const repository: InstalledScenario = {
     ...REPOSITORY,
     prepare: async (root, environment) => {
-        await mkdir(join(root, 'node_modules'));
-
         await appendFile(join(root, 'gspot.toml'), `\n${ARCHITECTURE}`);
         const applied = await spawnGspot(root, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);

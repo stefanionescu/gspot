@@ -13,7 +13,11 @@ export const REPOSITORY: InstalledScenario = {
     configurations: ['swift', 'naming'],
 
     tools: ['swiftlint', 'swiftformat', 'periphery'],
-    files: { '.gitignore': '.build\n', 'Package.swift': SWIFT_PACKAGE, 'Sources/App/Greeting.swift': LIBRARY },
+    files: {
+        '.gitignore': '.build\nnode_modules/\n',
+        'Package.swift': SWIFT_PACKAGE,
+        'Sources/App/Greeting.swift': LIBRARY,
+    },
 };
 
 export const CASES: FindingCase[] = [

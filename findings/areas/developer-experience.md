@@ -1,6 +1,6 @@
 # Developer Experience in Non-JavaScript and Mixed Projects
 
-8 unresolved review records remain.
+7 unresolved review records remain.
 
 ## 1. Whether gspot installs cleanly in each kind of project
 
@@ -44,3 +44,11 @@ Original records and quotations remain above. These records are complete at `1ec
 | ID                               | Status   | Evidence                                                                                                                                                                    |
 | -------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/developer-experience/030` | complete | Init prints active checks and counts checks turned off by the selected level. Native init selection and plan tests pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`. |
+
+## Implementation checkpoint 989aafe5b of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `989aafe5ba0d3794ab7928d050801d718b5f5813`.
+
+| ID                               | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| -------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/developer-experience/037` | complete | Pointer files described at scope roots and Swift test folders; explicit titled example includes both required services/api and Tests paths. Main CLI37/152 passed. Initial native tool family26pass/3fail; malformed declared-pack replay1/9 and both-level native pack syntax replay2/6 passed. Native full prose1711files0findings; types/format and staged148passing checks plus corrected11affected checks passed. Original failures retained. Agent native boundary/byte-equivalence evidence retained in frozen handoffs; no whole-suite/all-platform claim. Commit `989aafe5ba0d3794ab7928d050801d718b5f5813`. |

@@ -153,7 +153,7 @@ test('policy inspection accepts hardlinked authored text while edits preserve bo
         }),
     ).toThrow('private regular file');
     expect(evaluated).toBe(false);
-    expect(await readFile(original, 'utf8')).toBe(policy);
+    expect(await file.readFile('utf8')).toBe(policy);
     expect(await readFile(path, 'utf8')).toBe(policy);
     expect(await pathExists(join(sandbox.path, '.gspot'))).toBe(false);
 });

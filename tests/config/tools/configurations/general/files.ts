@@ -46,17 +46,4 @@ export const CASES: FindingCase[] = [
         },
         corrected: { files: { 'settings/feed.xml': '<feed><entry /></feed>\n' } },
     },
-    // The plist reader is the macOS plutil.
-    {
-        check: 'files/plutil',
-        files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
-        expected: { file: 'app/Info.plist' },
-        platforms: ['darwin'],
-        corrected: {
-            files: {
-                'app/Info.plist':
-                    '<?xml version="1.0"?><plist version="1.0"><dict><key>A</key><string>value</string></dict></plist>\n',
-            },
-        },
-    },
 ];
