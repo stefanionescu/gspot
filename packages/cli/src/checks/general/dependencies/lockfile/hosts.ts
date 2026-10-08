@@ -6,7 +6,7 @@ import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { LOCKFILE_URL, NPM_DOWNLOAD, JAVASCRIPT_CLIENTS } from '#cli/config/checks/general/dependencies.ts';
 
-function urlProblem(url: URL, hosts: Set<string>): string | undefined {
+function urlMessage(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;
     return hosts.has(url.host) ? undefined : `${url.host} is not an allowed registry host.`;
 }
@@ -21,7 +21,7 @@ function fileFindings(input: CheckInput, path: string, hosts: Set<string>): Find
             : text.matchAll(LOCKFILE_URL).map((match) => match[0])
         )
             .flatMap((url) => {
-                const diagnostic = URL.canParse(url) ? urlProblem(new URL(url), hosts) : undefined;
+                const diagnostic = URL.canParse(url) ? urlMessage(new URL(url), hosts) : undefined;
                 if (diagnostic === undefined) return [];
                 return [findingAt(input, { file: path, line: index + 1 }, 'host', diagnostic)];
             })

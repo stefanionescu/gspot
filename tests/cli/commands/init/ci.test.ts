@@ -92,7 +92,7 @@ test.each(CI_PREFERENCE_CASES)('initialization CI preference uses %s', async (_l
     const options = buildInitOptions(sandbox.path, { isDryRun: true });
     delete options.ci;
     const answers = await askQuestions(sandbox.path, options, { ...EMPTY_TOOLING, ci: [...ci] });
-    expect(answers).toStrictEqual({ hooks: false, runner: 'none', rules: false, ci: expected });
+    expect(answers).toStrictEqual({ hooks: false, runner: 'none', agentRules: false, ci: expected });
 });
 
 test('init keeps an unsupported CI pipeline in place and names it in the plan', async () => {

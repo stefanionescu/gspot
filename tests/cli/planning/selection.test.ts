@@ -159,7 +159,7 @@ test.each(POLICY_PATHS)('a change to %s retains project inputs and check path ig
         'ignored/guide.md': '# Built pages\n',
     });
     const session = await openSession(sandbox.path);
-    expect(session.policyFiles.problems).toStrictEqual([]);
+    expect(session.policyFiles.errors).toStrictEqual([]);
     const planned = planRun(session, { stage: 'commit', skips: [], staged: [path], only: ['docs/lychee'] });
     expect(
         planned.map((entry) => ({
@@ -182,7 +182,7 @@ test.each(COMPONENTS)('reconciliation retains CSS tooling for embedded styles in
         policy: proposal.policy,
         text: proposal.text,
         path: join(sandbox.path, 'gspot.toml'),
-        problems: [],
+        errors: [],
     });
     expect(session.policyFiles.policy.configurations).toContain('css');
     const check = planRun(session, { stage: 'commit', skips: [], only: ['css/stylelint'] });

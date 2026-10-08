@@ -6,9 +6,9 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { buildTrackedFile } from '#tests/harness/tracked.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
 import { runtimeEvidenceCases } from '#tests/harness/repository.ts';
 import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
+import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import { detectUnselected, detectConfigurations } from '#cli/configurations/detect.ts';
 import { parseManifest, configurationManifests } from '#cli/configurations/manifests.ts';
 
@@ -112,10 +112,10 @@ test('Python project detection uses captured dependencies after the authored man
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, PYTHON_PROJECT_FILES);
     const repository = await readRepository(sandbox.path, [], [], []);
-    const projectManifests = readManifests(sandbox.path, repository.files);
+    const packageManifests = readPackageManifests(sandbox.path, repository.files);
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
     expect(
-        detectConfigurations(repository.files, configurationManifests(), projectManifests, 'api').some(
+        detectConfigurations(repository.files, configurationManifests(), packageManifests, 'api').some(
             (entry) => entry.configuration === 'fastapi',
         ),
     ).toBe(true);
@@ -125,21 +125,21 @@ test.each(PYTHON_DEPENDENCY_CASES)('Python dependency detection reads $name from
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { [`api/${path}`]: source, 'other/readme.txt': 'No Python dependencies.\n' });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const projectManifests = readManifests(sandbox.path, repository.files);
+    const packageManifests = readPackageManifests(sandbox.path, repository.files);
     expect(
-        Object.keys(projectManifests[0]!.dependencies).toSorted((left, right) => left.localeCompare(right)),
+        Object.keys(packageManifests[0]!.dependencies).toSorted((left, right) => left.localeCompare(right)),
     ).toStrictEqual(['fastapi', 'friendly-bard']);
     const manifests = configurationManifests();
-    const proposed = detectConfigurations(repository.files, manifests, projectManifests, 'api');
+    const proposed = detectConfigurations(repository.files, manifests, packageManifests, 'api');
     expect(proposed.find((entry) => entry.configuration === 'fastapi')?.evidence).toBe(`fastapi in api/${path}`);
     expect(proposed.find((entry) => entry.configuration === 'python')?.evidence).toBe(`api/${path}`);
     expect(
-        detectConfigurations(repository.files, manifests, projectManifests, 'other').some(
+        detectConfigurations(repository.files, manifests, packageManifests, 'other').some(
             (entry) => entry.configuration === 'fastapi',
         ),
     ).toBe(false);
     await writeFile(join(sandbox.path, 'api', path), path.endsWith('.txt') ? '# dependencies removed\n' : '');
-    const corrected = readManifests(sandbox.path, repository.files);
+    const corrected = readPackageManifests(sandbox.path, repository.files);
     expect(
         detectConfigurations(repository.files, manifests, corrected, 'api').some(
             (entry) => entry.configuration === 'fastapi',
@@ -156,12 +156,12 @@ test.each(runtimeEvidenceCases())('$name determines runtime applicability within
         'api/.gspot/package.json': JSON.stringify('toolProjectManifest' in entry ? entry.toolProjectManifest : {}),
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const projectManifests = readManifests(sandbox.path, repository.files);
+    const packageManifests = readPackageManifests(sandbox.path, repository.files);
     const manifest = parseManifest(
         `[configuration]\ntitle = "Runtime"\ndescription = "Detects the runtime declared by this project."\n[detect]\nruntimes = ["${entry.runtime}"]\n`,
         'configurations/general/runtime',
     );
-    const detected = detectConfigurations(repository.files, new Map([['runtime', manifest]]), projectManifests, 'api');
+    const detected = detectConfigurations(repository.files, new Map([['runtime', manifest]]), packageManifests, 'api');
     expect(detected.map(({ configuration }) => configuration)).toStrictEqual(entry.detected ? ['runtime'] : []);
 });
 

@@ -21,11 +21,11 @@ import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
 import { styleRules, proseFormats } from '#cli/generation/vale-styles.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import { buildTsconfig, requiredTsconfigOptions } from '#cli/generation/tsconfig.ts';
-import { readManifests, getProjectDependencies } from '#cli/repository/manifests.ts';
 import { tablesFor, policyValue, harnessFolders } from '#cli/policy/settings/lookup.ts';
 import { editorconfigOverrides, prettierConfiguration } from '#cli/generation/formatting.ts';
 import type { TemplateInputs, ScopeTemplateInputs } from '#cli/types/generation/templates.ts';
 import { scopeIgnorePatterns, selectedIgnorePaths } from '#cli/generation/ignore-patterns.ts';
+import { readPackageManifests, getProjectDependencies } from '#cli/repository/package-manifests.ts';
 
 import {
     ETA_OPTIONS,
@@ -141,7 +141,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, mani
         scope: selection.scope.path,
     };
     return {
-        ...scopeInputs({ session, selection, manifests, projects: readManifests(root, sourceFiles) }),
+        ...scopeInputs({ session, selection, manifests, projects: readPackageManifests(root, sourceFiles) }),
         ...eslintInputs(session, selection),
         javascriptConfig: (target) =>
             buildJsconfig({

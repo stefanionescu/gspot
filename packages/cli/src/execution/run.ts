@@ -1,7 +1,7 @@
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
 import pLimit from 'p-limit';
 import { cpus } from 'node:os';
-import { problemText } from '#cli/policy/read.ts';
+import { errorText } from '#cli/policy/read.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { checkRun } from '#cli/execution/built-in.ts';
@@ -35,13 +35,13 @@ import type {
 } from '#cli/types/execution/check.ts';
 
 // The wrong lines of gspot.toml that reading dropped, reported as one failed check so the rest of the run stands.
-function policyProblemsResult(session: ToolSession): CheckResult | undefined {
-    const { problems } = session.policyFiles;
-    if (problems.length === 0) return undefined;
-    const findings = problems.map((problem) => ({
+function policyErrorsResult(session: ToolSession): CheckResult | undefined {
+    const { errors } = session.policyFiles;
+    if (errors.length === 0) return undefined;
+    const findings = errors.map((problem) => ({
         check: POLICY_CHECK,
         file: POLICY_FILE,
-        message: problemText(problem),
+        message: errorText(problem),
         fixable: false,
     }));
     return { check: POLICY_CHECK, scope: '', status: 'failed', fileCount: 1, duration: 0, findings };
@@ -221,7 +221,7 @@ export async function executeRun(opened: ToolSession, options: RunOptions): Prom
     };
     const active = executables.filter(({ check }) => isActive(check) || check.skip?.cause === 'ignore');
     const ran = await runChecks(pass, active);
-    const policyResult = options.stage === 'message' ? undefined : policyProblemsResult(session);
+    const policyResult = options.stage === 'message' ? undefined : policyErrorsResult(session);
     if (policyResult !== undefined) {
         options.onResult?.(policyResult);
         ran.push(policyResult);

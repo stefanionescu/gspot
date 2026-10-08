@@ -74,7 +74,8 @@ export async function askQuestions(root: string, options: InitOptions, tooling: 
         (getLintJobs(root, tooling.ci).length > 0
             ? 'none'
             : await askChoice('Write a CI workflow?', '--ci', CI_CHOICES, proposeCi(root, tooling), options.yes));
-    const rules = options.rules ?? (await askConfirmation('Install the agent rules?', '--no-rules', true, options.yes));
+    const agentRules =
+        options.agentRules ?? (await askConfirmation('Install the agent rules?', '--no-rules', true, options.yes));
     const runner =
         options.runner ??
         (await askChoice(
@@ -84,7 +85,7 @@ export async function askQuestions(root: string, options: InitOptions, tooling: 
             which.sync('mise', { nothrow: true }) === null ? tooling.runner : 'mise',
             options.yes,
         ));
-    return { hooks, ci, rules, runner };
+    return { hooks, ci, agentRules, runner };
 }
 
 /**

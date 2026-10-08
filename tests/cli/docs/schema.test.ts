@@ -5,7 +5,7 @@ import { parseStrictPolicy } from '#cli/policy/read.ts';
 import { policySchema } from '#cli/policy/schema/policy.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { NAMING_SCHEMA_CASES } from '#tests/config/cli/docs/naming.ts';
-import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
+import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { buildJsonSchema } from '#docs/src/content/reference/schema.ts';
 import { UNSAFE_DIRECTORIES } from '#tests/config/cli/policy/boundaries.ts';
 import { EXCEPTION_SCHEMA_CASES } from '#tests/config/cli/docs/exceptions.ts';
@@ -47,9 +47,9 @@ test.each([...RUNTIME_SCHEMA_CASES, ...POLICY_FIELD_SCHEMA_CASES, ...NAMING_SCHE
     ({ input, valid, diagnostic }) => {
         const document = { ...input };
         const text = stringify(document);
-        const problems = policyProblems(text);
-        if (valid) expect(problems).toStrictEqual([]);
-        else expect(problems).toContainEqual(textContaining(diagnostic));
+        const errors = policyFindings(text);
+        if (valid) expect(errors).toStrictEqual([]);
+        else expect(errors).toContainEqual(textContaining(diagnostic));
         expect(validate(document)).toBe(valid);
     },
 );
@@ -101,11 +101,11 @@ for (const scope of TOOL_SCHEMA_SCOPES)
         ({ input, valid, diagnostic }) => {
             const { configurations, ...table } = input;
             const document = { configurations, ...(scope === '' ? table : { scope: { [scope]: table } }) };
-            const problems = policyProblems(stringify(document));
-            if (valid) expect(problems).toStrictEqual([]);
+            const errors = policyFindings(stringify(document));
+            if (valid) expect(errors).toStrictEqual([]);
             else {
                 const owner = scope === '' ? '' : `scope.${scope}.`;
-                expect(problems).toContainEqual(
+                expect(errors).toContainEqual(
                     textContaining(diagnostic.replace('under [tools', `under [${owner}tools`)),
                 );
             }
@@ -130,6 +130,6 @@ for (const scope of TOOL_SCHEMA_SCOPES)
             const accepted = VERBATIM_TOOL_NAMES.includes(tool);
             expect(policySchema.safeParse(document).success).toBe(accepted);
             expect(validate(document)).toBe(accepted);
-            expect(policyProblems(stringify(document)).length === 0).toBe(accepted);
+            expect(policyFindings(stringify(document)).length === 0).toBe(accepted);
         },
     );

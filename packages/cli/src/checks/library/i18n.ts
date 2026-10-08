@@ -21,7 +21,7 @@ function dottedKeys(value: unknown): string[] {
     return Object.entries(value).flatMap(([key, entry]) => [...(key.includes('.') ? [key] : []), ...dottedKeys(entry)]);
 }
 
-function translationProblem(text: string): string | undefined {
+function translationMessage(text: string): string | undefined {
     if (text.trim() === '') return 'The message is empty.';
     try {
         parse(text);
@@ -61,7 +61,7 @@ export function locales(input: CheckInput): Finding[] {
         .entries()
         .flatMap(([path, messages]) => {
             const broken = [...messages].flatMap(([key, text]) => {
-                const problem = translationProblem(text);
+                const problem = translationMessage(text);
                 return problem === undefined
                     ? []
                     : [findingAt(input, { file: path, line: 1 }, 'message', `${key}: ${problem}`)];

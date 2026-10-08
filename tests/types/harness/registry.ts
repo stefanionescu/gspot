@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { run } from '#cli/platform/spawn.ts';
 import type { packedPackagesSchema } from '#tests/harness/registry.ts';
 
-/** Execute acquisition commands within the caller's cancellation boundary. */
+/** Execute install commands within the caller's cancellation boundary. */
 export type RegistryCommand = typeof run;
 
 /** Package metadata and its local source to pack for installation. */

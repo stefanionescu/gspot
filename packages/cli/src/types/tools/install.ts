@@ -56,7 +56,7 @@ export type LocateOptions = {
     installedRoot?: string | undefined;
 };
 
-/** The tool search, selected pin, and process limits of Vale package acquisition. */
+/** The tool search, selected pin, and process limits of Vale package installation. */
 export type ValeInstallation = {
     level: Policy['level'];
     search: ToolSearch;

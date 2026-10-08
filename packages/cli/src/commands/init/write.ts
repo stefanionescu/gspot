@@ -63,7 +63,7 @@ export async function writeSetup(
         policy: parseStrictPolicy(prepared.policyText, root),
         text: prepared.policyText,
         path: POLICY_FILE,
-        problems: [],
+        errors: [],
     });
     const generated = emitAll(session);
     if (options.install) {

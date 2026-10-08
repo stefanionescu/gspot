@@ -1,9 +1,9 @@
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
 import { extensionOf } from '#cli/platform/paths.ts';
 import { projectFolder } from '#cli/repository/scopes.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
-import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
+import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import { RUNTIME_TAG, SHEBANG_TAG } from '#cli/config/repository/inventory.ts';
 import { isInScope, pathMatcher, filenameMatcher, isToolProjectPath } from '#cli/repository/selectors.ts';
 
@@ -15,16 +15,16 @@ import type {
     ConfigurationSuggestion,
 } from '#cli/types/configurations.ts';
 
-function dependencyMap(projectManifests: ProjectManifest[], scope: string): Map<string, string> {
+function dependencyMap(packageManifests: PackageManifest[], scope: string): Map<string, string> {
     const dependencies = new Map<string, string>();
-    for (const fact of projectManifests) {
+    for (const fact of packageManifests) {
         if (!isInScope(fact.path, scope)) continue;
         for (const name of Object.keys(fact.dependencies)) dependencies.set(name, fact.path);
     }
     return dependencies;
 }
 
-function layout(files: TrackedFile[], projectManifests: ProjectManifest[], scope: string): Layout {
+function layout(files: TrackedFile[], packageManifests: PackageManifest[], scope: string): Layout {
     const candidates = files.filter(
         (file) => file.kind === 'source' && !isToolProjectPath(file.path) && isInScope(file.path, scope),
     );
@@ -35,7 +35,7 @@ function layout(files: TrackedFile[], projectManifests: ProjectManifest[], scope
         ),
     );
     const paths = new Set(candidates.map((file) => file.path));
-    const scopeSummaries = projectManifests.filter((fact) => paths.has(fact.path));
+    const scopeSummaries = packageManifests.filter((fact) => paths.has(fact.path));
     const runtimes = new Map([
         ...candidates.flatMap((file) =>
             file.tags
@@ -136,17 +136,17 @@ function tagEvidence(detect: Manifest['detect'], tree: Layout): DetectionEvidenc
  * Proposes configurations from the tree, the manifests and the dependencies, with the evidence for each.
  * @param files the tracked files
  * @param manifests every configuration manifest
- * @param projectManifests the parsed project manifests
+ * @param packageManifests the parsed package manifests
  * @param scope the scope path, '' for the root
  * @returns each applicable configuration with its repository evidence
  */
 export function detectConfigurations(
     files: TrackedFile[],
     manifests: Map<string, Manifest>,
-    projectManifests: ProjectManifest[],
+    packageManifests: PackageManifest[],
     scope = '',
 ): ConfigurationEvidence[] {
-    const tree = layout(files, projectManifests, scope);
+    const tree = layout(files, packageManifests, scope);
     return manifests
         .values()
         .map((manifest) => evidenceFor(manifest, tree))
@@ -158,15 +158,15 @@ export function detectConfigurations(
  * Selects conditional declarations using the shared file and dependency evidence.
  * @param conditions the detection conditions declared by selected manifests.
  * @param files the repository source inventory.
- * @param projectManifests the parsed project manifests.
+ * @param packageManifests the parsed package manifests.
  * @returns the matching condition objects.
  */
 export function detectConditions(
     conditions: Manifest['detect'][],
     files: TrackedFile[],
-    projectManifests: ProjectManifest[],
+    packageManifests: PackageManifest[],
 ): Set<Manifest['detect']> {
-    const tree = layout(files, projectManifests, '');
+    const tree = layout(files, packageManifests, '');
     const matched = new Set<Manifest['detect']>();
     for (const condition of conditions)
         if (evidenceReaders.some((source) => source(condition, tree) !== undefined)) matched.add(condition);
@@ -188,8 +188,8 @@ export function detectUnselected(
     configured: Manifest[],
 ): ConfigurationSuggestion[] {
     const selected = new Set(configured.map((manifest) => manifest.configuration.name));
-    const projectManifests = readManifests(root, files);
-    return detectConfigurations(files, manifests, projectManifests)
+    const packageManifests = readPackageManifests(root, files);
+    return detectConfigurations(files, manifests, packageManifests)
         .filter((detection) => detection.kind !== 'general' && !selected.has(detection.configuration))
         .map((detection) => ({
             configuration: detection.configuration,

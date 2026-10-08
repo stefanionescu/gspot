@@ -1,4 +1,4 @@
-// Reusable policy: source acquisition, validation, and export share one repository-path calculation.
+// Reusable policy: source installation, validation, and export share one repository-path calculation.
 import { readFileSync } from 'node:fs';
 import { resolve, basename } from 'node:path';
 import { isRecord } from '#cli/platform/objects.ts';
@@ -7,7 +7,7 @@ import { contentDigest } from '#cli/platform/text.ts';
 import { emitPolicy, parseTomlText } from '#cli/policy/file.ts';
 import { templateSchema } from '#cli/policy/schema/templates.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import { unknownConfigurations } from '#cli/configurations/problems.ts';
+import { unknownConfigurations } from '#cli/configurations/errors.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import type { Template, ExportedTemplate } from '#cli/types/policy/templates.ts';
 
@@ -68,7 +68,7 @@ export function exportTemplate(policyText: string, file: string): ExportedTempla
  * @param text the TOML text
  * @param source the local path or address used in diagnostics
  * @returns the validated template
- * @throws GspotError('template') with every validation problem
+ * @throws GspotError('template') with every validation error
  */
 export function parseTemplate(text: string, source: string): Template {
     const raw = parseTomlText(text, source, 'template');
@@ -84,8 +84,8 @@ export function parseTemplate(text: string, source: string): Template {
     const unknown = unknownConfigurations(declarations, configurationManifests()).map(
         ({ message: diagnostic }) => diagnostic,
     );
-    const problems = [...shape, ...unknown];
-    if (!result.success || problems.length > 0) throw new GspotError('template', problems);
+    const errors = [...shape, ...unknown];
+    if (!result.success || errors.length > 0) throw new GspotError('template', errors);
     return {
         text,
         digest: contentDigest(text),

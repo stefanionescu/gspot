@@ -8,5 +8,5 @@ export type CiProject = {
     pipelinePath: string;
     workflowPath: string;
 };
-/** A job's fake npm acquisition boundary with explicit success and failure controls. */
+/** A job's fake npm installation boundary with explicit success and failure controls. */
 export type CiInstallation = { refuse: () => Promise<void>; allow: () => Promise<void> };

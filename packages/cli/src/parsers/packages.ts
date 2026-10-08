@@ -22,12 +22,12 @@ import {
     packageInstallerDeclarationSchema,
 } from '#cli/parsers/schema/packages.ts';
 import type {
+    PackageJson,
     DependencyMap,
     ManifestParser,
     PoetrySettings,
     PythonManifest,
     PackageManifest,
-    ProjectManifest,
     PackageInstaller,
     PackageToolProject,
     PackageInstallerDeclaration,
@@ -94,7 +94,7 @@ function pythonDependencies(parsed: PythonManifest): DependencyMap {
     );
 }
 
-function parseRequirements(path: string, text: string): ProjectManifest {
+function parseRequirements(path: string, text: string): PackageManifest {
     const dependencies: DependencyMap = {};
     for (const line of text.replaceAll(/\\\r?\n/gu, '').split(/\r?\n/u)) {
         const comment = line.search(/\s#/u);
@@ -110,14 +110,14 @@ function parseRequirements(path: string, text: string): ProjectManifest {
     };
 }
 
-const readers: Record<string, (path: string, text: string) => ProjectManifest> = {
+const readers: Record<string, (path: string, text: string) => PackageManifest> = {
     'package.json': parsePackageSummary,
     'pyproject.toml': parsePyproject,
     'Package.swift': parseSwiftPackage,
     Pipfile: parsePipfile,
 };
 
-function packageRuntimes(path: string, manifest: PackageManifest): Record<string, string> {
+function packageRuntimes(path: string, manifest: PackageJson): Record<string, string> {
     const runtimes: Record<string, string> = {};
     for (const runtime of JAVASCRIPT_RUNTIMES)
         if (manifest.engines?.[runtime] !== undefined) runtimes[runtime] = `${runtime} in ${path} engines`;
@@ -128,7 +128,7 @@ function packageRuntimes(path: string, manifest: PackageManifest): Record<string
     return runtimes;
 }
 
-function parsePackageSummary(path: string, text: string): ProjectManifest {
+function parsePackageSummary(path: string, text: string): PackageManifest {
     const parsed = parsePackageManifest(text);
     const installed: DependencyMap = { ...parsed.dependencies, ...parsed.devDependencies };
     const dependencies: DependencyMap = {
@@ -145,7 +145,7 @@ function parsePackageSummary(path: string, text: string): ProjectManifest {
     };
 }
 
-function parsePipfile(path: string, text: string): ProjectManifest {
+function parsePipfile(path: string, text: string): PackageManifest {
     const parsed = pipfileSchema.parse(parseToml(text));
     const dependencies: DependencyMap = {};
     for (const [name, value] of Object.entries({ ...parsed.packages, ...parsed['dev-packages'] })) {
@@ -154,7 +154,7 @@ function parsePipfile(path: string, text: string): ProjectManifest {
     return { path, kind: 'Pipfile', dependencies, installed: dependencies };
 }
 
-function parsePyproject(path: string, text: string): ProjectManifest {
+function parsePyproject(path: string, text: string): PackageManifest {
     const parsed = pythonManifestSchema.parse(parseToml(text));
     const dependencies = pythonDependencies(parsed);
     return {
@@ -165,7 +165,7 @@ function parsePyproject(path: string, text: string): ProjectManifest {
     };
 }
 
-function parseSwiftPackage(path: string, text: string): ProjectManifest {
+function parseSwiftPackage(path: string, text: string): PackageManifest {
     const dependencies: DependencyMap = {};
     for (const match of text.matchAll(SWIFT_PACKAGE_URL)) {
         const url = match[1] ?? '';
@@ -213,7 +213,7 @@ export function parsePackageInstaller(value: string): PackageInstaller {
  * @param manifest the validated package manifest
  * @returns packageManager first, then the first devEngines declaration, or no declaration
  */
-export function declaredPackageInstaller(manifest: PackageManifest): PackageInstallerDeclaration | undefined {
+export function declaredPackageInstaller(manifest: PackageJson): PackageInstallerDeclaration | undefined {
     if (manifest.packageManager !== undefined) return packageInstallerDeclaration(manifest.packageManager);
     const engines = manifest.devEngines?.packageManager;
     const entry = Array.isArray(engines) ? engines[0] : engines;
@@ -266,7 +266,7 @@ export function parseBunInstallSettings(text: string): Record<string, unknown> {
  * @param path the source path included in parsing diagnostics, when known
  * @returns fields validated for repository and installed-package consumers
  */
-export function parsePackageManifest(text: string, path?: string): PackageManifest {
+export function parsePackageManifest(text: string, path?: string): PackageJson {
     try {
         const parsed: unknown = JSON.parse(text);
         return packageManifestSchema.parse(parsed);

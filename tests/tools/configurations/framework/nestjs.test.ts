@@ -4,8 +4,8 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import type { Level } from '#cli/types/configurations.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import type { PackageJson } from '#cli/types/parsers/packages.ts';
 import { createTestRepository } from '#tests/harness/repository.ts';
-import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import type { OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import { REPOSITORY, SWAGGER_DEPENDENCY } from '#tests/config/tools/configurations/framework/nestjs.ts';
@@ -17,7 +17,7 @@ async function swaggerContracts(repository: OwnedTestRepository, level: Level): 
     const policyPath = join(root, 'gspot.toml');
     const original = await Bun.file(packagePath).text();
     const policy = await Bun.file(policyPath).text();
-    const manifest = JSON.parse(original) as PackageManifest;
+    const manifest = JSON.parse(original) as PackageJson;
     try {
         const selected = await spawnGspot(root, ['set', 'level', level], environment);
         expect(selected.code, selected.stdout + selected.stderr).toBe(0);

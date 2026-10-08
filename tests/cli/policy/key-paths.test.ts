@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { symlink, readFile } from 'node:fs/promises';
-import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
+import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 
 test.each([
     {
@@ -29,11 +29,11 @@ test.each([
 ])(
     'parseStrictPolicy > semantic errors name the key path of $name and accept its correction',
     ({ text, where, before, after }) => {
-        const found = policyProblems(text);
+        const found = policyFindings(text);
         expect(found).toHaveLength(1);
         expect(found[0]).toStartWith(`gspot.toml: ${where}:`);
         const corrected = before === '' ? text + after : text.replace(before, after);
-        expect(policyProblems(corrected)).toStrictEqual([]);
+        expect(policyFindings(corrected)).toStrictEqual([]);
     },
 );
 test.each([
@@ -76,24 +76,24 @@ test.each([
 ])(
     'parseStrictPolicy > schema errors name the key path of $name and accept its correction',
     ({ name, text, where, correction }) => {
-        const found = policyProblems(text);
+        const found = policyFindings(text);
         expect(found).toHaveLength(1);
         expect(found[0]).toStartWith(`gspot.toml: ${where}`);
         // The quoted key keeps its type message beside the key path.
         expect(name !== 'a quoted key' || found[0]!.includes('expected boolean, received string')).toBe(true);
-        expect(policyProblems(text.replace(correction[0], correction[1]))).toStrictEqual([]);
+        expect(policyFindings(text.replace(correction[0], correction[1]))).toStrictEqual([]);
     },
 );
 test.each(['\n', '\r\n'])(
     'parseStrictPolicy > syntax errors name their location without copying neighboring source with %j lines',
     (newline) => {
         const invalid = ['# private fixture marker', 'configurations = ?', ''].join(newline);
-        const found = policyProblems(invalid);
+        const found = policyFindings(invalid);
         expect(found).toHaveLength(1);
         expect(found[0]).toMatch(/^gspot\.toml:2:\d+ is not valid TOML:/u);
         expect(found[0]).not.toContain('private fixture marker');
         expect(found[0]).not.toContain('\n');
-        expect(policyProblems(invalid.replace('configurations = ?', 'configurations = []'))).toStrictEqual([]);
+        expect(policyFindings(invalid.replace('configurations = ?', 'configurations = []'))).toStrictEqual([]);
     },
 );
 test.each(['linked', 'linked/nested'])(
@@ -103,7 +103,7 @@ test.each(['linked', 'linked/nested'])(
         await createFileTree(sandbox.path, { 'project/.keep': '', 'outside/nested/sentinel': 'unchanged' });
         const root = join(sandbox.path, 'project');
         await symlink('../outside', join(root, 'linked'));
-        const found = policyProblems(`${buildPolicy(['bash'])}[scope."${path}"]\n`, root);
+        const found = policyFindings(`${buildPolicy(['bash'])}[scope."${path}"]\n`, root);
         expect(found).toHaveLength(1);
         expect(found[0]).toContain('Unsafe lifecycle');
         expect(await readFile(join(sandbox.path, 'outside/nested/sentinel'), 'utf8')).toBe('unchanged');
@@ -111,5 +111,5 @@ test.each(['linked', 'linked/nested'])(
 );
 
 test('parseStrictPolicy > invalid TOML is reported as such', () => {
-    expect(policyProblems('level = \n')[0]).toContain('is not valid TOML');
+    expect(policyFindings('level = \n')[0]).toContain('is not valid TOML');
 });

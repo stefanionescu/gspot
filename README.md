@@ -1,8 +1,8 @@
-# ![gspot](docs/public/brand/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/public/brand/readme/banner/dark.svg#gh-dark-mode-only)
+# ![gspot](docs/assets/readme/banner/light.svg#gh-light-mode-only)![gspot](docs/assets/readme/banner/dark.svg#gh-dark-mode-only)
 
-[![npm: unreleased](docs/public/brand/badges/npm.svg)](#install)
-[![Documentation source](docs/public/brand/badges/docs.svg)](docs/src/content/docs/guides/overview.md)
-[![License: Apache-2.0](docs/public/brand/badges/license.svg)](LICENSE.md)
+[![npm: unreleased](docs/assets/readme/badges/npm.svg)](#install)
+[![Documentation source](docs/assets/readme/badges/docs.svg)](docs/src/content/docs/guides/overview.md)
+[![License: Apache-2.0](docs/assets/readme/badges/license.svg)](LICENSE.md)
 
 gspot sets up linters and checks for the languages in your repository. Git hooks and CI run those checks. It also installs instructions for coding agents.
 

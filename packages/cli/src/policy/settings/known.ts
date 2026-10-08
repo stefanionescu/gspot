@@ -19,7 +19,7 @@ function addDefault(surface: KnownSettings, manifest: Manifest, declaration: Set
     const previous = surface.defaults.get(declaration.name);
     const isList = surface.declarations.get(declaration.name)?.type === 'list';
     if (!isList && previous !== undefined && isScalarConflict(previous, manifest, declaration)) {
-        surface.problems.push({
+        surface.errors.push({
             key: declaration.name,
             message: `The configurations \`${previous.configuration}\` and \`${manifest.configuration.name}\` set \`${declaration.name}\` to different values. Set it yourself in gspot.toml to decide.`,
         });
@@ -82,7 +82,7 @@ const rootDeclarations: SettingDeclaration[] = [
  * @returns the declarations, their defaults and the conflicts found on the way
  */
 export function knownSettings(selected: Manifest[], level: Level = 'recommended'): KnownSettings {
-    const surface: KnownSettings = { declarations: new Map(), defaults: new Map(), problems: [] };
+    const surface: KnownSettings = { declarations: new Map(), defaults: new Map(), errors: [] };
     for (const declaration of rootDeclarations) {
         surface.declarations.set(declaration.name, declaration);
         surface.defaults.set(declaration.name, { value: declaration.default, configuration: 'gspot' });

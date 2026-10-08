@@ -28,7 +28,7 @@ describe('the markdown, docs and prose configurations', () => {
         expect((JSON.parse(broken.stdout) as RunReport).checks).toMatchObject([
             { check: 'prose/vale', status: 'error' },
         ]);
-        // Install reacquires the missing dictionaries through the acquisition command in the diagnostic.
+        // Install reacquires the missing dictionaries through the install command in the diagnostic.
         const installed = await spawnGspot(sandbox, ['install'], environment);
         expect(installed.code, installed.stdout + installed.stderr).toBe(0);
         const corrected = await spawnGspot(sandbox, ['check', '--only', 'prose/vale', '--json'], environment);

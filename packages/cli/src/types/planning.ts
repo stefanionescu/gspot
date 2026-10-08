@@ -3,7 +3,7 @@ import type { ReadCache } from '#cli/types/platform/reads.ts';
 import type { allowlistSchema } from '#cli/parsers/schema/licenses.ts';
 import type { PolicyFile, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { Repository, TrackedFile } from '#cli/types/repository/inventory.ts';
-import type { ProjectManifest, PackageInstaller } from '#cli/types/parsers/packages.ts';
+import type { PackageManifest, PackageInstaller } from '#cli/types/parsers/packages.ts';
 import type { ToolPin, Manifest, ParsedCheck, CheckDeclaration } from '#cli/types/configurations.ts';
 
 /** Policy, repository inventory, and selected configurations shared by planning and generation. */
@@ -50,7 +50,7 @@ export type PlanInputs = {
     platform: string;
     narrow: Set<string> | undefined;
     children: string[];
-    projects: ProjectManifest[];
+    projects: PackageManifest[];
 };
 
 export type Stage = ParsedCheck['stage'];

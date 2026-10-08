@@ -32,7 +32,7 @@ function templateAnswers(template: Template): Partial<InitOptions> {
         hooks: tables.hooks?.enabled === true,
         ci: tables.ci === undefined ? 'none' : tables.ci.provider,
         runner: tables.runner ?? 'none',
-        rules: install,
+        agentRules: install,
     });
 }
 
@@ -169,7 +169,7 @@ export function registerInit(program: Program): void {
                         hooks: flags.hooks ? undefined : false,
                         ci: flags.ci === false ? ('none' as const) : flags.ci,
                         runner: flags.task ? undefined : ('none' as const),
-                        rules: flags.rules ? undefined : false,
+                        agentRules: flags.rules ? undefined : false,
                     }),
                 }),
             );

@@ -1,6 +1,6 @@
 import type { Template } from '#cli/types/policy/templates.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { Policy, Mutation } from '#cli/types/policy/settings.ts';
-import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
 import type { Repository, ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 
@@ -18,7 +18,7 @@ export type InitOptions = {
     scopes?: Map<string, string[]>;
     hooks?: boolean;
     ci?: CiChoice;
-    rules?: boolean;
+    agentRules?: boolean;
     runner?: RunnerChoice;
     from?: string;
     template?: Template;
@@ -31,7 +31,7 @@ export type ConfigurationReason = 'named' | 'detected' | 'suggested' | 'required
 export type InitDetection = {
     manifests: Map<string, Manifest>;
     files: TrackedFile[];
-    projectManifests: ProjectManifest[];
+    packageManifests: PackageManifest[];
     options: Pick<InitOptions, 'configurations' | 'scopes' | 'template'>;
     /** Whether the folder is a git repository; a configuration whose checks all read git stays out otherwise. */
     hasGit: boolean;
@@ -51,7 +51,7 @@ export type InitSelection = {
 export type InitInputs = {
     root: string;
     repo: Repository;
-    projectManifests: ProjectManifest[];
+    packageManifests: PackageManifest[];
     workspace: ScopeEntry[];
     manifests: Map<string, Manifest>;
     options: Pick<InitOptions, 'configurations' | 'scopes' | 'template'>;

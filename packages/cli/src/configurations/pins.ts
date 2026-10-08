@@ -2,7 +2,7 @@ import semver from 'semver';
 import { compact } from '#cli/platform/objects.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { MISE_BACKENDS } from '#cli/config/configurations.ts';
-import { manifestError } from '#cli/configurations/problems.ts';
+import { manifestError } from '#cli/configurations/errors.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
 

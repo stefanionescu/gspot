@@ -3,7 +3,7 @@ import { readSource } from '#cli/platform/source.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { parsePackageManifest } from '#cli/parsers/packages.ts';
-import { installedDependencyVersion } from '#cli/repository/manifests.ts';
+import { installedDependencyVersion } from '#cli/repository/package-manifests.ts';
 
 /**
  * Compare installed versions of declared packages that ship together.

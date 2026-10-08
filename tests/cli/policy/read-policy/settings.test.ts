@@ -4,7 +4,7 @@ import { parse, stringify } from 'smol-toml';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { policySchema } from '#cli/policy/schema/policy.ts';
-import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
+import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { readPolicy, readPolicyText, parseStrictPolicy } from '#cli/policy/read.ts';
 
 import {
@@ -29,7 +29,7 @@ test.each(['recommended', 'all'] as const)(
                 level,
                 tables: `${scope}[${prefix}secrets]\nreader_functions = ["config.$env", "read_env"]\nenv_examples = ["example.env"]\n`,
             });
-            expect(policyProblems(source)).toStrictEqual([]);
+            expect(policyFindings(source)).toStrictEqual([]);
         }
     },
 );
@@ -44,7 +44,7 @@ test.each(
     const source = stringify({ configurations: [], ...(entry.scoped ? { scope: { app: values } } : values) });
     const path = entry.scoped ? 'scope.app.reasons.limits.file_lines' : 'reasons.limits.file_lines';
     const diagnostic = `gspot.toml: ${path}: Invalid input: expected string, received ${entry.received}`;
-    expect(policyProblems(source)).toStrictEqual([diagnostic]);
+    expect(policyFindings(source)).toStrictEqual([diagnostic]);
     expect(() => readPolicyText(source)).toThrow(diagnostic);
 });
 
@@ -80,18 +80,18 @@ describe('policy setting refusals', () => {
                 architecture: { roles: { types: ['types/**'], config: ['config/**'] } },
             }),
         );
-        expect(corrected.problems).toStrictEqual([]);
+        expect(corrected.errors).toStrictEqual([]);
         expect(corrected.policy.architecture.roles).toMatchObject({ types: ['types/**'], config: ['config/**'] });
     });
 
     test('an unknown key names its table', () => {
-        const found = policyProblems(`${buildPolicy(['bash'])}[hooks]\npush_files = "all"\npsh = "all"\n`);
+        const found = policyFindings(`${buildPolicy(['bash'])}[hooks]\npush_files = "all"\npsh = "all"\n`);
         expect(found).toHaveLength(1);
         expect(found[0]).toContain('`psh` is not a setting gspot knows under [hooks]');
     });
 
     test('an ignore refuses a single-word reason and accepts a substantive reason', () => {
-        const found = policyProblems(`${buildPolicy(['bash'])}[[ignore]]\ncheck = "bash/shellcheck"\nreason = "N/A"\n`);
+        const found = policyFindings(`${buildPolicy(['bash'])}[[ignore]]\ncheck = "bash/shellcheck"\nreason = "N/A"\n`);
         expect(found).toHaveLength(1);
         expect(found[0]).toContain('needs a reason that says something');
         const corrected = parseStrictPolicy(
@@ -101,7 +101,7 @@ describe('policy setting refusals', () => {
     });
 
     test('a scoped disabled ESLint rule names the accepted-finding command and rule', () => {
-        const found = policyProblems(
+        const found = policyFindings(
             buildPolicy(['javascript'], {
                 tables: '[scope."api"]\n[scope."api".tools.eslint.rules]\n"unicorn/no-null" = "off"\n',
             }),
@@ -114,7 +114,7 @@ describe('policy setting refusals', () => {
 
     test('a verbatim table needs a reason', () => {
         expect(
-            policyProblems(`${buildPolicy(['bash'])}[tools.prettier.verbatim]\nuseTabs = false\nreason = ""\n`)[0],
+            policyFindings(`${buildPolicy(['bash'])}[tools.prettier.verbatim]\nuseTabs = false\nreason = ""\n`)[0],
         ).toContain('[tools.prettier.verbatim] needs an entry in [reasons]');
     });
 });
@@ -124,14 +124,14 @@ describe('authored scope and inventory policy', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'api/a.txt': '', 'api/inner/b.txt': '' });
         const text = `${buildPolicy(['bash'])}[scope."api"]\n[scope."api/inner"]\n[scope."missing"]\n`;
-        expect(policyProblems(text, sandbox.path)).toStrictEqual([]);
+        expect(policyFindings(text, sandbox.path)).toStrictEqual([]);
         expect(Object.keys(parseStrictPolicy(text, sandbox.path).scope)).toStrictEqual(['api', 'api/inner', 'missing']);
         await mkdir(join(sandbox.path, 'missing'));
-        expect(policyProblems(text, sandbox.path)).toStrictEqual([]);
+        expect(policyFindings(text, sandbox.path)).toStrictEqual([]);
     });
 
     test('a vendored declaration needs a reason when required', () => {
-        expect(policyProblems(`${buildPolicy(['bash'])}[[vendored]]\npaths = ["vendor/**"]\n`)[0]).toContain(
+        expect(policyFindings(`${buildPolicy(['bash'])}[[vendored]]\npaths = ["vendor/**"]\n`)[0]).toContain(
             'needs a reason',
         );
     });
@@ -148,9 +148,9 @@ test('refuses an empty correction command', () => {
     paths = ["source.txt"]
     stage = "commit"
     `;
-    expect(policyProblems(`${check}fix = []`)).toHaveLength(1);
-    expect(policyProblems(`${check}fix = []`)[0]).toContain('check.sandbox/fixer.fix');
-    expect(policyProblems(`${check}fix = ["tool"]`)).toStrictEqual([]);
+    expect(policyFindings(`${check}fix = []`)).toHaveLength(1);
+    expect(policyFindings(`${check}fix = []`)[0]).toContain('check.sandbox/fixer.fix');
+    expect(policyFindings(`${check}fix = ["tool"]`)).toStrictEqual([]);
 });
 
 test('schema defaults preserve absent and explicitly authored empty policy tables', () => {
@@ -192,7 +192,7 @@ test('native zero-valued Stylelint options and false Taplo formatting remain act
         reasons: { 'tools.taplo.verbatim': 'This fixture retains a native formatting option.' },
     });
     const result = readPolicyText(source);
-    expect(result.problems).toStrictEqual([]);
+    expect(result.errors).toStrictEqual([]);
     expect(result.policy.tools).toMatchObject({
         stylelint: { rules: { 'max-nesting-depth': 0 } },
         taplo: { verbatim: { reorder_keys: false } },
@@ -208,7 +208,7 @@ test.each(REMOVED_FRAMEWORK_CONTROLS)(
                 tables: `${scope}[${prefix}${table}]\n${key} = true\n`,
             });
             expect(() => parseStrictPolicy(source)).toThrow(diagnostic);
-            expect(policyProblems(source)).toHaveLength(1);
+            expect(policyFindings(source)).toHaveLength(1);
         }
     },
 );
@@ -220,7 +220,7 @@ test('at-rule exceptions use native Stylelint options without a duplicate settin
     const native = buildPolicy(['css'], {
         tables: '[tools.stylelint.rules]\nat-rule-no-unknown = [true, { ignoreAtRules = ["container"] }]\n',
     });
-    expect(policyProblems(native)).toStrictEqual([]);
+    expect(policyFindings(native)).toStrictEqual([]);
 });
 
 test.each(['recommended', 'all'] as const)(

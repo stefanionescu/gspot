@@ -10,9 +10,9 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { toPosix, isInside } from '#cli/platform/paths.ts';
 import { HOOK_PACKAGES } from '#cli/config/repository/hooks.ts';
 import { ROOT_SCOPE } from '#cli/config/repository/inventory.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
-import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { PnpmTool, RushTool, YarnTool, LernaTool } from '@manypkg/tools';
+import { readPackageManifest } from '#cli/repository/package-manifests.ts';
 import { isGlob, isInScope, isToolingPath } from '#cli/repository/selectors.ts';
 import type { ScopeEntry, TrackedFile } from '#cli/types/repository/inventory.ts';
 import { rushProjectsSchema, workspacePatternsSchema } from '#cli/parsers/schema/repository.ts';
@@ -64,19 +64,19 @@ export function buildScope(scope: Omit<ScopeEntry, 'name'>): ScopeEntry {
 /**
  * The scopes initialization proposes from tracked project files, excluding root and lint-only packages.
  * @param files the repository inventory
- * @param projectManifests the parsed project manifests
+ * @param packageManifests the parsed package manifests
  * @param patterns project-file patterns declared by configurations
  * @param npmNames declared npm installer packages
  * @returns project scopes in path order
  */
 export function proposedScopes(
     files: TrackedFile[],
-    projectManifests: ProjectManifest[],
+    packageManifests: PackageManifest[],
     patterns: string[],
     npmNames: ReadonlySet<string>,
 ): ScopeEntry[] {
     const lintOnly = new Set(
-        projectManifests.filter((fact) => isLintOnlyManifest(fact, npmNames)).map((fact) => fact.path),
+        packageManifests.filter((fact) => isLintOnlyManifest(fact, npmNames)).map((fact) => fact.path),
     );
     const folders = new Set<string>();
     const sources = files.filter(
@@ -137,7 +137,7 @@ export function projectFolder(path: string, pattern: string): string | undefined
  * @param npmNames declared npm installer packages
  * @returns whether it holds tooling only
  */
-export function isLintOnlyManifest(projectManifest: ProjectManifest, npmNames: ReadonlySet<string>): boolean {
+export function isLintOnlyManifest(projectManifest: PackageManifest, npmNames: ReadonlySet<string>): boolean {
     if (projectManifest.kind !== 'package.json') return false;
     const names = Object.keys(projectManifest.installed);
     if (names.length === 0) return false;

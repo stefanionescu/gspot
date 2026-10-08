@@ -2,11 +2,11 @@
 import ignore from 'ignore';
 import { readText } from '#cli/platform/source.ts';
 import { coversScope } from '#cli/repository/selectors.ts';
-import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
-import { getProjectDependencies } from '#cli/repository/manifests.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { Policy, ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { ToolPin, CheckDeclaration } from '#cli/types/configurations.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/platform/operating-systems.ts';
+import { getProjectDependencies } from '#cli/repository/package-manifests.ts';
 
 import type {
     Host,
@@ -19,7 +19,7 @@ import type {
 } from '#cli/types/planning.ts';
 
 // Conditions belong to the planned check, so its declaration and scope cannot disagree.
-function conditionSkip(check: PlannedCheck, hasGit: boolean, projects: ProjectManifest[]): Skip {
+function conditionSkip(check: PlannedCheck, hasGit: boolean, projects: PackageManifest[]): Skip {
     const { configuration, git, dependencies } = { ...check.manifest?.configuration.when, ...check.check.when };
     if (configuration !== undefined && !check.scope.view.configurations.includes(configuration))
         return {
@@ -119,7 +119,7 @@ export function skipFor(
     host: Host,
     hasGit: boolean,
     policy: Policy,
-    projects: ProjectManifest[],
+    projects: PackageManifest[],
 ): Skip {
     const selected = selectionStatus(policy, check.scope, check.check);
     if (selected !== undefined) return selected;

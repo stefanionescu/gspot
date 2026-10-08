@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { typescriptNodes } from '#cli/parsers/typescript.ts';
-import type { NextSettingsProblem } from '#cli/types/parsers/nextjs.ts';
+import type { NextSettingsFinding } from '#cli/types/parsers/nextjs.ts';
 import { SECRET_NAME, DISABLED_CHECKS } from '#cli/config/parsers/nextjs.ts';
 
 // Names whose values are computed at runtime cannot establish a configuration option.
@@ -29,11 +29,11 @@ function literalValue(value: ts.Expression): ts.Expression {
  * @param text the source text
  * @returns disabled checks and likely secret keys with one-based source lines
  */
-export function nextSettingsProblems(path: string, text: string): NextSettingsProblem[] {
+export function nextSettingsFindings(path: string, text: string): NextSettingsFinding[] {
     const source = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true);
     return typescriptNodes(source)
         .filter((node) => ts.isPropertyAssignment(node))
-        .flatMap((node): NextSettingsProblem[] => {
+        .flatMap((node): NextSettingsFinding[] => {
             const name = propertyName(node.name);
             if (name === undefined) return [];
             const value = literalValue(node.initializer);
@@ -48,7 +48,7 @@ export function nextSettingsProblems(path: string, text: string): NextSettingsPr
             if (name !== 'env' || !ts.isObjectLiteralExpression(value)) return [];
             return value.properties
                 .filter((property) => ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property))
-                .flatMap((property): NextSettingsProblem[] => {
+                .flatMap((property): NextSettingsFinding[] => {
                     const key = propertyName(property.name);
                     if (key === undefined || !SECRET_NAME.test(key)) return [];
                     return [

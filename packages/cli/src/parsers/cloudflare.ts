@@ -31,11 +31,11 @@ export function parseWrangler(text: string, path: string): WranglerParse {
 }
 
 /**
- * The problems of one headers file: a header line under no path, and an indented line that is no header.
+ * The findings of one headers file: a header line under no path, and an indented line that is no header.
  * @param text the authored asset contents
- * @returns the problems, each with its line
+ * @returns the findings, each with its line
  */
-export function headerProblems(text: string): NumberedLine[] {
+export function headerFindings(text: string): NumberedLine[] {
     const entries = contentLines(text);
     let hasPath = false;
     return entries.flatMap((line) => {
@@ -59,11 +59,11 @@ export function headerProblems(text: string): NumberedLine[] {
 }
 
 /**
- * The problems of one redirects file: each rule is a source, a destination, and an optional status Cloudflare knows.
+ * The findings of one redirects file: each rule is a source, a destination, and an optional status Cloudflare knows.
  * @param text the authored asset contents
- * @returns the problems, each with its line
+ * @returns the findings, each with its line
  */
-export function redirectProblems(text: string): NumberedLine[] {
+export function redirectFindings(text: string): NumberedLine[] {
     const entries = contentLines(text);
     return entries.flatMap((line) => {
         const parts = line.text.trim().split(/\s+/u);

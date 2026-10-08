@@ -4,13 +4,13 @@ import { readAsset } from '#cli/platform/assets.ts';
 import { ruleSections } from '#cli/parsers/markdown.ts';
 import { FRONT_MATTER } from '#cli/config/agent-rules.ts';
 import { isExcluded } from '#cli/policy/errors/selection.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
 import { detectConditions } from '#cli/configurations/detect.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
 import type { RuleFile, AgentRules } from '#cli/types/agent-rules.ts';
 import { configurationFiles } from '#cli/configurations/declarations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { CONFIGURATION_RULES_FOLDER } from '#cli/config/configurations.ts';
+import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import type { Level, Manifest, RuleSource } from '#cli/types/configurations.ts';
 
 // The rules of the selected configurations; a file with a condition installs only when the repository meets it.
@@ -20,7 +20,7 @@ function configurationRules(manifests: Manifest[], repository: Repository): Rule
     const matched = detectConditions(
         conditions,
         repository.files,
-        isRead ? readManifests(repository.root, repository.files) : [],
+        isRead ? readPackageManifests(repository.root, repository.files) : [],
     );
     return manifests.flatMap((manifest) =>
         configurationFiles(manifest).filter((file) => {

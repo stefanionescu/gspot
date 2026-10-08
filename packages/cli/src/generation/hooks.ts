@@ -12,7 +12,7 @@ import { HOOK_ARGS, HOOK_RUNNERS } from '#cli/config/generation/hooks.ts';
 // becomes absolute first, in the Windows spelling under Git for Windows.
 function hookScript(name: HookName, runner: Policy['runner'], prefix: string, version: string): string {
     const program = runner ?? 'gspot';
-    const { acquisition } = HOOK_RUNNERS[program];
+    const { install } = HOOK_RUNNERS[program];
     const quoted = prefix.replaceAll("'", String.raw`'\''`);
     const absolutePath =
         name === 'commit-msg'
@@ -25,7 +25,7 @@ function hookScript(name: HookName, runner: Policy['runner'], prefix: string, ve
     const body = [
         ...absolutePath,
         ...(prefix === '' ? [] : [`cd '${quoted}' || exit 2`]),
-        `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${acquisition}' >&2; exit 2; }`,
+        `command -v ${program} >/dev/null 2>&1 || { echo '${program} is not installed. ${install}' >&2; exit 2; }`,
         `GSPOT_HOOK=${name} exec ${hookLine(name, runner)}`,
         '',
     ].join('\n');

@@ -35,7 +35,7 @@ function explainConfiguration(configurationName: string): Explanation | undefine
         tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
         checks: manifest.checks.map((check) => ({ check: check.name, stage: check.stage })),
         settings: manifest.settings.map((setting) => setting.name),
-        guides: configurationFiles(manifest).map((file) => file.path),
+        agentRules: configurationFiles(manifest).map((file) => file.path),
         auto: manifest.configuration.always_selected,
     };
     const { detect, files } = manifest;
@@ -62,7 +62,7 @@ function explainConfiguration(configurationName: string): Explanation | undefine
             ),
         ),
         ...formatList('Settings', row.settings),
-        ...formatList('Guides', row.guides),
+        ...formatList('Guides', row.agentRules),
     ];
     return { kind: 'configuration', subject: configurationName, text: `${lines.join('\n')}\n`, data: row };
 }

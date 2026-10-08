@@ -10,22 +10,22 @@ import { REASON_WORDS_MIN } from '#cli/config/policy/settings.ts';
 import { pathKey, trimTrailingSlashes } from '#cli/platform/paths.ts';
 import type { SettingDeclaration } from '#cli/types/configurations.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
-import type { Policy, ToolTable, PolicyProblem } from '#cli/types/policy/settings.ts';
+import type { Policy, ToolTable, PolicyError } from '#cli/types/policy/settings.ts';
 
-function located(path: KeyPath, text: string | undefined): PolicyProblem[] {
+function located(path: KeyPath, text: string | undefined): PolicyError[] {
     return text === undefined ? [] : [{ path, message: text }];
 }
 
-function ignoreProblems(policy: Policy): PolicyProblem[] {
-    const problems: PolicyProblem[] = [];
+function ignoreErrors(policy: Policy): PolicyError[] {
+    const errors: PolicyError[] = [];
     for (const [index, entry] of policy.ignore.entries()) {
         const where = `[[ignore]] (${entry.check})`;
-        problems.push(...located(['ignore', index, 'reason'], reasonDiagnostic(where, entry.reason)));
+        errors.push(...located(['ignore', index, 'reason'], reasonDiagnostic(where, entry.reason)));
     }
-    return problems;
+    return errors;
 }
 
-function declarationProblems(policy: Policy): PolicyProblem[] {
+function declarationErrors(policy: Policy): PolicyError[] {
     return ['generated', 'vendored'].flatMap((kind) =>
         policy.declarations
             .filter((entry) => entry.kind === kind)
@@ -36,7 +36,7 @@ function declarationProblems(policy: Policy): PolicyProblem[] {
     );
 }
 
-function namingPathProblems(policy: Policy): PolicyProblem[] {
+function namingPathErrors(policy: Policy): PolicyError[] {
     return everyTable(policy).flatMap(({ table, path }) =>
         (table.naming?.overrides ?? []).flatMap((override, index) =>
             override.allowed === undefined
@@ -49,12 +49,7 @@ function namingPathProblems(policy: Policy): PolicyProblem[] {
     );
 }
 
-function toolReasonProblems(
-    tool: string,
-    table: ToolTable,
-    reason: string | undefined,
-    path: KeyPath,
-): PolicyProblem[] {
+function toolReasonErrors(tool: string, table: ToolTable, reason: string | undefined, path: KeyPath): PolicyError[] {
     if (table.verbatim === undefined || isReasonAccepted(reason)) return [];
     return [
         {
@@ -64,7 +59,7 @@ function toolReasonProblems(
     ];
 }
 
-function disabledRuleProblems(tool: string, table: ToolTable, path: KeyPath): PolicyProblem[] {
+function disabledRuleErrors(tool: string, table: ToolTable, path: KeyPath): PolicyError[] {
     const rules = table['rules'];
     if (!isRecord(rules)) return [];
     const manifests = configurationManifests();
@@ -94,19 +89,19 @@ function disabledRuleProblems(tool: string, table: ToolTable, path: KeyPath): Po
 }
 
 // Duplicate scope declarations after case and Unicode normalization.
-function duplicateScopeProblems(paths: string[]): PolicyProblem[] {
+function duplicateScopeErrors(paths: string[]): PolicyError[] {
     const seen = new Set<string>();
-    const problems: PolicyProblem[] = [];
+    const errors: PolicyError[] = [];
     for (const path of paths) {
         const key = pathKey(trimTrailingSlashes(path));
         if (seen.has(key))
-            problems.push({
+            errors.push({
                 path: ['scope', path],
                 message: `Scope path is declared more than once: ${path}.`,
             });
         seen.add(key);
     }
-    return problems;
+    return errors;
 }
 
 function isThresholdLoosening(direction: 'ceiling' | 'floor', value: unknown, shipped: unknown): boolean {
@@ -123,7 +118,7 @@ function isThresholdLoosening(direction: 'ceiling' | 'floor', value: unknown, sh
  * @param where the policy entry or command needing a reason
  * @param reason the authored explanation, when present
  * @param command an available command that can correct the entry
- * @returns the problem, or undefined when the reason is accepted
+ * @returns the error, or undefined when the reason is accepted
  */
 export function reasonDiagnostic(where: string, reason: string | undefined, command?: string): string | undefined {
     if (reason === undefined)
@@ -136,12 +131,12 @@ export function reasonDiagnostic(where: string, reason: string | undefined, comm
 /**
  * Missing or invalid reasons on ignores, declarations, naming exceptions, and custom tool options.
  * @param policy the normalized policy
- * @returns the problems in plain English
+ * @returns the errors in plain English
  */
-export function reasonProblems(policy: Policy): PolicyProblem[] {
+export function reasonErrors(policy: Policy): PolicyError[] {
     const tools = everyTable(policy).flatMap(({ table: layer, path }) =>
         (layer.tools === undefined ? [] : Object.entries(layer.tools)).flatMap(([tool, table]) =>
-            toolReasonProblems(tool, table, layer.reasons?.[`tools.${tool}.verbatim`], [...path, 'tools', tool]),
+            toolReasonErrors(tool, table, layer.reasons?.[`tools.${tool}.verbatim`], [...path, 'tools', tool]),
         ),
     );
     const words = Object.entries(policy.words).flatMap(([word, reason]) =>
@@ -160,9 +155,9 @@ export function reasonProblems(policy: Policy): PolicyProblem[] {
     return [
         ...modules,
         ...words,
-        ...ignoreProblems(policy),
-        ...declarationProblems(policy),
-        ...namingPathProblems(policy),
+        ...ignoreErrors(policy),
+        ...declarationErrors(policy),
+        ...namingPathErrors(policy),
         ...tools,
     ];
 }
@@ -172,15 +167,15 @@ export function reasonProblems(policy: Policy): PolicyProblem[] {
  * @param policy the normalized policy
  * @returns the prohibited changes, at both check levels
  */
-export function restrictionProblems(policy: Policy): PolicyProblem[] {
+export function restrictionErrors(policy: Policy): PolicyError[] {
     return everyTable(policy).flatMap(({ table: layer, path }) =>
         (layer.tools === undefined ? [] : Object.entries(layer.tools)).flatMap(([tool, table]) => {
             const location = [...path, 'tools', tool];
             const overrides = Array.isArray(table['overrides']) ? table['overrides'] : [];
             return [
-                ...disabledRuleProblems(tool, table, location),
+                ...disabledRuleErrors(tool, table, location),
                 ...overrides.flatMap((override: unknown, index) =>
-                    isRecord(override) ? disabledRuleProblems(tool, override, [...location, 'overrides', index]) : [],
+                    isRecord(override) ? disabledRuleErrors(tool, override, [...location, 'overrides', index]) : [],
                 ),
             ];
         }),
@@ -191,9 +186,9 @@ export function restrictionProblems(policy: Policy): PolicyProblem[] {
  * Refuses file-valued or duplicate scope paths while retaining absent authored projects.
  * @param root the repository root
  * @param policy the normalized policy
- * @returns the problems in plain English
+ * @returns the errors in plain English
  */
-export function pathProblems(root: string, policy: Policy): PolicyProblem[] {
+export function pathErrors(root: string, policy: Policy): PolicyError[] {
     const paths =
         'scope' in policy.authored && policy.authored.scope !== undefined ? Object.keys(policy.authored.scope) : [];
     using files = openRoot(root);
@@ -213,7 +208,7 @@ export function pathProblems(root: string, policy: Policy): PolicyProblem[] {
             return [{ path: location, message: String(error) }];
         }
     });
-    return [...missing, ...duplicateScopeProblems(paths)];
+    return [...missing, ...duplicateScopeErrors(paths)];
 }
 
 /**

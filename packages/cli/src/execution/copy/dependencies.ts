@@ -9,8 +9,8 @@ import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import { isValePackageFile } from '#cli/repository/kind.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
+import { PACKAGE_MANIFESTS } from '#cli/config/execution/copy.ts';
 import { PRIVATE_DIRECTORY } from '#cli/config/platform/modes.ts';
-import { PROJECT_MANIFESTS } from '#cli/config/execution/copy.ts';
 import { join, posix, dirname, resolve, basename } from 'node:path';
 import { DOT_GSPOT, VALE_CONFIG } from '#cli/config/platform/locations.ts';
 import type { DependencyCopy, DependencyFolder } from '#cli/types/execution/copy.ts';
@@ -143,12 +143,12 @@ export async function revisionDependencies(
         const name = basename(entry.path);
         const lockfile = lockfileEntry(name);
         return (
-            PROJECT_MANIFESTS.includes(name) ||
+            PACKAGE_MANIFESTS.includes(name) ||
             name === 'Package.swift' ||
             (lockfile !== undefined && 'snapshot' in lockfile)
         );
     });
-    const projects = inputs.map((entry) => entry.path).filter((path) => PROJECT_MANIFESTS.includes(basename(path)));
+    const projects = inputs.map((entry) => entry.path).filter((path) => PACKAGE_MANIFESTS.includes(basename(path)));
     const directories = getDependencies(installed, projects);
     if (directories.length === 0) return [];
     await assertManifestsUnchanged(root, installed, inputs, cancelSignal);

@@ -28,7 +28,7 @@ export function buildInitOptions(cwd: string, overrides: Partial<InitOptions> = 
         hooks: false,
         runner: 'none',
         ci: 'none',
-        rules: false,
+        agentRules: false,
         ...overrides,
     };
 }

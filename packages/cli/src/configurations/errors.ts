@@ -31,12 +31,12 @@ import type {
 const CHECK_RULES: CheckRule[] = [
     {
         applies: (check) => check.nested_config_file !== undefined && check.cwd !== 'scope',
-        problem: (check) => `check ${check.name} discovers nested configuration and requires cwd = scope.`,
+        error: (check) => `check ${check.name} discovers nested configuration and requires cwd = scope.`,
     },
     {
         applies: (check) =>
             check.path_prefix !== undefined && (check.runs !== 'files' || check.command?.includes('{files}') !== true),
-        problem: (check) =>
+        error: (check) =>
             `check ${check.name} prefixes file arguments and requires runs = "files" with {files} in its command.`,
     },
     {
@@ -46,18 +46,18 @@ const CHECK_RULES: CheckRule[] = [
             const perScope = check.runs === 'scope' && check.command?.includes('{root}') === true;
             return !perFile && !perScope;
         },
-        problem: (check) =>
+        error: (check) =>
             `check ${check.name} isolates files and requires runs = "files" with {files} or runs = "scope" with {root}.`,
     },
     {
         applies: (check) => check.needs !== undefined && check.stage === 'commit',
-        problem: (check) =>
+        error: (check) =>
             `check ${check.name} needs ${check.needs?.join(', ') ?? ''} and cannot run at the commit stage.`,
     },
     {
         applies: ({ stage, needs, runs, command }) =>
             stage === 'manual' && needs === undefined && runs === 'files' && command === undefined,
-        problem: (check) => `check ${check.name} is manual with nothing that makes it slow.`,
+        error: (check) => `check ${check.name} is manual with nothing that makes it slow.`,
     },
 ];
 
@@ -220,7 +220,7 @@ function assertConfigurationConsumers(
             .filter((name) => !checks.has(name))
             .map((name) => `config ${config.target} requires undeclared check ${name}.`),
     );
-    const versionProblems = manifest.checks.flatMap((check) => {
+    const versionErrors = manifest.checks.flatMap((check) => {
         const required = new Set([check.tool ?? check.command?.[0], ...(check.other_tools ?? [])]);
         return (check.min_versions === undefined ? [] : Object.keys(check.min_versions)).flatMap((name) => {
             if (!required.has(name))
@@ -232,8 +232,8 @@ function assertConfigurationConsumers(
             return [];
         });
     });
-    const problems = [...unknownTools, ...unknownChecks, ...versionProblems];
-    if (problems.length > 0) throw manifestError(manifest.configuration.name, problems);
+    const errors = [...unknownTools, ...unknownChecks, ...versionErrors];
+    if (errors.length > 0) throw manifestError(manifest.configuration.name, errors);
 }
 
 // Conditional instructions must name shipped assets before any consumer selects or reads them.
@@ -252,14 +252,11 @@ function assertRuleFiles(manifest: Manifest): void {
 /**
  * The error of a configuration manifest that is not valid.
  * @param configuration the configuration name
- * @param problems the problems in plain English
+ * @param errors the errors in plain English
  * @returns the error to throw
  */
-export function manifestError(configuration: string, problems: string[]): GspotError {
-    return new GspotError('manifest', [
-        `The configuration manifest for \`${configuration}\` is not valid:`,
-        ...problems,
-    ]);
+export function manifestError(configuration: string, errors: string[]): GspotError {
+    return new GspotError('manifest', [`The configuration manifest for \`${configuration}\` is not valid:`, ...errors]);
 }
 
 /**
@@ -267,9 +264,9 @@ export function manifestError(configuration: string, problems: string[]): GspotE
  * @param raw the parsed manifest
  * @returns contradictory declarations and config files without a declared reader
  */
-export function manifestProblems(raw: ParsedManifest): string[] {
+export function manifestErrors(raw: ParsedManifest): string[] {
     const checks = raw.checks.flatMap((check) =>
-        CHECK_RULES.filter((rule) => rule.applies(check)).map((rule) => rule.problem(check)),
+        CHECK_RULES.filter((rule) => rule.applies(check)).map((rule) => rule.error(check)),
     );
     const fragments = raw.configs.flatMap((config) => [
         ...(config.imports !== undefined && !config.fragment

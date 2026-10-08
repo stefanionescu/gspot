@@ -64,7 +64,7 @@ export const TOOL_PROJECT_PACKAGES = [
     },
 ] as const;
 
-/** Native acquisition hints must account for the repository's chosen installation runner. */
+/** Native installation hints must account for the repository's chosen installation runner. */
 export const NATIVE_HINTS = [
     ['swiftlint', 'none'],
     ['swiftlint', 'mise'],

@@ -78,13 +78,13 @@ function getFacts(check: CheckDeclaration, configuration: Found['configuration']
                 setting.name === check.limit || (tool !== undefined && setting.name.startsWith(`tools.${tool}.`)),
         )
         .map((setting) => setting.name);
-    const guides = configuration === undefined ? [] : configurationFiles(configuration).map((file) => file.path);
+    const agentRules = configuration === undefined ? [] : configurationFiles(configuration).map((file) => file.path);
     const crashPattern = check.crash_pattern ?? getToolPin(tool, check)?.crash_pattern;
     return {
         source:
             configuration === undefined ? 'repository command' : `${configuration.configuration.name} configuration`,
         settings,
-        guides,
+        agentRules,
         crashPattern,
         minVersions: check.min_versions,
         versionRequirements: (check.min_versions === undefined ? [] : Object.entries(check.min_versions)).map(
@@ -121,7 +121,7 @@ function describeCheck(
     facts: CheckFacts,
 ): string {
     const { check, configuration } = found;
-    const { source, settings, guides, crashPattern, versionRequirements } = facts;
+    const { source, settings, agentRules, crashPattern, versionRequirements } = facts;
     const lines = [
         `${check.name}  (${source}, ${check.stage} stage, ${check.level} level)`,
         '',
@@ -140,7 +140,7 @@ function describeCheck(
             ? ['Runs with selected files and declared configuration in an isolated directory.']
             : []),
         ...(settings.length === 0 ? [] : [`Settings that change it: ${settings.join(', ')} (gspot set <key> <value>)`]),
-        ...(guides.length === 0 ? [] : [`Guides that state it: ${guides.join(', ')}`]),
+        ...(agentRules.length === 0 ? [] : [`Guides that state it: ${agentRules.join(', ')}`]),
         ...repositoryLines(session, declared, configuration),
     ];
     return `${lines.join('\n')}\n`;
@@ -190,7 +190,7 @@ export function explainCheck(session: ToolSession | undefined, checkName: string
                 path_prefix: check.path_prefix,
             }),
             settings: facts.settings,
-            guides: facts.guides,
+            agentRules: facts.agentRules,
         },
     };
 }

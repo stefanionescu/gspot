@@ -34,7 +34,7 @@ export const packedPackagesSchema = z.array(
  * Pack the run's packages once and record their archive paths and npm metadata.
  * @param work the temporary archive folder
  * @param declarations the package sources to pack
- * @param execute the caller's acquisition command runner
+ * @param execute the caller's install command runner
  * @returns the metadata file shared with installation tests
  */
 export async function packRegistryPackages(
@@ -65,7 +65,7 @@ export async function packRegistryPackages(
 /**
  * Serve the run's workspace archives and any packages required by a credential test.
  * @param work the temporary folder for additional archives
- * @param options additional packages, acquisition, and private-registry credentials
+ * @param options additional packages, installation, and private-registry credentials
  * @returns the local npm registry and ownership of its listen socket
  */
 export async function createPackageRegistry(work: string, options: PackageRegistryOptions): Promise<PackageRegistry> {

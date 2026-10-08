@@ -13,7 +13,7 @@ import type {
     FencedBlock,
     RuleSection,
     FenceSyntaxReader,
-    FenceSyntaxProblem,
+    FenceSyntaxFinding,
 } from '#cli/types/parsers/markdown.ts';
 import {
     PATH_CHARS,
@@ -43,7 +43,7 @@ function getCodeFences(text: string): FencedBlock[] {
     return blocks;
 }
 
-function findJsonSyntaxProblem(body: string, options: ParseOptions): FenceSyntaxProblem | undefined {
+function findJsonSyntaxFinding(body: string, options: ParseOptions): FenceSyntaxFinding | undefined {
     const errors: ParseError[] = [];
     parse(body, errors, options);
     const error = errors[0];
@@ -54,7 +54,7 @@ function findJsonSyntaxProblem(body: string, options: ParseOptions): FenceSyntax
     return { line: body.slice(0, error.offset).split('\n').length, message: `JSON syntax error: ${diagnostic}.` };
 }
 
-function findTomlSyntaxProblem(body: string): FenceSyntaxProblem | undefined {
+function findTomlSyntaxFinding(body: string): FenceSyntaxFinding | undefined {
     try {
         parseToml(body);
         return undefined;
@@ -64,17 +64,17 @@ function findTomlSyntaxProblem(body: string): FenceSyntaxProblem | undefined {
     }
 }
 
-function findYamlSyntaxProblem(body: string): FenceSyntaxProblem | undefined {
+function findYamlSyntaxFinding(body: string): FenceSyntaxFinding | undefined {
     const error = parseAllDocuments(body).flatMap((document) => document.errors)[0];
     if (error === undefined) return undefined;
     return { line: body.slice(0, error.pos[0]).split('\n').length, message: error.message.split('\n', 1).join('') };
 }
 
-async function findTreeSyntaxProblem(
+async function findTreeSyntaxFinding(
     grammar: GrammarName,
     body: string,
     context?: ParseReads,
-): Promise<FenceSyntaxProblem | undefined> {
+): Promise<FenceSyntaxFinding | undefined> {
     const tree = await parseSource(grammar, body, context);
     try {
         if (!tree.rootNode.hasError) return undefined;
@@ -147,7 +147,7 @@ export function ruleSections(text: string): RuleSection[] {
  * @param result the shell's exit status and diagnostic stream.
  * @returns the shell's syntax problem and body line, or undefined after success.
  */
-export function parseBashSyntaxResult(result: Pick<SpawnResult, 'code' | 'stderr'>): FenceSyntaxProblem | undefined {
+export function parseBashSyntaxResult(result: Pick<SpawnResult, 'code' | 'stderr'>): FenceSyntaxFinding | undefined {
     if (result.code === 0) return undefined;
     const detail = result.stderr.trim().split('\n', 1).join('');
     const line = Number(BASH_ERROR_LINE.exec(detail)?.groups?.['line'] ?? '1');
@@ -161,23 +161,23 @@ export function parseBashSyntaxResult(result: Pick<SpawnResult, 'code' | 'stderr
  * @param context the existing run-owned grammar cache, when checking repository files.
  * @returns one syntax problem per invalid example, with aliases sharing the same outcome.
  */
-export async function findFenceSyntaxProblems(
+export async function findFenceSyntaxFindings(
     text: string,
     checkBash: FenceSyntaxReader,
     context?: ParseReads,
-): Promise<FenceSyntaxProblem[]> {
+): Promise<FenceSyntaxFinding[]> {
     const readers: Record<FenceParser, FenceSyntaxReader> = {
-        json: (body) => findJsonSyntaxProblem(body, { disallowComments: true, allowTrailingComma: false }),
-        jsonc: (body) => findJsonSyntaxProblem(body, { allowTrailingComma: true }),
-        toml: findTomlSyntaxProblem,
-        yaml: findYamlSyntaxProblem,
+        json: (body) => findJsonSyntaxFinding(body, { disallowComments: true, allowTrailingComma: false }),
+        jsonc: (body) => findJsonSyntaxFinding(body, { allowTrailingComma: true }),
+        toml: findTomlSyntaxFinding,
+        yaml: findYamlSyntaxFinding,
         bash: checkBash,
-        typescript: (body) => findTreeSyntaxProblem('typescript', body, context),
-        tsx: (body) => findTreeSyntaxProblem('tsx', body, context),
-        javascript: (body) => findTreeSyntaxProblem('javascript', body, context),
-        python: (body) => findTreeSyntaxProblem('python', body, context),
+        typescript: (body) => findTreeSyntaxFinding('typescript', body, context),
+        tsx: (body) => findTreeSyntaxFinding('tsx', body, context),
+        javascript: (body) => findTreeSyntaxFinding('javascript', body, context),
+        python: (body) => findTreeSyntaxFinding('python', body, context),
     };
-    const problems: FenceSyntaxProblem[] = [];
+    const findings: FenceSyntaxFinding[] = [];
     for (const fence of getCodeFences(text)) {
         const parser = FENCE_PARSERS[fence.language];
         if (typeof parser !== 'string' || fence.body.trim() === '') continue;
@@ -190,9 +190,9 @@ export async function findFenceSyntaxProblems(
             .replaceAll(ELLIPSIS_ARGUMENTS, '()')
             .replaceAll(ANGLE_PLACEHOLDER, 'PLACEHOLDER');
         const problem = await readers[parser](body);
-        if (problem !== undefined) problems.push({ ...problem, line: fence.line + problem.line });
+        if (problem !== undefined) findings.push({ ...problem, line: fence.line + problem.line });
     }
-    return problems;
+    return findings;
 }
 
 /**

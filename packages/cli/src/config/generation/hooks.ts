@@ -9,10 +9,10 @@ export const HOOK_ARGS = {
 
 /** Hook commands and the installation needed when their executable is absent. */
 export const HOOK_RUNNERS = {
-    gspot: { command: 'gspot', acquisition: 'Install gspot and add it to PATH, then run: gspot install.' },
-    mise: { command: 'mise exec -- gspot', acquisition: 'Install mise, then run: mise install.' },
-    bun: { command: 'bun run --no-install gspot', acquisition: 'Install Bun, then run: bun install.' },
-    npm: { command: 'npm exec --no -- gspot', acquisition: 'Install Node.js and npm, then run: npm install.' },
-    pnpm: { command: 'pnpm exec gspot', acquisition: 'Install pnpm, then run: pnpm install.' },
-    yarn: { command: 'yarn exec gspot', acquisition: 'Install Yarn, then run: yarn install.' },
+    gspot: { command: 'gspot', install: 'Install gspot and add it to PATH, then run: gspot install.' },
+    mise: { command: 'mise exec -- gspot', install: 'Install mise, then run: mise install.' },
+    bun: { command: 'bun run --no-install gspot', install: 'Install Bun, then run: bun install.' },
+    npm: { command: 'npm exec --no -- gspot', install: 'Install Node.js and npm, then run: npm install.' },
+    pnpm: { command: 'pnpm exec gspot', install: 'Install pnpm, then run: pnpm install.' },
+    yarn: { command: 'yarn exec gspot', install: 'Install Yarn, then run: yarn install.' },
 } satisfies Record<NonNullable<Policy['runner']> | 'gspot', HookRunner>;

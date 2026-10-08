@@ -3,16 +3,16 @@ import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { readRepository } from '#cli/repository/read.ts';
 import { npmToolNames } from '#cli/configurations/pins.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
-import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { PYTHON_PROJECT_FILES } from '#tests/config/samples/python.ts';
 import { rm, mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import { INVALID_WORKSPACE_CASES } from '#tests/config/cli/repository/scopes.ts';
 import { scopeOf, proposedScopes, packageWorkspaces } from '#cli/repository/scopes.ts';
 
-function proposeProjectScopes(files: TrackedFile[], manifests: ProjectManifest[]) {
+function proposeProjectScopes(files: TrackedFile[], manifests: PackageManifest[]) {
     const configurations = configurationManifests();
     return proposedScopes(
         files,
@@ -43,7 +43,7 @@ test.each([
         'packages/api',
         'packages/lint',
     ]);
-    const scopes = proposeProjectScopes(repository.files, readManifests(sandbox.path, repository.files));
+    const scopes = proposeProjectScopes(repository.files, readPackageManifests(sandbox.path, repository.files));
     expect(scopes.map((scope) => scope.path)).toStrictEqual(['packages/api']);
 });
 
@@ -118,7 +118,7 @@ test('broad workspace patterns ignore private environments containing external i
     const repository = await readRepository(root, [], [], []);
     expect(packageWorkspaces(root)).toStrictEqual(['packages/app']);
     expect(
-        proposeProjectScopes(repository.files, readManifests(root, repository.files)).map((scope) => scope.path),
+        proposeProjectScopes(repository.files, readPackageManifests(root, repository.files)).map((scope) => scope.path),
     ).toStrictEqual(['packages/app']);
 });
 
@@ -147,8 +147,8 @@ test('every folder that holds a project file is a scope, the root and lint-only 
         'apps/web/supabase/config.toml': 'project_id = "web"\n',
     });
     const repository = await readRepository(sandbox.path, [], [], []);
-    const projectManifests = readManifests(sandbox.path, repository.files);
-    const found = proposeProjectScopes(repository.files, projectManifests);
+    const packageManifests = readPackageManifests(sandbox.path, repository.files);
+    const found = proposeProjectScopes(repository.files, packageManifests);
     expect(found.map((scope) => [scope.path, scope.source])).toStrictEqual([
         ['api', 'project'],
         ['apps/web', 'project'],
@@ -204,7 +204,7 @@ test('scope discovery excludes declared npm tools and hook managers without hidi
         'packages/process',
     ]);
     expect(
-        proposeProjectScopes(repository.files, readManifests(sandbox.path, repository.files)).map(
+        proposeProjectScopes(repository.files, readPackageManifests(sandbox.path, repository.files)).map(
             (scope) => scope.path,
         ),
     ).toStrictEqual(['packages/custom', 'packages/process']);
@@ -214,7 +214,9 @@ test('scope discovery excludes declared npm tools and hook managers without hidi
     );
     const corrected = await readRepository(sandbox.path, [], [], []);
     expect(
-        proposeProjectScopes(corrected.files, readManifests(sandbox.path, corrected.files)).map((scope) => scope.path),
+        proposeProjectScopes(corrected.files, readPackageManifests(sandbox.path, corrected.files)).map(
+            (scope) => scope.path,
+        ),
     ).toStrictEqual(['packages/custom', 'packages/next', 'packages/process']);
 });
 
@@ -222,7 +224,7 @@ test('Python scopes use captured project files and omit workspace-only members a
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, PYTHON_PROJECT_FILES);
     const repository = await readRepository(sandbox.path, [], [], []);
-    const projectManifests = readManifests(sandbox.path, repository.files);
+    const packageManifests = readPackageManifests(sandbox.path, repository.files);
     await writeFile(join(sandbox.path, 'pyproject.toml'), '[invalid');
-    expect(proposeProjectScopes(repository.files, projectManifests).map((scope) => scope.path)).toStrictEqual(['api']);
+    expect(proposeProjectScopes(repository.files, packageManifests).map((scope) => scope.path)).toStrictEqual(['api']);
 });

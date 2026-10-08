@@ -52,7 +52,7 @@ export type PolicyDraft = {
     scopes: ScopeEntry[];
     hooks: boolean;
     ci: CiChoice;
-    rules: boolean;
+    agentRules: boolean;
     runner: RunnerChoice;
     commitScopes?: string[];
 };
@@ -61,7 +61,7 @@ export type PolicyDraft = {
 export type InitAnswers = {
     hooks: boolean;
     ci: CiChoice;
-    rules: boolean;
+    agentRules: boolean;
     runner: RunnerChoice;
 };
 

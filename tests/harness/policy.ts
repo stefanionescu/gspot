@@ -22,12 +22,12 @@ export function buildPolicy(configurations: string[], options: PolicyOptions = {
  * @param root the repository the policy describes, when a problem depends on the tree
  * @returns the problem messages
  */
-export function policyProblems(text: string, root?: string): string[] {
+export function policyFindings(text: string, root?: string): string[] {
     try {
         parseStrictPolicy(text, root);
         return [];
     } catch (error) {
-        if (error instanceof GspotError && error.code === 'policy') return error.problems;
+        if (error instanceof GspotError && error.code === 'policy') return error.errors;
         throw error;
     }
 }

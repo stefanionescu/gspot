@@ -8,8 +8,8 @@ import { allChecks } from '#cli/configurations/declarations.ts';
 import { readAsset, listAssets } from '#cli/platform/assets.ts';
 import { NAMING_TERMS_FILE } from '#cli/config/configurations.ts';
 import { shippedNamingSchema } from '#cli/parsers/schema/naming.ts';
+import { manifestError, manifestErrors } from '#cli/configurations/errors.ts';
 import { manifestSchema } from '#cli/parsers/schema/configurations/manifest.ts';
-import { manifestError, manifestProblems } from '#cli/configurations/problems.ts';
 import type { Manifest, ManifestCache, CheckDeclaration } from '#cli/types/configurations.ts';
 
 function issueLines(issue: z.core.$ZodIssue): string[] {
@@ -75,8 +75,8 @@ export function parseManifest(text: string, dir: string): Manifest {
         ...declared,
         checks: declared.checks.map((check) => ({ ...check, name: `${declared.configuration.name}/${check.name}` })),
     };
-    const problems = manifestProblems(raw);
-    if (problems.length > 0) throw manifestError(raw.configuration.name, problems);
+    const errors = manifestErrors(raw);
+    if (errors.length > 0) throw manifestError(raw.configuration.name, errors);
     return {
         ...raw,
         checks: raw.checks.map((check) => compact(check)),

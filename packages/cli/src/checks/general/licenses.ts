@@ -43,7 +43,7 @@ function isAllowed(license: string, allow: Set<string>): boolean {
     return satisfies(license, [...allow]);
 }
 
-function licenseProblem(name: string, license: string, exception: LicenseException | undefined): string | undefined {
+function licenseMessage(name: string, license: string, exception: LicenseException | undefined): string | undefined {
     if (exception === undefined) return `${name} reports ${license}, which is not an allowed license.`;
     if (exception.license === license) return undefined;
     return `${name} reports ${license}, and its exception names ${exception.license}; the exception no longer holds.`;
@@ -168,7 +168,7 @@ export async function licensesPackages(input: CheckInput): Promise<Finding[]> {
         return packages.flatMap(({ name, license }) => {
             const exception = exceptions.get(packageKey(name));
             if (exception === undefined && isAllowed(license, allow)) return [];
-            const text = licenseProblem(name, license, exception);
+            const text = licenseMessage(name, license, exception);
             return text === undefined
                 ? []
                 : [findingAt(input, { file: manifest, line: 1 }, 'disallowed-license', text)];

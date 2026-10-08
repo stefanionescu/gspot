@@ -5,8 +5,8 @@ import type { Session } from '#cli/types/planning.ts';
 import { npmToolNames } from '#cli/configurations/pins.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { selectForInit } from '#cli/lifecycle/selection.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
 import type { Policy, Mutation } from '#cli/types/policy/settings.ts';
+import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import type { InitSelection, ConfigurationMerge, ConfigurationReconciliation } from '#cli/types/lifecycle/selection.ts';
 
 function mergeConfigurationChoices({ saved, found, removed }: ConfigurationMerge): string[] {
@@ -64,10 +64,10 @@ function configurationMutation(policy: Policy, rootIds: string[], scopeIds: Map<
  */
 export function reconcileConfigurations(session: Session): ConfigurationReconciliation {
     const { root, repository: repo, manifests } = session;
-    const projectManifests = readManifests(root, repo.files);
+    const packageManifests = readPackageManifests(root, repo.files);
     const discovered = proposedScopes(
         repo.files,
-        projectManifests,
+        packageManifests,
         [...manifests.values()].flatMap((manifest) => manifest.detect.project_files),
         npmToolNames(manifests.values()),
     );
@@ -77,7 +77,7 @@ export function reconcileConfigurations(session: Session): ConfigurationReconcil
     const detected = selectForInit({
         root,
         repo,
-        projectManifests,
+        packageManifests,
         manifests,
         workspace: [...workspace.values()],
         options: {},

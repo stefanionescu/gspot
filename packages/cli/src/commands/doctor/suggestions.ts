@@ -6,7 +6,6 @@ import { getLintJobs } from '#cli/repository/survey.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import { getTooling } from '#cli/configurations/takeover.ts';
 import { hasHeader } from '#cli/parsers/generated-header.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import { HEADER_BYTES } from '#cli/config/commands/doctor.ts';
 import { everyManifest } from '#cli/configurations/select.ts';
@@ -15,6 +14,7 @@ import type { Generated } from '#cli/types/generation/output.ts';
 import { detectUnselected } from '#cli/configurations/detect.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { Tooling, ToolFile } from '#cli/types/repository/inventory.ts';
+import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import type { Suggestions, SuggestionRow } from '#cli/types/commands/doctor.ts';
 
 function suggestedConfigurations(session: Session, selected: Set<string>): Suggestions['suggested'] {
@@ -103,9 +103,9 @@ function getUnownedOutputs(session: Session): SuggestionRow[] {
  * @returns detected and suggested configurations, unowned config files, authored lint jobs, and duplicate pins
  */
 export function getSuggestions(session: Session): Suggestions {
-    const projectManifests = readManifests(session.root, session.repository.files);
+    const packageManifests = readPackageManifests(session.root, session.repository.files);
     const selected = new Set(everyManifest(session.scopes).map((manifest) => manifest.configuration.name));
-    const tooling = getTooling(session.root, session.repository.files, projectManifests);
+    const tooling = getTooling(session.root, session.repository.files, packageManifests);
     const generated = emitAll(session);
     const tools = new Set(applicableManifests(session).flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     const workflows = new Set(generated.files.filter((file) => file.kind === 'workflow').map((file) => file.path));

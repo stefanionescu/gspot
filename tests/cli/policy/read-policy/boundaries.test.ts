@@ -2,7 +2,7 @@ import { stringify } from 'smol-toml';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { textContaining } from '#tests/harness/expectations.ts';
-import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
+import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { readPolicyText, parseStrictPolicy } from '#cli/policy/read.ts';
 import { UNSAFE_DIRECTORIES } from '#tests/config/cli/policy/boundaries.ts';
 
@@ -17,9 +17,9 @@ describe('configuration directory boundaries', () => {
         ),
     )('%s refuses escaping directory %j before filesystem discovery', (table, path) => {
         const text = stringify(table === 'scope' ? { scope: { [path]: {} } } : { agent_rules: { folder: path } });
-        const problems = policyProblems(text);
-        expect(problems.join('\n')).toContain(table === 'scope' ? `scope.${path}` : 'agent_rules.folder');
-        expect(problems.join('\n')).toContain('Use a relative path');
+        const errors = policyFindings(text);
+        expect(errors.join('\n')).toContain(table === 'scope' ? `scope.${path}` : 'agent_rules.folder');
+        expect(errors.join('\n')).toContain('Use a relative path');
     });
 
     test('accepts relative directories containing spaces, percent signs, and Unicode', async () => {
@@ -47,14 +47,14 @@ test.each([
         message: 'gspot.toml: `rulez` is not a setting gspot knows under [tools.eslint.overrides.0]',
     },
 ])('invalid ESLint override names its refusal: $message', ({ source, message: diagnostic }) => {
-    const problems = policyProblems(buildPolicy(['javascript'], { tables: `[[tools.eslint.overrides]]\n${source}\n` }));
-    expect(problems).toContainEqual(textContaining(diagnostic));
+    const errors = policyFindings(buildPolicy(['javascript'], { tables: `[[tools.eslint.overrides]]\n${source}\n` }));
+    expect(errors).toContainEqual(textContaining(diagnostic));
 });
 
 test.each(["author's name", '$(printf injected); *'])(
     'an existing naming entry %j asks for a reason on that entry',
     (name) => {
-        const found = policyProblems(stringify({ configurations: ['naming'], naming: { allowed: { [name]: '' } } }));
+        const found = policyFindings(stringify({ configurations: ['naming'], naming: { allowed: { [name]: '' } } }));
         expect(found).toHaveLength(1);
         expect(found[0]).toContain(name);
         expect(found[0]).toContain('reason');
@@ -84,7 +84,7 @@ test.each([false, true])(
 );
 
 test.each(UNSAFE_DIRECTORIES)('authored agent rules refuse an escaping project folder %j', (path) => {
-    const found = policyProblems(stringify({ agent_rules: { own_rules_folder: path } }));
+    const found = policyFindings(stringify({ agent_rules: { own_rules_folder: path } }));
     expect(found).toContainEqual(textContaining('agent_rules.own_rules_folder'));
     expect(found).toContainEqual(textContaining('Use a relative path'));
 });

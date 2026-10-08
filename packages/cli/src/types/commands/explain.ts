@@ -34,7 +34,7 @@ export type ConfigurationExplanation = {
     tools: string[];
     checks: { check: string; stage: string }[];
     settings: string[];
-    guides: string[];
+    agentRules: string[];
     auto: boolean;
 };
 
@@ -43,7 +43,7 @@ export type Found = OwnedCheck | { check: RepositoryDefinition; configuration: u
 export type CheckFacts = {
     source: string;
     settings: string[];
-    guides: string[];
+    agentRules: string[];
     crashPattern: string | undefined;
     minVersions: Record<string, string> | undefined;
     versionRequirements: string[];

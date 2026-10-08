@@ -4,8 +4,8 @@ import { join, relative } from 'node:path';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
-import { installedPackage } from '#cli/repository/manifests.ts';
 import { parseVersionOutput } from '#cli/parsers/tool/version.ts';
+import { installedPackage } from '#cli/repository/package-manifests.ts';
 import { misePin, toolProjectPackage } from '#cli/configurations/pins.ts';
 import type { ParsedToolVersion } from '#cli/types/parsers/tool-version.ts';
 import { HOST_HINTS, VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
@@ -198,7 +198,7 @@ function isBelowFloor(found: string, floor: string): boolean {
     return version !== null && lowest !== null && semver.lt(version, lowest);
 }
 
-// A missing executable or outdated version needs the acquisition command recorded by its inspection.
+// A missing executable or outdated version needs the install command recorded by its inspection.
 function unavailableNote(tool: ToolPin, inspection: ToolInspection): string {
     const hint = inspection.hint ?? installHint(tool);
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
@@ -257,7 +257,7 @@ export function isToolAvailable(inspection: ToolInspection): inspection is Avail
 /**
  * Resolve a usable executable or an actionable inspection failure.
  * @param tool the selected pin
- * @param inspection the resolved path, version, and acquisition details
+ * @param inspection the resolved path, version, and installation details
  * @returns the executable path or its unavailable status and diagnostic
  */
 export function toolAvailability(tool: ToolPin, inspection: ToolInspection): ToolAvailability {

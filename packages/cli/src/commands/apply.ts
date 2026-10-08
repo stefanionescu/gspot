@@ -108,7 +108,7 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
         policy: proposal.policy,
         text: proposal.text,
         path: join(root, POLICY_FILE),
-        problems: [],
+        errors: [],
     });
     if (log === undefined) {
         const result = previewApply(session, proposal.text, reconciliation.notes);

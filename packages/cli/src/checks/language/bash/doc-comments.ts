@@ -34,7 +34,7 @@ function isMeaningful(name: string, summary: string): boolean {
     return words.some((word) => !nameWords.has(word));
 }
 
-function docProblem(entry: ScriptFunction, block: string[]): Required<Pick<Finding, 'rule' | 'message'>> | undefined {
+function docFinding(entry: ScriptFunction, block: string[]): Required<Pick<Finding, 'rule' | 'message'>> | undefined {
     const first = block[0];
     if (first === undefined)
         return {
@@ -68,7 +68,7 @@ export const docComments: BuiltInCheck = async (input) => {
     return index.files.flatMap((file) => {
         return file.functions.flatMap((entry) => {
             if (ENTRY_FUNCTIONS.includes(entry.name)) return [];
-            const found = docProblem(entry, blockAbove(file.lines, entry.start));
+            const found = docFinding(entry, blockAbove(file.lines, entry.start));
             return found === undefined
                 ? []
                 : [findingAt(input, { file: file.path, line: entry.start }, found.rule, found.message)];

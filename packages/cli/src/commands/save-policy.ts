@@ -59,7 +59,7 @@ export async function savePolicy(root: string, options: SavePolicyOptions): Prom
         policy: result.policy,
         text: result.text,
         path: join(root, POLICY_FILE),
-        problems: [],
+        errors: [],
     });
     let generated;
     try {

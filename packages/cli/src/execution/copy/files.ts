@@ -20,7 +20,7 @@ import {
     WRITE_BATCH,
     CLONE_OPTIONS,
     SCRATCH_EXTRAS,
-    PROJECT_MANIFESTS,
+    PACKAGE_MANIFESTS,
     SCRATCH_DIRECTORIES,
 } from '#cli/config/execution/copy.ts';
 import type {
@@ -197,7 +197,7 @@ export async function copyIntoScratch(input: ScratchSource | CheckInput, extra: 
  */
 export function projectCopyInputs(root: string, paths: string[], scopes: string[]): ScratchSource {
     const projects = paths.flatMap((path) =>
-        PROJECT_MANIFESTS.includes(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
+        PACKAGE_MANIFESTS.includes(posix.basename(path)) && posix.basename(posix.dirname(path)) !== DOT_GSPOT
             ? [posix.dirname(path)]
             : [],
     );

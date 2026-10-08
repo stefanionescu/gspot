@@ -18,12 +18,12 @@ export type PackageInstallerIdentity = z.infer<typeof packageInstallerIdentitySc
 /** A validated manager name with the exact version or range as authored. */
 export type PackageInstallerDeclaration = z.infer<typeof packageInstallerDeclarationSchema>;
 
-export type PackageManifest = z.infer<typeof packageManifestSchema>;
+export type PackageJson = z.infer<typeof packageManifestSchema>;
 
 export type DependencyMap = Record<string, string>;
 
 /** Dependencies and runtime evidence from one supported project manifest. */
-export type ProjectManifest = {
+export type PackageManifest = {
     path: string;
     kind: 'package.json' | 'pyproject.toml' | 'Package.swift' | 'Pipfile' | 'requirements.txt';
     dependencies: DependencyMap;
@@ -32,7 +32,7 @@ export type ProjectManifest = {
 };
 
 /** Pure parser selected by a supported repository manifest name. */
-export type ManifestParser = (text: string) => ProjectManifest;
+export type ManifestParser = (text: string) => PackageManifest;
 
 export type PythonManifest = z.infer<typeof pythonManifestSchema>;
 

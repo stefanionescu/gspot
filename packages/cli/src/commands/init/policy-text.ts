@@ -78,7 +78,7 @@ function applyIntegrations(document: TomlTable, draft: PolicyDraft): void {
     }
     if (draft.hooks) setKey(document, 'hooks.enabled', true);
     if (draft.ci !== 'none') setKey(document, 'ci.provider', draft.ci);
-    setKey(document, 'agent_rules.enabled', draft.rules);
+    setKey(document, 'agent_rules.enabled', draft.agentRules);
     if (draft.runner === 'none') delete document['runner'];
     else document['runner'] = draft.runner;
 }
@@ -103,7 +103,7 @@ export function draftPolicy(selection: InitSelection, answers: InitAnswers): Pol
         })),
         hooks: answers.hooks,
         ci: answers.ci,
-        rules: answers.rules,
+        agentRules: answers.agentRules,
         runner: answers.runner,
         ...(commitScopes === undefined ? {} : { commitScopes }),
     };

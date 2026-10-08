@@ -12,7 +12,6 @@ import { npmToolNames } from '#cli/configurations/pins.ts';
 import { proposedScopes } from '#cli/repository/scopes.ts';
 import { selectForInit } from '#cli/lifecycle/selection.ts';
 import { getTooling } from '#cli/configurations/takeover.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
 import { planTakeover } from '#cli/commands/init/takeover.ts';
 import { askQuestions } from '#cli/commands/init/questions.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
@@ -21,6 +20,7 @@ import type { Tooling } from '#cli/types/repository/inventory.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { Planning, InitPrepared } from '#cli/types/commands/init.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
+import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import { draftPolicy, proposeText } from '#cli/commands/init/policy-text.ts';
 import type { InitInputs, InitOptions, InitSelection } from '#cli/types/lifecycle/selection.ts';
 
@@ -72,16 +72,16 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const manifests = configurationManifests();
     const repo = await readRepository(root, [], [], []);
     if (repo.hasGit) assertCleanTree(root, options);
-    const projectManifests = readManifests(root, repo.files);
+    const packageManifests = readPackageManifests(root, repo.files);
     const workspace = proposedScopes(
         repo.files,
-        projectManifests,
+        packageManifests,
         [...manifests.values()].flatMap((manifest) => manifest.detect.project_files),
         npmToolNames(manifests.values()),
     );
-    const inputs = { root, repo, projectManifests, workspace, manifests };
+    const inputs = { root, repo, packageManifests, workspace, manifests };
     const selection = selectForInit({ ...inputs, options });
-    const tooling = getTooling(root, repo.files, projectManifests);
+    const tooling = getTooling(root, repo.files, packageManifests);
     const answers = await askQuestions(root, options, tooling);
     const everySelected = [...selection.selectedIds]
         .map((id) => manifests.get(id))
@@ -89,7 +89,7 @@ export async function prepare(root: string, options: InitOptions): Promise<InitP
     const draft = draftPolicy(selection, answers);
     const policyText = proposeText({ ...draft, ...compact({ template: options.template }) }, repo, manifests);
     const policy = parseStrictPolicy(policyText, root);
-    const session = await openSession(root, { policy, text: policyText, path: POLICY_FILE, problems: [] });
+    const session = await openSession(root, { policy, text: policyText, path: POLICY_FILE, errors: [] });
     const applicable = applicableManifests(session);
     const tools = new Set(applicable.flatMap((manifest) => manifest.tools.map((tool) => tool.name)));
     printDetection(inputs, selection, tooling, tools);

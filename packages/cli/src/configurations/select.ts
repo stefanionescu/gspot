@@ -1,6 +1,6 @@
 import { GspotError } from '#cli/platform/errors.ts';
 import { isInScope, byScopeDepth } from '#cli/repository/selectors.ts';
-import { unknownConfigurationDiagnostic } from '#cli/configurations/problems.ts';
+import { unknownConfigurationDiagnostic } from '#cli/configurations/errors.ts';
 
 import type {
     Manifest,
@@ -15,7 +15,7 @@ function visit(walk: SelectionWalk, configurationName: string): void {
     if (walk.seen.has(configurationName)) return;
     if (walk.visiting.includes(configurationName)) {
         const chain = [...walk.visiting.slice(walk.visiting.indexOf(configurationName)), configurationName];
-        walk.problems.push(
+        walk.errors.push(
             `The configurations require each other in a circle: ${chain.join(' -> ')}. This is a bug in a configuration manifest.`,
         );
         return;
@@ -23,7 +23,7 @@ function visit(walk: SelectionWalk, configurationName: string): void {
     const manifest = walk.manifests.get(configurationName);
     if (!manifest) {
         const known = walk.manifests.keys().toArray();
-        walk.problems.push(unknownConfigurationDiagnostic(configurationName, known));
+        walk.errors.push(unknownConfigurationDiagnostic(configurationName, known));
         walk.seen.add(configurationName);
         return;
     }
@@ -63,10 +63,10 @@ export function requireChain(target: string, from: string, manifests: Map<string
  * @returns the manifests, requirements first, in order of first mention.
  */
 export function selectConfigurations(configurationNames: string[], manifests: Map<string, Manifest>): Manifest[] {
-    const walk: SelectionWalk = { manifests, problems: [], order: [], seen: new Set(), visiting: [] };
+    const walk: SelectionWalk = { manifests, errors: [], order: [], seen: new Set(), visiting: [] };
     for (const configurationName of configurationNames) visit(walk, configurationName);
-    const { problems } = walk;
-    if (problems.length > 0) throw new GspotError('selection', [...new Set(problems)]);
+    const { errors } = walk;
+    if (errors.length > 0) throw new GspotError('selection', [...new Set(errors)]);
     return walk.order;
 }
 

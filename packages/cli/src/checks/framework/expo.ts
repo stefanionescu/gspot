@@ -6,7 +6,7 @@ import { parseExpoDoctor } from '#cli/parsers/expo.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
+import { readPackageManifest } from '#cli/repository/package-manifests.ts';
 
 function hasInstalledExpo(scopeRoot: string): boolean {
     try {

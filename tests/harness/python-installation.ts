@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { createFileTree } from 'testdirs';
 import { compact } from '#cli/platform/objects.ts';
+import { installUv } from '#cli/tools/python/uv.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { missingBuild } from '#cli/planning/skips.ts';
@@ -15,7 +16,6 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { applyPlan } from '#cli/lifecycle/ownership/commit.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { acquirePythonInstaller } from '#cli/tools/python/uv.ts';
 import { pythonToolProject } from '#cli/tools/python/project.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/platform/modes.ts';
 import { emitAll, gitignoreBlock } from '#cli/generation/outputs.ts';
@@ -63,7 +63,7 @@ export async function installSuitePythonTools(root: string, cancelSignal: AbortS
             tools: manifest.tools.filter((tool) => missingBuild(tool, hostPlatform(), process.arch) === undefined),
         })),
     );
-    const executable = await acquirePythonInstaller(root, undefined, cancelSignal);
+    const executable = await installUv(root, undefined, cancelSignal);
     using log = openOwnership(root);
     await prepareToolProjects(
         { root, pythonInstaller: () => Promise.resolve(executable), cancelSignal },

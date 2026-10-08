@@ -23,7 +23,7 @@ async function readScopeViews(): Promise<ScopeSelection[]> {
         'web/entry.sh': 'echo web\n',
     });
     const session = await openSession(sandbox.path);
-    expect(session.policyFiles.problems).toStrictEqual([]);
+    expect(session.policyFiles.errors).toStrictEqual([]);
     return session.scopes;
 }
 

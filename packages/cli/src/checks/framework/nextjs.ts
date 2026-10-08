@@ -6,7 +6,7 @@ import { checkInput } from '#cli/execution/built-in.ts';
 import { tsc } from '#cli/checks/language/typescript.ts';
 import type { PlannedCheck } from '#cli/types/planning.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import { nextSettingsProblems } from '#cli/parsers/nextjs.ts';
+import { nextSettingsFindings } from '#cli/parsers/nextjs.ts';
 import { parseNextBuildFlags } from '#cli/parsers/command.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import { copyIntoScratch } from '#cli/execution/copy/files.ts';
@@ -75,7 +75,7 @@ export function nextConfiguration(input: CheckInput): Finding[] {
         .filter((path) => NEXT_CONFIG.test(path))
         .flatMap((path) => {
             const text = readSource(input.root, path, input.reads).toString('utf8');
-            return nextSettingsProblems(path, text).map(({ name, line, kind }) =>
+            return nextSettingsFindings(path, text).map(({ name, line, kind }) =>
                 findingAt(
                     input,
                     { file: path, line },

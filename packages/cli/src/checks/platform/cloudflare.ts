@@ -8,7 +8,7 @@ import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
 import { toolOutputDetail } from '#cli/execution/command/failures.ts';
 import { COMPATIBILITY_DATE } from '#cli/config/checks/platform/cloudflare.ts';
-import { parseWrangler, headerProblems, redirectProblems } from '#cli/parsers/cloudflare.ts';
+import { parseWrangler, headerFindings, redirectFindings } from '#cli/parsers/cloudflare.ts';
 
 function scopePathsNamed(input: CheckInput, name: string): string[] {
     return input.files.map((file) => file.path).filter((path) => path === name || path.endsWith(`/${name}`));
@@ -39,7 +39,7 @@ async function isStale(input: CheckInput, path: string): Promise<boolean> {
  */
 export function redirects(input: CheckInput): Finding[] {
     return scopePathsNamed(input, '_redirects').flatMap((path) =>
-        redirectProblems(readSource(input.root, path, input.reads).toString('utf8')).map((entry) =>
+        redirectFindings(readSource(input.root, path, input.reads).toString('utf8')).map((entry) =>
             findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
     );
@@ -81,7 +81,7 @@ export function wrangler(input: CheckInput): Finding[] {
  */
 export function headers(input: CheckInput): Finding[] {
     return scopePathsNamed(input, '_headers').flatMap((path) =>
-        headerProblems(readSource(input.root, path, input.reads).toString('utf8')).map((entry) =>
+        headerFindings(readSource(input.root, path, input.reads).toString('utf8')).map((entry) =>
             findingAt(input, { file: path, line: entry.number }, 'syntax', entry.text),
         ),
     );

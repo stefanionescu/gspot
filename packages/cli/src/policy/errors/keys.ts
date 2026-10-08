@@ -11,8 +11,8 @@ import { isLoosening, isReasonOwed, isReasonAccepted, reasonDiagnostic } from '#
 import type {
     Policy,
     NamingTable,
+    PolicyError,
     KnownSettings,
-    PolicyProblem,
     AuthoredSetting,
     DeclarationMatch,
 } from '#cli/types/policy/settings.ts';
@@ -38,16 +38,11 @@ function looseningDiagnostic(
     return `\`${key} = ${value}\` is looser than the shipped ${shown}, so it needs a reason. Run: gspot set ${quoteArgument(key)} ${quoteArgument(value)}${scopeFlag} --reason "..."`;
 }
 
-// The problems of a written list: bad items, and loosening entries that carry no reason when reasons are required.
-function listProblems(
-    key: string,
-    written: AuthoredSetting,
-    match: DeclarationMatch,
-    shipped: unknown,
-): PolicyProblem[] {
+// The errors of a written list: bad items, and loosening entries that carry no reason when reasons are required.
+function listErrors(key: string, written: AuthoredSetting, match: DeclarationMatch, shipped: unknown): PolicyError[] {
     if (!Array.isArray(written.value)) return [];
     const items: unknown[] = written.value;
-    const quoted = items.flatMap((item, index): PolicyProblem[] => {
+    const quoted = items.flatMap((item, index): PolicyError[] => {
         const diagnostic = quotedTableDiagnostic(key, item);
         return diagnostic === undefined ? [] : [{ path: [...key.split('.'), index], message: diagnostic }];
     });
@@ -60,7 +55,7 @@ function listProblems(
                 item['reason'] === undefined ||
                 item['reason'] !== item[match.declaration.reason_identity],
         )
-        .flatMap(({ item, index }): PolicyProblem[] => {
+        .flatMap(({ item, index }): PolicyError[] => {
             const path = [...key.split('.'), index, 'reason'];
             const authored = item['reason'];
             if (authored !== undefined && typeof authored !== 'string')
@@ -80,30 +75,30 @@ function listProblems(
     return [...quoted, ...reasons, ...listReason];
 }
 
-// The problem of a written scalar that loosens the shipped default without an accepted reason.
-function scalarProblems(
+// The error of a written scalar that loosens the shipped default without an accepted reason.
+function scalarErrors(
     surface: KnownSettings,
     key: string,
     written: AuthoredSetting,
     match: DeclarationMatch,
     scope: string | undefined,
-): PolicyProblem[] {
+): PolicyError[] {
     if (written.reason !== undefined) {
         const diagnostic = reasonDiagnostic(key, written.reason);
         if (diagnostic !== undefined) return [{ path: ['reasons', key], message: diagnostic }];
     }
     const shipped = surface.defaults.get(match.declaration.name)?.value;
     if (!isReasonOwed(match.declaration, shipped, written.value) || isReasonAccepted(written.reason)) return [];
-    const problem = looseningDiagnostic(key, written, shipped, scope);
-    return [{ path: key.split('.'), message: problem }];
+    const error = looseningDiagnostic(key, written, shipped, scope);
+    return [{ path: key.split('.'), message: error }];
 }
 
-function keyProblems(
+function keyErrors(
     surface: KnownSettings,
     table: Partial<Policy>,
     scope: string | undefined,
     key: string,
-): PolicyProblem[] {
+): PolicyError[] {
     const match = declarationFor(surface, key);
     if (!match) return [{ path: key.split('.'), message: unknownSettingDiagnostic(surface, key) }];
     const written = policyValue(table, key);
@@ -121,24 +116,24 @@ function keyProblems(
             ];
     }
     if (match.declaration.type === 'list')
-        return listProblems(key, written, match, surface.defaults.get(match.declaration.name)?.value);
-    return scalarProblems(surface, key, written, match, scope);
+        return listErrors(key, written, match, surface.defaults.get(match.declaration.name)?.value);
+    return scalarErrors(surface, key, written, match, scope);
 }
 
-function extraDuplicateProblems(surface: KnownSettings, table: Partial<Policy>): PolicyProblem[] {
-    const problems: PolicyProblem[] = [];
+function extraDuplicateErrors(surface: KnownSettings, table: Partial<Policy>): PolicyError[] {
+    const errors: PolicyError[] = [];
     const { tools = {} } = table;
     for (const [tool, toolTable] of Object.entries(tools)) {
         const { verbatim = {} } = toolTable;
         for (const key of Object.keys(verbatim)) {
             if (surface.declarations.has(`tools.${tool}.${key}`))
-                problems.push({
+                errors.push({
                     path: ['tools', tool, 'verbatim', key],
                     message: `\`${key}\` under [tools.${tool}.verbatim] already has a declared setting. Move it up to \`tools.${tool}.${key}\` and remove it from verbatim.`,
                 });
         }
     }
-    return problems;
+    return errors;
 }
 
 // Configuration defaults that conflict in the root or a scope. No authored table settles them.
@@ -146,8 +141,8 @@ function unsettledConflicts(
     surface: KnownSettings,
     policy: Policy,
     scopeSurfaces: Map<string, KnownSettings>,
-): PolicyProblem[] {
-    const problems: PolicyProblem[] = [];
+): PolicyError[] {
+    const errors: PolicyError[] = [];
     const surfaces = [
         { settings: surface, scope: undefined, path: ['configurations'] as KeyPath },
         ...Object.keys(policy.scope).map((scope) => ({
@@ -158,11 +153,11 @@ function unsettledConflicts(
     ];
     for (const { settings, scope, path } of surfaces) {
         const layers = tablesFor(policy, scope);
-        for (const { key, message: text } of settings.problems)
+        for (const { key, message: text } of settings.errors)
             if (!layers.some(({ table }) => policyValue(table, key) !== undefined))
-                problems.push({ path, message: text });
+                errors.push({ path, message: text });
     }
-    return problems;
+    return errors;
 }
 
 function limitKeys(policy: Partial<Policy>): string[] {
@@ -228,7 +223,7 @@ function writtenKeys(policy: Partial<Policy>, surface: KnownSettings): string[] 
  * Names unknown settings and lists the closest keys under the same table.
  * @param surface the known settings of the selected configurations.
  * @param key the authored setting key.
- * @returns the problem and a command for discovering settings.
+ * @returns the error and a command for discovering settings.
  */
 export function unknownSettingDiagnostic(surface: KnownSettings, key: string): string {
     const all = surface.declarations.keys().toArray();
@@ -257,34 +252,34 @@ export function unknownSettingDiagnostic(surface: KnownSettings, key: string): s
  * @param policy the loaded policy.
  * @param scopeSurfaces the surface of each scope by its path; a scope table is read against its own.
  * @param retained the settings saved for configurations whose repository evidence disappeared.
- * @returns the problems in plain English, empty when the policy is sound.
+ * @returns the errors in plain English, empty when the policy is sound.
  */
 export function validateAgainstSurface(
     surface: KnownSettings,
     policy: Policy,
     scopeSurfaces: Map<string, KnownSettings>,
     retained?: KnownSettings,
-): PolicyProblem[] {
-    const problems = unsettledConflicts(surface, policy, scopeSurfaces);
+): PolicyError[] {
+    const errors = unsettledConflicts(surface, policy, scopeSurfaces);
     // A root table feeds every scope, so it may hold a setting that only a configuration of some scope exposes.
     const later = [surface, ...scopeSurfaces.values(), ...(retained === undefined ? [] : [retained])].toReversed();
     const everywhere: KnownSettings = {
         declarations: new Map(later.flatMap((entry) => entry.declarations.entries().toArray())),
         defaults: new Map(later.flatMap((entry) => entry.defaults.entries().toArray())),
-        problems: surface.problems,
+        errors: surface.errors,
     };
     for (const { table, scope, path } of everyTable(policy)) {
         const active = scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface);
         const settings: KnownSettings = {
             declarations: new Map([...everywhere.declarations, ...active.declarations]),
             defaults: new Map([...everywhere.defaults, ...active.defaults]),
-            problems: active.problems,
+            errors: active.errors,
         };
         const found = [
-            ...writtenKeys(table, settings).flatMap((key) => keyProblems(settings, table, scope, key)),
-            ...extraDuplicateProblems(settings, table),
+            ...writtenKeys(table, settings).flatMap((key) => keyErrors(settings, table, scope, key)),
+            ...extraDuplicateErrors(settings, table),
         ];
-        problems.push(...found.map((problem) => ({ ...problem, path: [...path, ...problem.path] })));
+        errors.push(...found.map((error) => ({ ...error, path: [...path, ...error.path] })));
     }
-    return problems;
+    return errors;
 }

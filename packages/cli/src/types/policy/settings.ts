@@ -30,11 +30,11 @@ export type PolicyFile = {
     path: string;
     text: string;
     /** The wrong entries reading dropped; empty for a policy every command accepts. */
-    problems: PolicyProblem[];
+    errors: PolicyError[];
 };
 
-/** An authored policy value and the semantic problem it caused. */
-export type PolicyProblem = { path: KeyPath; message: string };
+/** An authored policy value and the semantic error it caused. */
+export type PolicyError = { path: KeyPath; message: string };
 
 export type FormatSettings = Required<Defined<Omit<NonNullable<RawPolicy['format']>, 'overrides'>>>;
 
@@ -78,7 +78,7 @@ export type SettingState = { value: unknown; source: string; reason: string | un
 export type KnownSettings = {
     declarations: Map<string, SettingDeclaration>;
     defaults: Map<string, SettingDefault>;
-    problems: { key: string; message: string }[];
+    errors: { key: string; message: string }[];
 };
 
 export type TomlTable = Record<string, unknown>;

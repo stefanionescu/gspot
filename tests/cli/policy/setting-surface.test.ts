@@ -4,7 +4,7 @@ import { knownSettings } from '#cli/policy/settings/known.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { validateAgainstSurface } from '#cli/policy/errors/keys.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
-import { buildPolicy, policyProblems } from '#tests/harness/policy.ts';
+import { buildPolicy, policyFindings } from '#tests/harness/policy.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { settingValue, declarationFor } from '#cli/policy/settings/lookup.ts';
 
@@ -74,7 +74,7 @@ describe('conflicting configuration defaults', () => {
     test('reports an unresolved conflict at the scope that selects the configurations', () => {
         const policy = parseStrictPolicy(buildPolicy([], { tables: '[scope."db"]\nconfigurations = ["sql"]\n' }));
         expect(validateAgainstSurface(knownSettings([]), policy, new Map([['db', settings]]))).toStrictEqual([
-            { path: ['scope', 'db', 'configurations'], message: settings.problems[0]!.message },
+            { path: ['scope', 'db', 'configurations'], message: settings.errors[0]!.message },
         ]);
     });
 
@@ -86,7 +86,7 @@ describe('conflicting configuration defaults', () => {
         );
         const scopes = new Map(Object.keys(policy.scope).map((path) => [path, settings]));
         expect(validateAgainstSurface(knownSettings([]), policy, scopes)).toStrictEqual([
-            { path: ['scope', 'other', 'configurations'], message: settings.problems[0]!.message },
+            { path: ['scope', 'other', 'configurations'], message: settings.errors[0]!.message },
         ]);
         expect(settingValue(settings, policy, 'tools.sqlfluff.dialect', 'app/db')).toMatchObject({
             value: 'sqlite',
@@ -137,13 +137,13 @@ describe('setting defaults and declarations', () => {
         expect(declarationFor(settings, 'limits.sql.function_parameters')?.declaration.name).toBe(
             'limits.function_parameters',
         );
-        const problems = policyProblems(
+        const errors = policyFindings(
             buildPolicy(['sql', 'bash'], {
                 tables: '[limits.sql]\nfunction_lines = 60\n[limits.bash]\ncyclomatic_complexity = 8\n',
             }),
         );
-        expect(problems).toContainEqual(textContaining('`limits.sql.function_lines` is not a limit any check reads.'));
-        expect(problems).toContainEqual(
+        expect(errors).toContainEqual(textContaining('`limits.sql.function_lines` is not a limit any check reads.'));
+        expect(errors).toContainEqual(
             textContaining('`limits.bash.cyclomatic_complexity` is not a limit any check reads.'),
         );
     });
@@ -222,26 +222,24 @@ describe('merged settings', () => {
 
 describe('setting validation', () => {
     test('raising a ceiling needs a reason that names the command, and lowering one does not', () => {
-        const problems = policyProblems('configurations = ["bash"]\n[limits]\nfile_lines = 400\n');
-        expect(problems[0]).toContain('gspot set limits.file_lines 400 --reason');
+        const errors = policyFindings('configurations = ["bash"]\n[limits]\nfile_lines = 400\n');
+        expect(errors[0]).toContain('gspot set limits.file_lines 400 --reason');
         const lowered = parseStrictPolicy(buildPolicy(['bash'], { tables: '[limits]\nfile_lines = 200\n' }));
         expect(validateAgainstSurface(surface, lowered, new Map())).toStrictEqual([]);
     });
 
     test('an undeclared native setting is refused with its owning table', () => {
-        const problems = policyProblems(buildPolicy(['bash'], { tables: '[tools.shellcheck]\nseverity = "style"\n' }));
-        expect(problems[0]).toContain('`severity` is not a setting gspot knows under [tools.shellcheck]');
+        const errors = policyFindings(buildPolicy(['bash'], { tables: '[tools.shellcheck]\nseverity = "style"\n' }));
+        expect(errors[0]).toContain('`severity` is not a setting gspot knows under [tools.shellcheck]');
     });
 
     test('term-group controls are refused because no group can be removed', () => {
-        const problems = policyProblems(
+        const errors = policyFindings(
             buildPolicy(['bash'], {
                 tables: '[naming]\ngroups_off = [{ group = "marketing", reason = "We like adjectives here." }]\n',
             }),
         );
-        expect(problems).toStrictEqual([
-            'gspot.toml: naming.groups_off: Invalid input: expected object, received array',
-        ]);
+        expect(errors).toStrictEqual(['gspot.toml: naming.groups_off: Invalid input: expected object, received array']);
     });
 });
 
@@ -250,7 +248,7 @@ test('raising the duplication line floor requires a reason, while lowering it ti
     const key = 'limits.duplication.min_lines';
     const shipped = settings.defaults.get(key)!.value as number;
     const [raised, lowered] = [shipped + 1, shipped - 1].map((value) =>
-        policyProblems(`configurations = ["duplication"]\n[limits.duplication]\nmin_lines = ${String(value)}\n`),
+        policyFindings(`configurations = ["duplication"]\n[limits.duplication]\nmin_lines = ${String(value)}\n`),
     );
     expect(raised).toHaveLength(1);
     expect(raised![0]).toContain(`gspot set ${key} ${String(shipped + 1)} --reason`);

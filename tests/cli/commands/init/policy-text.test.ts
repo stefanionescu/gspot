@@ -21,7 +21,7 @@ test('initialization preserves root and scoped configuration choices', async () 
             ],
             hooks: true,
             ci: 'none',
-            rules: true,
+            agentRules: true,
             runner: 'none',
         },
         repository,
@@ -50,7 +50,7 @@ test('template settings survive beside the commit scopes init adds', async () =>
             commitScopes: ['api'],
             hooks: false,
             ci: 'none',
-            rules: false,
+            agentRules: false,
             runner: 'none',
         },
         repository,
@@ -80,7 +80,7 @@ test('initialization uses its selected runner over the template runner and honor
             ),
             hooks: false,
             ci: 'none',
-            rules: false,
+            agentRules: false,
             runner: 'npm',
         },
         repository,
@@ -112,7 +112,7 @@ test('template initialization retains owned comments and records copy-once prove
             template,
             hooks: false,
             ci: 'none',
-            rules: true,
+            agentRules: true,
             runner: 'none',
         },
         repository,
@@ -131,7 +131,7 @@ test.each(SDK_DESTINATIONS)('initialization selects the native $sdk destination'
     await using sandbox = await testdir({ 'App.xcodeproj/project.pbxproj': source });
     const repository = await readRepository(sandbox.path, [], [], []);
     const text = proposeText(
-        { configurations: ['swift', 'xcode'], scopes: [], hooks: false, ci: 'none', rules: false, runner: 'none' },
+        { configurations: ['swift', 'xcode'], scopes: [], hooks: false, ci: 'none', agentRules: false, runner: 'none' },
         repository,
         configurationManifests(),
     );
@@ -139,7 +139,7 @@ test.each(SDK_DESTINATIONS)('initialization selects the native $sdk destination'
         policy: parseStrictPolicy(text),
         text,
         path: 'gspot.toml',
-        problems: [],
+        errors: [],
     });
     expect(session.scopes[0]!.view.options('swift').xcode_destination).toBe(destination);
     expect(await Bun.file(`${sandbox.path}/App.xcodeproj/project.pbxproj`).text()).toBe(source);
@@ -160,7 +160,7 @@ test.each(MANUAL_SWIFT_CHOICES)(
                 scopes: [],
                 hooks: false,
                 ci: 'none',
-                rules: false,
+                agentRules: false,
                 runner: 'none',
                 template: parseTemplate(stringify({ swift }), 'swift.template.toml'),
             },
@@ -171,7 +171,7 @@ test.each(MANUAL_SWIFT_CHOICES)(
             policy: parseStrictPolicy(text),
             text,
             path: 'gspot.toml',
-            problems: [],
+            errors: [],
         });
         const choices = session.scopes[0]!.view.options('swift');
         expect(choices.xcode_project).toBe(swift.xcode_project);

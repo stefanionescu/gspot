@@ -20,7 +20,7 @@ import {
     TOP_LEVEL_ASSIGNMENT,
 } from '#cli/config/checks/language/bash.ts';
 
-function strictModeProblems(code: CodeLine[], report: ScriptReport): void {
+function strictModeFindings(code: CodeLine[], report: ScriptReport): void {
     const first = code.findIndex((line) => !line.code.startsWith('set ') && !line.code.startsWith('shopt '));
     const before = new Set(code.slice(0, first === -1 ? code.length : first).map((line) => line.code));
     const missing = STRICT_MODE.filter((statement) => !before.has(statement));
@@ -28,7 +28,7 @@ function strictModeProblems(code: CodeLine[], report: ScriptReport): void {
         report(code[0]?.number ?? 1, 'strict-mode', `Put ${missing.join(' and ')} before the first command.`);
 }
 
-function entryProblems(file: ScriptFile, code: CodeLine[], report: ScriptReport): void {
+function entryFindings(file: ScriptFile, code: CodeLine[], report: ScriptReport): void {
     if (file.functions.length === 0) return;
     if (file.functions.filter((entry) => entry.name === 'main').length !== 1)
         report(1, 'main-function', 'An executable defines exactly one main function.');
@@ -36,7 +36,7 @@ function entryProblems(file: ScriptFile, code: CodeLine[], report: ScriptReport)
     if (last?.code !== MAIN_CALL) report(last?.number ?? 1, 'main-call', `An executable ends with ${MAIN_CALL}.`);
 }
 
-function libraryLineProblems(line: CodeLine, file: ScriptFile, isDeclarative: boolean, report: ScriptReport): void {
+function libraryLineFindings(line: CodeLine, file: ScriptFile, isDeclarative: boolean, report: ScriptReport): void {
     if (line.code.startsWith('set ')) {
         report(line.number, 'library-options', 'A sourced library does not change shell options.');
         return;
@@ -58,7 +58,7 @@ function libraryLineProblems(line: CodeLine, file: ScriptFile, isDeclarative: bo
     );
 }
 
-function libraryProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean, report: ScriptReport): void {
+function libraryFindings(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean, report: ScriptReport): void {
     const last = code.at(-1);
     if (last?.code === MAIN_CALL) {
         report(
@@ -76,11 +76,11 @@ function libraryProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: bool
             SOURCE_STATEMENT.test(line.code) ||
             line.code.startsWith(READONLY_WORD) ||
             TOP_LEVEL_ASSIGNMENT.test(withoutDeclaration(line.code));
-        libraryLineProblems(line, file, isDeclarative, report);
+        libraryLineFindings(line, file, isDeclarative, report);
     }
 }
 
-function fileProblems(input: CheckInput, file: ScriptFile, isConfigOwner: boolean): Finding[] {
+function fileFindings(input: CheckInput, file: ScriptFile, isConfigOwner: boolean): Finding[] {
     const findings: Finding[] = [];
     const report: ScriptReport = (line, rule, text) => {
         findings.push(findingAt(input, { file: file.path, line }, rule, text));
@@ -88,9 +88,9 @@ function fileProblems(input: CheckInput, file: ScriptFile, isConfigOwner: boolea
     if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))
         report(1, 'shebang', `The first line is not one of ${BASH_SHEBANGS.join(' or ')}.`);
     const code = codeLines(file.code).filter((line) => !line.code.startsWith('#!'));
-    if (file.isExecutable) strictModeProblems(code, report);
-    if (file.isExecutable) entryProblems(file, code, report);
-    else libraryProblems(file, code, isConfigOwner, report);
+    if (file.isExecutable) strictModeFindings(code, report);
+    if (file.isExecutable) entryFindings(file, code, report);
+    else libraryFindings(file, code, isConfigOwner, report);
     for (const temporary of file.temporaryPaths)
         if (temporary.cleanupLines.length === 0)
             report(temporary.line, 'mktemp-trap', `The temporary path ${temporary.name} needs a trap that removes it.`);
@@ -107,5 +107,5 @@ export const contract: BuiltInCheck = async (input) => {
     const index = await getScriptIndex(input);
     return index.files
         .filter((file) => !OTHER_SHEBANG.test(file.lines[0] ?? ''))
-        .flatMap((file) => fileProblems(input, file, isOwner(file.path)));
+        .flatMap((file) => fileFindings(input, file, isOwner(file.path)));
 };

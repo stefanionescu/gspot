@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import { rm, chmod, copyFile } from 'node:fs/promises';
 import { EXECUTABLE_FILE } from '#cli/config/platform/modes.ts';
+import { assertManifests } from '#cli/configurations/errors.ts';
 import packageManifest from '#cli-package' with { type: 'json' };
-import { assertManifests } from '#cli/configurations/problems.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { validateEslintPresets } from '#cli/generation/eslint/presets.ts';
 

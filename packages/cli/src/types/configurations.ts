@@ -26,13 +26,13 @@ export type Layout = {
 
 export type SelectionWalk = {
     manifests: Map<string, Manifest>;
-    problems: string[];
+    errors: string[];
     order: Manifest[];
     seen: Set<string>;
     visiting: string[];
 };
 
-export type CheckRule = { applies: (check: ParsedCheck) => boolean; problem: (check: ParsedCheck) => string };
+export type CheckRule = { applies: (check: ParsedCheck) => boolean; error: (check: ParsedCheck) => string };
 
 export type InstallerPin = z.output<typeof installerPinSchema>;
 
@@ -81,7 +81,7 @@ export type ConfigurationSelection = {
 };
 /** Resolved configuration choices consumed without their scope's policy values. */
 export type SelectedConfigurations = { selected: Manifest[] };
-/** A detected configuration absent from the saved selection, with its acquisition command. */
+/** A detected configuration absent from the saved selection, with its install command. */
 export type ConfigurationSuggestion = { configuration: string; evidence: string; command: string };
 
 /** Repository evidence with an optional count for extension matches. */
@@ -95,7 +95,7 @@ export type UnknownConfiguration<Declaration extends Pick<ConfigurationDeclarati
     message: string;
 };
 
-/** The configuration responsible for one declared acquisition version. */
+/** The configuration responsible for one declared installation version. */
 export type PinRequirement = { version: string; owner: string };
 
 /** A pinned package installed in the npm or Python tool project. */

@@ -13,7 +13,7 @@ import { toolPin, pythonInstallerPin } from '#cli/configurations/pins.ts';
  * @param cancelSignal the command cancellation
  * @returns the uv executable used for both lockfile creation and installation
  */
-export async function acquirePythonInstaller(
+export async function installUv(
     root: string,
     runner: string | undefined,
     cancelSignal: AbortSignal | undefined,

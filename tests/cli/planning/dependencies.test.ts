@@ -4,8 +4,8 @@ import { test, expect } from 'bun:test';
 import { planRun } from '#cli/planning/plan.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
+import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import { DEPENDENCY_CASES } from '#tests/config/cli/planning/dependencies.ts';
 
 for (const level of ['recommended', 'all'] as const)
@@ -56,7 +56,7 @@ test.each(['next-intl', 'react-i18next'])(
         const detected = detectConfigurations(
             session.repository.files,
             session.manifests,
-            readManifests(session.root, session.repository.files),
+            readPackageManifests(session.root, session.repository.files),
         );
         expect(detected.some((entry) => entry.configuration === 'i18n')).toBe(true);
         expect(detected.some((entry) => entry.configuration === 'nextjs')).toBe(false);

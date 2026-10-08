@@ -3,7 +3,7 @@ import { getTsconfig } from '#cli/parsers/tsconfig.ts';
 import { join, dirname, resolve, relative } from 'node:path';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
 import { TRAILING_STAR } from '#cli/config/repository/aliases.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
+import { readPackageManifest } from '#cli/repository/package-manifests.ts';
 
 function importTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;

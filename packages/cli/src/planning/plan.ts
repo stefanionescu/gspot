@@ -3,12 +3,12 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { ownedBy } from '#cli/configurations/owners.ts';
 import { HISTORY_CHECKS } from '#cli/config/planning.ts';
 import { hostPlatform } from '#cli/platform/environment.ts';
-import { readManifests } from '#cli/repository/manifests.ts';
 import { isOutsideChildren } from '#cli/repository/selectors.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import type { CheckDeclaration } from '#cli/types/configurations.ts';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { filesFor, runsAtRoot, childScopes } from '#cli/planning/files.ts';
+import { readPackageManifests } from '#cli/repository/package-manifests.ts';
 import { toolPin, toolName, checkToolPin } from '#cli/configurations/pins.ts';
 import { skipFor, selectionStatus, restrictIgnoredPaths } from '#cli/planning/skips.ts';
 import type { Stage, Session, PlanEntry, PlanInputs, PlanOptions, PlannedCheck } from '#cli/types/planning.ts';
@@ -133,7 +133,7 @@ function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
             ({ check }) => isWanted(check, options) && check.when?.dependencies !== undefined,
         ),
     );
-    const projects = needsDependencies ? readManifests(session.root, session.repository.files) : [];
+    const projects = needsDependencies ? readPackageManifests(session.root, session.repository.files) : [];
     return session.scopes.map((scope) => {
         const context: PlanInputs = {
             session,

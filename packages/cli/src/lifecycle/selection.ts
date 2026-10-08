@@ -6,8 +6,8 @@ import { ROOT_SCOPE } from '#cli/config/repository/inventory.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
 import { detectConfigurations } from '#cli/configurations/detect.ts';
 import { selectConfigurations } from '#cli/configurations/select.ts';
+import { unknownConfigurations } from '#cli/configurations/errors.ts';
 import { NO_CONFIGURATIONS } from '#cli/config/lifecycle/selection.ts';
-import { unknownConfigurations } from '#cli/configurations/problems.ts';
 import type { Manifest, ConfigurationEvidence } from '#cli/types/configurations.ts';
 
 import type {
@@ -68,7 +68,7 @@ function scopeSelection(
 ): string[] {
     const ids =
         flagged ??
-        detectConfigurations(context.files, context.manifests, context.projectManifests, scope.path)
+        detectConfigurations(context.files, context.manifests, context.packageManifests, scope.path)
             .filter((evidence) => {
                 const manifest = getCandidate(context, evidence.configuration);
                 return manifest !== undefined && manifest.configuration.kind !== 'general';
@@ -138,13 +138,13 @@ function reasonFor(id: string, sets: ConfigurationChoices): ConfigurationReason 
  * @returns the scopes, the root and per-scope configuration ids, and the closure of everything selected.
  */
 export function selectForInit(inputs: InitInputs): InitSelection {
-    const { root, repo, projectManifests, workspace, manifests, options } = inputs;
-    const context: InitDetection = { manifests, files: repo.files, projectManifests, options, hasGit: repo.hasGit };
+    const { root, repo, packageManifests, workspace, manifests, options } = inputs;
+    const context: InitDetection = { manifests, files: repo.files, packageManifests, options, hasGit: repo.hasGit };
     const scopeFlags = options.scopes ?? new Map<string, string[]>();
     assertKnown(options, scopeFlags, manifests);
     const scopes = initScopes(root, workspace, scopeFlags);
     const hasScopes = scopes.length > 1;
-    const detected = detectConfigurations(repo.files, manifests, projectManifests);
+    const detected = detectConfigurations(repo.files, manifests, packageManifests);
     const proposedRoot = rootSelection(context, detected, hasScopes);
     const scopeConfigurations = new Map<string, string[]>();
     const heldAtRoot = proposedRoot.filter((id) => {

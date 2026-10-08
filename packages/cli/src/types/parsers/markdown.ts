@@ -8,9 +8,9 @@ export type FencedBlock = { line: number; language: string; body: string };
 export type FenceParser = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'json' | 'jsonc' | 'toml' | 'yaml';
 
 /** A syntax diagnostic at a one-based line of a code body or Markdown source. */
-export type FenceSyntaxProblem = { line: number; message: string };
+export type FenceSyntaxFinding = { line: number; message: string };
 
 /** A required syntax reader, with native Bash execution supplied by the check owner. */
 export type FenceSyntaxReader = (
     body: string,
-) => FenceSyntaxProblem | undefined | Promise<FenceSyntaxProblem | undefined>;
+) => FenceSyntaxFinding | undefined | Promise<FenceSyntaxFinding | undefined>;

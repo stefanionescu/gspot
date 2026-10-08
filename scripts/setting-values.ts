@@ -3,7 +3,7 @@ import { join, dirname } from 'node:path';
 import { format, resolveConfig } from 'prettier';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { ARGUMENT_START } from '#automation/config/paths.ts';
-import { assertManifests } from '#cli/configurations/problems.ts';
+import { assertManifests } from '#cli/configurations/errors.ts';
 import { settingSchemaSources } from '#cli/generation/setting-values.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { SETTING_VALUES_COMMAND } from '#cli/config/policy/setting-values.ts';

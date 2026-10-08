@@ -13,7 +13,7 @@ import type { AddOptions } from '#cli/types/commands/add.ts';
 import type { Mutation } from '#cli/types/policy/settings.ts';
 import type { Program } from '#cli/types/commands/program.ts';
 import { assertVersionPin } from '#cli/lifecycle/version-pin.ts';
-import { unknownConfigurations } from '#cli/configurations/problems.ts';
+import { unknownConfigurations } from '#cli/configurations/errors.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 
 /**

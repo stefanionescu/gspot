@@ -6,10 +6,10 @@ import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { join, dirname, basename, relative } from 'node:path';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import { runnerSchema } from '#cli/parsers/schema/settings.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
-import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { hooksDirectory, readGitSetting } from '#cli/platform/git.ts';
+import { readPackageManifest } from '#cli/repository/package-manifests.ts';
 import { statSync, lstatSync, existsSync, readdirSync, realpathSync } from 'node:fs';
 import type { Tooling, TrackedFile, RunnerSelection } from '#cli/types/repository/inventory.ts';
 
@@ -153,18 +153,18 @@ export function getHooks(root: string): Tooling['hooks'] {
  * Find the hooks, CI files, agent files, rules and lint folders, and task runner a repository already has.
  * @param root the repository root
  * @param files the tracked files
- * @param projectManifests the parsed project manifests
+ * @param packageManifests the parsed package manifests
  * @param npmNames declared npm installer packages
  * @returns everything init lists except the tool configurations, which need the configurations
  */
 export function surveyRepository(
     root: string,
     files: TrackedFile[],
-    projectManifests: ProjectManifest[],
+    packageManifests: PackageManifest[],
     npmNames: ReadonlySet<string>,
 ): Omit<Tooling, 'configs'> {
     const paths = new Set(files.map((file) => file.path));
-    const lintOnlyManifests = projectManifests
+    const lintOnlyManifests = packageManifests
         .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact, npmNames))
         .map((fact) => fact.path)
         .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));

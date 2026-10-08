@@ -7,7 +7,7 @@ import { join, posix, dirname, basename, relative } from 'node:path';
 import type { TrackedFile } from '#cli/types/repository/inventory.ts';
 import { isInScope, isToolingPath } from '#cli/repository/selectors.ts';
 import { manifestParser, parsePackageManifest } from '#cli/parsers/packages.ts';
-import type { DependencyMap, PackageManifest, ProjectManifest } from '#cli/types/parsers/packages.ts';
+import type { PackageJson, DependencyMap, PackageManifest } from '#cli/types/parsers/packages.ts';
 
 /**
  * Get dependencies from the nearest declared npm project that contains a scope.
@@ -15,7 +15,7 @@ import type { DependencyMap, PackageManifest, ProjectManifest } from '#cli/types
  * @param scope the repository-relative project scope
  * @returns declared dependencies without borrowing from children or siblings
  */
-export function getProjectDependencies(manifests: ProjectManifest[], scope: string): DependencyMap {
+export function getProjectDependencies(manifests: PackageManifest[], scope: string): DependencyMap {
     const owner = manifests
         .filter(
             (manifest) =>
@@ -33,7 +33,7 @@ export function getProjectDependencies(manifests: ProjectManifest[], scope: stri
  * @param files the tracked files
  * @returns one project manifest per supported source file
  */
-export function readManifests(root: string, files: TrackedFile[]): ProjectManifest[] {
+export function readPackageManifests(root: string, files: TrackedFile[]): PackageManifest[] {
     return files
         .filter((file) => file.kind === 'source' && !isToolingPath(file.path))
         .flatMap((file) => {
@@ -56,7 +56,7 @@ export function readManifests(root: string, files: TrackedFile[]): ProjectManife
  * @param path the repository-relative package.json path
  * @returns the validated package fields, or undefined when the file is absent
  */
-export function readPackageManifest(root: string, path: string): PackageManifest | undefined {
+export function readPackageManifest(root: string, path: string): PackageJson | undefined {
     const text = readText(root, path);
     if (text === undefined) return undefined;
     return parsePackageManifest(text, path);
@@ -69,7 +69,7 @@ export function readPackageManifest(root: string, path: string): PackageManifest
  * @param manifest the absolute package.json path.
  * @returns the validated package fields, or undefined when the file is absent.
  */
-export function installedPackage(files: Root | undefined, root: string, manifest: string): PackageManifest | undefined {
+export function installedPackage(files: Root | undefined, root: string, manifest: string): PackageJson | undefined {
     try {
         let text: string | undefined;
         if (files === undefined) text = readFileSync(manifest, 'utf8');

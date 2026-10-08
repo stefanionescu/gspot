@@ -220,7 +220,7 @@ function isInstallationFailure(error: unknown): error is GspotError {
  * @param session the saved policy, scope selections, and repository inventory.
  * @param generated the outputs calculated once for this preview or installation.
  * @param refreshLockfiles include fresh resolution of every declared tool pin.
- * @returns the applicable phases and their acquisition commands.
+ * @returns the applicable phases and their install commands.
  */
 export function installationPlan(
     session: ToolSession,
@@ -248,7 +248,7 @@ export function installationPlan(
  * @param generated the outputs calculated once for this installation.
  * @param options whether to resolve declared pins again before installing.
  * @param options.refreshLockfiles resolve declared pins instead of reusing matching lockfiles.
- * @returns the installation summary and exit code, with a repair command for acquisition failures.
+ * @returns the installation summary and exit code, with a repair command for installation failures.
  */
 export async function installTools(
     session: ToolSession,

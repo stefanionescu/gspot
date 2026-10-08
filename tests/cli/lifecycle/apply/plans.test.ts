@@ -7,7 +7,7 @@ import { openSession } from '#cli/commands/session.ts';
 import { writeOutputs } from '#cli/lifecycle/apply.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import type { PackageManifest } from '#cli/types/parsers/packages.ts';
+import type { PackageJson } from '#cli/types/parsers/packages.ts';
 
 test('apply refuses a plan whose policy changed after the session was read', async () => {
     await using sandbox = await testdir();
@@ -37,7 +37,7 @@ test('an npm runner preserves the authored scripts and adds no task of its own',
         writeOutputs(await openSession(sandbox.path), log);
     }
     const content = JSON.parse(await readFile(join(sandbox.path, 'package.json'), 'utf8')) as Required<
-        Pick<PackageManifest, 'scripts'>
+        Pick<PackageJson, 'scripts'>
     >;
     expect(content.scripts).toStrictEqual({ prepare: 'build-app' });
 });

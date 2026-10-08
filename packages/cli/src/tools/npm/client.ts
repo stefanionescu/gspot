@@ -6,7 +6,7 @@ import { GspotError } from '#cli/platform/errors.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { openRoot } from '#cli/platform/root/open.ts';
 import { VERSION_TIMEOUT_MS } from '#cli/config/tools/install.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
+import { readPackageManifest } from '#cli/repository/package-manifests.ts';
 import { DOT_GSPOT, TOOL_PACKAGE_PROJECT } from '#cli/config/platform/locations.ts';
 import { parsePackageInstaller, declaredPackageInstaller } from '#cli/parsers/packages.ts';
 import type { PackageInstaller, PackageInstallerIdentity } from '#cli/types/parsers/packages.ts';

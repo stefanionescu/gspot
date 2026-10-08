@@ -25,5 +25,5 @@ export const PACKAGE_PROJECTS = [
     ['npm', 'package.json', 'none'],
 ] as const;
 
-/** Package-manager sandboxes exercise Prettier and native EditorConfig acquisition, not application analyzers. */
+/** Package-manager sandboxes exercise Prettier and native EditorConfig installation, not application analyzers. */
 export const EXCLUDED_PACKAGE_CHECKS = ['files/v8r', 'javascript/eslint', 'javascript/tsc', 'javascript/knip'];

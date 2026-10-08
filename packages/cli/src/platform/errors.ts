@@ -5,19 +5,19 @@ import type { ErrorCode } from '#cli/types/platform/runtime.ts';
 export class GspotError extends Error {
     readonly code: ErrorCode;
 
-    readonly problems: string[];
+    readonly errors: string[];
 
     /**
-     * Joins the problems into the message and keeps them as a list.
+     * Joins the errors into the message and keeps them as a list.
      * @param code what kind of failure this is.
-     * @param problems one or several problems in plain English.
+     * @param errors one or several errors in plain English.
      * @param options the underlying cause, when one exists.
      */
-    constructor(code: ErrorCode, problems: string | string[], options?: ErrorOptions) {
-        const list = typeof problems === 'string' ? [problems] : problems;
+    constructor(code: ErrorCode, errors: string | string[], options?: ErrorOptions) {
+        const list = typeof errors === 'string' ? [errors] : errors;
         super(list.join('\n'), options);
         this.name = 'GspotError';
         this.code = code;
-        this.problems = list;
+        this.errors = list;
     }
 }

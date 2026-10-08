@@ -9,4 +9,4 @@ export const SCRATCH_EXTRAS = [POLICY_FILE, 'package.json', 'tsconfig.json', 'py
 export const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
 
 /** A project manifest marks a folder whose installed dependencies a scratch copy carries. */
-export const PROJECT_MANIFESTS = ['package.json', 'pyproject.toml'];
+export const PACKAGE_MANIFESTS = ['package.json', 'pyproject.toml'];

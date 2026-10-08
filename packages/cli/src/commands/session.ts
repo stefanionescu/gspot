@@ -1,6 +1,7 @@
 // One session per command: the policy, the manifests, the repository, the selection, and the merged view per scope.
 import { posix } from 'node:path';
 import { readPolicy } from '#cli/policy/read.ts';
+import { installUv } from '#cli/tools/python/uv.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { npmPins } from '#cli/configurations/pins.ts';
 import { readRepository } from '#cli/repository/read.ts';
@@ -13,7 +14,6 @@ import type { ToolSession } from '#cli/types/tools/session.ts';
 import { getOwnership } from '#cli/lifecycle/ownership/log.ts';
 import { selectForScope } from '#cli/configurations/select.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
-import { acquirePythonInstaller } from '#cli/tools/python/uv.ts';
 import { RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { applicableManifests } from '#cli/planning/requirements.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';
@@ -93,7 +93,7 @@ export async function openSession(rootPath: string, policyFiles = readPolicy(roo
     let resolvedPython: Promise<string> | undefined;
     const session: ToolSession = {
         pythonInstaller: (cancelSignal) => {
-            resolvedPython ??= acquirePythonInstaller(root, policy.runner, cancelSignal);
+            resolvedPython ??= installUv(root, policy.runner, cancelSignal);
             return resolvedPython;
         },
         packageInstaller() {

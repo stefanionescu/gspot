@@ -2,13 +2,13 @@ import { join } from 'node:path';
 import { test, spyOn, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/spawn.ts';
+import { installUv } from '#cli/tools/python/uv.ts';
 import { GspotError } from '#cli/platform/errors.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { openSession } from '#cli/commands/session.ts';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fakeCommand } from '#tests/harness/command.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/log.ts';
-import { acquirePythonInstaller } from '#cli/tools/python/uv.ts';
 import { pythonInstallerPin } from '#cli/configurations/pins.ts';
 import { pythonToolProject } from '#cli/tools/python/project.ts';
 import type { GeneratedFile } from '#cli/types/generation/output.ts';
@@ -78,9 +78,7 @@ test('failed mise acquisition names the pinned uv repair and preserves repositor
             stderr: 'registry unreachable',
         });
     });
-    const failure: unknown = await acquirePythonInstaller(repository.path, 'mise', undefined).catch(
-        (error: unknown) => error,
-    );
+    const failure: unknown = await installUv(repository.path, 'mise', undefined).catch((error: unknown) => error);
     expect(failure).toBeInstanceOf(GspotError);
     expect(failure).toMatchObject({
         code: 'installation',

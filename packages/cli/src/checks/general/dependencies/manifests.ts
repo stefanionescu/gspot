@@ -3,11 +3,11 @@ import { findingAt } from '#cli/checks/finding.ts';
 import { lockfileEntry } from '#cli/parsers/lockfiles.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { readPackageManifest } from '#cli/repository/manifests.ts';
-import type { PackageManifest } from '#cli/types/parsers/packages.ts';
+import type { PackageJson } from '#cli/types/parsers/packages.ts';
+import { readPackageManifest } from '#cli/repository/package-manifests.ts';
 import { NPM_MANIFEST, JAVASCRIPT_CLIENTS } from '#cli/config/checks/general/dependencies.ts';
 
-function rootFindings(input: CheckInput, root: PackageManifest | undefined): Finding[] {
+function rootFindings(input: CheckInput, root: PackageJson | undefined): Finding[] {
     if (root === undefined) return [];
     const findings: Finding[] = [];
     if (root.packageManager === undefined)
@@ -31,7 +31,7 @@ function rootFindings(input: CheckInput, root: PackageManifest | undefined): Fin
     return findings;
 }
 
-function packageClientFindings(input: CheckInput, manifests: Map<string, PackageManifest>): Finding[] {
+function packageClientFindings(input: CheckInput, manifests: Map<string, PackageJson>): Finding[] {
     const root = manifests.get(NPM_MANIFEST);
     const wanted = root?.packageManager;
     if (wanted === undefined) return [];
@@ -77,7 +77,7 @@ function lockfileFindings(input: CheckInput): Finding[] {
  * @returns the findings
  */
 export function manifests(input: CheckInput): Finding[] {
-    const manifests = new Map<string, PackageManifest>();
+    const manifests = new Map<string, PackageJson>();
     for (const file of input.files) {
         if (file.kind !== 'source') continue;
         if (file.path !== NPM_MANIFEST && !file.path.endsWith(`/${NPM_MANIFEST}`)) continue;

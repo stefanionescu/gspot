@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
+import { assertNoErrors } from '#cli/policy/read.ts';
 import { readPolicyFile } from '#cli/policy/file.ts';
 import type { Session } from '#cli/types/planning.ts';
-import { assertNoProblems } from '#cli/policy/read.ts';
 import { removeValePackages } from '#cli/tools/vale.ts';
 import { toolProjectDrift } from '#cli/tools/project.ts';
 import type { FileCopy } from '#cli/types/platform/root.ts';
@@ -131,7 +131,7 @@ export function writeOutputs(
     prepared?: Generated,
 ): ApplyReport {
     // Generation requires a valid policy. Refuse errors before writing proposed files.
-    assertNoProblems(session.policyFiles);
+    assertNoErrors(session.policyFiles);
 
     assertPolicyUnchanged(session);
     const generated = prepared ?? emitAll(session);

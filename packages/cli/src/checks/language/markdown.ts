@@ -3,7 +3,7 @@ import { readSource } from '#cli/platform/source.ts';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { runCheckTool } from '#cli/execution/command/check.ts';
 import type { CheckInput } from '#cli/types/execution/check.ts';
-import { parseBashSyntaxResult, findFenceSyntaxProblems } from '#cli/parsers/markdown.ts';
+import { parseBashSyntaxResult, findFenceSyntaxFindings } from '#cli/parsers/markdown.ts';
 
 /**
  * Report invalid tagged examples at their error lines; Bash executes through the same native tool boundary.
@@ -15,19 +15,19 @@ export async function fences(input: CheckInput): Promise<Finding[]> {
     for (const file of input.files) {
         if (file.kind !== 'source' || !file.path.endsWith('.md')) continue;
         const text = readSource(input.root, file.path, input.reads).toString('utf8');
-        const problems = await findFenceSyntaxProblems(
+        const syntaxFindings = await findFenceSyntaxFindings(
             text,
             async (body) =>
                 parseBashSyntaxResult(await runCheckTool(input, ['bash', '-n'], { cwd: input.root, stdin: body })),
             input,
         );
         findings.push(
-            ...problems.map((problem) =>
+            ...syntaxFindings.map((finding) =>
                 findingAt(
                     input,
-                    { file: file.path, line: problem.line },
+                    { file: file.path, line: finding.line },
                     'syntax',
-                    `Fix this code example: ${problem.message}`,
+                    `Fix this code example: ${finding.message}`,
                 ),
             ),
         );

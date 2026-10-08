@@ -55,7 +55,7 @@ test.each([...RUNNER_ANSWERS])('initialization $name', async ({ terminal, defaul
     expect(await askQuestions(directory.path, options, EMPTY_TOOLING)).toStrictEqual({
         hooks: false,
         ci: 'none',
-        rules: false,
+        agentRules: false,
         runner: expected,
     });
 });

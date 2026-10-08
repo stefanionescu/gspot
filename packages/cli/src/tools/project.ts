@@ -51,7 +51,7 @@ export function toolProjectDrift(root: string, generated: GeneratedFile[]): Lock
 }
 
 /**
- * Preview each actual acquisition, lockfile, and environment phase without running it.
+ * Preview each actual installation, lockfile, and environment phase without running it.
  * @param root the repository root.
  * @param description the project's native behavior.
  * @param proposed the generated manifest, or undefined to read its recorded bytes.

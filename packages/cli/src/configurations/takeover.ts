@@ -4,7 +4,7 @@ import { npmToolNames } from '#cli/configurations/pins.ts';
 import type { ToolPin } from '#cli/types/configurations.ts';
 import { surveyRepository } from '#cli/repository/survey.ts';
 import { hasToolSection } from '#cli/parsers/tool/configuration.ts';
-import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import { configurationManifests } from '#cli/configurations/manifests.ts';
 import { isGlob, pathMatcher, isToolProjectPath } from '#cli/repository/selectors.ts';
 import type { Tooling, ToolFile, TrackedFile } from '#cli/types/repository/inventory.ts';
@@ -58,10 +58,10 @@ function getToolConfigs(root: string, paths: Iterable<string>): ToolFile[] {
  * Find the tool configuration the configurations replace, with the hooks, CI, agent files, lint folders, and runner found.
  * @param root the repository root
  * @param files the tracked files
- * @param projectManifests the parsed project manifests
+ * @param packageManifests the parsed package manifests
  * @returns the configuration files, hooks, CI, agent files, lint folders, and runner found
  */
-export function getTooling(root: string, files: TrackedFile[], projectManifests: ProjectManifest[]): Tooling {
+export function getTooling(root: string, files: TrackedFile[], packageManifests: PackageManifest[]): Tooling {
     const configurations = getToolConfigs(
         root,
         files.filter((file) => file.kind === 'source').map((file) => file.path),
@@ -75,6 +75,6 @@ export function getTooling(root: string, files: TrackedFile[], projectManifests:
                 ]),
             ).values(),
         ],
-        ...surveyRepository(root, files, projectManifests, npmToolNames(configurationManifests().values())),
+        ...surveyRepository(root, files, packageManifests, npmToolNames(configurationManifests().values())),
     };
 }

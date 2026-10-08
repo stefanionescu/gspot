@@ -67,7 +67,7 @@ test('a quoted word from a template reaches typos.toml through init', async () =
             hooks: false,
             ci: 'none',
             runner: 'none',
-            rules: false,
+            agentRules: false,
         }),
     );
     expect(plan.exitCode).toBe(0);

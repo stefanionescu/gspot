@@ -2,7 +2,7 @@ import type { relative } from 'node:path/posix';
 import type { Session } from '#cli/types/planning.ts';
 import type { Manifest } from '#cli/types/configurations.ts';
 import type { ScopeEntry } from '#cli/types/repository/inventory.ts';
-import type { ProjectManifest } from '#cli/types/parsers/packages.ts';
+import type { PackageManifest } from '#cli/types/parsers/packages.ts';
 import type { EditorconfigOverride } from '#cli/types/generation/formatting.ts';
 import type { EslintPresets, EslintAllRules } from '#cli/types/parsers/eslint.ts';
 import type { Policy, ScopeView, ScopeSelection } from '#cli/types/policy/settings.ts';
@@ -21,7 +21,7 @@ export type ScopeTemplateInputs = {
     session: Session;
     selection: ScopeSelection;
     manifests: Manifest[];
-    projects: ProjectManifest[];
+    projects: PackageManifest[];
 };
 
 export type TemplateInputs = {

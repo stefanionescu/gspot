@@ -72,7 +72,7 @@ test('a command check declares its native ignore file without borrowing a built-
         'kept.json': '{}\n',
     });
     const session = await openSession(sandbox.path);
-    expect(session.policyFiles.problems).toStrictEqual([]);
+    expect(session.policyFiles.errors).toStrictEqual([]);
     const plans = planRun(session, { stage: 'commit', skips: [], only: ['custom/native-ignore'] });
     expect(plans[0]?.files.map((file) => file.path)).toStrictEqual(['kept.json']);
     expect(plans[0]?.skip).toBeUndefined();
