@@ -21,14 +21,7 @@ title: HTML
 
 ## Script safety
 
-- Do not put executable script URLs or active-document data URLs in links or embedded content.
 - Use `defer` or `type="module"` for scripts that do not need to block parsing.
-
-### Script and style placement
-
-<!-- level: all -->
-
-- `<script type="application/ld+json">` is data and remains allowed inline.
 
 ## Templates and copy
 

@@ -126,7 +126,7 @@ test('README shape diagnostics give a valid reasoned exception command without c
                     file: 'README.md',
                     rule: 'opening-paragraph',
                     line: 1,
-                    help: textContaining('gspot ignore docs/readme-shape --paths <glob> --reason "<why>"'),
+                    help: textContaining('gspot ignore docs/readme-shape --paths `<glob>` --reason "`<why>`"'),
                 }),
             ],
         },

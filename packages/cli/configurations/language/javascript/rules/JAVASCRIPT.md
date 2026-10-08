@@ -51,13 +51,11 @@ A function that mutates its input names and documents that effect.
 
 <!-- level: all -->
 
-- Use `for...of` in place of `forEach` and `reduce`.
 - Use an options object for several related arguments.
 - Do not add optional parameters to hide a broken caller contract.
 - Use early returns when they make missing-value and error handling clearer.
 - Keep constructors simple. Add inheritance only for a real runtime relationship.
 - Use decorators only where a framework requires them.
-- Every exported function has JSDoc. Private functions need none unless their behavior needs an explanation.
 
 ## Asynchronous work
 

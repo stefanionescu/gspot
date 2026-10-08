@@ -42,7 +42,7 @@ test.each(['recommended', 'all'] as const)(
                           file: 'src/widget.js',
                           line: 1,
                           message:
-                              "'create' import from 'zustand' is restricted. Create a store in a store file, once for the module, and export its hook.",
+                              "'create' import from 'zustand' is restricted. Create the store inside a factory that a provider owns, not as a module-level store.",
                       },
                   ]
                 : [],

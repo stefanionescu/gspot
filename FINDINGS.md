@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-869 unresolved review records remain. 417 come from the review of October 6, 2026 and the owner decisions of that day. 452 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+861 unresolved review records remain. 409 come from the review of October 6, 2026 and the owner decisions of that day. 452 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: test time limits sit in at least six places. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-223 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain.
+231 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain.
 
 ## Review of October 6, 2026
 
@@ -38,9 +38,9 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | [Source layout, names, and import graph](findings/review/source-layout.md)                            |           11 |
 | [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |           39 |
 | [Code: execution, tools, parsers, platform, repository, checks](findings/review/code-execution.md)    |            8 |
-| [Configurations and the ESLint plugin](findings/review/configurations-plugin.md)                      |           51 |
+| [Configurations and the ESLint plugin](findings/review/configurations-plugin.md)                      |           49 |
 | [Test layout and wiring](findings/review/tests-layout.md)                                             |           33 |
-| [Tests in tests/cli](findings/review/tests-cli.md)                                                    |          100 |
+| [Tests in tests/cli](findings/review/tests-cli.md)                                                    |           94 |
 | [Tests in tests/tools, tests/plugin, tests/packages, and the harness](findings/review/tests-tools.md) |           35 |
 | [READMEs, guides, and the docs site](findings/review/docs-site.md)                                    |            2 |
 | [Repository root, scripts, workflows, and dependencies](findings/review/repository-root.md)           |           22 |

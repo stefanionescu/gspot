@@ -10,7 +10,6 @@ These rules cover Vue 3 single-file components, reactivity, props and events, te
 
 <!-- level: all -->
 
-- One component has one job. Split a component when its template holds two unrelated regions.
 - Keep a template declarative. Move an expression longer than one operator into a computed value.
 - Do not reach into a child with a template ref to change its state. Pass a prop or call an exposed method.
 
@@ -18,7 +17,6 @@ These rules cover Vue 3 single-file components, reactivity, props and events, te
 
 - A prop is required when the component cannot operate without it. An optional prop can remain
   undefined when absence has defined behavior; supply a default only when that matches the contract.
-- Do not pass a whole store or a whole parent object to a child that reads two fields.
 
 ### Event naming
 
@@ -33,10 +31,6 @@ Name an event for what happened, in the past tense or as a noun: `saved`, `updat
 - A `watch` is for an effect outside Vue: a request, a timer, storage. It is not for deriving state.
 - Clean up in `onUnmounted`, or in the cleanup callback of the watcher, whatever a component started.
 
-## Templates
-
-- Use the shorthand forms `:` and `@`.
-
 ## State and data
 
 <!-- level: all -->
@@ -48,5 +42,4 @@ Name an event for what happened, in the past tense or as a noun: `saved`, `updat
 
 ## Accessibility and tests
 
-- Test a component through what the user sees and does, not through its internal refs.
 - Test a composable as a function, with no component around it where it needs none.

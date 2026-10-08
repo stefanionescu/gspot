@@ -12,7 +12,7 @@ TypeScript makes contracts explicit at compile time; it is not a runtime validat
 Types describe values after they cross a trusted boundary, and Zod, custom guards, or
 database constraints prove unknown input before it is treated as typed data. Plain values,
 small functions, discriminated unions, and clear module boundaries beat type gymnastics
-harder to read than the runtime behavior. If a check and this file disagree, tell the user.
+harder to read than the runtime behavior.
 
 ## Files and modules
 
@@ -22,9 +22,7 @@ and constants. Infer schema types from their authored schemas.
 
 ## Values and shapes
 
-User input, environment values, and provider responses are parsed explicitly, never coerced,
-and a truthiness check is not used where `0`, `''`, `false`, `null`, and `undefined` mean
-different things. `as const` fixes a value set when it improves precision without obscuring
+User input, environment values, and provider responses are parsed explicitly, never coerced. `as const` fixes a value set when it improves precision without obscuring
 the runtime shape. Grouped data is an object literal, annotated rather than cast when its
 contract matters, and destructured where that names the fields in use. `T[]` serves simple
 arrays and `Array<T>` or `ReadonlyArray<T>` complex element types; `readonly` marks a
@@ -32,7 +30,7 @@ contract, not decoration. With `noUncheckedIndexedAccess`, an indexed read is op
 narrowed before use.
 
 Untrusted values are `unknown` plus narrowing. Casts give way to runtime narrowing, typed
-helpers, or fixing the source type, and a type alias that only renames another adds nothing.
+helpers, or fixing the source type.
 Known variants are discriminated unions.
 
 Absence is precise: `property?: T` and
@@ -56,11 +54,6 @@ generated data sources, webhooks, and scheduled-job payloads. Typed values pass 
 request-shaped values never spread through domain code.
 
 ## Errors and async work
-
-Catches narrow from `unknown`. Preserve the cause when wrapping a failure. Keep a `try` block
-focused on the operation that can throw. Functions doing asynchronous work are `async`. Route handlers,
-middleware, startup, and shutdown paths await their work before returning, and required
-cleanup runs in `finally`.
 
 `Promise.all` serves bounded independent fan-out. Order, rate limits, or failure isolation
 call for sequential `await`. Large fan-out, provider calls, and batch work use platform
@@ -99,5 +92,4 @@ export async function createProviderOperation(request: ProviderOperationRequest)
 ## Comments
 
 Comments document purpose, invariants, security boundaries, concurrency behavior, and runtime
-assumptions, never TypeScript syntax or restated code; type tags stay out of JSDoc because
-TypeScript owns types.
+assumptions. Do not restate TypeScript syntax or code.

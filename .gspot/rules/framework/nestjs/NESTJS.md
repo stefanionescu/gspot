@@ -8,11 +8,6 @@ These rules cover NestJS modules, controllers, providers, validation, configurat
 
 ## Request handling
 
-- Return handler values through Nest response handling. If a route owns the native response,
-  complete it explicitly. Use `@Res({ passthrough: true })` to set native headers or cookies
-  while retaining Nest response handling.
-- Ordinary `@Res()` handling bypasses response mapping and serialization of returned values.
-  It does not disable every interceptor callback.
 - Return the documented HTTP status. Do not report a failed operation as a successful response.
 - Validate body, query, and route parameters before using them. Configure `ValidationPipe`
   transformation and unknown-field handling for the declared input contract.
@@ -38,9 +33,6 @@ These rules cover NestJS modules, controllers, providers, validation, configurat
 <!-- level: all -->
 
 - Give each feature one module and export only providers consumed by other features.
-- Remove module dependency cycles instead of using `forwardRef` to retain them.
-- Keep controllers responsible for request and response handling. Put business operations in
-  services and persistence in its declared owner.
 - Inject dependencies through constructors instead of constructing them inside consumers.
 - Define the versioning contract before publishing a public API.
 - Keep request DTOs distinct from persistence entities and map between them explicitly.

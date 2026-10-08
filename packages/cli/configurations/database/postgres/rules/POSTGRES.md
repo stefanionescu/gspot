@@ -10,30 +10,10 @@ database. Roles and schemas are the ones the application declares.
 ## Migrations
 
 - Create a blank migration with the project's migration command, then edit the generated file.
-- A migration on the base branch or applied to any remote database is immutable: never rename,
-  reorder, squash, split, or edit it. A production correction is a new forward-only migration.
-- A migration that exists only on your local branch, unpushed and unreviewed, can change before
-  merge, together with its paired generated sources.
 - Repair migration history only when the user asks for that task.
 - Every durable change is a migration, never a web console or SQL editor on a remote database.
 - Use idempotent DDL only when repeated execution is a contract and existing definitions are
   verified. Do not hide schema drift with `IF NOT EXISTS`.
-
-### Migration structure
-
-<!-- level: all -->
-
-When `postgres.docs` is on, follow the layout that `postgres/migration-docs` reports.
-
-```sql
--- ============================================================================
--- Table: orders
--- Purpose: Represents a submitted order owned by an account.
--- ============================================================================
-CREATE TABLE commerce.orders (
-    id UUID PRIMARY KEY
-);
-```
 
 ## Tables
 
@@ -46,8 +26,7 @@ CREATE TABLE commerce.orders (
 
 ## Row-level security
 
-- Every table in `postgres.client_schemas` has row-level security (RLS). Fully qualify
-  cross-schema references inside functions and policies.
+- Fully qualify cross-schema references inside functions and policies.
 - Every policy names its roles with `TO`, unless every role belongs in it.
 - Wrap the identity function of an ownership check in a scalar subquery, so the planner evaluates
   it once per statement instead of once per row.

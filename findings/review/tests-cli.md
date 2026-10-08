@@ -1,6 +1,6 @@
 # Tests in `tests/cli`
 
-100 unresolved review records remain.
+94 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -265,3 +265,16 @@ Original records and quotations remain above. These records are complete at `0a7
 | `review/tests-cli/101` | complete | Replaced the three remaining dedicated mockRestore try/finally wrappers with using in installer-failures. Existing installation and version owners already use disposal. Native rejection probe restores process identity; main installer cases pass. Commit `0a7108489e8091269f2cf615ff9985e13f5d9199`. |
 | `review/tests-cli/102` | complete | The reasoned deadline row is absent; five distinct deadline, cancellation, native-error, incomplete-output, and dictionary cases remain. Native six-file 91-case corpus passes. Commit `0a7108489e8091269f2cf615ff9985e13f5d9199`.                                                                       |
 | `review/tests-cli/114` | complete | CodeQL execution cases and data have one flat general/security owner; old owners are absent. Original case inventory and native assertions remain; main security tests pass. Commit `0a7108489e8091269f2cf615ff9985e13f5d9199`.                                                                          |
+
+## Implementation checkpoint 327fc3f21 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.
+
+| ID                     | Status   | Evidence                                                                                                                                                                                                                                                                                            |
+| ---------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-cli/108` | complete | Removed level-independent duplicate level runs and registered all 14 Python option/scope vectors. Refusals now belong to policy/read with static mirrors. Original native bodies and exported values retained; mechanical120b precedes behavior. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`. |
+| `review/tests-cli/117` | complete | Generated framework TypeScript assertions now run at both levels under generation/typescript; checker still tests exact root/scoped findings and corrections. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.                                                                                    |
+| `review/tests-cli/118` | complete | All assertManifests cases reside in configurations/errors; parser declarations retain parser contracts. Native errors corpus passes. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.                                                                                                             |
+| `review/tests-cli/119` | complete | Canonical emission and publication tests reside in policy/file; obsolete parser layout owner is absent. Native policy writer corpus passes. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.                                                                                                      |
+| `review/tests-cli/120` | complete | SQL cases reside in parsers/sql/pg, and tree-sitter retains only its native reader/lifetime cases. Both native parser corpora pass. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.                                                                                                              |
+| `review/tests-cli/122` | complete | COMMITLINT_PACKAGE has one config/samples owner, with all generation and tools consumers updated. Native generation corpus passes. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.                                                                                                               |

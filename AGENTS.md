@@ -42,6 +42,7 @@ Repository:
 Languages:
 
 - `.gspot/rules/language/javascript/BUN.md`
+- `.gspot/rules/language/javascript/COMPONENTS.md`
 - `.gspot/rules/language/javascript/JAVASCRIPT.md`
 - `.gspot/rules/language/javascript/NAMING.md`
 - `.gspot/rules/language/javascript/NODE.md`

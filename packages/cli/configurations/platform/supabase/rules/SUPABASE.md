@@ -13,15 +13,6 @@ project, on top of the Postgres rules. Supabase's API roles are `anon`, `authent
 - Use the established Supabase layout for migrations, Edge Functions, storage assets, and tests.
 - A schema or contract change that affects another project updates that consumer deliberately.
 
-### Migration names
-
-<!-- level: all -->
-
-Supabase migration files use `YYYYMMDDHHMMSS_description.sql`, with a 14-digit timestamp and a
-lowercase description. Use the project's migration creation command. Preserve committed
-history. For example, `20260101121500_CreateUsers.sql` becomes `20260101121500_create_users.sql`
-before that migration is committed or applied.
-
 ## Database access
 
 - `[api].schemas` in `config.toml` lists the schemas the Data API exposes. Treat those schemas as

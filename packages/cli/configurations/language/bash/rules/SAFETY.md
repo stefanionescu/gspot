@@ -172,8 +172,8 @@ printf '%s\n' "$$" >"${lock_dir}/pid" || {
 trap 'rm -f -- "${lock_dir}/pid"; rmdir -- "${lock_dir}"' EXIT
 ```
 
-Put recursive deletes in a script listed in `bash.safety_owners`. Validate its cleanup path
-against the owner root:
+Put recursive deletes in one script, and accept that script with an `[[ignore]]` record for `bash/safety`.
+Validate its cleanup path against the owner root:
 
 ```bash
 # remove_build_dir: Removes the build child of the approved owner directory.

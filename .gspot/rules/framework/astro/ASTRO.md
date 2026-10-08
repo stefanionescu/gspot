@@ -10,8 +10,6 @@ These rules cover Astro components, islands, markup, routing, and the data a pag
 
 <!-- level: all -->
 
-- One component has one job. Split a component when its markup holds two unrelated regions.
-- Name a component in PascalCase and name the file the same.
 - Keep the frontmatter to data: read the props, load what the page needs, and compute values.
   Move a helper longer than a few lines into a module.
 
@@ -38,10 +36,6 @@ These rules cover Astro components, islands, markup, routing, and the data a pag
 - Load content through a content collection with a schema, so a missing field fails the build.
 - Read a secret on the server only, from a variable without the `PUBLIC_` prefix. Every visitor sees a `PUBLIC_` variable.
 - Validate what an endpoint or an action receives before it reaches a database or another service.
-
-## Accessibility and tests
-
-- Test the HTML a component renders, not the code inside it.
 
 ## References
 

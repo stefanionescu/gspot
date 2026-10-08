@@ -10,8 +10,6 @@ These rules cover Svelte 5 components, runes, props and events, markup, and data
 
 <!-- level: all -->
 
-- One component has one job. Split a component when its markup holds two unrelated regions.
-- Name a component in PascalCase and name the file the same.
 - Keep markup declarative. Move an expression longer than one operator into a `$derived` value.
 - Do not reach into a child with `bind:this` to change its state. Pass a prop or a callback.
 
@@ -31,15 +29,12 @@ These rules cover Svelte 5 components, runes, props and events, markup, and data
 
 - Declare props through `$props()` with a type. A prop with no sensible default is required.
 - Never mutate a prop object. Call a callback prop, or use `$bindable` for a two-way value.
-- Do not pass a whole store or a whole parent object to a child that reads two fields.
 
 ### Callback naming
 
 <!-- level: all -->
 
 Name a callback prop for what happened: `onsave`, `onclose`.
-
-## Markup
 
 ## Data loading and the server
 
@@ -52,8 +47,6 @@ Name a callback prop for what happened: `onsave`, `onclose`.
 ## Accessibility and tests
 
 - Fix the compiler's accessibility warnings. Suppress one only with a reason.
-
-- Test a component through what the user sees and does, not through its internal state.
 
 ## References
 

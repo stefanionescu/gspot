@@ -394,6 +394,8 @@ summary = "Dependencies knip does not report as unused, each with a reason: pack
 
 [agent_rules]
 "NODE.md" = { runtimes = ["node"] }
+"DENO.md" = { runtimes = ["deno"] }
+"COMPONENTS.md" = { dependencies = ["astro", "svelte", "vue", "react"] }
 "BUN.md" = { filenames = ["bun.lock", "bun.lockb", "bunfig.toml"] }
 
 [required_eslint_rules]

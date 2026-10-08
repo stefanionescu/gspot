@@ -38,48 +38,10 @@ elsewhere. A workflow that needs nested maps, large
 arrays, state machines, non-trivial validation, complex retries, concurrent work, or domain
 rules is too big for a script.
 
-## File types and invocation
-
-An executable script starts with a Bash shebang, is executable and directly invoked, and is
-never sourced by another repository script. A library is not executable and is safe to
-`source` without running program behavior. It has no `main` function or `main "$@"` call,
-never enables or disables shell options, and never calls `exit`. It performs no workflow
-step, process start, state mutation, or deletion while loading. A configuration library may assign documented
-configuration values while loading; other libraries only declare readonly owner constants,
-source direct dependencies, and define functions. A file is exactly one of the two.
-
-### Entrypoint conventions
-
-<!-- level: all -->
-
-The header declares the runtime contract, checked when `bash.platforms` is set:
-
-```bash
-#!/usr/bin/env bash
-#
-# Start the configured application server.
-# Runtime: Bash 4.4+, Linux.
-```
-
-Use `macOS and Linux` only when the file is supported and reviewed on both.
-
-### Shebangs
-
-A newer Bash requirement names the minimum version and fails before any other work. Use
-`#!/usr/bin/env bash` for repository scripts; use `#!/bin/bash` only when the target runtime
-relies on system Bash at that path, such as a controlled Linux host. A `#!/bin/sh` file is
-POSIX `sh`, and this file applies to it only in its quoting and security principles. SUID
-and SGID are forbidden on shell scripts; use `sudo` or a platform privilege boundary.
+## Values
 
 Bash variables cannot hold NUL, so binary data
 stays out of them, and command substitution loses trailing newlines where they matter.
-
-## Runtime compatibility
-
-The configuration requires Bash 4.4 or newer. The macOS system Bash is too old for these scripts.
-Use a current Bash installation and state the minimum version in the `Runtime:` header. Check
-`BASH_VERSINFO` before using features that require a newer version. Executable scripts enable
-`set -euo pipefail` before their first command and add `shopt -s inherit_errexit`.
 
 ## Deprecated and forbidden syntax
 
@@ -98,17 +60,16 @@ condition, or an optional cleanup check must not become the script status by acc
 an explicit `exit 0` only when the final command's status is not the program result and
 success is already established.
 
-## Shell options
+## Options
 
-`set -euo pipefail` is the entrypoint default, used only when the script is written and
-reviewed for those semantics. `errexit` is a backstop, not control flow: it has exceptions in
+`errexit` is a backstop, not control flow: it has exceptions in
 conditionals, pipelines, command substitutions, subshells, and functions, so `cd`, `rm`,
 builds, publishing, uploads, and destructive commands are checked explicitly. Do not toggle
 options around a small operation without restoring the prior state. Do not change `IFS` as a
 strict-mode ritual; set it locally where reading or joining data requires it. Keep `set -x`
 out of committed code.
 
-Put recursive deletes in a script listed in `bash.safety_owners`. A function called in
+A function called in
 `if`, `while`, `&&`, or `||` writes its checks inside because `errexit` does not stop it there:
 
 ```bash

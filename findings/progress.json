@@ -1,5 +1,5 @@
 {
-    "openRecords": 869,
+    "openRecords": 861,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -236,7 +236,7 @@
         }
     ],
     "implementationBatches": {
-        "openRecords": 869,
+        "openRecords": 861,
         "records": 1092,
         "batches": [
             {
@@ -1402,8 +1402,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 55,
-                "unresolvedAssignments": 414
+                "completedAssignments": 61,
+                "unresolvedAssignments": 408
             },
             {
                 "id": "scripts-repository",
@@ -1950,8 +1950,8 @@
                     "review/configurations-plugin/066",
                     "review/configurations-plugin/067"
                 ],
-                "completedAssignments": 8,
-                "unresolvedAssignments": 51
+                "completedAssignments": 10,
+                "unresolvedAssignments": 49
             },
             {
                 "id": "names",
@@ -5904,16 +5904,20 @@
             "verification": []
         },
         "review/configurations-plugin/044": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "327fc3f21b6aa431e7e7040fa49a87b68a00fcc9",
+            "verification": [
+                "SwiftFormat reads format.line_ending. Empty rules/lint-only and stale Swift/gixy rule metadata removed. Native SwiftFormat newline correction and mode preservation pass."
+            ]
         },
         "review/configurations-plugin/045": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "327fc3f21b6aa431e7e7040fa49a87b68a00fcc9",
+            "verification": [
+                "Nested SwiftLint YAML now belongs to its Eta source; manifest body removed. Shared root/directory pointer emission preserves native quoted/scoped target replacement and fragment precedence. Native SwiftLint tools pass."
+            ]
         },
         "review/configurations-plugin/046": {
             "status": "pending",
@@ -9376,10 +9380,12 @@
             ]
         },
         "review/tests-cli/108": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "327fc3f21b6aa431e7e7040fa49a87b68a00fcc9",
+            "verification": [
+                "Removed level-independent duplicate level runs and registered all 14 Python option/scope vectors. Refusals now belong to policy/read with static mirrors. Original native bodies and exported values retained; mechanical120b precedes behavior."
+            ]
         },
         "review/tests-cli/110": {
             "status": "partial",
@@ -9476,61 +9482,67 @@
             ]
         },
         "review/tests-cli/117": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": [
-                "Evidence 881bacd5c843e8d5.",
-                "Evidence 936ebc6f86b82657.",
-                "Evidence be543f29d0974793.",
-                "Main commit/push and cross-platform acceptance remain pending."
-            ]
-        },
-        "review/tests-cli/118": {
-            "status": "partial",
-            "owner": "main",
-            "commit": null,
+            "commit": "327fc3f21b6aa431e7e7040fa49a87b68a00fcc9",
             "verification": [
                 "Evidence 881bacd5c843e8d5.",
                 "Evidence 936ebc6f86b82657.",
                 "Evidence be543f29d0974793.",
                 "Main commit/push and cross-platform acceptance remain pending.",
-                "Evidence d173e021e9592986."
+                "Generated framework TypeScript assertions now run at both levels under generation/typescript; checker still tests exact root/scoped findings and corrections."
+            ]
+        },
+        "review/tests-cli/118": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "327fc3f21b6aa431e7e7040fa49a87b68a00fcc9",
+            "verification": [
+                "Evidence 881bacd5c843e8d5.",
+                "Evidence 936ebc6f86b82657.",
+                "Evidence be543f29d0974793.",
+                "Main commit/push and cross-platform acceptance remain pending.",
+                "Evidence d173e021e9592986.",
+                "All assertManifests cases reside in configurations/errors; parser declarations retain parser contracts. Native errors corpus passes."
             ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-cli-owner-consolidation-final-freeze.json",
-                    "commit": null,
+                    "commit": "327fc3f21b6aa431e7e7040fa49a87b68a00fcc9",
                     "verification": ["Evidence d173e021e9592986."]
                 }
             ]
         },
         "review/tests-cli/119": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "327fc3f21b6aa431e7e7040fa49a87b68a00fcc9",
+            "verification": [
+                "Canonical emission and publication tests reside in policy/file; obsolete parser layout owner is absent. Native policy writer corpus passes."
+            ]
         },
         "review/tests-cli/120": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "327fc3f21b6aa431e7e7040fa49a87b68a00fcc9",
             "verification": [
                 "Evidence 881bacd5c843e8d5.",
                 "Evidence 936ebc6f86b82657.",
                 "Evidence be543f29d0974793.",
-                "Main commit/push and cross-platform acceptance remain pending."
+                "Main commit/push and cross-platform acceptance remain pending.",
+                "SQL cases reside in parsers/sql/pg, and tree-sitter retains only its native reader/lifetime cases. Both native parser corpora pass."
             ]
         },
         "review/tests-cli/122": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
+            "commit": "327fc3f21b6aa431e7e7040fa49a87b68a00fcc9",
             "verification": [
                 "Evidence 881bacd5c843e8d5.",
                 "Evidence 936ebc6f86b82657.",
                 "Evidence be543f29d0974793.",
-                "Main commit/push and cross-platform acceptance remain pending."
+                "Main commit/push and cross-platform acceptance remain pending.",
+                "COMMITLINT_PACKAGE has one config/samples owner, with all generation and tools consumers updated. Native generation corpus passes."
             ]
         },
         "review/tests-cli/126": {
@@ -15337,6 +15349,27 @@
                 "CI 37743608545 at prior4137 is incomplete and has actual failures; no cross-platform acceptance claimed.",
                 "Installed native XCTest coverage not rerun for no-op option deletion.",
                 "No package publication, tag, deployment, or live setup."
+            ]
+        },
+        {
+            "commit": "327fc3f21b6aa431e7e7040fa49a87b68a00fcc9",
+            "completedRecords": [
+                "review/tests-cli/108",
+                "review/tests-cli/117",
+                "review/tests-cli/118",
+                "review/tests-cli/119",
+                "review/tests-cli/120",
+                "review/tests-cli/122",
+                "review/configurations-plugin/044",
+                "review/configurations-plugin/045"
+            ],
+            "unresolvedRecords": 861,
+            "validation": [
+                "Main CLI211pass822assert18files; native tools6pass48assert3files, one LinuxDocker skip on macOS.",
+                "Root/CLI types0; normal setting-values producer, apply and CLI build0. Full staged68pass10skip0findings32.124s; normal commit/message hooks pass."
+            ],
+            "limitations": [
+                "No Linux/Windows proof claimed; Linux Docker nginx case skipped on macOS. Stage-area022 remains partial until its dependencies/secrets sites are resolved. No publication/tag/deployment."
             ]
         }
     ],

@@ -1,3 +1,3 @@
 <% if (isAll) { %>
-<%~ eslintModule.block({ files: eslintFiles.code, ignores: roles.stores, rules: { 'no-restricted-imports': ['error', { paths: [...eslint().restrictedImports, { name: 'zustand', importNames: ['create', 'createStore'], message: 'Create a store in a store file, once for the module, and export its hook.' }] }] } }) %>,
+<%~ eslintModule.block({ files: eslintFiles.code, ignores: roles.stores, rules: { 'no-restricted-imports': ['error', { paths: [...eslint().restrictedImports, { name: 'zustand', importNames: ['create', 'createStore'], message: 'Create the store inside a factory that a provider owns, not as a module-level store.' }] }] } }) %>,
 <% } %>

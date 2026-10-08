@@ -109,9 +109,9 @@ export const POLICY_PREVIEW_CASES = [
         argv: ['ignore', 'bash/bash-syntax', '--reason', 'The checked file demonstrates invalid syntax.'] as const,
         expected: {
             ignore: [
+                { check: 'bash/bash-syntax', reason: 'The checked file demonstrates invalid syntax.' },
                 { check: 'bash/shellcheck', rule: 'SC2034' },
                 { check: 'bash/shellcheck', rule: 'SC2086' },
-                { check: 'bash/bash-syntax', reason: 'The checked file demonstrates invalid syntax.' },
             ],
         },
         absent: [],

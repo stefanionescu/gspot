@@ -352,7 +352,7 @@ runs = "scope"
 files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
 summary = "Checks private declaration order, including Bash entrypoints."
 why = "Keep each responsibility in its declared owner."
-help = "Correct the finding, or record the required exception with gspot ignore structure/private-before-public --paths <file> --reason <why>."
+help = "Correct the finding. To record an exception, run `gspot ignore structure/private-before-public --paths <file> --reason \"<why>\"`."
 
 [[check]]
 name = "import-comments"
@@ -364,7 +364,7 @@ runs = "scope"
 files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
 summary = "Checks comments among native import and source statements."
 why = "Keep each responsibility in its declared owner."
-help = "Correct the finding, or record the required exception with gspot ignore structure/import-comments --paths <file> --reason <why>."
+help = "Correct the finding. To record an exception, run `gspot ignore structure/import-comments --paths <file> --reason \"<why>\"`."
 
 [[check]]
 name = "trivial-functions"
@@ -376,7 +376,7 @@ runs = "scope"
 files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
 summary = "Checks function statement floors and trivial source files."
 why = "Keep each responsibility in its declared owner."
-help = "Correct the finding, or record the required exception with gspot ignore structure/trivial-functions --paths <file> --reason <why>."
+help = "Correct the finding. To record an exception, run `gspot ignore structure/trivial-functions --paths <file> --reason \"<why>\"`."
 
 [[check]]
 name = "env-owner"
@@ -388,4 +388,4 @@ runs = "scope"
 files = { extensions = [".py", ".swift", ".sh", ".bash", ".zsh", ".bats"], tags = ["shell"], kinds = ["source"] }
 summary = "Checks native environment reads against architecture.roles.env."
 why = "Keep each responsibility in its declared owner."
-help = "Correct the finding, or record the required exception with gspot ignore structure/env-owner --paths <file> --reason <why>."
+help = "Correct the finding. To record an exception, run `gspot ignore structure/env-owner --paths <file> --reason \"<why>\"`."

@@ -9,15 +9,12 @@ The React rules apply first. These add what a phone changes.
 
 ## Components and touch
 
-- Use `Pressable` for touch. The `Touchable` components are kept for old code and get no new behavior.
 - Give every touch target a size of at least 44 points on iOS or 48 dp on Android, with `hitSlop` where the drawing is smaller.
 - Do not read `Dimensions` at module load. Use `useWindowDimensions`, which follows rotation and split view.
 - Respect the safe area on every screen, through the safe area context.
 
 ## Lists
 
-- Render a list that grows through `FlatList` or `SectionList`, never through `map` inside a `ScrollView`.
-- Every list has a `keyExtractor` that returns a stable id. An index is not a key for a list that changes.
 - Keep `renderItem` and the row component stable: define them outside the render, or memoize them.
 - Give a list of fixed row height `getItemLayout`, so it scrolls to an index without measuring.
 
@@ -40,7 +37,6 @@ The React rules apply first. These add what a phone changes.
 
 ## Native data and secrets
 
-- `AsyncStorage` is plain text on the device. Keep a token, a password, and a key in the secure store of the platform.
 - Nothing in the bundle is secret. A key that ships in the app belongs to everyone who downloads it.
 - Ask for a permission at the moment the feature needs it, and handle the refusal.
 - Validate a deep link before it navigates or acts. A link is input from outside.

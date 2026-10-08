@@ -1,6 +1,6 @@
 # Configurations and the ESLint Plugin
 
-51 unresolved review records remain.
+49 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -166,3 +166,12 @@ Original records and quotations remain above. These records are complete at `1ec
 | ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/configurations-plugin/025` | complete | Seven Semgrep packs are inferred from their owned Eta files; repeated manual tool-file blocks deleted. Native root/child packs and declaration tests pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`. |
 | `review/configurations-plugin/029` | complete | Every manifest setting declares a default; redundant native Eta and source-reader defaults deleted. Native declarations and tool settings pass. Commit `1ec77e444bb586fa8418344c1d124230bb6e48c8`.            |
+
+## Implementation checkpoint 327fc3f21 of October 8, 2026
+
+Original records and quotations remain above. These records are complete at `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.
+
+| ID                                 | Status   | Evidence                                                                                                                                                                                                                                                                      |
+| ---------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/configurations-plugin/044` | complete | SwiftFormat reads format.line_ending. Empty rules/lint-only and stale Swift/gixy rule metadata removed. Native SwiftFormat newline correction and mode preservation pass. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`.                                                  |
+| `review/configurations-plugin/045` | complete | Nested SwiftLint YAML now belongs to its Eta source; manifest body removed. Shared root/directory pointer emission preserves native quoted/scoped target replacement and fragment precedence. Native SwiftLint tools pass. Commit `327fc3f21b6aa431e7e7040fa49a87b68a00fcc9`. |
