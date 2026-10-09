@@ -48,18 +48,6 @@ export const SITE_HTML_RULE_SCOPES = [
     ['app', 'off'],
     ['other', 'error'],
 ] as const;
-/** The sandbox installs only its native validator before generating the complete selected tool project. */
-export const SITE_HTML_INSTALL_ARGUMENTS = [
-    'npm',
-    'install',
-    '--prefix',
-    '.gspot',
-    '--ignore-scripts',
-    '--no-audit',
-    '--no-fund',
-    '--package-lock=false',
-    '--no-save',
-];
 /** Site-only scopes and sites below an HTML owner both keep native rule exceptions confined. */
 export const SITE_HTML_REPOSITORIES = [
     { name: 'a root HTML configuration', configurations: ['html'], files: { 'index.html': SITE_HTML_CORRECTED } },

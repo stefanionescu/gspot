@@ -70,6 +70,7 @@ Frameworks:
 - `.gspot/rules/framework/react/REACT.md`
 - `.gspot/rules/framework/nextjs/NEXTJS.md`
 - `.gspot/rules/framework/svelte/SVELTE.md`
+- `.gspot/rules/framework/vue/VUE.md`
 
 Libraries:
 

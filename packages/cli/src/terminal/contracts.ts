@@ -2,8 +2,8 @@ import { colors } from '#cli/terminal/public.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { Finding } from '#cli/types/parsers/output.ts';
 import { FAILED_STATUSES } from '#cli/config/execution/runtime.ts';
-import type { RunReport, CheckResult } from '#cli/types/execution/check.ts';
 import { EXIT_ERROR, MS_PER_SECOND } from '#cli/config/platform/runtime.ts';
+import type { RunReport, CheckResult } from '#cli/types/execution/check.ts';
 import type { Columns, OutputOptions, ProgressStream } from '#cli/types/terminal.ts';
 
 import {

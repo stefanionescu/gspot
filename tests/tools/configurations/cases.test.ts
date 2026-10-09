@@ -2,12 +2,12 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { commitAll } from '#tests/harness/git.ts';
 import { HEAD } from '#tests/config/samples/bash.ts';
-import { chmod, appendFile } from 'node:fs/promises';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { chmod, appendFile } from 'node:fs/promises';
 import { GUIDE } from '#tests/config/samples/docs.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
-import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runFindingCase } from '#tests/harness/check-case.ts';
 import { installToolProjects } from '#tests/harness/install.ts';
 import { installedModules } from '#tests/harness/environment.ts';
@@ -21,7 +21,6 @@ import * as toolVitest from '#tests/config/tools/configurations/tool/vitest.ts';
 import * as languageSql from '#tests/config/tools/configurations/language/sql.ts';
 import * as toolAnsible from '#tests/config/tools/configurations/tool/ansible.ts';
 import * as toolOpenapi from '#tests/config/tools/configurations/tool/openapi.ts';
-import * as frameworkVue from '#tests/config/tools/configurations/framework/vue.ts';
 import type { BashBoundary, ConfigurationCallbacks } from '#tests/types/tools/cases.ts';
 import * as frameworkNestjs from '#tests/config/tools/configurations/framework/nestjs.ts';
 import * as frameworkNextjs from '#tests/config/tools/configurations/framework/nextjs.ts';
@@ -31,8 +30,8 @@ import * as languagePython from '#tests/config/tools/configurations/language/pyt
 import * as languageBashChecks from '#tests/config/tools/configurations/language/bash/checks.ts';
 import type { InstalledScenario, OwnedTestRepository } from '#tests/types/harness/repository.ts';
 import * as languageSwiftChecks from '#tests/config/tools/configurations/language/swift/checks.ts';
-import * as markdownDocsProse from '#tests/config/tools/configurations/general/markdown-docs-prose.ts';
 import { SCENARIOS, SQL_EXCLUSION, BASH_LOCATIONS } from '#tests/config/tools/configurations/cases.ts';
+import * as markdownDocsProse from '#tests/config/tools/configurations/general/markdown-docs-prose.ts';
 import { DOUBLE_JS, ARCHITECTURE } from '#tests/config/tools/configurations/language/typescript/source.ts';
 import * as languageTypescriptChecks from '#tests/config/tools/configurations/language/typescript/checks.ts';
 
@@ -227,15 +226,6 @@ const CALLBACKS = new Map<InstalledScenario, ConfigurationCallbacks>([
         frameworkNextjs.REPOSITORY,
         {
             dirname: join(installedModules, '../..', `gspot-test-${randomUUID()}`),
-        },
-    ],
-    [
-        frameworkVue.REPOSITORY,
-        {
-            prepare: async (root) => {
-                const installed = await runTestCommand(['bun', 'install'], { cwd: root });
-                if (installed.code !== 0) throw new Error(installed.stdout + installed.stderr);
-            },
         },
     ],
 ]);

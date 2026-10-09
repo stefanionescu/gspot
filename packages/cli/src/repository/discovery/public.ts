@@ -4,9 +4,9 @@ import { readText } from '#cli/platform/root/public.ts';
 import type { ToolPin } from '#cli/types/parsers/tool.ts';
 import { LOCKFILES } from '#cli/config/parsers/lockfiles.ts';
 import { join, dirname, basename, relative } from 'node:path';
-import { hasToolSection } from '#cli/parsers/tool/contracts.ts';
 import { npmToolNames } from '#cli/configurations/contracts.ts';
 import { runnerSchema } from '#cli/parsers/schema/contracts.ts';
+import { hasToolSection } from '#cli/parsers/tool/contracts.ts';
 import { readPackageManifest } from '#cli/repository/contracts.ts';
 import { HOOKS_DIRECTORY } from '#cli/config/platform/locations.ts';
 import type { PackageManifest } from '#cli/types/parsers/packages.ts';
@@ -18,15 +18,6 @@ import { isGlob, pathMatcher, isToolProjectPath } from '#cli/repository/paths/pu
 import type { Tooling, ToolFile, TrackedFile, RunnerSelection } from '#cli/types/repository/inventory.ts';
 
 import {
-    LEFTHOOK_NAMES,
-    HOOK_DIRECTORIES,
-    LEFTHOOK_PREFIXES,
-    LEFTHOOK_EXTENSIONS,
-    MISE_HOOK_DIRECTORY,
-    LEFTHOOK_CONFIG_PREFIX,
-    LEFTHOOK_YAML_EXTENSION_COUNT,
-} from '#cli/config/repository/hooks.ts';
-import {
     LINT_PAIRS,
     LINT_WORDS,
     MISE_FILES,
@@ -36,6 +27,15 @@ import {
     LINT_DIRECTORIES,
     RULES_DIRECTORIES,
 } from '#cli/config/repository/inventory.ts';
+import {
+    LEFTHOOK_NAMES,
+    HOOK_DIRECTORIES,
+    LEFTHOOK_PREFIXES,
+    LEFTHOOK_EXTENSIONS,
+    MISE_HOOK_DIRECTORY,
+    LEFTHOOK_CONFIG_PREFIX,
+    LEFTHOOK_YAML_EXTENSION_COUNT,
+} from '#cli/config/repository/hooks.ts';
 
 // Whether a CI command line runs a linter: eslint, a two-word lint command, or a runner's lint task.
 function isLintCommand(command: string): boolean {

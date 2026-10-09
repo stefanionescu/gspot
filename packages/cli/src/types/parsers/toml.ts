@@ -1,6 +1,6 @@
 import type { parseDocument } from '@decimalturn/toml-patch';
-import type { KeyPath } from '#cli/types/parsers/document.ts';
 import type { NODE_KINDS } from '#cli/config/parsers/toml.ts';
+import type { KeyPath } from '#cli/types/parsers/document.ts';
 
 export type TomlBlock = ReturnType<typeof parseDocument>['cst'][number];
 

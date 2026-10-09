@@ -18,8 +18,8 @@ import { setEnvironmentVariable } from '#tests/harness/environment.ts';
 import { PACKAGE_REGISTRY_TOKEN } from '#tests/config/harness/registry.ts';
 import prettierManifest from 'prettier/package.json' with { type: 'json' };
 import { RUNNER_POLICY, NO_AGENT_RULES } from '#tests/config/harness/policy.ts';
+import { AUTHORED_FILES, EXCLUDED_PACKAGE_CHECKS } from '#tests/config/harness/npm.ts';
 import type { PackageInputs, PackageProject, PackageProjectOptions } from '#tests/types/harness/npm.ts';
-import { AUTHORED_FILES, EDITORCONFIG_PACKAGE, EXCLUDED_PACKAGE_CHECKS } from '#tests/config/harness/npm.ts';
 
 async function writePackageProject(
     options: PackageProjectOptions,
@@ -103,7 +103,6 @@ export async function createPackageProject(
                         version: prettierManifest.version,
                         bin: { [prettierManifest.name]: prettierManifest.bin },
                     },
-                    ...(runner === 'none' ? [EDITORCONFIG_PACKAGE] : []),
                 ],
                 execute: runTestCommand,
                 token: PACKAGE_REGISTRY_TOKEN,

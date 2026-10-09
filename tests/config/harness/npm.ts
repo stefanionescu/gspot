@@ -1,4 +1,3 @@
-import type { RegistryPackage } from '#tests/types/harness/registry.ts';
 // The authored files every package project starts from.
 export const AUTHORED_FILES = {
     // These sandboxes invoke the source launcher, so mise must not install the unpublished CLI.
@@ -6,13 +5,6 @@ export const AUTHORED_FILES = {
     'other/package.json': '{"private":true,"packageManager":"npm@99.0.0"}',
     'source.js': 'export const greeting="hello";',
     'node_modules/authored.txt': 'keep project dependencies',
-};
-
-export const EDITORCONFIG_PACKAGE: RegistryPackage = {
-    name: 'editorconfig-checker',
-    source: 'editorconfig-checker@7.0.0',
-    version: '7.0.0',
-    bin: { ec: 'dist/index.js', 'editorconfig-checker': 'dist/index.js' },
 };
 
 /** The package managers, manifest paths, and runners a package project test covers. */

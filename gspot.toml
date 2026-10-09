@@ -19,7 +19,7 @@ configurations = ["javascript", "zod"]
 configurations = ["javascript"]
 
 [scope.tests]
-configurations = ["astro", "javascript", "jest", "nestjs", "nextjs", "react", "svelte", "vitest", "react-dom", "python"]
+configurations = ["astro", "javascript", "jest", "nestjs", "nextjs", "react", "svelte", "vitest", "react-dom", "python", "vue"]
 
 [hooks]
 enabled = true

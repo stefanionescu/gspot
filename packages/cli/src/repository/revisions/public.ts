@@ -3,8 +3,8 @@
 // The revisions a push sends, resolved from the ref and object pairs Git hands the pre-push hook.
 
 import { GspotError } from '#cli/platform/public.ts';
-import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { HASH_PATTERN } from '#cli/config/parsers/git.ts';
+import type { GitEntry } from '#cli/types/parsers/git.ts';
 import { readIndexEntries } from '#cli/repository/contracts.ts';
 import { WORKTREE_DIFF_ARGV } from '#cli/config/repository/revisions.ts';
 import { parseGitBlobs, parseGitEntries, parseIndexRevision } from '#cli/parsers/contracts.ts';

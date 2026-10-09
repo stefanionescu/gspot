@@ -90,12 +90,14 @@ export async function createPackageRegistry(work: string, options: PackageRegist
                 return Response.json({ error: 'Authentication required' }, { status: 401 });
             const url = new URL(request.url);
             const pathname = decodeURIComponent(url.pathname.slice(1));
-            const separator = pathname.indexOf('/-/');
-            const name = separator === -1 ? pathname : pathname.slice(0, separator);
+            const name = pathname.split('/-/', 1).join('');
             const entry = packages.get(name);
-            if (entry === undefined) return Response.json({ error: 'Package not found' }, { status: 404 });
+            if (entry === undefined && name.startsWith('@gspothq/'))
+                return Response.json({ error: 'Package not found' }, { status: 404 });
+            if (entry === undefined)
+                return Response.redirect(new URL(url.pathname, 'https://registry.npmjs.org/'), 302);
             const tarball = `${name}/-/${name.slice(name.lastIndexOf('/') + 1)}-${entry.version}.tgz`;
-            if (separator !== -1) {
+            if (pathname.includes('/-/')) {
                 if (pathname !== tarball) return Response.json({ error: 'Package not found' }, { status: 404 });
                 return new Response(Bun.file(entry.filename));
             }

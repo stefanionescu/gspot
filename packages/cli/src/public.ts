@@ -1,7 +1,7 @@
 import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
-import { GspotError } from '#cli/platform/public.ts';
 import { registerList } from '#cli/commands/list.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { registerApply } from '#cli/commands/public.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
 import { registerRemove } from '#cli/commands/remove.ts';
@@ -12,8 +12,8 @@ import { registerCheck } from '#cli/commands/check/command.ts';
 import { registerDoctor } from '#cli/commands/doctor/public.ts';
 import { registerExplain } from '#cli/commands/explain/public.ts';
 import { registerExport, registerInstall } from '#cli/commands/contracts.ts';
-import { EXIT_ERROR, RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { Option, Command, CommanderError } from '@commander-js/extra-typings';
+import { EXIT_ERROR, RUNNING_VERSION } from '#cli/config/platform/runtime.ts';
 import { printError, isColorAllowed, configureOutput, selectVerbosity } from '#cli/terminal/public.ts';
 
 // The program reads its options anywhere on the line. It hands the command every argument after the command name,

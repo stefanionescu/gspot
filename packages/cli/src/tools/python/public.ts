@@ -1,13 +1,13 @@
 import { join } from 'node:path';
 import { parse, stringify } from 'smol-toml';
-import { GspotError } from '#cli/platform/public.ts';
 import { SETUP } from '#cli/config/tools/install.ts';
+import { GspotError } from '#cli/platform/public.ts';
 import { readText } from '#cli/platform/root/public.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import type { ToolProject } from '#cli/types/tools/project.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';
-import { environmentExecutable } from '#cli/platform/contracts.ts';
 import { pythonInstallerPin } from '#cli/configurations/public.ts';
+import { environmentExecutable } from '#cli/platform/contracts.ts';
 import type { ScopeSelection } from '#cli/types/policy/settings.ts';
 import { PYTHON_MIN_VERSION } from '#cli/config/parsers/packages.ts';
 import { MODE_BITS, PRIVATE_FILE } from '#cli/config/platform/modes.ts';

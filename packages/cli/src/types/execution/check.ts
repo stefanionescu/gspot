@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { Finding } from '#cli/types/parsers/output.ts';
-import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { ReadCache } from '#cli/types/platform/reads.ts';
+import type { Defined } from '#cli/types/platform/runtime.ts';
 import type { ToolSearch } from '#cli/types/tools/install.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { resultSchema } from '#cli/parsers/schema/contracts.ts';

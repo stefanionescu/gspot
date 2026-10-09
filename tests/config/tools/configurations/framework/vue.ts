@@ -3,7 +3,7 @@ import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 import { COMPONENT_SOURCE, COMPONENT_TSCONFIG } from '#tests/config/samples/components.ts';
 
 /** The consumer version installed only in native Vue sandboxes. */
-export const VUE_VERSION = '3.5.22';
+export const VUE_VERSION = '3.5.42';
 
 export const VUE_CLEAN =
     '<script setup lang="ts">\ndefineProps<{ name: string }>();\n</script>\n\n<template>\n    <p>{{ name }}</p>\n</template>\n';

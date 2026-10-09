@@ -1,8 +1,8 @@
 import { statSync } from 'node:fs';
 import { parseShebang } from '#cli/parsers/shebang.ts';
 import { extensionOf } from '#cli/platform/contracts.ts';
-import { join, posix, dirname, resolve } from 'node:path';
 import { lockfileEntry } from '#cli/parsers/contracts.ts';
+import { join, posix, dirname, resolve } from 'node:path';
 import { parseSource } from '#cli/parsers/source/public.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';
 import type { SpawnResult } from '#cli/types/platform/runtime.ts';

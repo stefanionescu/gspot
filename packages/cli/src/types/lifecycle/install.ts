@@ -1,7 +1,7 @@
 import type { FileCopy } from '#cli/types/platform/root.ts';
 import type { Policy } from '#cli/types/policy/settings.ts';
-import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import type { Planned } from '#cli/types/lifecycle/apply.ts';
+import type { Log } from '#cli/types/lifecycle/ownership.ts';
 import type { ToolSession } from '#cli/types/tools/session.ts';
 import type { Generated } from '#cli/types/generation/files.ts';
 import type { Repository } from '#cli/types/repository/inventory.ts';

@@ -1,12 +1,13 @@
 // What this machine can and cannot do: which pinned tools ship for it, the modes it keeps, and the modules it links.
-import { join, dirname } from 'node:path';
+import { join, dirname, relative } from 'node:path';
 import { hostPlatform } from '#cli/platform/public.ts';
 import { missingBuild } from '#cli/planning/contracts.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
-import { mkdir, readdir, symlink, realpath } from 'node:fs/promises';
+import { executableNames } from '#cli/platform/contracts.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { testModules, installedModules } from '#tests/harness/environment.ts';
+import { cp, mkdir, lstat, readdir, symlink, realpath, copyFile } from 'node:fs/promises';
 
 /**
  * Whether the pinned tool has a build for this machine.
@@ -77,4 +78,33 @@ export function usePlatform(name: NodeJS.Platform): Disposable {
             Object.defineProperty(process, 'platform', descriptor);
         },
     };
+}
+
+/**
+ * Copy a cached module into the sandbox with its bins and dependency store.
+ * @param target the sandbox's node_modules folder
+ * @param name the installed package and executable name
+ */
+export async function copyInstalledModule(target: string, name: string): Promise<void> {
+    const source = await realpath(join(testModules, name));
+    const destination = join(target, name);
+    await cp(source, destination, { recursive: true });
+    await symlink(
+        dirname(source),
+        join(destination, 'node_modules'),
+        process.platform === 'win32' ? 'junction' : 'dir',
+    );
+    const binaries = join(target, '.bin');
+    await mkdir(binaries, { recursive: true });
+    const installed = join(testModules, '.bin');
+    const entries = await readdir(installed);
+    for (const file of executableNames(name).filter((entry) => entries.includes(entry))) {
+        const original = join(installed, file);
+        const path = join(binaries, file);
+        const entry = await lstat(original);
+        if (entry.isSymbolicLink()) {
+            const program = join(destination, relative(source, await realpath(original)));
+            await symlink(relative(binaries, program), path, 'file');
+        } else await copyFile(original, path);
+    }
 }

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { isDeepStrictEqual } from 'node:util';
 import { resolve, basename } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import { openRoot } from '#cli/platform/root/public.ts';
 import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { POLICY_FILE } from '#cli/config/platform/locations.ts';

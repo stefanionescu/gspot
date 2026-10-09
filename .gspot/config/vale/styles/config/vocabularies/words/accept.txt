@@ -86,6 +86,8 @@ eslint-plugin-security
 eslint-plugin-sonarjs
 eslint-plugin-svelte
 eslint-plugin-unicorn
+eslint-plugin-vue
+eslint-plugin-vuejs-accessibility
 eslint-plugin-zod
 ESM
 Facter
@@ -270,6 +272,8 @@ VIP
 VIPER
 vitest
 Vitest
+vue-eslint-parser
+vue-tsc
 WASM
 WCAG
 Windows

@@ -4,12 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { readFile, writeFile } from 'node:fs/promises';
-import { toolPin } from '#cli/configurations/contracts.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
 import { containing } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
-import { configurationManifests } from '#cli/configurations/public.ts';
+import { copyInstalledModule } from '#tests/harness/platforms.ts';
 import type { HtmlValidationConfiguration } from '#tests/types/tools/generation/html.ts';
 
 import {
@@ -19,7 +18,6 @@ import {
     SITE_HTML_CORRECTED,
     SITE_HTML_RULE_SCOPES,
     SITE_HTML_REPOSITORIES,
-    SITE_HTML_INSTALL_ARGUMENTS,
 } from '#tests/config/tools/generation/site-html.ts';
 
 for (const repository of SITE_HTML_REPOSITORIES)
@@ -36,12 +34,7 @@ for (const repository of SITE_HTML_REPOSITORIES)
                 'other/build.mjs': SITE_HTML_BUILD,
                 'other/page.html': SITE_HTML_PAGE,
             });
-            const packagePin = toolPin(configurationManifests().values(), 'html-validate').installers['npm']!;
-            const installed = await runTestCommand(
-                [...SITE_HTML_INSTALL_ARGUMENTS, `${packagePin.name}@${packagePin.version!}`],
-                { cwd: sandbox.path },
-            );
-            expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+            await copyInstalledModule(join(sandbox.path, '.gspot/node_modules'), 'html-validate');
             const applied = await spawnGspot(sandbox.path, ['apply']);
             expect(applied.code, applied.stdout + applied.stderr).toBe(0);
             const appliedPolicy = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');

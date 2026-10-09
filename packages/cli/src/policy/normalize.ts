@@ -1,7 +1,7 @@
 import { namingLists } from '#cli/parsers/schema/naming.ts';
 import { prefixScopePath, scopePolicyPaths } from '#cli/policy/paths.ts';
-import { configurationSettingSchemas } from '#cli/policy/schema/native/contracts.ts';
 import { defaultValue, namingCategorySchema } from '#cli/policy/schema/contracts.ts';
+import { configurationSettingSchemas } from '#cli/policy/schema/native/contracts.ts';
 import { policySchema, policyTableValuesSchema } from '#cli/policy/schema/public.ts';
 import { compact, valueAt, isRecord, trimTrailingSlashes } from '#cli/platform/contracts.ts';
 

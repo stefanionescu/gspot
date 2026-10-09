@@ -1,5 +1,5 @@
-import picomatch from 'picomatch';
 import { posix } from 'node:path';
+import picomatch from 'picomatch';
 import { DOT_GSPOT } from '#cli/config/platform/locations.ts';
 import type { PathExpressions } from '#cli/types/repository/inventory.ts';
 
