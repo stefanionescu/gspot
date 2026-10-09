@@ -65,10 +65,6 @@ jobs:
                       bun install --frozen-lockfile --filter @gspothq/workspace --filter @gspothq/cli --filter @gspothq/eslint-plugin
                       bun packages/cli/scripts/grammars.ts
                       mise run build:plugin
-            - name: Check the release version
-              run: bun scripts/release.ts "${TAG}"
-              env:
-                  TAG: ${{ github.ref_name }}
             - name: Build the CLI package
               run: mise run build:cli
             # First publish each package manually with a short-lived granular token. Configure this workflow and

@@ -26,6 +26,7 @@ runs:
                   ~/.cache/uv
                   ~/AppData/Local/uv/cache
               key: packages-${{ runner.os }}-${{ hashFiles('mise.toml', 'bun.lock', '.gspot/bun.lock', '.gspot/uv.lock') }}
+              restore-keys: packages-${{ runner.os }}-
         - name: Install Linux XML tools and zsh
           if: runner.os == 'Linux' && inputs.native-tests == 'true'
           shell: bash
