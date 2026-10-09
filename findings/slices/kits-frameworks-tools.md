@@ -1,6 +1,6 @@
 # Kits: Frameworks, Libraries, Platforms, Tools, and Postgres
 
-21 unresolved review records remain.
+20 unresolved review records remain.
 
 ## Open findings
 
@@ -153,3 +153,11 @@ Original records and quotations remain above. These records are complete at `488
 | ID                                 | Status   | Evidence                                                                                                                                                                                                                                                                                                         |
 | ---------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/kits-frameworks-tools/024` | complete | The React Hook Form selector excludes literal checkbox and radio inputs. Both-level controls passed, the native 360-case selector matrix preserves matches, and schema/Taplo checks pass. Same-concern shortening removes the earlier 80-byte asset increase. Commit `488be8b30c2a4065bc576e63a7fde10b00e633f1`. |
+
+## Implementation checkpoint 05997a065 of October 9, 2026 for tool-obligation-audit
+
+Original records and quotations remain above. These records are complete at `05997a065f49ff80c71173cd699953c132f85fcf`.
+
+| ID                                 | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `slices/kits-frameworks-tools/054` | complete | Final Supabase host declaration with real minimum-version floor and host hint: Supabase system=true, version_command=[--version], min_version2.0.0; installer declarations retained; byte-equal reviewed approved+46B AFTER. Native version argv/floor/missing/launch-failure/doctor boundary: /tmp/gspot-platform-supabase-three-final-freeze.json Commit `05997a065f49ff80c71173cd699953c132f85fcf`. |

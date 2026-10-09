@@ -1,6 +1,6 @@
 # Tests: Check Integration Tests
 
-16 unresolved review records remain.
+14 unresolved review records remain.
 
 ## Open findings
 
@@ -158,3 +158,19 @@ Original records and quotations remain above. These records are complete at `e61
 | ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ------------------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-checks/029` | complete | Separate config-logic roles and file-line limit policy literals; delete the shared misleading structure sample. Original finding and correction assertions retained; authored change reduces484bytes/50AST. Combined checkpoint:217 CLI cases pass,68 native cases pass; final Wrangler replay5/37 and live docs schema check1/0; configured types pass. Full staged152/0, normal commit113/0 plus commitlint, normal push152/0. Commit `e612fce45b842be8b452f33bfe69029a92cc7694`. |
+
+## Implementation checkpoint e53d4db4e of October 9, 2026 for native-fake-tool-contract
+
+Original records and quotations remain above. These records are complete at `e53d4db4ee2571663209c3a62f8122f4f65d9e71`.
+
+| ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-checks/032` | complete | One fakeTool(root, name, script) in tests/harness/platforms.ts writes the child program and both native wrappers and returns PATH. All named Taplo, GitHub Actions and pushed-secret callers plus remaining shared native wrapper sites use it. Retained scripts, arguments, streams, diagnostics, modes, cancellation and cleanup; preserved genuine Drizzle executable paths. The 17-owner checkpoint removes 1,039 bytes. Commit `e53d4db4ee2571663209c3a62f8122f4f65d9e71`. |
+
+## Implementation checkpoint 4ea1e5c00 of October 9, 2026 for large-file-lfs-exclusion
+
+Original records and quotations remain above. These records are complete at `4ea1e5c0038d3390e14327ab6555cacba7ff71a9`.
+
+| ID                                    | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-checks/028` | complete | The committed root/child test plants an over-limit lfs.bin with .gitattributes filter=lfs and stages it. Exact expected findings include only the unclassified root and child large files; LFS, generated and vendored files are absent. Both levels then correct the actual offending files, require zero findings and preserve policy/generated bytes. This was included in the tracked-file consolidation checkpoint, which removes1946 production and manifest bytes. Commit `4ea1e5c0038d3390e14327ab6555cacba7ff71a9`. |

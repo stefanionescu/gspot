@@ -1,6 +1,6 @@
 # Source Layout: `packages/cli/src` and `packages/eslint-plugin/src`
 
-6 unresolved review records remain.
+4 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -554,3 +554,12 @@ Original records and quotations remain above. These records are complete at `c0d
 | -------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/source-layout/019` | complete | Generic SARIF parsing/schema/locations have substantive structured-parser owners; flat security check keeps CodeQL database steps. Native parser137/288, command21/208, security30/65 and9 controls on each Bun/Node retained; public-owner override applied. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`.                |
 | `review/source-layout/023` | complete | JavaScript/TypeScript/Vue compiler callbacks share actual language public/contracts owners; former JavaScript tsc/rules-off folder is absent. Original five-owner merge removes496bytes; original6pass16assert retained. Later compiler behavior remains separately tracked. Commit `c0dab0da213458868371e8fb3a69fe88740bc3ed`. |
+
+## Implementation checkpoint e53d4db4e of October 9, 2026 for naming-owner-lineage
+
+Original records and quotations remain above. These records are complete at `e53d4db4ee2571663209c3a62f8122f4f65d9e71`.
+
+| ID                         | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/source-layout/026` | complete | The original three path helpers were merged verbatim into identifiers.ts and the one-importer paths.ts module deleted at843c4d79e. The subsequent strict public API owner decision places their actual implementations in naming/contracts.ts, with no forwarding layer. Exact current lineage,35 focused cases115 assertions, types/lint/format pass. Commit `e53d4db4ee2571663209c3a62f8122f4f65d9e71`. |
+| `review/source-layout/027` | complete | The original names.ts became check-owned words.ts and its test words.test.ts at843c4d79e. The approved strict public API change retains the actual word implementations in naming/public.ts. Five identifier extractors remain under parsers/naming; word constants keep their check owner. Exact functions and assertions are preserved. Commit `e53d4db4ee2571663209c3a62f8122f4f65d9e71`.              |

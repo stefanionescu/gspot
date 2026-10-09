@@ -1,6 +1,6 @@
 # Tests: Execution Integration Tests
 
-7 unresolved review records remain.
+5 unresolved review records remain.
 
 ## Open findings
 
@@ -81,3 +81,12 @@ Original records and quotations remain above. These records are complete at `ad8
 | `slices/tests-integration-execution/031` | complete | Move actual last-file fixer preview/apply assertions into distinct fixers test; maintain shared input policy/commands at existing static owner and genuine projectChecks calculation in proper current harness owner only if necessary; exact substantive existing helper transfer needs grant. Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions. Commit `ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a`. |
 | `slices/tests-integration-execution/038` | complete | Evidence-only: current reason table has scenario column and buildPolicy without deleted require_reasons. Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions. Commit `ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a`.                                                                                                                                                                                        |
 | `slices/tests-integration-execution/042` | complete | Evidence-only: final comment already says The copy row replaces the source with a directory before the run. Native isolated checkpoint CLI103/350/11files and types pass; staged51/9skipped/0findings and normal hooks pass. Required setup/duplicate reductions preserve distinct assertions. Commit `ad8c6d10daff00d9ac1ff5ac66c3c5f6c1370f3a`.                                                                                                                                                                                     |
+
+## Implementation checkpoint fc2af1dd6 of October 9, 2026 for output-parser-obligations
+
+Original records and quotations remain above. These records are complete at `fc2af1dd6dda2eb6bd62e42f445879e89b2bb1aa`.
+
+| ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                    |
+| ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-execution/004` | complete | Removed the duplicate declared typos loop. The declared regex case now observes verifyFiles with and without a configuration manifest; the current CLI case passes. Commit `fc2af1dd6dda2eb6bd62e42f445879e89b2bb1aa`.                                                                      |
+| `slices/tests-integration-execution/021` | complete | Format inputs use named test.each rows; one local configurationCheck resolves the manifest check. Existing REPORT_ERRORS cases preserve distinct malformed-report diagnostics. Current parser corpus passes 98 cases and 150 assertions. Commit `fc2af1dd6dda2eb6bd62e42f445879e89b2bb1aa`. |

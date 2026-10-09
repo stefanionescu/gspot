@@ -1,6 +1,6 @@
 # Test Layout and Wiring
 
-23 unresolved review records remain.
+21 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -287,3 +287,19 @@ Original records and quotations remain above. These records are complete at `b6c
 ## Partial shared sample ownership at b6c535bc1
 
 `review/tests-layout/017` is partial. Shared Next.js messages, the Supabase source, and three native compiler-option objects are implemented with their original values. Remaining JSconfig duplication and the original library and native project mapping stay open. The original quotation and controls are preserved.
+
+## Implementation checkpoint fc2af1dd6 of October 9, 2026 for output-parser-obligations
+
+Original records and quotations remain above. These records are complete at `fc2af1dd6dda2eb6bd62e42f445879e89b2bb1aa`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                     |
+| ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `review/tests-layout/029` | complete | All six CLI and three tool parse-output tests and five config mirrors live under parsers/output; old execution/parse-output owners are absent. JSON tests have their declared parser owner. Current CLI parser corpus passes 98 cases and 150 assertions. Commit `fc2af1dd6dda2eb6bd62e42f445879e89b2bb1aa`. |
+
+## Implementation checkpoint e8894f855 of October 9, 2026 for shared-policy-and-preparation-contracts
+
+Original records and quotations remain above. These records are complete at `e8894f855ab294ccf7ec51c90a84fb1c92a1ea2f`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-layout/007` | complete | The shared buildPolicy helper defaults agent rules off; actual consumers opt in through typed agentRules. Removed the repeated inline disable tables and NO_AGENT_RULES imports/constant across115 hash-verified owners. Whole corpus4086 cases passed before the eleven unrelated fixture defects; all eleven pass in the64-case focused correction. Combined related policy/native fixture changes remove2729 bytes; final full release replay remains separate. Commit `e8894f855ab294ccf7ec51c90a84fb1c92a1ea2f`. |
