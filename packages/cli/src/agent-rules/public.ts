@@ -1,4 +1,4 @@
-// Select agent instructions from configuration assets and emit them into the configured rules folder.
+// Select agent rules from configuration assets and write them to the configured rules folder.
 import { posix } from 'node:path';
 import { isExcluded } from '#cli/policy/public.ts';
 import { ruleSections } from '#cli/parsers/public.ts';

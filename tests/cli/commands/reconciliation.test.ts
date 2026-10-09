@@ -110,7 +110,7 @@ function mockNpmLockfile(): NpmLockfile {
     };
 }
 
-test('apply retains saved stack choices, settings and command checks when source evidence disappears', async () => {
+test('apply retains saved configurations, settings and command checks when source evidence disappears', async () => {
     await using sandbox = await testdir();
     const path = join(sandbox.path, 'gspot.toml');
     await createFileTree(sandbox.path, {

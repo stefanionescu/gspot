@@ -1,7 +1,7 @@
 // Shared authored documents for native-tool and in-process document tests.
 export const README = `# Test
 
-A test repository that holds documents and nothing else.
+A sandbox that holds documents and nothing else.
 
 ## Requirements
 

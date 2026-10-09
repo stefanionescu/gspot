@@ -99,7 +99,7 @@ More ways to write a setting:
 - For a list, `--replace` replaces the list authored at that scope, and `--remove` removes items from it. Inherited lists and shipped defaults still apply, except command argument lists, which replace inherited arguments intact.
 
 Adding formatter exclusions, sitemap exclusions, registry
-hosts, or project vocabulary needs a reason. Values stay in their concern tables. `[reasons]`
+hosts, or accepted words needs a reason. Values stay in their concern tables. `[reasons]`
 records reasons by setting name. List edits preserve the reason. Replacing an exception list
 with an empty list tightens the policy and needs no reason.
 

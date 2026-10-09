@@ -1,4 +1,4 @@
-// Select agent instructions from configuration assets and emit them into the configured rules folder.
+// Select agent rules from configuration assets and write them to the configured rules folder.
 
 import type { Manifest } from '#cli/types/configurations.ts';
 import { CONFIGURATION_LABELS } from '#cli/config/configurations.ts';

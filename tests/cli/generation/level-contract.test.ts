@@ -31,7 +31,7 @@ test.each(['recommended', 'all'] as const)('%s Ruff selects stable rules with pr
     );
 });
 
-test('switching levels restores generated defaults and agent instructions', async () => {
+test('switching levels restores generated defaults and agent rules', async () => {
     await using sandbox = await testdir();
     await Bun.write(join(sandbox.path, 'source.js'), 'export const value = 1;\n');
     const outputs: string[] = [];

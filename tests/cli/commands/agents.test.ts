@@ -13,7 +13,7 @@ import { stat, chmod, symlink, readFile } from 'node:fs/promises';
 
 const INIT = buildInitArguments(['bash'], { json: true }).filter((argument) => argument !== '--no-agent-rules');
 
-test('agent instructions reach AGENTS.md and configured files, and other agent files stay as written', async () => {
+test('agent rules reach AGENTS.md and configured files, and other agent files stay as written', async () => {
     await using sandbox = await testdir();
     const original = '# Gemini instructions\n\nKeep this authored note.\n';
     await createFileTree(sandbox.path, {

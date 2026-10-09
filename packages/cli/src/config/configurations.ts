@@ -79,5 +79,5 @@ export const MANIFEST_TABLE_ORDER = [
     'agent_rules',
 ];
 
-/** Executable runtime required by npm tool-project packages and their native acquisition. */
+/** Executable runtime required by npm tool projects and their install commands. */
 export const NPM_REQUIRES = ['node'] as const;

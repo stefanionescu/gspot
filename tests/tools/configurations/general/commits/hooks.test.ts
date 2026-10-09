@@ -7,7 +7,6 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { LICENSE } from '#tests/config/samples/docs.ts';
 import { quoteArgument } from '#cli/platform/contracts.ts';
-import { containing } from '#tests/harness/expectations.ts';
 import { buildInitArguments } from '#tests/harness/init.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
@@ -32,23 +31,26 @@ function expectCompleteHistory(output: string, commits: string[]): void {
 }
 
 // Every message scenario asserts the public native exit and diagnostic contract.
-async function expectDraftCheck(root: string, draft: string, rule?: string): Promise<void> {
-    const checked = await spawnGspot(root, [
-        'check',
-        '--only',
-        'commits/commitlint',
-        '--message-file',
-        draft,
-        '--json',
-    ]);
-    expect(checked.code, checked.stdout + checked.stderr).toBe(rule === undefined ? 0 : 1);
-    expect((JSON.parse(checked.stdout) as RunReport).checks).toMatchObject([
+async function expectDraftCheck(
+    root: string,
+    draft: string,
+    rules: string[] = [],
+    environment?: Parameters<typeof spawnGspot>[2],
+): Promise<void> {
+    const checked = await spawnGspot(
+        root,
+        ['check', '--only', 'commits/commitlint', '--message-file', draft, '--json'],
+        environment,
+    );
+    expect(checked.code, checked.stdout + checked.stderr).toBe(rules.length === 0 ? 0 : 1);
+    const report = JSON.parse(checked.stdout) as RunReport;
+    expect(report.checks).toMatchObject([
         {
             check: 'commits/commitlint',
-            status: rule === undefined ? 'passed' : 'failed',
-            findings: rule === undefined ? [] : [containing({ rule })],
+            status: rules.length === 0 ? 'passed' : 'failed',
         },
     ]);
+    expect(report.checks[0]?.findings.map(({ rule }) => rule)).toStrictEqual(rules);
 }
 
 test('native commitlint keeps exact project scopes optional and restores coverage across level changes', async () => {
@@ -67,7 +69,7 @@ test('native commitlint keeps exact project scopes optional and restores coverag
     const command = ['check', '--only', 'commits/commitlint', '--message-file', draft, '--json'];
     for (const { message, rule } of COMMIT_MESSAGES) {
         await Bun.write(draft, `${message}\n`);
-        await expectDraftCheck(sandbox.path, draft, rule);
+        await expectDraftCheck(sandbox.path, draft, rule === undefined ? [] : [rule]);
     }
     await Bun.write(
         policyPath,
@@ -76,7 +78,7 @@ test('native commitlint keeps exact project scopes optional and restores coverag
     const configured = await spawnGspot(sandbox.path, ['apply']);
     expect(configured.code, configured.stdout + configured.stderr).toBe(0);
     await Bun.write(draft, `fix(Core): ${'x'.repeat(35)}\n`);
-    await expectDraftCheck(sandbox.path, draft, 'header-max-length');
+    await expectDraftCheck(sandbox.path, draft, ['header-max-length']);
     for (const message of ['fix(Core): repair source', 'fix: repair source']) {
         await Bun.write(draft, `${message}\n`);
         await expectDraftCheck(sandbox.path, draft);
@@ -132,20 +134,7 @@ const checkCommitHook = async () => {
 const checkMessageFile = async () => {
     const draft = join(root, 'draft.txt');
     await Bun.write(draft, 'Fixed stuff.\n');
-    const refused = await spawnGspot(
-        root,
-        ['check', '--only', 'commits/commitlint', '--message-file', draft, '--json'],
-        environment,
-    );
-    expect(refused.code).toBe(1);
-    expect((JSON.parse(refused.stdout) as RunReport).checks).toMatchObject([
-        { check: 'commits/commitlint', status: 'failed' },
-    ]);
-    expect((JSON.parse(refused.stdout) as RunReport).checks[0]?.findings.map(({ rule }) => rule)).toStrictEqual([
-        'type-empty',
-        'subject-empty',
-        'subject-full-stop',
-    ]);
+    await expectDraftCheck(root, draft, ['type-empty', 'subject-empty', 'subject-full-stop'], environment);
 };
 
 const checkBypassedHook = async () => {

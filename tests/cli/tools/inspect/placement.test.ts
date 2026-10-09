@@ -44,7 +44,7 @@ test('managed library discovery refuses a package directory linked outside the r
     );
 });
 
-test('a missing private npm binary cannot fall back to the developer executable', async () => {
+test('a missing npm tool executable cannot fall back to the developer executable', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         'node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
@@ -87,7 +87,7 @@ test('direct host lookup excludes an unrelated managed compiler', async () => {
     });
 });
 
-test('a private Python pin refuses a project executable and uses its own environment', async () => {
+test('a Python tool pin refuses a project executable and uses its own environment', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
         [environmentExecutable('.venv', 'teller')]:

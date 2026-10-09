@@ -175,7 +175,7 @@ test.each([false, true])(
     },
 );
 
-test('missing Node refuses npm lock acquisition before scratch creation and preserves a current cached lock', async () => {
+test('missing Node refuses npm lockfile resolution before scratch creation and preserves a cached lockfile', async () => {
     const manifest = JSON.stringify({
         ...NPM_TOOL_PROJECT,
         packageManager: 'bun@1.4.2',

@@ -54,7 +54,7 @@ test('doctor identifies unowned generated-directory files that apply preserves',
     expect(await readFile(join(sandbox.path, '.gspot/authored.json'), 'utf8')).toBe(original);
 });
 
-test('doctor reports authored Python and submodules without treating private tool manifests as source', async () => {
+test('doctor reports authored Python and submodules without treating tool manifests as source', async () => {
     await using sandbox = await testdir();
     const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
     await createFileTree(sandbox.path, {

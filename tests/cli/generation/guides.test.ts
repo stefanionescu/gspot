@@ -68,7 +68,7 @@ test('Swift guides require parsed imports and ignore comments and strings', asyn
     }
 });
 
-test.each(runtimeEvidenceCases())('Node instructions follow $name evidence', async (entry) => {
+test.each(runtimeEvidenceCases())('Node agent rules follow $name evidence', async (entry) => {
     const guides = await generatedGuides('all', {
         'package.json': JSON.stringify(entry.package),
         'entry.js': entry.source,
@@ -80,7 +80,7 @@ test.each(runtimeEvidenceCases())('Node instructions follow $name evidence', asy
 });
 
 test.each([...DRIZZLE_DRIVERS])(
-    'Drizzle PostgreSQL instructions follow the $driver driver',
+    'Drizzle PostgreSQL agent rules follow the $driver driver',
     async ({ driver, postgres }) => {
         const guides = await generatedGuides('all', {
             'package.json': JSON.stringify({ dependencies: { 'drizzle-orm': '0.45.1', [driver]: '1.0.0' } }),
@@ -89,7 +89,7 @@ test.each([...DRIZZLE_DRIVERS])(
     },
 );
 
-test('shared HTTP and OpenAPI instructions use their engineering and tool owners', async () => {
+test('shared HTTP and OpenAPI agent rules use their engineering and tool owners', async () => {
     const guides = await generatedGuides('all', { 'openapi.yaml': 'openapi: 3.1.0\n' });
     expect(guides.has(`${RULES_DIRECTORY}/general/engineering/code/HTTP.md`)).toBe(true);
     expect(guides.has(`${RULES_DIRECTORY}/infra/openapi/OPENAPI.md`)).toBe(true);
