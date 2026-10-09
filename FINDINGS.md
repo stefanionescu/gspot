@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-281 unresolved review records remain. 100 come from the review of October 6, 2026 and the owner decisions of that day. 181 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+265 unresolved review records remain. 85 come from the review of October 6, 2026 and the owner decisions of that day. 180 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: test time limits sit in at least six places. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-811 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
+827 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
 
 ## Review of October 6, 2026
 
@@ -30,10 +30,10 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | ----------------------------------------------------------------------------------------------------- | -----------: |
 | [Owner decisions of October 6, 2026](findings/review/owner-decisions.md)                              |            1 |
 | [Owner questions and their answers](findings/review/owner-questions.md)                               |              |
-| [Vocabulary: one name for each concept](findings/review/glossary.md)                                  |           17 |
+| [Vocabulary: one name for each concept](findings/review/glossary.md)                                  |           12 |
 | [Commands and templates](findings/review/commands-templates.md)                                       |            1 |
 | [The gspot.toml format](findings/review/policy-format.md)                                             |           18 |
-| [This repository's own gspot.toml exceptions](findings/review/policy-exceptions.md)                   |           18 |
+| [This repository's own gspot.toml exceptions](findings/review/policy-exceptions.md)                   |           14 |
 | [Carve-outs](findings/review/carve-outs.md)                                                           |            1 |
 | [Source layout, names, and import graph](findings/review/source-layout.md)                            |            2 |
 | [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |            9 |
@@ -41,10 +41,10 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | [Configurations and the ESLint plugin](findings/review/configurations-plugin.md)                      |            1 |
 | [Test layout and wiring](findings/review/tests-layout.md)                                             |           12 |
 | [Tests in tests/cli](findings/review/tests-cli.md)                                                    |            3 |
-| [Tests in tests/tools, tests/plugin, tests/packages, and the harness](findings/review/tests-tools.md) |            4 |
+| [Tests in tests/tools, tests/plugin, tests/packages, and the harness](findings/review/tests-tools.md) |            3 |
 | [READMEs, guides, and the docs site](findings/review/docs-site.md)                                    |            0 |
 | [Repository root, scripts, workflows, and dependencies](findings/review/repository-root.md)           |            4 |
-| [Found while verifying the older records](findings/review/verification.md)                            |            7 |
+| [Found while verifying the older records](findings/review/verification.md)                            |            2 |
 
 ## Older reviews
 
@@ -67,7 +67,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Kits: General](findings/slices/kits-general.md)                                                               |            1 |
 | [Kits: Python, Swift, Bash, and SQL](findings/slices/kits-other-languages.md)                                  |            3 |
 | [Kits: JavaScript, TypeScript, CSS, HTML, and Markdown](findings/slices/kits-web-languages.md)                 |            5 |
-| [Tests: Acceptance](findings/slices/tests-acceptance.md)                                                       |            4 |
+| [Tests: Acceptance](findings/slices/tests-acceptance.md)                                                       |            3 |
 | [Tests: Check Integration Tests](findings/slices/tests-integration-checks.md)                                  |           12 |
 | [Tests: Command, Policy, Platform, and Tools Integration Tests](findings/slices/tests-integration-commands.md) |           13 |
 | [Tests: Execution Integration Tests](findings/slices/tests-integration-execution.md)                           |            4 |

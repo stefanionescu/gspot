@@ -1,6 +1,6 @@
 # Found While Verifying the Open Records
 
-7 unresolved review records remain.
+2 unresolved review records remain.
 
 Six read-only verifiers checked every open record against commit `3e1445a2d` on October 6, 2026. These are the new problems they found on the way. The status of each older record is in the "Status on October 6, 2026" section of its own file.
 
@@ -44,3 +44,15 @@ Original records and quotations remain above. These records are complete at `74f
 | ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                                         |
 | ------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/verification/026` | complete | Windows cmd test shim uses quoted process.execPath, preserving runtime identity without requiring node in PATH. Native argument selection tests pass. This is source/caller evidence; Windows execution is still required in final cross-platform acceptance. Commit `74fcf06452f0a0b0293130e5cff69d42e5ddd620`. |
+
+## Implementation checkpoint 4436ff3bd of October 9, 2026 for five-verification-contracts
+
+Original records and quotations remain above. These records are complete at `4436ff3bd36e99fd2d4922b780dc64813651e34a`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                                                                            |
+| ------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/verification/002` | complete | Delete postgres.docs and its when clause; migration-docs runs only at all. Native root/child and both-level acceptance plus refusal of the retired key pass after normal schema generation. Commit `4436ff3bd36e99fd2d4922b780dc64813651e34a`.                                      |
+| `review/verification/004` | complete | Architecture role documentation names modules, paths, test_harness and configuration-declared roles with their actual default provenance. Native manifest parsing and role acceptance pass. Commit `4436ff3bd36e99fd2d4922b780dc64813651e34a`.                                      |
+| `review/verification/006` | complete | Delete duplicate Semgrep eval rule and retain sonarjs/code-eval as the native in-process owner at both levels. Generated root and child packs omit the retired rule and retain other security rules. Commit `4436ff3bd36e99fd2d4922b780dc64813651e34a`.                             |
+| `review/verification/007` | complete | Docker diagnostics prescribe the missing file and entries; paired package diagnostics prescribe matching versions. Existing native message cases, coordinates and cleanup remain. Root-held broader Docker changes are excluded. Commit `4436ff3bd36e99fd2d4922b780dc64813651e34a`. |
+| `review/verification/015` | complete | Gate NEXT-INTL.md by next-intl in the translations manifest. Native root/child, both-level and five-library acceptance preserve TALKING and omit the rule for unrelated translation libraries. Commit `4436ff3bd36e99fd2d4922b780dc64813651e34a`.                                   |

@@ -1,6 +1,6 @@
 # Tests: Tools, Plugin, Packages, and the Harness
 
-4 unresolved review records remain.
+3 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -315,3 +315,11 @@ Original records and quotations remain above. These records are complete at `acf
 | ID                       | Status   | Evidence                                                                                                                                                                                                                                                                                     |
 | ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/tests-tools/061` | complete | Use explicit managed Ruff/Vale paths and delete the duplicate executable lookup. Exact approved five-byte patch; nine native tests/38 assertions pass. /tmp/gspot-tests-tools061-canonical.patch; combined staged and commit checks pass. Commit `acff97d297045cca054727e72f499181dedefa18`. |
+
+## Implementation checkpoint 82b5b4f83 of October 9, 2026 for reducing-native-and-vocabulary-contracts
+
+Original records and quotations remain above. These records are complete at `82b5b4f83efb79b498136e4d8691386ddd4d0817`.
+
+| ID                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-tools/059` | complete | Delete the second Docker availability check; keep the single designated native Docker gate. Implementation commit `ca2975ca5552d3276e78bbd6d897c44cfdf70a09`. Designated Ubuntu database workflow 37965939028, job 113940178605, passes both stale-to-regenerated and two-scoped-database recovery cases: two tests, 19 assertions, 134.07 seconds. Test, data, types, Docker gate, command harness, Supabase source/manifest and committed generated-code reader match that successful run byte for byte. Evidence: `/tmp/gspot-database059-current-proof/proof.json`. Root-held broader generated-code changes are excluded from this attribution; no fresh dispatch or skip credit. Commit `82b5b4f83efb79b498136e4d8691386ddd4d0817`. |
