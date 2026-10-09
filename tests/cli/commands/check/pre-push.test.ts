@@ -102,11 +102,11 @@ test('annotated commits resolve while blob tags, blobs, and deleted refs remain 
     );
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const report = JSON.parse(selected.stdout) as PushReport;
-    expect(report.revisions.map(({ object: hash }) => hash)).toStrictEqual([reviewed]);
+    expect(report.revisions.map(({ hash }) => hash)).toStrictEqual([reviewed]);
     expect(report.skipped).toStrictEqual([
-        { ref: 'refs/tags/data', object: data, reason: 'non-commit object' },
-        { ref: 'refs/tags/blob', object: blob, reason: 'non-commit object' },
-        { ref: 'refs/heads/removed', object: zero, reason: 'deleted ref' },
+        { ref: 'refs/tags/data', hash: data, reason: 'non-commit object' },
+        { ref: 'refs/tags/blob', hash: blob, reason: 'non-commit object' },
+        { ref: 'refs/heads/removed', hash: zero, reason: 'deleted ref' },
     ]);
     await expectWorkingTreeKept(sandbox.path, broken);
 });
@@ -190,7 +190,7 @@ test('pre-push text supplies an executable reproduction of the same committed fi
     );
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     const repeatedReport = JSON.parse(repeated.stdout) as PushReport;
-    expect(repeatedReport.revisions[0]?.object).toBe(broken);
+    expect(repeatedReport.revisions[0]?.hash).toBe(broken);
     expect(repeatedReport.revisions[0]?.report.checks[0]?.findings).toStrictEqual(failedReport.checks[0]?.findings);
     await expectWorkingTreeKept(sandbox.path, broken);
 });

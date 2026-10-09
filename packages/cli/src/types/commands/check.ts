@@ -10,7 +10,7 @@ export type CheckCommandResult = CommandResult & { report?: RunReport };
 /** The push report: one run report for every distinct tree that Git's pre-push input names. */
 export type PushReport = {
     canceled?: { pendingRefs: string[] };
-    revisions: { object: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport }[];
+    revisions: { hash: string; refs: string[]; commits: string[]; historyComplete: boolean; report: RunReport }[];
     skipped: PushSelection['skipped'];
     exitCode: number;
 };

@@ -7,7 +7,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
 import { buildCheckInput } from '#tests/harness/input.ts';
-import { AUTHORED_PATH_CASES } from '#tests/config/cli/checks/general/gspot.ts';
+import { AUTHORED_PATH_CASES, NATIVE_EXCEPTION_CASES } from '#tests/config/cli/checks/general/gspot.ts';
 
 test('check path ignores must match tracked paths even when documentation mentions them', async () => {
     await using sandbox = await testdir();
@@ -32,10 +32,20 @@ test('check path ignores must match tracked paths even when documentation mentio
             ],
         }),
     );
-    const selected = buildCheckInput(await openSession(sandbox.path), 'gspot/unmatched-paths', {
+    const session = await openSession(sandbox.path);
+    const selected = buildCheckInput(session, 'gspot/unmatched-paths', {
         paths: ['docs/guide.md'],
     });
-    const findings = await BUILT_IN_CHECKS['gspot/unmatched-paths'].input(selected);
+    const { findings } = await BUILT_IN_CHECKS['gspot/unmatched-paths'].run(
+        session,
+        {
+            scope: selected.selection,
+            check: selected.check,
+            files: selected.files,
+            triggerPaths: [],
+        },
+        undefined,
+    );
     expect(findings.map(({ message: description }) => description)).toStrictEqual([
         '.reports/output.json under [[ignore]] matches no tracked file or folder.',
         '.reports/unused.json under [[ignore]] matches no tracked file or folder.',
@@ -50,8 +60,16 @@ test.each(AUTHORED_PATH_CASES)('$name', async ({ files, policy, unmatched }) => 
     commitAll(sandbox.path);
     const session = await openSession(sandbox.path);
     expect(session.policyFiles.errors).toStrictEqual([]);
-    const findings = await BUILT_IN_CHECKS['gspot/unmatched-paths'].input(
-        buildCheckInput(session, 'gspot/unmatched-paths'),
+    const selected = buildCheckInput(session, 'gspot/unmatched-paths');
+    const { findings } = await BUILT_IN_CHECKS['gspot/unmatched-paths'].run(
+        session,
+        {
+            scope: selected.selection,
+            check: selected.check,
+            files: selected.files,
+            triggerPaths: [],
+        },
+        undefined,
     );
     expect(findings.map((finding) => finding.message.split(' under ', 1)[0])).toStrictEqual(unmatched);
     expect(findings).toMatchObject(
@@ -62,4 +80,37 @@ test.each(AUTHORED_PATH_CASES)('$name', async ({ files, policy, unmatched }) => 
             rule: 'unmatched-pattern',
         })),
     );
+});
+
+test.each(NATIVE_EXCEPTION_CASES)('$name', async ({ files, policy, unusedNames, unusedIgnores }) => {
+    await using sandbox = await testdir();
+    const text = stringify({ level: 'all', ...policy });
+    await createFileTree(sandbox.path, { ...files, 'gspot.toml': text });
+    commitAll(sandbox.path);
+    const session = await openSession(sandbox.path);
+    expect(session.policyFiles.errors).toStrictEqual([]);
+    const selected = buildCheckInput(session, 'gspot/unmatched-paths');
+    const result = await BUILT_IN_CHECKS['gspot/unmatched-paths'].run(
+        session,
+        {
+            scope: selected.selection,
+            check: selected.check,
+            files: selected.files,
+            triggerPaths: [],
+        },
+        undefined,
+    );
+    expect(
+        result.findings
+            .filter((entry) => entry.rule === 'unused-name')
+            .map((entry) => entry.message.split(' under ', 1)[0]),
+    ).toStrictEqual(unusedNames);
+    expect(
+        result.findings
+            .filter((entry) => entry.rule === 'unused-ignore')
+            .map((entry) => entry.message.split(' for ', 2)[1]?.split(' matches ', 1)[0]),
+    ).toStrictEqual(unusedIgnores);
+    expect(result.findings).toHaveLength(unusedNames.length + unusedIgnores.length);
+    expect(result.findings.every((entry) => entry.file === 'gspot.toml' && entry.line === 1)).toBe(true);
+    expect(await Bun.file(join(sandbox.path, 'gspot.toml')).text()).toBe(text);
 });

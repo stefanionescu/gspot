@@ -18,14 +18,14 @@ async function checkRevision(
     try {
         return await checkOutRevision(
             root,
-            { kind: 'commit', hash: revision.object },
+            { kind: 'commit', hash: revision.hash },
             (checkout) =>
                 checkTree(checkout, options, signal, {
                     commits: revision.commits,
                     historyComplete: revision.historyComplete,
                     content: 'commit',
                     installedRoot: root,
-                    reference: revision.object,
+                    reference: revision.hash,
                     ...(revision.paths === undefined ? {} : { changed: revision.paths }),
                 }),
             signal,
@@ -89,13 +89,13 @@ export async function checkPush(
         if (result === undefined) break;
         if (result.report === undefined) return result;
         revisions.push({
-            object: revision.object,
+            hash: revision.hash,
             refs: revision.refs,
             commits: revision.commits,
             historyComplete: revision.historyComplete,
             report: result.report,
         });
-        text.push(`${revision.refs.join(', ')} at ${revision.object}\n${result.text}`);
+        text.push(`${revision.refs.join(', ')} at ${revision.hash}\n${result.text}`);
     }
     const report = buildPushReport(selected, revisions, signal);
     if (report.canceled !== undefined)

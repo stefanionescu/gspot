@@ -233,7 +233,7 @@ export function effectivePolicy(
 /**
  * Read lexical declarations and path names using each source file's selected language.
  * @param input the scoped repository and native parse resources.
- * @returns lexical and path names for every readable source.
+ * @returns declared names and the existing path-name projection for every readable source.
  */
 export async function declaredNames(input: CheckInput): Promise<FileNames[]> {
     const policy = input.policyFiles.policy;
@@ -257,13 +257,15 @@ export async function declaredNames(input: CheckInput): Promise<FileNames[]> {
             name,
             input,
         );
+        const declarations = identifiers.map((identifier) => identifier.name);
         files.push({
             path: file.path,
+            declarations,
             names: [
-                fileIdentifier(file.path, name, containers),
-                ...directoryIdentifiers(file.path, name, containers),
-                ...identifiers,
-            ].map((identifier) => identifier.name),
+                fileIdentifier(file.path, name, containers).name,
+                ...directoryIdentifiers(file.path, name, containers).map((identifier) => identifier.name),
+                ...declarations,
+            ],
         });
     }
     return files;

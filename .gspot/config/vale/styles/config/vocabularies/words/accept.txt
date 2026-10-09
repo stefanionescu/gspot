@@ -8,6 +8,7 @@ ASCII
 ASD
 ast-grep
 astro-check
+axe
 basedpyright
 Bash
 BASH
@@ -15,6 +16,7 @@ BCP
 BOM
 BSD
 Bun
+capitalisation
 CDN
 CI
 Cloudflare
@@ -53,6 +55,7 @@ eslint-plugin-sonarjs
 eslint-plugin-unicorn
 eslint-plugin-zod
 ESM
+facter
 GET
 GitHub
 gitleaks
@@ -66,6 +69,7 @@ HTML
 html-validate
 HTTPS
 ICU
+IIF
 INI
 JavaScript
 jscpd
@@ -74,6 +78,7 @@ JSX
 JWT
 knip
 LFS
+LICENCE
 license-checker-rseidelsohn
 linkinator
 lint-imports
@@ -93,6 +98,8 @@ Node
 npm
 NUL
 OCSP
+ODF
+optin
 ORM
 osv-scanner
 PEP
@@ -141,6 +148,7 @@ typescript
 TypeScript
 typescript-eslint
 typos
+udid
 UTC
 UTF
 uv

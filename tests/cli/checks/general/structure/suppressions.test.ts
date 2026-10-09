@@ -1,5 +1,7 @@
 import { ESLint } from 'eslint';
 import { join } from 'node:path';
+import stylelint from 'stylelint';
+import { HtmlValidate } from 'html-validate';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { executeRun } from '#cli/execution/public.ts';
@@ -12,37 +14,79 @@ import { suppressionComments } from '#cli/checks/general/structure/public.ts';
 
 import {
     SUPPRESSION_COMMENTS,
+    STYLELINT_SUPPRESSIONS,
     SUPPRESSION_REASON_CASES,
+    HTML_VALIDATE_SUPPRESSIONS,
 } from '#tests/config/cli/checks/general/structure/suppressions.ts';
 
-describe('suppression comments match native ESLint', () => {
-    const sources = SUPPRESSION_COMMENTS.map(([comment, active], index) => ({
+const eslint = new ESLint({ overrideConfigFile: true, overrideConfig: { rules: { 'no-console': 'error' } } });
+const html = new HtmlValidate({ extends: ['html-validate:recommended'] });
+
+describe.each([
+    {
+        name: 'ESLint',
+        configuration: 'javascript',
+        extension: 'js',
+        form: 'eslint',
+        rows: SUPPRESSION_COMMENTS,
+        body: 'console.log(1);',
+        native: async (source: string, path: string, active: boolean) => {
+            const native = await eslint.lintText(source, { filePath: path });
+            expect(native[0]!.suppressedMessages).toHaveLength(active ? 1 : 0);
+        },
+    },
+    {
+        name: 'Stylelint',
+        configuration: 'css',
+        extension: 'css',
+        form: 'stylelint',
+        rows: STYLELINT_SUPPRESSIONS,
+        body: 'a { color: #ggg; }',
+        native: async (source: string, _path: string, active: boolean) => {
+            const native = await stylelint.lint({ code: source, config: { rules: { 'color-no-invalid-hex': true } } });
+            expect(native.results[0]!.warnings).toHaveLength(active ? 0 : 1);
+        },
+    },
+    {
+        name: 'HTML Validate',
+        configuration: 'html',
+        extension: 'html',
+        form: 'html-validate',
+        rows: HTML_VALIDATE_SUPPRESSIONS,
+        body: '<img src="fixture.png">',
+        native: async (source: string, _path: string, active: boolean) => {
+            const native = await html.validateString(source);
+            const findings = native.results.flatMap(({ messages }) =>
+                messages.filter(({ ruleId }) => ruleId === 'wcag/h37'),
+            );
+            expect(findings).toHaveLength(active ? 0 : 1);
+        },
+    },
+])('suppression comments match native $name', ({ configuration, extension, form, rows, body, native }) => {
+    const sources = rows.map(([comment, active], index) => ({
         comment,
         active,
-        path: `source-${index.toString()}.js`,
-        source: `${comment}\nconsole.log(1);\n`,
+        path: `source-${index.toString()}.${extension}`,
+        source: `${comment}\n${body}\n`,
     }));
     let sandbox: Awaited<ReturnType<typeof testdir>>;
     let comments: Awaited<ReturnType<typeof suppressionComments>>;
-    let eslint: ESLint;
     beforeAll(async () => {
         sandbox = await testdir();
         await createFileTree(sandbox.path, {
-            'gspot.toml': buildPolicy(['javascript'], { level: 'all' }),
+            'gspot.toml': buildPolicy([configuration], { level: 'all' }),
             ...Object.fromEntries(sources.map(({ path, source }) => [path, source])),
         });
         const session = await openSession(sandbox.path);
         comments = await suppressionComments(session.root, session.scopes, session.reads, session.repository.files);
-        eslint = new ESLint({ overrideConfigFile: true, overrideConfig: { rules: { 'no-console': 'error' } } });
     });
     afterAll(async () => {
         await sandbox[Symbol.asyncDispose]();
     });
     test.each(sources)('recognizes $comment', async ({ active, path, source }) => {
-        const native = await eslint.lintText(source, { filePath: path });
-        expect(native[0]!.suppressedMessages).toHaveLength(active ? 1 : 0);
+        await native(source, path, active);
         expect(comments.filter((entry) => entry.file === path).map(({ line, form }) => ({ line, form }))).toStrictEqual(
-            active ? [{ line: 1, form: 'eslint' }] : [],
+            active ? [{ line: 1, form }] : [],
         );
     });
 });

@@ -17,7 +17,6 @@ import type {
     KnipConfiguration,
     RuffConfiguration,
     StylelintConfiguration,
-    TestedRuffConfiguration,
 } from '#tests/types/cli/generation/configuration-files.ts';
 import {
     KNIP,
@@ -115,7 +114,7 @@ test('Ruff selects declared runner and framework families without implicit rule 
     const plain = await generatedDocument<RuffConfiguration>(python, RUFF);
     expect(plain.lint.select.filter((code) => /^(?:AIR|DJ|FAST|NPY|PT)/u.test(code))).toStrictEqual([]);
     expect(plain.lint['per-file-ignores']).toBeUndefined();
-    const tested = await generatedDocument<TestedRuffConfiguration>(buildPolicy(['python', 'pytest']), RUFF);
+    const tested = await generatedDocument<RuffConfiguration>(buildPolicy(['python', 'pytest']), RUFF);
     expect(tested.lint.select).toStrictEqual(containingAll(pytest.ruff_rules.recommended));
     expect(tested.lint['per-file-ignores']).toBeUndefined();
     const served = await generatedDocument<RuffConfiguration>(buildPolicy(['python', 'fastapi']), RUFF);
@@ -124,13 +123,13 @@ test('Ruff selects declared runner and framework families without implicit rule 
 });
 
 test('policy ignores for the same test path share the native rule list', async () => {
-    const ignored = await generatedDocument<TestedRuffConfiguration>(
+    const ignored = await generatedDocument<RuffConfiguration>(
         buildPolicy(['python', 'pytest'], {
             tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["**/test_*.py"]\nreason = "The sandbox uses deliberate assertions."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/test_*.py"]\nreason = "Samples are documented by their names."\n',
         }),
         RUFF,
     );
-    expect(ignored.lint['per-file-ignores']['../../**/test_*.py']).toStrictEqual(['S101', 'D103']);
+    expect(ignored.lint['per-file-ignores']?.['../../**/test_*.py']).toStrictEqual(['S101', 'D103']);
 });
 
 test.each(PATH_IGNORE_CONFIGURATIONS)(

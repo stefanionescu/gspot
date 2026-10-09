@@ -165,7 +165,7 @@ test.skipIf(!isPosix)('push cancellation retains completed reports and names ref
     expect(await child.exited, await errors).toBe(2);
     const report = JSON.parse(await output) as PushReport;
     expect(report).toMatchObject({
-        revisions: [{ object: first, report: { checks: [{ status: 'passed' }] } }],
+        revisions: [{ hash: first, report: { checks: [{ status: 'passed' }] } }],
         canceled: { pendingRefs: ['refs/heads/second'] },
         exitCode: 2,
     });
@@ -227,7 +227,7 @@ await import(${JSON.stringify(gspot)});
             expect(retry.code, retry.stdout + retry.stderr).toBe(0);
             expect((JSON.parse(retry.stdout) as PushReport).revisions).toMatchObject([
                 {
-                    object: revision,
+                    hash: revision,
                     refs: [ref],
                     report: { exitCode: 0, checks: [{ check: 'bash/bash-syntax', status: 'passed' }] },
                 },

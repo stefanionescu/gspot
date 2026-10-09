@@ -90,7 +90,7 @@ async function buildRevision(context: PushSearch, line: PushLine, hash: string):
     const tree = await gitText(root, ['rev-parse', '--verify', `${hash}^{tree}`], { cancelSignal });
     const selected = changed === undefined ? undefined : [...new Set(changed)].toSorted((a, b) => a.localeCompare(b));
     return {
-        object: hash,
+        hash,
         tree: tree.trim(),
         refs: [line.localRef],
         commits: history,
@@ -116,14 +116,14 @@ function recordRevision(result: PushSelection, revision: PushRevision): void {
 // Records what one pre-push line pushes: a deleted ref, a non-commit object, or a revision.
 async function selectLine(context: PushSearch, result: PushSelection, line: PushLine): Promise<void> {
     if (ABSENT_HASH.test(line.localHash)) {
-        result.skipped.push({ ref: line.remoteRef, object: line.localHash, reason: 'deleted ref' });
+        result.skipped.push({ ref: line.remoteRef, hash: line.localHash, reason: 'deleted ref' });
         return;
     }
     if (!context.commits.has(line.localHash))
         throw new GspotError('selection', `Cannot resolve pushed object ${line.localHash}. Fetch the remote again.`);
     const commit = context.commits.get(line.localHash);
     if (commit === undefined) {
-        result.skipped.push({ ref: line.localRef, object: line.localHash, reason: 'non-commit object' });
+        result.skipped.push({ ref: line.localRef, hash: line.localHash, reason: 'non-commit object' });
         return;
     }
     recordRevision(result, await buildRevision(context, line, commit));

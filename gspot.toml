@@ -30,7 +30,7 @@ provider = "github"
 setup = ["mise", "run", "setup"]
 
 [naming]
-banned = ["catalog", "catalogue", "corpus", "render", "sync", "synchronize", "materialize", "coerce", "scoped", "bind", "load", "loaded", "loader", "loaders", "loading", "fetch", "resolve", "resolving", "resolution", "probe", "probes", "probed", "probing", "fixture", "fixtures", "shell"]
+banned = ["catalog", "catalogue", "corpus", "render", "sync", "synchronize", "materialize", "coerce", "scoped", "bind", "load", "loaded", "loader", "loaders", "loading", "fetch", "resolve", "resolving", "resolution", "probe", "probes", "probed", "probing", "fixture", "fixtures", "shell", "rendered", "renders", "resolved", "resolver", "synced", "bindings", "fetched"]
 
 [[naming.overrides]]
 allowed = ["may_import", "tool_timeout_seconds", "agent_rules", "test_files", "removed_configurations"]
@@ -38,32 +38,12 @@ paths = ["packages/cli/src/types/policy/settings.ts"]
 reason = "These fields carry the gspot.toml key names."
 
 [[naming.overrides]]
-allowed = ["object"]
-paths = ["packages/cli/src/types/repository/revisions.ts"]
-reason = "The pre-push JSON report names Git object identities with this key."
-
-[[naming.overrides]]
-allowed = ["object"]
-paths = ["packages/cli/src/types/commands/check.ts"]
-reason = "The pre-push JSON report names Git object identities with this key."
-
-[[naming.overrides]]
 allowed = ["C"]
 paths = ["packages/cli/src/types/commands/program.ts"]
 reason = "Commander names the value of the -C flag after its letter, which Git uses for the same flag."
 
 [[naming.overrides]]
-allowed = ["DefElem", "List", "String", "FunctionParameter"]
-paths = ["packages/cli/src/types/checks/language/sql.ts"]
-reason = "libpg-query AST tags spell these keys."
-
-[[naming.overrides]]
-allowed = ["lengthBytesUTF8", "stringToUTF8", "UTF8ToString", "_malloc", "_free", "_wasm_parse_query_raw", "_wasm_parse_plpgsql", "_wasm_free_string", "_wasm_free_parse_result", "stmt_location", "stmt_len"]
-paths = ["packages/cli/src/types/parsers/sql.ts"]
-reason = "Emscripten and libpg-query export these members."
-
-[[naming.overrides]]
-allowed = ["404"]
+allow_digits = true
 paths = ["docs/src/content/docs/404.md"]
 reason = "Starlight routes the HTTP 404 page by this filename."
 
@@ -84,6 +64,7 @@ reason = "SwiftLint JSON diagnostics identify the native rule using rule_id."
 
 [[naming.overrides]]
 allowed = ["swift-snapshot-testing", "swift-snapshot-testing.test"]
+categories = ["files"]
 paths = ["tests/cli/checks/library/swift-snapshot-testing.test.ts", "tests/config/cli/checks/library/swift-snapshot-testing.ts", "packages/cli/src/checks/library/swift-snapshot-testing.ts", "packages/cli/src/config/checks/swift-snapshot-testing.ts"]
 reason = "These files test the swift-snapshot-testing library configuration and use its exact public name."
 
@@ -217,11 +198,13 @@ reason = "A build dependency of the manual site; the license binds changes to it
 [words]
 "(?-i:PATH)" = "Accepted spelling from this repository's previous prose vocabulary."
 ASCII = "Accepted spelling from this repository's previous prose vocabulary."
+axe = "The npm package and quoted original findings retain the exact axe spelling."
 Bash = "Bash is the proper name of the language described in the shipped rule documents."
 BASH = "Accepted spelling from this repository's previous prose vocabulary."
 BCP = "Accepted spelling from this repository's previous prose vocabulary."
 BOM = "Accepted spelling from this repository's previous prose vocabulary."
 BSD = "Accepted spelling from this repository's previous prose vocabulary."
+capitalisation = "SQLFluff requires the exact capitalisation setting names; original findings retain them."
 CDN = "Accepted spelling from this repository's previous prose vocabulary."
 CORS = "Accepted spelling from this repository's previous prose vocabulary."
 CPU = "Accepted spelling from this repository's previous prose vocabulary."
@@ -230,22 +213,27 @@ CRUD = "Accepted spelling from this repository's previous prose vocabulary."
 CSV = "Accepted spelling from this repository's previous prose vocabulary."
 DDL = "Accepted spelling from this repository's previous prose vocabulary."
 ESM = "Accepted spelling from this repository's previous prose vocabulary."
+facter = "The adopted Vale product rule retains the official Facter name."
 GET = "Accepted spelling from this repository's previous prose vocabulary."
 GNU = "Accepted spelling from this repository's previous prose vocabulary."
 HEAD = "Accepted spelling from this repository's previous prose vocabulary."
 HSTS = "Accepted spelling from this repository's previous prose vocabulary."
 HTTPS = "Accepted spelling from this repository's previous prose vocabulary."
 ICU = "Accepted spelling from this repository's previous prose vocabulary."
+IIF = "The upstream ESLint selector and preserved findings use the exact IIF token."
 INI = "Accepted spelling from this repository's previous prose vocabulary."
 JSX = "Accepted spelling from this repository's previous prose vocabulary."
 JWT = "Accepted spelling from this repository's previous prose vocabulary."
 LFS = "Accepted spelling from this repository's previous prose vocabulary."
+LICENCE = "Original findings retain the exact LICENCE filename quotation."
 MIME = "Accepted spelling from this repository's previous prose vocabulary."
 MIT = "Accepted spelling from this repository's previous prose vocabulary."
 MVVM = "Accepted spelling from this repository's previous prose vocabulary."
 next-intl = "The package name used by the authored internationalization guide."
 NUL = "Accepted spelling from this repository's previous prose vocabulary."
 OCSP = "Accepted spelling from this repository's previous prose vocabulary."
+ODF = "The adopted Vale product rule retains the ODF format abbreviation."
+optin = "The dependency patch retains the upstream Zod optin schema direction."
 ORM = "Accepted spelling from this repository's previous prose vocabulary."
 PEP = "Accepted spelling from this repository's previous prose vocabulary."
 PID = "Accepted spelling from this repository's previous prose vocabulary."
@@ -263,6 +251,7 @@ SVG = "Accepted spelling from this repository's previous prose vocabulary."
 TCA = "Accepted spelling from this repository's previous prose vocabulary."
 TLS = "Accepted spelling from this repository's previous prose vocabulary."
 TSX = "Accepted spelling from this repository's previous prose vocabulary."
+udid = "Original findings quote the native Apple identifier udid."
 UTC = "Accepted spelling from this repository's previous prose vocabulary."
 UTF = "Accepted spelling from this repository's previous prose vocabulary."
 WASM = "Accepted spelling from this repository's previous prose vocabulary."
@@ -294,15 +283,15 @@ workspace = "docs"
 
 [[ignore]]
 check = "dependencies/osv"
-reason = "http-cache-semantics 4.2.0 is the newest release, and no release fixes it. Astro and the npm fetch client use it in the development tools; the static docs build shares no cached response between users."
+reason = "Checked 2026-10-09: GHSA lists no patched release; http-cache-semantics 4.3.0 is latest. Astro and npm fetch use it in development; the static docs build shares no cached response between users."
 rule = "GHSA-ch52-4w7c-c8xp"
-until = 2026-10-17
+until = 2026-11-08
 
 [[ignore]]
 check = "dependencies/osv"
-reason = "braces 3.0.3 is the newest release, and no release fixes it. micromatch pulls it into the development tools of this workspace, which expand only the patterns this repository writes."
+reason = "Checked 2026-10-09: braces 3.0.3 is latest and GHSA lists no patched release. micromatch uses it in development tools, which expand only repository-authored patterns."
 rule = "GHSA-vfj7-8cjw-p6xm"
-until = 2026-10-17
+until = 2026-11-08
 
 [[ignore]]
 check = "docs/lychee"

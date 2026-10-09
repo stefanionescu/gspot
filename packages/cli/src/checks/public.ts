@@ -7,6 +7,7 @@ import { embeds } from '#cli/checks/language/bash/embeds.ts';
 import { safety } from '#cli/checks/language/bash/safety.ts';
 import { sshBlocks } from '#cli/checks/language/bash/ssh.ts';
 import { locales } from '#cli/checks/library/translations.ts';
+import { runBuiltInCheck } from '#cli/execution/contracts.ts';
 import { svelteCheck } from '#cli/checks/framework/contracts.ts';
 import { contract } from '#cli/checks/language/bash/contract.ts';
 import { wrappers } from '#cli/checks/language/bash/wrappers.ts';
@@ -15,7 +16,6 @@ import { codeql, semgrep } from '#cli/checks/general/security.ts';
 import { licensesPackages } from '#cli/checks/general/licenses.ts';
 import { sourceOrder } from '#cli/checks/language/bash/sources.ts';
 import { nginxTest, actionlint } from '#cli/checks/tool/public.ts';
-import type { BuiltInChecks } from '#cli/types/execution/check.ts';
 import { shellcheck } from '#cli/checks/language/bash/shellcheck.ts';
 import { generatedCode } from '#cli/checks/general/generated-code.ts';
 import { envOwner } from '#cli/checks/general/structure/env-owner.ts';
@@ -34,6 +34,7 @@ import { relations as drizzleRelations } from '#cli/checks/library/drizzle.ts';
 import { testPlacement } from '#cli/checks/general/structure/test-placement.ts';
 import { unreadArguments } from '#cli/checks/language/bash/unread-arguments.ts';
 import { unusedFunctions } from '#cli/checks/language/bash/unused-functions.ts';
+import type { CheckResult, BuiltInChecks } from '#cli/types/execution/check.ts';
 import { ats, xcconfig, entitlements } from '#cli/checks/tool/xcode/settings.ts';
 import { foreignKeyIndexes } from '#cli/checks/database/postgres/foreign-keys.ts';
 import { importComments } from '#cli/checks/general/structure/import-comments.ts';
@@ -110,7 +111,10 @@ export const BUILT_IN_CHECKS = {
     'structure/file-lines': { input: fileLines },
     'structure/config-logic': { input: configurationLogic },
     'gspot/suppressions': { input: suppressions },
-    'gspot/unmatched-paths': { input: unmatchedPaths },
+    'gspot/unmatched-paths': {
+        run: (session, planned, options): Promise<CheckResult> =>
+            runBuiltInCheck((input) => unmatchedPaths(input, session, BUILT_IN_CHECKS))(session, planned, options),
+    },
     'repository/large-files': { input: largeFiles },
     'typescript/tsconfig': { input: tsconfig },
     'docs/headings': { input: headings },

@@ -85,3 +85,150 @@ export const AUTHORED_PATH_CASES = [
         unmatched: [],
     },
 ];
+
+export const NATIVE_EXCEPTION_CASES = [
+    {
+        name: 'allowances name code or files',
+        files: { 'phantomName.js': '// commentName\nexport const keptName = true;\n' },
+        policy: {
+            configurations: ['javascript'],
+            naming: {
+                overrides: [
+                    {
+                        paths: ['*.js'],
+                        allowed: ['keptName', 'phantomName', 'commentName'],
+                        reason: 'The external API declares these exact names.',
+                    },
+                    {
+                        paths: ['*.js'],
+                        categories: ['files', 'variables'],
+                        allowed: ['phantomName', 'keptName'],
+                        reason: 'Exact API names.',
+                    },
+                ],
+            },
+        },
+        unusedNames: ['phantomName', 'commentName'],
+        unusedIgnores: [],
+    },
+    {
+        name: 'a sibling declaration cannot satisfy an authored source pattern',
+        files: {
+            'app/source.js': 'export const keptName = true;\n',
+            'worker/source.js': 'export const siblingName = true;\n',
+        },
+        policy: {
+            configurations: ['javascript'],
+            naming: {
+                overrides: [
+                    {
+                        paths: ['app/**'],
+                        allowed: ['keptName', 'siblingName'],
+                        reason: 'The app interface fixes these exact names.',
+                    },
+                ],
+            },
+            scope: { app: {}, worker: {} },
+        },
+        unusedNames: ['siblingName'],
+        unusedIgnores: [],
+    },
+    {
+        name: 'child Python declarations satisfy normalized inherited paths',
+        files: { 'app/deep/source.py': 'kept_value = True\n', 'worker/source.py': 'sibling_value = True\n' },
+        policy: {
+            configurations: ['python'],
+            scope: {
+                app: {
+                    naming: {
+                        overrides: [
+                            {
+                                paths: ['**/*.py'],
+                                allowed: ['kept_value', 'sibling_value'],
+                                reason: 'The app interface fixes these exact names.',
+                            },
+                        ],
+                    },
+                },
+                'app/deep': {},
+                worker: {},
+            },
+        },
+        unusedNames: ['sibling_value'],
+        unusedIgnores: [],
+    },
+    {
+        name: 'duplicate and shadowed path ignores each match the raw native finding',
+        files: {
+            'helpers/first.js': 'export const active = true;\n',
+            'helpers/second.js': 'export const enabled = true;\n',
+        },
+        policy: {
+            configurations: ['javascript'],
+            ignore: [
+                {
+                    check: 'structure/folder-names',
+                    paths: ['helpers/**'],
+                    reason: 'The external project fixes this folder name.',
+                },
+                {
+                    check: 'structure/folder-names',
+                    paths: ['helpers/first.js'],
+                    reason: 'The external project fixes this source folder.',
+                },
+                {
+                    check: 'structure/folder-names',
+                    rule: 'container-name',
+                    reason: 'The external project fixes this required folder.',
+                },
+            ],
+        },
+        unusedNames: [],
+        unusedIgnores: [],
+    },
+    {
+        name: 'only the wrong rule is unused beside the native folder exception',
+        files: { 'app/helpers/first.js': 'export const active = true;\n' },
+        policy: {
+            configurations: ['javascript'],
+            scope: { app: {} },
+            ignore: [
+                {
+                    check: 'structure/folder-names',
+                    paths: ['app/helpers/**'],
+                    reason: 'The external project fixes this folder name.',
+                },
+                {
+                    check: 'structure/folder-names',
+                    rule: 'other-rule',
+                    reason: 'An obsolete exception no longer matches this check.',
+                },
+            ],
+        },
+        unusedNames: [],
+        unusedIgnores: ['structure/folder-names'],
+    },
+    {
+        name: 'an enabled whole-check ignore is unused when no native finding exists',
+        files: { 'source.js': 'export const active = true;\n' },
+        policy: {
+            configurations: ['javascript'],
+            ignore: [
+                { check: 'structure/folder-names', reason: 'An obsolete exception no longer matches this check.' },
+            ],
+        },
+        unusedNames: [],
+        unusedIgnores: ['structure/folder-names'],
+    },
+    {
+        name: 'a recommended-level dormant check cannot establish an unused exception',
+        files: { 'source.js': 'export const active = true;\n' },
+        policy: {
+            level: 'recommended',
+            configurations: ['javascript'],
+            ignore: [{ check: 'structure/folder-names', reason: 'The all-level exception belongs to this project.' }],
+        },
+        unusedNames: [],
+        unusedIgnores: [],
+    },
+];

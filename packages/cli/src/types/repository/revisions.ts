@@ -1,7 +1,7 @@
 export type Revision = { kind: 'index' } | { kind: 'commit'; hash: string };
 
 export type PushRevision = {
-    object: string;
+    hash: string;
     tree: string;
     refs: string[];
     commits: string[];
@@ -11,7 +11,7 @@ export type PushRevision = {
 
 export type PushSelection = {
     revisions: PushRevision[];
-    skipped: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+    skipped: { ref: string; hash: string; reason: 'deleted ref' | 'non-commit object' }[];
 };
 
 export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };

@@ -51,4 +51,4 @@ export type PathContainer = z.infer<typeof pathContainerSchema>;
 /** A selected source file and its owning language configuration. */
 export type NamingSource = { file: TrackedFile; language: string };
 /** Identifier spellings associated with one file for cross-project comparisons. */
-export type FileNames = { path: string; names: string[] };
+export type FileNames = { path: string; names: string[]; declarations: string[] };
