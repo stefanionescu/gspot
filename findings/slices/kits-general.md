@@ -1,6 +1,6 @@
 # Kits: General
 
-5 unresolved review records remain.
+4 unresolved review records remain.
 
 ## Open findings
 
@@ -76,3 +76,11 @@ Original records and quotations remain above. These records are complete at `482
 | ------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/kits-general/056` | complete | Delete the obsolete .qlty replacement declaration from structure; Qlty metadata is preserved by native takeover controls. Main223 CLI cases734 assertions and native per-record controls pass. Root types/policy ESLint, normal build/schema generation, preset idempotence and owned gspot apply/install pass. Explicit staged check, normal commit and push hooks pass; source checkpoint is pushed to main. Authored fragment ownership production reduces657 bytes; manifest metadata production reduces56 bytes; structure pair reduces25 bytes. Captured generated data and new regression tests are recorded separately. Named-tool036 growth remains explicitly partial; no broad batch or cross-platform completion claim. Commit `48298e0be89d77c0778acbc63382381a26ef202d`.                                          |
 | `slices/kits-general/057` | complete | The limits.prefix_collisions summary now states the number of siblings sharing a prefix that makes a finding. Existing >= comparison and default remain unchanged. Main223 CLI cases734 assertions and native per-record controls pass. Root types/policy ESLint, normal build/schema generation, preset idempotence and owned gspot apply/install pass. Explicit staged check, normal commit and push hooks pass; source checkpoint is pushed to main. Authored fragment ownership production reduces657 bytes; manifest metadata production reduces56 bytes; structure pair reduces25 bytes. Captured generated data and new regression tests are recorded separately. Named-tool036 growth remains explicitly partial; no broad batch or cross-platform completion claim. Commit `48298e0be89d77c0778acbc63382381a26ef202d`. |
+
+## Implementation checkpoint 6e72dc731 of October9,2026 for test-and-metadata-obligations
+
+Original records and quotations remain above. These records are complete at `6e72dc731f36345d33c5101cb1705eff61ae8673`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                                   |
+| ------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/kits-general/014` | complete | Native editorconfig-checker uses -disable-indentation; original flag reproduced failures, corrected indentation controls pass. Main focused tool packet42pass389assert. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |

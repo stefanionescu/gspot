@@ -1,6 +1,6 @@
 # Tests: Command, Policy, Platform, and Tools Integration Tests
 
-16 unresolved review records remain.
+14 unresolved review records remain.
 
 ## Open findings
 
@@ -75,3 +75,12 @@ Original records and quotations remain above. These records are complete at `801
 | ID                                      | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | --------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-commands/039` | complete | The shared inspectionContext(root) returns the same root and a new inspection map. All 29 real callers in the three tool-inspection files use it; repeated constructions are removed. Pushed implementation 80156a478: main CLI 79 tests and 231 assertions in six files; secrets tools 3 tests and 22 assertions. Types pass; normal staged, commit and push checks report zero findings. Exact implementation blobs verified in /tmp/gspot-five-behavior-closure-owner-proof.json. Commit `80156a478f3286427a507b33a7d03cd3f48f6813`. |
+
+## Implementation checkpoint 6e72dc731 of October9,2026 for test-and-metadata-obligations
+
+Original records and quotations remain above. These records are complete at `6e72dc731f36345d33c5101cb1705eff61ae8673`.
+
+| ID                                      | Status   | Evidence                                                                                                                                                                                                                             |
+| --------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `slices/tests-integration-commands/029` | complete | Expected key-path/message columns, direct version-process note values and exact unchanged policy comparisons replace row-dependent permissive assertions; kitz duplicate deleted. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |
+| `slices/tests-integration-commands/030` | complete | Deleted parser-only sentinel preservation assertion; exact unsafe-lifecycle diagnostic remains. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`.                                                                                   |

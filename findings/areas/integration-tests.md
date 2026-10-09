@@ -1,6 +1,6 @@
 # Integration Tests Outside the Checks Folder
 
-36 unresolved review records remain.
+29 unresolved review records remain.
 
 ## Findings
 
@@ -197,3 +197,17 @@ Original records and quotations remain above. These records are complete at `02f
 | ID                            | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ----------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/integration-tests/025` | complete | Deleted the duplicate staged dependency-copy cancellation case and its dead imports/type. Genuine copy cancellation, partial-output cleanup, CLI cancellation exit codes and JSON diagnostics remain. Native cancellation and dependency-copy tests: 17 passed, 95 assertions. Normal staged gate: 66 passed, zero failed, 10 skipped, zero findings; normal commit and push hooks passed. Commit `02fd3b662284c6cf57540f67001875fb1b459783`. |
+
+## Implementation checkpoint 6e72dc731 of October9,2026 for test-and-metadata-obligations
+
+Original records and quotations remain above. These records are complete at `6e72dc731f36345d33c5101cb1705eff61ae8673`.
+
+| ID                            | Status   | Evidence                                                                                                                                                                                                        |
+| ----------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/integration-tests/019` | complete | Exact outside directory inventory replaces non-writing-path absence assertions; init/check table passes. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`.                                                     |
+| `areas/integration-tests/020` | complete | Init/check unsafe managed links share one table in commands/roots; storage test deleted in separate mechanical checkpoint. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`.                                   |
+| `areas/integration-tests/026` | complete | Deleted the repeated explain run after changing95 to96; distinct exact policy and output observations remain. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`.                                                |
+| `areas/integration-tests/056` | complete | Deleted three prescribed duplicate ESLint-generation cases; two whole callback ASTs preserved. Main native2pass2assert; existing RuleTester153pass. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`.          |
+| `areas/integration-tests/064` | complete | Deleted the impossible recovery absence assertion; substantive restoration observations remain. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`.                                                              |
+| `areas/integration-tests/067` | complete | Deleted duplicate regular-file interruption from links; batches retains multiple paths and verifies pending journal before recovery and clearance afterward. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |
+| `areas/integration-tests/071` | complete | Deleted duplicate missing-reason/kitz/syntax rows; retained both ignore-index positions, exact key diagnostics, corrections and scoped unknown-key controls. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |

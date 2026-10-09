@@ -1,6 +1,6 @@
 # Repository Root, Scripts, Workflows, and Package Wiring
 
-16 unresolved review records remain.
+15 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -293,3 +293,11 @@ Original records and quotations remain above. These records are complete at `35f
 | `review/repository-root/025` | complete | Delete unused workflow_call trigger; push, pull_request and workflow_dispatch remain. Native workflow checks pass. Commit `35fca2bc08540fadb2402a3d8f28968c7b552ca8`.                                                                                                                                              |
 | `review/repository-root/026` | complete | One workflow Bash default replaces repeated job defaults; Windows Defender retains its required PowerShell. Native workflow checks pass. Commit `35fca2bc08540fadb2402a3d8f28968c7b552ca8`.                                                                                                                        |
 | `review/repository-root/031` | complete | Cartesian three-OS/four-shard matrix retains all twelve tool jobs and uses the prescribed shard argument, with no platform-only field. Native workflow checks pass. Commit `35fca2bc08540fadb2402a3d8f28968c7b552ca8`.                                                                                             |
+
+## Implementation checkpoint 6e72dc731 of October9,2026 for test-and-metadata-obligations
+
+Original records and quotations remain above. These records are complete at `6e72dc731f36345d33c5101cb1705eff61ae8673`.
+
+| ID                           | Status   | Evidence                                                                                                                                                                                                                                  |
+| ---------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/repository-root/033` | complete | ARGUMENT_START owner is arguments.ts; preset capture takes no argument and resolves test packages; obsolete constant owner deleted. Native capture leaves all15 preset data unchanged. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |

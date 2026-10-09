@@ -1,6 +1,6 @@
 # Kits, Settings, and Names
 
-30 unresolved review records remain.
+29 unresolved review records remain.
 
 ## Findings
 
@@ -291,3 +291,11 @@ Original records and quotations remain above. These records are complete at `4ea
 | ---------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `areas/kits/146` | complete | Repository owns large-files and tracked-files. gspot owns suppressions and unmatched-paths. Prose limit move was separately verified under areas/kits/022. Production and manifest declarations shrink1,946 bytes; native checkpoint123/472, types, producer freshness, normal apply and staged checks pass. Commit `4ea1e5c0038d3390e14327ab6555cacba7ff71a9`. |
 | `areas/kits/142` | complete | Kept always-selected gspot with drift, policy, policy-layout, suppressions and unmatched-paths; removed redundant structure requires. Current manifest and native checkpoint agree. Commit `4ea1e5c0038d3390e14327ab6555cacba7ff71a9`.                                                                                                                          |
+
+## Implementation checkpoint 6e72dc731 of October9,2026 for test-and-metadata-obligations
+
+Original records and quotations remain above. These records are complete at `6e72dc731f36345d33c5101cb1705eff61ae8673`.
+
+| ID               | Status   | Evidence                                                                                                                                                                                                                                      |
+| ---------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `areas/kits/042` | complete | Supabase admin_key_files setting deleted; native service-role check excludes only function/test selections and honors reasoned ignores. Qualified summary/help agree; Main31pass216assert. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |

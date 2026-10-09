@@ -1,6 +1,6 @@
 # Test Layout and Wiring
 
-29 unresolved review records remain.
+28 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -263,3 +263,11 @@ Original records and quotations remain above. These records are complete at `38c
 | ID                        | Status   | Evidence                                                                                                                                                                                                                                                                                            |
 | ------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `review/tests-layout/013` | complete | Merge release and package-check support into the consumer owner, merge its result types, delete both former owners and update all five package consumers. Existing function bodies, argv, assertions and resource cleanup are preserved exactly. Commit `38ccc4d35eb84863786d6e2d0f1a926774c8a48a`. |
+
+## Implementation checkpoint 6e72dc731 of October9,2026 for test-and-metadata-obligations
+
+Original records and quotations remain above. These records are complete at `6e72dc731f36345d33c5101cb1705eff61ae8673`.
+
+| ID                        | Status   | Evidence                                                                                                                                                                                                    |
+| ------------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/tests-layout/033` | complete | Pre-push/changed/cancellation owners and mirrored data use check command ownership; obsolete storage leaf deleted under integration-tests/020 final fix. Commit `6e72dc731f36345d33c5101cb1705eff61ae8673`. |
