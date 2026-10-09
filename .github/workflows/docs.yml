@@ -38,16 +38,11 @@ jobs:
               with:
                   ref: ${{ inputs.release_tag || github.ref }}
                   persist-credentials: false
-            - name: Install mise
-              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Prepare the documentation workspace
+              uses: ./.github/actions/setup
               with:
-                  version: '2026.8.8'
-                  install: false
-                  cache: false
-            - name: Install Bun and Node
-              run: mise install bun node
-            - name: Install workspace dependencies
-              run: bun install --frozen-lockfile
+                  tools: bun node
+                  setup: bun install --frozen-lockfile --filter @gspothq/docs
             - name: Name the source commit the documentation links to
               shell: bash
               run: printf 'GSPOT_DOCS_REVISION=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_ENV"
@@ -70,16 +65,11 @@ jobs:
               with:
                   ref: ${{ inputs.release_tag || github.ref }}
                   persist-credentials: false
-            - name: Install mise
-              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Prepare the documentation workspace
+              uses: ./.github/actions/setup
               with:
-                  version: '2026.8.8'
-                  install: false
-                  cache: false
-            - name: Install Bun and Node
-              run: mise install bun node
-            - name: Install workspace dependencies
-              run: bun install --frozen-lockfile
+                  tools: bun node
+                  setup: bun install --frozen-lockfile --filter @gspothq/docs
             - name: Download the reviewed static build
               uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
               with:

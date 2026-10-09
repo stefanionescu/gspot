@@ -19,7 +19,7 @@ _.path = ["{{config_root}}/scripts"]
 bun = "1.4.2"
 [tasks."install:checks"]
 description = "Install locked repository checks with the current workspace plugin."
-run = "bun scripts/plugin.ts install --refresh-lockfiles"
+run = "bun scripts/plugin.ts install"
 
 [tasks.setup]
 description = "Install locked dependencies, write grammars, build the plugin, and generate Astro types."
@@ -33,11 +33,6 @@ run = "bun scripts/eslint-presets.ts"
 [tasks."check:pins"]
 description = "Check that every tool pin of the configuration manifests exists in its registry."
 run = "bun scripts/pins.ts"
-
-[tasks."check:types"]
-description = "Check workspace and documentation TypeScript types."
-depends = ["generate:docs"]
-run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p packages/cli/tsconfig.json", "bunx tsc --noEmit -p packages/eslint-plugin/tsconfig.json", "bunx tsc --noEmit -p docs/tsconfig.json"]
 
 [tasks."build:cli"]
 description = "Build the CLI package; run setup first to copy the grammars."

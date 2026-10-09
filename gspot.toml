@@ -457,8 +457,8 @@ reason = "Shipped agent rules describe consumer projects. Their file paths are e
 
 [[ignore]]
 check = "github-actions/zizmor"
-paths = [".github/workflows/ci.yml", ".github/workflows/release.yml"]
-reason = "The repository diagram requires the supported ./ reference form. These jobs check out the repository before calling their own actions; the dedicated $/ spelling is a preference rather than a missing security contract here."
+paths = [".github/workflows/ci.yml", ".github/workflows/database.yml", ".github/workflows/docs.yml", ".github/workflows/release.yml"]
+reason = "Pinned Actionlint 1.7.12 rejects the $/ syntax required by Zizmor 1.30.1. These jobs check out the repository before calling ./.github/actions/setup; the owner permits this repository-only self-repository exception."
 rule = "self-repository"
 
 [[ignore]]

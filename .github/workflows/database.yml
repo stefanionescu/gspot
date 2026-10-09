@@ -19,14 +19,9 @@ jobs:
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   persist-credentials: false
-            - name: Install mise
-              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Prepare the test workspace
+              uses: ./.github/actions/setup
               with:
-                  version: '2026.8.8'
-                  install: false
-            - name: Install Bun and Node
-              run: mise install bun node
-            - name: Install workspace dependencies
-              run: bun install --frozen-lockfile
+                  tools: bun node
             - name: Run the Supabase freshness test
               run: mise run test:tools -- -- tools/configurations/platform/supabase/types.test.ts

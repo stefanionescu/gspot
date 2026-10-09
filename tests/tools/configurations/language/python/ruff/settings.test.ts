@@ -6,11 +6,12 @@ import { emitAll } from '#cli/generation/public.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { buildToolsPath } from '#tests/harness/install.ts';
 import { writeGeneratedFiles } from '#cli/lifecycle/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { openOwnership } from '#cli/lifecycle/ownership/public.ts';
 import { runTestCommandBlocking } from '#tests/harness/command.ts';
-import { buildToolsPath, installToolProjects } from '#tests/harness/install.ts';
+import { sharePythonTools } from '#tests/harness/python-installation.ts';
 
 import {
     RULE_CODES,
@@ -84,9 +85,9 @@ test.each(['recommended', 'all'] as const)('Ruff fixes respect each project Pyth
     await createFileTree(sandbox.path, { 'gspot.toml': buildPolicy(['python'], { level, tables }), ...files });
     const applied = await spawnGspot(sandbox.path, ['apply', '--json']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    await installToolProjects(sandbox.path);
+    const environment = await sharePythonTools(sandbox.path);
     const command = ['check', '--only', 'python/ruff', '--json'];
-    const checked = await spawnGspot(sandbox.path, command);
+    const checked = await spawnGspot(sandbox.path, command, environment);
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const report = JSON.parse(checked.stdout) as RunReport;
     for (const { scope, generics, unions } of VERSION_CASES) {
@@ -100,7 +101,7 @@ test.each(['recommended', 'all'] as const)('Ruff fixes respect each project Pyth
             scope || 'root',
         ).toBe(unions);
     }
-    const fixed = await spawnGspot(sandbox.path, [...command, '--fix']);
+    const fixed = await spawnGspot(sandbox.path, [...command, '--fix'], environment);
     expect(fixed.code, fixed.stdout + fixed.stderr).toBe(1);
     const fixedReport = JSON.parse(fixed.stdout) as RunReport;
     for (const { scope, annotation } of VERSION_CASES) {
@@ -124,9 +125,9 @@ test.each(['recommended', 'all'] as const)(
         });
         const applied = await spawnGspot(sandbox.path, ['apply', '--json']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        await installToolProjects(sandbox.path);
+        const environment = await sharePythonTools(sandbox.path);
         const command = ['check', '--only', 'python/ruff', 'python/basedpyright', '--json'];
-        const checked = await spawnGspot(sandbox.path, command);
+        const checked = await spawnGspot(sandbox.path, command, environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(1);
         const report = JSON.parse(checked.stdout) as RunReport;
         expect(
@@ -138,7 +139,7 @@ test.each(['recommended', 'all'] as const)(
             { check: 'python/basedpyright', file: 'sample.py', line: 5, rule: 'reportAssignmentType' },
         ]);
         await Bun.write(join(sandbox.path, 'sample.py'), '"""An example module."""\n\nTOTAL: int = 1\n');
-        const corrected = await spawnGspot(sandbox.path, command);
+        const corrected = await spawnGspot(sandbox.path, command, environment);
         expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
         expect((JSON.parse(corrected.stdout) as RunReport).checks.flatMap(({ findings }) => findings)).toStrictEqual(
             [],

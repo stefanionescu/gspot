@@ -19,16 +19,14 @@ jobs:
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   persist-credentials: false
-            - name: Prepare release validation runtimes
-              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Prepare release validation
+              uses: ./.github/actions/setup
               with:
-                  version: '2026.8.8'
-                  install: false
+                  tools: bun node
+                  setup: bun install --frozen-lockfile --filter @gspothq/workspace --filter @gspothq/cli
             - name: Validate the release tag and plugin pin
               shell: bash
               run: |
-                  mise install bun node
-                  bun install --frozen-lockfile
                   bun scripts/release.ts "${TAG}"
               env:
                   TAG: ${{ github.ref_name }}
@@ -59,16 +57,14 @@ jobs:
               uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   persist-credentials: false
-            - name: Install mise and the pinned tools
-              uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+            - name: Prepare release packages
+              uses: ./.github/actions/setup
               with:
-                  version: '2026.8.8'
-                  cache: false
-                  install: false
-            - name: Install release runtimes
-              run: mise install bun node
-            - name: Set up the repository
-              run: mise run setup
+                  tools: bun node
+                  setup: |
+                      bun install --frozen-lockfile --filter @gspothq/workspace --filter @gspothq/cli --filter @gspothq/eslint-plugin
+                      bun packages/cli/scripts/grammars.ts
+                      mise run build:plugin
             - name: Check the release version
               run: bun scripts/release.ts "${TAG}"
               env:
