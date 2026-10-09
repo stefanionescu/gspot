@@ -63,7 +63,7 @@ test('initialization identifies a scope flag without attributing it to an absent
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
 
-async function selected(root: string): Promise<string[]> {
+async function plannedConfigurations(root: string): Promise<string[]> {
     const result = await runGspot(root, [...buildInitArguments([], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const plan = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
@@ -77,7 +77,7 @@ test('init selects a recommended language only when the repository holds its fil
         'src/Greeting.vue': COMPONENT,
     });
     commitAll(sandbox.path);
-    const plain = await selected(sandbox.path);
+    const plain = await plannedConfigurations(sandbox.path);
     expect(plain).toContain('vue');
     expect(plain).toContain('javascript');
     expect(plain).toContain('format');
@@ -88,7 +88,7 @@ test('init selects a recommended language only when the repository holds its fil
         'src/styles.css': 'p {\n    color: #abc;\n}\n',
     });
     commitAll(sandbox.path);
-    const typed = await selected(sandbox.path);
+    const typed = await plannedConfigurations(sandbox.path);
     expect(typed).toContain('typescript');
     expect(typed).toContain('css');
     expect(await Bun.file(join(sandbox.path, 'gspot.toml')).exists()).toBe(false);

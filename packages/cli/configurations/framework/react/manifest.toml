@@ -1,4 +1,4 @@
-products = ["React"]
+products = ["React", "DOM"]
 eslint_presets = { recommended = { package = "eslint-plugin-react", source = "configs.flat.recommended" }, jsx = { package = "eslint-plugin-react", source = "configs.flat.jsx-runtime" }, hooks = { package = "eslint-plugin-react-hooks", source = "configs.flat.recommended-latest" }, refresh = { package = "eslint-plugin-react-refresh", source = "configs.recommended" } }
 eslint_all_rules = [
     "react/display-name",

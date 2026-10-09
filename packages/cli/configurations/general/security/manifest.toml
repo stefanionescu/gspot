@@ -1,4 +1,4 @@
-products = ["Semgrep", "CodeQL"]
+products = ["Semgrep", "CodeQL", "RPC"]
 [configuration]
 title = "Security"
 always_selected = true

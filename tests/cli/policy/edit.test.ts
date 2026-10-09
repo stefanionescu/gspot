@@ -96,17 +96,14 @@ describe('writePolicyFile', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'gspot.toml': `${AUTHORED_POLICY}\n${scope}`, 'api/run.sh': '' });
         const resultInput = preparePolicy(sandbox.path);
-        const result = {
-            ...editPolicy(sandbox.path, resultInput, (raw) => {
-                setKey(getScopeTable(raw, 'api'), 'limits.function_lines', 20);
-            }),
-            original: resultInput.original,
-        };
+        const result = editPolicy(sandbox.path, resultInput, (raw) => {
+            setKey(getScopeTable(raw, 'api'), 'limits.function_lines', 20);
+        });
         {
             using log = openOwnership(sandbox.path);
             writePolicyFile({
                 text: result.text,
-                original: result.original,
+                original: resultInput.original,
                 publish: (next, expected) => {
                     log.files.write('gspot.toml', next, expected);
                 },

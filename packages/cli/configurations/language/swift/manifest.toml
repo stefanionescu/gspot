@@ -1,4 +1,4 @@
-products = ["Swift", "SwiftLint", "SwiftFormat", "Periphery"]
+products = ["Swift", "SwiftLint", "SwiftFormat", "Periphery", "DTO"]
 untracked_files = ["**/{Pods,DerivedData,.build}/**"]
 
 ignored_folders = [".build/", "DerivedData/", "Pods/"]

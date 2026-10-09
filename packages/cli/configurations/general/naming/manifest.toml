@@ -1,3 +1,4 @@
+products = ["DTO"]
 [configuration]
 title = "Naming"
 always_selected = true

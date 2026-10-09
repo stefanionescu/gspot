@@ -1,4 +1,4 @@
-products = ["Bun", "Node", "npm", "pnpm", "mise", "Homebrew", "SARIF", "CI", "macOS", "Linux", "Windows"]
+products = ["Bun", "Node", "npm", "pnpm", "mise", "Homebrew", "SARIF", "CI", "macOS", "Linux", "Windows", "CSRF", "ASD"]
 [configuration]
 title = "Engineering guidance"
 always_selected = true

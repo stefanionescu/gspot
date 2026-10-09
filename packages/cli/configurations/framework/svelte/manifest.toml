@@ -1,3 +1,4 @@
+products = ["DOM"]
 eslint_presets = { recommended = { package = "eslint-plugin-svelte", source = "configs.recommended" } }
 eslint_all_rules = [
     "svelte/block-lang",
