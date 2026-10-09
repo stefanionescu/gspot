@@ -1,5 +1,5 @@
 // One installed Svelte repository: the shared rules inside component scripts, svelte-check, the style block, the
-// takeover of tsc, and Prettier through the Svelte plugin.
+// Prettier through the Svelte plugin.
 import { join } from 'node:path';
 import { test, expect, describe } from 'bun:test';
 import { spawnGspot } from '#tests/harness/gspot.ts';

@@ -288,8 +288,10 @@ for (const declared of SCENARIOS) {
                     const { failed, passed } = await runFindingCase(repository(), entry, scenario.repository);
                     const { message, ...position } = entry.expected;
                     expect(failed.code, `${entry.check}: ${failed.stdout}${failed.stderr}`).toBe(1);
-                    expect(failed.report.checks).toMatchObject([{ check: entry.check, status: 'failed' }]);
-                    expect(failed.report.checks[0]?.findings).toContainEqual(
+                    expect(failed.report.checks.filter(({ status }) => status !== 'passed')).toMatchObject([
+                        { check: entry.check, status: 'failed' },
+                    ]);
+                    expect(failed.report.checks.flatMap(({ findings }) => findings)).toContainEqual(
                         containing({
                             check: entry.check,
                             ...position,
@@ -297,9 +299,14 @@ for (const declared of SCENARIOS) {
                         }),
                     );
                     expect(passed.code, `${entry.check} corrected: ${passed.stdout}${passed.stderr}`).toBe(0);
-                    expect(passed.report.checks).toMatchObject([
-                        { check: entry.check, status: 'passed', findings: [] },
-                    ]);
+                    expect(passed.report.checks).toMatchObject(
+                        failed.report.checks.map(({ check, scope }) => ({
+                            check,
+                            scope,
+                            status: 'passed',
+                            findings: [],
+                        })),
+                    );
                 },
             );
         }

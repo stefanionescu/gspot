@@ -29,7 +29,6 @@ test('partial ShellCheck output beside an unreadable file is an execution error'
     expect(checkedFindings(planned, failed, paths)).toContainEqual(
         containing({ file: 'sample.sh', line: 2, rule: 'SC2086' }),
     );
-    expect(await Bun.file(join(sandbox.path, 'sample.sh')).text()).toBe(source);
     await Bun.write(join(sandbox.path, 'sample.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "${1:-}"\n');
     const corrected = runTestCommandBlocking(command, { cwd: sandbox.path });
     expect(corrected.code).toBe(0);

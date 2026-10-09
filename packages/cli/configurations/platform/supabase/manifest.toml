@@ -27,6 +27,8 @@ scoop = "deno"
 
 [[tool]]
 name = "supabase"
+system = true
+version_command = ["--version"]
 min_version = "2.0.0"
 mise = "supabase"
 brew = "supabase/tap/supabase"

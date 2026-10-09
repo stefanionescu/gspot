@@ -13,10 +13,10 @@ import { PYPROJECT } from '#tests/config/samples/python.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { writeSetup } from '#cli/commands/init/contracts.ts';
 import { runGspot, checkReport } from '#tests/harness/gspot.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { prepare, initCommand } from '#cli/commands/init/public.ts';
 import { buildInitOptions, buildInitArguments } from '#tests/harness/init.ts';
+import { INIT_FILES, INIT_ORIGINALS } from '#tests/config/samples/commands.ts';
 import { rejection, containingAll, textContaining } from '#tests/harness/expectations.ts';
 import { rm, stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
 import { PLAN_INIT, PYPROJECT_TAKEOVERS } from '#tests/config/cli/commands/init/replace.ts';
@@ -44,28 +44,24 @@ test.each(['', 'hooks', '.husky'])(
 
 test('the init plan replaces the files of the selected tools and lists the lint folder', async () => {
     await using sandbox = await testdir();
-    const originals = {
-        'typos.toml': '[default.extend-words]\n# The device identifier API name.\nudid = "udid"\n',
-        '.shellcheckrc': 'disable=SC2086,SC2034\n',
-        '.markdownlint.jsonc': '// Keep long prose lines.\n{ "MD013": false, "MD033": true, }\n',
-        '.eslintrc.json': '{ "rules": { "eqeqeq": "error" } }\n',
-        '.prettierrc': '{ "semi": false }\n',
-    };
-    await createFileTree(sandbox.path, {
-        ...originals,
-        'scripts/a.sh': CLEAN_BASH_SCRIPT,
-        'src/a.js': 'export const a = 1;\n',
-        'README.md': '# test\n',
-        'quality/lint.sh': CLEAN_BASH_SCRIPT,
-    });
+    await createFileTree(sandbox.path, INIT_FILES);
     commitAll(sandbox.path);
     const preview = await runGspot(sandbox.path, [...PLAN_INIT, '--dry-run', '--json']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan!;
-    for (const path of Object.keys(originals))
+    for (const path of Object.keys(INIT_ORIGINALS))
         expect(plan.remove).toContainEqual({ path, note: textContaining('replaced by the generated') });
     expect(plan.noLongerRuns).toContainEqual({ path: 'quality/', note: textContaining('lint scripts') });
     expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
+    const initialized = await runGspot(sandbox.path, [...PLAN_INIT, '--json']);
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    for (const path of Object.keys(INIT_ORIGINALS)) expect(await pathExists(join(sandbox.path, path))).toBe(false);
+    const policy = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
+    for (const carried of ['udid', 'SC2086', 'MD013']) expect(policy).not.toContain(carried);
+    expect(await readFile(join(sandbox.path, 'eslint.config.mjs'), 'utf8')).toContain(
+        'export { default } from "./.gspot/config/eslint.config.mjs";\n',
+    );
+    expect(await pathExists(join(sandbox.path, 'quality/lint.sh'))).toBe(true);
 });
 
 test.each(['setup.cfg', 'tox.ini'])(

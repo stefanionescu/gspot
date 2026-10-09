@@ -9,7 +9,7 @@ export const PSQL =
     "\\set team 'core'\nSELECT id FROM user_accounts WHERE display_name = :'team' AND id = :account_id;\n";
 
 export const REPOSITORY: InstalledScenario = {
-    configurations: ['sql', 'naming'],
+    configurations: ['sql'],
 
     tools: ['sqlfluff'],
     files: {

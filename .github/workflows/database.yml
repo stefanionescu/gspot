@@ -24,4 +24,4 @@ jobs:
               with:
                   tools: bun node
             - name: Run the Supabase freshness test
-              run: mise run test:tools -- -- tools/configurations/platform/supabase/types.test.ts
+              run: mise run test:tools -- -- tools/configurations/platform/supabase.test.ts

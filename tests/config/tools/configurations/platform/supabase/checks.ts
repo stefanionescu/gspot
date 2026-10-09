@@ -31,4 +31,18 @@ export const CASES: FindingCase[] = [
         },
         expected: { file: 'supabase/functions/greet/index.ts', rule: 'type-error', line: 1 },
     },
+    {
+        check: 'supabase/deno-lint',
+        policy: '[scope."apps/api"]\nconfigurations = ["supabase"]\n',
+        files: {
+            'apps/api/supabase/functions/hello/index.ts': 'export function greet(value: any) { return value; }\n',
+        },
+        expected: { file: 'apps/api/supabase/functions/hello/index.ts', rule: 'no-explicit-any', line: 1 },
+        corrected: {
+            files: {
+                'apps/api/supabase/functions/hello/index.ts':
+                    'export function greet(value: string) { return value; }\n',
+            },
+        },
+    },
 ];

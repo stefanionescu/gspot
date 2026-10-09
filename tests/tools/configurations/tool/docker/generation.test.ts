@@ -11,6 +11,7 @@ import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 
 test('Docker configuration scans isolate deepest scopes and retain scoped advisory exceptions', async () => {
     await using sandbox = await testdir();
+    // Trivy rule DS-0002 reports `USER root`. Use `USER node` to fix it.
     const source =
         'FROM node:22.11.0-bookworm-slim\nWORKDIR /app\nUSER root\nHEALTHCHECK CMD ["node", "--version"]\nCMD ["node", "index.js"]\n';
     const paths = ['Dockerfile', 'app/Dockerfile', 'app/child/Dockerfile', 'sibling/Dockerfile'];
