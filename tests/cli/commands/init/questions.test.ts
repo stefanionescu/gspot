@@ -1,12 +1,12 @@
 import which from 'which';
 import { join } from 'node:path';
 import * as clack from '@clack/prompts';
+import { open, readdir } from 'node:fs/promises';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as environment from '#cli/platform/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
 import { rejection } from '#tests/harness/expectations.ts';
-import { stat, readdir, readFile } from 'node:fs/promises';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
 import { INIT_CI_CASES } from '#tests/config/cli/commands/init/ci.ts';
 import { EMPTY_TOOLING } from '#tests/config/cli/commands/init/tooling.ts';
@@ -146,19 +146,24 @@ test('noninteractive source init dry-run prints a plan without writing and ordin
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'README.md': '# Example\n' });
     commitAll(sandbox.path);
-    const path = join(sandbox.path, 'README.md');
-    const files = await readdir(sandbox.path, { recursive: true });
-    files.sort((left, right) => left.localeCompare(right));
-    const content = await readFile(path);
-    const { mode } = await stat(path);
+    async function snapshot() {
+        await using file = await open(join(sandbox.path, 'README.md'));
+        const { mode } = await file.stat();
+        const files = await readdir(sandbox.path, { recursive: true });
+        return {
+            content: await file.readFile(),
+            mode,
+            files: files.toSorted((left, right) => left.localeCompare(right)),
+        };
+    }
+    const { content, mode, files } = await snapshot();
     const proposed = await spawnGspot(sandbox.path, ['init', '--dry-run', '--no-install']);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     expect(proposed.stdout).toContain('gspot.toml');
     expect(proposed.stderr).not.toContain('There is no terminal to ask in.');
-    const proposedFiles = await readdir(sandbox.path, { recursive: true });
-    expect(proposedFiles.toSorted((left, right) => left.localeCompare(right))).toStrictEqual(files);
-    expect(await readFile(path)).toStrictEqual(content);
-    const current = await stat(path);
+    const current = await snapshot();
+    expect(current.files).toStrictEqual(files);
+    expect(current.content).toStrictEqual(content);
     expect(current.mode).toBe(mode);
     const refused = await spawnGspot(sandbox.path, ['init', '--no-install']);
     expect(refused.code).toBe(2);

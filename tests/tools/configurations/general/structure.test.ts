@@ -4,6 +4,7 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { buildToolsPath } from '#tests/harness/install.ts';
 import { parseAlerts } from '#cli/parsers/output/contracts.ts';
 import { suppressionComments } from '#cli/checks/general/structure/public.ts';
 import { RUFF_DIRECTIVES, VALE_DIRECTIVES } from '#tests/config/tools/configurations/general/structure.ts';
@@ -17,7 +18,7 @@ test('suppression detection agrees with Ruff on every directive form and placeme
     });
     const native = await runTestCommand(
         ['ruff', 'check', '--isolated', '--select', 'F401', '--output-format', 'json', ...paths],
-        { cwd: sandbox.path },
+        { cwd: sandbox.path, env: { PATH: buildToolsPath(['ruff']) } },
     );
     expect(native.code, native.stdout + native.stderr).toBe(1);
     const reported = new Set(
@@ -56,6 +57,7 @@ test('shared suppression detection preserves Vale directives while excluding doc
     });
     const native = await runTestCommand(['vale', '--config', '.vale.ini', '--output', 'JSON', '--no-exit', ...paths], {
         cwd: sandbox.path,
+        env: { PATH: buildToolsPath(['vale']) },
     });
     expect(native.code, native.stdout + native.stderr).toBe(0);
     const reported = new Set(parseAlerts(native.stdout).map(({ file }) => basename(file)));

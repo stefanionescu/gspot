@@ -125,7 +125,6 @@
                 "packages/cli/src/checks/general/site/purgecss.ts",
                 "packages/cli/src/parsers/tool/format.ts",
                 "packages/eslint-plugin/src/rules/public.ts",
-                "docs/src/content/reference/collection.ts",
                 "scripts/setting-values.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
@@ -143,7 +142,6 @@
         },
         "docs": {
             "entry": [
-                "src/content/reference/collection.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",

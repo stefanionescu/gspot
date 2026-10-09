@@ -126,7 +126,7 @@ test('Ruff selects declared runner and framework families without implicit rule 
 test('policy ignores for the same test path share the native rule list', async () => {
     const ignored = await generatedDocument<TestedRuffConfiguration>(
         buildPolicy(['python', 'pytest'], {
-            tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["**/test_*.py"]\nreason = "The fixture assertions are deliberate checks."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/test_*.py"]\nreason = "Fixtures document themselves through their names."\n',
+            tables: '[[ignore]]\ncheck = "python/ruff"\nrule = "S101"\npaths = ["**/test_*.py"]\nreason = "The sandbox uses deliberate assertions."\n[[ignore]]\ncheck = "python/ruff"\nrule = "D103"\npaths = ["**/test_*.py"]\nreason = "Samples are documented by their names."\n',
         }),
         RUFF,
     );

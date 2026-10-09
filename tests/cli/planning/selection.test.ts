@@ -227,7 +227,7 @@ describe.each([...COVERAGE_PLUGIN_CASES])(
                 Object.entries(floors)
                     .map(([name, value]) => `${name} = ${String(value)}`)
                     .join('\n') +
-                '\n[reasons]\n"coverage.lines" = "This fixture tests optional coverage."\n"coverage.branches" = "This fixture tests optional coverage."\n"coverage.functions" = "This fixture tests optional coverage."\n"coverage.statements" = "This fixture tests optional coverage."\n' +
+                '\n[reasons]\n"coverage.lines" = "This sandbox tests optional coverage."\n"coverage.branches" = "This sandbox tests optional coverage."\n"coverage.functions" = "This sandbox tests optional coverage."\n"coverage.statements" = "This sandbox tests optional coverage."\n' +
                 '[scope."app"]\nconfigurations = [' +
                 setups.map((name) => `"${name}"`).join(', ') +
                 ']\n';

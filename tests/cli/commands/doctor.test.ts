@@ -231,7 +231,7 @@ test.each(['recommended', 'all'] as const)(
             join(sandbox.path, 'gspot.toml'),
             buildPolicy(['python', 'pytest'], {
                 level,
-                tables: '[coverage]\nlines = 0\nbranches = 0\nfunctions = 0\nstatements = 0\n[reasons]\n"coverage.lines" = "This fixture tests optional coverage."\n"coverage.branches" = "This fixture tests optional coverage."\n"coverage.functions" = "This fixture tests optional coverage."\n"coverage.statements" = "This fixture tests optional coverage."\n',
+                tables: '[coverage]\nlines = 0\nbranches = 0\nfunctions = 0\nstatements = 0\n[reasons]\n"coverage.lines" = "This sandbox tests optional coverage."\n"coverage.branches" = "This sandbox tests optional coverage."\n"coverage.functions" = "This sandbox tests optional coverage."\n"coverage.statements" = "This sandbox tests optional coverage."\n',
             }),
         );
         const zero = await doctorCommand(sandbox.path);

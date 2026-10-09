@@ -1,5 +1,5 @@
 export const APP_SEMGREP =
-    '[[ignore]]\ncheck = "security/semgrep"\npaths = ["app/**/ignored.js"]\nreason = "Generated fixtures are checked by their producer."\n[scope."app"]\nconfigurations = ["express"]\n[scope."app/child"]\n[scope."sibling"]\n';
+    '[[ignore]]\ncheck = "security/semgrep"\npaths = ["app/**/ignored.js"]\nreason = "Generated samples are checked by their producer."\n[scope."app"]\nconfigurations = ["express"]\n[scope."app/child"]\n[scope."sibling"]\n';
 
 /** Express project evidence and inherited source paths for the scoped security test. */
 export const FRAMEWORK_FILES = {

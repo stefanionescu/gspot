@@ -44,7 +44,7 @@ test.each(IGNORE_FEEDBACK_CASES)(
 test('ignore removal keeps its summary and apply failure while preserving edited output', async () => {
     await using directory = await testdir();
     const policy = buildPolicy(['bash'], {
-        tables: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The fixture keeps word splitting."\n',
+        tables: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\nreason = "The sample keeps word splitting."\n',
     });
     await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'echo example\n' });
     const applied = await runGspot(directory.path, ['apply']);

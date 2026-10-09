@@ -47,13 +47,13 @@ paths = ["**/*.sh"]
 stage = "manual"
 `;
     await createFileTree(sandbox.path, {
-        'gspot.toml': `${policy}\n[[ignore]]\ncheck = "project/syntax"\nreason = "The fixture verifies a disabled check."\n`,
+        'gspot.toml': `${policy}\n[[ignore]]\ncheck = "project/syntax"\nreason = "The sandbox tests a disabled check."\n`,
         'api/build.sh': CLEAN_BASH_SCRIPT,
     });
     const ignored = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);
     expect(ignored.code).toBe(0);
     expect(JSON.parse(ignored.stdout)).toMatchObject({
-        ignores: [{ check: 'project/syntax', reason: 'The fixture verifies a disabled check.' }],
+        ignores: [{ check: 'project/syntax', reason: 'The sandbox tests a disabled check.' }],
     });
     await writeFile(join(sandbox.path, 'gspot.toml'), policy);
     const corrected = await runGspot(sandbox.path, ['explain', './api/build.sh', '--json']);

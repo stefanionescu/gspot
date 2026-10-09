@@ -4,7 +4,7 @@ export const PARAMETER_CASES = [
         language: 'python',
         file: 'example.py',
         command: ['ruff', 'check', '--config', '.gspot/config/ruff.toml', '--output-format', 'json', 'example.py'],
-        source: `"""Parameter-limit fixtures."""
+        source: `"""Parameter-limit samples."""
 
 
 def _seven(value0: int, value1: int, value2: int, value3: int, value4: int, value5: int, value6: int) -> int:

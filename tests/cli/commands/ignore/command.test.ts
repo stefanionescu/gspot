@@ -22,7 +22,7 @@ test('a global ignore stops a command check and its correction command until rem
     expect(before.code, before.stdout + before.stderr).toBe(1);
     expect(await readFile(join(directory.path, 'read.txt'), 'utf8')).toBe('executed');
     await unlink(join(directory.path, 'read.txt'));
-    const reason = 'The fixture preserves the command failure.';
+    const reason = 'The sandbox preserves the command failure.';
     const ignored = await runGspot(directory.path, ['ignore', 'project/quality', '--reason', reason]);
     expect(ignored.code, ignored.stdout + ignored.stderr).toBe(0);
     const skipped = await checkReport(directory.path, [...args, '--fix']);
@@ -232,7 +232,7 @@ test('ignore combines matching paths, keeps different reasons, and lets a pathle
         'b.sh': 'echo b\n',
         'other.sh': 'echo other\n',
     });
-    const reason = 'Generated fixtures repeat on purpose.';
+    const reason = 'Generated samples repeat on purpose.';
     const args = ['ignore', 'bash/shellcheck', '--rule', 'SC2312'];
     for (const [paths, explanation] of [
         [['a.sh'], reason],

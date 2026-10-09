@@ -62,7 +62,7 @@ test.each([...PROVIDER_FLOORS])(
             join(sandbox.path, 'gspot.toml'),
             buildPolicy(['python', 'pytest'], {
                 level,
-                tables: `[coverage]\nlines = ${String(floor)}\nbranches = 0\nfunctions = 0\nstatements = 0\n[reasons]\n"coverage.lines" = "This fixture checks a missing Python provider."\n"coverage.branches" = "This fixture checks a missing Python provider."\n"coverage.functions" = "This fixture checks a missing Python provider."\n"coverage.statements" = "This fixture checks a missing Python provider."\n[scope."app"]\nconfigurations = ["python", "pytest"]\n`,
+                tables: `[coverage]\nlines = ${String(floor)}\nbranches = 0\nfunctions = 0\nstatements = 0\n[reasons]\n"coverage.lines" = "This sandbox checks a missing Python provider."\n"coverage.branches" = "This sandbox checks a missing Python provider."\n"coverage.functions" = "This sandbox checks a missing Python provider."\n"coverage.statements" = "This sandbox checks a missing Python provider."\n[scope."app"]\nconfigurations = ["python", "pytest"]\n`,
             }),
         );
         const session = await openSession(sandbox.path);

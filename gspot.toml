@@ -31,7 +31,7 @@ banned = ["catalog", "catalogue", "corpus", "render", "sync", "synchronize", "ma
 [[naming.overrides]]
 allowed = ["may_import", "tool_timeout_seconds", "agent_rules", "test_files", "removed_configurations"]
 paths = ["packages/cli/src/types/policy/settings.ts"]
-reason = "These declarations use the exact public TOML policy keys."
+reason = "These fields carry the gspot.toml key names."
 
 [[naming.overrides]]
 allowed = ["object"]
@@ -54,19 +54,9 @@ paths = ["packages/cli/src/types/checks/language/sql.ts"]
 reason = "libpg-query AST tags spell these keys."
 
 [[naming.overrides]]
-allowed = ["shouldTranslate"]
-paths = ["packages/cli/src/parsers/schema/xcode.ts"]
-reason = "Xcode string files spell this key."
-
-[[naming.overrides]]
 allowed = ["lengthBytesUTF8", "stringToUTF8", "UTF8ToString", "_malloc", "_free", "_wasm_parse_query_raw", "_wasm_parse_plpgsql", "_wasm_free_string", "_wasm_free_parse_result", "stmt_location", "stmt_len"]
 paths = ["packages/cli/src/types/parsers/sql.ts"]
 reason = "Emscripten and libpg-query export these members."
-
-[[naming.overrides]]
-allowed = ["FunctionParameter"]
-paths = ["packages/cli/src/checks/language/sql.ts"]
-reason = "The libpg-query AST tag for a function parameter."
 
 [[naming.overrides]]
 allowed = ["404"]
@@ -75,28 +65,8 @@ reason = "Starlight routes the HTTP 404 page by this filename."
 
 [[naming.overrides]]
 allowed = ["MD007"]
-paths = ["tests/cli/generation/formatting.test.ts"]
-reason = "The markdownlint rule name."
-
-[[naming.overrides]]
-allowed = ["rule_id"]
-paths = ["tests/tools/generation/parameter-limits.test.ts"]
-reason = "The SwiftLint JSON diagnostic key."
-
-[[naming.overrides]]
-allowed = ["allowed", "exceptions"]
-paths = ["tests/cli/generation/licenses.test.ts"]
-reason = "The license scanner policy keys."
-
-[[naming.overrides]]
-allowed = ["with"]
-paths = ["tests/cli/commands/ci.test.ts"]
-reason = "The GitHub Actions inputs key."
-
-[[naming.overrides]]
-allowed = ["MD007", "customSyntax"]
 paths = ["tests/types/cli/generation/configuration-files.ts"]
-reason = "Markdownlint names its indentation rule MD007. Stylelint names its parser option customSyntax. These native configuration keys retain their exact API spelling."
+reason = "Markdownlint names its indentation rule MD007. This native configuration key retains its exact API spelling."
 
 [[naming.overrides]]
 allowed = ["with"]
@@ -120,7 +90,7 @@ reason = "This selection contract uses the public TOML key for manual configurat
 
 # A CLI layer imports itself and the layers named in its imports_allowed entry. Its config and types files belong to the same layer.
 [[architecture.modules]]
-may_import = ["platform", "commands", "main"]
+may_import = ["platform", "commands"]
 name = "main"
 paths = ["packages/cli/src/main.ts"]
 
@@ -205,9 +175,9 @@ paths = ["packages/eslint-plugin/src/**", "packages/eslint-plugin/build.ts"]
 config = ["packages/*/src/config/**", "tests/config/**", "scripts/config/**", "docs/src/config/**"]
 env = ["packages/cli/src/platform/public.ts", "tests/harness/environment.ts"]
 runtime = ["packages/*/src/**"]
-scripts = ["scripts/**", "packages/*/scripts/**", "docs/src/content/reference/**"]
+scripts = ["packages/*/scripts/**"]
 test_harness = "tests/harness"
-tests = ["tests/cli/**", "tests/plugin/**", "tests/tools/**", "tests/packages/**", "**/*.test.*"]
+tests = ["**/*.test.*"]
 types = ["packages/*/src/types/**", "tests/types/**", "scripts/types/**", "docs/src/types/**"]
 
 [dependencies]
@@ -415,7 +385,7 @@ scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
 "**/*" = "ts"
 
 [tools.knip]
-entry = ["packages/cli/src/checks/general/site/linkinator.ts", "packages/cli/src/checks/general/site/purgecss.ts", "packages/cli/src/parsers/tool/format.ts", "packages/eslint-plugin/src/rules/public.ts", "docs/src/content/reference/collection.ts", "scripts/setting-values.ts"]
+entry = ["packages/cli/src/checks/general/site/linkinator.ts", "packages/cli/src/checks/general/site/purgecss.ts", "packages/cli/src/parsers/tool/format.ts", "packages/eslint-plugin/src/rules/public.ts", "scripts/setting-values.ts"]
 
 [tools.knip.ignore_dependencies]
 "^@fontsource-variable/" = "The site imports the fonts from docs/src/theme.css, outside the TypeScript import graph."
@@ -459,7 +429,7 @@ reason = "Shipped agent rules describe consumer projects. Their file paths are e
 [[ignore]]
 check = "github-actions/zizmor"
 paths = [".github/workflows/ci.yml", ".github/workflows/database.yml", ".github/workflows/docs.yml", ".github/workflows/release.yml"]
-reason = "Pinned Actionlint 1.7.12 rejects the $/ syntax required by Zizmor 1.30.1. These jobs check out the repository before calling ./.github/actions/setup; the owner permits this repository-only self-repository exception."
+reason = "Actionlint reads ./ natively. Pull-request jobs run the checked-out setup action. Reusable workflow calls resolve at the same commit."
 rule = "self-repository"
 
 [[ignore]]
@@ -611,12 +581,12 @@ reason = "These suite namespaces follow their behavioral source owners. The docs
 
 [[ignore]]
 check = "structure/prefix-collisions"
-paths = ["docs/src"]
+paths = ["docs/src/content.config.ts"]
 reason = "Astro fixes the name of the content configuration file beside the content folder."
 
 [[ignore]]
 check = "structure/prefix-collisions"
-paths = ["packages/cli/configurations/language/html", "packages/cli/configurations/language/markdown", "packages/cli/configurations/infra/docker"]
+paths = ["packages/cli/configurations/language/markdown", "packages/cli/configurations/infra/docker"]
 reason = "A configuration template takes the name of the file it writes, and a tool names its own configuration files."
 
 [[ignore]]

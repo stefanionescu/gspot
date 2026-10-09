@@ -25,8 +25,7 @@ async function prepareFixer(root: string, checkId: string): Promise<void> {
     const manifests = session.scopes[0]!.selected;
     const check = manifests.flatMap((manifest) => manifest.checks).find((entry) => entry.name === checkId)!;
     const tool = toolPin(manifests, toolName(check)!);
-    const executable = Bun.which(tool.name, { PATH: buildToolsPath([tool.name]) });
-    if (executable === null) throw new Error(`The native fixer test requires ${tool.name}.`);
+    buildToolsPath([tool.name]);
     if (toolProjectPackage(tool)?.kind === 'python') await sharePythonTools(root);
 }
 

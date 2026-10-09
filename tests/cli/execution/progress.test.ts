@@ -14,7 +14,7 @@ test('completion callbacks publish filtered results before the remaining check f
         'source.sh': 'echo example\n',
         'gspot.toml': stringify({
             configurations: [],
-            ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The fixture verifies filtered progress.' }],
+            ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The sandbox tests filtered progress.' }],
             check: {
                 'project/fast': {
                     paths: ['source.sh'],

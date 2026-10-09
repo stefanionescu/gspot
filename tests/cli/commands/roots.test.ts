@@ -24,7 +24,7 @@ test.each(LINKED_STORAGE_CASES)('$name', async ({ command, path, source, sentine
     if (command === 'check') {
         await createFileTree(project, {
             'gspot.toml': buildPolicy([], {
-                tables: `[check."project/storage"]\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', STORAGE_COMMAND])}\n[check.output]\nformat = "lines"\n`,
+                tables: `[check."project/storage"]\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', STORAGE_COMMAND])}\noutput = { format = "lines" }\n`,
             }),
         });
     }

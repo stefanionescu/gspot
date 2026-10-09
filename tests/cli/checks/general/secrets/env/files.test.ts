@@ -130,7 +130,7 @@ test.each(['recommended', 'all'] as const)(
         await Bun.write(
             join(sandbox.path, 'gspot.toml'),
             policy +
-                '\n[[ignore]]\ncheck = "repository/tracked-files"\npaths = ["python/.venv/**"]\nreason = "The existing Python example fixture is retained for this isolated index control."\n',
+                '\n[[ignore]]\ncheck = "repository/tracked-files"\npaths = ["python/.venv/**"]\nreason = "This sandbox keeps the Python example for the isolated index check."\n',
         );
         const ignored = await checkReport(sandbox.path, ['check', '--only', 'repository/tracked-files', '--json']);
         expect(ignored.code, ignored.stdout + ignored.stderr).toBe(1);

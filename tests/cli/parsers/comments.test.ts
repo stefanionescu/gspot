@@ -12,17 +12,12 @@ async function markedLines(path: string, source: string): Promise<number[]> {
 
 test('a shell comment after a quoted apostrophe stays a comment while quoted marker text stays literal', async () => {
     const source =
-        'echo "Sid\'s value" # marker: Required external interface.\necho "# marker: Literal fixture text."\n';
+        'echo "Sid\'s value" # marker: Required external interface.\necho "# marker: Literal sample text."\n';
     expect(await markedLines('source.sh', source)).toStrictEqual([1]);
 });
 
 test.each(["'", "E'", '"'])('an unterminated SQL %s value hides the comment text after it', async (opener) => {
-    const source = [
-        '-- marker: Required interface.',
-        `SELECT ${opener}`,
-        '-- marker: Literal fixture text.',
-        ':value;',
-    ];
+    const source = ['-- marker: Required interface.', `SELECT ${opener}`, '-- marker: Literal sample text.', ':value;'];
     expect(await markedLines('source.sql', source.join('\n'))).toStrictEqual([1]);
 });
 

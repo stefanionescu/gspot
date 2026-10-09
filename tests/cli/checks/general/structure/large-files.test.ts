@@ -39,7 +39,7 @@ test.each(['recommended', 'all'] as const)(
         await using sandbox = await testdir();
         const policy = buildPolicy(['javascript'], {
             level,
-            tables: '[limits]\nfile_kb = 1\n[[generated]]\npaths = ["data/**"]\nreason = "The isolated fixture owns generated data."\n[[vendored]]\npaths = ["vendor/**"]\nreason = "The isolated fixture owns external data."\n[scope.app]\n',
+            tables: '[limits]\nfile_kb = 1\n[[generated]]\npaths = ["data/**"]\nreason = "The isolated sandbox owns generated data."\n[[vendored]]\npaths = ["vendor/**"]\nreason = "The isolated sandbox owns external data."\n[scope.app]\n',
         });
         await createFileTree(sandbox.path, {
             'gspot.toml': policy,

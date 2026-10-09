@@ -31,7 +31,7 @@ beforeAll(() => {
 test('Ruff keeps pytest rules and scoped limits inside their selected project', async () => {
     await using sandbox = await testdir();
     const sample =
-        '"""Fixture declarations."""\n\nimport pytest\n\n\n@pytest.fixture()\ndef example() -> int:\n    """Provide a reusable value."""\n    return 1\n';
+        '"""Sample declarations."""\n\nimport pytest\n\n\n@pytest.fixture()\ndef example() -> int:\n    """Provide a reusable value."""\n    return 1\n';
     await createFileTree(sandbox.path, {
         'gspot.toml': buildPolicy(['python'], {
             level: 'all',

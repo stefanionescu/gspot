@@ -88,7 +88,7 @@ test.each(['recommended', 'all'] as const)(
             'title.md': '# Title\n\nA document with a title.\n',
             'gspot.toml': buildPolicy(['markdown'], {
                 level,
-                tables: `${TABLES}[[ignore]]\ncheck = "markdown/markdownlint"\nrule = "MD045"\nreason = "The fixture demonstrates an empty alternative."\n`,
+                tables: `${TABLES}[[ignore]]\ncheck = "markdown/markdownlint"\nrule = "MD045"\nreason = "The sample demonstrates an empty alternative."\n`,
             }),
         });
         const applied = await spawnGspot(sandbox.path, ['apply']);

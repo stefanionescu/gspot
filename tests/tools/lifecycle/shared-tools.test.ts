@@ -38,7 +38,7 @@ test.each(['recommended', 'all'] as const)(
             port: 0,
             fetch() {
                 requests++;
-                return Response.json({ error: 'The cached fixture needs no package acquisition.' }, { status: 404 });
+                return Response.json({ error: 'The cached sandbox needs no packages.' }, { status: 404 });
             },
         });
         await using resources = new AsyncDisposableStack();
