@@ -1,9 +1,14 @@
+import ts from 'typescript';
 import { join } from 'node:path';
 import type { Linter } from 'eslint';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
+import { readAsset } from '#cli/platform/root/public.ts';
 import { createEslint } from '#tests/harness/generated.ts';
+import { configurationManifests } from '#cli/configurations/public.ts';
+import { eta, etaInputs } from '#cli/generation/compilation/public.ts';
 
 test.each(['recommended', 'all'] as const)(
     '%s keeps scoped framework rules and syntax selectors inside their project',
@@ -114,3 +119,80 @@ test.each(['recommended', 'all'] as const)(
             expect(source.rules!['gspot/no-trivial-functions']).toStrictEqual([2, { maxStatements: 4 }]);
     },
 );
+
+test.each(['recommended', 'all'] as const)(
+    '%s authored rule payloads expose their level before preset masking',
+    async (level) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['javascript'], { level }),
+            'package.json': '{"private":true,"type":"module"}',
+            'source.js': '',
+        });
+        const session = await openSession(sandbox.path);
+        const selection = session.scopes[0]!;
+        const inputs = etaInputs(session, selection, selection.selected);
+        const blocks: Parameters<typeof inputs.eslintModule.block>[0][] = [];
+        let recorded: unknown;
+        eta.renderString(readAsset(`${session.manifests.get('javascript')!.dir}/eslint.config.mjs.eta`), {
+            ...inputs,
+            recordRules: (document: unknown) => {
+                recorded = document;
+            },
+            eslintPresets: (name: string) =>
+                Object.fromEntries(
+                    Object.entries(inputs.eslintPresets(name)).map(([key, preset]) => [
+                        key,
+                        {
+                            ...preset,
+                            blocks: preset.blocks.map((block) => ({ ...block, rules: {} })),
+                        },
+                    ]),
+                ),
+            eslintModule: {
+                ...inputs.eslintModule,
+                block: (block: Parameters<typeof inputs.eslintModule.block>[0], runtime?: string) => {
+                    blocks.push(block);
+                    return inputs.eslintModule.block(block, runtime);
+                },
+            },
+        });
+        const enabled = blocks.flatMap((block) =>
+            (block.rules === undefined ? [] : Object.entries(block.rules)).flatMap(([rule, value]) => {
+                const severity: unknown = Array.isArray(value) ? value[0] : value;
+                return inputs.eslintAllRules.has(rule) && severity !== 'off' && severity !== 0 ? [rule] : [];
+            }),
+        );
+        expect(recorded).toBeDefined();
+        if (level === 'recommended') expect(enabled).toStrictEqual([]);
+        else expect(enabled).toContain('max-lines');
+    },
+);
+
+test('authored all-only rule literals belong to the explicit level branch', () => {
+    const javascript = configurationManifests().get('javascript')!;
+    const allRules = new Set(javascript.eslint_all_rules);
+    const compiled = eta.compile(readAsset(`${javascript.dir}/eslint.config.mjs.eta`)).toString();
+    const source = ts.createSourceFile('eslint-template.js', compiled, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+    const visited: string[] = [];
+    const visit = (node: ts.Node): void => {
+        ts.forEachChild(node, visit);
+        if (!ts.isPropertyAssignment(node)) return;
+        if (!ts.isStringLiteral(node.name) && !ts.isIdentifier(node.name)) return;
+        const rule = node.name.text;
+        if (!allRules.has(rule) || node.initializer.getText(source) === "'off'") return;
+        const owner = ts.findAncestor(
+            node,
+            (parent) =>
+                ts.isConditionalExpression(parent) &&
+                parent.condition.getText(source) === 'IS_ALL' &&
+                node.pos >= parent.whenTrue.pos &&
+                node.end <= parent.whenTrue.end,
+        );
+        expect(owner, rule).toBeDefined();
+        visited.push(rule);
+    };
+    visit(source);
+    expect(visited).toContain('max-lines');
+    expect(visited).toContain('n/no-process-exit');
+});
