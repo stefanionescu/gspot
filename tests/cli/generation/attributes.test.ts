@@ -2,6 +2,8 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { git } from '#tests/harness/git.ts';
+import { rm, readFile } from 'node:fs/promises';
+import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
 import { openSession } from '#cli/commands/public.ts';
@@ -27,4 +29,30 @@ test('the attributes block keeps LF in each generated file, including one in a s
         ...outside.map((path) => `${path}: eol: lf`),
         'nested/.editorconfig: eol: unspecified',
     ]);
+});
+
+test('generated attributes preserve LF through autocrlf checkout', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy([], { agentRules: true }),
+        '.gitattributes': '*.txt text\n',
+    });
+    expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
+    const applied = await runGspot(sandbox.path, ['apply']);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    const path = '.gspot/rules/general/engineering/agent/WORKING.md';
+    const bytes = await readFile(join(sandbox.path, path));
+    expect(git(sandbox.path, ['add', '--', '.gitattributes', path]).code).toBe(0);
+    const attributes = git(sandbox.path, ['check-attr', 'text', 'eol', 'linguist-generated', '--', path]);
+    expect(attributes.code, attributes.stderr).toBe(0);
+    expect(attributes.stdout.split('\n').filter(Boolean)).toStrictEqual([
+        `${path}: text: set`,
+        `${path}: eol: lf`,
+        `${path}: linguist-generated: set`,
+    ]);
+    await rm(join(sandbox.path, path));
+    const checked = git(sandbox.path, ['-c', 'core.autocrlf=true', 'checkout-index', '--force', '--', path]);
+    expect(checked.code, checked.stderr).toBe(0);
+    const checkedBytes = await readFile(join(sandbox.path, path));
+    expect(checkedBytes).toStrictEqual(bytes);
 });

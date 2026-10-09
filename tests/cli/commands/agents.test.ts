@@ -1,6 +1,5 @@
 import { join } from 'node:path';
 import { test, expect } from 'bun:test';
-import { git } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
@@ -10,7 +9,7 @@ import { containing } from '#tests/harness/expectations.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { currentBlock } from '#cli/platform/root/contracts.ts';
-import { rm, stat, chmod, symlink, readFile } from 'node:fs/promises';
+import { stat, chmod, symlink, readFile } from 'node:fs/promises';
 
 test('agent instructions reach AGENTS.md and configured files, and other agent files stay as written', async () => {
     await using sandbox = await testdir();
@@ -133,30 +132,4 @@ test.skipIf(!isPosix)('init deletes a CLAUDE.md link and moves nothing', async (
     expect(await pathExists(join(sandbox.path, 'CLAUDE.md'))).toBe(false);
     const instructions = await readFile(join(sandbox.path, 'AGENTS.md'), 'utf8');
     expect(instructions).not.toContain('## Other instructions');
-});
-
-test('generated attributes preserve LF through autocrlf checkout', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildPolicy([], { agentRules: true }),
-        '.gitattributes': '*.txt text\n',
-    });
-    expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
-    const applied = await runGspot(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    const path = '.gspot/rules/general/engineering/agent/WORKING.md';
-    const bytes = await readFile(join(sandbox.path, path));
-    expect(git(sandbox.path, ['add', '--', '.gitattributes', path]).code).toBe(0);
-    const attributes = git(sandbox.path, ['check-attr', 'text', 'eol', 'linguist-generated', '--', path]);
-    expect(attributes.code, attributes.stderr).toBe(0);
-    expect(attributes.stdout.split('\n').filter(Boolean)).toStrictEqual([
-        `${path}: text: set`,
-        `${path}: eol: lf`,
-        `${path}: linguist-generated: set`,
-    ]);
-    await rm(join(sandbox.path, path));
-    const checked = git(sandbox.path, ['-c', 'core.autocrlf=true', 'checkout-index', '--force', '--', path]);
-    expect(checked.code, checked.stderr).toBe(0);
-    const checkedBytes = await readFile(join(sandbox.path, path));
-    expect(checkedBytes).toStrictEqual(bytes);
 });
