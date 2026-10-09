@@ -40,7 +40,7 @@ depends = ["generate:docs"]
 run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p packages/cli/tsconfig.json", "bunx tsc --noEmit -p packages/eslint-plugin/tsconfig.json", "bunx tsc --noEmit -p docs/tsconfig.json"]
 
 [tasks."build:cli"]
-description = "Build the gspot package into packages/cli/dist, with its grammars."
+description = "Build the CLI package; run setup first to copy the grammars."
 run = "bun packages/cli/scripts/build.ts"
 
 [tasks."build:plugin"]
@@ -69,19 +69,7 @@ description = "Build the documentation site."
 dir = "{{config_root}}/docs"
 run = "bun --bun astro build"
 
-[tasks.dev]
+[tasks."serve:docs"]
 description = "Generate references and serve the documentation locally."
 dir = "{{config_root}}/docs"
 run = "bun --bun astro dev"
-
-[tasks.check]
-description = "Run the repository checks."
-run = "bun packages/cli/src/main.ts check"
-
-[tasks."check:fix"]
-description = "Correct findings from repository checks."
-run = "bun packages/cli/src/main.ts check --fix"
-
-[tasks.build]
-description = "Build the CLI, plugin, and documentation."
-depends = ["build:cli", "build:plugin", "build:docs"]

@@ -6,10 +6,16 @@ import packageManifest from '#cli-package' with { type: 'json' };
 import { configurationManifests } from '#cli/configurations/public.ts';
 import { validateEslintPresets } from '#cli/generation/eslint/public.ts';
 import { assertManifests } from '#cli/configurations/errors/contracts.ts';
-import { rm, chmod, rename, copyFile, readFile, writeFile } from 'node:fs/promises';
+import { rm, chmod, access, rename, copyFile, readFile, writeFile } from 'node:fs/promises';
+import { RUNTIME_WASM, GRAMMAR_PACKAGES, SWIFT_GRAMMAR_FILE } from '#cli/config/platform/assets.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const distribution = join(root, 'dist');
+await Promise.all(
+    [...Object.keys(GRAMMAR_PACKAGES), ...Object.keys(RUNTIME_WASM), SWIFT_GRAMMAR_FILE].map((name) =>
+        access(join(root, 'grammars', name)),
+    ),
+);
 
 const schemaCheck = Bun.spawn([process.execPath, join(root, '../../scripts/setting-values.ts'), '--check'], {
     cwd: join(root, '../..'),

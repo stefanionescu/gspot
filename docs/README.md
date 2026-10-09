@@ -4,7 +4,7 @@ The documentation site uses Astro Starlight.
 
 ## Setup
 
-Run `mise run setup` from the repository root. Use `mise run dev` to preview the site and
+Run `mise run setup` from the repository root. Use `mise run serve:docs` to preview the site and
 `mise run build:docs` to build it. Reference pages come from the CLI contracts in
 `docs/src/content/reference/`.
 
