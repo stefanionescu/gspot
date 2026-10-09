@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-334 unresolved review records remain. 140 come from the review of October 6, 2026 and the owner decisions of that day. 194 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+314 unresolved review records remain. 129 come from the review of October 6, 2026 and the owner decisions of that day. 185 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: test time limits sit in at least six places. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-758 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
+778 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain. Shared verification evidence is in [verification.json](findings/verification.json).
 
 ## Review of October 6, 2026
 
@@ -36,14 +36,14 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | [This repository's own gspot.toml exceptions](findings/review/policy-exceptions.md)                   |           32 |
 | [Carve-outs](findings/review/carve-outs.md)                                                           |            1 |
 | [Source layout, names, and import graph](findings/review/source-layout.md)                            |            2 |
-| [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |           14 |
+| [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |           11 |
 | [Code: execution, tools, parsers, platform, repository, checks](findings/review/code-execution.md)    |            2 |
 | [Configurations and the ESLint plugin](findings/review/configurations-plugin.md)                      |            1 |
-| [Test layout and wiring](findings/review/tests-layout.md)                                             |           21 |
+| [Test layout and wiring](findings/review/tests-layout.md)                                             |           15 |
 | [Tests in tests/cli](findings/review/tests-cli.md)                                                    |            3 |
 | [Tests in tests/tools, tests/plugin, tests/packages, and the harness](findings/review/tests-tools.md) |            5 |
 | [READMEs, guides, and the docs site](findings/review/docs-site.md)                                    |            0 |
-| [Repository root, scripts, workflows, and dependencies](findings/review/repository-root.md)           |            7 |
+| [Repository root, scripts, workflows, and dependencies](findings/review/repository-root.md)           |            5 |
 | [Found while verifying the older records](findings/review/verification.md)                            |            7 |
 
 ## Older reviews
@@ -56,11 +56,11 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Findings From Implementation Verification](findings/additional.md)                                            |            1 |
 | [Built-in Checks](findings/areas/checks.md)                                                                    |           13 |
 | [Developer Experience in Non-JavaScript and Mixed Projects](findings/areas/developer-experience.md)            |            3 |
-| [Integration Tests Outside the Checks Folder](findings/areas/integration-tests.md)                             |           16 |
-| [Kits, Settings, and Names](findings/areas/kits.md)                                                            |           24 |
+| [Integration Tests Outside the Checks Folder](findings/areas/integration-tests.md)                             |           13 |
+| [Kits, Settings, and Names](findings/areas/kits.md)                                                            |           23 |
 | [Repository Setup and Ceremony](findings/areas/repository.md)                                                  |            1 |
 | [Native-Tool, Acceptance, and Package Tests](findings/areas/tool-tests.md)                                     |            9 |
-| [Unit Tests and Check Integration Tests](findings/areas/unit-tests.md)                                         |            3 |
+| [Unit Tests and Check Integration Tests](findings/areas/unit-tests.md)                                         |            0 |
 | [Checks: Database, Framework, Library, Platform, Tool, and the Registry](findings/slices/checks-other.md)      |            7 |
 | [The Config Constants](findings/slices/config.md)                                                              |            3 |
 | [Kits: Frameworks, Libraries, Platforms, Tools, and Postgres](findings/slices/kits-frameworks-tools.md)        |           19 |
@@ -71,8 +71,8 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Tests: Check Integration Tests](findings/slices/tests-integration-checks.md)                                  |           13 |
 | [Tests: Command, Policy, Platform, and Tools Integration Tests](findings/slices/tests-integration-commands.md) |           14 |
 | [Tests: Execution Integration Tests](findings/slices/tests-integration-execution.md)                           |            5 |
-| [Tests: Generation Integration Tests](findings/slices/tests-integration-generation.md)                         |            2 |
-| [Tests: Lifecycle and Repository Integration Tests](findings/slices/tests-integration-lifecycle.md)            |           14 |
+| [Tests: Generation Integration Tests](findings/slices/tests-integration-generation.md)                         |            1 |
+| [Tests: Lifecycle and Repository Integration Tests](findings/slices/tests-integration-lifecycle.md)            |           13 |
 | [Tests: Native-Tool Tests and Samples](findings/slices/tests-tools-samples.md)                                 |           31 |
 
 ## Pending summary records

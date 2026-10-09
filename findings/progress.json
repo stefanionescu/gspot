@@ -1,5 +1,5 @@
 {
-    "openRecords": 334,
+    "openRecords": 314,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -12,7 +12,7 @@
             "scope": "Test, script, and package organization",
             "decision": "The current user plan requires four test directories: cli, plugin, tools, and packages. Config and types mirror their behavioral owners, and the shared harness stays flat. Scripts own suite and registry orchestration. This supersedes the inherited five-family decision.",
             "evidence": [
-                "The user’s implementation plan in this conversation",
+                "The user\u2019s implementation plan in this conversation",
                 "tests/package.json",
                 "tests/bunfig.toml",
                 "mise.toml",
@@ -155,7 +155,7 @@
             "decision": "Keep Taplo defaults. The canonical emitter may correct toml-patch array spacing and trailing commas while preserving comments, native value encoding, and spaced inline tables. This supersedes the earlier proposal limited to a dependency spacing fix and resolves the policy-format/007 spacing and commented multiline-array conflicts. Do not change Taplo options or retain duplicate writers.",
             "evidence": [
                 "User answer: Keep Taplo defaults; permit a minimal dependency fix that gives arrays compact spacing while preserving spaced inline tables.",
-                "Later user answer: Keep Taplo defaults; allow the emitter to correct toml-patch’s array layout while preserving comments and native value encoding."
+                "Later user answer: Keep Taplo defaults; allow the emitter to correct toml-patch\u2019s array layout while preserving comments and native value encoding."
             ]
         },
         {
@@ -479,10 +479,30 @@
                 "/tmp/gspot-cc021-main-final-review/combined.patch",
                 "/tmp/gspot-cc021-main-final-review/freeze.json"
             ]
+        },
+        {
+            "id": "generated-format-validation-size-exception",
+            "date": "2026-10-09",
+            "scope": "slices/tests-integration-generation/012",
+            "decision": "Allow the reviewed explicit INI parsers, named plain tool files, and unknown-format refusal; 1,035 bytes including generated lockfile, zero production bytes. This is a narrow size exception.",
+            "evidence": [
+                "User reply: Allow this verified size exception.",
+                "/tmp/gspot-template012-main-native-review/combined.patch"
+            ]
+        },
+        {
+            "id": "push-selection-test-owner-size-exception",
+            "date": "2026-10-09",
+            "scope": "slices/tests-integration-lifecycle/035",
+            "decision": "Allow the reviewed push-selection owner move and replaceEntry to headEntries rename; 1,133 bytes overall with all assertions preserved. Keep mechanical transfer and rename in separate commits. This is a narrow size exception.",
+            "evidence": [
+                "User reply: Allow this verified size exception.",
+                "/tmp/gspot-lifecycle034035-a566-review/canonical.patch"
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 334,
+        "openRecords": 314,
         "records": 1092,
         "batches": [
             {
@@ -788,8 +808,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 198,
-                "unresolvedAssignments": 93
+                "completedAssignments": 205,
+                "unresolvedAssignments": 86
             },
             {
                 "id": "python",
@@ -942,8 +962,8 @@
                     "slices/tests-integration-execution/020",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 54,
-                "unresolvedAssignments": 45
+                "completedAssignments": 55,
+                "unresolvedAssignments": 44
             },
             {
                 "id": "swift-bash-sql",
@@ -1032,8 +1052,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 48,
-                "unresolvedAssignments": 34
+                "completedAssignments": 49,
+                "unresolvedAssignments": 33
             },
             {
                 "id": "frameworks-platforms",
@@ -1171,8 +1191,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 66,
-                "unresolvedAssignments": 65
+                "completedAssignments": 67,
+                "unresolvedAssignments": 64
             },
             {
                 "id": "test-quality",
@@ -1648,8 +1668,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 342,
-                "unresolvedAssignments": 127
+                "completedAssignments": 350,
+                "unresolvedAssignments": 119
             },
             {
                 "id": "scripts-repository",
@@ -1788,8 +1808,8 @@
                     "review/repository-root/047",
                     "review/owner-decisions/007"
                 ],
-                "completedAssignments": 85,
-                "unresolvedAssignments": 47
+                "completedAssignments": 90,
+                "unresolvedAssignments": 42
             },
             {
                 "id": "installation-docs",
@@ -1933,8 +1953,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 92,
-                "unresolvedAssignments": 45
+                "completedAssignments": 93,
+                "unresolvedAssignments": 44
             },
             {
                 "id": "policy-file",
@@ -2129,8 +2149,8 @@
                     "review/tests-layout/045",
                     "review/tests-layout/046"
                 ],
-                "completedAssignments": 66,
-                "unresolvedAssignments": 23
+                "completedAssignments": 72,
+                "unresolvedAssignments": 17
             },
             {
                 "id": "configurations",
@@ -2256,7 +2276,7 @@
                 "Evidence 15b7e23ff87ec367.",
                 "Evidence 66b9441b73390aab.",
                 "Evidence fdc839bbba7e99bb.",
-                "Three-owner heading consolidation /tmp/gspot-checks008-heading-final-freeze.json: parse recognized headings once, delete sectionAbove/repeatedSECTIONscans, preserve all-field ordered Findings across108 native comparisons. Production−187bytes/-33AST; tests+1451bytes/+163AST. Root8tests15assertions preserve held root/child level controls; isolated/CP6tests7assertions pass. Historical complete conversion remains source-positive910bytes including amendment; no whole-record less-code closure claim."
+                "Three-owner heading consolidation /tmp/gspot-checks008-heading-final-freeze.json: parse recognized headings once, delete sectionAbove/repeatedSECTIONscans, preserve all-field ordered Findings across108 native comparisons. Production\u2212187bytes/-33AST; tests+1451bytes/+163AST. Root8tests15assertions preserve held root/child level controls; isolated/CP6tests7assertions pass. Historical complete conversion remains source-positive910bytes including amendment; no whole-record less-code closure claim."
             ],
             "additionalChanges": [
                 {
@@ -2273,7 +2293,7 @@
                     "evidence": "/tmp/gspot-checks008-heading-final-freeze.json",
                     "commit": null,
                     "verification": [
-                        "Root8/15 and CP6/7 pass; original108 complete native Findings exactlymatch; source−187 bytes/-33AST with testgrowth1451 disclosed."
+                        "Root8/15 and CP6/7 pass; original108 complete native Findings exactlymatch; source\u2212187 bytes/-33AST with testgrowth1451 disclosed."
                     ]
                 }
             ]
@@ -2791,10 +2811,12 @@
             "verification": []
         },
         "areas/integration-tests/003": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
+            "verification": [
+                "Mechanical move b5df04bcce58ef00790f5a753dbf3c067a76c80d places generated attributes in generation/attributes.test.ts; this checkpoint removes the redundant eol query and retains the actual autocrlf checkout bytes. Full related change removes 295 bytes."
+            ]
         },
         "areas/integration-tests/004": {
             "status": "complete",
@@ -2929,10 +2951,12 @@
             ]
         },
         "areas/integration-tests/022": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
+            "verification": [
+                "Copy-and-preserve success controls remain; the duplicate lock-mismatch/recovery suffix is deleted, removing 718 bytes. Direct dependency refusal, stamp and CRLF controls passed nine tests and 28 assertions; the focused checkpoint also passed the actual copy test."
+            ]
         },
         "areas/integration-tests/024": {
             "status": "complete",
@@ -2988,10 +3012,12 @@
             ]
         },
         "areas/integration-tests/030": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
+            "verification": [
+                "JavaScript, TypeScript and JSX directive cases now use the suppression owner alongside its original controls; pure parser controls remain in parsers/comments.test.ts. The final two-owner change removes nine bytes. Current parser/suppression/pin replay passed 50 tests and 106 assertions; original callback assertions remain exact."
+            ]
         },
         "areas/integration-tests/035": {
             "status": "complete",
@@ -4125,14 +4151,17 @@
             "verification": []
         },
         "areas/kits/122": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 99cedf9c066772ef."],
+            "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
+            "verification": [
+                "Evidence 99cedf9c066772ef.",
+                "Only links.allowed_urls supplies both link checkers, using glossary allowed terminology; the two stale manifest help strings now match the implemented setting. Final manifest change removes 33 bytes. Frozen /tmp/gspot-language-config-kits122/final-freeze.json: native Lychee one test/43 assertions, Linkinator three tests/12 assertions, schema four tests/eight assertions, and eight real Node/Bun root/child and level vectors passed."
+            ],
             "additionalChanges": [
                 {
                     "evidence": "/tmp/gspot-w3-main-checkpoint-freeze.json",
-                    "commit": null,
+                    "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
                     "verification": ["Evidence b30ef09416624bd0."]
                 }
             ]
@@ -4383,7 +4412,7 @@
             "commit": "05997a065f49ff80c71173cd699953c132f85fcf",
             "verification": [
                 "Delete duplicate native Deno test: deno.test.ts absent in05997; sibling types test flattened byte-identically to supabase.test.ts per existing move proof.",
-                "Retain scoped edge-function case in shared acceptance table: CASES exact apps/api/supabase/functions/hello/index.ts any→string correction, supabase/deno-lint no-explicit-any line1; root no-var and type-error rows preserved.",
+                "Retain scoped edge-function case in shared acceptance table: CASES exact apps/api/supabase/functions/hello/index.ts any\u2192string correction, supabase/deno-lint no-explicit-any line1; root no-var and type-error rows preserved.",
                 "Native defect/correction with declared scope and correct observer: /tmp/gspot-test-consolidation-main-native.log"
             ]
         },
@@ -4703,16 +4732,25 @@
             ]
         },
         "areas/unit-tests/009": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence 68a2bf9ff8c99356."]
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "verification": [
+                "Evidence 68a2bf9ff8c99356.",
+                "The oversized planted duplicate and its obsolete suppression are deleted; the dedicated large-files test retains undeclared, declared and small-file behavior plus root/child/LFS/correction coverage. Exact two-owner deletion removes 1,335 bytes and 218 AST nodes.",
+                "Linked second-pass tests-cli/112 is already complete and remains unchanged.",
+                "Main current native replay passes 38 tests and 105 assertions across all five current mapped owners in 3.42 seconds. Complete original/final bindings, current hashes and linked status audit: /tmp/gspot-unit-four-current-readiness-proposal.json."
+            ]
         },
         "areas/unit-tests/019": {
-            "status": "partial",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "verification": [
+                "The current final fix deletes the invalid snapshot reference_layout table; that table and the retired setting are absent from the current Swift test owners. The historical JSON-schema move is superseded and is not restored.",
+                "The exact removed registration accounts for 1,275 bytes and 205 AST nodes; linked kits/074 remains cost-partial and is not closed here.",
+                "Main current native replay passes 38 tests and 105 assertions across all five current mapped owners in 3.42 seconds. Complete original/final bindings, current hashes and linked status audit: /tmp/gspot-unit-four-current-readiness-proposal.json."
+            ]
         },
         "areas/unit-tests/040": {
             "status": "complete",
@@ -4724,13 +4762,17 @@
             ]
         },
         "areas/unit-tests/048": {
-            "status": "partial",
-            "owner": "root",
-            "commit": null,
-            "verification": [],
+            "status": "complete",
+            "owner": "main",
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "verification": [
+                "Deleted only the duplicate SQL parse-failure callback from the naming owner. The statement parser tests retain exact source file, line and column, Unicode/nested-comment/psql positions, failure and corrected-source behavior.",
+                "Exact callback deletion removes 240 bytes and 27 AST nodes; dead rejection import is removed. Original15/62 diagnostic receipt retains its original provenance.",
+                "Main current native replay passes 38 tests and 105 assertions across all five current mapped owners in 3.42 seconds. Complete original/final bindings, current hashes and linked status audit: /tmp/gspot-unit-four-current-readiness-proposal.json."
+            ],
             "additionalChanges": [
                 {
-                    "commit": null,
+                    "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
                     "scope": "Evidence 82310834fde2dbeb.",
                     "evidence": "/tmp/gspot-native-diagnostic-leaves-evidence.json",
                     "limitations": ["Evidence 9f7f42cd2c36be5e."]
@@ -4875,7 +4917,7 @@
             "verification": [
                 "Evidence a54f15598472523e.",
                 "Hook outputs now prune; disabled installation unsets only exact own hooksPath; apply prints install note for removed hooks.",
-                "Root and app disable→dry-run→prune→install controls, foreign path preservation; actual own root/app native install cases pass.",
+                "Root and app disable\u2192dry-run\u2192prune\u2192install controls, foreign path preservation; actual own root/app native install cases pass.",
                 "Evidence 53a752e070462538."
             ],
             "additionalChanges": [
@@ -4998,10 +5040,14 @@
             ]
         },
         "review/code-commands/011": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "2b3bacbfd6a819ef4bc847310d9e2e131bd3ee8b",
+            "verification": [
+                "Ignore edits capture one parsed authored table and pass it through the mutation and writer. mergeIgnore returns the saved entry directly; no mutation closure transports written text and no repeated initial policy parse remains.",
+                "The substantive public merge owner compares all authored identity fields except paths, covering the prescribed check/rule/reason/until identity. Removal keeps its distinct optional selector semantics. Later public-owner and native identity contracts supersede the historical sameIgnore/private-path spelling.",
+                "The exact prescribed ignore-owner change deletes 72 bytes and 16 AST nodes. Joint policy transport/CAS changes are separately costed and not allocated here. Native five-file corpus passes 42 tests and 190 assertions; existing byte-CAS, invalid-ignore repair, expiry and merged-path observations remain. Full evidence: /tmp/gspot-command011037-261-review/readiness-freeze.json."
+            ]
         },
         "review/code-commands/012": {
             "status": "partial",
@@ -5157,7 +5203,7 @@
             "owner": "main",
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
-                "One manifest-declared emitter replaces Commitlint/Stylelint generators. Native redirect=true package.json/nonempty key contract. Commitlint array→string intentional; nearest Stylelint scope preserved. Native emitted loaders Node24/Bun both levels/root+app.",
+                "One manifest-declared emitter replaces Commitlint/Stylelint generators. Native redirect=true package.json/nonempty key contract. Commitlint array\u2192string intentional; nearest Stylelint scope preserved. Native emitted loaders Node24/Bun both levels/root+app.",
                 "Evidence 160ed58bd91b6f75."
             ]
         },
@@ -5177,10 +5223,13 @@
             "verification": []
         },
         "review/code-commands/030": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "verification": [
+                "Deleted the suppressed three-property eslintSettings helper; eslintConfiguration owns its testFiles, scriptFiles, and restrictedImports values directly. No replacement forwarding helper or complexity suppression remains.",
+                "The exact helper-and-spread to inline contribution removes 466 bytes; no aggregate ca2975 changes are allocated. Current source/native ESLint ceilings, configured types and rendered-level control evidence pass. Frozen independent readiness: /tmp/gspot-cc029030045-final/freeze.json."
+            ]
         },
         "review/code-commands/031": {
             "status": "complete",
@@ -5228,10 +5277,16 @@
             ]
         },
         "review/code-commands/037": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "partial",
+            "owner": "main",
+            "commit": "2b3bacbfd6a819ef4bc847310d9e2e131bd3ee8b",
+            "verification": [
+                "One required Session.packageManifests capture supplies all six dependency-fact consumers; native final focused42/190 and sixth-init1/21 pass. Pre-policy init facts and final policy-selected Session facts are genuinely distinct inventories; an authored template exclusion changes membership. Consumers add zero collection calls.",
+                "The original same-obligation production packet removes 57 bytes and 79 AST nodes; its native coverage additions grow 5,238 bytes overall. No unrelated savings are allocated. Full readiness and immutable historical costs: /tmp/gspot-command011037-261-review/readiness-freeze.json."
+            ],
+            "remaining": [
+                "Owner adoption of the exact 5,238-byte native-coverage increase remains required before whole-record closure. No universal package.json parse-once claim: alias-field parsing and post-fix refresh remain separate real contracts."
+            ]
         },
         "review/code-commands/038": {
             "status": "complete",
@@ -5308,7 +5363,7 @@
             "commit": "5586a3c910149fdf156765db99779e372a2b8b09",
             "verification": [
                 "Evidence a54f15598472523e.",
-                "dry-run JSON configurations→reconciled only; actual CLI has reconciled and refuses old alias by absence. Native policy/configuration arrays, drift, pin and notes preserved. One allowed JSON field mapping explicitly normalized in extracted-function proof.",
+                "dry-run JSON configurations\u2192reconciled only; actual CLI has reconciled and refuses old alias by absence. Native policy/configuration arrays, drift, pin and notes preserved. One allowed JSON field mapping explicitly normalized in extracted-function proof.",
                 "Evidence 160ed58bd91b6f75."
             ],
             "additionalChanges": [
@@ -5320,10 +5375,12 @@
             ]
         },
         "review/code-commands/045": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "a41e1c41485f48bc4ef17d96bb741568abd2dd4f",
+            "verification": [
+                "Replaced the remaining prescribed emit/write/fix wording in command help, policy failure diagnostics and native Git hook-folder diagnostics. Existing emitted document identifiers and earlier named finding owners already use the glossary; no compatibility alias remains. Exact three-owner contribution removes five bytes overall, one production byte. Current Main ignore removal controls pass 5 tests and 49 assertions, and the staged gate passes 44 checks with zero findings. Frozen authored and current callback projection: /tmp/gspot-cc029030045-final/freeze.json."
+            ]
         },
         "review/code-commands/046": {
             "status": "complete",
@@ -5354,7 +5411,7 @@
             "verification": [
                 "Evidence a54f15598472523e.",
                 "Native foreign hook descriptors preserve files and provider paths; readiness reads their regular-file bytes and requires gspot check --hook; absent registration reports not installed plus native instructions. Native Git hooksDirectory preserves below-Git-root coordinates.",
-                "All4 existing foreign provider vectors now verify absent→actual line→ready and original bytes before mutation; extra nested-core.hooksPath positive/negative case passes.",
+                "All4 existing foreign provider vectors now verify absent\u2192actual line\u2192ready and original bytes before mutation; extra nested-core.hooksPath positive/negative case passes.",
                 "Evidence 53a752e070462538."
             ],
             "additionalChanges": [
@@ -6475,7 +6532,7 @@
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
-                "Binding implemented: Use a list, `replaces = [\".prettierrc\", \".prettierrc.json\", …]`, and keep tables only for the 11 `shared` key and table rows.",
+                "Binding implemented: Use a list, `replaces = [\".prettierrc\", \".prettierrc.json\", \u2026]`, and keep tables only for the 11 `shared` key and table rows.",
                 "Evidence c7ec0890eb460bd6."
             ]
         },
@@ -6501,7 +6558,7 @@
             "owner": "main",
             "commit": "063b0a5e68d28952a7960fdc69fae7cf1216407a",
             "verification": [
-                "Binding implemented: Add `validation = {enum = […]}` to each.",
+                "Binding implemented: Add `validation = {enum = [\u2026]}` to each.",
                 "Evidence c7ec0890eb460bd6."
             ]
         },
@@ -6674,7 +6731,7 @@
             "additionalChanges": [
                 {
                     "commit": "f3b216f87c910bf1fc1aeedeb20cea49358c508e",
-                    "scope": "Fourteen byte-identical authored rule asset moves and Playwright dependency condition integrated; original92 native cases391 assertions. Production−27 bytes; normal apply regenerates owned instructions."
+                    "scope": "Fourteen byte-identical authored rule asset moves and Playwright dependency condition integrated; original92 native cases391 assertions. Production\u221227 bytes; normal apply regenerates owned instructions."
                 }
             ]
         },
@@ -8294,10 +8351,13 @@
             ]
         },
         "review/repository-root/012": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "e1ea918b20c34062ba1451b4d4061538ebb08077",
+            "verification": [
+                "Each CLI module uses one native brace-expanded glob for its source/config/types paths. All 494 CLI files retain identical membership across 15 current modules; import edges and roles are unchanged. The authored policy removes 810 bytes.",
+                "Normal gspot apply regenerates the corresponding ESLint boundary declarations; no managed file is hand-edited. Main staged verification passes 152 checks, with 11 skips and zero findings, in 71.1 seconds. Exact membership proof: /tmp/gspot-repository-policy010012032-readiness.json and /tmp/gspot-repository-root012-candidate-main-meta.json."
+            ]
         },
         "review/repository-root/015": {
             "status": "complete",
@@ -8326,10 +8386,14 @@
             ]
         },
         "review/repository-root/020": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "47ed49316862c5ddb3e9403b1bfca7aad8180f07",
+            "verification": [
+                "The current override table has all 15 required version pairs; four Verdaccio-only overrides are deleted. Its manifest/lock graph was copied exactly from the current pinned revision into confined private native consumers, with zero new package acquisition.",
+                "Actual Node 24 Jest runs reject insufficient line/function coverage, accept full coverage, and reject a failing assertion. Native Babel/Istanbul separately loads private js-yaml 4.3.2; native PurgeCSS 7.0.2 loads private postcss-selector-parser 7.1.6 at both levels and rejects unused selectors before accepting corrected input.",
+                "Verification commit 47ed49316862c5ddb3e9403b1bfca7aad8180f07 explicitly records GHSA-2883-xcg3-v3hh, GHSA-rj75-hqrm-r3gf, GHSA-wq5f-xc86-pv6w and GHSA-68fv-2mgg-jv7q. Missing historical message IDs are not retroactively claimed. Exact current readiness and raw receipts: /tmp/gspot-repository-root020-current-readiness/readiness.json."
+            ]
         },
         "review/repository-root/024": {
             "status": "complete",
@@ -9017,7 +9081,7 @@
             "verification": [
                 "Python manifest declares tool-file paths, not Ruff rule/value or basedpyright report-value inventories. These live inside Eta templates. Comparing the emitter against itself would be tautological; arbitrary parsing Eta expressions is not a meaningful independent manifest-owned expectation. Existing level/preview-control test remains unchanged.",
                 "The Python manifest owns actual production Ruff baseline/all additions and basedpyright per-level values. Both Eta generation and one representative Ruff code/basedpyright value assertion per level consume those declarations; restated lists are deleted. Ten complete generated outputs/native values are byte-identical across root, child and both levels.",
-                "Main focused48tests123assertions/3files5.04s and Root/CLI types pass. Isolated native Python11/95/2files123.56s uses cached suite tools with0mise installs; both negative emitter controls fail and restore exact hashes. Producer/freshness, build/apply pass. Corrected repository-native Taplo yields whole−142bytes/-215executableAST; production+602 and test−744 disclosed. Staged68pass0fail10skip0findings; normal commit52pass0fail3skip and push68pass0fail10skip pass."
+                "Main focused48tests123assertions/3files5.04s and Root/CLI types pass. Isolated native Python11/95/2files123.56s uses cached suite tools with0mise installs; both negative emitter controls fail and restore exact hashes. Producer/freshness, build/apply pass. Corrected repository-native Taplo yields whole\u2212142bytes/-215executableAST; production+602 and test\u2212744 disclosed. Staged68pass0fail10skip0findings; normal commit52pass0fail3skip and push68pass0fail10skip pass."
             ]
         },
         "review/tests-cli/007": {
@@ -9549,7 +9613,7 @@
             "verification": [
                 "Five exact callbacks plus matching literal inputs moved into requirements/reconcile owners. Removed repeated unscoped license skip/tool-presence assertions already covered by automatic selection."
             ],
-            "remaining": "Manual matrix retains distinct undefined/empty/Python initialization choices, yes/default equality, explicit child JavaScript, recommended→all→recommended scoped Semgrep/jscpd outcomes, CodeQL absence and MIT scanner activation. Existing automatic-selection tests do not cover these scoped/init controls; complete repeat deletion not claimed."
+            "remaining": "Manual matrix retains distinct undefined/empty/Python initialization choices, yes/default equality, explicit child JavaScript, recommended\u2192all\u2192recommended scoped Semgrep/jscpd outcomes, CodeQL absence and MIT scanner activation. Existing automatic-selection tests do not cover these scoped/init controls; complete repeat deletion not claimed."
         },
         "review/tests-cli/057": {
             "status": "complete",
@@ -10538,10 +10602,13 @@
             ]
         },
         "review/tests-layout/008": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
+            "verification": [
+                "One quiet-init argument owner has the prescribed hooks/json/ci options; all hand-written copies and redundant init fields are removed. Static config remains literal-only and manual argument omissions remain exact.",
+                "Frozen /tmp/gspot-layout008-final/freeze.json: 38 owners remove 1,081 bytes; 229 argument comparisons, 1,223 preserved assertion expressions, 111 native tests and seven tool tests. Main focused checkpoint: 183 passed, 946 assertions; types and staged gate passed."
+            ]
         },
         "review/tests-layout/009": {
             "status": "complete",
@@ -10586,15 +10653,13 @@
             ]
         },
         "review/tests-layout/017": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": "b6c535bc1bf5db9e7f61f375b549eb5c56922377",
+            "commit": "ee1ef52d9d71dc77ec651f39f5429941253b8a39",
             "verification": [
-                "Shared Next en/de messages, Supabase GREET, and three native tsconfig objects with original strict/decorator/include/allowJs controls are implemented. Native declared values and all existing assertions/resources are preserved in /tmp/gspot-layout-support-six-final-v2-freeze.json; main types/staged gates pass."
-            ],
-            "remaining": [
-                "Finish original JSconfig duplicate compiler options while preserving checkJs/noEmit/include.",
-                "Account for separate native project references/outdir controls and original deleted library-test final consumers before whole closure."
+                "Shared Next en/de messages, Supabase GREET, and three native tsconfig objects with original strict/decorator/include/allowJs controls are implemented. Native declared values and all existing assertions/resources are preserved in /tmp/gspot-layout-support-six-final-v2-freeze.json; main types/staged gates pass.",
+                "Shared Next.js message and Supabase GREET samples have their actual CLI and tools consumers. Strict compiler options replace the remaining library/TypeScript raw JSON; both real native jsconfig filesystem callers serialize unchanged bytes. Distinct reference/output-directory/author compiler controls remain.",
+                "Read-only whole obligation audit /tmp/gspot-layout017022045-whole-audit/audit.json verifies each prescribed transport and historical same-record contribution of minus 1,208 bytes; final phase removes 625 bytes. Native 17 tests passed, callbacks and JSON bytes preserved; configured types/lint/format and Main staged gate passed."
             ]
         },
         "review/tests-layout/018": {
@@ -10629,10 +10694,13 @@
             ]
         },
         "review/tests-layout/022": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "ee1ef52d9d71dc77ec651f39f5429941253b8a39",
+            "verification": [
+                "All 45 actual config/type move-table rows have their final owner/import census. Six prescribed retained paths remain; no superseded forwarding owner remains. The last three unchanged Next.js declarations now reside beside their sole framework consumer, with old owner/import deleted in mechanical commit 2709f8d82bfbdea0a8a0528eca8593e3afbfe8e8, removing 88 bytes.",
+                "Frozen whole audit /tmp/gspot-layout017022045-whole-audit/audit.json and original 102 declaration/body/type proofs preserved. Native five Next.js cases passed; normal Main staged, commit and push-hook evidence is retained."
+            ]
         },
         "review/tests-layout/023": {
             "status": "pending",
@@ -10644,13 +10712,22 @@
             "status": "partial",
             "owner": "main",
             "commit": null,
-            "verification": ["Evidence e362e01625e487f0."]
+            "verification": [
+                "Evidence e362e01625e487f0.",
+                "Current explicit readonly inventory /tmp/gspot-layout-unresolved-21-readiness-v2.json and Main120pass337assertions preserve sample/native parser contracts; source/compiler/runtime no new edits."
+            ],
+            "remaining": [
+                "Final shared-data native ownership is implemented; original patch adds new inert scanner sample and spelling explanatory text as well as exact moves. Per-record size adoption must be reconciled before closure; no blanket original packet reduction is allocated."
+            ]
         },
         "review/tests-layout/025": {
-            "status": "partial",
+            "status": "complete",
             "owner": "main",
-            "commit": null,
-            "verification": ["Evidence e362e01625e487f0."]
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "verification": [
+                "Evidence e362e01625e487f0.",
+                "Merged the original Python source and tool static data into `tests/config/samples/python.ts`, updated actual imports and removed both old files and their stale folder path. The exact original merge and import/policy-path contribution removes 44 bytes; later sample additions are separately owned and preserved. Current Main Python project/UV/lock and shared output controls pass within 120 tests and 337 assertions across thirteen owners. Historical shared-data freeze and immutable current-owner audit: /tmp/gspot-shared-test-data-main-freeze.json and /tmp/gspot-layout-unresolved-21-readiness-v2.json."
+            ]
         },
         "review/tests-layout/026": {
             "status": "partial",
@@ -10660,7 +10737,7 @@
             "additionalChanges": [
                 {
                     "commit": null,
-                    "scope": "Corrected structural125 owners integrated with232 preserved AST statements82 native-equal config values; current Actions/JS fixes retained; source delta−529 bytes and154 AST. Public API applicability remains open."
+                    "scope": "Corrected structural125 owners integrated with232 preserved AST statements82 native-equal config values; current Actions/JS fixes retained; source delta\u2212529 bytes and154 AST. Public API applicability remains open."
                 }
             ]
         },
@@ -10800,16 +10877,20 @@
             ]
         },
         "review/tests-layout/043": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
+            "verification": [
+                "Both test task dir entries are absent at ca2975ca5552d3276e78bbd6d897c44cfdf70a09; their removal saves 60 bytes. Root suite paths and working directory are verified in the native suite-selection vectors."
+            ]
         },
         "review/tests-layout/044": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
+            "verification": [
+                "Root bunfig owns preload and tests/bunfig.toml is absent. Every suite runner selects root-relative tests paths; the four obsolete docs excludes are absent. Final runner change removes 10 bytes and preserves eight suite-selection and four source CLI dispatch vectors; database exclusion and shared timeout remain unchanged."
+            ]
         },
         "review/tests-layout/045": {
             "status": "partial",
@@ -12862,7 +12943,7 @@
             "commit": "872e0b82cb4feb103b82adcd836781bed7049506",
             "verification": [
                 "Draft selects jest/coverage by name and uses run spies without weakening native dead-store or callback checks. Original30 cases136 assertions pass; subsequent enforcement correction is preserved and requires final replay before integration. /tmp/gspot-jest041-local-consolidation/receipt.json retains initial passing execution and native lint rejection; no checkpoint claimed.",
-                "Corrected final draft uses Bun.file native UTF-8 reads to remove the sole fs import, names actual copy paths, and preserves all117 Jest assertions across27 passed cases. Configured ESLint and Prettier pass with no suppressions; final source−5 bytes. Frozen /tmp/gspot-jest041-local-consolidation/final-receipt.json.",
+                "Corrected final draft uses Bun.file native UTF-8 reads to remove the sole fs import, names actual copy paths, and preserves all117 Jest assertions across27 passed cases. Configured ESLint and Prettier pass with no suppressions; final source\u22125 bytes. Frozen /tmp/gspot-jest041-local-consolidation/final-receipt.json.",
                 "Select jest/coverage by name and name the used process spies run. All117 assertions across27 Jest cases pass; final test source removes5 bytes. Normal Main staged gate29 passed,2 skipped,zero findings; normal commit/push hooks passed. /tmp/gspot-jest041-native-fs-main-staged-final.log and /tmp/gspot-jest041-native-fs-main-push.log retain actual results."
             ]
         },
@@ -13263,10 +13344,12 @@
             ]
         },
         "slices/tests-integration-generation/012": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
+            "verification": [
+                "Every generated extension is parsed or named explicitly as a plain tool file. Native INI parsing covers cfg/ini and unknown extensions fail rather than passing unread. Both original level cases and the negative unknown-format witness were verified; owner-approved increase is 1,035 bytes including 203 generated lockfile bytes. Frozen /tmp/gspot-template012-main-native-review/freeze.json."
+            ]
         },
         "slices/tests-integration-generation/014": {
             "status": "partial",
@@ -13544,10 +13627,12 @@
             ]
         },
         "slices/tests-integration-lifecycle/035": {
-            "status": "pending",
-            "owner": null,
-            "commit": null,
-            "verification": []
+            "status": "complete",
+            "owner": "main",
+            "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
+            "verification": [
+                "Mechanical move 502287f9783d56606ebf5efd7d147c321253798b places non-gitlink entries beside copy tests and selection beside push tests; all assertions and rejection diagnostics remain. The separate rename changes replaceEntry to headEntries and removes two bytes. Approved complete move/rename adds 1,133 bytes; native 19 tests and the Main 30-test/150-assertion replay passed."
+            ]
         },
         "slices/tests-integration-lifecycle/036": {
             "status": "complete",
@@ -15765,7 +15850,7 @@
             ],
             "evidence": "/tmp/gspot-test-boilerplate-main-freeze.json",
             "limitations": [
-                "045remainingprose fixture→sandbox/sample obligation is not implemented in this packet.",
+                "045remainingprose fixture\u2192sandbox/sample obligation is not implemented in this packet.",
                 "Main Git metadata protected; required main commits/push pending.",
                 "Fullnative checkpoint andcross-platform CI incomplete; older stagedmirroractualexit2 preserved."
             ]
@@ -17058,7 +17143,7 @@
             "unresolvedRecords": 718,
             "validation": [
                 "Main234 cases759assertions, types0, actual ESLint0, native HTML90 and Markdown equality controls, canonical manifest/catalog/generation equivalence; normal preset/schema producers and apply.",
-                "113 commit hook checks0 and152 push hook checks0; source production including captured data−419bytes."
+                "113 commit hook checks0 and152 push hook checks0; source production including captured data\u2212419bytes."
             ],
             "limitations": [
                 "Related production contract deletes more source than it adds; generated catalog and required regression test growth retained explicitly. Final suites/platforms and release-boundary work remain outstanding."
@@ -18421,6 +18506,145 @@
             "limitations": [
                 "Windows and other matrix jobs remain running at this observation; no platform skip is counted as proof.",
                 "Manual public documentation URLs and normal managed-lock freshness failures remain separately unresolved."
+            ]
+        },
+        {
+            "commit": "2b3bacbfd6a819ef4bc847310d9e2e131bd3ee8b",
+            "completedRecords": ["review/code-commands/011"],
+            "unresolvedRecords": 333,
+            "validation": [
+                "Current native focus42/190; unchanged owner hashes, types/scopedlint/format all pass.",
+                "Main subsequent CC021 change alters only publication calls and passes112/521 ownership checks."
+            ],
+            "limitations": [
+                "No universal parse-once claim: native CST encoding and final strict validation remain real boundaries.",
+                "Joint captured-input packet growth remains separately disclosed and is not called a source reduction."
+            ]
+        },
+        {
+            "commit": "47ed49316862c5ddb3e9403b1bfca7aad8180f07",
+            "completedRecords": ["review/repository-root/020"],
+            "unresolvedRecords": 332,
+            "validation": [
+                "All 15 override pairs and actual private package resolutions verified. Native negative/positive coverage, assertion, YAML and unused-selector behavior passed.",
+                "The verification commit normal staged/commit/push gates passed with no findings."
+            ],
+            "limitations": [
+                "Native private consumer evidence is local macOS.",
+                "Earlier store-resolution-only receipts are retained as qualified historical evidence and are not the private-loader proof."
+            ]
+        },
+        {
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "completedRecords": ["review/code-commands/030"],
+            "unresolvedRecords": 331,
+            "validation": [
+                "Exact committed current-owner body and original helper/suppression lineage checked.",
+                "Corrected native levels9/416 and existing44 other configuration controls pass; Pages/App Router2/13 and types/scopedlint/format pass."
+            ],
+            "limitations": [
+                "The separate configs.all catalog growth in commands/029 is not approved or attributed to this reducing leaf."
+            ]
+        },
+        {
+            "commit": "e1ea918b20c34062ba1451b4d4061538ebb08077",
+            "completedRecords": ["review/repository-root/012"],
+            "unresolvedRecords": 330,
+            "validation": [
+                "Native micromatch4.0.8 expansion and per-module original/candidate membership equality checked.",
+                "Combined generated/authored policy diff reviewed; normal commit hooks pass."
+            ],
+            "limitations": [
+                "Only architecture path serialization is included; other Root-held role/manual-choice drafts remain separate."
+            ]
+        },
+        {
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "completedRecords": ["areas/unit-tests/009"],
+            "unresolvedRecords": 329,
+            "validation": [
+                "Main current five-file focused replay38/105 passes; native survivor coverage and exact deleted registrations inspected."
+            ],
+            "limitations": [
+                "No unrelated snapshot/library test growth or broader aggregate commit costs are attributed."
+            ]
+        },
+        {
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "completedRecords": ["areas/unit-tests/019"],
+            "unresolvedRecords": 328,
+            "validation": [
+                "Main current five-file focused replay38/105 passes; native survivor coverage and exact deleted registrations inspected."
+            ],
+            "limitations": [
+                "No unrelated snapshot/library test growth or broader aggregate commit costs are attributed."
+            ]
+        },
+        {
+            "commit": "9a3851a9ad5626d65229aa8208302ed5c7f065b6",
+            "completedRecords": ["areas/unit-tests/048"],
+            "unresolvedRecords": 327,
+            "validation": [
+                "Main current parser/structure/Swift five-file38/105 replay passes; exact diagnostic positions and corrected-source behavior remain."
+            ],
+            "limitations": [
+                "Old statements body is not claimed byte-identical after later stronger consolidation; original native proof is qualified."
+            ]
+        },
+        {
+            "commit": "a41e1c41485f48bc4ef17d96bb741568abd2dd4f",
+            "completedRecords": ["review/code-commands/045"],
+            "unresolvedRecords": 326,
+            "validation": ["Main 5 tests, 49 assertions; staged 44 passed, 3 skipped, zero findings."],
+            "limitations": [
+                "Separate technical Git-object diagnostics and parser prose are outside the named historical fix locations. No fresh cross-platform acceptance is inferred."
+            ]
+        },
+        {
+            "commit": "ca2975ca5552d3276e78bbd6d897c44cfdf70a09",
+            "completedRecords": ["review/tests-layout/025"],
+            "unresolvedRecords": 325,
+            "validation": [
+                "Main native current-owner family120passed337assertions; original64passed134assertions; original static values retained."
+            ],
+            "limitations": ["No new platform or credential-provider claim; native fixture literals remain unchanged."]
+        },
+        {
+            "commit": "3d180af9dc94cfc800fecf959f8faf43dd43ea3c",
+            "completedRecords": [
+                "review/tests-layout/008",
+                "review/tests-layout/043",
+                "review/tests-layout/044",
+                "areas/integration-tests/003",
+                "areas/integration-tests/022",
+                "areas/integration-tests/030",
+                "slices/tests-integration-generation/012",
+                "slices/tests-integration-lifecycle/035",
+                "areas/kits/122"
+            ],
+            "unresolvedRecords": 316,
+            "validation": [
+                "183 native tests passed, 946 assertions; configured typecheck passed.",
+                "Staged: 67 passed, zero failed, six skipped, zero findings, 23.5 seconds.",
+                "53 intended owners remove 1,165 bytes; reviewed exact approved size allocations remain separate."
+            ],
+            "limitations": [
+                "No new Windows runtime or final full matrix acceptance is claimed.",
+                "Repository-root/032 remains partial; this commit supplies only its prescribed 60-minute generated job limits."
+            ]
+        },
+        {
+            "commit": "ee1ef52d9d71dc77ec651f39f5429941253b8a39",
+            "completedRecords": ["review/tests-layout/017", "review/tests-layout/022"],
+            "unresolvedRecords": 314,
+            "validation": [
+                "Native 17 tests passed across three actual files; types, native ESLint and formatting passed.",
+                "Main staged gate29 passed, zero failed, two skipped, zero findings; normal commit hooks passed."
+            ],
+            "limitations": [
+                "The 45 move-table census is historical ownership evidence, not an unrelated aggregate size allocation.",
+                "Tests-layout/045 remains partial until all authored prose literals are corrected; native identifiers and parser-negative syntax remain exact.",
+                "No Windows-runtime or final full-suite acceptance is claimed."
             ]
         }
     ],

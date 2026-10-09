@@ -1,6 +1,6 @@
 # Tests: Generation Integration Tests
 
-2 unresolved review records remain.
+1 unresolved review record remains.
 
 ## Open findings
 
@@ -17,3 +17,11 @@ A read-only verification checked every record against the code at commit `3e1445
 | ----------------------------------------- | ------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-generation/012` | open    | tests/cli/generation/every-template.test.ts:68-71 | In `tests/cli/generation/every-template.test.ts:68-71`, fail on a generated file whose extension has no entry in `PARSERS`. Add an INI parser for `.cfg` and `.ini` (`sqlfluff.cfg`, `gixy.cfg`, `vale.ini`). List the plain-text tool files that have no parser by name (`trivy-findings.tpl`, `editorconfig`, `prettierignore`, `semgrepignore`, `shellcheckrc`, `swiftformat`, `trivyignore`), so a new format cannot pass unread. |
 | `slices/tests-integration-generation/014` | partial | tests/cli/generation/every-template.test.ts:60,67 | In `tests/cli/generation/every-template.test.ts:67`, replace `expect(generated.length).toBeGreaterThan(configurations.length)` with a check that the target of every non-fragment `[[tool_file]]` (`[[config]]` today) of each selected manifest is among the generated paths.                                                                                                                                                        |
+
+## Implementation checkpoint 3d180af9d of October 9, 2026 for quiet-init-and-test-owners
+
+Original records and quotations remain above. These records are complete at `3d180af9dc94cfc800fecf959f8faf43dd43ea3c`.
+
+| ID                                        | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-generation/012` | complete | Every generated extension is parsed or named explicitly as a plain tool file. Native INI parsing covers cfg/ini and unknown extensions fail rather than passing unread. Both original level cases and the negative unknown-format witness were verified; owner-approved increase is 1,035 bytes including 203 generated lockfile bytes. Frozen /tmp/gspot-template012-main-native-review/freeze.json. Commit `3d180af9dc94cfc800fecf959f8faf43dd43ea3c`. |

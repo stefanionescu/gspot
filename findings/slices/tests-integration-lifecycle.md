@@ -1,6 +1,6 @@
 # Tests: Lifecycle and Repository Integration Tests
 
-14 unresolved review records remain.
+13 unresolved review records remain.
 
 ## Open findings
 
@@ -177,3 +177,11 @@ Original records and quotations remain above. These records are complete at `c0d
 | ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------------------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `slices/tests-integration-lifecycle/021` | complete | Shared interruptOwner owns only matching native before/after exit-73 operations; the exit code is named and modes are octal. Distinct ENOSPC and Windows permission children retain their separate behavior and byte-equivalence evidence. Current vector API projection removes obsolete scalar imports. Main final native replay: 23 tests, 129 assertions, four files, 2.82 seconds. Canonical helper consolidation removes 50 bytes; reviewed overlap projection preserves all later scalar/refusal assertion bodies. Commit `c0dafc5ea0d3618b16a65dd7338bb933db43c359`. |
+
+## Implementation checkpoint 3d180af9d of October 9, 2026 for quiet-init-and-test-owners
+
+Original records and quotations remain above. These records are complete at `3d180af9dc94cfc800fecf959f8faf43dd43ea3c`.
+
+| ID                                       | Status   | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `slices/tests-integration-lifecycle/035` | complete | Mechanical move 502287f9783d56606ebf5efd7d147c321253798b places non-gitlink entries beside copy tests and selection beside push tests; all assertions and rejection diagnostics remain. The separate rename changes replaceEntry to headEntries and removes two bytes. Approved complete move/rename adds 1,133 bytes; native 19 tests and the Main 30-test/150-assertion replay passed. Commit `3d180af9dc94cfc800fecf959f8faf43dd43ea3c`. |
