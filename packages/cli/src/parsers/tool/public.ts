@@ -1,19 +1,22 @@
 import ts from 'typescript';
 import { posix } from 'node:path';
+import type { Options } from 'prettier';
 import { parse } from '@bacons/xcode/json';
+import { run } from '#cli/platform/public.ts';
 import { parse as parseToml } from 'smol-toml';
 import { parseJsonc } from '#cli/parsers/public.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { isRecord } from '#cli/platform/contracts.ts';
+import { assetPath } from '#cli/platform/root/public.ts';
 import { pbxprojSchema } from '#cli/parsers/schema/xcode.ts';
 import { SETTING_REFERENCE } from '#cli/config/parsers/xcode.ts';
 import type { NumberedLine } from '#cli/types/parsers/source.ts';
 import { typescriptNodes } from '#cli/parsers/source/contracts.ts';
 import type { NextSettingsFinding } from '#cli/types/parsers/nextjs.ts';
 import { FAILED_CHECK, PASSED_CHECKS } from '#cli/config/parsers/expo.ts';
+import { formatConfigurationSchema } from '#cli/parsers/schema/format.ts';
 import { SECRET_NAME, DISABLED_CHECKS } from '#cli/config/parsers/nextjs.ts';
-import type { Options, IntSupportOption, BooleanSupportOption } from 'prettier';
-import { check, resolveConfig, getSupportInfo, resolveConfigFile } from 'prettier';
+import { FORMAT_RESULT, FORMAT_PROGRAMS } from '#cli/config/parsers/tool/format.ts';
 import type { HeaderBlock, HeaderBlocks, WranglerParse } from '#cli/types/parsers/cloudflare.ts';
 import { STATUS_CODES, REDIRECT_PARTS, HTTP_HEADER_LINE } from '#cli/config/parsers/cloudflare.ts';
 
@@ -345,23 +348,15 @@ export async function readFormatConfiguration(
     file: string,
     dependencies: Record<string, string>,
 ): Promise<Options | null> {
-    const configuration = await resolveConfigFile(file);
-    const usesPrettier = configuration !== null || dependencies['prettier'] !== undefined;
-    const options = await resolveConfig(file, { editorconfig: !usesPrettier, useCache: false });
-    await check('', { ...options, parser: 'json' });
-    if (!usesPrettier) return options;
-    const declarations = await getSupportInfo();
-    const defaults = Object.fromEntries(
-        declarations.options
-            .filter(
-                (option): option is IntSupportOption | BooleanSupportOption =>
-                    (option.type === 'int' || option.type === 'boolean') && option.array !== true,
-            )
-            .flatMap((option) =>
-                option.name !== undefined && ['tabWidth', 'printWidth', 'singleQuote'].includes(option.name)
-                    ? [[option.name, option.default] as const]
-                    : [],
-            ),
+    const entry = import.meta.url.endsWith('.ts') ? FORMAT_PROGRAMS.source : FORMAT_PROGRAMS.distribution;
+    const result = await run(
+        [process.execPath, assetPath(entry), file, String(dependencies['prettier'] !== undefined)],
+        {
+            cwd: posix.dirname(file),
+        },
     );
-    return { ...defaults, ...options };
+    if (result.code !== 0) throw new Error(result.stderr);
+    return formatConfigurationSchema.parse(
+        JSON.parse(result.stdout.slice(result.stdout.lastIndexOf(FORMAT_RESULT) + 1).split('\n', 1)[0] ?? ''),
+    );
 }

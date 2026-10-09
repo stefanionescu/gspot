@@ -1,5 +1,5 @@
 {
-    "openRecords": 397,
+    "openRecords": 390,
     "decisions": [
         {
             "date": "2026-10-04",
@@ -343,10 +343,50 @@
                 "Explicit user answer: Allow this formatter-inference exception.",
                 "Reviewed patch /tmp/gspot-init-format015-final/combined.patch; native31pass138assert and fresh Node/Bun consumers."
             ]
+        },
+        {
+            "id": "purgecss-native-api-size-exception",
+            "date": "2026-10-09",
+            "scope": "Native pinned PurgeCSS Windows file-URL loading",
+            "decision": "Allow the reviewed six-owner native API fix and its1635-byte production increase as a narrow exception to the less-code contract. Preserve extractor, safelist, cancellation and output validation; actual Windows acceptance remains CI-owned.",
+            "evidence": [
+                "Explicit user answer: Allow this native PurgeCSS exception.",
+                "Reviewed patch /tmp/gspot-purgecss-windows-final/combined.patch."
+            ]
+        },
+        {
+            "id": "suite-shared-installation-size-exception",
+            "date": "2026-10-09",
+            "scope": "Ordinary suite npm and Vale installation reuse",
+            "decision": "Allow the reviewed shared-installation cache14036-byte increase (support6489, types221, constants1238, tests6088; production unchanged) as a narrow exception to the less-code contract. Preserve real credential and installer tests, source confinement and once-per-suite installations.",
+            "evidence": [
+                "Explicit user answer: Allow this shared-installation exception.",
+                "Reviewed patch /tmp/gspot-ordinary-tool-cache-full-final.patch."
+            ]
+        },
+        {
+            "id": "formatter-output-isolation-size-exception",
+            "date": "2026-10-09",
+            "scope": "slices/kits-general/015 native formatter output",
+            "decision": "Allow the reviewed formatter-output fix and its1831-byte production increase (1883 total) as a narrow exception to the less-code contract. Preserve native value validation and isolate authored stdout while preserving CLI JSON, no-install and runtime contracts.",
+            "evidence": [
+                "Explicit user answer: Allow the formatter-output fix.",
+                "Reviewed patch /tmp/gspot-init015-output-framed-final/combined.patch."
+            ]
+        },
+        {
+            "id": "compiler-native-ownership-size-exception",
+            "date": "2026-10-09",
+            "scope": "review/policy-exceptions/003; review/code-execution/007; areas/checks/044",
+            "decision": "Allow the reviewed compiler ownership fix and its14846-byte production increase after consolidation as a narrow exception to the less-code contract. Preserve ancestor tsconfig coverage, confined declarations and one shared Next.js typegen/compiler workspace.",
+            "evidence": [
+                "Explicit user answer: Allow the verified compiler fix.",
+                "Reviewed patch /tmp/gspot-compiler-three-native-candidate-freeze.json and /tmp/gspot-compiler-three-scope-amendment-freeze.json."
+            ]
         }
     ],
     "implementationBatches": {
-        "openRecords": 397,
+        "openRecords": 390,
         "records": 1092,
         "batches": [
             {
@@ -652,8 +692,8 @@
                     "review/code-execution/048",
                     "review/code-commands/052"
                 ],
-                "completedAssignments": 178,
-                "unresolvedAssignments": 113
+                "completedAssignments": 180,
+                "unresolvedAssignments": 111
             },
             {
                 "id": "python",
@@ -896,8 +936,8 @@
                     "slices/tests-integration-execution/026",
                     "slices/tests-integration-execution/038"
                 ],
-                "completedAssignments": 47,
-                "unresolvedAssignments": 35
+                "completedAssignments": 48,
+                "unresolvedAssignments": 34
             },
             {
                 "id": "frameworks-platforms",
@@ -1035,8 +1075,8 @@
                     "slices/tests-integration-execution/015",
                     "slices/tests-integration-execution/018"
                 ],
-                "completedAssignments": 51,
-                "unresolvedAssignments": 80
+                "completedAssignments": 53,
+                "unresolvedAssignments": 78
             },
             {
                 "id": "test-quality",
@@ -1512,8 +1552,8 @@
                     "review/verification/026",
                     "review/verification/029"
                 ],
-                "completedAssignments": 311,
-                "unresolvedAssignments": 158
+                "completedAssignments": 317,
+                "unresolvedAssignments": 152
             },
             {
                 "id": "scripts-repository",
@@ -1797,8 +1837,8 @@
                     "review/docs-site/048",
                     "review/docs-site/049"
                 ],
-                "completedAssignments": 75,
-                "unresolvedAssignments": 62
+                "completedAssignments": 78,
+                "unresolvedAssignments": 59
             },
             {
                 "id": "policy-file",
@@ -1896,8 +1936,8 @@
                     "review/policy-exceptions/061",
                     "review/carve-outs/001"
                 ],
-                "completedAssignments": 29,
-                "unresolvedAssignments": 62
+                "completedAssignments": 30,
+                "unresolvedAssignments": 61
             },
             {
                 "id": "layout",
@@ -4077,8 +4117,24 @@
                 }
             ]
         },
-        "areas/tool-tests/010": { "status": "partial", "owner": null, "commit": null, "verification": [] },
-        "areas/tool-tests/011": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/tool-tests/010": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "d56c5d84384e6b069eb98e1c865ccb99d1aca193",
+            "verification": [
+                "All eight spelling rows assert independent exact surviving paths at root and child, retaining their equality check.",
+                "Evidence 73ab5536ccab95c9."
+            ]
+        },
+        "areas/tool-tests/011": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "d56c5d84384e6b069eb98e1c865ccb99d1aca193",
+            "verification": [
+                "Only the three internal planning statements/imports removed; actual native Swift and Xcode coverage callbacks preserved.",
+                "Evidence 73ab5536ccab95c9."
+            ]
+        },
         "areas/tool-tests/014": {
             "status": "partial",
             "owner": "main",
@@ -4092,7 +4148,15 @@
                 }
             ]
         },
-        "areas/tool-tests/015": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "areas/tool-tests/015": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "d56c5d84384e6b069eb98e1c865ccb99d1aca193",
+            "verification": [
+                "Six shipped Vale-style witnesses moved byte-exact to prose/styles with their static mirror; engine/comment/native stdin controls remain.",
+                "Evidence 73ab5536ccab95c9."
+            ]
+        },
         "areas/tool-tests/020": {
             "status": "complete",
             "owner": "main",
@@ -4102,7 +4166,15 @@
                 "Evidence 3723a258f74e6d04."
             ]
         },
-        "areas/tool-tests/021": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/tool-tests/021": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "d56c5d84384e6b069eb98e1c865ccb99d1aca193",
+            "verification": [
+                "Deleted the duplicate full-installed stale Bun case after separate mechanical partition; all five package-manager and five Syncpack contracts preserved.",
+                "Evidence 73ab5536ccab95c9."
+            ]
+        },
         "areas/tool-tests/022": { "status": "partial", "owner": null, "commit": null, "verification": [] },
         "areas/tool-tests/023": {
             "status": "partial",
@@ -4190,7 +4262,15 @@
         },
         "areas/tool-tests/035": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "areas/tool-tests/037": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "areas/tool-tests/039": { "status": "partial", "owner": null, "commit": null, "verification": [] },
+        "areas/tool-tests/039": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "d56c5d84384e6b069eb98e1c865ccb99d1aca193",
+            "verification": [
+                "Hook installation/readiness now asserts captured native JSON status and exit codes, retaining real commit rejection/correction and no-drift assertions.",
+                "Evidence 73ab5536ccab95c9."
+            ]
+        },
         "areas/tool-tests/043": { "status": "partial", "owner": null, "commit": null, "verification": [] },
         "areas/tool-tests/044": {
             "status": "partial",
@@ -4205,7 +4285,15 @@
                 }
             ]
         },
-        "areas/tool-tests/045": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "areas/tool-tests/045": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "d56c5d84384e6b069eb98e1c865ccb99d1aca193",
+            "verification": [
+                "Deleted only the duplicate central DockerDS0002 row; scoped real Trivy controls remain.",
+                "Evidence 73ab5536ccab95c9."
+            ]
+        },
         "areas/tool-tests/049": {
             "status": "partial",
             "owner": "main",
@@ -7037,7 +7125,14 @@
         "review/policy-exceptions/057": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "review/policy-exceptions/058": { "status": "pending", "owner": null, "commit": null, "verification": [] },
         "review/policy-exceptions/060": { "status": "pending", "owner": null, "commit": null, "verification": [] },
-        "review/policy-exceptions/061": { "status": "pending", "owner": null, "commit": null, "verification": [] },
+        "review/policy-exceptions/061": {
+            "status": "complete",
+            "owner": "main",
+            "commit": "d56c5d84384e6b069eb98e1c865ccb99d1aca193",
+            "verification": [
+                "Root/scoped identical Semgrep ignores emit once; distinct scoped patterns remain, and Swift-only patterns depend on actual Swift selection. Main11pass54assert and repeated native apply with no changes; normal generated pruning removed all four duplicate scope copies at5ad96dff."
+            ]
+        },
         "review/policy-format/002": {
             "status": "partial",
             "owner": "main",
@@ -16685,6 +16780,31 @@
                 "Darwin local receipts only. CI37923594912 pending; platform skips and prior unrelated failures are not credited as platform passes. main/001 stays partial."
             ],
             "ci": "https://github.com/stefanionescu/gspot/actions/runs/37923594912 (pending when inspected)"
+        },
+        {
+            "commit": "d56c5d84384e6b069eb98e1c865ccb99d1aca193",
+            "completedRecords": [
+                "review/policy-exceptions/061",
+                "areas/tool-tests/010",
+                "areas/tool-tests/011",
+                "areas/tool-tests/015",
+                "areas/tool-tests/021",
+                "areas/tool-tests/039",
+                "areas/tool-tests/045"
+            ],
+            "unresolvedRecords": 390,
+            "validation": [
+                "Mechanical1b6bd3b98 and behavior d56c5d843 retain separate commits; staged27pass0findings, native hooks and successful normal commit/push gates.",
+                "Semgrep main5ad96dff staged152pass0findings and repeated native apply idempotent; fixture root Python coverage preserved."
+            ],
+            "limitations": [
+                "Actual Windows/Linux native replay and overall final verification remain; tests-layout003 retains automatic-selection versus literal empty-list obligation.",
+                "Shared repository lifecycle005, ownership move020/022 and helper-default007 remain partial outside this checkpoint."
+            ],
+            "ci": {
+                "semgrep": "37927181448 cancelled by newer workflow; no test failure inferred.",
+                "mechanical": "37929991065 pending at inspection."
+            }
         }
     ],
     "verificationEvidence": {
@@ -17197,6 +17317,7 @@
         "988176c65cc0d4c1": ["Evidence 4d2ac8d51b2e53aa.", "Evidence a6858ccfea9e46c9."],
         "ab26062d5c84366d": ["Evidence be543f29d0974793.", "Evidence 1289292efe621fa2."],
         "e88fd77ec3308d00": ["Evidence ac10fd02ab2f83a0.", "Evidence 5fad9abc71677bae."],
-        "8de20943a0dca2b8": ["Evidence a85ef2a0a6686bbc.", "Evidence d13d23ef753740dc."]
+        "8de20943a0dca2b8": ["Evidence a85ef2a0a6686bbc.", "Evidence d13d23ef753740dc."],
+        "73ab5536ccab95c9": "Immutable native six-owner packet and preservation proof /tmp/gspot-native-tool-tests-six-final-freeze.json;58 distinct native controls verified across57 initial passes plus corrected hook replay, types/lint/format and final staged27pass0findings. No Linux/Windows result inferred."
     }
 }

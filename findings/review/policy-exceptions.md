@@ -1,6 +1,6 @@
 # This Repository's Own gspot Policy: Entries and Customizations
 
-34 unresolved review records remain.
+33 unresolved review records remain.
 
 A read-only review wrote these findings on October 6, 2026, against commit `3e1445a2d`. The Existing column names an older record that covers the same problem.
 
@@ -201,3 +201,11 @@ Not read in full:
 - The other files under `.gspot/config/`.
 
 Not run, by the brief's rules: Vale, typos, knip, semgrep, CodeQL, and taplo. The rows that say "verify with one run" depend on those tools: the remaining `prose.vocabulary` words, `axe`, the knip `collection.ts` entry, and the `require('eslint')` change.
+
+## Implementation checkpoint d56c5d843 of October 9, 2026 for native test witnesses and root Semgrep ownership
+
+Original records and quotations remain above. These records are complete at `d56c5d84384e6b069eb98e1c865ccb99d1aca193`.
+
+| ID                             | Status   | Evidence                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `review/policy-exceptions/061` | complete | Root/scoped identical Semgrep ignores emit once; distinct scoped patterns remain, and Swift-only patterns depend on actual Swift selection. Main11pass54assert and repeated native apply with no changes; normal generated pruning removed all four duplicate scope copies at5ad96dff. Commit `d56c5d84384e6b069eb98e1c865ccb99d1aca193`. |

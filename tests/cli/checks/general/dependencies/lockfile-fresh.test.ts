@@ -134,8 +134,8 @@ test.each(['recommended', 'all'] as const)(
         expect(commands).toStrictEqual([]);
         const triggered = await executeRun(session, buildRunOptions({ ...options, staged: ['app/package.json'] }));
         expect(triggered.report.checks).toMatchObject([{ check: 'dependencies/stale-lockfile', status: 'passed' }]);
-        expect(commands.map(([executable, ...argv]) => [basename(executable!), ...argv])).toStrictEqual([
-            ['bun', 'install', '--frozen-lockfile', '--dry-run'],
+        expect(commands.map(([executable, ...argv]) => [executable, ...argv])).toStrictEqual([
+            [process.execPath, 'install', '--frozen-lockfile', '--dry-run'],
         ]);
         expect(inputs).toStrictEqual([['Root source.\n', 'Child source.\n']]);
         expect(await readFile(join(directory.path, 'bun.lock'), 'utf8')).toBe('Original lock.\n');

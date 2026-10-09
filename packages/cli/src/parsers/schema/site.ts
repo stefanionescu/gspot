@@ -36,3 +36,9 @@ export const webManifestSchema = z.object({
     name: z.unknown().optional(),
     icons: z.array(z.object({ src: z.string().optional() })).optional(),
 });
+
+/** The selected PurgeCSS child's configuration and stylesheet paths. */
+export const purgecssRequestSchema = z.strictObject({
+    configuration: z.string().min(1),
+    css: z.array(z.string().min(1)).min(1),
+});

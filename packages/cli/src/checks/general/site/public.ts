@@ -19,6 +19,7 @@ import {
     HTTP_OK_STATUS,
     HTML_REPORT_FILE,
     SITEMAP_LOCATION,
+    PURGECSS_PROGRAM,
     LINKINATOR_PROGRAM,
 } from '#cli/config/checks/general/site.ts';
 
@@ -148,18 +149,11 @@ export async function purgecss(input: CheckInput): Promise<Finding[]> {
         .find((target) => target.check.includes(input.check.name));
     if (configuration === undefined) throw new Error(`Check ${input.check.name} has no declared CSS configuration.`);
     const config = join(input.root, targetInScope(input.scope, configuration));
-    const argv = [
-        'purgecss',
-        '--config',
-        config,
-        '--css',
-        ...sheets,
-        '--content',
-        '**/*.html',
-        '**/*.js',
-        '--rejected',
-    ];
-    const result = await runCheckTool(input, argv, { cwd: build.output });
+    const result = await runCheckTool(
+        input,
+        { tool: 'purgecss', entry: PURGECSS_PROGRAM },
+        { cwd: build.output, stdin: JSON.stringify({ configuration: config, css: sheets }) },
+    );
     if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
     const report = purgecssReportSchema.parse(JSON.parse(result.stdout));
     if (report.length !== sheets.length) throw new Error('Unused CSS analysis returned an incomplete report.');

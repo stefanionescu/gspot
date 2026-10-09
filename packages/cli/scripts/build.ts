@@ -30,7 +30,12 @@ assertManifests(configurationManifests());
 validateEslintPresets(configurationManifests());
 await rm(distribution, { recursive: true, force: true });
 const result = await Bun.build({
-    entrypoints: [join(root, 'src/main.ts'), join(root, 'src/checks/general/site/linkinator.ts')],
+    entrypoints: [
+        join(root, 'src/main.ts'),
+        join(root, 'src/checks/general/site/linkinator.ts'),
+        join(root, 'src/checks/general/site/purgecss.ts'),
+        join(root, 'src/parsers/tool/format.ts'),
+    ],
     outdir: distribution,
     naming: '[name].js',
     format: 'esm',

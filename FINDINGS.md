@@ -1,6 +1,6 @@
 # Unresolved Findings
 
-397 unresolved review records remain. 155 come from the review of October 6, 2026 and the owner decisions of that day. 242 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
+390 unresolved review records remain. 154 come from the review of October 6, 2026 and the owner decisions of that day. 236 are older records that the same review checked and kept open. Each record has a stable ID. Owner decisions are in [progress](findings/progress.json); they win over any record.
 
 On October 6, 2026, a read-only verification checked all 802 older records against commit `3e1445a2d` and closed 203. The owner decisions of October 6 and 7, 2026 closed 15 more. A coherence check then compared every open record with the decisions and with every other record, and closed 272 duplicates, superseded records, and wrong records. [The closed list](findings/review/closed.md) gives the evidence for each. Each older findings file ends with a "Status on October 6, 2026" table that gives the current file and what remains; the original rows above it are history.
 
@@ -20,7 +20,7 @@ On October 6, 2026, a read-only verification checked all 802 older records again
 8. Carve-outs: test time limits sit in at least six places. The owner rule is one setting for each concern ([carve-outs](findings/review/carve-outs.md)).
 9. File and folder names: `commands/policy-edit.ts`, `tools/installed-files.ts`, and `tools/installation.ts` are explained, with a target tree and a move table, in [the source layout review](findings/review/source-layout.md). [The test layout review](findings/review/tests-layout.md) has the same for `tests/`.
 
-695 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain.
+702 records are implemented and verified. The implementation commits, evidence, and current status are in each review file and [progress](findings/progress.json). Original IDs and quotations remain.
 
 ## Review of October 6, 2026
 
@@ -33,7 +33,7 @@ Read-only reviewers read every folder of the repository. Each file below holds a
 | [Vocabulary: one name for each concept](findings/review/glossary.md)                                  |           17 |
 | [Commands and templates](findings/review/commands-templates.md)                                       |            9 |
 | [The gspot.toml format](findings/review/policy-format.md)                                             |           18 |
-| [This repository's own gspot.toml exceptions](findings/review/policy-exceptions.md)                   |           34 |
+| [This repository's own gspot.toml exceptions](findings/review/policy-exceptions.md)                   |           33 |
 | [Carve-outs](findings/review/carve-outs.md)                                                           |            1 |
 | [Source layout, names, and import graph](findings/review/source-layout.md)                            |            6 |
 | [Code: commands, lifecycle, policy, generation](findings/review/code-commands.md)                     |           15 |
@@ -59,7 +59,7 @@ These records come from the reviews of October 3, 2026. The record IDs and their
 | [Integration Tests Outside the Checks Folder](findings/areas/integration-tests.md)                             |           25 |
 | [Kits, Settings, and Names](findings/areas/kits.md)                                                            |           26 |
 | [Repository Setup and Ceremony](findings/areas/repository.md)                                                  |            2 |
-| [Native-Tool, Acceptance, and Package Tests](findings/areas/tool-tests.md)                                     |           20 |
+| [Native-Tool, Acceptance, and Package Tests](findings/areas/tool-tests.md)                                     |           14 |
 | [Unit Tests and Check Integration Tests](findings/areas/unit-tests.md)                                         |            3 |
 | [Checks: Database, Framework, Library, Platform, Tool, and the Registry](findings/slices/checks-other.md)      |            7 |
 | [The Config Constants](findings/slices/config.md)                                                              |            4 |

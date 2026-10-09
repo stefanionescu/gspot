@@ -253,7 +253,7 @@ test('initialization flags control integrations without changing the authored fo
     expect(policy).not.toHaveProperty('hooks');
     expect(policy).not.toHaveProperty('ci');
     expect(policy).not.toHaveProperty('runner');
-    expect(policy.format).toStrictEqual({});
+    expect(policy.format).toStrictEqual({ indent_width: 8, print_width: 80, quotes: 'double' });
     expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
     expect(await Bun.file(join(sandbox.path, '.prettierrc.json')).text()).toBe('{"semi":false,"tabWidth":8}\n');
 });

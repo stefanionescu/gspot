@@ -55,3 +55,8 @@ export type LinkinatorConstructor = new () => {
 
 /** Read the selected native package's default CLI configuration. */
 export type LinkinatorOptionsReader = (flags: Record<string, never>) => Promise<LinkinatorFlags>;
+
+/** The selected native PurgeCSS package's public analysis API. */
+export type PurgecssConstructor = new () => {
+    purge(options: Record<string, unknown>): Promise<unknown>;
+};

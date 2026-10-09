@@ -121,6 +121,8 @@
         ".": {
             "entry": [
                 "packages/cli/src/checks/general/site/linkinator.ts",
+                "packages/cli/src/checks/general/site/purgecss.ts",
+                "packages/cli/src/parsers/tool/format.ts",
                 "packages/eslint-plugin/src/rules/public.ts",
                 "docs/src/content/reference/collection.ts",
                 "scripts/setting-values.ts",
@@ -159,6 +161,8 @@
         "packages/cli": {
             "entry": [
                 "src/checks/general/site/linkinator.ts",
+                "src/checks/general/site/purgecss.ts",
+                "src/parsers/tool/format.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "**/test/**",

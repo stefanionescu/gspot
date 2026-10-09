@@ -415,7 +415,7 @@ scopes = ["cli", "eslint-plugin", "docs", "root", "hooks", "deps"]
 "**/*" = "ts"
 
 [tools.knip]
-entry = ["packages/cli/src/checks/general/site/linkinator.ts", "packages/eslint-plugin/src/rules/public.ts", "docs/src/content/reference/collection.ts", "scripts/setting-values.ts"]
+entry = ["packages/cli/src/checks/general/site/linkinator.ts", "packages/cli/src/checks/general/site/purgecss.ts", "packages/cli/src/parsers/tool/format.ts", "packages/eslint-plugin/src/rules/public.ts", "docs/src/content/reference/collection.ts", "scripts/setting-values.ts"]
 
 [tools.knip.ignore_dependencies]
 "^@fontsource-variable/" = "The site imports the fonts from docs/src/theme.css, outside the TypeScript import graph."
