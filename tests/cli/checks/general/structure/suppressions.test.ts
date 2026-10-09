@@ -6,6 +6,7 @@ import { executeRun } from '#cli/execution/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { checkReport, buildRunOptions } from '#tests/harness/gspot.ts';
 import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
+import { commentText, parseComments } from '#cli/parsers/source/public.ts';
 import { containing, containingAll } from '#tests/harness/expectations.ts';
 import { suppressionComments } from '#cli/checks/general/structure/public.ts';
 import { SUPPRESSION_COMMENTS } from '#tests/config/cli/checks/general/structure/suppressions.ts';
@@ -218,4 +219,68 @@ test('shared noqa text is attributed only to the tool that reads the file', asyn
         ]),
     );
     expect(report.checks[0]!.findings).toHaveLength(2);
+});
+
+test.each(['js', 'ts'])(
+    'suppression comments in %s distinguish strings and templates from executable directives',
+    async (extension) => {
+        await using sandbox = await testdir();
+        const path = `source.${extension}`;
+        await createFileTree(sandbox.path, {
+            'gspot.toml': buildPolicy(['typescript', 'structure'], { level: 'all' }),
+            [path]: [
+                String.raw`const apostrophe = "I am Sid\'s example"; // eslint-disable-line no-console`,
+                'const template = `',
+                '// eslint-disable-next-line no-alert',
+                '// marker: Fixture text is not a directive.',
+                '`;',
+                'const ordinary = "// marker: This is fixture text.";',
+                '// eslint-disable-next-line no-alert -- reason: External callback owns this call.',
+                'alert(ordinary);',
+                'function empty() { /* eslint-disable no-console */ }',
+                'const nested = `${(() => { // eslint-disable-line no-alert',
+                'return 1; })()}`;',
+                '// marker: Required external interface.',
+                'const active = 1;',
+            ].join('\n'),
+        });
+        const session = await openSession(sandbox.path);
+        const comments = await suppressionComments(
+            session.root,
+            session.scopes,
+            session.reads,
+            session.repository.files,
+        );
+        expect(comments.map(({ line, form, reason }) => ({ line, form, reason }))).toStrictEqual([
+            { line: 1, form: 'eslint', reason: undefined },
+            { line: 7, form: 'eslint', reason: 'reason: External callback owns this call.' },
+            { line: 9, form: 'eslint', reason: undefined },
+            { line: 10, form: 'eslint', reason: undefined },
+        ]);
+        const parsed = await parseComments(path, await Bun.file(`${sandbox.path}/${path}`).text());
+        expect(
+            parsed.flatMap(({ text, line }) => (/^(?:\/\/|#|--|<!--) ?marker:/u.test(commentText(text)) ? [line] : [])),
+        ).toStrictEqual([12]);
+    },
+);
+
+test('JSX text and quoted attributes do not become directives, but an empty expression comment does', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildPolicy(['typescript', 'structure'], { level: 'all' }),
+        'source.tsx': [
+            'const element = <div title="// eslint-disable no-alert">',
+            '// eslint-disable no-console',
+            '{/* eslint-disable no-debugger */}',
+            '</div>;',
+            '// eslint-disable-next-line no-alert',
+            'alert(element);',
+        ].join('\n'),
+    });
+    const session = await openSession(sandbox.path);
+    const comments = await suppressionComments(session.root, session.scopes, session.reads, session.repository.files);
+    expect(comments.map(({ line, form }) => ({ line, form }))).toStrictEqual([
+        { line: 3, form: 'eslint' },
+        { line: 5, form: 'eslint' },
+    ]);
 });

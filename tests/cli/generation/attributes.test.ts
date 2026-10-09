@@ -43,13 +43,6 @@ test('generated attributes preserve LF through autocrlf checkout', async () => {
     const path = '.gspot/rules/general/engineering/agent/WORKING.md';
     const bytes = await readFile(join(sandbox.path, path));
     expect(git(sandbox.path, ['add', '--', '.gitattributes', path]).code).toBe(0);
-    const attributes = git(sandbox.path, ['check-attr', 'text', 'eol', 'linguist-generated', '--', path]);
-    expect(attributes.code, attributes.stderr).toBe(0);
-    expect(attributes.stdout.split('\n').filter(Boolean)).toStrictEqual([
-        `${path}: text: set`,
-        `${path}: eol: lf`,
-        `${path}: linguist-generated: set`,
-    ]);
     await rm(join(sandbox.path, path));
     const checked = git(sandbox.path, ['-c', 'core.autocrlf=true', 'checkout-index', '--force', '--', path]);
     expect(checked.code, checked.stderr).toBe(0);

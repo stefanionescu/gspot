@@ -1,4 +1,3 @@
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { FindingCase } from '#tests/types/harness/check-case.ts';
 import type { InstalledScenario } from '#tests/types/harness/repository.ts';
 
@@ -7,7 +6,6 @@ export const ENV_SOURCE = 'const host = process.env.HOST;\nconsole.log(host, pro
 export const REPOSITORY: InstalledScenario = {
     configurations: ['secrets'],
 
-    init: [...QUIET_INIT],
     tools: ['dotenv-linter'],
     files: { '.env.example': 'PORT=3000\n' },
 };

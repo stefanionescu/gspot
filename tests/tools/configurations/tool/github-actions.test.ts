@@ -9,13 +9,14 @@ import { executeRun } from '#cli/execution/public.ts';
 import { checkRun } from '#cli/execution/contracts.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { BUILT_IN_CHECKS } from '#cli/checks/public.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { levelSchema } from '#cli/parsers/schema/contracts.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { spawnGspot, buildRunOptions } from '#tests/harness/gspot.ts';
 import { sharePythonTools } from '#tests/harness/python-installation.ts';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { ACTIONS_INIT } from '#tests/config/tools/configurations/tool/github-actions.ts';
+
 // Sandbox for the github-actions configuration: a workflow with an unknown expression context and one open to template injection.
 
 test('the github-actions configuration: GitHub initialization writes a workflow accepted by actionlint', async () => {
@@ -23,7 +24,7 @@ test('the github-actions configuration: GitHub initialization writes a workflow 
     await createFileTree(sandbox.path, { 'README.md': '# Workflow test\n' });
     commitAll(sandbox.path);
     const environment = { PATH: buildToolsPath(['actionlint']) };
-    await initRepository(sandbox.path, [...ACTIONS_INIT, '--ci', 'github', '--no-hooks'], environment);
+    await initRepository(sandbox.path, buildInitArguments(['github-actions'], { ci: 'github' }), environment);
     const selected = await spawnGspot(sandbox.path, ['set', 'level', 'all'], environment);
     expect(selected.code, selected.stdout + selected.stderr).toBe(0);
     const workflow = join(sandbox.path, '.github/workflows/gspot.yml');

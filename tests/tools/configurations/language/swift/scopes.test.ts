@@ -4,10 +4,10 @@ import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { CAST_SWIFT, CLEAN_SWIFT } from '#tests/config/samples/swift/source.ts';
@@ -22,7 +22,7 @@ test.skipIf(!hasToolBuild('swiftlint'))(
         });
         commitAll(sandbox.path);
         const environment = { PATH: buildToolsPath(['swiftlint', 'swiftformat', 'typos', 'editorconfig-checker']) };
-        const argv = ['init', '--yes', '--scope-configurations', 'ios=swift', ...QUIET_INIT];
+        const argv = [...buildInitArguments([]), '--scope-configurations', 'ios=swift'];
         await initRepository(sandbox.path, argv, environment, { level: 'all' });
         for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
             const clean = await spawnGspot(sandbox.path, ['check', '--only', id], environment);

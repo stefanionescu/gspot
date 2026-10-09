@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { testdir } from 'testdirs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { consumerEnvironment } from '#tests/harness/environment.ts';
@@ -82,17 +83,9 @@ export async function initializeConsumer(release: PublishedRelease, installation
     const initialized = await runTestCommand(
         [
             ...command,
-            'init',
-            '--json',
-            '--yes',
-            '--configurations',
-            'bash',
-            'python',
-            'swift',
-            '--no-runner',
-            '--no-ci',
-            '--no-hooks',
-            '--no-install',
+            ...buildInitArguments(['bash', 'python', 'swift'], { json: true }).filter(
+                (argument) => argument !== '--no-agent-rules',
+            ),
         ],
         setupOptions,
     );

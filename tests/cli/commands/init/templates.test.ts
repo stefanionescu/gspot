@@ -7,8 +7,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { parseStrictPolicy } from '#cli/policy/public.ts';
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { textContaining } from '#tests/harness/expectations.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
@@ -63,13 +63,10 @@ test.each(['exact', 'detect'])('an empty %s template controls root detection wit
     });
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, [
-        'init',
-        '--yes',
+        ...buildInitArguments([], { json: true }),
         '--from',
         'team.template.toml',
         '--dry-run',
-        '--json',
-        ...QUIET_INIT,
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stderr).toBe('');
@@ -126,7 +123,7 @@ test.each(['recommended', 'all'] as const)(
         commitAll(source);
         commitAll(destination);
         for (const argv of [
-            ['init', '--yes', '--configurations', 'bash', ...QUIET_INIT],
+            buildInitArguments(['bash']),
             ['set', 'level', level],
             ['set', 'format.indent_width', '2'],
             ['export', 'house.template.toml'],
@@ -135,7 +132,7 @@ test.each(['recommended', 'all'] as const)(
             expect(result.code, result.stdout + result.stderr).toBe(0);
         }
         const template = join(source, 'house.template.toml');
-        const copied = await runGspot(destination, ['init', '--yes', '--from', template, ...QUIET_INIT]);
+        const copied = await runGspot(destination, [...buildInitArguments([]), '--from', template]);
         expect(copied.code, copied.stdout + copied.stderr).toBe(0);
         expect(parse(await Bun.file(join(destination, 'gspot.toml')).text())).toStrictEqual(
             parse(await Bun.file(join(source, 'gspot.toml')).text()),

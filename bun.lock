@@ -133,6 +133,7 @@
         "@next/eslint-plugin-next": "16.3.8",
         "@react-native/eslint-plugin": "0.87.1",
         "@tanstack/eslint-plugin-query": "5.91.2",
+        "@types/ini": "4.1.1",
         "@types/react": "19.1.13",
         "@types/which": "3.0.4",
         "@typescript-eslint/parser": "8.70.0",
@@ -174,6 +175,7 @@
         "eslint-plugin-zod": "4.12.0",
         "globals": "17.12.0",
         "html-validate": "11.6.1",
+        "ini": "6.0.0",
         "jest": "30.2.0",
         "jsonc-parser": "3.3.1",
         "knip": "6.35.1",
@@ -995,6 +997,8 @@
     "@types/estree-jsx": ["@types/estree-jsx@1.0.5", "", { "dependencies": { "@types/estree": "*" } }, "sha512-52CcUVNFyfb1A2ALocQw/Dd1BQFNmSdkuC3BkZ6iqhdMfQz7JWOFRuJFloOzjk+6WijU56m9oKXFAXc7o3Towg=="],
 
     "@types/hast": ["@types/hast@3.0.5", "", { "dependencies": { "@types/unist": "*" } }, "sha512-rp/ezSWaD1m44dPKICGhiskI13nVr7qTloFwDa/IYkhhf5nzwP+zIQcIJh3WIFSBOy/H1PzB40jPjMDksN4F+g=="],
+
+    "@types/ini": ["@types/ini@4.1.1", "", {}, "sha512-MIyNUZipBTbyUNnhvuXJTY7B6qNI78meck9Jbv3wk0OgNwRyOOVEKDutAkOs1snB/tx0FafyR6/SN4Ps0hZPeg=="],
 
     "@types/istanbul-lib-coverage": ["@types/istanbul-lib-coverage@2.0.6", "", {}, "sha512-2QF/t/auWm0lsy8XtKVPG19v3sSOQlJe/YHZgfjb/KBBHOGSV+J2q/S671rcq9uTBrLAXmZpqJiaQbMT+zNU1w=="],
 

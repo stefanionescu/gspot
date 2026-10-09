@@ -5,13 +5,12 @@ import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import * as environment from '#cli/platform/public.ts';
 import { test, spyOn, expect, describe } from 'bun:test';
-import { buildInitOptions } from '#tests/harness/init.ts';
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { rejection } from '#tests/harness/expectations.ts';
 import { stat, readdir, readFile } from 'node:fs/promises';
 import { runGspot, spawnGspot } from '#tests/harness/gspot.ts';
 import { INIT_CI_CASES } from '#tests/config/cli/commands/init/ci.ts';
 import { EMPTY_TOOLING } from '#tests/config/cli/commands/init/tooling.ts';
+import { buildInitOptions, buildInitArguments } from '#tests/harness/init.ts';
 import { askQuestions, askConfirmation } from '#cli/commands/init/contracts.ts';
 
 import {
@@ -91,7 +90,7 @@ test('initialization groups detected test runners and infrastructure under their
         Dockerfile: 'FROM node:24\n',
     });
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--dry-run', ...QUIET_INIT]);
+    const result = await runGspot(sandbox.path, [...buildInitArguments([]), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toMatch(/^test runners\s+jest\b/mu);
     expect(result.stdout).toMatch(/^infrastructure\s+docker\b/mu);

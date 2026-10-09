@@ -5,8 +5,8 @@ import { commitAll } from '#tests/harness/git.ts';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { openSession } from '#cli/commands/public.ts';
 import { buildPolicy } from '#tests/harness/policy.ts';
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { test, expect, afterAll, beforeAll } from 'bun:test';
 import { runCheckCommand } from '#cli/execution/command/public.ts';
 import { testdir, createFileTree, type TestdirResult } from 'testdirs';
@@ -27,11 +27,7 @@ test('the pytest configuration > naming accepts the test_ prefix of a test funct
     const project = await runTestCommand(['uv', 'sync'], { cwd: sandbox.path, env: environment });
     expect(project.code, project.stdout + project.stderr).toBe(0);
     commitAll(sandbox.path);
-    await initRepository(
-        sandbox.path,
-        ['init', '--yes', '--configurations', 'python', 'pytest', 'naming', ...QUIET_INIT],
-        environment,
-    );
+    await initRepository(sandbox.path, buildInitArguments(['python', 'pytest', 'naming']), environment);
     for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
         const clean = await spawnGspot(sandbox.path, ['check', '--only', id], environment);
         expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);

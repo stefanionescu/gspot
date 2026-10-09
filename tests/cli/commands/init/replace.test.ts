@@ -7,7 +7,6 @@ import { readPolicy } from '#cli/policy/public.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { TYPO } from '#tests/config/samples/spelling.ts';
 import { getKeptMode } from '#tests/harness/platforms.ts';
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { PYPROJECT } from '#tests/config/samples/python.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
@@ -17,9 +16,9 @@ import { git, commitAll, gitOutput } from '#tests/harness/git.ts';
 import { prepare, initCommand } from '#cli/commands/init/public.ts';
 import { buildInitOptions, buildInitArguments } from '#tests/harness/init.ts';
 import { INIT_FILES, INIT_ORIGINALS } from '#tests/config/samples/commands.ts';
+import { PYPROJECT_TAKEOVERS } from '#tests/config/cli/commands/init/replace.ts';
 import { rejection, containingAll, textContaining } from '#tests/harness/expectations.ts';
 import { rm, stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
-import { PLAN_INIT, PYPROJECT_TAKEOVERS } from '#tests/config/cli/commands/init/replace.ts';
 
 test.each(['', 'hooks', '.husky'])(
     'dry-run distinguishes source hooks from configured hooks at %s',
@@ -32,7 +31,10 @@ test.each(['', 'hooks', '.husky'])(
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
         const configured = hooksPath === '' ? { code: 0 } : git(sandbox.path, ['config', 'core.hooksPath', hooksPath]);
         expect(configured.code).toBe(0);
-        const result = await runGspot(sandbox.path, [...PLAN_INIT, '--dry-run']);
+        const result = await runGspot(sandbox.path, [
+            ...buildInitArguments(['bash', 'javascript', 'spelling', 'markdown'], { hooks: true }),
+            '--dry-run',
+        ]);
         expect(result.code).toBe(0);
         const hooks = result.stdout.split('\n').find((line) => /^hooks\s/.test(line)) ?? '';
         for (const token of hooksPath === '' ? ['none'] : [`${hooksPath}/`, 'pre-commit'])
@@ -46,14 +48,21 @@ test('the init plan replaces the files of the selected tools and lists the lint 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, INIT_FILES);
     commitAll(sandbox.path);
-    const preview = await runGspot(sandbox.path, [...PLAN_INIT, '--dry-run', '--json']);
+    const preview = await runGspot(sandbox.path, [
+        ...buildInitArguments(['bash', 'javascript', 'spelling', 'markdown'], { hooks: true }),
+        '--dry-run',
+        '--json',
+    ]);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const plan = (JSON.parse(preview.stdout) as InitJson).plan!;
     for (const path of Object.keys(INIT_ORIGINALS))
         expect(plan.remove).toContainEqual({ path, note: textContaining('replaced by the generated') });
     expect(plan.noLongerRuns).toContainEqual({ path: 'quality/', note: textContaining('lint scripts') });
     expect(await pathExists(join(sandbox.path, 'gspot.toml'))).toBe(false);
-    const initialized = await runGspot(sandbox.path, [...PLAN_INIT, '--json']);
+    const initialized = await runGspot(sandbox.path, [
+        ...buildInitArguments(['bash', 'javascript', 'spelling', 'markdown'], { hooks: true }),
+        '--json',
+    ]);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     for (const path of Object.keys(INIT_ORIGINALS)) expect(await pathExists(join(sandbox.path, path))).toBe(false);
     const policy = await readFile(join(sandbox.path, 'gspot.toml'), 'utf8');
@@ -71,14 +80,7 @@ test.each(['setup.cfg', 'tox.ini'])(
         const original = '[flake8]\nignore = E501\n\n[sqlfluff]\nexclude_rules = LT01, RF01\n';
         await createFileTree(sandbox.path, { [path]: original, 'query.sql': 'SELECT 1;\n' });
         await chmod(join(sandbox.path, path), 0o640);
-        const initialized = await runGspot(sandbox.path, [
-            'init',
-            '--yes',
-            '--json',
-            '--configurations',
-            'sql',
-            ...QUIET_INIT,
-        ]);
+        const initialized = await runGspot(sandbox.path, buildInitArguments(['sql'], { json: true }));
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         expect(readPolicy(sandbox.path).policy.ignore).toStrictEqual([]);
         expect((JSON.parse(initialized.stdout) as InitJson).plan!.remove.some((entry) => entry.path === path)).toBe(
@@ -102,7 +104,7 @@ test('an ignore file inside a scope is replaced at init, and the scoped check ru
         'db/.sqlfluffignore': '# Templates\ntemplates/\n',
     });
     commitAll(sandbox.path);
-    const argv = ['init', '--yes', '--scope-configurations', 'db=sql', ...QUIET_INIT];
+    const argv = [...buildInitArguments([]), '--scope-configurations', 'db=sql'];
     const initialized = await runGspot(sandbox.path, argv);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();

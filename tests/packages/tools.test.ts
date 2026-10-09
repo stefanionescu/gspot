@@ -2,14 +2,14 @@
 import { test, expect } from 'bun:test';
 import { toPosix } from '#cli/platform/contracts.ts';
 import { join, relative, delimiter } from 'node:path';
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
+import { SUPPORTED_MISE } from '#tests/config/packages/tools.ts';
 import type { Consumer } from '#tests/types/harness/consumer.ts';
 import { consumerEnvironment } from '#tests/harness/environment.ts';
 import type { PublishedRelease } from '#automation/types/package.ts';
 import { mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
-import { FORMATTER_INIT, SUPPORTED_MISE } from '#tests/config/packages/tools.ts';
 import { createConsumer, getPublishedRelease } from '#tests/harness/consumer.ts';
 import type { NativeConsumer, FormatterConsumer } from '#tests/types/packages.ts';
 
@@ -54,7 +54,13 @@ async function prepareFormatterConsumer(installation: Consumer, release: Publish
             NO_PROXY: '127.0.0.1,localhost',
         },
     };
-    const toolInit = await runTestCommand([...command, ...FORMATTER_INIT], toolOptions);
+    const toolInit = await runTestCommand(
+        [
+            ...command,
+            ...buildInitArguments(['format'], { json: true }).filter((argument) => argument !== '--no-runner'),
+        ],
+        toolOptions,
+    );
     if (toolInit.code !== 0) throw new Error(`Formatter sandbox init failed: ${toolInit.stdout}${toolInit.stderr}`);
     const selectedFormatter = await runTestCommand([...command, 'set', 'level', 'all'], toolOptions);
     if (selectedFormatter.code !== 0)
@@ -75,7 +81,7 @@ async function prepareNativeConsumer(installation: Consumer): Promise<NativeCons
     await writeFile(join(nativeConsumer, 'notes.json'), '"text"\n');
     const nativeOptions = { ...installation.onlineOptions, cwd: nativeConsumer };
     const nativeInit = await runTestCommand(
-        [...installation.command, 'init', '--yes', '--configurations', 'files', ...QUIET_INIT, '--json'],
+        [...installation.command, ...buildInitArguments(['files'], { json: true })],
         nativeOptions,
     );
     if (nativeInit.code !== 0) throw new Error(`Native sandbox init failed: ${nativeInit.stdout}${nativeInit.stderr}`);

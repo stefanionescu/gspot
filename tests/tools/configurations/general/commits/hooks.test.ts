@@ -8,6 +8,7 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { LICENSE } from '#tests/config/samples/docs.ts';
 import { quoteArgument } from '#cli/platform/contracts.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import type { PushReport } from '#cli/types/commands/check.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import type { CommandFailureJson } from '#cli/types/terminal.ts';
@@ -106,7 +107,7 @@ const prepareCommits = async () => {
     root = sandbox.path;
     await createFileTree(root, { 'scripts/a.sh': CLEAN_BASH_SCRIPT, 'README.md': '# Test\n', LICENSE });
     commitAll(root);
-    for (const command of COMMITS_SETUP) {
+    for (const command of [buildInitArguments(['commits'], { hooks: true }), ...COMMITS_SETUP]) {
         const prepared = await spawnGspot(root, command);
         expect(prepared.code, prepared.stdout + prepared.stderr).toBe(0);
     }

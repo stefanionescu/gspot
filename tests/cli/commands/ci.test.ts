@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 
 // Each row names the provider init proposes and the note or file its plan must carry.
 test.each([
@@ -37,16 +38,8 @@ test.each([
         expect(git(repository.path, ['init', '-q']).code).toBe(0);
         expect(git(repository.path, ['remote', 'add', 'origin', remote]).code).toBe(0);
         const result = await runGspot(repository.path, [
-            'init',
+            ...buildInitArguments(['none'], { json: true, ci: null }),
             '--dry-run',
-            '--json',
-            '--yes',
-            '--configurations',
-            'none',
-            '--no-runner',
-            '--no-hooks',
-            '--no-agent-rules',
-            '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const plan = JSON.parse(result.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;

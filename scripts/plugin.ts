@@ -73,9 +73,9 @@ const isSourceSuite = suite === 'cli' || suite === 'plugin';
 const separator = options.indexOf('--');
 const flags = separator === -1 ? options : options.slice(0, separator);
 const paths = separator === -1 ? [] : options.slice(separator + 1);
-let defaults = suite === 'cli' ? ['cli', 'plugin'] : [suite].filter((target) => target !== undefined);
+let defaults = suite === 'cli' ? ['tests/cli', 'tests/plugin'] : [`tests/${String(suite)}`];
 if (suite === 'tools')
-    defaults = [...new Bun.Glob('tools/**/*.test.ts').scanSync({ cwd: join(workspaceRoot, 'tests') })].filter(
+    defaults = [...new Bun.Glob('tests/tools/**/*.test.ts').scanSync({ cwd: workspaceRoot })].filter(
         (path) => path !== SUPABASE_DATABASE_TEST,
     );
 const targets = paths.length === 0 ? defaults : paths;
@@ -85,12 +85,12 @@ const testCommand = [
     ...flags,
     '--timeout',
     String(TEST_TIMEOUT_MS),
-    ...targets.map((path) => resolve(workspaceRoot, 'tests', path)),
+    ...targets.map((path) => resolve(workspaceRoot, path)),
 ];
 
 if (suite !== undefined && options.length === 1 && options[0] === '--help') {
     console.log(
-        `Usage: bun scripts/plugin.ts ${String(args[0])} [Bun options] [-- paths ...]\n\nPaths are relative to tests/. Without paths, it runs ${targets.join(' and ')}. Bun validates its options.`,
+        `Usage: bun scripts/plugin.ts ${String(args[0])} [Bun options] [-- paths ...]\n\nPaths start at the repository root. Without paths, it runs ${targets.join(' and ')}. Bun validates its options.`,
     );
 } else {
     const controller = new AbortController();

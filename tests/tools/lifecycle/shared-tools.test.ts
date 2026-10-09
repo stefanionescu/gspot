@@ -7,6 +7,7 @@ import { readFile, realpath } from 'node:fs/promises';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { packageToolProject } from '#cli/tools/npm/public.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { INIT_FILES } from '#tests/config/samples/commands.ts';
@@ -18,7 +19,6 @@ import { buildToolsPath, buildSandboxPath, shareToolProjects, installToolProject
 import {
     SCOPE,
     CHECKS,
-    PLAN_INIT,
     CORRECTED,
     CLEAN_CSS,
     INVALID_CSS,
@@ -115,7 +115,7 @@ test('installed tool projects leave no apply drift after initialization', async 
     await createFileTree(sandbox.path, INIT_FILES);
     commitAll(sandbox.path);
     const environment = { PATH: buildToolsPath(['ast-grep']) };
-    const init = await spawnGspot(sandbox.path, PLAN_INIT, environment);
+    const init = await spawnGspot(sandbox.path, buildInitArguments([], { hooks: true }), environment);
     expect(init.code, init.stdout + init.stderr).toBe(0);
     await installToolProjects(sandbox.path);
     const applied = await spawnGspot(sandbox.path, ['apply', '--dry-run', '--json']);

@@ -1,18 +1,25 @@
 // Every template of every configuration renders at both levels into a file its reader parses.
 import ts from 'typescript';
 import { test, expect } from 'bun:test';
-import { join, extname } from 'node:path';
+import { parse as parseIni } from 'ini';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import { testdir, createFileTree } from 'testdirs';
 import { emitAll } from '#cli/generation/public.ts';
+import { join, extname, basename } from 'node:path';
 import { openSession } from '#cli/commands/public.ts';
 import { linkInstalledModules } from '#tests/harness/platforms.ts';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import { configurationManifests } from '#cli/configurations/public.ts';
-import { PROJECT_FILES } from '#tests/config/cli/generation/every-template.ts';
+import { PROJECT_FILES, PLAIN_TOOL_FILES } from '#tests/config/cli/generation/every-template.ts';
 
 const PARSERS: Record<string, (text: string, path: string) => void> = {
+    '.cfg': (text) => {
+        parseIni(text);
+    },
+    '.ini': (text) => {
+        parseIni(text);
+    },
     '.json': (text) => void JSON.parse(text),
     '.jsonc': parseJson,
     '.webmanifest': (text) => void JSON.parse(text),
@@ -66,8 +73,10 @@ test.each(['recommended', 'all'])(
         expect(selected).toStrictEqual(new Set(configurations));
         expect(generated.length).toBeGreaterThan(configurations.length);
         for (const file of generated) {
+            if (PLAIN_TOOL_FILES.includes(basename(file.path))) continue;
             const parser = PARSERS[extname(file.path)];
-            if (parser !== undefined) parser(file.content, file.path);
+            if (parser === undefined) throw new Error(`${file.path}: no generated-file parser is declared.`);
+            parser(file.content, file.path);
         }
     },
 );

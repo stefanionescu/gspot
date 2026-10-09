@@ -116,7 +116,7 @@ runs = "scope"
 needs = ["network"]
 summary = "Follows every link of the built site, the ones that leave it included."
 why = "Other sites move their pages, and a link nobody rechecks rots."
-help = "Update the link. Skip a host that refuses crawlers under tools.linkinator.exclude_urls with a reason."
+help = "Update the link, or allow its URL under links.allowed_urls with a reason."
 
 [[check]]
 name = "size"

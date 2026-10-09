@@ -5,8 +5,8 @@ import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
 import { parseStrictPolicy } from '#cli/policy/public.ts';
 import { readTree } from '#tests/harness/preservation.ts';
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { TOOLING_PACKAGE, NON_JAVASCRIPT_PROJECTS } from '#tests/config/cli/commands/init/selection.ts';
 
@@ -21,7 +21,7 @@ test.each(NON_JAVASCRIPT_PROJECTS)(
             [`app/${file}`]: source,
         });
         const before = await readTree(sandbox.path);
-        const argv = ['init', '--dry-run', ...QUIET_INIT];
+        const argv = [...buildInitArguments([]).filter((argument) => argument !== '--yes'), '--dry-run'];
         const preview = await runGspot(sandbox.path, argv);
         const accepted = await runGspot(sandbox.path, [...argv, '--yes']);
         for (const result of [preview, accepted]) {
@@ -38,7 +38,7 @@ test.each(NON_JAVASCRIPT_PROJECTS)(
         expect(output.plan.configurations.map(({ configuration }) => configuration)).toContain('javascript');
         expect(Object.keys(parseStrictPolicy(output.policy, sandbox.path).scope)).toStrictEqual(['app']);
         expect(await readTree(sandbox.path)).toStrictEqual(before);
-        const written = await runGspot(sandbox.path, ['init', '--yes', '--json', ...QUIET_INIT]);
+        const written = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
         expect(written.code, written.stdout + written.stderr).toBe(0);
         const session = await openSession(sandbox.path);
         expect(session.repository.scopes.map(({ path }) => path)).toStrictEqual(['', 'app']);
@@ -52,7 +52,7 @@ test.each(NON_JAVASCRIPT_PROJECTS)(
     async (language, file, source) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'package.json': TOOLING_PACKAGE, [file]: source });
-        const initialized = await runGspot(sandbox.path, ['init', '--yes', '--json', ...QUIET_INIT]);
+        const initialized = await runGspot(sandbox.path, buildInitArguments([], { json: true }));
         expect(initialized.code, `${language}: ${initialized.stdout}${initialized.stderr}`).toBe(0);
         for (const level of ['recommended', 'all']) {
             const selected = await runGspot(sandbox.path, ['set', 'level', level]);

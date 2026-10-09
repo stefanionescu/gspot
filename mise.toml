@@ -71,7 +71,7 @@ run = "bun scripts/release.ts"
 
 [tasks."test:database"]
 description = "Run the native Supabase database tests."
-run = "bun scripts/plugin.ts test -- tools/configurations/platform/supabase.test.ts"
+run = "bun scripts/plugin.ts test -- tests/tools/configurations/platform/supabase.test.ts"
 
 [tasks."deploy:docs"]
 description = "Deploy the reviewed documentation build."

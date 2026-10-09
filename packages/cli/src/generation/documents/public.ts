@@ -89,7 +89,7 @@ function buildJob(
         .join(', ');
     return {
         'runs-on': runner,
-        'timeout-minutes': 30,
+        'timeout-minutes': 60,
         ...(check.condition === undefined ? {} : { if: check.condition }),
         defaults: { run: { shell: 'bash' } },
         steps: [
@@ -273,7 +273,7 @@ export function gitlabFile(pipeline: Pipeline): GeneratedFile {
     const content = stringify({
         gspot: {
             stage: 'test',
-            timeout: '30m',
+            timeout: '60m',
             variables: { GIT_DEPTH: '0' },
             rules: [
                 { if: '$CI_PIPELINE_SOURCE == "merge_request_event"', interruptible: true },

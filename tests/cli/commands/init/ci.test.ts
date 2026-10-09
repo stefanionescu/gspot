@@ -21,18 +21,8 @@ test.each(INIT_CI_CASES)(
         const before = await readTree(sandbox.path);
         for (const provider of ['github', 'gitlab'] as const) {
             const preview = await runGspot(sandbox.path, [
-                'init',
-                '--yes',
+                ...buildInitArguments(['none'], { json: true, ci: provider }),
                 '--dry-run',
-                '--json',
-                '--configurations',
-                'none',
-                '--no-runner',
-                '--no-hooks',
-                '--no-agent-rules',
-                '--no-install',
-                '--ci',
-                provider,
             ]);
             expect(preview.code, preview.stdout + preview.stderr).toBe(0);
             expect(preview.stderr).toBe('');

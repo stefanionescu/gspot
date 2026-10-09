@@ -24,8 +24,8 @@ test('nested policies retain repository context with policy-relative index and c
     await Bun.write(join(project, 'source.txt'), 'indexed');
     gitOutput(sandbox.path, ['add', '.']);
     await Bun.write(join(project, 'source.txt'), 'working');
-    const replaceEntry = await getHeadEntries(project);
-    expect(replaceEntry.map((entry) => entry.path)).toStrictEqual(['source.txt']);
+    const headEntries = await getHeadEntries(project);
+    expect(headEntries.map((entry) => entry.path)).toStrictEqual(['source.txt']);
     const entries = await getEntries(project, { kind: 'index' });
     expect(entries.map((entry) => entry.path)).toStrictEqual(['source.txt']);
     for (const source of [{ kind: 'index' } as const, { kind: 'commit', hash: commitId } as const]) {

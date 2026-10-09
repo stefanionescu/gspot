@@ -4,12 +4,14 @@ import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { buildPolicy } from '#tests/harness/policy.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
-import { INIT } from '#tests/config/cli/commands/agents.ts';
 import { containing } from '#tests/harness/expectations.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { isPosix } from '#tests/config/harness/platforms.ts';
 import { currentBlock } from '#cli/platform/root/contracts.ts';
 import { stat, chmod, symlink, readFile } from 'node:fs/promises';
+
+const INIT = buildInitArguments(['bash'], { json: true }).filter((argument) => argument !== '--no-agent-rules');
 
 test('agent instructions reach AGENTS.md and configured files, and other agent files stay as written', async () => {
     await using sandbox = await testdir();

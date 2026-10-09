@@ -3,8 +3,8 @@ import { join, delimiter } from 'node:path';
 import { gitOutput } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { gspot, runGspot } from '#tests/harness/gspot.ts';
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { runTestCommand } from '#tests/harness/command.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { environmentVariables } from '#cli/platform/public.ts';
 import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
@@ -48,7 +48,7 @@ command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
         'legacy.sh': 'if then\n',
     });
     commitCiSource(root, 'Authored inputs');
-    const initialized = await runGspot(root, ['init', '--yes', '--configurations', 'none', ...QUIET_INIT]);
+    const initialized = await runGspot(root, buildInitArguments(['none']));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     await writeFile(join(root, 'gspot.toml'), policy);
     const applied = await runGspot(root, ['apply']);

@@ -1,17 +1,3 @@
-export const PLAN_INIT = [
-    'init',
-    '--yes',
-    '--configurations',
-    'bash',
-    'javascript',
-    'spelling',
-    'markdown',
-    '--no-runner',
-    '--no-ci',
-    '--no-agent-rules',
-    '--no-install',
-];
-
 /** Native Python project tables retained when generated configuration takes over. */
 export const PYPROJECT_TAKEOVERS = [
     {

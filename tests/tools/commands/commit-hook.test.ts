@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { test, expect } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { git, commitAll } from '#tests/harness/git.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { buildSandboxPath } from '#tests/harness/install.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { spawnGspot, checkReport } from '#tests/harness/gspot.ts';
@@ -44,16 +45,7 @@ test('installed and freshly cloned repositories enforce staged findings through 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);
-    const initialized = await spawnGspot(sandbox.path, [
-        'init',
-        '--yes',
-        '--configurations',
-        'bash',
-        '--no-runner',
-        '--no-ci',
-        '--no-agent-rules',
-        '--no-install',
-    ]);
+    const initialized = await spawnGspot(sandbox.path, buildInitArguments(['bash'], { hooks: true }));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const installed = await spawnGspot(sandbox.path, ['install']);
     expect(installed.code, installed.stdout + installed.stderr).toBe(0);

@@ -115,4 +115,4 @@ type = "list"
 items = "string"
 direction = "loosening"
 default = []
-summary = "URL patterns lychee skips, each with a reason."
+summary = "Allowed URL patterns, each with a reason."

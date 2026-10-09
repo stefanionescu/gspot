@@ -7,26 +7,20 @@ import { testdir, createFileTree } from 'testdirs';
 import * as processes from '#cli/platform/public.ts';
 import { symlink, readFile } from 'node:fs/promises';
 import { parseStrictPolicy } from '#cli/policy/public.ts';
-import { buildInitOptions } from '#tests/harness/init.ts';
 import { initCommand } from '#cli/commands/init/public.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { rejection, textContaining } from '#tests/harness/expectations.ts';
-
-import {
-    QUIET,
-    GIT_PLAN_CASES,
-    ARGUMENT_REFUSALS,
-    UNSAFE_SCOPE_CASES,
-} from '#tests/config/cli/commands/init/refusals.ts';
+import { buildInitOptions, buildInitArguments } from '#tests/harness/init.ts';
+import { GIT_PLAN_CASES, ARGUMENT_REFUSALS, UNSAFE_SCOPE_CASES } from '#tests/config/cli/commands/init/refusals.ts';
 
 test.each(ARGUMENT_REFUSALS)('$name exits 2 and writes nothing', async ({ argv, cause }) => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, argv);
+    const result = await runGspot(sandbox.path, [...buildInitArguments([], { hooks: true }), ...argv]);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toContain(cause);
     expect(await readTree(sandbox.path)).toStrictEqual(before);
@@ -37,7 +31,7 @@ test('uncommitted changes stop init until they are committed', async () => {
     await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);
     await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
-    const argv = ['init', '--yes', '--configurations', 'none', '--no-hooks', ...QUIET];
+    const argv = buildInitArguments(['none']);
     const before = await readTree(sandbox.path);
     const diagnostic =
         'The working tree has 1 uncommitted change(s). Commit or stash them before gspot init: Git then keeps every file init replaces, and you review its changes separately.';
@@ -69,7 +63,7 @@ test('failed Git status stops initialization with a selection error before writi
             return run(command, options);
         return { code: 7, missing: false, duration: 0, stdout: '', stderr: 'status unavailable\n' };
     });
-    const argv = ['init', '--yes', '--configurations', 'none', ...QUIET];
+    const argv = buildInitArguments(['none'], { hooks: true });
     const human = await runGspot(sandbox.path, argv);
     expect(human.code, human.stdout + human.stderr).toBe(2);
     expect(human.stdout).toBe('');
@@ -93,7 +87,7 @@ test('init refuses an invalid manifest before writing', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'package.json': '{', 'source.ts': 'export {};\n' });
     const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--no-hooks', ...QUIET]);
+    const result = await runGspot(sandbox.path, buildInitArguments([]));
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stderr).toContain('package.json');
     expect(await readTree(sandbox.path)).toStrictEqual(before);
@@ -107,7 +101,7 @@ test('init in a repository that already has gspot.toml exits 2 and changes nothi
     });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--json', ...QUIET]);
+    const result = await runGspot(sandbox.path, buildInitArguments([], { hooks: true, json: true }));
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({
         error: 'already-initialized',
@@ -122,7 +116,11 @@ test('init from a template address that answers 404 exits 2 and writes nothing',
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
     using fetched = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('Not found', { status: 404 }));
-    const result = await runGspot(sandbox.path, ['init', '--yes', '--from', 'github:acme/missing', ...QUIET]);
+    const result = await runGspot(sandbox.path, [
+        ...buildInitArguments([], { hooks: true }),
+        '--from',
+        'github:acme/missing',
+    ]);
     expect(fetched).toHaveBeenCalledTimes(1);
     expect(result.code, result.stdout + result.stderr).toBe(2);
     expect(result.stdout + result.stderr).toContain('answered 404');
@@ -144,7 +142,7 @@ test.each(GIT_PLAN_CASES)('initialization in $name previews only applicable Git 
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'control.txt': 'preserve this source\n' });
     if (hasGit) commitAll(sandbox.path);
-    const argv = ['init', '--yes', '--configurations', 'none', ...QUIET, '--json'];
+    const argv = buildInitArguments(['none'], { hooks: true, json: true });
     const before = await readTree(sandbox.path);
     const preview = await runGspot(sandbox.path, [...argv, '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
@@ -166,7 +164,7 @@ test.each(GIT_PLAN_CASES)('initialization in $name previews only applicable Git 
 test('initialization without a terminal names --yes once and writes only after explicit acceptance', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'control.txt': 'preserve this source\n' });
-    const argv = ['init', '--configurations', 'none', '--no-hooks', ...QUIET];
+    const argv = buildInitArguments(['none']).filter((argument) => argument !== '--yes');
     const before = await readTree(sandbox.path);
     const refused = await runGspot(sandbox.path, argv);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);

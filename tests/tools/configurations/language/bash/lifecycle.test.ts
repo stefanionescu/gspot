@@ -7,6 +7,7 @@ import { spawnGspot } from '#tests/harness/gspot.ts';
 import { join, dirname, delimiter } from 'node:path';
 import { toolPin } from '#cli/configurations/contracts.ts';
 import { buildToolsPath } from '#tests/harness/install.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
@@ -32,11 +33,10 @@ test('a missing tool fails with the install hint', async () => {
         HOME: join(sandbox.path, 'home'),
         MISE_DATA_DIR: join(sandbox.path, 'home', 'mise'),
     };
-    const initialized = await spawnGspot(
-        sandbox.path,
-        ['init', '--yes', '--configurations', 'bash', '--no-runner', '--no-ci', '--no-agent-rules', '--no-install'],
-        { ...environment, PATH: buildToolsPath([]) },
-    );
+    const initialized = await spawnGspot(sandbox.path, buildInitArguments(['bash'], { hooks: true }), {
+        ...environment,
+        PATH: buildToolsPath([]),
+    });
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(initialized.stdout + initialized.stderr).toContain('run gspot check');
     const check = await spawnGspot(sandbox.path, ['check', '--only', 'bash/shellcheck'], environment);

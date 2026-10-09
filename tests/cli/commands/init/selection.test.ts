@@ -7,9 +7,9 @@ import { commitAll } from '#tests/harness/git.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/commands/public.ts';
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
 import { policySchema } from '#cli/policy/schema/public.ts';
 import type { InitJson } from '#cli/types/commands/init.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { applicableManifests } from '#cli/planning/public.ts';
 import { parseTomlText } from '#cli/policy/document/public.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
@@ -17,8 +17,8 @@ import { toolProjectPins } from '#cli/configurations/contracts.ts';
 import { parseToolProject } from '#cli/parsers/packages/contracts.ts';
 import { readTree, pathExists } from '#tests/harness/preservation.ts';
 import { configurationManifests } from '#cli/configurations/public.ts';
+import { COMPONENT } from '#tests/config/cli/commands/init/selection.ts';
 import { readPolicyTable, parseStrictPolicy } from '#cli/policy/public.ts';
-import { COMPONENT, SELECTION_INIT } from '#tests/config/cli/commands/init/selection.ts';
 
 test('accepting defaults leaves the detected initialization plan unchanged', async () => {
     await using sandbox = await testdir();
@@ -30,7 +30,7 @@ test('accepting defaults leaves the detected initialization plan unchanged', asy
     });
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
-    const argv = ['init', '--dry-run', ...QUIET_INIT];
+    const argv = [...buildInitArguments([]).filter((argument) => argument !== '--yes'), '--dry-run'];
     const selected = await runGspot(sandbox.path, argv);
     const accepted = await runGspot(sandbox.path, [...argv, '--yes']);
     for (const result of [selected, accepted]) {
@@ -52,12 +52,10 @@ test('initialization identifies a scope flag without attributing it to an absent
     commitAll(sandbox.path);
     const before = await readTree(sandbox.path);
     const result = await runGspot(sandbox.path, [
-        'init',
-        '--yes',
+        ...buildInitArguments([]),
         '--dry-run',
         '--scope-configurations',
         'jobs=bash',
-        ...QUIET_INIT,
     ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).toMatch(/^scopes\s+jobs\s+from --scope-configurations$/mu);
@@ -66,7 +64,7 @@ test('initialization identifies a scope flag without attributing it to an absent
 });
 
 async function selected(root: string): Promise<string[]> {
-    const result = await runGspot(root, [...SELECTION_INIT, ...QUIET_INIT]);
+    const result = await runGspot(root, [...buildInitArguments([], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const plan = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     return plan.plan.configurations.map((entry) => entry.configuration);
@@ -107,7 +105,7 @@ test('init proposes a project scope without --scope-configurations and sets lint
         'tools/lint/package.json': '{"name":"lint","private":true,"devDependencies":{"eslint":"9.39.5"}}\n',
     });
     commitAll(sandbox.path);
-    const result = await runGspot(sandbox.path, [...SELECTION_INIT, ...QUIET_INIT]);
+    const result = await runGspot(sandbox.path, [...buildInitArguments([], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const output = JSON.parse(result.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;
     const proposed = policySchema.parse(parse(output.policy));
@@ -131,7 +129,11 @@ test.each([
         'app/page.tsx': 'export default function Page() { return "home"; }\n',
     });
     const configurations = ['--configurations', 'nextjs', ...(named ? ['translations'] : [])];
-    const result = await runGspot(sandbox.path, [...SELECTION_INIT, ...configurations, ...QUIET_INIT]);
+    const result = await runGspot(sandbox.path, [
+        ...buildInitArguments([], { json: true }),
+        '--dry-run',
+        ...configurations,
+    ]);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
     expect(plan.configurations.some(({ configuration }) => configuration === 'translations')).toBe(isSelected);
@@ -144,7 +146,7 @@ test('init proposes workspace scopes without a lockfile and preserves files afte
         'packages/api/package.json': '{"name":"api"}',
         'packages/api/source.js': 'export const port = 8080;\n',
     });
-    const command = ['init', '--yes', ...QUIET_INIT];
+    const command = buildInitArguments([]);
     const proposed = await runGspot(sandbox.path, [...command, '--dry-run', '--json']);
     expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
     const plan = JSON.parse(proposed.stdout) as Required<Pick<InitJson, 'policy'>>;
@@ -164,7 +166,7 @@ test('init previews only applicable tool projects and duplicate pins for the sel
         'source.py': 'print("hello")\n',
         'mise.toml': '[tools]\nruff = "0.9.0"\nvale = "3.0.0"\n',
     });
-    const result = await runGspot(sandbox.path, [...SELECTION_INIT, '--configurations', 'python', ...QUIET_INIT]);
+    const result = await runGspot(sandbox.path, [...buildInitArguments(['python'], { json: true }), '--dry-run']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan, policy } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan' | 'policy'>>;
     const selected = applicableManifests(
@@ -186,14 +188,7 @@ test('init previews only applicable tool projects and duplicate pins for the sel
     expect(plan.noLongerRuns).toStrictEqual([
         { path: 'mise.toml', note: '1 pin gspot also pins (gspot doctor lists them)' },
     ]);
-    const written = await runGspot(sandbox.path, [
-        'init',
-        '--yes',
-        '--json',
-        '--configurations',
-        'python',
-        ...QUIET_INIT,
-    ]);
+    const written = await runGspot(sandbox.path, buildInitArguments(['python'], { json: true }));
     expect(written.code, written.stdout + written.stderr).toBe(0);
     const installed = parseToolProject(await Bun.file(join(sandbox.path, '.gspot/package.json')).text());
     expect(Object.keys(installed.dependencies)).toStrictEqual(Object.keys(packages));
@@ -206,7 +201,7 @@ test.each(['recommended', 'all'] as const)('init counts active and disabled chec
         'team.template.toml': `template = "team"\nselection = "exact"\nlevel = "${level}"\nconfigurations = ["python"]\n`,
     });
     const before = await readTree(sandbox.path);
-    const command = ['init', '--yes', '--from', 'team.template.toml', '--dry-run', ...QUIET_INIT];
+    const command = [...buildInitArguments([]), '--from', 'team.template.toml', '--dry-run'];
     const result = await runGspot(sandbox.path, [...command, '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const { plan } = JSON.parse(result.stdout) as Required<Pick<InitJson, 'plan'>>;
@@ -227,7 +222,7 @@ test('a named configuration brings its suggested configurations, and one --scope
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'tools/a.sh': CLEAN_BASH_SCRIPT, 'jobs/b.sh': CLEAN_BASH_SCRIPT });
     commitAll(sandbox.path);
-    const preview = [...SELECTION_INIT, ...QUIET_INIT];
+    const preview = [...buildInitArguments([], { json: true }), '--dry-run'];
     const named = await runGspot(sandbox.path, [...preview, '--configurations', 'bash']);
     expect(named.code, named.stdout + named.stderr).toBe(0);
     const { plan } = JSON.parse(named.stdout) as Required<Pick<InitJson, 'plan'>>;
@@ -246,7 +241,7 @@ test('initialization flags control integrations without changing the authored fo
         'source.js': 'export const port = 8080;\n',
         '.prettierrc.json': '{"semi":false,"tabWidth":8}\n',
     });
-    const preview = await runGspot(sandbox.path, [...SELECTION_INIT, ...QUIET_INIT, '--configurations', 'javascript']);
+    const preview = await runGspot(sandbox.path, [...buildInitArguments(['javascript'], { json: true }), '--dry-run']);
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const plan = JSON.parse(preview.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;
     const policy = parseStrictPolicy(plan.policy);
@@ -264,15 +259,10 @@ test.each(['mise', 'bun', 'npm', 'pnpm', 'yarn'] as const)(
         await using sandbox = await testdir();
         const original = await readTree(sandbox.path);
         const result = await runGspot(sandbox.path, [
-            'init',
-            '--yes',
+            ...buildInitArguments(['none'], { json: true }).filter((argument) => argument !== '--no-runner'),
             '--dry-run',
-            '--json',
-            '--configurations',
-            'none',
             '--runner',
             runner,
-            ...QUIET_INIT.filter((argument) => argument !== '--no-runner'),
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         const report = JSON.parse(result.stdout) as Required<Pick<InitJson, 'policy' | 'plan'>>;

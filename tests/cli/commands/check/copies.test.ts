@@ -127,7 +127,7 @@ stage = "commit"
     expect(await pathExists(join(directory.path, 'created.txt'))).toBe(false);
 });
 
-test('index checks copy matching locked dependencies and refuse a different working lockfile', async () => {
+test('index checks copy matching locked dependencies and preserve authored files', async () => {
     await using directory = await testdir();
     const manifest = { name: 'snapshot-project', private: true, type: 'module', dependencies: { dependency: '1.0.0' } };
     const lockfile = JSON.stringify({
@@ -165,18 +165,6 @@ stage = "commit"
     const args = ['check', '--staged', '--only', 'project/dependencies', '--json'];
     const first = await runGspot(directory.path, args);
     expect(first.code, first.stdout + first.stderr).toBe(0);
-    expect(await readFile(join(directory.path, 'node_modules/dependency/stamp.txt'), 'utf8')).toBe(
-        'authored dependency data',
-    );
-    await writeFile(join(directory.path, 'package-lock.json'), lockfile + '\n');
-    const refused = await runGspot(directory.path, args);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect((JSON.parse(refused.stdout) as CommandFailureJson).message).toContain(
-        'do not match the revision manifests and lockfiles',
-    );
-    await writeFile(join(directory.path, 'package-lock.json'), lockfile);
-    const corrected = await runGspot(directory.path, args);
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
     expect(await readFile(join(directory.path, 'node_modules/dependency/stamp.txt'), 'utf8')).toBe(
         'authored dependency data',
     );

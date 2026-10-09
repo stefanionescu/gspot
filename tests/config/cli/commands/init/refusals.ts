@@ -1,10 +1,8 @@
-export const QUIET = ['--no-runner', '--no-ci', '--no-agent-rules', '--no-install'];
-
 export const ARGUMENT_REFUSALS = [
-    { name: 'a choice outside its list', argv: ['init', '--yes', '--ci', 'foo'], cause: 'foo' },
+    { name: 'a choice outside its list', argv: ['--ci', 'foo'], cause: 'foo' },
     {
         name: 'an unknown configuration',
-        argv: ['init', '--yes', '--configurations', 'bassh', ...QUIET],
+        argv: ['--configurations', 'bassh'],
         cause: 'bassh',
     },
 ];

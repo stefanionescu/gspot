@@ -4,15 +4,11 @@ import { commitAll } from '#tests/harness/git.ts';
 import { test, expect, describe } from 'bun:test';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
 import { initRepository, buildSandboxPath } from '#tests/harness/install.ts';
-
-import {
-    COMMAND_STEPS,
-    DUPLICATION_INIT,
-    METADATA_ENTRIES,
-} from '#tests/config/tools/configurations/general/duplication.ts';
+import { COMMAND_STEPS, METADATA_ENTRIES } from '#tests/config/tools/configurations/general/duplication.ts';
 
 /** Run the selected check and verify its contractual exit before reading its report. */
 async function checkDuplication(root: string, environment: Record<string, string>, code: number): Promise<RunReport> {
@@ -43,7 +39,7 @@ describe('the duplication configuration', () => {
         const environment = {
             PATH: buildSandboxPath(['typos', 'editorconfig-checker']),
         };
-        await initRepository(sandbox.path, DUPLICATION_INIT, environment, { level: 'all' });
+        await initRepository(sandbox.path, buildInitArguments(['bash']), environment, { level: 'all' });
         await checkDuplication(sandbox.path, environment, 0);
         await Bun.write(
             `${sandbox.path}/scripts/second.sh`,

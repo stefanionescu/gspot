@@ -8,10 +8,11 @@ import { buildPolicy } from '#tests/harness/policy.ts';
 import { hasLinuxDocker } from '#tests/harness/docker.ts';
 import { hasToolBuild } from '#tests/harness/platforms.ts';
 import { runCheckCase } from '#tests/harness/check-case.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import type { RunReport } from '#cli/types/execution/check.ts';
 import { buildToolsPath, initRepository } from '#tests/harness/install.ts';
 import { containing, textContaining } from '#tests/harness/expectations.ts';
-import { CLEAN, FORGED, SERVER, NGINX_INIT } from '#tests/config/tools/configurations/tool/nginx.ts';
+import { CLEAN, FORGED, SERVER } from '#tests/config/tools/configurations/tool/nginx.ts';
 
 // The root names an image that cannot exist, so only the scope's own image lets the container test run.
 const NGINX_POLICY = buildPolicy(['nginx'], {
@@ -74,7 +75,7 @@ describe('the nginx configuration', () => {
         await createFileTree(sandbox.path, { 'proxy/nginx.conf': CLEAN });
         commitAll(sandbox.path);
         const environment = { PATH: buildToolsPath(['gixy', 'typos', 'editorconfig-checker']) };
-        await initRepository(sandbox.path, NGINX_INIT, environment, { level: 'all' });
+        await initRepository(sandbox.path, buildInitArguments(['nginx']), environment, { level: 'all' });
         const clean = await spawnGspot(sandbox.path, ['check', '--only', 'nginx/gixy'], environment);
         expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         const outcome = await runCheckCase(

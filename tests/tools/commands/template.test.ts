@@ -4,6 +4,7 @@ import { commitAll } from '#tests/harness/git.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { spawnGspot } from '#tests/harness/gspot.ts';
 import { contentDigest } from '#cli/platform/contracts.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import { pathExists } from '#tests/harness/preservation.ts';
 import { parseTomlText } from '#cli/policy/document/public.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/samples/bash.ts';
@@ -27,7 +28,7 @@ const prepareSource = async () => {
     commitAll(path);
     const initialized = await spawnGspot(
         path,
-        ['init', '--yes', '--configurations', 'bash', '--no-runner', '--no-ci', '--no-hooks', '--no-install'],
+        buildInitArguments(['bash']).filter((argument) => argument !== '--no-agent-rules'),
         TOOLS,
     );
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);

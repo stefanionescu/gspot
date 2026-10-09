@@ -6,7 +6,7 @@ import { readPolicy } from '#cli/policy/public.ts';
 import { runGspot } from '#tests/harness/gspot.ts';
 import { testdir, createFileTree } from 'testdirs';
 import { readTree } from '#tests/harness/preservation.ts';
-import { QUIET_INIT } from '#tests/config/harness/init.ts';
+import { buildInitArguments } from '#tests/harness/init.ts';
 import type { ApplyPlanJson } from '#cli/types/commands/apply.ts';
 
 import {
@@ -46,7 +46,7 @@ test.each(INITIAL_OVERRIDES)(
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, files);
         commitAll(sandbox.path);
-        const initialized = await runGspot(sandbox.path, ['init', '--yes', ...argv, ...QUIET_INIT]);
+        const initialized = await runGspot(sandbox.path, [...buildInitArguments([]), ...argv]);
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
         await rm(join(sandbox.path, source));
         const applied = await runGspot(sandbox.path, ['apply']);
@@ -60,7 +60,7 @@ test('a manual removal survives loss and return of detection evidence', async ()
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'run.sh': SCRIPT_SOURCE });
     commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--yes', ...QUIET_INIT]);
+    const initialized = await runGspot(sandbox.path, buildInitArguments([]));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const policy = readPolicy(sandbox.path).policy;
     expect(policy.configurations).toContain('bash');
@@ -79,7 +79,7 @@ test('authored language choices remain when source evidence disappears and retur
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'run.sh': SCRIPT_SOURCE });
     commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--yes', ...QUIET_INIT]);
+    const initialized = await runGspot(sandbox.path, buildInitArguments([]));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     for (const hasSource of [false, true]) {
         await (hasSource ? writeFile(join(sandbox.path, 'run.sh'), SCRIPT_SOURCE) : rm(join(sandbox.path, 'run.sh')));
@@ -93,7 +93,7 @@ test('adding an already detected language keeps it selected after its source dis
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'run.sh': SCRIPT_SOURCE });
     commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--yes', ...QUIET_INIT]);
+    const initialized = await runGspot(sandbox.path, buildInitArguments([]));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const added = await runGspot(sandbox.path, ['add', 'bash']);
     expect(added.code, added.stdout + added.stderr).toBe(0);
@@ -121,7 +121,7 @@ test('a detect template keeps its named language while other configurations foll
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, { 'run.sh': SCRIPT_SOURCE, 'team.template.toml': DETECT_TEMPLATE });
     commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--yes', '--from', 'team.template.toml', ...QUIET_INIT]);
+    const initialized = await runGspot(sandbox.path, [...buildInitArguments([]), '--from', 'team.template.toml']);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     await rm(join(sandbox.path, 'run.sh'));
     const applied = await runGspot(sandbox.path, ['apply']);
@@ -136,7 +136,7 @@ test('an authored scope keeps its language choice while absent and after its sou
         'api/run.sh': SCRIPT_SOURCE,
     });
     commitAll(sandbox.path);
-    const initialized = await runGspot(sandbox.path, ['init', '--yes', ...QUIET_INIT]);
+    const initialized = await runGspot(sandbox.path, buildInitArguments([]));
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     expect(readPolicy(sandbox.path).policy.scope['api']?.configurations).toContain('bash');
     await rm(join(sandbox.path, 'api'), { recursive: true });
